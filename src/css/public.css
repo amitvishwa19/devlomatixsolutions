@@ -1,0 +1,76 @@
+.hero-content h1 span {
+    color: #dceaa2;
+    transform: rotate(-5deg);
+    display: inline-block;
+}
+
+.hero-circle {
+    animation-name: float-bob;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+@keyframes float-bob {
+    0% {
+        -webkit-transform: translateY(-30px);
+        transform: translateY(-30px);
+    }
+
+    50% {
+        -webkit-transform: translateY(-15px);
+        transform: translateY(-15px);
+    }
+
+    100% {
+        -webkit-transform: translateY(-30px);
+        transform: translateY(-30px);
+    }
+}
+
+.header-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2;
+    display: flex;
+    padding: 20px;
+    transition: all .4s ease-out 0s;
+    /* border-bottom: 1px solid rgba(255, 255, 255, .1) */
+}
+
+.about-exp {
+    font-size: 32px;
+    color: #ffffff;
+    font-weight: 600;
+    font-family: "Unbounded";
+    width: 110px;
+    height: 110px;
+    border-radius: 55px;
+    background-color: #041c33;
+    line-height: 110px;
+    text-align: center;
+}
+
+.subscribe {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    padding: 60px 0 60px;
+}
+
+.discover-more-button {
+    padding: 13px 36px;
+    display: inline-block;
+    border-radius: 32px;
+    position: relative;
+    z-index: 1;
+    transition: 0.5s;
+    overflow: hidden;
+    border: 1px solid #0495ff;
+    font-size: 15px;
+    color: #ffffff;
+    font-weight: 400;
+
+}

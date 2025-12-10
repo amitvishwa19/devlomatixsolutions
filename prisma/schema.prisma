@@ -1,0 +1,1029 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+enum ROLE {
+  DOCTOR
+  PATIENT
+  NURSE
+  RECEPTIONIST
+  ADMIN
+  TECHNICIAN
+  PHARMACIST
+  HOSPITAL
+  AMBULANCE
+  PHARMACY
+  INSURANCE
+  GUEST
+}
+
+enum PRIORITY {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum GENDER {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ACTION {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum ENTITY_TYPE {
+  BOARD
+  LIST
+  CARD
+}
+
+model User {
+  id            String  @id @default(cuid())
+  uuid          String?
+  name          String?
+  displayName   String?
+  firstName     String?
+  lastName      String?
+  username      String? @unique
+  email         String  @unique
+  phone         String?
+  avatar        String?
+  emailVerified Boolean @default(false)
+  status        Boolean @default(false)
+  guest         Boolean @default(true)
+  avaliable     Boolean @default(false)
+  password      String?
+
+  uid      String?
+  provider String?
+
+  profile        Profile?
+  medicalProfile MedicalProfile?
+  profileStatus  Boolean         @default(false)
+  online         Boolean         @default(true)
+
+  healthMetricItemId String?
+
+  role       ROLE             @default(PATIENT)
+  roles      Role[]
+  preference UserPreference[]
+
+  members      Member[]
+  servers      Server[]
+  channels     Channel[]
+  locations    Location[]
+  documents    Document[]
+  Folder       Folder[]
+  healthMetric HealthMetric[]
+  address      Address[]
+  fcmTokens    FcmToken[]
+  posts        Post[]
+
+  webDeviceToken String?
+  deviceToken    String?
+  expoPushToken  String?
+  refreshToken   String?
+  accessToken    String?
+
+  forgotPasswordToken       String?
+  forgotPasswordTokenExpiry DateTime?
+
+  verifyToken       String?
+  verifyTokenExpiry DateTime?
+
+  content Content[]
+  card    Card[]
+  task    Task[]
+
+  //patientAppointments Appointment[] @relation(name: "patient")
+  //doctorAppointment   Appointment[] @relation(name: "doctor")
+
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments  Appointment[] @relation("DoctorAppointments")
+
+  careuser     Care[] @relation(name: "patient")
+  careprovider Care[] @relation(name: "care")
+
+  //careteams           Careteam[]
+
+  credit Credit?
+
+  //Record and prescription
+  records Record[]
+  //prescription Prescription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Profile {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  type String? @db.Text
+
+  displayname String?   @db.Text
+  firstname   String?   @db.Text
+  lastname    String?   @db.Text
+  dob         DateTime?
+  gender      String?   @db.Text
+  weight      Float?
+  height      Float?
+  waist       Float?
+  contact     String?   @db.Text
+  bloodGroup  String?   @db.Text
+  emrcontact  String?   @db.Text
+  location    Json?
+
+  open                Boolean? @default(false)
+  timing              Json?
+  slotTime            Int?
+  consultationOptions Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model MedicalProfile {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  personal           Json?
+  contact            Json?
+  medicalInformation Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ServerType {
+  DEFAULT
+  CUSTOM
+}
+
+model Server {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  name        String
+  description String?
+  imageUrl    String?
+  inviteCode  String   @unique
+  selected    Boolean  @default(false)
+  type        String   @default("default")
+  default     Boolean  @default(false)
+  terms       String?
+  privacy     String?
+  setting     Setting?
+  setup       Boolean  @default(false)
+
+  roles        Role[]
+  members      Member[]
+  channels     Channel[]
+  boards       Board[]
+  appointments Appointment[]
+  posts        Post[]
+  Task         Task[]
+  Card         Card[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Setting {
+  id String @id @default(cuid())
+
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  serverId String @unique
+
+  type                String? @db.Text
+  online              Boolean @default(false)
+  offline             Boolean @default(false)
+  timing              Json?
+  slotTime            Int?
+  consultationOptions Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId])
+}
+
+model Care {
+  id String @id @default(cuid())
+
+  patient   User   @relation("patient", fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+
+  care   User   @relation("care", fields: [careId], references: [id], onDelete: Cascade)
+  careId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([careId])
+}
+
+model FcmToken {
+  id     String @id @default(cuid())
+  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  type  String? @db.Text
+  token String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Location {
+  id     String @id @default(cuid())
+  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  latitude  Float
+  longitude Float
+
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Address {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  address Json?
+  coords  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Content {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  title       String
+  slug        String
+  description String?
+  status      Boolean @default(true)
+
+  contentFields ContentField[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ContentField {
+  id String @id @default(cuid())
+
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId String
+
+  type        String
+  title       String
+  slug        String?
+  description String?
+  display     Boolean @default(true)
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  ContentItems ContentItems[]
+
+  @@index([contentId])
+}
+
+model ContentItems {
+  id String @id @default(cuid())
+
+  field   ContentField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId String
+
+  value String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fieldId])
+}
+
+model ContactForm {
+  id String @id @default(cuid())
+
+  name    String?
+  company String?
+  email   String?
+  phone   String?
+  message String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum APPOINTMENTSTATUS {
+  scheduled
+  confirmed
+  inprogress
+  completed
+  noshow
+  cancelled
+}
+
+model Appointment {
+  id String @id @default(cuid())
+
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  serverId String
+
+  patient User @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctor  User @relation("DoctorAppointments", fields: [doctorId], references: [id])
+
+  patientId String
+  doctorId  String
+
+  uid            String?
+  date           String
+  slot           Json?
+  time           String?
+  note           String?
+  additionalNote String?
+  doctorNote     String?
+  type           Json?
+  visitType      String? @default("consultation")
+  status         String  @default("scheduled")
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transaction  Transaction?
+  prescription Prescription?
+  //record       Record?
+}
+
+model Prescription {
+  id String @id @default(cuid())
+
+  // user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // userId String @unique
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  appointmentId String      @unique
+
+  title        String?  @db.Text
+  description  String?  @db.Text
+  prescription Json?
+  status       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([appointmentId])
+}
+
+model Transaction {
+  id String @id @default(cuid())
+
+  // payer   User   @relation("payer", fields: [payerId], references: [id], onDelete: Cascade)
+  // payerId String
+
+  // payee   User   @relation("payee", fields: [payeeId], references: [id], onDelete: Cascade)
+  // payeeId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  appointmentId String      @unique
+
+  type        String?
+  amount      Float
+  description String?
+  status      String?
+  orderId     String?
+  paymentId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@index([appointmentId])
+}
+
+model HealthRecord {
+  id String @id @default(cuid())
+
+  order       Int?
+  title       String? @db.Text
+  slug        String? @db.Text
+  description String?
+  icon        String? @db.Text
+  action      String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// model HealthMetricItem {
+//   id String @id @default(cuid())
+
+//   order      Int?
+//   title      String? @db.Text
+//   slug       String? @db.Text
+//   datafields Int     @default(1)
+//   suffix     String? @db.Text
+//   creator    String  @default("N/A")
+//   data       String  @default("-")
+//   date       String  @default("-")
+//   lowerRange Int?
+//   upperRange Int?
+
+//   HealthMetric HealthMetric[]
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+model HealthMetric {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  title     String? @db.Text
+  slug      String? @db.Text
+  unit      String? @db.Text
+  value     String? @db.Text
+  entryType String? @default("Self-Entered")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Record {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  // appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  // appointmentId String      @unique
+
+  type         String  @db.Text
+  title        String  @db.Text
+  description  String? @db.Text
+  prescription Json?
+  owner        ROLE    @default(PATIENT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+
+model Channel {
+  id   String      @id @default(cuid())
+  name String
+  type ChannelType @default(TEXT)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([serverId])
+}
+
+enum MemberRole {
+  DOCTOR
+  PATIENT
+  ADMIN
+  STAFF
+}
+
+model Member {
+  id   String     @id @default(cuid())
+  role MemberRole @default(PATIENT)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  messages       Message[]
+  directMessages DirectMessage[]
+
+  conversationsInitiated Conversation[] @relation("MemberOne")
+  conversationsReceived  Conversation[] @relation("MemberTwo")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([serverId])
+}
+
+model Message {
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  fileUrl String? @db.Text
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  deleted    Boolean @default(false)
+  sent       Boolean @default(false)
+  deleivered Boolean @default(false)
+  read       Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([channelId])
+  @@index([memberId])
+}
+
+model Conversation {
+  id String @id @default(cuid())
+
+  memberOneId String
+  memberOne   Member @relation("MemberOne", fields: [memberOneId], references: [id], onDelete: Cascade)
+
+  memberTwoId String
+  memberTwo   Member @relation("MemberTwo", fields: [memberTwoId], references: [id], onDelete: Cascade)
+
+  directMessages DirectMessage[]
+
+  @@unique([memberOneId, memberTwoId])
+  @@index([memberTwoId])
+}
+
+model DirectMessage {
+  id      String  @id @default(cuid())
+  content String  @db.Text
+  fileUrl String? @db.Text
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  deleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+  @@index([conversationId])
+}
+
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String
+  user   Board  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emailUpdates  Boolean @default(true)
+  notifications Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User[]
+
+  @@index([userId])
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  title       String  @unique
+  description String?
+  status      Boolean @default(true)
+
+  users       User[]
+  permissions Permission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  server    Server?  @relation(fields: [serverId], references: [id])
+  serverId  String?
+}
+
+model Permission {
+  id          String  @id @default(cuid())
+  title       String  @unique
+  description String
+  status      Boolean @default(false)
+  roles       Role[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  order       Int
+  description String?  @db.Text
+  color       String?  @db.Text
+  priority    PRIORITY @default(LOW)
+  status      Boolean  @default(true)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  assigneeId String
+  assignee   User   @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Board     Board?    @relation(fields: [boardId], references: [id])
+  boardId   String?
+  List      List?     @relation(fields: [listId], references: [id])
+  listId    String?
+
+  @@index([serverId])
+}
+
+model Board {
+  id             String  @id @default(cuid())
+  title          String
+  description    String?
+  avatar         String?
+  showBackground Boolean @default(false)
+  status         Boolean @default(true)
+
+  lists List[]
+
+  server   Server? @relation(fields: [serverId], references: [id])
+  serverId String?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  UserPreference UserPreference[]
+  Card           Card[]
+  Task           Task[]
+
+  @@index([serverId])
+}
+
+model List {
+  id    String @id @default(cuid())
+  title String
+  order Int
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  cards Card[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Task      Task[]
+
+  @@index([boardId])
+}
+
+model Card {
+  id          String   @id @default(cuid())
+  title       String
+  order       Int
+  description String?  @db.Text
+  color       String?  @db.Text
+  priority    PRIORITY @default(LOW)
+  status      Boolean  @default(true)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id])
+
+  listId String
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  assigneeId String
+  assignee   User   @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([listId])
+}
+
+model AuditLog {
+  id          String  @id @default(uuid())
+  orgId       String?
+  action      String?
+  entityId    String?
+  entityType  String?
+  entityTitle String?
+  userId      String?
+  userImage   String? @db.Text
+  userName    String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrgLimit {
+  id    String @id @default(uuid())
+  orgId String @unique
+  count Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrgSubscription {
+  id    String @id @default(uuid())
+  orgId String @unique
+
+  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
+  stripePriceId          String?   @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
+}
+
+model Folder {
+  id String @id @default(cuid())
+
+  User   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  FIle Document[]
+
+  name   String  @db.Text
+  status Boolean @default(true)
+
+  @@index([userId])
+}
+
+model Document {
+  id String @id @default(cuid())
+
+  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  folder   Folder? @relation(fields: [folderId], references: [id])
+  folderId String?
+
+  name         String  @db.Text
+  description  String?
+  url          String
+  type         String
+  documentType String?
+  size         String
+  comment      String? @db.Text
+  status       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum WORKFLOWSTATUS {
+  DRAFT
+  PUBLISHED
+}
+
+enum TASKTYPE {
+  LAUNCHBROWSER
+}
+
+enum TASKPARAMTYPES {
+  STRING
+}
+
+model Workflow {
+  id String @id @default(cuid())
+
+  userId      String
+  name        String
+  description String?
+
+  defination    String?
+  executionPlan String?
+  creditCost    Int            @default(0)
+  cron          String?
+  status        WORKFLOWSTATUS @default(DRAFT)
+
+  lastRunAt     DateTime?
+  lastRunId     String?
+  lastRunStatus String?
+  nextRunAt     DateTime?
+
+  executions WorkflowExecution[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, userId])
+}
+
+model WorkflowExecution {
+  id String @id @default(cuid())
+
+  workflowId     String
+  userId         String
+  trigger        String
+  status         String
+  startedAt      DateTime?
+  completedAt    DateTime?
+  creditConsumed Int       @default(0)
+  definition     String    @default("{}")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  phases WorkflowExecutionPhase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkflowExecutionPhase {
+  id String @id @default(cuid())
+
+  userId String
+  status String
+  number Int
+  node   String
+  name   String
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  inputs  String?
+  outputs String?
+
+  creditConsumed Int?
+
+  workflowExceutionId String
+  execution           WorkflowExecution @relation(fields: [workflowExceutionId], references: [id], onDelete: Cascade)
+
+  workflowExecutionLogs WorkflowExecutionLogs[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkflowExecutionLogs {
+  id       String @id @default(cuid())
+  logLevel String
+  message  String
+
+  workflowExecutionPhaseId String
+  workflowExecutionPhase   WorkflowExecutionPhase @relation(fields: [workflowExecutionPhaseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserBalance {
+  userId  String @id
+  credits Int    @default(0)
+}
+
+model Credit {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type  String @default("virtual")
+  value Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Credential {
+  id String @id @default(cuid())
+
+  userId String
+  name   String
+  value  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, userId])
+}
+
+// schema.prisma
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  icon        String? // "hospital", "surgery", etc.
+  color       String? // "#3B82F6"
+
+  // ✅ Self-referential hierarchy
+  parentId String?
+  parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryChildren")
+
+  // Relations
+  posts Post[] // Many-to-many with posts
+
+  // Metadata
+  level     Int     @default(0) // 0=root, 1=sub, 2=sub-sub
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([parentId, sortOrder]) // Siblings unique sort order
+}
+
+model Tag {
+  id String @id @default(cuid())
+
+  name   String  @unique
+  slug   String  @unique
+  status Boolean @default(true)
+
+  posts Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id String @id @default(cuid())
+
+  server   Server? @relation(fields: [serverId], references: [id])
+  serverId String?
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  title       String
+  slug        String
+  description String?
+  content     String?
+  platform    String?    @default("none")
+  excerpt     String?
+  thumbnail   String?
+  aigenerated Boolean    @default(false)
+  status      String     @default("draft")
+  categories  Category[]
+  tags        Tag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
