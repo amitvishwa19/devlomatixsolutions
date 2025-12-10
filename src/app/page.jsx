@@ -28,7 +28,7 @@ export default function WorkspacePage() {
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false)
 
-    console.log('@server form home', server)
+    console.log('@server form home-need to check', server)
 
     useEffect(() => {
 
