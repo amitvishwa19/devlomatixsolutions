@@ -12,16 +12,22 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus } from 'lucide-react';
+import { Loader, Plus, PlusIcon, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { newCategory } from '../../_actions/add-category';
+import { useAction } from '@/hooks/use-action';
+import { updateCategory } from '../../_actions/update-category';
+import { useTaxonomy } from '../../_provider/taxanomyProvider';
 
 const CategoryTreeInteractive = ({ initialCategories }) => {
-    const [categories, setCategories] = useState(initialCategories);
+    //const [categories, setCategories] = useState(initialCategories);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [expandedIds, setExpandedIds] = useState(['cat1', 'cat2']);
     const [searchQuery, setSearchQuery] = useState('');
     const [draggedCategory, setDraggedCategory] = useState(null);
     const [showDetails, setShowDetails] = useState(false);
+    const [loading, setLoading] = useState(false)
+    const { categories, setCategories } = useTaxonomy()
 
     const [modalState, setModalState] = useState({
         isOpen: false,
@@ -72,12 +78,12 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
     const handleExpandAll = () => {
         const allIds = flattenCategories(categories)?.map(cat => cat?.id);
         setExpandedIds(allIds);
-        success('All categories expanded');
+        toast.success('All categories expanded');
     };
 
     const handleCollapseAll = () => {
         setExpandedIds([]);
-        success('All categories collapsed');
+        toast.success('All categories collapsed');
     };
 
     const handleSelect = (category) => {
@@ -141,13 +147,53 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
         });
     };
 
-    const handleSaveCategory = (formData) => {
-        if (modalState?.mode === 'edit') {
-            toast.success(`Category "${formData?.name}" updated successfully`);
-        } else {
-            console.log('@new category add', formData)
-            toast.success(`Category "${formData?.name}" created successfully`);
+
+    const { execute: addCategory } = useAction(newCategory, {
+        onSuccess: (data) => {
+            console.log(data)
+            setLoading(false)
+            setModalState({ ...modalState, isOpen: false })
+            setCategories(prev => [data.category, ...prev])
+            toast.success('Category created successfully', { id: 'new-cat' });
+        },
+        onError: (error) => {
+            toast.error(`Oops!, something went wrong, please try again later`, { id: 'new-cat' });
+            setLoading(false)
         }
+    })
+
+    const { execute: editCategory } = useAction(updateCategory, {
+        onSuccess: (data) => {
+            console.log(data)
+            setLoading(false)
+            setModalState({ ...modalState, isOpen: false })
+            setCategories(prev => prev.map(cat =>
+                cat.id === data.category.id
+                    ? { ...cat, ...data.category }
+                    : cat
+            ))
+            toast.success('Category updated successfully', { id: 'new-cat' });
+        },
+        onError: (error) => {
+            toast.error(`Oops!, something went wrong, please try again later`, { id: 'new-cat' });
+            setLoading(false)
+        }
+    })
+
+    const handleSaveCategory = async (formData) => {
+
+        if (modalState?.mode === 'edit') {
+            setLoading(true)
+            await editCategory({ formData })
+        } else {
+            setLoading(true)
+            await addCategory({ formData })
+            console.log(formData)
+        }
+
+
+
+
     };
 
     const handleDragStart = (category) => {
@@ -172,6 +218,8 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
             <div className="flex-1 flex flex-col bg-surface rounded-lg border border-border shadow-elevation-1 overflow-hidden">
                 {/* Tree Header */}
                 <div className="p-4 border-b border-border space-y-4">
+
+
                     {/* Search */}
                     <SearchSuggestions
                         query={searchQuery}
@@ -200,11 +248,12 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                             </button>
                         </div>
                         <Button
-                            variant='outline'
+                            variant='save'
                             onClick={handleAddCategory}
                             className=""
+                            disabled={loading}
                         >
-                            <Icon name="PlusIcon" size={16} variant="outline" />
+                            <PlusIcon />
                             Add Category
                         </Button>
 
@@ -216,6 +265,8 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                     {categories?.length > 0 ? (
                         <div className="space-y-1">
                             {categories?.map((category) => (
+
+
                                 <CategoryNode
                                     key={category?.id}
                                     category={category}
@@ -270,6 +321,7 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                 mode={modalState?.mode}
                 parentCategory={modalState?.parentCategory}
                 allCategories={categories}
+                loading={loading}
             />
             <ConfirmDialog
                 isOpen={confirmDialog?.isOpen}

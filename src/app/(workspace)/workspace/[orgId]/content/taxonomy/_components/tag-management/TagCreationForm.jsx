@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@radix-ui/react-label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Loader, Save } from 'lucide-react';
 
-const TagCreationForm = ({ onSubmit, editingTag, onCancel }) => {
+const TagCreationForm = ({ onSubmit, editingTag, onCancel, loading }) => {
+
     const [formData, setFormData] = useState({
         name: editingTag?.name || '',
         color: editingTag?.color || '#2563EB',
@@ -191,7 +193,7 @@ const TagCreationForm = ({ onSubmit, editingTag, onCancel }) => {
                 </div>
 
                 {/* Category Assignment */}
-                <div>
+                {/* <div>
                     <label className="block text-sm font-medium text-text-primary mb-2">
                         Assign to Categories
                     </label>
@@ -214,12 +216,13 @@ const TagCreationForm = ({ onSubmit, editingTag, onCancel }) => {
                     <p className="mt-2 text-xs text-text-secondary">
                         {formData?.categories?.length} {formData?.categories?.length === 1 ? 'category' : 'categories'} selected
                     </p>
-                </div>
+                </div> */}
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-4 border-t border-border self-end w-full">
-                    <Button type="submit" variant='outline' size='sm' className=""                    >
-                        <Icon name={editingTag ? "CheckIcon" : "PlusIcon"} size={18} variant="outline" />
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border self-end w-full">
+                    <Button type="submit" variant='save' size='sm' className="" disabled={loading}                  >
+                        {/* <Icon name={editingTag ? "CheckIcon" : "SaveIcon"} size={18} variant="outline" /> */}
+                        {loading ? <Loader className=' animate-spin' /> : <Save />}
                         {editingTag ? 'Update Tag' : 'Create Tag'}
                     </Button>
 

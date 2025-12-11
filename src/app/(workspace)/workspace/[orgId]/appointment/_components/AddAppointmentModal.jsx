@@ -55,7 +55,7 @@ export default function AddAppointmentModal() {
     yesterday.setDate(yesterday.getDate())
     yesterday.setHours(0, 0, 0, 0) // normalize time
 
-    console.log('data', data)
+
 
     const [appointmentData, setAppointmentData] = useState({
         patientId: null,

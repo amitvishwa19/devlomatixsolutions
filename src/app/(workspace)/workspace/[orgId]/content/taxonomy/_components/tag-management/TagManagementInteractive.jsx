@@ -8,6 +8,9 @@ import TagCreationForm from './TagCreationForm';
 import BulkOperationsToolbar from './BulkOperationsToolbar';
 import TagAnalytics from './TagAnalytics';
 import SearchSuggestions from '../SearchSuggestions';
+import { toast } from 'sonner';
+import { useAction } from '@/hooks/use-action';
+import { newTag } from '../../_actions/new-tag';
 
 const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
     const [tags, setTags] = useState(initialTags);
@@ -16,7 +19,7 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
     const [editingTag, setEditingTag] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [analytics, setAnalytics] = useState(initialAnalytics);
-
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         let result = [...tags];
@@ -44,7 +47,20 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
         });
     };
 
-    const handleCreateTag = (formData) => {
+
+    const { execute: addTag } = useAction(newTag, {
+        onSuccess: (data) => {
+            console.log(data)
+            setLoading(false)
+            toast.success(`Tag "${data?.tag?.name}" created successfully`, { id: 'new-tag' });
+        },
+        onError: (error) => {
+            toast.error(`Oops!, something went wrong, please try again later`, { id: 'new-tag' });
+            setLoading(false)
+        }
+    })
+
+    const handleCreateTag = async (formData) => {
         const newTag = {
             id: tags?.length + 1,
             name: formData?.name,
@@ -58,7 +74,12 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
         const updatedTags = [...tags, newTag];
         setTags(updatedTags);
         updateAnalytics(updatedTags);
-        success(`Tag "${formData?.name}" created successfully`);
+
+        setLoading(true)
+        await addTag({ formData })
+
+        //console.log('@create new tag', formData, newTag)
+        //toast.loading(`Creating tag "${formData?.name}"`, { id: 'new-tag' });
     };
 
     const handleEditTag = (tag) => {
@@ -75,13 +96,14 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
         setTags(updatedTags);
         updateAnalytics(updatedTags);
         setEditingTag(null);
-        success(`Tag "${formData?.name}" updated successfully`);
+        console.log('@update tag', formData)
+        toast.success(`Tag "${formData?.name}" updated successfully`);
     };
 
     const handleDeleteTag = (tagId) => {
         const tag = tags?.find(t => t?.id === tagId);
         if (tag && tag?.usageCount > 0) {
-            warning(`Tag "${tag?.name}" is in use (${tag?.usageCount} times). Consider reassigning before deletion.`);
+            toast.warning(`Tag "${tag?.name}" is in use (${tag?.usageCount} times). Consider reassigning before deletion.`);
             return;
         }
 
@@ -89,7 +111,7 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
         setTags(updatedTags);
         updateAnalytics(updatedTags);
         setSelectedTags(selectedTags?.filter(id => id !== tagId));
-        success(`Tag deleted successfully`);
+        toast.success(`Tag deleted successfully`);
     };
 
     const handleBulkEdit = () => {
@@ -191,7 +213,7 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
             <TagAnalytics analytics={analytics} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-6 mx-1">
                     <SearchSuggestions
                         query={searchQuery}
                         suggestions={searchSuggestions}
@@ -215,6 +237,7 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
                             onSubmit={editingTag ? handleUpdateTag : handleCreateTag}
                             editingTag={editingTag}
                             onCancel={() => setEditingTag(null)}
+                            loading={loading}
                         />
                     </div>
                 </div>
@@ -223,24 +246,5 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
     );
 };
 
-TagManagementInteractive.propTypes = {
-    initialTags: PropTypes?.arrayOf(
-        PropTypes?.shape({
-            id: PropTypes?.number?.isRequired,
-            name: PropTypes?.string?.isRequired,
-            color: PropTypes?.string?.isRequired,
-            description: PropTypes?.string,
-            usageCount: PropTypes?.number?.isRequired,
-            categories: PropTypes?.arrayOf(PropTypes?.string)?.isRequired,
-            createdAt: PropTypes?.string?.isRequired
-        })
-    )?.isRequired,
-    initialAnalytics: PropTypes?.shape({
-        totalTags: PropTypes?.number?.isRequired,
-        activeTags: PropTypes?.number?.isRequired,
-        unusedTags: PropTypes?.number?.isRequired,
-        totalUsage: PropTypes?.number?.isRequired
-    })?.isRequired
-};
 
 export default TagManagementInteractive;

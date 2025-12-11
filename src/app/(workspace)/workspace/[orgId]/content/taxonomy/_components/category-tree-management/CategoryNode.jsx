@@ -27,6 +27,8 @@ const CategoryNode = ({
     const isSelected = selectedId === category?.id;
     const hasChildren = category?.children && category?.children?.length > 0;
 
+    //console.log('category', category)
+
     const handleDragStart = (e) => {
         setIsDragging(true);
         onDragStart(category);

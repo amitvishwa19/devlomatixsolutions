@@ -6,33 +6,29 @@ import { v4 as uuidv4 } from 'uuid'
 import { ROLE } from "@prisma/client";
 import { slug } from "@/utils/functions";
 
+
 const NewCategory = z.object({
-    name: z.string(),
-    slug: z.string(),
-    description: z.string().optional(),
-    status: z.string(),
-    data: z.any()
+    formData: z.any()
 });
 
 const handler = async (data) => {
     let category
     let categories
-
-
-    console.log('add category action', data)
-
-    const { name, description, slug, status } = data
-
+    console.log(data.formData)
 
     try {
-
+        const tags = data?.formData?.tags
         category = await db.category.create({
             data: {
-                name,
-                description,
-                slug,
-                status: status === 'true' ? true : false
-            }
+                name: data.formData.name,
+                slug: slug(data?.formData?.name),
+                description: data.formData.description,
+                parentId: data.formData.parentId,
+                //parent: data.formData.parentId && { connect: { id: data.formData.parentId } },
+                level: data.formData.parentId ? 1 : 0,
+                tags: { connect: tags.map(tag => ({ id: tag.id })) }
+            },
+            include: { tags: true }
         })
 
 

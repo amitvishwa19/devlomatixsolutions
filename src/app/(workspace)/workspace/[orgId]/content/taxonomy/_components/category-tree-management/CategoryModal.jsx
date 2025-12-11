@@ -8,11 +8,13 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Save } from 'lucide-react';
+import { Loader, Plus, Save } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { useTaxonomy } from '../../_provider/taxanomyProvider';
 
-const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory, allCategories = [] }) => {
+const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory, allCategories = [], loading }) => {
+    const { tags } = useTaxonomy()
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -34,6 +36,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
     useEffect(() => {
         if (category && mode === 'edit') {
             setFormData({
+                id: category?.id,
                 name: category?.name || '',
                 description: category?.description || '',
                 tags: category?.tags || [],
@@ -131,7 +134,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
         e?.preventDefault();
         if (validate()) {
             onSave(formData);
-            onClose();
+            //onClose();
         }
     };
 
@@ -176,7 +179,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                                     Parent Category
                                 </label>
 
-                                <Select defaultValue={formData?.parentId || ''} onValueChange={handleParentChange}>
+                                <Select defaultValue={formData?.parentId || ''} onValueChange={handleParentChange} disabled={loading}>
                                     <SelectTrigger className="">
                                         <SelectValue placeholder="Select Parent Category" />
                                     </SelectTrigger>
@@ -212,6 +215,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                                 value={formData?.name}
                                 onChange={handleChange}
                                 placeholder="Enter category name"
+                                disabled={loading}
 
                             />
                             {errors?.name && (
@@ -234,6 +238,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                                 onChange={handleChange}
                                 placeholder="Enter category description"
                                 rows={4}
+                                disabled={loading}
                             />
                         </div>
 
@@ -243,7 +248,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                                 Assign Tags
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                {availableTags?.map((tag) => {
+                                {tags?.map((tag) => {
                                     const isSelected = formData?.tags?.some(t => t?.id === tag?.id);
                                     return (
                                         <Badge
@@ -302,9 +307,10 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                     <Button
                         variant='save'
                         onClick={handleSubmit}
+                        disabled={loading}
                         className=" transition-all duration-200 flex items-center gap-2"
                     >
-                        <Save />
+                        {loading ? <Loader className=' animate-spin' /> : <Save />}
                         {mode === 'edit' ? 'Save Changes' : 'Create Category'}
                     </Button>
                 </div>

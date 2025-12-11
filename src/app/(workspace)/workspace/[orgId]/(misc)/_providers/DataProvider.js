@@ -11,7 +11,7 @@ export default function DataProvider({ children }) {
     const dispatch = useDispatch()
     const appointment = { id: '12rerefe43ed', name: 'Devlomatix solutions' }
 
-    console.log('@DataProvider loaded')
+
 
     useEffect(() => {
         if (server) {

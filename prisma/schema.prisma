@@ -978,6 +978,7 @@ model Category {
 
   // Relations
   posts Post[] // Many-to-many with posts
+  tags  Tag[]
 
   // Metadata
   level     Int     @default(0) // 0=root, 1=sub, 2=sub-sub
@@ -993,14 +994,19 @@ model Category {
 model Tag {
   id String @id @default(cuid())
 
-  name   String  @unique
-  slug   String  @unique
-  status Boolean @default(true)
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  color       String  @default("#FFFF")
+  status      Boolean @default(true)
 
-  posts Post[]
+  posts      Post[]
+  categories Category[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([slug])
 }
 
 model Post {
