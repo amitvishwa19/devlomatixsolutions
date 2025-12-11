@@ -13,7 +13,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import moment from 'moment'
 import StatusSelector from './_components/StatusSelector'
 import { DynamicIcon } from 'lucide-react/dynamic';
-import EditAppointment from './_components/EditAppointment'
 import { DatePicker } from '@/components/global/DatePicker'
 import { setSelectedAppointment, setSelectedAppointments } from './_redux/appointment-slice'
 import { Calendar, FilePenLine, MoreHorizontal, Trash2, View } from 'lucide-react'
