@@ -3,15 +3,12 @@ import React, { useContext, useEffect, useState } from 'react'
 import { Poppins, Unbounded } from 'next/font/google'
 import { useSession } from 'next-auth/react'
 import Lottie, { useLottie } from "lottie-react";
-import lotte from "@/assets/lottie/loading.json";
 import { useDispatch } from 'react-redux'
 import { Activity, Heart, Shield, Users } from 'lucide-react'
 import coverImage from '@/assets/images/auth_cover_image.jpg'
 import { useRouter } from 'next/navigation';
 import { useOrg } from '@/providers/OrgProvider';
-import { SetupModal } from '@/components/setup/SetupModal';
-import { SetupWizard } from '@/components/setup/SetupWizard';
-
+import lotte from "@/assets/lottie/loading-pulse.json";
 
 const textFont = Poppins({
     subsets: ['latin'],
@@ -28,33 +25,25 @@ export default function WorkspacePage() {
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false)
 
-    console.log('@server form home-need to check', server)
+
 
     useEffect(() => {
-
-        router.push(`/workspace/${server?.id}`)
-
+        if (server) {
+            router.push(`/workspace/${server?.id}`)
+        }
     }, [server])
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setProgress((prev) => {
-                if (prev >= 100) {
-                    return 0; // Reset to loop continuously
-                }
-                return prev + 2;
-            });
-        }, 30);
 
-        return () => clearInterval(timer);
-    }, []);
 
     const options = {
         animationData: lotte,
         loop: true,
+        height: 20,
+        width: 20,
     };
 
     const { View } = useLottie(options);
+
 
     return (
         <div className={`flex min-h-screen items-center justify-center ${unbounded.className}`}
@@ -62,6 +51,8 @@ export default function WorkspacePage() {
             <div className="fixed inset-0 z-50  bg-black/80" >
                 <div className='flex flex-1 h-screen items-center justify-center '>
                     <div className="flex flex-col items-center justify-center space-y-8 px-4">
+
+
                         {/* Logo and Icons Animation */}
                         <div className="relative">
                             <div className="flex items-center justify-center space-x-4">
@@ -99,10 +90,12 @@ export default function WorkspacePage() {
 
                         {/* Motto Section */}
                         <div className="max-w-2xl text-center space-y-4">
-                            <div className="flex items-center justify-center space-x-6">
-                                <div className="h-1 w-12 bg-primary rounded-full" />
-                                <Heart className="h-5 w-5 text-accent animate-ping delay-200 text-sky-500" fill="currentColor" />
-                                <div className="h-1 w-12 bg-primary rounded-full" />
+                            <div className="flex items-center justify-center ">
+                                {/* <div className="h-1 w-12 bg-primary rounded-full" /> */}
+                                <div className='h-40 w-40 '>
+                                    {View}
+                                </div>
+                                {/* <div className="h-1 w-12 bg-primary rounded-full" /> */}
                             </div>
 
                             <p className="text-lg text-muted-foreground leading-relaxed">
@@ -130,18 +123,6 @@ export default function WorkspacePage() {
                             </div>
                         </div>
 
-                        {/* Progress Bar */}
-                        <div className="w-80 space-y-2">
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300 ease-out"
-                                    style={{ width: `${progress}%` }}
-                                />
-                            </div>
-                            {/* <p className="text-center text-sm text-muted-foreground">
-                            Loading... {progress}%
-                        </p> */}
-                        </div>
                     </div>
                 </div>
             </div>

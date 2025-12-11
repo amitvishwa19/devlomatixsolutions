@@ -33,57 +33,15 @@ export const OrgProvider = ({ children }) => {
     const dispatch = useDispatch()
     const { orgId } = useParams()
 
-
-    const fetchChatMessages = (data) => {
-        //console.log('Fetching chat messages from server', data)
-    }
-
     useEffect(() => {
         refreshServer()
     }, [session])
 
 
-    useEffect(() => {
-        //const socket = io('http://3.109.121.161:5000/')
-        //setSocket(socket)
-        //console.log(socket)
 
-        // socket.on("connect", () => {
-        //     console.log(`Connected to server-org provider!, id:${socket.id}`);
-        // });
-
-        // socket.on('new-message-post', (data) => {
-        //     //console.log('received in io', data.message, data.query)
-        //     //console.log('User', user)
-        //     if (data.query.userId !== user.id) {
-
-        //         let tempitems = chatPages[0]?.items
-        //         tempitems.unshift(data.message)
-        //         if (tempitems.length > 10) {
-        //             tempitems.pop()
-        //         }
-
-        //         setChatPages(prevItem => {
-        //             const updatedArray = [...prevItem];
-        //             updatedArray[0] = { ...updatedArray[0], items: tempitems };
-        //             return updatedArray;
-        //         })
-
-        //         console.log('Here the chat message will be added as this is different user')
-        //     }
-
-        // })
-
-        // return () => {
-        //     socket.disconnect();
-        // };
-
-    }, [chatPages])
 
     const refreshServer = (serverId) => {
-        //console.log('refreshServer() in org proviter', { serverId })
         return getserverInfo({ userId: session?.user?.userId, serverId: orgId })
-
     }
 
     const updateChatPages = (data) => {
@@ -217,7 +175,6 @@ export const OrgProvider = ({ children }) => {
     }, [session])
 
 
-
     return (
         <OrgContext.Provider value={{
             server, servers, users, updateServer, updateServers,
@@ -226,7 +183,7 @@ export const OrgProvider = ({ children }) => {
             chatMessages, setChatMessages, updateChatMesages,
             socket, hasPermission, superAdmin, hasRole,
             chatPages, setChatPages, updateChatPages,
-            fetchChatMessages, updateServerInfo, refreshServer
+            updateServerInfo, refreshServer
         }}>
             {children}
         </OrgContext.Provider>
