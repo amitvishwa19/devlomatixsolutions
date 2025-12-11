@@ -13,6 +13,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const CategoryTreeInteractive = ({ initialCategories }) => {
     const [categories, setCategories] = useState(initialCategories);
@@ -142,9 +143,10 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
 
     const handleSaveCategory = (formData) => {
         if (modalState?.mode === 'edit') {
-            success(`Category "${formData?.name}" updated successfully`);
+            toast.success(`Category "${formData?.name}" updated successfully`);
         } else {
-            success(`Category "${formData?.name}" created successfully`);
+            console.log('@new category add', formData)
+            toast.success(`Category "${formData?.name}" created successfully`);
         }
     };
 
@@ -158,7 +160,8 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
 
     const handleDrop = (targetCategory) => {
         if (draggedCategory && draggedCategory?.id !== targetCategory?.id) {
-            success(`Moved "${draggedCategory?.name}" to "${targetCategory?.name}"`);
+            toast.success(`Moved "${draggedCategory?.name}" to "${targetCategory?.name}"`);
+            console.log(targetCategory)
             setDraggedCategory(null);
         }
     };
