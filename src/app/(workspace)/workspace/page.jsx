@@ -50,23 +50,6 @@ export default function WorkspacePage() {
         }
     }, [server])
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setProgress((prev) => {
-                if (prev >= 100) {
-                    return 0; // Reset to loop continuously
-                }
-                return prev + 2;
-            });
-        }, 30);
-
-        return () => clearInterval(timer);
-    }, [loading]);
-
-    const handleSetupClose = () => {
-        console.log('SetupCLose')
-        setSetup(false)
-    }
 
     const options = {
         animationData: lotte,

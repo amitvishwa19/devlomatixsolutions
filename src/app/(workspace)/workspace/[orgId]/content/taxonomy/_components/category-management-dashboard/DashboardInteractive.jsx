@@ -8,11 +8,13 @@ import CategoryTreePreview from './CategoryTreePreview';
 import RecentActivityFeed from './RecentActivityFeed';
 
 import SearchSuggestions from '../SearchSuggestions';
+import { useTaxonomy } from '../../_provider/taxanomyProvider';
 
 const DashboardInteractive = ({ initialStats, initialCategories, initialActivities }) => {
     const { orgId } = useParams()
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const { categories, setCategories } = useTaxonomy()
 
     const statsData = [
         {
@@ -124,10 +126,8 @@ const DashboardInteractive = ({ initialStats, initialCategories, initialActiviti
             <div className="">
                 {/* Category Tree Preview - Takes 2 columns */}
                 <div className="lg:col-span-2">
-                    <CategoryTreePreview categories={initialCategories} />
+                    <CategoryTreePreview categories={categories} />
                 </div>
-
-
             </div>
         </div>
     );

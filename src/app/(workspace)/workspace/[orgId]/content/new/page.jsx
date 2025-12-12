@@ -20,7 +20,7 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import { useContent } from '../_provider/contentProvider';
 import DocumentPicker from '../../(misc)/_components/DocumentPicker';
 
-export default function NewCOntentPage() {
+export default function NewCOntentPage({ post }) {
     const { orgId } = useParams()
     const { data: session } = useSession()
     const { categories, setPosts } = useContent()

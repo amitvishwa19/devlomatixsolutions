@@ -2,34 +2,48 @@
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
-import { v4 as uuidv4 } from 'uuid'
-import { ROLE } from "@prisma/client";
-import { slug } from "@/utils/functions";
 
 
 const NewCategory = z.object({
-    formData: z.any()
+    formData: z.any(),
+    orgId: z.string().optional()
 });
 
 const handler = async (data) => {
-    let category
-    let categories
-    console.log(data.formData)
+    let category = {}
+    let categories = []
+    let sortOrder
+    let level = 0
+
 
     try {
+
+        const tmpData = data.formData
+
+        if (tmpData.parentId) {
+            const parent = await db.category.findUnique({
+                where: { id: tmpData.parentId },
+            });
+            if (!parent) throw new Error("Parent not found");
+            level = parent.level + 1;
+        }
+
         const tags = data?.formData?.tags
         category = await db.category.create({
             data: {
-                name: data.formData.name,
-                slug: slug(data?.formData?.name),
-                description: data.formData.description,
-                parentId: data.formData.parentId,
-                //parent: data.formData.parentId && { connect: { id: data.formData.parentId } },
-                level: data.formData.parentId ? 1 : 0,
+                name: tmpData.name,
+                slug: tmpData.name,
+                description: tmpData.description,
+                parentId: tmpData.parentId && tmpData.parentId,
+                level,
+                sortOrder,
                 tags: { connect: tags.map(tag => ({ id: tag.id })) }
             },
-            include: { tags: true }
+            include: { tags: true, posts: true }
         })
+
+
+
 
 
     } catch (error) {

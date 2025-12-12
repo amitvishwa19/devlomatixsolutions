@@ -18,6 +18,8 @@ import { newCategory } from '../../_actions/add-category';
 import { useAction } from '@/hooks/use-action';
 import { updateCategory } from '../../_actions/update-category';
 import { useTaxonomy } from '../../_provider/taxanomyProvider';
+import { slug } from '@/utils/functions';
+import { deleteCategory } from '../../_actions/delete-category';
 
 const CategoryTreeInteractive = ({ initialCategories }) => {
     //const [categories, setCategories] = useState(initialCategories);
@@ -28,6 +30,32 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
     const [showDetails, setShowDetails] = useState(false);
     const [loading, setLoading] = useState(false)
     const { categories, setCategories } = useTaxonomy()
+
+    function buildCategoryTree(categories) {
+        const map = new Map();
+        const roots = [];
+
+        // create map entries
+        for (const cat of categories) {
+            map.set(cat.id, { ...cat, children: [] });
+        }
+
+        // assign children
+        for (const cat of categories) {
+            const node = map.get(cat.id);
+
+            if (cat.parentId) {
+                const parent = map.get(cat.parentId);
+                if (parent) {
+                    parent.children.push(node);
+                }
+            } else {
+                roots.push(node); // root categories
+            }
+        }
+
+        return roots;
+    }
 
     const [modalState, setModalState] = useState({
         isOpen: false,
@@ -41,6 +69,7 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
         title: '',
         message: '',
         type: 'warning',
+        id: '',
         onConfirm: () => { }
     });
 
@@ -118,15 +147,18 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
         });
     };
 
-    const handleDelete = (category) => {
+    const handleDelete = async (category) => {
+        //await deleteCat({ categoryId: category.id })
+
         setConfirmDialog({
             isOpen: true,
             title: 'Delete Category',
             message: `Are you sure you want to delete "${category?.name}"? This action cannot be undone. All subcategories and content will be permanently removed.`,
             type: 'danger',
-            onConfirm: () => {
-                success(`Category "${category?.name}" deleted successfully`);
+            data: category,
+            onConfirm: async () => {
                 if (selectedCategory?.id === category?.id) {
+                    setLoading(true)
                     setSelectedCategory(null);
                     setShowDetails(false);
                 }
@@ -146,7 +178,6 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
             }
         });
     };
-
 
     const { execute: addCategory } = useAction(newCategory, {
         onSuccess: (data) => {
@@ -187,13 +218,9 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
             await editCategory({ formData })
         } else {
             setLoading(true)
-            await addCategory({ formData })
+            await addCategory({ formData: { ...formData, slug: slug(formData.name) }, orgId: 'org' })
             console.log(formData)
         }
-
-
-
-
     };
 
     const handleDragStart = (category) => {
@@ -290,12 +317,15 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                             <div className="text-center">
                                 <Icon name="FolderIcon" size={48} variant="outline" className="mx-auto mb-4 opacity-50" />
                                 <p className="text-sm mb-4">No categories found</p>
-                                <button
+                                <Button
+                                    variant='save'
+
                                     onClick={handleAddCategory}
-                                    className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg shadow-elevation-1 transition-all duration-200"
+                                    className=" shadow-elevation-1 transition-all duration-200"
                                 >
+                                    <PlusIcon />
                                     Create First Category
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -324,12 +354,14 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                 loading={loading}
             />
             <ConfirmDialog
+                data={confirmDialog?.data}
                 isOpen={confirmDialog?.isOpen}
-                onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-                onConfirm={confirmDialog?.onConfirm}
+                onClose={() => { setLoading(false); setConfirmDialog({ ...confirmDialog, isOpen: false }) }}
+                onConfirm={() => { setLoading(true) }}
                 title={confirmDialog?.title}
                 message={confirmDialog?.message}
                 type={confirmDialog?.type}
+                loading={loading}
             />
         </div>
     );
@@ -339,3 +371,4 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
 
 export default CategoryTreeInteractive;
 
+//setConfirmDialog({ ...confirmDialog, isOpen: false })

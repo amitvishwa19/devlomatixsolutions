@@ -7,13 +7,7 @@ const CategoryTreePreview = ({ categories }) => {
         <div className="bg-surface rounded-lg border border-border shadow-sm">
             <div className="flex items-center justify-between p-4 border-b border-border">
                 <h2 className="text-lg font-semibold text-text-primary">Category Overview</h2>
-                <Link
-                    href="/category-tree-management"
-                    className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors duration-150"
-                >
-                    View All
-                    <Icon name="ChevronRightIcon" size={16} variant="outline" />
-                </Link>
+
             </div>
             <div className="divide-y divide-border">
                 {categories?.map((category) => (

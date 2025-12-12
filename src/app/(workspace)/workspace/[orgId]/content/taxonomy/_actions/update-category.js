@@ -34,7 +34,7 @@ const handler = async (data) => {
                     connect: tags.map(tag => ({ id: tag.id })) // Connect existing tags
                 }
             },
-            include: { tags: true }
+            include: { tags: true, posts: true }
         })
 
 

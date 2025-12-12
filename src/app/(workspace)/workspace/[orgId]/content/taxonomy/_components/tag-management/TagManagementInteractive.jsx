@@ -223,7 +223,7 @@ const TagManagementInteractive = ({ initialTags, initialAnalytics }) => {
                     />
 
                     <TagTable
-                        tags={filteredTags}
+                        tags={tags}
                         onEdit={handleEditTag}
                         onDelete={handleDeleteTag}
                         onSelect={setSelectedTags}

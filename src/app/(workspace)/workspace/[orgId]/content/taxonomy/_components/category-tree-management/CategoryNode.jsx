@@ -78,20 +78,20 @@ const CategoryNode = ({
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 onClick={handleSelect}
-                className={`
+                className={`border
                             flex items-center gap-2 py-2.5 px-3 rounded-md cursor-pointer
                             transition-all duration-200 ease-out
-                            ${isSelected ? 'bg-primary/20 dark:bg-darkFocusColor ' : 'hover:bg-primary/10 dark:hover:bg-darkFocusColor text-text-primary'}
+                            ${isSelected ? 'bg-primary/20 dark:bg-darkFocusColor ring-[0.8px]' : 'hover:bg-primary/10 dark:hover:bg-darkFocusColor text-text-primary'}
                             ${isDragging ? 'opacity-50' : 'opacity-100'}
                         `}
-                style={{ paddingLeft: `${level * 24 + 12}px` }}
+                style={{ paddingLeft: `${level * 1 + 12}px` }}
             >
 
                 {/* Expand/Collapse Button */}
                 <button
                     onClick={toggleExpand}
                     className={`
-                                flex-shrink-0 w-5 h-5 flex items-center justify-center rounded
+                                flex-shrink-0 w-5 h-5 flex items-center justify-center rounded 
                                 transition-all duration-200 ease-out
                                 ${hasChildren ? 'hover:bg-muted' : 'invisible'}
                                 ${isSelected ? 'text-primary-foreground' : 'text-text-secondary'}
@@ -102,7 +102,7 @@ const CategoryNode = ({
                             name="ChevronRightIcon"
                             size={16}
                             variant="solid"
-                            className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                            className={`transition-transform duration-200 text-foreground ${isExpanded ? 'rotate-90' : ''}`}
                         />
                     )}
                 </button>

@@ -989,6 +989,7 @@ model Category {
   updatedAt DateTime @updatedAt
 
   @@unique([parentId, sortOrder]) // Siblings unique sort order
+  @@index([parentId]) // Helpful for lookups (get children)
 }
 
 model Tag {

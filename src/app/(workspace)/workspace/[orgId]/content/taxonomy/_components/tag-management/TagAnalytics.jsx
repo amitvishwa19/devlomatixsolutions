@@ -24,14 +24,14 @@ const TagAnalytics = ({ analytics }) => {
             value: analytics?.unusedTags,
             icon: 'ExclamationTriangleIcon',
             color: 'text-warning',
-            bgColor: 'bg-warning/10'
+            bgColor: 'bg-red-500/10'
         },
         {
             label: 'Total Usage',
             value: analytics?.totalUsage,
             icon: 'ChartBarIcon',
-            color: 'text-accent',
-            bgColor: 'bg-accent/10'
+            color: 'text-foreground',
+            bgColor: 'bg-blue-500/10'
         }
     ];
 
@@ -57,13 +57,5 @@ const TagAnalytics = ({ analytics }) => {
     );
 };
 
-TagAnalytics.propTypes = {
-    analytics: PropTypes?.shape({
-        totalTags: PropTypes?.number?.isRequired,
-        activeTags: PropTypes?.number?.isRequired,
-        unusedTags: PropTypes?.number?.isRequired,
-        totalUsage: PropTypes?.number?.isRequired
-    })?.isRequired
-};
 
 export default TagAnalytics;
