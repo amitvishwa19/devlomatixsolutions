@@ -272,6 +272,7 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
                                 <TabsTrigger value="prompt" className='flex flex-1'>AI Content Generator</TabsTrigger>
                                 <TabsTrigger value="preview" className='flex flex-1'>Generated Content</TabsTrigger>
                             </TabsList>
+
                             <TabsContent value="prompt">
                                 <div className='mt-6 flex flex-col gap-6 '>
 
@@ -430,6 +431,7 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
 
                                 </div>
                             </TabsContent>
+
                             <TabsContent value="preview" className='flex flex-col h-full w-full p-0 gap-4 '>
                                 {(generatedContent || generatedImageUrl) ? (
                                     <div className='flex flex-col h-full gap-4'>

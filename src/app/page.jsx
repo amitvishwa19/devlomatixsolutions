@@ -28,10 +28,11 @@ export default function WorkspacePage() {
 
 
     useEffect(() => {
+        console.log('App page loaded', server)
         if (server) {
             router.push(`/workspace/${server?.id}`)
         }
-    }, [server])
+    }, [])
 
 
 

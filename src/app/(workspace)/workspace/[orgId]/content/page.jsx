@@ -13,6 +13,12 @@ import History from './_components/History'
 import { Generate } from './_components/post-generator/Generate'
 import { useContent } from './_provider/contentProvider'
 import { DashboardStatCard } from './_components/DashboardStatCard'
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
+import PostCreator from './_components/PostCreator'
+
+
+
+
 
 
 export default function ContentPage() {
@@ -21,18 +27,17 @@ export default function ContentPage() {
     const router = useRouter()
     const { posts } = useContent()
 
-    const [selected, setSelected] = useState({
-        label: 'dashboard',
-        path: `/workspace/${orgId}/content`,
-        icon: 'square-chart-gantt',
-        component: <Dashboard />
-    })
 
 
     const navigationItems = [
-        { label: 'Dashboard', path: `/workspace/${orgId}/content`, icon: 'square-chart-gantt', component: <Dashboard /> },
-        { label: 'Generate with AI', path: `/workspace/${orgId}/content/generate`, icon: 'sparkles', component: <Generate /> },
+        { label: 'Dashboard', icon: 'square-chart-gantt', component: <Dashboard /> },
+        { label: 'Generate with AI', icon: 'sparkles', component: <Generate /> },
+        { label: 'New Post', icon: 'newspaper', component: <PostCreator onSuccessPost={() => { console.log('@post posted callback') }} /> },
     ];
+
+    const [selected, setSelected] = useState(navigationItems[0])
+
+
 
 
     const metricsData = {
@@ -123,7 +128,24 @@ export default function ContentPage() {
 
                 <div className='flex flex-row items-center gap-2'>
                     <div className="hidden md:flex items-center space-x-2">
-                        {navigationItems?.map((item) => (
+
+                        <ButtonGroup>
+                            {navigationItems?.map((item, index) => (
+                                <Button
+                                    key={index}
+                                    variant={`outline`}
+                                    size='sm'
+                                    className={`border ${selected.label === item.label && 'bg-primary/10 dark:bg-darkFocusColor'} hover:bg-primary/10 dark:hover:bg-darkFocusColor`}
+                                    onClick={() => { setSelected(item) }}
+                                >
+                                    <DynamicIcon name={item.icon} size={18} className='h-10 line-through' />
+                                    {item.label}
+                                </Button>
+                            ))}
+                        </ButtonGroup>
+
+
+                        {/* {navigationItems?.map((item) => (
                             <Button
                                 key={item?.path}
                                 variant={'ghost'}
@@ -136,60 +158,18 @@ export default function ContentPage() {
                                 <DynamicIcon name={item.icon} size={18} className='h-10 line-through' />
                                 <span className=' capitalize'>{item?.label}</span>
                             </Button>
-                        ))}
+                        ))} */}
+
+
                     </div>
                     {/* <Button variant='outline' size='sm' onClick={() => { onOpen('new-post') }} className='hover:dark:bg-darkFocusColor'>New Post</Button> */}
-                    <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={() => { router.push(`/workspace/${orgId}/content/new`) }}
-                        className='bg-primary/10 hover:dark:bg-darkFocusColor border dark:bg-transparent'
-                    >
-                        New Post
-                    </Button>
+
                 </div>
             </div>
 
 
-            <div className='group flex flex-row gap-2'>
-                <DashboardStatCard
-                    title="Total posts"
-                    value={posts?.length}
 
-                    changeType='positive'
-                    icon={'file-text'}
-                    iconColor='#001BB7'
-                    iconClassName='bg-[#172E3A]'
-                />
-                <DashboardStatCard
-                    title="Published Posts"
-                    value={posts?.filter(post => post.status === 'published').length}
-
-                    changeType='positive'
-                    icon={'send'}
-                    iconColor='#007E6E'
-                    iconClassName='bg-[#172E3A]'
-                />
-                <DashboardStatCard
-                    title="Draft posts"
-                    value={posts?.filter(post => post.status === 'draft').length}
-                    changeType='positive'
-                    icon={'notepad-text-dashed'}
-                    iconColor='#FFA239'
-                    iconClassName='bg-[#172E3A]'
-                />
-                <DashboardStatCard
-                    title="AI Generated"
-                    value={posts?.filter(post => post.aitenerated).length}
-
-                    changeType='positive'
-                    icon={'sparkles'}
-                    iconColor='#B4DEBD'
-                    iconClassName='bg-[#172E3A]'
-                />
-            </div>
-
-            <ScrollArea className='h-[70vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md'>
+            <ScrollArea className='h-[70vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md'>
                 {selected.component}
             </ScrollArea>
 

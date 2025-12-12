@@ -13,6 +13,7 @@ import { CustomBadge } from '../../(misc)/_components/CustomBadge'
 import { useModal } from '@/hooks/useModal'
 import { DeletePost } from './DeletePostModal'
 import PostPreviewModal from '../../appointment/_components/PostPreviewModal'
+import { DashboardStatCard } from './DashboardStatCard'
 
 
 export default function Dashboard() {
@@ -150,7 +151,44 @@ export default function Dashboard() {
 
 
     return (
-        <div>
+        <div className='flex flex-col gap-4 p-2'>
+            <div className='group flex flex-row gap-2 '>
+                <DashboardStatCard
+                    title="Total posts"
+                    value={posts?.length}
+
+                    changeType='positive'
+                    icon={'file-text'}
+                    iconColor='#001BB7'
+                    iconClassName='bg-[#172E3A]'
+                />
+                <DashboardStatCard
+                    title="Published Posts"
+                    value={posts?.filter(post => post.status === 'published').length}
+
+                    changeType='positive'
+                    icon={'send'}
+                    iconColor='#007E6E'
+                    iconClassName='bg-[#172E3A]'
+                />
+                <DashboardStatCard
+                    title="Draft posts"
+                    value={posts?.filter(post => post.status === 'draft').length}
+                    changeType='positive'
+                    icon={'notepad-text-dashed'}
+                    iconColor='#FFA239'
+                    iconClassName='bg-[#172E3A]'
+                />
+                <DashboardStatCard
+                    title="AI Generated"
+                    value={posts?.filter(post => post.aitenerated).length}
+
+                    changeType='positive'
+                    icon={'sparkles'}
+                    iconColor='#B4DEBD'
+                    iconClassName='bg-[#172E3A]'
+                />
+            </div>
 
             <DataTable columns={columns} data={posts} />
         </div>
@@ -195,13 +233,11 @@ function DataTable({ columns, data, }) {
     })
 
     return (
-        <div>
-
-
+        <div className=''>
 
             <div className="flex flex-row gap-4 items-center mb-4">
 
-                <div className='flex flex-row w-full gap-4'>
+                <div className='flex flex-row w-full gap-2'>
                     <Input
                         placeholder="Search content by title..."
                         value={(table.getColumn("title")?.getFilterValue()) ?? ""}
@@ -246,7 +282,7 @@ function DataTable({ columns, data, }) {
                 </DropdownMenu>
             </div>
 
-            <div className='rounded-lg border  shadow-card overflow-hidden'>
+            <div className='rounded-md border  shadow-card overflow-hidden'>
                 <Table className='rounded-md'>
                     <TableHeader >
 

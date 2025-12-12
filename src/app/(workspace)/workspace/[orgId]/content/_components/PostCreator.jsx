@@ -1,4 +1,3 @@
-'use client'
 import React from 'react'
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,13 +13,13 @@ import { toast } from 'sonner';
 import { useAction } from '@/hooks/use-action';
 import { useParams, useRouter } from 'next/navigation';
 import { newPost } from '../_actions/new-post';
-import { AIPostGenerator } from '../_components/AIPostGenerator';
+//import { AIPostGenerator } from '../_components/AIPostGenerator';
 import { useSession } from 'next-auth/react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { useContent } from '../_provider/contentProvider';
 import DocumentPicker from '../../(misc)/_components/DocumentPicker';
 
-export default function NewCOntentPage({ post }) {
+export default function PostCreator({ post, onSuccessPost }) {
     const { orgId } = useParams()
     const { data: session } = useSession()
     const { categories, setPosts } = useContent()
@@ -37,8 +36,6 @@ export default function NewCOntentPage({ post }) {
     const contentRef = useRef(null);
     const [preview, setPreview] = useState('')
     const imgRef = useRef(null)
-
-
 
     useEffect(() => {
         if (contentRef.current && content) {
@@ -148,7 +145,7 @@ export default function NewCOntentPage({ post }) {
     const { execute } = useAction(newPost, {
         onSuccess: (data) => {
             setPosts(prev => [data.post, ...prev])
-            router.push(`/workspace/${orgId}/content`)
+            onSuccessPost()
             toast.success('Content published successfully', { id: 'new-post' })
         },
         onError: (error) => {
@@ -158,37 +155,17 @@ export default function NewCOntentPage({ post }) {
 
 
     return (
-        <div className='absolute inset-0 flex flex-col gap-2 p-2' >
+        <div className=''>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between' >
-                <div>
-                    <h2 className='text-xl' > Create new content </h2>
-                    < h2 className='text-xs text-white/50' > Create new content to share your ideas effortlessly.
-                        Craft, publish, and engage your audience in seconds </h2>
-                </div>
+
+            <div className=' absolute inset-0 overflow-hidden' >
 
 
 
-                < div className="flex gap-3" >
-                    <Button variant="outline" disabled={loading} size='sm' onClick={() => setContentCreator(!contentCreator)
-                    } className="gap-2" >
-                        <Sparkles className='' />
-                        Generate with AI
-                    </Button>
-                    < Button variant="outline" disabled={loading} size='sm' onClick={() => handleSave('draft')} className="gap-2" >
-                        {loading === 'draft' ? <Loader className=' animate-spin' /> : <Save />}
-                        Save Draft
-                    </Button>
-                    < Button variant="save" disabled={loading} size='sm' onClick={() => handleSave('published')} className="gap-2" >
 
-                        {loading === 'published' ? <Loader className=' animate-spin' /> : <Send />}
-                        Publish
-                    </Button>
-                </div>
-            </div>
 
-            < ScrollArea className='h-[70vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md overflow-hidden' >
-                <div className=' absolute inset-0 flex flex-row p-2 overflow-hidden' >
+                <div className='flex flex-row p-2 h-full'>
+
 
                     <div className='w-[75%] flex flex-col gap-4' >
                         <div>
@@ -198,7 +175,7 @@ export default function NewCOntentPage({ post }) {
 
                         < div >
                             <Label>Post Description </Label>
-                            < Textarea rows='2' value={postData?.description} onChange={(e) => { setPostData({ ...postData, description: e.target.value }) }} />
+                            < Textarea rows='1' value={postData?.description} onChange={(e) => { setPostData({ ...postData, description: e.target.value }) }} />
                         </div>
 
                         < div className='flex flex-1 flex-col gap-2' >
@@ -209,15 +186,32 @@ export default function NewCOntentPage({ post }) {
                         </div>
                         < div >
                             <Label>Post excerpt </Label>
-                            < Textarea rows='2' value={postData?.excerpt} onChange={(e) => { setPostData({ ...postData, excerpt: e.target.value }) }} />
+                            < Textarea rows='1' value={postData?.excerpt} onChange={(e) => { setPostData({ ...postData, excerpt: e.target.value }) }} />
                         </div>
                     </div>
 
 
-                    < div className='w-[25%] p-2 ml-2' >
+                    < div className='w-[25%] p-2 ml-2 ' >
                         {/* Sidebar */}
                         < div className="flex flex-col gap-4" >
                             {/* <AIPostGenerator onInsert={handleAIInsert} /> */}
+
+
+                            <div className='flex flex-row items-center justify-end gap-2 '>
+                                <Button variant="outline" disabled={loading} size='sm' onClick={() => setContentCreator(!contentCreator)
+                                } className="gap-2" >
+                                    <Sparkles className='' />
+                                </Button>
+                                < Button variant="outline" disabled={loading} size='sm' onClick={() => handleSave('draft')} className="gap-2" >
+                                    {loading === 'draft' ? <Loader className=' animate-spin' /> : <Save />}
+                                    Save Draft
+                                </Button>
+                                < Button variant="save" disabled={loading} size='sm' onClick={() => handleSave('published')} className="gap-2" >
+
+                                    {loading === 'published' ? <Loader className=' animate-spin' /> : <Send />}
+                                    Publish
+                                </Button>
+                            </div>
 
 
                             {/* Cover Image */}
@@ -277,8 +271,10 @@ export default function NewCOntentPage({ post }) {
                         </div>
                     </div>
 
+
                 </div>
-            </ScrollArea >
+
+            </div>
 
         </div>
     )
