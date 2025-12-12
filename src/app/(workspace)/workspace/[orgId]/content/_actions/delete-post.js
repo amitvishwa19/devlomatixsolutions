@@ -17,9 +17,10 @@ const handler = async (data) => {
     let posts
     let post
 
+    console.log('@delete post server action')
+
     try {
 
-        console.log('Delete post')
         post = await db.post.delete({
             where: { id: postId, userId },
         })

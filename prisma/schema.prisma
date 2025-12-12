@@ -1020,7 +1020,7 @@ model Post {
   userId String?
 
   title       String
-  slug        String
+  slug        String     @unique
   description String?
   content     String?
   platform    String?    @default("none")

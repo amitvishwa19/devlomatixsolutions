@@ -1,24 +1,13 @@
 'use client'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import React, { useState } from 'react'
-import { StatsCard } from '../appointment/_components/cards/StatsCard'
 import { Button } from '@/components/ui/button'
-import { useModal } from '@/hooks/useModal'
-import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { DynamicIcon } from 'lucide-react/dynamic';
 import Dashboard from './_components/Dashboard'
-import Template from './_components/Template'
-import History from './_components/History'
-import { Generate } from './_components/post-generator/Generate'
 import { useContent } from './_provider/contentProvider'
-import { DashboardStatCard } from './_components/DashboardStatCard'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
-import PostCreator from './_components/PostCreator'
-
-
-
-
+import PostEditor from './_components/PostEditor'
 
 
 export default function ContentPage() {
@@ -31,8 +20,7 @@ export default function ContentPage() {
 
     const navigationItems = [
         { label: 'Dashboard', icon: 'square-chart-gantt', component: <Dashboard /> },
-        { label: 'Generate with AI', icon: 'sparkles', component: <Generate /> },
-        { label: 'New Post', icon: 'newspaper', component: <PostCreator onSuccessPost={() => { console.log('@post posted callback') }} /> },
+        { label: 'New Post', icon: 'newspaper', component: <PostEditor onSuccessPost={() => { setSelected(navigationItems[0]) }} /> },
     ];
 
     const [selected, setSelected] = useState(navigationItems[0])

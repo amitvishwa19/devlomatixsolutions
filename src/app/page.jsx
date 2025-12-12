@@ -32,7 +32,7 @@ export default function WorkspacePage() {
         if (server) {
             router.push(`/workspace/${server?.id}`)
         }
-    }, [])
+    }, [server])
 
 
 

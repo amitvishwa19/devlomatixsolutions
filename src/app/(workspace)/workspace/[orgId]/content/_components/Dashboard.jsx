@@ -4,23 +4,25 @@ import { flexRender, getFilteredRowModel, getCoreRowModel, getPaginationRowModel
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table"
 import { DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
-import { FileText, MoreHorizontal, Pencil, Trash2, View } from 'lucide-react'
+import { Eye, FileText, MoreHorizontal, Pencil, PencilIcon, Trash2, View } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDispatch, useSelector } from 'react-redux'
 import { Input } from '@/components/ui/input'
 import moment from 'moment'
 import { CustomBadge } from '../../(misc)/_components/CustomBadge'
 import { useModal } from '@/hooks/useModal'
-import { DeletePost } from './DeletePostModal'
-import PostPreviewModal from '../../appointment/_components/PostPreviewModal'
 import { DashboardStatCard } from './DashboardStatCard'
+import PostView from './PostView'
+import PostEdit from './PostEdit'
+import PostDelete from './PostDelete'
+
+
+
 
 
 export default function Dashboard() {
     const { posts } = useContent()
     const { onOpen } = useModal()
-
-
 
     const columns = [
         {
@@ -31,7 +33,7 @@ export default function Dashboard() {
                     <div className='p-2 bg-primary/10 dark:bg-[#133932] m-2 rounded-md'>
                         <FileText size={16} />
                     </div>
-                    {row.original.title}
+                    {row?.original?.title}
                 </div>
             ),
             enableSorting: false,
@@ -97,8 +99,8 @@ export default function Dashboard() {
             header: "Status",
             cell: ({ row }) => (
                 <div className='flex flex-row gap-4 items-center w-[20%]'>
-                    <CustomBadge status={`${row.original.status === 'published' ? 'success' : 'info'}`}>
-                        <span className=' capitalize'> {row.original.status}</span>
+                    <CustomBadge status={`${row?.original?.status === 'published' ? 'success' : 'info'}`}>
+                        <span className=' capitalize'> {row?.original?.status}</span>
                     </CustomBadge>
 
                 </div>
@@ -108,47 +110,20 @@ export default function Dashboard() {
         },
         {
             id: "actions",
+            header: "Actions",
             enableHiding: false,
             cell: ({ row }) => {
-                const appointment = row.original
 
                 return (
-                    <DropdownMenu className='ring-0	flex justify-end'>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 w-8 p-0 ring-0 focus-visible:ring-0  border-none">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className='dark:bg-darkSecondaryBackground w-40'>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <PostPreviewModal data={row.original} />
-                                <View className="h-4 w-4 ml-auto" />
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => {
-                                //dispatch(setSelectedAppointment(JSON.stringify(row.original)))
-                                //router.push(`/workspace/${orgId}/appointment/${row.original.id}`)
-                            }}>
-                                Edit
-                                <Pencil className="h-4 w-4 ml-auto" />
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <DeletePost postId={row.original.id} />
-                                <Trash2 className="h-4 w-4 ml-auto" />
-                            </DropdownMenuItem>
-
-
-
-
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className='flex flex-row gap-4 text-xs'>
+                        <PostView />
+                        <PostEdit post={row?.original} edit={true} />
+                        <PostDelete post={row.original} />
+                    </div>
                 )
             },
         },
     ]
-
-
 
     return (
         <div className='flex flex-col gap-4 p-2'>
@@ -164,7 +139,7 @@ export default function Dashboard() {
                 />
                 <DashboardStatCard
                     title="Published Posts"
-                    value={posts?.filter(post => post.status === 'published').length}
+                    value={posts?.filter(post => post?.status === 'published').length}
 
                     changeType='positive'
                     icon={'send'}
@@ -173,7 +148,7 @@ export default function Dashboard() {
                 />
                 <DashboardStatCard
                     title="Draft posts"
-                    value={posts?.filter(post => post.status === 'draft').length}
+                    value={posts?.filter(post => post?.status === 'draft').length}
                     changeType='positive'
                     icon={'notepad-text-dashed'}
                     iconColor='#FFA239'
@@ -181,7 +156,7 @@ export default function Dashboard() {
                 />
                 <DashboardStatCard
                     title="AI Generated"
-                    value={posts?.filter(post => post.aitenerated).length}
+                    value={posts?.filter(post => post?.aitenerated).length}
 
                     changeType='positive'
                     icon={'sparkles'}

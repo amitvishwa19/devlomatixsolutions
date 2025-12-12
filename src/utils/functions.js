@@ -83,10 +83,10 @@ const getInitials = (fullName) => {
 }
 
 
-async function encryptAndStore(keyName, data, password) {
+export function encryptAndStore(keyName, data, password) {
     // Derive key from password
     const enc = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey(
+    const keyMaterial = crypto.subtle.importKey(
         'raw',
         enc.encode(password),
         { name: 'PBKDF2' },
@@ -95,7 +95,7 @@ async function encryptAndStore(keyName, data, password) {
     );
 
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    const key = await crypto.subtle.deriveKey(
+    const key = crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
             salt,
@@ -110,7 +110,7 @@ async function encryptAndStore(keyName, data, password) {
 
     // Encrypt data
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await crypto.subtle.encrypt(
+    const encrypted = crypto.subtle.encrypt(
         { name: 'AES-GCM', iv },
         key,
         enc.encode(JSON.stringify(data))
@@ -125,13 +125,13 @@ async function encryptAndStore(keyName, data, password) {
     localStorage.setItem(keyName, JSON.stringify(record));
 }
 
-async function retrieveAndDecrypt(keyName, password) {
+export function retrieveAndDecrypt(keyName, password) {
     const stored = localStorage.getItem(keyName);
     if (!stored) return null;
 
     const record = JSON.parse(stored);
     const enc = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey(
+    const keyMaterial = crypto.subtle.importKey(
         'raw',
         enc.encode(password),
         { name: 'PBKDF2' },
@@ -139,7 +139,7 @@ async function retrieveAndDecrypt(keyName, password) {
         ['deriveBits', 'deriveKey']
     );
 
-    const key = await crypto.subtle.deriveKey(
+    const key = crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
             salt: new Uint8Array(record.salt),
@@ -152,7 +152,7 @@ async function retrieveAndDecrypt(keyName, password) {
         ['decrypt']
     );
 
-    const decrypted = await crypto.subtle.decrypt(
+    const decrypted = crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: new Uint8Array(record.iv) },
         key,
         new Uint8Array(record.data)

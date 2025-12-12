@@ -87,7 +87,7 @@ export const OrgProvider = ({ children }) => {
 
     const { execute: getserverInfo, fieldErrors } = useAction(getServerData, {
         onSuccess: (data) => {
-            console.log('@getting servers from orgprovider')
+            //console.log('@getting servers from orgprovider', data)
             setUsers(data.users)
             //updateServer(data?.servers?.find(server => server.default === true))
             updateServer(orgId ? data?.servers?.find(server => server.id === orgId) : data?.servers?.find(server => server.default === true))

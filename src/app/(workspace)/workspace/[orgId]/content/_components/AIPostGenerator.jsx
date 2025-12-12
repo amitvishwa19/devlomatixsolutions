@@ -6,13 +6,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from '@/components/ui/dialog';
 import { Sparkles, Loader2, Copy, Check, ImageIcon, Download, Loader } from 'lucide-react';
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet"
 import { toast } from 'sonner';
 import { useModal } from '@/hooks/useModal';
 import Icon from '@/components/ui/AppIcon';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { Textarea } from '@/components/ui/textarea';
 import { useAction } from '@/hooks/use-action';
-import { generativeAI } from '../_actions/generative-ai';
+import { generateAICintent } from '../_actions/generative-ai';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger, } from "@/components/ui/tabs"
 
 
 const platforms = [
+    { value: 'general', label: 'General', icon: 'wallpaper', color: 'text-[#880808]', chars: 63206 },
     { value: 'facebook', label: 'Facebook', icon: 'facebook', color: 'text-[#1877F2]', chars: 63206 },
     { value: 'twitter', label: 'Twitter/X', icon: 'twitter', color: 'text-[#1DA1F2]', chars: 280 },
     { value: 'instagram', label: 'Instagram', icon: 'instagram', color: 'text-[#833AB4]', chars: 2200 },
@@ -98,7 +100,7 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
     const [selectedTemplate, setSelectedTemplate] = useState('blank');
     const [topicLength, setTopicLength] = useState(0);
     const [formData, setFormData] = useState({
-        platform: 'instagram',
+        platform: 'general',
         template: 'blank',
         category: 'business',
         tone: 'professional',
@@ -114,7 +116,7 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
     const { isOpen, onClose, type: dtype, data } = useModal();
     const isModalOpen = isOpen && dtype === "ai-content-generate";
 
-    const { execute: generateContent } = useAction(generativeAI, {
+    const { execute: generateContent } = useAction(generateAICintent, {
         onSuccess: (data) => {
             console.log(data)
             toast.success(data.imageUrl ? 'Post and image generated!' : 'Post generated successfully!', { id: 'content-generator' });
@@ -156,10 +158,6 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
         } finally {
             setIsGenerating(false)
         }
-
-
-
-
 
         try {
             // const response = await fetch(
@@ -222,11 +220,11 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
 
 
     const handleOnClose = () => {
-        handleClose(false)
+        handleClose(true)
         setGeneratedContent('')
         setGeneratedImageUrl(null)
         setFormData({
-            platform: 'instagram',
+            platform: 'general',
             template: 'blank',
             category: 'business',
             tone: 'professional',
@@ -239,25 +237,26 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
         })
     }
     return (
-        <Dialog open={setOpen} onOpenChange={handleOnClose}>
-            <DialogContent className='dark:bg-darkPrimaryBackground min-w-[60%] max-w-60% min-h-[80%] max-h-[80%] overflow-hidden'>
-                <DialogHeader className={'hidden'}>
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
-                    <DialogDescription>
+        <Sheet open={setOpen} onOpenChange={handleOnClose}>
+            <SheetContent className='dark:bg-darkPrimaryBackground min-w-[40%] max-w-[40%]  overflow-hidden p-4'>
+                <SheetHeader className={'hidden'}>
+                    <SheetTitle>Are you absolutely sure?</SheetTitle>
+                    <SheetDescription>
                         This action cannot be undone. This will permanently delete your account
                         and remove your data from our servers.
-                    </DialogDescription>
-                </DialogHeader>
+                    </SheetDescription>
+                </SheetHeader>
 
                 <div className='flex flex-col'>
                     <div>
-                        <div className='mb-6 flex flex-col justify-center items-center self-center'>
+                        <div className='mb-6 flex flex-col justify-center items-center self-center gap-2'>
                             <div className='flex flex-row items-center gap-2'>
                                 <Sparkles className="h-5 w-5 text-primary" />
                                 AI Content Generator
                             </div>
-                            <div className='text-sm text-muted-foreground'>
-                                Generate engaging social media content and images using Gemini AI.
+                            <div className='text-xs text-muted-foreground text-center'>
+                                Create high-quality content instantly with intelligent AI.
+                                Save time, boost creativity, and write better in seconds.
                             </div>
                         </div>
                     </div>
@@ -276,7 +275,21 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
                             <TabsContent value="prompt">
                                 <div className='mt-6 flex flex-col gap-6 '>
 
+                                    {/* Content idea */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="topic">What's your content about?</Label>
+                                        <Textarea
+                                            id="topic"
+                                            rows='4'
+                                            placeholder="e.g., New product launch, tech tips, motivational quote, or a breif description....."
+                                            value={formData.topic}
+                                            onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
+                                        />
+                                    </div>
 
+
+
+                                    {/* Platform */}
                                     <div>
                                         <Label>Select Platform</Label>
                                         <Select defaultValue={formData.platform} onValueChange={(e) => { setFormData({ ...formData, platform: e }) }}>
@@ -307,6 +320,8 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
                                         </Select>
                                     </div>
 
+
+                                    {/* 
                                     <div>
                                         <Label>Choose Template</Label>
                                         <Select defaultValue={formData.template} onValueChange={(e) => { setFormData({ ...formData, template: e }) }}>
@@ -335,11 +350,13 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
 
                                             </SelectContent>
                                         </Select>
-                                    </div>
+                                    </div> */}
 
+
+                                    {/* Content tone */}
                                     <div>
                                         <Label>Content Tone</Label>
-                                        <Select defaultValue={formData.tone} onValueChange={(e) => { setFormData({ ...formData, tone: e }) }}>
+                                        <Select defaultValue={'professional'} onValueChange={(e) => { setFormData({ ...formData, tone: e }) }}>
                                             <SelectTrigger className="">
                                                 <SelectValue placeholder="Select Tone" />
                                             </SelectTrigger>
@@ -367,8 +384,11 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
                                         </Select>
                                     </div>
 
+
+
                                     {/* Content Length */}
                                     <div>
+                                        <Label>Content length</Label>
                                         <Select defaultValue={formData.contentLength} onValueChange={(e) => { setFormData({ ...formData, contentLength: e }) }}>
                                             <SelectTrigger className="">
                                                 <SelectValue placeholder="Select Content Length" />
@@ -384,17 +404,9 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
                                         </Select>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="topic">What's your content about?</Label>
-                                        <Textarea
-                                            id="topic"
-                                            rows='4'
-                                            placeholder="e.g., New product launch, tech tips, motivational quote..."
-                                            value={formData.topic}
-                                            onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-                                        />
-                                    </div>
 
+
+                                    {/* Image option */}
                                     <div className="flex items-center space-x-2 p-3 rounded-md">
                                         <Checkbox
                                             id="generateImage"
@@ -409,10 +421,13 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
                                         </div>
                                     </div>
 
+
+                                    {/* Action */}
                                     <Button
                                         onClick={handleGenerate}
                                         disabled={isGenerating}
                                         className="w-full gap-2"
+                                        variant='save'
                                     >
                                         {isGenerating ? (
                                             <>
@@ -523,7 +538,7 @@ export function AIPostGenerator({ onInsert, setOpen, handleClose }) {
 
 
                 </div>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     );
 }

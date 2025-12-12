@@ -5,7 +5,11 @@ import { db } from "@/lib/db";
 import { v4 as uuidv4 } from 'uuid'
 import { ROLE } from "@prisma/client";
 
-const GenerativeAI = z.object({
+
+
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+const GenerateAICintent = z.object({
     orgId: z.string(),
     userId: z.string(),
     topic: z.string(),
@@ -14,9 +18,6 @@ const GenerativeAI = z.object({
     contentType: z.string(),
     image: z.boolean()
 });
-
-
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
 const platformGuidelines = {
     twitter: "Keep it under 280 characters. Use hashtags sparingly (2-3 max). Be punchy and engaging.",
@@ -185,4 +186,4 @@ const handler = async (data) => {
 }
 
 
-export const generativeAI = createSafeAction(GenerativeAI, handler);
+export const generateAICintent = createSafeAction(GenerateAICintent, handler);
