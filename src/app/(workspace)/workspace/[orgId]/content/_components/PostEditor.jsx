@@ -39,6 +39,8 @@ export default function PostEditor({ post, onSuccessPost, edit = false }) {
     const [preview, setPreview] = useState('')
     const imgRef = useRef(null)
 
+    console.log(post)
+
     useEffect(() => {
         if (contentRef.current && content) {
             contentRef.current.innerHTML = content;
@@ -53,8 +55,8 @@ export default function PostEditor({ post, onSuccessPost, edit = false }) {
         excerpt: '',
         thumbnail: post?.thumbnail || null,
         file: null,
-        categories: [],
-        tags: []
+        categories: post?.categories || [],
+        tags: post?.tags?.map(tag => tag.name) || []
     })
 
     const handleFileChange = (e) => {
@@ -102,7 +104,12 @@ export default function PostEditor({ post, onSuccessPost, edit = false }) {
     };
 
     const handleRemoveTag = (tagToRemove) => {
-        setTags(tags.filter((tag) => tag !== tagToRemove));
+        //setTags(tags.filter((tag) => tag !== tagToRemove));
+        //console.log(postData?.tags.filter((tag) => tag !== tagToRemove))
+        setPostData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(t => t !== tagToRemove),
+        }));
     };
 
     const handleImageUpload = () => {
@@ -126,6 +133,12 @@ export default function PostEditor({ post, onSuccessPost, edit = false }) {
     const toggleLoading = (buttonId) => {
         setLoading(e);
     };
+
+    async function urlToFile(url, filename) {
+        const res = await fetch(url);
+        const blob = await res.blob();                    // get Blob from URL
+        return new File([blob], filename, { type: blob.type });
+    }
 
     const handleSave = async (e) => {
         if (postData?.title === '') return toast.error('Provide a title for post')
@@ -191,12 +204,14 @@ export default function PostEditor({ post, onSuccessPost, edit = false }) {
                     </div>
 
                     < div className='w-[25%] px-2 ml-2 ' >
+
+
                         {/* Sidebar */}
                         < div className="flex flex-col gap-4" >
                             {/* <AIPostGenerator onInsert={handleAIInsert} /> */}
 
 
-                            <div className='flex flex-row items-center justify-start gap-2 mb-4'>
+                            <div className='flex flex-row items-center justify-end gap-2 mb-4'>
 
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -256,11 +271,11 @@ export default function PostEditor({ post, onSuccessPost, edit = false }) {
                                     className="mb-2"
                                 />
                                 {
-                                    tags.length > 0 && (
+                                    postData?.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-2">
-                                            {postData?.tags?.map((tag) => (
+                                            {postData?.tags?.map((tag, index) => (
                                                 <Badge
-                                                    key={tag}
+                                                    key={index}
                                                     variant="secondary"
                                                     className="dark:bg-darkFocusColor  border dark:border-white/10 dark:text-white py-1 px-2"
                                                 >

@@ -23,9 +23,11 @@ const handler = async (data) => {
     let thumbnailUrl = null
 
     try {
-        console.log('@Post data upsert server action', status)
+        //console.log('@Post data upsert server action', postData)
 
-        if (postData.thumbnail) {
+        //console.log(postData?.thumbnail instanceof File)
+
+        if (postData?.thumbnail) {
             thumbnailUrl = await uploadToBlob({
                 file: postData.thumbnail,
             })
@@ -46,10 +48,11 @@ const handler = async (data) => {
                 description: postData?.description,
                 excerpt: postData?.excerpt,
                 content: postData?.content,
-                thumbnail: thumbnailUrl,
+                thumbnail: thumbnailUrl ? thumbnailUrl : postData?.thumbnail,
                 status,
-                categories: { connect: categoryIds.map(id => ({ id })) },
+                categories: { set: [], connect: categoryIds.map(id => ({ id })) },
                 tags: {
+                    set: [],
                     connectOrCreate: postData.tags.map(tagName => ({
                         where: { slug: slug(tagName) },
                         create: { name: tagName, slug: slug(tagName) }

@@ -12,8 +12,7 @@ export default function TaxanomyPage() {
     const [active, setActive] = useState({ title: 'dashboard', icon: 'layout-dashboard', component: <TaxonomyDashboard /> })
     const nav = [
         { title: 'dashboard', icon: 'layout-dashboard', component: <TaxonomyDashboard /> },
-        { title: 'categories', icon: 'folder-closed', component: <CatogeriesTree /> },
-        { title: 'tags', icon: 'tag', component: <TagsComponent /> }
+        { title: 'categories', icon: 'folder-closed', component: <CatogeriesTree /> }
     ]
 
 

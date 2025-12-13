@@ -16,6 +16,7 @@ module.exports = {
       },
       colors: {
         darkPrimaryBackground: '#0E141B',
+        //darkPrimaryBackground: '#101318',
         darkSecondaryBackground: '#171F26',
         darkFocusColor: '#1C2736',
         border: "hsl(var(--border))",

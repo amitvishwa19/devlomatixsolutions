@@ -16,7 +16,7 @@ export default function PostEdit({ post }) {
                 <DialogTrigger asChild>
                     <Pencil size={16} className=' cursor-pointer' />
                 </DialogTrigger>
-                <DialogContent className="min-h-[90%] min-w-[90%] [&>button:last-child]:hidden ">
+                <DialogContent className="min-h-[96%] min-w-[96%] [&>button:last-child]:hidden ">
                     <DialogTitle className='hidden' />
                     <PostEditor post={post} onSuccessPost={() => { }} edit={true} />
                 </DialogContent>

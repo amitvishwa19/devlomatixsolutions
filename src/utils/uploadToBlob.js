@@ -30,6 +30,6 @@ export async function uploadToBlob({ file, name = null, type = 'vercel', path = 
         return imgUrl;
     } catch (error) {
         console.error('❌ Blob upload failed:', error);
-        throw error;
+        return null;
     }
 }

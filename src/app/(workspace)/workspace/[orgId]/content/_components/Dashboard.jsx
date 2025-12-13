@@ -116,7 +116,7 @@ export default function Dashboard() {
 
                 return (
                     <div className='flex flex-row gap-4 text-xs'>
-                        <PostView />
+                        <PostView post={row?.original} onClose={() => { console.log('post view close') }} />
                         <PostEdit post={row?.original} edit={true} />
                         <PostDelete post={row.original} />
                     </div>

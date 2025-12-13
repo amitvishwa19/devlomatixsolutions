@@ -968,19 +968,16 @@ model Category {
   name        String
   slug        String  @unique
   description String?
-  icon        String? // "hospital", "surgery", etc.
-  color       String? // "#3B82F6"
+  icon        String?
+  color       String?
 
-  // ✅ Self-referential hierarchy
   parentId String?
   parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
   children Category[] @relation("CategoryChildren")
 
-  // Relations
-  posts Post[] // Many-to-many with posts
+  posts Post[]
   tags  Tag[]
 
-  // Metadata
   level     Int     @default(0) // 0=root, 1=sub, 2=sub-sub
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
@@ -988,7 +985,7 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([parentId, sortOrder]) // Siblings unique sort order
+  //@@unique([parentId, sortOrder]) // Siblings unique sort order
   @@index([parentId]) // Helpful for lookups (get children)
 }
 

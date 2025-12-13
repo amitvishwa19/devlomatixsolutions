@@ -12,14 +12,25 @@ import { Loader, Plus, Save } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useTaxonomy } from '../../_provider/taxanomyProvider';
+import { Switch } from '@/components/ui/switch';
+
+const predefinedColors = [
+    '#2563EB', '#DC2626', '#059669', '#D97706',
+    '#7C3AED', '#DB2777', '#0891B2', '#65A30D'
+];
 
 const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory, allCategories = [], loading }) => {
     const { tags } = useTaxonomy()
     const [formData, setFormData] = useState({
+        id: '',
         name: '',
         description: '',
         tags: [],
-        parentId: null
+        parentId: null,
+        color: '#FFFF',
+        icon: '',
+        isActive: true,
+        sortOrder: 0
     });
 
     const [errors, setErrors] = useState({});
@@ -39,22 +50,36 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                 id: category?.id,
                 name: category?.name || '',
                 description: category?.description || '',
+                color: category?.color || '#FFFF',
+                icon: category.icon,
                 tags: category?.tags || [],
-                parentId: category?.parentId || null
+                parentId: category?.parentId || null,
+                isActive: category.status || true,
+                sortOrder: category.sortOrder || 0
             });
         } else if (mode === 'subcategory' && parentCategory) {
             setFormData({
+                id: '',
                 name: '',
                 description: '',
                 tags: [],
-                parentId: parentCategory?.id || null
+                parentId: parentCategory?.id || null,
+                color: '#FFFF',
+                icon: '',
+                isActive: true,
+                sortOrder: 0
             });
         } else {
             setFormData({
+                id: '',
                 name: '',
                 description: '',
                 tags: [],
-                parentId: null
+                parentId: null,
+                color: '#FFFF',
+                icon: '',
+                isActive: true,
+                sortOrder: 0
             });
         }
         setErrors({});
@@ -88,6 +113,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
     )?.filter(cat => !cat?.isArchived); // Filter out archived categories
 
     const handleChange = (e) => {
+
         const { name, value } = e?.target;
         setFormData(prev => ({
             ...prev,
@@ -154,54 +180,25 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
     return (
 
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-            <DialogTrigger asChild>
+            {/* <DialogTrigger asChild>
                 <Button variant='outline'>
                     <Plus className='mr-2 h-4 w-4' />
-                    Add Category
+                    Add Category aa
                 </Button>
-            </DialogTrigger>
-            <DialogContent className='dark:bg-darkPrimaryBackground p-2 w-full max-w-lg'>
-                <DialogHeader className={'p-4'}>
-                    <DialogTitle>Select your catogory</DialogTitle>
-                    <DialogDescription>
+            </DialogTrigger> */}
+            <DialogContent className='dark:bg-darkPrimaryBackground p-2 sm:max-w-[500px] '>
+                <DialogHeader className={'p-2'}>
+                    <DialogTitle>Create Category</DialogTitle>
+                    {/* <DialogDescription>
                         This action cannot be undone. This will permanently delete your account
                         and remove your data from our servers.
-                    </DialogDescription>
+                    </DialogDescription> */}
                 </DialogHeader>
 
                 <div>
-                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-2 space-y-6">
 
-                        {/* Parent Category Selector */}
-                        {mode !== 'subcategory' && selectableCategories?.length > 0 && (
-                            <div>
-                                <label htmlFor="parentId" className="block text-sm font-medium text-text-primary mb-2">
-                                    Parent Category
-                                </label>
 
-                                <Select defaultValue={formData?.parentId || ''} onValueChange={handleParentChange} disabled={loading}>
-                                    <SelectTrigger className="">
-                                        <SelectValue placeholder="Select Parent Category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectLabel>None (Root Category)</SelectLabel>
-                                            {selectableCategories?.map((cat, index) => (
-                                                <SelectItem key={index} value={cat?.id}>
-                                                    {'└─'?.repeat(cat?.level)} {cat?.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {formData?.parentId && (
-                                    <p className="mt-1.5 text-sm text-text-secondary flex items-center gap-1">
-                                        <Icon name="InformationCircleIcon" size={14} variant="solid" className="text-primary" />
-                                        Will be nested under "{getSelectedParentName()}"
-                                    </p>
-                                )}
-                            </div>
-                        )}
 
                         {/* Category Name */}
                         <div>
@@ -219,7 +216,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
 
                             />
                             {errors?.name && (
-                                <p className="mt-1.5 text-sm text-error flex items-center gap-1">
+                                <p className="mt-1.5 text-xs text-error flex items-center gap-1 text-muted-foreground">
                                     <Icon name="ExclamationCircleIcon" size={14} variant="solid" />
                                     {errors?.name}
                                 </p>
@@ -242,47 +239,75 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                             />
                         </div>
 
-                        {/* Tags */}
+
+
+                        {/* Icon Name */}
                         <div>
-                            <label className="block text-sm font-medium text-text-primary mb-3">
-                                Assign Tags
+                            <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
+                                Icon <span className="text-error"></span>
                             </label>
+                            <Input
+                                type="text"
+                                id="icon"
+                                name="icon"
+                                value={formData?.icon}
+                                onChange={handleChange}
+                                placeholder="e.g consulting"
+                                disabled={loading}
+
+                            />
+                            {errors?.name && (
+                                <p className="mt-1.5 text-sm text-error flex items-center gap-1">
+                                    <Icon name="ExclamationCircleIcon" size={14} variant="solid" />
+                                    {errors?.name}
+                                </p>
+                            )}
+                            <span className='text-xs text-muted-foreground'>Lucide icon name (optional)</span>
+                        </div>
+
+
+                        {/* Color Picker */}
+                        <div>
+                            <label className="block text-sm font-medium text-text-primary mb-2">
+                                Tag Color
+                            </label>
+
+                            <div className="flex items-center gap-3 mb-3">
+                                <Input
+                                    type="color"
+                                    name="color"
+                                    value={formData?.color}
+                                    onChange={handleChange}
+                                    className="w-10 h-10   p-0 rounded-md cursor-pointer"
+                                />
+                                <Input
+                                    type="text"
+                                    name='color'
+                                    value={formData?.color}
+                                    onChange={handleChange}
+                                    placeholder="#2563EB"
+
+                                />
+                            </div>
                             <div className="flex flex-wrap gap-2">
-                                {tags?.map((tag) => {
-                                    const isSelected = formData?.tags?.some(t => t?.id === tag?.id);
-                                    return (
-                                        <Badge
-                                            key={tag?.id}
-                                            type="button"
-                                            onClick={() => toggleTag(tag)}
-                                            className={`
-                                                        inline-flex items-center gap-1.5 px-2 py-2 rounded-lg text-sm font-medium cursor-default
-                                                        transition-all duration-200 ease-out
-                                                        ${isSelected
-                                                    ? 'border' : 'opacity-60 hover:opacity-100'
-                                                }
-                                            `}
-                                            style={{
-                                                backgroundColor: `${tag?.color}20`,
-                                                color: tag?.color,
-                                                ringColor: isSelected ? tag?.color : 'transparent'
-                                            }}
-                                        >
-                                            <Icon
-                                                name={isSelected ? 'CheckIcon' : 'TagIcon'}
-                                                size={14}
-                                                variant="solid"
-                                            />
-                                            {tag?.name}
-                                        </Badge>
-                                    );
-                                })}
+                                {predefinedColors?.map((color) => (
+                                    <Button
+                                        key={color}
+                                        type="button"
+                                        name='color'
+                                        onClick={() => { setFormData({ ...formData, color: color }) }}
+                                        className={`w-8 h-8 rounded border-2 transition-all ${formData?.color === color ? 'border-text-primary scale-110' : 'border-border hover:scale-105'
+                                            }`}
+                                        style={{ backgroundColor: color }}
+                                        aria-label={`Select color ${color}`}
+                                    />
+                                ))}
                             </div>
                         </div>
 
                         {/* Parent Category Info for Subcategory Mode */}
                         {mode === 'subcategory' && parentCategory && (
-                            <div className="p-4 bg-muted rounded-lg border border-border">
+                            <div className="p-4 bg-muted dark:bg-darkSecondaryBackground rounded-lg border border-border">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Icon name="InformationCircleIcon" size={16} variant="solid" className="text-primary" />
                                     <span className="text-sm font-medium text-text-primary">Parent Category</span>
@@ -290,6 +315,21 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                                 <p className="text-sm text-text-secondary">{parentCategory?.name}</p>
                             </div>
                         )}
+
+                        {/* Status */}
+                        <div className='flex items-center justify-between rounded-lg border p-4'>
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
+                                    Status <span className="text-error"></span>
+                                </label>
+                                <span className='text-xs text-muted-foreground'>
+                                    Inactive categories won't be visible to users
+                                </span>
+                            </div>
+                            <Switch checked={formData.isActive} onCheckedChange={(e) => { setFormData({ ...formData, isActive: e }) }} />
+
+
+                        </div>
 
 
                     </form>

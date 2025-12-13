@@ -20,6 +20,8 @@ import { updateCategory } from '../../_actions/update-category';
 import { useTaxonomy } from '../../_provider/taxanomyProvider';
 import { slug } from '@/utils/functions';
 import { deleteCategory } from '../../_actions/delete-category';
+import { upsertCategory } from '../../_actions/upsert-category';
+import CategoryTree from './CategoryTree';
 
 const CategoryTreeInteractive = ({ initialCategories }) => {
     //const [categories, setCategories] = useState(initialCategories);
@@ -179,16 +181,21 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
         });
     };
 
-    const { execute: addCategory } = useAction(newCategory, {
+    const { execute } = useAction(upsertCategory, {
         onSuccess: (data) => {
-            console.log(data)
             setLoading(false)
             setModalState({ ...modalState, isOpen: false })
-            setCategories(prev => [data.category, ...prev])
+            const newItem = data.category
+            setCategories(prev =>
+                prev.some(item => item.id === newItem.id)
+                    ? prev.map(item => (item.id === newItem.id ? { ...item, ...newItem } : item))
+                    : [newItem, ...prev])
+
+
             toast.success('Category created successfully', { id: 'new-cat' });
         },
         onError: (error) => {
-            toast.error(`Oops!, something went wrong, please try again later`, { id: 'new-cat' });
+            toast.error(`Category already avaliable`, { id: 'new-cat' });
             setLoading(false)
         }
     })
@@ -212,15 +219,9 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
     })
 
     const handleSaveCategory = async (formData) => {
-
-        if (modalState?.mode === 'edit') {
-            setLoading(true)
-            await editCategory({ formData })
-        } else {
-            setLoading(true)
-            await addCategory({ formData: { ...formData, slug: slug(formData.name) }, orgId: 'org' })
-            console.log(formData)
-        }
+        console.log(formData)
+        setLoading(true)
+        await execute({ formData })
     };
 
     const handleDragStart = (category) => {
@@ -292,8 +293,6 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                     {categories?.length > 0 ? (
                         <div className="space-y-1">
                             {categories?.map((category) => (
-
-
                                 <CategoryNode
                                     key={category?.id}
                                     category={category}

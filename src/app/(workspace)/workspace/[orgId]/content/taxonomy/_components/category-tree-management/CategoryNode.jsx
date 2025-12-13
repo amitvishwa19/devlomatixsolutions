@@ -4,6 +4,10 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@/components/ui/AppIcon';
 import { Button } from '@/components/ui/button';
+import { GripVertical } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, } from "@/components/ui/tooltip"
+import { ActionTooltip } from '@/components/global/ActionTooltip';
+import { DynamicIcon } from 'lucide-react/dynamic';
 
 const CategoryNode = ({
     category,
@@ -78,14 +82,16 @@ const CategoryNode = ({
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 onClick={handleSelect}
-                className={`border
+                className={`
                             flex items-center gap-2 py-2.5 px-3 rounded-md cursor-pointer
                             transition-all duration-200 ease-out
-                            ${isSelected ? 'bg-primary/20 dark:bg-darkFocusColor ring-[0.8px]' : 'hover:bg-primary/10 dark:hover:bg-darkFocusColor text-text-primary'}
+                            ${isSelected ? 'bg-primary/20 dark:bg-darkFocusColor ' : 'hover:bg-primary/10 dark:hover:bg-darkFocusColor text-text-primary'}
                             ${isDragging ? 'opacity-50' : 'opacity-100'}
                         `}
                 style={{ paddingLeft: `${level * 1 + 12}px` }}
             >
+
+                <GripVertical className="h-4 w-4 text-muted-foreground  group-hover:opacity-100 transition-opacity cursor-grab" />
 
                 {/* Expand/Collapse Button */}
                 <button
@@ -108,12 +114,19 @@ const CategoryNode = ({
                 </button>
 
                 {/* Folder Icon */}
-                <Icon
-                    name={isExpanded ? 'FolderOpenIcon' : 'FolderIcon'}
-                    size={20}
-                    variant={isSelected ? 'solid' : 'outline'}
-                    className={`flex-shrink-0 `}
-                />
+
+
+                {category?.icon ? (
+                    <DynamicIcon name={category?.icon} size={16} color={category?.color} />
+                ) : (
+                    <Icon
+                        name={isExpanded ? 'FolderOpenIcon' : 'FolderIcon'}
+                        size={20}
+                        variant={isSelected ? 'solid' : 'outline'}
+                        className={`flex-shrink-0 `}
+                        color={category?.color}
+                    />
+                )}
 
                 {/* Category Name */}
                 <span className={`flex-1 text-sm font-medium truncate text-text-primary`}>
@@ -145,39 +158,48 @@ const CategoryNode = ({
                 {/* Action Buttons */}
                 {isHovered && !isDragging && (
                     <div className="flex flex-row gap-2">
-                        <Icon name="PlusIcon" size={16} variant="outline" onClick={(e) => handleAction(e, onAddSubcategory)} />
-                        <Icon name="PencilIcon" size={16} variant="outline" onClick={(e) => handleAction(e, onEdit)} />
-                        <Icon name="ArchiveBoxIcon" size={16} variant="outline" onClick={(e) => handleAction(e, onArchive)} />
-                        <Icon name="TrashIcon" size={16} variant="outline" onClick={(e) => handleAction(e, onDelete)} />
+                        <ActionTooltip label='Create new Category'>
+                            <Icon name="PlusIcon" size={16} variant="outline" onClick={(e) => handleAction(e, onAddSubcategory)} />
+                        </ActionTooltip>
+                        <ActionTooltip label='Edit Category'>
+                            <Icon name="PencilIcon" size={16} variant="outline" onClick={(e) => handleAction(e, onEdit)} />
+                        </ActionTooltip>
+                        <ActionTooltip label='Delete Category'>
+                            <Icon name="TrashIcon" size={16} variant="outline" onClick={(e) => handleAction(e, onDelete)} />
+                        </ActionTooltip>
+
+
 
                     </div>
                 )}
             </div>
 
             {/* Render Children */}
-            {isExpanded && hasChildren && (
-                <div className="mt-1">
-                    {category?.children?.map((child) => (
-                        <CategoryNode
-                            key={child?.id}
-                            category={child}
-                            level={level + 1}
-                            onSelect={onSelect}
-                            selectedId={selectedId}
-                            onExpand={onExpand}
-                            expandedIds={expandedIds}
-                            onDragStart={onDragStart}
-                            onDragOver={onDragOver}
-                            onDrop={onDrop}
-                            onAddSubcategory={onAddSubcategory}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                            onArchive={onArchive}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
+            {
+                isExpanded && hasChildren && (
+                    <div className="ml-4 mt-1">
+                        {category?.children?.map((child) => (
+                            <CategoryNode
+                                key={child?.id}
+                                category={child}
+                                level={level + 1}
+                                onSelect={onSelect}
+                                selectedId={selectedId}
+                                onExpand={onExpand}
+                                expandedIds={expandedIds}
+                                onDragStart={onDragStart}
+                                onDragOver={onDragOver}
+                                onDrop={onDrop}
+                                onAddSubcategory={onAddSubcategory}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                onArchive={onArchive}
+                            />
+                        ))}
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

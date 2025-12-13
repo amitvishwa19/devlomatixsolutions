@@ -30,7 +30,8 @@ export function MultiSelect({
 
     const handleRemove = (value, e) => {
         e.stopPropagation();
-        onChange(selected.filter((item) => item !== value));
+        //console.log('remove cat', value)
+        onChange(selected.filter((item) => item.id !== value.id));
     };
 
     const handleClearAll = (e) => {
@@ -51,7 +52,7 @@ export function MultiSelect({
                     role="combobox"
                     aria-expanded={open}
                     className={cn(
-                        "w-full justify-between min-h-10 h-auto py-2  dark:bg-darkSecondaryBackground flex flex-row items-center border rounded-md cursor-pointer"
+                        "w-full justify-between min-h-10 h-auto py-2  dark:bg-transparent flex flex-row items-center border rounded-md cursor-pointer"
                         , selected?.length > 0 ? "px-2" : "px-3", className)}
                 >
                     <div className="flex flex-wrap gap-1.5 items-center">
@@ -65,8 +66,7 @@ export function MultiSelect({
                                     <Badge key={item.id} className={'dark:bg-darkFocusColor  border dark:border-white/10 dark:text-white py-1 px-2 flex flex-row items-center gap-2'}>
                                         <span className="dark:text-white/80">{item.name}</span>
                                         <CircleX size={14} className="cursor-pointer" onClick={(e) => {
-                                            e.stopPropagation()
-                                            console.log('remove-cat')
+                                            handleRemove(item, e)
                                         }} />
                                     </Badge>
                                 ))}
