@@ -15,8 +15,12 @@ import StatusSelector from './_components/StatusSelector'
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { DatePicker } from '@/components/global/DatePicker'
 import { setSelectedAppointment, setSelectedAppointments } from './_redux/appointment-slice'
-import { Calendar, FilePenLine, MoreHorizontal, Trash2, View } from 'lucide-react'
+import { Calendar, CalendarRange, Eye, FilePenLine, MoreHorizontal, Pencil, Trash2, Trash2Icon, View } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
+import { ActionTooltip } from '@/components/global/ActionTooltip'
+import BookAppointment from './_components/appointment-mamager/BookAppointment'
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
+
 
 export default function Appointments() {
     const { server } = useOrg()
@@ -33,6 +37,7 @@ export default function Appointments() {
     const data = serverAppointments?.map((item) => {
         return {
             id: item?.id,
+            uuid: item?.patient?.uuid,
             patient: item?.patient?.displayName,
             patientDetails: item?.patient,
             doctor: 'Dr. ' + item?.doctor?.displayName,
@@ -41,6 +46,7 @@ export default function Appointments() {
             slot: item?.slot,
             time: item?.time,
             type: item?.type,
+            visitType: item?.visitType,
             note: item?.note,
             additionalNote: item?.additionalNote,
             doctorNote: item?.doctorNote,
@@ -50,43 +56,68 @@ export default function Appointments() {
     })
 
     const columns = [
-
         {
-            id: "select",
+            id: "patient",
+            accessorKey: "patient",
+            header: "Patient",
             cell: ({ row }) => (
                 <div className='flex flex-row gap-4 items-center'>
                     <Avatar className='rounded-md h-8 w-8'>
                         <AvatarImage src={row?.original?.patientDetails?.avatar} alt="@shadcn" />
                         <AvatarFallback className='rounded-md'>{row?.original?.patientDetails?.displayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <DynamicIcon name={row.original.type.icon} size={18} className='h-10 line-through' />
+                    <div className='flex flex-col items-start'>
+                        <span>{row.original.patient}</span>
+                        <span className='text-xs text-muted-foreground'>{row.original.uuid}</span>
+                    </div>
                 </div>
             ),
-            enableSorting: false,
-            enableHiding: false,
+            enableSorting: true,
+            enableHiding: true,
         },
+
         {
-            accessorKey: "patient",
-            header: "Patient",
-        },
-        {
+            id: "doctor",
             accessorKey: "doctor",
             header: "Doctor",
+            cell: ({ row }) => (
+                <div className='flex flex-col items-start'>
+                    <span>{row.original.doctor}</span>
+                    <span className='text-xs text-muted-foreground'>{row.original.doctorDetails?.uuid}</span>
+                </div>
+            )
+        },
+        {
+            id: "info",
+            header: "Appointment Info",
+            cell: ({ row }) => (
+                <div className='flex flex-col '>
+                    <div>
+                        {moment(row.original.date).format("Do MMM YY")} -
+                        {row.original.time}
+                    </div>
+                    <span className=' capitalize text-xs text-muted-foreground'>{row.original.visitType}</span>
+                </div>
+            )
+        },
+        {
+            id: "note",
+            header: "Desctiption",
+            cell: ({ row }) => (
+                <div className='flex flex-wrap text-wrap overflow-hidden w-80 text-xs text-muted-foreground'>
+                    <div>
+                        {row.original.note}
+                    </div>
 
+                </div>
+            )
         },
-        {
-            id: "date",
-            header: "Date",
-            cell: ({ row }) => moment(row.original.date).format("Do MMM YY")
-        },
-        {
-            accessorKey: "time",
-            header: "Time",
-        },
+
         {
             accessorKey: "status",
             header: "Status",
             cell: ({ row }) => <StatusSelector
+                status={row.original.status}
                 title={row.original.status}
                 id={row.original.id}
             />
@@ -94,32 +125,24 @@ export default function Appointments() {
         {
             id: "actions",
             enableHiding: false,
+            header: "Actions",
             cell: ({ row }) => {
                 const appointment = row.original
 
                 return (
-                    <DropdownMenu className='ring-0	flex justify-end'>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 w-8 p-0 ring-0 focus-visible:ring-0  border-none">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className='dark:bg-darkSecondaryBackground w-40'>
-                            <DropdownMenuItem onClick={() => {
-                                dispatch(setSelectedAppointment(JSON.stringify(row.original)))
-                                router.push(`/workspace/${orgId}/appointment/${row.original.id}`)
-                            }}>View
-                                <View className="h-4 w-4 ml-auto" />
-                            </DropdownMenuItem>
+                    <div className='flex flex-row items-center gap-4'>
+                        <ActionTooltip label={'Edit Appointment'}>
+                            <Eye size={18} className=' cursor-pointer' onClick={() => { onOpen('view-appointment', { appointment }) }} />
+                        </ActionTooltip>
 
-                            <DropdownMenuItem onClick={() => {
-                                onOpen("deleteuser", { id: row.original.id })
-                            }}>Delete
-                                <Trash2 className="h-4 w-4 ml-auto" />
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        <ActionTooltip label={'Edit Appointment'}>
+                            <Pencil size={18} className=' cursor-pointer' />
+                        </ActionTooltip>
+
+                        <ActionTooltip label={'Delete Appointment'}>
+                            <Trash2Icon size={18} className=' cursor-pointer' onClick={() => { onOpen('delete-appointment', { appointmentId: row.original.id }) }} />
+                        </ActionTooltip>
+                    </div>
                 )
             },
         },
@@ -135,15 +158,8 @@ export default function Appointments() {
                     <h2 className='text-xs text-white/50'>Manage all your appointments</h2>
                 </div>
                 <div className='flex flex-row gap-2'>
-                    {/* <Button variant={'outline'} size={'sm'} className='' onClick={() => {
-                        //onOpen('appointment-crud', { type: 'add' })
-                        router.push(`/workspace/${orgId}/appointment/new`)
-                    }}>
-                        Book Appointment
-                    </Button> */}
-
-                    <Button variant={'save'} size={'sm'} className='' onClick={() => { onOpen('add-appointment-modal', 'add') }}>
-                        <Calendar />
+                    <Button variant='save' size='sm' onClick={() => { onOpen('book-appointment') }}>
+                        <CalendarRange />
                         Book Appointment
                     </Button>
                 </div>
@@ -168,7 +184,6 @@ function DataTable({ columns, data, }) {
     const [selectedDate, setSelectedDate] = useState(null);
     const selectedAppointments = useSelector((state) => state.appointment.selectedAppointments)
     const dispatch = useDispatch()
-
 
     useEffect(() => {
 
@@ -224,36 +239,46 @@ function DataTable({ columns, data, }) {
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onGlobalFilterChange: setGlobalFilter,
-        //onRowSelectionChange: setRowSelection,
+
         state: {
             pagination,
         },
         state: {
             sorting,
+            globalFilter,
             columnFilters,
             columnVisibility,
         },
     })
 
+    const appointmentFilter = [
+        { value: 'all', function: (e) => { setSelector(e) } },
+        { value: 'yesterday', function: (e) => { setSelector(e) } },
+        { value: 'today', function: (e) => { setSelector(e) } },
+        { value: 'tomorrow', function: (e) => { setSelector(e) } },
+        { value: 'week', function: (e) => { setSelector(e) } },
+        { value: 'month', function: (e) => { setSelector(e) } }
+    ]
+
     return (
         <div>
 
-            <div className='flex flex-row'>
-                <div className='flex flex-row gap-x-2 w-full'>
+            <div className='flex flex-row justify-between'>
+                <ButtonGroup size='sm'>
+                    {appointmentFilter.map((item) => (
+                        <Button
+                            key={item.value}
+                            variant={'outline'}
+                            size={'sm'}
+                            className={` capitalize w-32 border hover:bg-primary/10 hover:dark:bg-darkFocusColor ${selector === item.value && 'bg-primary/10 dark:bg-darkFocusColor'}`}
+                            onClick={() => { item.function(item.value) }}
+                        >
+                            {item.value}
+                        </Button>
+                    ))}
+                </ButtonGroup>
 
-                    <SelectorButton title='all' onClick={(e) => { setSelector(e) }} value={selector} />
 
-                    <SelectorButton title='yesterday' onClick={(e) => { setSelector(e) }} value={selector} />
-
-                    <SelectorButton title='today' onClick={(e) => { setSelector(e) }} value={selector} />
-
-                    <SelectorButton title='tomorrow' onClick={(e) => { setSelector(e) }} value={selector} />
-
-                    <SelectorButton title='week' onClick={(e) => { setSelector(e) }} value={selector} />
-
-                    <SelectorButton title='month' onClick={(e) => { setSelector(e) }} value={selector} />
-
-                </div>
                 <DatePicker onChange={(e) => { setSelector('date'); setSelectedDate(e) }} />
             </div>
 
@@ -261,33 +286,10 @@ function DataTable({ columns, data, }) {
 
                 <div className='flex flex-row justify-evenly gap-4'>
                     <Input
-                        placeholder="Patient..."
-                        value={(table.getColumn("patient")?.getFilterValue()) ?? ""}
-                        onChange={(event) =>
-                            table.getColumn("patient")?.setFilterValue(event.target.value)
-
-                        }
-                        className="max-w-sm"
-                    />
-
-                    <Input
-                        placeholder="Doctor..."
-                        value={(table.getColumn("doctor")?.getFilterValue()) ?? ""}
-                        onChange={(event) =>
-                            table.getColumn("doctor")?.setFilterValue(event.target.value)
-
-                        }
-                        className="max-w-sm"
-                    />
-
-                    <Input
-                        placeholder="Status..."
-                        value={(table.getColumn("status")?.getFilterValue()) ?? ""}
-                        onChange={(event) =>
-                            table.getColumn("status")?.setFilterValue(event.target.value)
-
-                        }
-                        className="max-w-sm"
+                        placeholder="Search Appointment..."
+                        value={globalFilter ?? ''}
+                        onChange={(event) => table.setGlobalFilter(String(event.target.value))}
+                        className=""
                     />
 
                 </div>

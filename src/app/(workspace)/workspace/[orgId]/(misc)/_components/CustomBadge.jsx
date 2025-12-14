@@ -11,10 +11,11 @@ export function CustomBadge({ status, children }) {
         success: "bg-green-500/10 text-green-500 border-green-500/20",
         error: "bg-red-500/10 text-red-500 border-red-500/20",
         progress: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+        scheduled: "bg-blue-500/10 text-blue-500 border-blue-500/20",
     };
 
     return (
-        <Badge className={cn("border capitalize", statusColors[status])}>
+        <Badge className={cn("border capitalize  hover:bg-transparent", statusColors[status])}>
             {children}
         </Badge>
     )

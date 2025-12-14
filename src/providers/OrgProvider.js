@@ -23,8 +23,8 @@ export const OrgProvider = ({ children }) => {
     const [refresh, setRefresh] = useState(false)
     const { data: session } = useSession()
     const [users, setUsers] = useState([])
-    const [server, setServer] = useState(localStorage.getItem('server') ? JSON.parse(localStorage.getItem('server')) : null)
-    const [servers, setServers] = useState(localStorage.getItem('servers') ? JSON.parse(localStorage.getItem('servers')) : [])
+    const [server, setServer] = useState(null)
+    const [servers, setServers] = useState([])
     const [loading, setLoading] = useState(false)
     const [loadingData, setLoadingData] = useState(false)
     const [chatMessages, setChatMessages] = useState([])
@@ -34,7 +34,7 @@ export const OrgProvider = ({ children }) => {
     const { orgId } = useParams()
 
     useEffect(() => {
-        //console.log('@session orgprovider', session, localStorage.getItem('server'))
+        console.log('@session orgprovider', session, localStorage.getItem('server'))
         refreshServer()
     }, [session])
 
@@ -87,10 +87,9 @@ export const OrgProvider = ({ children }) => {
 
     const { execute: getserverInfo, fieldErrors } = useAction(getServerData, {
         onSuccess: (data) => {
-            //console.log('@getting servers from orgprovider', data)
+            console.log('@getserverInfo', data)
             setUsers(data.users)
-            //updateServer(data?.servers?.find(server => server.default === true))
-            updateServer(orgId ? data?.servers?.find(server => server.id === orgId) : data?.servers?.find(server => server.default === true))
+            updateServer(data?.servers?.find(server => server.default === true))
             updateServers(data.servers)
         },
         onError: (error) => {

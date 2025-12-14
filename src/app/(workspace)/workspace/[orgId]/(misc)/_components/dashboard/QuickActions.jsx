@@ -14,7 +14,7 @@ export default function QuickActions() {
 
     const actions = [
         {
-            id: 'add-appointment-modal',
+            id: 'quick-appointment',
             label: "Book Appointment",
             icon: Calendar,
             variant: "outline",
@@ -44,7 +44,7 @@ export default function QuickActions() {
         console.log('handleActionClick Clicked:', action.id)
         // do something based on action.id or action.label
 
-        if (action.id === 'add-appointment-modal') {
+        if (action.id === 'quick-appointment') {
             onOpen(action.id)
         }
 
