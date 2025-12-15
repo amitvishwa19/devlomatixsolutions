@@ -374,21 +374,8 @@ export default function MedicalRecordsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
-
-
-            <main className="pt-20 px-6 pb-12">
-                <div className="max-w-7xl mx-auto">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-foreground mb-2">Medical Records</h1>
-                        <p className="text-text-secondary">
-                            Comprehensive patient medical history, documentation, and clinical data management
-                        </p>
-                    </div>
-
-                    <MedicalRecordsInteractive initialData={mockData} />
-                </div>
-            </main>
+        <div className="">
+            <MedicalRecordsInteractive initialData={mockData} />
         </div>);
 
 }

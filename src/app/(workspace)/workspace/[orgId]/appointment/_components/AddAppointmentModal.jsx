@@ -30,7 +30,7 @@ import MedicationsTab from '../../patient/_component/patient-profile/Medications
 import AllergiesTab from '../../patient/_component/patient-profile/AllergiesTab'
 import VisitHistoryTab from '../../patient/_component/patient-profile/VisitHistoryTab'
 import DocumentsTab from '../../patient/_component/patient-profile/DocumentsTab'
-import AppointmentEditor from './appointment-mamager/AppointmentEditor'
+import AppointmentEditor from './appointment-manager/AppointmentEditor'
 
 
 export default function AddAppointmentModal() {

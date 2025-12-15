@@ -16,7 +16,7 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         try {
-            //setSocket(io('http://localhost:5000'))
+            setSocket(io('https://socket.devlomatix.in'))
         } catch (error) {
             console.log('Error connecting to socket server')
         }

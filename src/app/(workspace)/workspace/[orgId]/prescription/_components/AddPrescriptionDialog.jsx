@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, User, Stethoscope, Pill } from 'lucide-react';
-import { toast } from '@/hooks/useToast';
 import { getDoctors, getPatients } from '../page';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -21,8 +20,8 @@ const emptyMedication = {
 };
 
 export function AddPrescriptionDialog({ open, onOpenChange, onAdd, }) {
-    const patients = getPatients();
-    const doctors = getDoctors();
+    const patients = [];
+    const doctors = [];
 
     const [selectedPatientId, setSelectedPatientId] = useState('');
     const [selectedDoctorId, setSelectedDoctorId] = useState('');

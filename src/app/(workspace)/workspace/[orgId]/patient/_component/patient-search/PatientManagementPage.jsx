@@ -18,6 +18,7 @@ import { getAge } from '@/utils/functions'
 import moment from 'moment'
 import { useParams, useRouter } from 'next/navigation'
 import { usePatient } from '../../_provider/patientProvider'
+import PatientEditor from '../patient-profile/PatientEditor'
 
 
 
@@ -187,48 +188,12 @@ export default function PatientManagementPage() {
             id: "actions",
             cell: ({ row }) => {
                 //const dispatch = useDispatch()
-                const payment = row.original
+                const patient = row.original
 
                 return (
 
-                    <div>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant={'ghost'} size='sm' className='p-0' onClick={() => {
-                                    setSelectedPatient(row.original)
-                                    router.push(`/workspace/${orgId}/patient/${row.original.id}/profile`)
-                                }}>
-                                    <CircleUser size={18} className='cursor-pointer' />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>View Profile</p>
-                            </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant={'ghost'} size='sm' className='p-0' onClick={() => { onOpen("view-patient", { user: row?.original?.user }) }}>
-                                    <CalendarClock size={18} className='cursor-pointer' />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Book Appointment</p>
-                            </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant={'ghost'} size='sm' className='p-0' onClick={() => { onOpen("view-patient", { user: row?.original?.user }) }}>
-                                    <FileSliders size={18} className='cursor-pointer' />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Add Note</p>
-                            </TooltipContent>
-                        </Tooltip>
-
-
+                    <div className='flex flex-row items-center gap-2'>
+                        <PatientEditor patient={row?.original} />
                     </div>
                 )
             },
@@ -278,7 +243,7 @@ function DataTable({ columns, data, }) {
     return (
         <div className='flex flex-col gap-4'>
 
-            <div className="flex flex-row gap-4 p-2 rounded-md border mb-10">
+            <div className="flex flex-row gap-4 p-2 rounded-md border">
                 <div className="flex items-center space-x-2 flex-1">
                     <Search size={18} />
                     <Input

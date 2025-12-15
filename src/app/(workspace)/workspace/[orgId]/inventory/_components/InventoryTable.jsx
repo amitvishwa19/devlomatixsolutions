@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 
 export function InventoryTable({ items, onAddItem }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const filteredItems = items.filter(
+    const filteredItems = items?.filter(
         (item) =>
             item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,7 +76,7 @@ export function InventoryTable({ items, onAddItem }) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredItems.map((item, index) => (
+                        {filteredItems?.map((item, index) => (
                             <TableRow
                                 key={item.id}
                                 className={cn(
@@ -126,7 +126,7 @@ export function InventoryTable({ items, onAddItem }) {
             </div>
 
             {/* Empty State */}
-            {filteredItems.length === 0 && (
+            {filteredItems?.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="rounded-full bg-muted p-4 mb-4">
                         <Search className="h-6 w-6 text-muted-foreground" />

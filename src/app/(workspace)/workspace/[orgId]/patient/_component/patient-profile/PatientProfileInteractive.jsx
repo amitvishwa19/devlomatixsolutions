@@ -13,6 +13,7 @@ import AllergiesTab from './AllergiesTab';
 import VisitHistoryTab from './VisitHistoryTab';
 import DocumentsTab from './DocumentsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger, } from "@/components/ui/tabs"
+import NotesTab from './NotesTab';
 
 export default function PatientProfileInteractive({ patientData, patient }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -23,7 +24,8 @@ export default function PatientProfileInteractive({ patientData, patient }) {
         { id: 'medications', label: 'Medications', icon: 'BeakerIcon' },
         { id: 'allergies', label: 'Allergies', icon: 'ExclamationTriangleIcon' },
         { id: 'visits', label: 'Visit History', icon: 'ClockIcon' },
-        { id: 'documents', label: 'Documents', icon: 'DocumentIcon' }
+        { id: 'documents', label: 'Documents', icon: 'DocumentIcon' },
+        { id: 'notes', label: 'Notes', icon: 'NotebookText' }
     ];
 
     const handleQuickAction = (actionId) => {
@@ -34,14 +36,10 @@ export default function PatientProfileInteractive({ patientData, patient }) {
         switch (activeTab) {
             case 'overview':
                 return (
-                    <div className="space-y-2">
-
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <VitalSignsCard vitals={patientData?.vitals} />
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <DemographicsCard demographics={patientData?.demographics} />
-                            <InsuranceCard insurance={patientData?.insurance} />
-                        </div>
-
+                        <DemographicsCard demographics={patientData?.demographics} />
+                        <InsuranceCard insurance={patientData?.insurance} />
                     </div>
                 );
             case 'history':
@@ -54,6 +52,8 @@ export default function PatientProfileInteractive({ patientData, patient }) {
                 return <VisitHistoryTab visits={patientData?.visitHistory} />;
             case 'documents':
                 return <DocumentsTab documents={patientData?.documents} />;
+            case 'notes':
+                return <NotesTab documents={patientData?.documents} />;
             default:
                 return null;
         }

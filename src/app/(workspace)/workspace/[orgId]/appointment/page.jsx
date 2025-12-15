@@ -18,8 +18,10 @@ import { setSelectedAppointment, setSelectedAppointments } from './_redux/appoin
 import { Calendar, CalendarRange, Eye, FilePenLine, MoreHorizontal, Pencil, Trash2, Trash2Icon, View } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { ActionTooltip } from '@/components/global/ActionTooltip'
-import BookAppointment from './_components/appointment-mamager/BookAppointment'
+import BookAppointment from './_components/appointment-manager/BookAppointment'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
+import ViewAppointment from './_components/appointment-manager/ViewAppointment'
+import EditAppointment from './_components/appointment-manager/EditAppointment'
 
 
 export default function Appointments() {
@@ -32,6 +34,37 @@ export default function Appointments() {
     const { orgId } = useParams()
     const dispatch = useDispatch()
 
+
+    const [viewAppointment, setViewAppointment] = useState({
+        isOpen: false,
+        mode: 'view',
+        category: null,
+        parentCategory: null
+    });
+
+    const handleViewAppointment = (e) => {
+        console.log('view appointment', e)
+        setViewAppointment({
+            isOpen: true,
+            mode: 'view',
+            appointment: e
+        });
+    };
+
+    const [editAppointment, setEditAppointment] = useState({
+        isOpen: false,
+        mode: 'edit',
+
+    });
+
+    const handleEditAppointment = (e) => {
+
+        setEditAppointment({
+            isOpen: true,
+            mode: 'edit',
+            appointment: e
+        });
+    };
 
 
     const data = serverAppointments?.map((item) => {
@@ -75,7 +108,6 @@ export default function Appointments() {
             enableSorting: true,
             enableHiding: true,
         },
-
         {
             id: "doctor",
             accessorKey: "doctor",
@@ -112,7 +144,6 @@ export default function Appointments() {
                 </div>
             )
         },
-
         {
             accessorKey: "status",
             header: "Status",
@@ -132,11 +163,11 @@ export default function Appointments() {
                 return (
                     <div className='flex flex-row items-center gap-4'>
                         <ActionTooltip label={'Edit Appointment'}>
-                            <Eye size={18} className=' cursor-pointer' onClick={() => { onOpen('view-appointment', { appointment }) }} />
+                            <Eye size={18} className=' cursor-pointer' onClick={() => { handleViewAppointment(appointment) }} />
                         </ActionTooltip>
 
                         <ActionTooltip label={'Edit Appointment'}>
-                            <Pencil size={18} className=' cursor-pointer' />
+                            <Pencil size={18} className=' cursor-pointer' onClick={() => { handleEditAppointment(appointment) }} />
                         </ActionTooltip>
 
                         <ActionTooltip label={'Delete Appointment'}>
@@ -168,6 +199,19 @@ export default function Appointments() {
             <div className='h-full dark:bg-darkSecondaryBackground p-4 rounded-md'>
                 <DataTable columns={columns} data={data} />
             </div>
+
+            <ViewAppointment
+                isOpen={viewAppointment?.isOpen}
+                onClose={() => { setViewAppointment({ ...viewAppointment, isOpen: false }) }}
+                appointment={viewAppointment?.appointment}
+            />
+
+            <EditAppointment
+                isOpen={editAppointment?.isOpen}
+                onClose={() => { setEditAppointment({ ...editAppointment, isOpen: false }) }}
+                appointment={editAppointment?.appointment}
+
+            />
         </div >
     )
 }

@@ -256,6 +256,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     </SidebarItem>
 
                     <SidebarSingleItem
+                        title='Taxonomy'
+                        link={`/workspace/${server?.id}/content/taxonomy`}
+                        selected={url.split('/')[4] === 'taxonomy'}
+                        icon='hand-helping'
+                    />
+
+                    <SidebarSingleItem
                         title='Appointment'
                         link={`/workspace/${server?.id}/appointment`}
                         selected={url.split('/')[3] === 'appointment'}
@@ -273,7 +280,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         title='Patients'
                         link={`/workspace/${server?.id}/patient`}
                         selected={url.split('/')[3] === 'patient'}
-                        icon='stethoscope'
+                        icon='accessibility'
                     />
 
                     <SidebarSingleItem
@@ -282,8 +289,6 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         selected={url.split('/')[3] === 'prescription'}
                         icon='pill'
                     />
-
-
 
                     <SidebarSingleItem
                         title='Services'
@@ -342,19 +347,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     {/* )} */}
 
 
-                    <SidebarSingleItem
-                        title='Department'
-                        link={`/workspace/${server?.id}/department`}
-                        selected={url.split('/')[3] === 'department'}
-                        icon='cog'
-                    />
 
-                    <SidebarSingleItem
-                        title='Reports'
-                        link={`/workspace/${server?.id}/report`}
-                        selected={url.split('/')[3] === 'report'}
-                        icon='chart-area'
-                    />
 
                 </Accordion>
 
@@ -381,15 +374,15 @@ const SidebarItem = ({ title, children, value, icon, isActive, onExpand }) => {
         <AccordionItem className='border-none rounded-md' value={value} open>
             <AccordionTrigger
                 onClick={() => { handleOnExpand(value) }}
-                className={cn('flex item-ccenter gap-x-2 p-0 mt-2 mx-1.5 hover:bg-nuteral-500/10 transition text-start no-underline  rounded-t-md',
+                className={cn('hover:dark:bg-darkFocusColor flex item-ccenter gap-x-2 p-0 mt-2 mx-1.5 hover:bg-nuteral-500/10 transition text-start no-underline  rounded-t-md',
                     expanded && 'bg-primary/10 dark:bg-darkPrimaryBackground/60  border ')}
             >
-                <div className={cn(`hover:dark:bg-[#1C2736] px-2 py-2 w-full rounded-md ${expanded && 'rounded-b-none'}  font-semibold text-md flex flex-row justify-between items-center `)} >
+                <div className={cn(` px-2 py-2 w-full rounded-md ${expanded && 'rounded-b-none'}  font-semibold text-md flex flex-row justify-between items-center `)} >
                     <div className='flex flex-row gap-2 items-center font-semibold text-slate-600 dark:text-white'>
                         <AppIcon name={icon} size={14} />
                         {title}
                     </div>
-                    {!expanded ? <ChevronRight size={14} className=' text-muted-foreground font-bold' /> : <ChevronDown size={14} className=' text-slate-600' />}
+                    {/* {!expanded ? <ChevronRight size={14} className=' text-muted-foreground font-bold' /> : <ChevronDown size={14} className=' text-slate-600' />} */}
                 </div>
             </AccordionTrigger>
             <AccordionContent className={`gap-x-2 mx-[6px] p-2 px-4 bg-primary/10 dark:bg-darkPrimaryBackground/60 text-xs rounded-b-md border border-t-0`}>

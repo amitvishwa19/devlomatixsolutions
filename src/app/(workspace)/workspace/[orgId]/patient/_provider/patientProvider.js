@@ -18,6 +18,8 @@ export const PatientProvider = ({ children }) => {
         setPatients(users?.filter(user => user.role === ROLE.PATIENT))
     }, [])
 
+    console.log(selectedPatient)
+
     function patientsMapData() {
         return users?.filter(user => user.role === ROLE.PATIENT)
     }

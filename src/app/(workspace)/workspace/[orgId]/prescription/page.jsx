@@ -4,7 +4,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Clock, CheckCircle2, XCircle, Plus, Pill, } from 'lucide-react';
-import { toast } from '@/hooks/useToast';
 import { StatsCard } from './_components/StatsCard';
 import { PrescriptionList } from './_components/PrescriptionList';
 import { PrescriptionDetail } from './_components/PrescriptionDetai';
@@ -89,7 +88,7 @@ export default function PrescriptionPage() {
 
             <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md pr-4'>
 
-                <main className="">
+                <main className="flex flex-col gap-4">
                     {/* Stats Section */}
                     <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <StatsCard
@@ -130,6 +129,7 @@ export default function PrescriptionPage() {
                             onView={handleViewPrescription}
                         />
                     </section>
+
                 </main>
                 {/* Prescription Detail Dialog */}
                 <PrescriptionDetail

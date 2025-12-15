@@ -88,6 +88,16 @@ model User {
   fcmTokens    FcmToken[]
   posts        Post[]
 
+  // Healthyfine fields
+  patient        Json?
+  demographics   Json?
+  insurance      Json?
+  vitals         Json?
+  medicalHistory Json?
+  medications    Json?
+  allergies      Json?
+  visitHistory   Json?
+
   webDeviceToken String?
   deviceToken    String?
   expoPushToken  String?

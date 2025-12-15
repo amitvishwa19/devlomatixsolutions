@@ -28,14 +28,14 @@ export default function MedicalRecordsInteractive({ initialData }) {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-2">
             <div className="bg-card border border-border rounded-lg p-4">
                 <div className="flex items-center gap-2 overflow-x-auto pb-2">
                     {tabs?.map((tab) => (
                         <button
                             key={tab?.id}
                             onClick={() => setActiveTab(tab?.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors duration-200 ${activeTab === tab?.id
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-colors duration-200 ${activeTab === tab?.id
                                 ? 'bg-primary text-primary-foreground'
                                 : 'text-text-secondary hover:text-foreground hover:bg-muted'
                                 }`}

@@ -213,8 +213,6 @@ export default function AppointmentEditor({ appointment, onCLose }) {
         }
     })
 
-
-
     const handleSubmit = (e) => {
         e?.preventDefault();
 
@@ -222,10 +220,10 @@ export default function AppointmentEditor({ appointment, onCLose }) {
     }
 
     return (
-        <div className='flex flex-col gap-4'>
-            <div className='self-center'>
+        <div className='flex flex-col gap-4  h-full'>
+            {/* <div className='self-center'>
                 <h2 className='text-md'>Book New Appointment</h2>
-            </div>
+            </div> */}
             <div className='flex flex-1 flex-col gap-4 flex-wrap'>
 
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-2 space-y-6">
@@ -493,7 +491,7 @@ export default function AppointmentEditor({ appointment, onCLose }) {
                 </form>
             </div>
 
-            <div className='flex flex-row items-center gap-2 justify-end'>
+            <div className='flex flex-row items-center gap-2 justify-end p-4'>
                 <Button disabled={loading} variant="ghost" size={'sm'} onClick={() => { handleOpenChange() }}>Cancel</Button>
                 <Button disabled={loading} variant="save" size={'sm'} onClick={handleSaveData}>
                     {loading ? <Loader className=' animate-spin' /> : <Save />}
