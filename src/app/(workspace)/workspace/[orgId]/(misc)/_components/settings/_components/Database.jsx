@@ -8,11 +8,10 @@ import { toast } from 'sonner'
 
 export default function Database() {
     const [loading, setLoading] = useState(null)
-    const { users: user, roleSeed: role, permissionSeed: permission, doctor: doctor, patient: patient } = seeder()
+    const { users: user, roleSeed: role, permissionSeed: permission, doctor: doctor, patient: patient, categorySeed } = seeder()
 
     const handleDatabaseSeed = (type, data) => {
         setLoading(type)
-
         SeedDAtabase(type, data)
 
         setTimeout(() => {
@@ -34,6 +33,13 @@ export default function Database() {
                     <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('user', user) }}>
                         <span>Seed Users</span>
                         {loading === 'user' && <Loader className='flex justify-end animate-spin' />}
+                    </Button>
+
+                </div>
+                <div>
+                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('categories', categorySeed) }}>
+                        <span>Seed Categories</span>
+                        {loading === 'categories' && <Loader className='flex justify-end animate-spin' />}
                     </Button>
 
                 </div>

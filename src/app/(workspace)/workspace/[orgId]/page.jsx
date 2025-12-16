@@ -166,7 +166,7 @@ export default function Dashboard() {
                 {/* Left Column - Appointments */}
                 <div className="lg:col-span-2 space-y-2">
                     <AppointmentsList appointments={todayAppointments} count={5} />
-                    <RecentPatients />
+                    {/* <RecentPatients /> */}
                     <div className='grid gap-2 lg:grid-cols-2'>
                         <UpcomingTasks />
                         <InventoryStatus />
@@ -177,9 +177,9 @@ export default function Dashboard() {
                 {/* Right Column - Quick Actions & Overview */}
                 <div className="space-y-2">
                     <QuickActions />
-                    <DoctorSchedule />
-                    <ClinicOverview />
+                    {/* <DoctorSchedule /> */}
                     <NotificationsPanel />
+                    <ClinicOverview />
                 </div>
 
             </div>

@@ -22,6 +22,7 @@ import { slug } from '@/utils/functions';
 import { deleteCategory } from '../../_actions/delete-category';
 import { upsertCategory } from '../../_actions/upsert-category';
 import CategoryTree from './CategoryTree';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const CategoryTreeInteractive = ({ initialCategories }) => {
     //const [categories, setCategories] = useState(initialCategories);
@@ -289,7 +290,7 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                 </div>
 
                 {/* Tree Content */}
-                <div className="flex-1 overflow-y-auto p-4">
+                <ScrollArea className="flex-1  p-4 h-[65vh]">
                     {categories?.length > 0 ? (
                         <div className="space-y-1">
                             {categories?.map((category) => (
@@ -328,7 +329,7 @@ const CategoryTreeInteractive = ({ initialCategories }) => {
                             </div>
                         </div>
                     )}
-                </div>
+                </ScrollArea>
             </div>
 
 

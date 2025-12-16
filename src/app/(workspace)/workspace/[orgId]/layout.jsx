@@ -7,6 +7,7 @@ import { QueryProvider } from '@/providers/QueryProvider';
 import { OrgModalProvider } from '@/providers/OrgModalProvider';
 import DataProvider from './(misc)/_providers/DataProvider';
 import { db } from '@/lib/db';
+import Loader from '@/components/global/Loader';
 
 const inter = Inter({ subsets: ["latin"] });
 const font = Roboto({ subsets: ["latin"] });
@@ -42,9 +43,7 @@ export default async function layout({ children }) {
                         <OrgSidebar />
                     </div>
                     <div className='flex  flex-col w-full h-screen dark:bg-[#0E141B]'>
-                        {/* <div>
-                            <TopNav />
-                        </div> */}
+                        <div className='md:hidden'><TopNav /></div>
 
                         <ScrollArea className='h-full relative flex-1 p-0'>
                             <div className='p-2'>
@@ -54,6 +53,7 @@ export default async function layout({ children }) {
                             <ScrollBar orientation="horizontal" />
                         </ScrollArea>
                     </div>
+                    {/* <Loader /> */}
                 </div>
             </DataProvider>
         </QueryProvider>

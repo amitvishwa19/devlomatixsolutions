@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react';
 import ServiceToolbar from './ServiceToolbar';
 import ServiceTable from './ServiceTable';
 import ServiceHierarchy from './ServiceHierarchy';
-import ServiceEditModal from './ServiceEditModal';
 import MobileServiceCard from './MobileServiceCard';
+import { useService } from '../../_provider/serviceProvider';
+import ServiceEditor from './ServiceEditor';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import ServiceDelete from './ServiceDelete';
 
 
 const ServiceManagementInteractive = () => {
@@ -14,8 +18,13 @@ const ServiceManagementInteractive = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ category: 'all', status: 'all' });
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [deleteModal, setDeleteModal] = useState(false)
     const [selectedService, setSelectedService] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
+
+    const { department, services: allServices } = useService()
+
+
 
     const mockServices = [
         {
@@ -220,14 +229,14 @@ const ServiceManagementInteractive = () => {
     };
 
     const handleEditService = (service) => {
+        // console.log(service)
         setSelectedService(service);
         setIsModalOpen(true);
     };
 
     const handleDeleteService = (service) => {
-        if (window.confirm(`Are you sure you want to delete "${service?.name}"?`)) {
-            setServices(prev => prev?.filter(s => s?.id !== service?.id));
-        }
+        setDeleteModal(true)
+        setSelectedService(service);
     };
 
     const handleDuplicateService = (service) => {
@@ -293,57 +302,64 @@ const ServiceManagementInteractive = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4">
 
-            <ServiceToolbar
-                onAddService={handleAddService}
-                onBulkAction={handleBulkAction}
-                onFilterChange={handleFilterChange}
-            />
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 <div className="lg:col-span-3">
-                    {isMobile ? (
-                        <div className="space-y-4">
-                            {filteredServices?.map((service) => (
-                                <MobileServiceCard
-                                    key={service?.id}
-                                    service={service}
-                                    onEdit={handleEditService}
-                                    onDelete={handleDeleteService}
-                                    onDuplicate={handleDuplicateService}
-                                    onToggleStatus={handleToggleStatus}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="bg-card border border-border rounded-lg overflow-hidden">
-                            <ServiceTable
-                                services={filteredServices}
-                                onEdit={handleEditService}
-                                onDelete={handleDeleteService}
-                                onDuplicate={handleDuplicateService}
-                                onToggleStatus={handleToggleStatus}
-                            />
-                        </div>
-                    )}
 
-                    {filteredServices?.length === 0 && (
-                        <div className="bg-card border border-border rounded-lg p-12 text-center">
-                            <p className="text-muted-foreground">No services found matching your criteria</p>
-                        </div>
-                    )}
+                    <ServiceTable
+                        services={allServices}
+                        onEdit={handleEditService}
+                        onDelete={handleDeleteService}
+                        onDuplicate={handleDuplicateService}
+                        onToggleStatus={handleToggleStatus}
+                    />
+
+
+
                 </div>
 
-                <div className="lg:col-span-1">
-                    <ServiceHierarchy hierarchyData={hierarchyData} />
+                <div className="flex flex-col gap-4 p-2">
+                    <div className='flex flex-row justify-end'>
+                        <Button
+                            variant='save'
+                            size='sm'
+                            onClick={handleAddService}
+                        >
+                            <Plus />
+                            Add Service
+                        </Button>
+                    </div>
+                    <ServiceHierarchy hierarchyData={department?.children} />
                 </div>
             </div>
-            <ServiceEditModal
-                isOpen={isModalOpen}
-                service={selectedService}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleSaveService}
-            />
+
+            <div>
+
+
+                <ServiceEditor
+                    isOpen={isModalOpen}
+                    service={selectedService}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={handleSaveService}
+                />
+
+
+                <ServiceDelete
+                    isOpen={deleteModal}
+                    onClose={() => setDeleteModal(false)}
+                    service={selectedService}
+                    onDelete
+                />
+
+
+            </div>
+
+
+
         </div>
     );
 };

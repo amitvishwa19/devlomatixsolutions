@@ -262,22 +262,5 @@ const ServiceEditModal = ({ isOpen, service, onClose, onSave }) => {
     );
 };
 
-ServiceEditModal.propTypes = {
-    isOpen: PropTypes?.bool?.isRequired,
-    service: PropTypes?.shape({
-        id: PropTypes?.number,
-        name: PropTypes?.string,
-        code: PropTypes?.string,
-        category: PropTypes?.string,
-        subcategory: PropTypes?.string,
-        description: PropTypes?.string,
-        price: PropTypes?.number,
-        insurancePrice: PropTypes?.number,
-        billingCode: PropTypes?.string,
-        status: PropTypes?.string
-    }),
-    onClose: PropTypes?.func?.isRequired,
-    onSave: PropTypes?.func?.isRequired
-};
 
 export default ServiceEditModal;

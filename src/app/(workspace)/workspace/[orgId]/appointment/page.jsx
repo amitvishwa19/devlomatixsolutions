@@ -15,32 +15,53 @@ import StatusSelector from './_components/StatusSelector'
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { DatePicker } from '@/components/global/DatePicker'
 import { setSelectedAppointment, setSelectedAppointments } from './_redux/appointment-slice'
-import { Calendar, CalendarRange, Eye, FilePenLine, MoreHorizontal, Pencil, Trash2, Trash2Icon, View } from 'lucide-react'
+import { Bell, Calendar, CalendarRange, Eye, FilePenLine, Megaphone, MoreHorizontal, Pencil, Trash2, Trash2Icon, View } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { ActionTooltip } from '@/components/global/ActionTooltip'
 import BookAppointment from './_components/appointment-manager/BookAppointment'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import ViewAppointment from './_components/appointment-manager/ViewAppointment'
 import EditAppointment from './_components/appointment-manager/EditAppointment'
+import { useSocket } from '@/providers/SocketProvider'
+import { useSession } from 'next-auth/react'
+import { ROLE } from '@prisma/client'
 
 
 export default function Appointments() {
-    const { server } = useOrg()
+    const { server, servers } = useOrg()
+    const { data: session } = useSession()
     const allAppointments = useSelector((state) => state.appointment.appointments)
     const serverAppointments = allAppointments?.filter(appointment => appointment.serverId === server?.id)
-    const appointmentData = useSelector((state) => state.appointment.appointments)
+    const appointmentData = servers.flatMap(group => group.appointments); //All appointment of all server
     const { onOpen } = useModal()
     const router = useRouter()
     const { orgId } = useParams()
     const dispatch = useDispatch()
-
-
+    const { socket } = useSocket()
+    const { newAppointmentNotification, patientInNotify } = useSocket()
     const [viewAppointment, setViewAppointment] = useState({
         isOpen: false,
         mode: 'view',
         category: null,
         parentCategory: null
     });
+
+    useEffect(() => {
+        socket?.on('patientInNotify', (e) => {
+            const { sender, data } = e
+
+            if (e?.sender?.orgId !== orgId) {
+                console.log('Patient in notification', e)
+                setViewAppointment({
+                    isOpen: true,
+                    mode: 'view',
+                    appointment: e.data
+                });
+            }
+        })
+
+    }, [socket])
+
 
     const handleViewAppointment = (e) => {
         console.log('view appointment', e)
@@ -57,6 +78,7 @@ export default function Appointments() {
 
     });
 
+
     const handleEditAppointment = (e) => {
 
         setEditAppointment({
@@ -67,7 +89,10 @@ export default function Appointments() {
     };
 
 
-    const data = serverAppointments?.map((item) => {
+    //console.log(session)
+    const finaldata = session?.user?.role === ROLE.RECEPTIONIST ? appointmentData : serverAppointments
+
+    const data = finaldata?.map((item) => {
         return {
             id: item?.id,
             uuid: item?.patient?.uuid,
@@ -87,6 +112,11 @@ export default function Appointments() {
             raw: item
         }
     })
+
+
+    const notifyDoctor = (e) => {
+        patientInNotify(e)
+    }
 
     const columns = [
         {
@@ -162,12 +192,22 @@ export default function Appointments() {
 
                 return (
                     <div className='flex flex-row items-center gap-4'>
+                        <ActionTooltip label={'Notify Doctor and open patient info'}>
+                            <Megaphone size={18} className=' cursor-pointer' onClick={() => {
+                                notifyDoctor(appointment)
+                            }} />
+                        </ActionTooltip>
                         <ActionTooltip label={'Edit Appointment'}>
-                            <Eye size={18} className=' cursor-pointer' onClick={() => { handleViewAppointment(appointment) }} />
+                            <Eye size={18} className=' cursor-pointer' onClick={() => {
+                                handleViewAppointment(appointment)
+                            }} />
                         </ActionTooltip>
 
                         <ActionTooltip label={'Edit Appointment'}>
-                            <Pencil size={18} className=' cursor-pointer' onClick={() => { handleEditAppointment(appointment) }} />
+                            <Pencil size={18} className=' cursor-pointer' onClick={() => {
+                                handleEditAppointment(appointment)
+                            }}
+                            />
                         </ActionTooltip>
 
                         <ActionTooltip label={'Delete Appointment'}>

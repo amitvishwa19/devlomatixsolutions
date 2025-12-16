@@ -114,17 +114,21 @@ const CategoryNode = ({
                 </button>
 
                 {/* Folder Icon */}
-
-
+                {/* color={category?.color ? category?.color : '' */}
                 {category?.icon ? (
-                    <DynamicIcon name={category?.icon} size={16} color={category?.color} />
+                    <DynamicIcon
+                        name={category?.icon}
+                        size={16}
+                        color={category?.color || 'currentColor'}
+                    />
                 ) : (
                     <Icon
                         name={isExpanded ? 'FolderOpenIcon' : 'FolderIcon'}
-                        size={20}
+                        size={16}
                         variant={isSelected ? 'solid' : 'outline'}
                         className={`flex-shrink-0 `}
-                        color={category?.color}
+
+
                     />
                 )}
 

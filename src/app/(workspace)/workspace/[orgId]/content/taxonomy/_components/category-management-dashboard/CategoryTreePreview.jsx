@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
+import { DynamicIcon } from 'lucide-react/dynamic';
 
 const CategoryTreePreview = ({ categories }) => {
     return (
@@ -17,12 +18,23 @@ const CategoryTreePreview = ({ categories }) => {
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 flex-1">
-                                <Icon
-                                    name={category?.hasChildren ? 'ChevronRightIcon' : 'FolderIcon'}
-                                    size={20}
-                                    variant="outline"
-                                    className="text-text-secondary"
-                                />
+
+                                {category?.icon ? (
+                                    <DynamicIcon
+                                        name={category?.icon}
+                                        size={16}
+                                        color={category?.color || 'currentColor'}
+                                    />
+                                ) : (
+                                    <Icon
+                                        name={category?.hasChildren ? 'ChevronRightIcon' : 'FolderIcon'}
+                                        size={16}
+                                        variant="outline"
+                                        className={`flex-shrink-0 `}
+
+
+                                    />
+                                )}
                                 <div className="flex-1">
                                     <h3 className="text-sm font-medium text-text-primary">{category?.name}</h3>
                                     <p className="text-xs text-text-secondary mt-0.5">{category?.description}</p>
@@ -59,24 +71,6 @@ const CategoryTreePreview = ({ categories }) => {
             </div>
         </div>
     );
-};
-
-CategoryTreePreview.propTypes = {
-    categories: PropTypes?.arrayOf(
-        PropTypes?.shape({
-            id: PropTypes?.number?.isRequired,
-            name: PropTypes?.string?.isRequired,
-            description: PropTypes?.string?.isRequired,
-            hasChildren: PropTypes?.bool?.isRequired,
-            itemCount: PropTypes?.number?.isRequired,
-            tags: PropTypes?.arrayOf(
-                PropTypes?.shape({
-                    name: PropTypes?.string?.isRequired,
-                    color: PropTypes?.string?.isRequired
-                })
-            )?.isRequired
-        })
-    )?.isRequired
 };
 
 export default CategoryTreePreview;

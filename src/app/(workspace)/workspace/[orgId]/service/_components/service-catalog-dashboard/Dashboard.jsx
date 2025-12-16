@@ -165,16 +165,5 @@ export default function Dashboard() {
     };
 
 
-    return (
-        <div className='flex flex-col gap-2 w-full'>
-            {/* <div className="w-[50%]">
-                <ServiceSearchBar
-                    searchType="admin"
-                    showFilters={true}
-                    placeholder="Search services, categories, or CPT codes..."
-                />
-            </div> */}
-            <DashboardInteractive initialData={dashboardData} />
-        </div>
-    )
+    return <DashboardInteractive initialData={dashboardData} />
 }

@@ -11,10 +11,10 @@ import Pricing from './_components/pricing-management/Pricing';
 import Billing from './_components/billing-integration/Billing';
 
 export default function ServicePage() {
-    const [active, setActive] = useState({ label: 'Dashboard', icon: 'layout-dashboard', component: <Dashboard /> })
+    const [active, setActive] = useState({ label: 'Services', icon: 'hand-helping', component: <Service /> })
 
     const navigationItems = [
-        { label: 'Dashboard', icon: 'layout-dashboard', component: <Dashboard /> },
+        // { label: 'Dashboard', icon: 'layout-dashboard', component: <Dashboard /> },
         { label: 'Services', icon: 'hand-helping', component: <Service /> },
         { label: 'Pricing', icon: 'indian-rupee', component: <Pricing /> },
         { label: 'Billing', icon: 'receipt-indian-rupee', component: <Billing /> },

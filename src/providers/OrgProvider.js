@@ -23,6 +23,7 @@ export const OrgProvider = ({ children }) => {
     const [refresh, setRefresh] = useState(false)
     const { data: session } = useSession()
     const [users, setUsers] = useState([])
+    const [defaultServer, setDefaultServer] = useState(null)
     const [server, setServer] = useState(null)
     const [servers, setServers] = useState([])
     const [loading, setLoading] = useState(false)
@@ -34,14 +35,17 @@ export const OrgProvider = ({ children }) => {
     const { orgId } = useParams()
 
     useEffect(() => {
-        console.log('@session orgprovider', session, localStorage.getItem('server'))
-        refreshServer()
+        //console.log('@session orgprovider', session)
+        if (!server) {
+            refreshServer()
+        }
     }, [session])
 
 
 
 
     const refreshServer = (serverId) => {
+        setLoading(true)
         return getserverInfo({ userId: session?.user?.userId, serverId: orgId })
     }
 
@@ -89,11 +93,13 @@ export const OrgProvider = ({ children }) => {
         onSuccess: (data) => {
             console.log('@getserverInfo', data)
             setUsers(data.users)
-            updateServer(data?.servers?.find(server => server.default === true))
+            setDefaultServer(data.server)
+            updateServer(data.server)
             updateServers(data.servers)
+            setLoading(false)
         },
         onError: (error) => {
-
+            setLoading(false)
             toast.error(error)
         }
     })
@@ -101,6 +107,7 @@ export const OrgProvider = ({ children }) => {
     const updateServer = async (server) => {
         try {
             localStorage.setItem('server', JSON.stringify(server))
+            localStorage.setItem('defaultServer', JSON.stringify(server))
             setServer(server)
             dispatch(setServerRedux(JSON.stringify(server)))
         } catch (error) {
@@ -177,7 +184,7 @@ export const OrgProvider = ({ children }) => {
 
     return (
         <OrgContext.Provider value={{
-            server, servers, users, updateServer, updateServers,
+            defaultServer, server, servers, users, updateServer, updateServers,
             loading, setLoading,
             updateLoading, loadingData, setLoadingData,
             chatMessages, setChatMessages, updateChatMesages,

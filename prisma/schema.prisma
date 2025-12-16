@@ -985,12 +985,13 @@ model Category {
   parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
   children Category[] @relation("CategoryChildren")
 
-  posts Post[]
-  tags  Tag[]
-
   level     Int     @default(0) // 0=root, 1=sub, 2=sub-sub
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
+
+  services Service[]
+  posts    Post[]
+  tags     Tag[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1037,6 +1038,24 @@ model Post {
   status      String     @default("draft")
   categories  Category[]
   tags        Tag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id String @id @default(cuid())
+
+  title          String
+  slug           String  @unique
+  description    String?
+  price          String?
+  insurancePrice String?
+
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+
+  status Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -66,14 +66,15 @@ export default function OrgSwitcher() {
                                         <AvatarImage src={server?.imageUrl} alt="@shadcn" className='grayscale' />
                                         <AvatarFallback className='rounded-md font-bold text-2xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
                                     </Avatar>
-                                    <div className='flex flex-col'>
+                                    <div className='flex flex-col capitalize'>
                                         <span className='text-sm'>{server?.name}</span>
+                                        <span className='text-xs text-muted-foreground'> {server?.user?.email}</span>
                                     </div>
                                 </div>
 
 
                             </div>
-                            <div>
+                            <div className=' capitalize'>
                                 {
                                     server.default ? <ShieldUser size={15} /> : <EllipsisVertical size={20} />
                                 }

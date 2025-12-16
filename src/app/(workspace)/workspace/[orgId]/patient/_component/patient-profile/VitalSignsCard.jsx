@@ -62,11 +62,11 @@ export default function VitalSignsCard({ vitals }) {
                 </div>
                 <span className="text-xs text-muted-foreground">Last recorded: {vitals?.lastRecorded}</span>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-row items-center justify-between gap-2">
                 {vitalItems?.map((vital, index) => {
                     const status = getVitalStatus(vital?.value, vital?.normal);
                     return (
-                        <div key={index} className="rounded-lg p-2 border">
+                        <div key={index} className="rounded-lg p-2 border  h-28 w-full">
                             <div className="flex flex-row items-center justify-between mb-3">
                                 <div className='flex flex-row items-center gap-2'>
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10 ${status === 'abnormal' ? 'bg-error/10' : 'bg-primary/10'

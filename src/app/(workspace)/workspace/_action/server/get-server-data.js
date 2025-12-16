@@ -24,7 +24,94 @@ const handler = async (data) => {
 
     try {
 
+        server = await db.server.findFirst({
+            where: {
+                userId,
+                default: true
+            },
+            include: {
+                appointments: {
+                    include: {
+                        doctor: {
+                            include: {
+                                profile: true
+                            }
+                        },
+                        patient: {
+                            include: {
+                                profile: true
+                            }
+                        },
+                    },
+                    orderBy: {
+                        createdAt: "desc",
+                    }
+                },
+                setting: true,
+                user: {
+                    include: {
+                        profile: true,
+                        roles: {
+                            include: {
+                                permissions: true
+                            }
+                        },
+                        servers: true
+                    }
+                },
+                roles: {
+                    include: {
+                        permissions: true
+                    }
+                },
+                channels: {
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                },
+                boards: {
+                    where: {
+                        status: true
+                    },
+                    include: {
+                        lists: {
+                            include: {
+                                cards: true
+                            }
+                        }
+                    },
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                },
+                members: {
+                    include: {
+                        user: {
+                            include: {
+                                servers: {
+                                    where: {
+                                        default: true
+                                    },
+                                    include: {
+                                        setting: true,
+                                        appointments: true
+                                    },
 
+                                }
+                            }
+                        },
+                        server: true
+                    },
+                    orderBy: {
+                        role: "desc",
+                    }
+                },
+
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        })
 
         servers = await db.server.findMany({
             where: {

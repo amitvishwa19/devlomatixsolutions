@@ -163,6 +163,12 @@ export async function SeedDAtabase(type, data) {
             })
         }
 
+        if (type === 'categories') {
+            await db.category.createMany({
+                data: data
+            })
+        }
+
 
         if (type === 'role') {
             await db.role.createMany({

@@ -75,8 +75,9 @@ const ServiceToolbar = ({ onAddService, onBulkAction, onFilterChange }) => {
             <div className="flex items-center gap-2 w-full lg:w-auto">
 
                 <Button
-                    variant='outline'
+                    variant='save'
                     onClick={onAddService}
+                    size='sm'
                     className="transition-colors duration-200"
                 >
                     <Icon name="PlusIcon" size={16} />

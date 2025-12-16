@@ -1,17 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import PropTypes from 'prop-types';
 import Icon from '@/components/ui/AppIcon';
 
 const ServiceTableRow = ({ service, onEdit, onDelete, onDuplicate, onToggleStatus }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'active':
+        switch (status) {
+            case true:
                 return 'bg-success/10 text-success border-success/20';
-            case 'inactive':
+            case false:
                 return 'bg-muted text-muted-foreground border-border';
             case 'pending':
                 return 'bg-warning/10 text-warning border-warning/20';
@@ -40,7 +39,7 @@ const ServiceTableRow = ({ service, onEdit, onDelete, onDuplicate, onToggleStatu
                     <input
                         type="checkbox"
                         className="w-4 h-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
-                        aria-label={`Select ${service?.name}`}
+                        aria-label={`Select ${service?.title}`}
                     />
                     <div>
                         <p className="text-sm font-medium text-foreground">{service?.name}</p>
@@ -134,21 +133,6 @@ const ServiceTableRow = ({ service, onEdit, onDelete, onDuplicate, onToggleStatu
     );
 };
 
-ServiceTableRow.propTypes = {
-    service: PropTypes?.shape({
-        id: PropTypes?.number?.isRequired,
-        name: PropTypes?.string?.isRequired,
-        code: PropTypes?.string?.isRequired,
-        category: PropTypes?.string?.isRequired,
-        subcategory: PropTypes?.string?.isRequired,
-        price: PropTypes?.number?.isRequired,
-        status: PropTypes?.string?.isRequired,
-        lastUpdated: PropTypes?.string?.isRequired
-    })?.isRequired,
-    onEdit: PropTypes?.func?.isRequired,
-    onDelete: PropTypes?.func?.isRequired,
-    onDuplicate: PropTypes?.func?.isRequired,
-    onToggleStatus: PropTypes?.func?.isRequired
-};
+
 
 export default ServiceTableRow;

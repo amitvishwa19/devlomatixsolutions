@@ -69,7 +69,7 @@ export default function DemographicsCard({ demographics }) {
     };
 
     return (
-        <div className="bg-card border border-border rounded-lg p-4 shadow-sm" onBlur={() => { console.log('blur') }}>
+        <div className="bg-card border border-border rounded-lg p-4 shadow-sm w-full" onBlur={() => { console.log('blur') }}>
 
             <div className="flex items-center justify-between mb-6 w-full">
 

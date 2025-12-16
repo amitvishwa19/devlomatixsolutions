@@ -43,10 +43,12 @@ export default function ViewAppointment({ isOpen, onClose, mode, appointment }) 
         switch (activeTab) {
             case 'overview':
                 return (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                    <div className="flex flex-col gap-4">
                         <VitalSignsCard />
-                        <DemographicsCard />
-                        <InsuranceCard />
+                        <div className='flex flex-row justify-between w-full gap-4'>
+                            <DemographicsCard />
+                            <InsuranceCard />
+                        </div>
                     </div>
                 );
             case 'history':
@@ -76,7 +78,7 @@ export default function ViewAppointment({ isOpen, onClose, mode, appointment }) 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
 
-            <DialogContent className='min-w-[80%] min-h-[80%] max-h-[80%] p-0 overflow-hidden [&>button:last-child]:hidden'>
+            <DialogContent className='min-w-[90%] min-h-[90%] max-h-[90%] p-0 overflow-hidden [&>button:last-child]:hidden'>
 
                 <DialogHeader className={'hidden'}>
                     <DialogTitle>Are you absolutely sure?</DialogTitle>
@@ -101,7 +103,7 @@ export default function ViewAppointment({ isOpen, onClose, mode, appointment }) 
                     </Tabs>
                 </div>
 
-                <ScrollArea className='w-full h-[74vh] m-0'>
+                <ScrollArea className='w-full h-[84vh] m-0'>
                     <div className='p-4'>
                         {renderTabContent()}
                     </div>

@@ -36,14 +36,17 @@ const ServiceHierarchy = ({ hierarchyData }) => {
                                     className="text-muted-foreground"
                                 />
                                 <span className="text-sm font-medium text-foreground">{category?.name}</span>
-                                <span className="text-xs text-muted-foreground">({category?.serviceCount})</span>
+                                <span className="text-xs text-muted-foreground">({category?.children?.length})</span>
                             </div>
                             <Icon name="Bars3Icon" size={16} className="text-muted-foreground cursor-move" />
                         </button>
 
                         {expandedCategories?.[category?.id] && (
                             <div className="p-3 space-y-2 bg-card">
-                                {category?.subcategories?.map((subcategory) => (
+                                <div className='w-full flex items-center justify-center'>
+                                    {category?.children?.length === 0 && <span className='text-xs text-muted-foreground ml-6'>No sub services found</span>}
+                                </div>
+                                {category?.children?.map((subcategory) => (
                                     <div
                                         key={subcategory?.id}
                                         className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors duration-200"
@@ -51,7 +54,7 @@ const ServiceHierarchy = ({ hierarchyData }) => {
                                         <div className="flex items-center gap-2 pl-6">
                                             <Icon name="Bars3Icon" size={14} className="text-muted-foreground cursor-move" />
                                             <span className="text-sm text-foreground">{subcategory?.name}</span>
-                                            <span className="text-xs text-muted-foreground">({subcategory?.serviceCount})</span>
+                                            <span className="text-xs text-muted-foreground">({subcategory?.children?.length})</span>
                                         </div>
                                     </div>
                                 ))}

@@ -1,6 +1,6 @@
 'use client'
 import React, { useContext } from 'react'
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from '@/components/ui/button';
 import { Menu, PanelLeft } from "lucide-react";
 import OrgSidebar from './OrgSidebar';
@@ -22,7 +22,7 @@ export default function MobileToggleMenu({ serverId }) {
                 </Button>
             </SheetTrigger>
             <SheetContent side='left' className='p-0 flex gap-0  border-none w-34'>
-
+                <SheetTitle className='hidden'>Are you absolutely sure?</SheetTitle>
                 <OrgNavigation />
                 <OrgSidebar server={server} userId={session?.user?.userId} />
             </SheetContent>

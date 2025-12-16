@@ -59,7 +59,7 @@ export default function InsuranceCard({ insurance }) {
     };
 
     return (
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+        <div className="bg-card border border-border rounded-lg p-6 shadow-sm w-full">
 
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">

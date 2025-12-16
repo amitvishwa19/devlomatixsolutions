@@ -152,12 +152,12 @@ export function TaxonomyDashboard() {
     ];
 
     return (
-        <div className='absolute inset-0 flex flex-col gap-2 p-2'>
-            <DashboardInteractive
-                initialStats={mockStats}
-                initialCategories={mockCategories}
-                initialActivities={mockActivities}
-            />
-        </div>
+
+        <DashboardInteractive
+            initialStats={mockStats}
+            initialCategories={mockCategories}
+            initialActivities={mockActivities}
+        />
+
     )
 }
