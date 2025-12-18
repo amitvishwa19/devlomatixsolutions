@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@/components/ui/AppIcon';
+import { CirclePlus, Plus } from 'lucide-react';
+import { DynamicIcon } from 'lucide-react/dynamic';
 
-const ServiceHierarchy = ({ hierarchyData }) => {
+const InventoryHierarchy = ({ hierarchyData = [] }) => {
     const [expandedCategories, setExpandedCategories] = useState({});
 
     const toggleCategory = (categoryId) => {
@@ -17,8 +19,10 @@ const ServiceHierarchy = ({ hierarchyData }) => {
     return (
         <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-foreground">Service Hierarchy</h3>
-
+                <h3 className="text-sm font-semibold text-foreground">Inventory Hierarchy</h3>
+                <CirclePlus size={18} className=' cursor-pointer text-sky-500' onClick={() => {
+                    console.log('Add Category')
+                }} />
             </div>
             <div className="space-y-2">
                 {hierarchyData?.map((category) => (
@@ -33,16 +37,21 @@ const ServiceHierarchy = ({ hierarchyData }) => {
                                     size={16}
                                     className="text-muted-foreground"
                                 />
-                                <span className="text-sm font-medium text-foreground">{category?.name}</span>
-                                <span className="text-xs text-muted-foreground">({category?.children?.length})</span>
+                                <DynamicIcon size={16} name={category.icon} />
+                                <div>
+                                    <span className="text-sm font-medium text-foreground">{category?.name}</span>
+                                    <span className="text-xs text-muted-foreground">({category?.children?.length})</span>
+                                </div>
                             </div>
-                            <Icon name="Bars3Icon" size={16} className="text-muted-foreground cursor-move" />
+                            <Plus size={16} className='' onClick={(e) => {
+                                e.stopPropagation()
+                            }} />
                         </button>
 
                         {expandedCategories?.[category?.id] && (
                             <div className="p-3 space-y-2 bg-card">
                                 <div className='w-full flex items-center justify-center'>
-                                    {category?.children?.length === 0 && <span className='text-xs text-muted-foreground ml-6'>No sub services found</span>}
+                                    {category?.children?.length === 0 && <span className='text-xs text-muted-foreground ml-6'>No sub items found</span>}
                                 </div>
                                 {category?.children?.map((subcategory) => (
                                     <div
@@ -60,26 +69,15 @@ const ServiceHierarchy = ({ hierarchyData }) => {
                         )}
                     </div>
                 ))}
+
+                <div className='text-xs text-muted-foreground'>
+                    {hierarchyData?.length === 0 && 'No items found'}
+                </div>
             </div>
         </div>
     );
 };
 
-ServiceHierarchy.propTypes = {
-    hierarchyData: PropTypes?.arrayOf(
-        PropTypes?.shape({
-            id: PropTypes?.number?.isRequired,
-            name: PropTypes?.string?.isRequired,
-            serviceCount: PropTypes?.number?.isRequired,
-            subcategories: PropTypes?.arrayOf(
-                PropTypes?.shape({
-                    id: PropTypes?.number?.isRequired,
-                    name: PropTypes?.string?.isRequired,
-                    serviceCount: PropTypes?.number?.isRequired
-                })
-            )?.isRequired
-        })
-    )?.isRequired
-};
 
-export default ServiceHierarchy;
+
+export default InventoryHierarchy;

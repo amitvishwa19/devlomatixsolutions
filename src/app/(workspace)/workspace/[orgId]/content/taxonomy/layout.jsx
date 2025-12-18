@@ -20,7 +20,8 @@ export default async function TaxonomyLayout({ children }) {
     const categories = await db.category.findMany({
         include: {
             tags: true,
-            posts: true
+            posts: true,
+            services: true
         },
         orderBy: {
             createdAt: "desc",

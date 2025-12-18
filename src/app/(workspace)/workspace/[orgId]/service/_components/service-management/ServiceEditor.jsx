@@ -77,11 +77,6 @@ export default function ServiceEditor({ isOpen, service, onClose, onSave }) {
     const handleChange = (e) => {
         const { name, value } = e?.target;
 
-
-        //console.log(e?.target)
-
-
-
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -133,12 +128,28 @@ export default function ServiceEditor({ isOpen, service, onClose, onSave }) {
         console.log('formData', formData)
     };
 
+    const handleOpenChange = () => {
+
+        onClose()
+        setFormData({
+            title: '',
+            code: '',
+            category: '',
+            subcategory: '',
+            description: '',
+            price: '',
+            insurancePrice: '',
+            billingCode: '',
+            status: true
+        });
+    }
+
     if (!isOpen) return null;
 
 
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
 
             <DialogContent className='p-4 [&>button:last-child]:hidden'>
 
@@ -151,6 +162,7 @@ export default function ServiceEditor({ isOpen, service, onClose, onSave }) {
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} >
+
 
                     <div className="flex flex-col gap-6">
 

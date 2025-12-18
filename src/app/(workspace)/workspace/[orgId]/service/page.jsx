@@ -2,16 +2,18 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
-import { HandHelping, IndianRupee, LayoutDashboard, ReceiptIndianRupee } from 'lucide-react';
+import { HandHelping, IndianRupee, LayoutDashboard, Plus, ReceiptIndianRupee } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import Dashboard from './_components/service-catalog-dashboard/Dashboard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Service from './_components/service-management/Service';
 import Pricing from './_components/pricing-management/Pricing';
 import Billing from './_components/billing-integration/Billing';
+import ServiceManagementInteractive from './_components/service-management/ServiceManagementInteractive';
 
 export default function ServicePage() {
     const [active, setActive] = useState({ label: 'Services', icon: 'hand-helping', component: <Service /> })
+    const [serviceEditor, setServiceEditor] = useState(false)
 
     const navigationItems = [
         // { label: 'Dashboard', icon: 'layout-dashboard', component: <Dashboard /> },
@@ -179,6 +181,10 @@ export default function ServicePage() {
         ],
     };
 
+    const handleEditorModal = () => {
+        setServiceEditor(true)
+    }
+
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
@@ -188,22 +194,21 @@ export default function ServicePage() {
                     <h2 className='text-xs text-muted-foreground'>Comprehensive oversight of medical services, pricing, and system performance</h2>
                 </div>
                 <div>
-                    <ButtonGroup className=''>
-                        {
-                            navigationItems.map((item, index) => (
-                                <Button key={index} variant='ghost' size='sm' className={`w-32 border ${active.label === item.label && 'bg-primary/10 dark:bg-darkFocusColor'}`} onClick={() => { setActive(item) }}>
-                                    <DynamicIcon name={item.icon} size={18} className='h-10 line-through' />
-                                    {item.label}
-                                </Button>
-                            ))
-                        }
 
-                    </ButtonGroup>
+                    <Button
+                        variant='save'
+                        size='sm'
+                        onClick={handleEditorModal}
+                    >
+                        <Plus />
+                        Add Service
+                    </Button>
                 </div>
             </div>
 
             <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md pr-4'>
-                {active.component}
+                {/* {active.component} */}
+                <ServiceManagementInteractive serviceEditor={serviceEditor} setServiceEditor={setServiceEditor} />
             </ScrollArea>
 
         </div >

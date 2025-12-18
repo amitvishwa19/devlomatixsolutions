@@ -77,16 +77,16 @@ const CategoryDetails = ({ category, onClose }) => {
                                 <Icon name="FolderIcon" size={16} variant="outline" className="text-primary" />
                                 <span className="text-xs text-text-secondary">Subcategories</span>
                             </div>
-                            <p className="text-2xl font-bold text-text-primary">{category?.subcategoryCount}</p>
+                            <p className="text-2xl font-bold text-text-primary">{category?.children?.length}</p>
                         </div>
                         <div className="p-4 bg-muted rounded-lg">
                             <div className="flex items-center gap-2 mb-1">
                                 <Icon name="DocumentTextIcon" size={16} variant="outline" className="text-primary" />
                                 <span className="text-xs text-text-secondary">Content Items</span>
                             </div>
-                            <p className="text-2xl font-bold text-text-primary">{category?.contentCount}</p>
+                            <p className="text-2xl font-bold text-text-primary">{category?.services.length}</p>
                         </div>
-                        <div className="p-4 bg-muted rounded-lg">
+                        {/* <div className="p-4 bg-muted rounded-lg">
                             <div className="flex items-center gap-2 mb-1">
                                 <Icon name="EyeIcon" size={16} variant="outline" className="text-primary" />
                                 <span className="text-xs text-text-secondary">Total Views</span>
@@ -99,7 +99,7 @@ const CategoryDetails = ({ category, onClose }) => {
                                 <span className="text-xs text-text-secondary">Usage Score</span>
                             </div>
                             <p className="text-2xl font-bold text-text-primary">{category?.usageScore}%</p>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -131,13 +131,7 @@ const CategoryDetails = ({ category, onClose }) => {
                 <div>
                     <h3 className="text-sm font-semibold text-text-primary mb-3">Metadata</h3>
                     <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                            <Icon name="UserIcon" size={16} variant="outline" className="text-text-secondary mt-0.5" />
-                            <div className="flex-1">
-                                <p className="text-xs text-text-secondary">Created By</p>
-                                <p className="text-sm text-text-primary font-medium">{category?.createdBy}</p>
-                            </div>
-                        </div>
+
                         <div className="flex items-start gap-2">
                             <Icon name="CalendarIcon" size={16} variant="outline" className="text-text-secondary mt-0.5" />
                             <div className="flex-1">
@@ -156,7 +150,7 @@ const CategoryDetails = ({ category, onClose }) => {
                 </div>
 
                 {/* Permissions */}
-                <div>
+                {/* <div>
                     <h3 className="text-sm font-semibold text-text-primary mb-3">Permissions</h3>
                     <div className="space-y-2">
                         {category?.permissions?.map((permission) => (
@@ -169,15 +163,9 @@ const CategoryDetails = ({ category, onClose }) => {
                             </div>
                         ))}
                     </div>
-                </div>
+                </div> */}
 
-                {/* Path */}
-                <div>
-                    <h3 className="text-sm font-semibold text-text-primary mb-2">Category Path</h3>
-                    <div className="p-3 bg-muted rounded-lg">
-                        <p className="text-sm text-text-secondary font-mono break-all">{category?.path}</p>
-                    </div>
-                </div>
+
             </div>
         </ScrollArea>
     );

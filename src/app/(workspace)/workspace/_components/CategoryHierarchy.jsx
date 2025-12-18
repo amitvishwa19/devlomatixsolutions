@@ -1,26 +1,167 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@/components/ui/AppIcon';
-import { Button } from '@/components/ui/button';
+import { CirclePlus, Loader, Plus, Save, Trash2 } from 'lucide-react';
+import { DynamicIcon } from 'lucide-react/dynamic';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader, Plus, Save } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { useTaxonomy } from '../../_provider/taxanomyProvider';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { upsertCategory } from '../../_actions/upsert-category';
+import { upsertCategory } from '../[orgId]/content/taxonomy/_actions/upsert-category';
+import { useAction } from '@/hooks/use-action';
+import { toast } from 'sonner';
+import { useInventory } from '../[orgId]/inventory/_provider/inventoryProvider';
+
 
 const predefinedColors = [
     '#2563EB', '#DC2626', '#059669', '#D97706',
     '#7C3AED', '#DB2777', '#0891B2', '#65A30D'
 ];
 
-const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory, allCategories = [], loading }) => {
+
+
+const CategoryHierarchy = ({ data = [], title, category }) => {
+    const [expandedCategories, setExpandedCategories] = useState({});
+    const [editor, setEditor] = useState(false)
+    const { setCategory } = useInventory()
+
+
+    const [modalState, setModalState] = useState({
+        isOpen: false,
+        mode: 'add',
+        root: category,
+        category: null,
+        parentCategory: null
+    });
+
+    const [delModalState, setDelModalState] = useState({
+        isOpen: false,
+        mode: 'delete',
+        category: null,
+        parentCategory: null
+    });
+
+
+    const toggleCategory = (categoryId) => {
+        setExpandedCategories(prev => ({
+            ...prev,
+            [categoryId]: !prev?.[categoryId]
+        }));
+    };
+
+    return (
+        <div className="bg-card border rounded-lg p-4 w-full">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                <CirclePlus size={18} className=' cursor-pointer text-sky-500' onClick={() => {
+                    console.log(modalState)
+                    setModalState({
+                        ...modalState,
+                        isOpen: true,
+                        mode: 'subcategory',
+                        root: category,
+                        category: null,
+                        parentCategory: category
+                    });
+                }} />
+            </div>
+            <div className="space-y-2">
+                {category?.children?.map((category) => (
+                    <div key={category?.id} className="border border-border rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleCategory(category?.id)}
+                            className="w-full flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Icon
+                                    name={expandedCategories?.[category?.id] ? 'ChevronDownIcon' : 'ChevronRightIcon'}
+                                    size={16}
+                                    className="text-muted-foreground"
+                                />
+                                {category.icon ? <DynamicIcon size={16} name={category.icon} /> : <DynamicIcon size={16} name={'folder'} />}
+
+                                <div>
+                                    <span className="text-sm font-medium text-foreground">{category?.name}</span>
+                                    <span className="text-xs text-muted-foreground">({category?.children?.length})</span>
+                                </div>
+                            </div>
+                            <div className='flex flex-row gap-2'>
+                                <Plus size={16} className='' onClick={(e) => {
+                                    e.stopPropagation()
+                                    // setModalState({
+                                    //     ...modalState,
+                                    //     isOpen: true,
+                                    //     mode: 'subcategory',
+                                    //     category: null,
+                                    //     parentCategory: category
+
+                                    // });
+                                }} />
+                                <Trash2 size={16} className='' onClick={(e) => {
+                                    e.stopPropagation()
+                                    setDelModalState({
+                                        isOpen: true,
+                                        mode: 'delete',
+                                        category: category,
+                                        parentCategory: null
+                                    })
+                                }} />
+                            </div>
+                        </button>
+
+                        {expandedCategories?.[category?.id] && (
+                            <div className="p-3 space-y-2 bg-card">
+                                <div className='w-full flex items-center justify-center'>
+                                    {category?.children?.length === 0 && <span className='text-xs text-muted-foreground ml-6'>No sub items found</span>}
+                                </div>
+                                {category?.children?.map((subcategory) => (
+                                    <div
+                                        key={subcategory?.id}
+                                        className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors duration-200"
+                                    >
+                                        <div className="flex items-center gap-2 pl-6">
+                                            <Icon name="Bars3Icon" size={14} className="text-muted-foreground cursor-move" />
+                                            <span className="text-sm text-foreground">{subcategory?.name}</span>
+                                            <span className="text-xs text-muted-foreground">({subcategory?.children?.length})</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ))}
+
+                <div className='text-xs text-muted-foreground'>
+                    {category?.children?.length === 0 && 'No items found'}
+                </div>
+            </div>
+
+            <HierarchyEditorModal
+                isOpen={modalState.isOpen}
+                root={modalState.root}
+                category={modalState.category}
+                parentCategory={modalState.parentCategory}
+                handleClose={() => { setModalState({ ...modalState, isOpen: false }) }}
+                mode={modalState.mode}
+                onSave={(c) => { setCategory(c) }}
+            />
+
+            <CatDeleteModal
+                isOpen={delModalState.isOpen}
+                onClose={() => { setDelModalState({ ...delModalState, isOpen: false }) }}
+                category={delModalState.category}
+            />
+        </div>
+    );
+};
+
+
+const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, parentCategory, mode, allCategories = [] }) => {
+    const [loading, setLoading] = useState(false)
+    const [errors, setErrors] = useState({});
 
     const [formData, setFormData] = useState({
         id: '',
@@ -29,46 +170,23 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
         tags: [],
         parentId: null,
         color: '#FFFF',
-        icon: '',
+        icon: 'folder',
         isActive: true,
         sortOrder: 0
     });
 
-    const [errors, setErrors] = useState({});
-
-    const availableTags = [
-        { id: 'tag1', name: 'Cardiology', color: '#EF4444' },
-        { id: 'tag2', name: 'Neurology', color: '#3B82F6' },
-        { id: 'tag3', name: 'Pediatrics', color: '#10B981' },
-        { id: 'tag4', name: 'Emergency', color: '#F59E0B' },
-        { id: 'tag5', name: 'Surgery', color: '#8B5CF6' },
-        { id: 'tag6', name: 'Radiology', color: '#EC4899' }
-    ];
-
     useEffect(() => {
-        if (category && mode === 'edit') {
+        if (category || parentCategory) {
             setFormData({
                 id: category?.id,
                 name: category?.name || '',
                 description: category?.description || '',
                 color: category?.color || '#FFFF',
-                icon: category.icon,
+                icon: category?.icon,
                 tags: category?.tags || [],
-                parentId: category?.parentId || null,
-                isActive: category.status || true,
-                sortOrder: category.sortOrder || 0
-            });
-        } else if (mode === 'subcategory' && parentCategory) {
-            setFormData({
-                id: '',
-                name: '',
-                description: '',
-                tags: [],
                 parentId: parentCategory?.id || null,
-                color: '#FFFF',
-                icon: '',
-                isActive: true,
-                sortOrder: 0
+                isActive: category?.status || true,
+                sortOrder: category?.sortOrder || 0
             });
         } else {
             setFormData({
@@ -78,12 +196,12 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                 tags: [],
                 parentId: null,
                 color: '#FFFF',
-                icon: '',
+                icon: 'folder',
                 isActive: true,
                 sortOrder: 0
             });
         }
-        setErrors({});
+
     }, [category, mode, isOpen, parentCategory]);
 
     // Helper function to flatten categories into a selectable list
@@ -157,13 +275,25 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
         return Object.keys(newErrors)?.length === 0;
     };
 
+    const { execute } = useAction(upsertCategory, {
+        onSuccess: (data) => {
+            onSave(data?.parentCategory)
+            toast.success(`Category "${formData.name}" created successfully`, { id: 'new-appointment' })
+            handleOnCLose()
+            setLoading(false)
+        },
+        onError: (error) => {
+            setLoading(false)
+            //toast.error('Oops something went wrong,please try again later', { id: 'new-appointment' });
+        }
+    })
 
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e?.preventDefault();
         if (validate()) {
-            onSave(formData);
-            //onClose();
+            setLoading(true)
+            //toast.loading(`Creating category "${formData?.name}"`, { id: 'new-cat' })
+            await execute({ formData, })
         }
     };
 
@@ -180,18 +310,25 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
         return parent?.name;
     };
 
-    return (
 
-        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-            <DialogContent className='dark:bg-darkPrimaryBackground p-2 sm:max-w-[500px] '>
-                <DialogHeader className={'p-2'}>
-                    <DialogTitle>Create Category</DialogTitle>
+    const handleOnCLose = () => {
+        handleClose()
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={handleOnCLose}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle className='text-md'>{modalTitle}</DialogTitle>
+                    <DialogDescription className='text-xs'>
+                        Add new category under {parentCategory?.name}, added category will reflect under parent category ({parentCategory?.name})
+                    </DialogDescription>
+                    {root?.name}
+                    {root?.id}
                 </DialogHeader>
 
                 <div>
-                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-2 space-y-6">
-
-
+                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-2 space-y-4">
 
                         {/* Category Name */}
                         <div>
@@ -209,7 +346,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
 
                             />
                             {errors?.name && (
-                                <p className="mt-1.5 text-xs text-error flex items-center gap-1 text-muted-foreground">
+                                <p className="mt-1.5 text-xs text-error dark:text-orange-500 flex items-center gap-1 text-muted-foreground">
                                     <Icon name="ExclamationCircleIcon" size={14} variant="solid" />
                                     {errors?.name}
                                 </p>
@@ -328,15 +465,17 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                     </form>
                 </div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-4 border-t border-border">
-                    <Button
-                        variant="ghost"
-                        onClick={onClose}
-                        className="transition-colors duration-200"
-                    >
-                        Cancel
-                    </Button>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button
+                            variant="ghost"
+                            onClick={handleClose}
+                            disabled={loading}
+                            className="transition-colors duration-200"
+                        >
+                            Cancel
+                        </Button>
+                    </DialogClose>
                     <Button
                         variant='save'
                         onClick={handleSubmit}
@@ -346,11 +485,30 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                         {loading ? <Loader className=' animate-spin' /> : <Save />}
                         {mode === 'edit' ? 'Save Changes' : 'Create Category'}
                     </Button>
-                </div>
+                </DialogFooter>
+
             </DialogContent>
         </Dialog>
-    );
-};
+    )
+}
 
 
-export default CategoryModal;
+const CatDeleteModal = ({ isOpen, onClose, category }) => {
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Are you absolutely sure?</DialogTitle>
+                    <DialogDescription>
+                        This action cannot be undone. This will permanently delete your account
+                        and remove your data from our servers.
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
+export default CategoryHierarchy;

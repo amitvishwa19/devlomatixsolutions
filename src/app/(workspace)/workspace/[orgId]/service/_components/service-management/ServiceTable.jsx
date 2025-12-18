@@ -9,9 +9,10 @@ import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Copy, Pencil, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Search, Trash2 } from 'lucide-react';
 import { CustomBadge } from '../../../(misc)/_components/CustomBadge';
 import { Badge } from '@/components/ui/badge';
+import TableNoItemFound from '@/app/(workspace)/workspace/_components/TableNoItemFound';
 
 const ServiceTable = ({ services, onEdit, onDelete, onDuplicate, onToggleStatus }) => {
     const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
@@ -71,7 +72,7 @@ const ServiceTable = ({ services, onEdit, onDelete, onDuplicate, onToggleStatus 
             cell: ({ row }) => {
                 return (
                     <div>
-                        {row.original.price === '' ? '0' : row.original.price}
+                        <span>₹ </span> {row.original.price === '' ? '0' : row.original.price}
                     </div>
                 )
             }
@@ -116,7 +117,6 @@ const ServiceTable = ({ services, onEdit, onDelete, onDuplicate, onToggleStatus 
                 return (
                     <div className='flex flex-row gap-4 text-xs'>
                         <Pencil size={16} className=' cursor-pointer' onClick={() => { onEdit(row.original) }} />
-                        <Copy size={16} className=' cursor-pointer' />
                         <Trash2 size={16} className=' cursor-pointer' onClick={() => { onDelete(row.original) }} />
                     </div>
                 )
@@ -218,15 +218,15 @@ function DataTable({ columns, data, }) {
             </div>
 
             <div className='rounded-md border  shadow-card overflow-hidden'>
-                <Table className='rounded-md'>
-                    <TableHeader >
+                <Table className='rounded-md '>
+                    <TableHeader className='bg-card'>
 
                         {table?.getHeaderGroups().map((headerGroup) => (
 
                             <TableRow key={headerGroup.id} className=' rounded-md'>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id} className='text-md font-semibold'>
+                                        <TableHead key={header.id} className='text-md font-semibold p-4'>
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -248,10 +248,10 @@ function DataTable({ columns, data, }) {
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
-
+                                    className=''
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id} className='text-sm'>
+                                        <TableCell key={cell.id} className='text-sm h-10'>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     ))}
@@ -260,7 +260,7 @@ function DataTable({ columns, data, }) {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No results.
+                                    <TableNoItemFound />
                                 </TableCell>
                             </TableRow>
                         )}

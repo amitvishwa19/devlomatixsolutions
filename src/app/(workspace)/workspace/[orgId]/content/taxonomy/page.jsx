@@ -4,15 +4,17 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import { Button } from '@/components/ui/button'
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { TaxonomyDashboard } from './_components/category-management-dashboard/TaxonomyDashboard'
+//import { TaxonomyDashboard } from './_components/category-management-dashboard/TaxonomyDashboard'
 import { CatogeriesTree } from './_components/category-tree-management/CatogeriesTree'
-import TagsComponent from './_components/tag-management/TagsComponent'
+//import TagsComponent from './_components/tag-management/TagsComponent'
+import DashboardInteractive from './_components/category-management-dashboard/DashboardInteractive'
+import CategoryTreeInteractive from './_components/category-tree-management/CategoryTreeInteractive'
 
 export default function TaxanomyPage() {
-    const [active, setActive] = useState({ title: 'dashboard', icon: 'layout-dashboard', component: <TaxonomyDashboard /> })
+    const [active, setActive] = useState({ title: 'dashboard', icon: 'layout-dashboard', component: <DashboardInteractive /> })
     const nav = [
-        { title: 'dashboard', icon: 'layout-dashboard', component: <TaxonomyDashboard /> },
-        { title: 'categories', icon: 'folder-closed', component: <CatogeriesTree /> }
+        { title: 'dashboard', icon: 'layout-dashboard', component: <DashboardInteractive /> },
+        { title: 'categories', icon: 'folder-closed', component: <CategoryTreeInteractive /> }
     ]
 
 

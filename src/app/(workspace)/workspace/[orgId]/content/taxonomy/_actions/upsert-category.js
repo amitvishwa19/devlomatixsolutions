@@ -12,6 +12,7 @@ const UpsertCategory = z.object({
 
 const handler = async (data) => {
     let category = {}
+    let parentCategory
     let categories = []
     let sortOrder
     let level = 0
@@ -20,7 +21,6 @@ const handler = async (data) => {
     try {
 
         console.log('@upsert category server action', data.formData)
-        console.log('category', 'category')
 
 
         const tmpData = data.formData
@@ -34,19 +34,6 @@ const handler = async (data) => {
         }
 
         const tags = data?.formData?.tags
-        // category = await db.category.create({
-        //     data: {
-        //         name: tmpData.name,
-        //         slug: tmpData.name,
-        //         description: tmpData.description,
-        //         parentId: tmpData.parentId && tmpData.parentId,
-        //         level,
-        //         color: tmpData.color,
-        //         sortOrder: tmpData.sortOrder,
-        //         tags: { connect: tags.map(tag => ({ id: tag.id })) }
-        //     },
-        //     include: { tags: true, posts: true }
-        // })
 
         category = await db.category.upsert({
             where: {
@@ -75,8 +62,33 @@ const handler = async (data) => {
                 sortOrder: tmpData.sortOrder,
                 tags: { connect: tags.map(tag => ({ id: tag.id })) },
                 isActive: tmpData.isActive
+            },
+            include: {
+                children: true
             }
         })
+
+        if (tmpData.parentId) {
+            parentCategory = await db.category.findFirst({
+                where: {
+                    id: tmpData.parentId
+                },
+                include: {
+                    children: {
+                        include: {
+                            children: {
+                                include: {
+                                    children: true
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            })
+        }
 
 
 
@@ -88,7 +100,7 @@ const handler = async (data) => {
     }
 
     //revalidatePath(`/org/${orgId}`)
-    return { data: { category, categories } };
+    return { data: { parentCategory, category, categories } };
 
 }
 

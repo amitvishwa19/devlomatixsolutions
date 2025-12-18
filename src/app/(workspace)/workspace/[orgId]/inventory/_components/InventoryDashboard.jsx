@@ -5,6 +5,8 @@ import { CategoryCard } from './CategoryCard';
 import { InventoryTable } from './InventoryTable';
 import { LowStockAlert } from './LowStockAlert';
 import { RecentActivity } from './RecentActivity';
+import InventoryHierarchy from './InventoryHierarchy';
+import { useInventory } from '../_provider/inventoryProvider';
 
 
 export const categories = [
@@ -152,6 +154,9 @@ export const inventoryItems = [
 ];
 
 export function InventoryDashboard() {
+    const { categories } = useInventory()
+
+    console.log(categories)
 
     const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -188,7 +193,7 @@ export function InventoryDashboard() {
                 />
                 <StatCard
                     title="Categories"
-                    value={categories.length}
+                    value={categories?.length}
                     change="All categories active"
                     changeType="neutral"
                     icon={TrendingUp}
@@ -202,24 +207,7 @@ export function InventoryDashboard() {
                 />
             </div>
 
-            {/* Categories */}
-            <div className="mb-2">
-                <h2 className="text-md font-semibold text-foreground mb-2">Categories</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    {categories.map((category) => (
-                        <CategoryCard
-                            key={category.id}
-                            category={category}
-                            isActive={selectedCategory === category.name}
-                            onClick={() =>
-                                setSelectedCategory(
-                                    selectedCategory === category.name ? null : category.name
-                                )
-                            }
-                        />
-                    ))}
-                </div>
-            </div>
+
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
@@ -227,8 +215,9 @@ export function InventoryDashboard() {
                     <InventoryTable items={filteredItems.slice(0, 6)} />
                 </div>
                 <div className="space-y-2">
+                    <InventoryHierarchy hierarchyData={categories} />
                     <LowStockAlert items={inventoryItems.slice(0, 10)} />
-                    <RecentActivity />
+
                 </div>
             </div>
 

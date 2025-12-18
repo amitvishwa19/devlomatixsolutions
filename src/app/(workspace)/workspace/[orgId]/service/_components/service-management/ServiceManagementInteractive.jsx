@@ -12,7 +12,7 @@ import { Plus } from 'lucide-react';
 import ServiceDelete from './ServiceDelete';
 
 
-const ServiceManagementInteractive = () => {
+const ServiceManagementInteractive = ({ serviceEditor, setServiceEditor }) => {
     const [services, setServices] = useState([]);
     const [filteredServices, setFilteredServices] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -231,7 +231,7 @@ const ServiceManagementInteractive = () => {
     const handleEditService = (service) => {
         // console.log(service)
         setSelectedService(service);
-        setIsModalOpen(true);
+        setServiceEditor(true);
     };
 
     const handleDeleteService = (service) => {
@@ -308,6 +308,7 @@ const ServiceManagementInteractive = () => {
 
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
                 <div className="lg:col-span-3">
 
                     <ServiceTable
@@ -323,16 +324,7 @@ const ServiceManagementInteractive = () => {
                 </div>
 
                 <div className="flex flex-col gap-4 p-2">
-                    <div className='flex flex-row justify-end'>
-                        <Button
-                            variant='save'
-                            size='sm'
-                            onClick={handleAddService}
-                        >
-                            <Plus />
-                            Add Service
-                        </Button>
-                    </div>
+
                     <ServiceHierarchy hierarchyData={department?.children} />
                 </div>
             </div>
@@ -341,9 +333,12 @@ const ServiceManagementInteractive = () => {
 
 
                 <ServiceEditor
-                    isOpen={isModalOpen}
+                    isOpen={serviceEditor}
                     service={selectedService}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => {
+                        setServiceEditor(false)
+                        setSelectedService(null)
+                    }}
                     onSave={handleSaveService}
                 />
 

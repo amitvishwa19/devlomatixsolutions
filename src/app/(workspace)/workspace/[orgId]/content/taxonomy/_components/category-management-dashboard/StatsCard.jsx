@@ -5,8 +5,8 @@ const StatsCard = ({ title, value, subtitle, icon, trend, trendValue, bgColor })
     const isPositiveTrend = trend === 'up';
 
     return (
-        <div className={`${bgColor} rounded-lg p-6 shadow-sm border border-border transition-all duration-200 hover:shadow-md`}>
-            <div className="flex items-start justify-between mb-4">
+        <div className={`${bgColor} bg-card rounded-lg p-4 shadow-sm border border-border transition-all duration-200 hover:shadow-md`}>
+            <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                     <p className="text-sm font-medium text-text-secondary mb-1">{title}</p>
                     <h3 className="text-3xl font-bold text-text-primary">{value}</h3>
@@ -36,16 +36,6 @@ const StatsCard = ({ title, value, subtitle, icon, trend, trendValue, bgColor })
             )}
         </div>
     );
-};
-
-StatsCard.propTypes = {
-    title: PropTypes?.string?.isRequired,
-    value: PropTypes?.oneOfType([PropTypes?.string, PropTypes?.number])?.isRequired,
-    subtitle: PropTypes?.string,
-    icon: PropTypes?.string?.isRequired,
-    trend: PropTypes?.oneOf(['up', 'down']),
-    trendValue: PropTypes?.string,
-    bgColor: PropTypes?.string
 };
 
 StatsCard.defaultProps = {

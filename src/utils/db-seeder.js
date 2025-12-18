@@ -163,8 +163,10 @@ export async function SeedDAtabase(type, data) {
             })
         }
 
-        if (type === 'categories') {
-            await db.category.createMany({
+
+
+        if (type === 'inventories') {
+            await db.inventory.createMany({
                 data: data
             })
         }

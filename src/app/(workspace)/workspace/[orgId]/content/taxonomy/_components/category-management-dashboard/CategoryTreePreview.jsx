@@ -4,6 +4,8 @@ import Icon from '@/components/ui/AppIcon';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 const CategoryTreePreview = ({ categories }) => {
+
+    console.log(categories)
     return (
         <div className="bg-surface rounded-lg border border-border shadow-sm">
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -43,7 +45,7 @@ const CategoryTreePreview = ({ categories }) => {
 
                             <div className="flex items-center gap-4">
                                 <div className="text-right">
-                                    <p className="text-sm font-medium text-text-primary">{category?.itemCount}</p>
+                                    <p className="text-sm font-medium text-text-primary">{category?.children?.length}</p>
                                     <p className="text-xs text-text-secondary">items</p>
                                 </div>
 

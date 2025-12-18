@@ -16,7 +16,11 @@ export default async function ContentLayout({ children }) {
             createdAt: "desc",
         },
     })
-    const categories = await db.category.findMany()
+    const categories = await db.category.findMany({
+        include: {
+            children: true
+        }
+    })
     const tags = await db.tag.findMany()
 
     return (

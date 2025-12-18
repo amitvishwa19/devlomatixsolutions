@@ -978,7 +978,7 @@ model Category {
   name        String
   slug        String  @unique
   description String?
-  icon        String?
+  icon        String? @default("folder")
   color       String?
 
   parentId String?
@@ -989,9 +989,10 @@ model Category {
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
 
-  services Service[]
-  posts    Post[]
-  tags     Tag[]
+  services    Service[]
+  inventories Inventory[]
+  posts       Post[]
+  tags        Tag[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1056,6 +1057,27 @@ model Service {
   categoryId String?
 
   status Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Inventory {
+  id String @id @default(cuid())
+
+  name        String
+  slug        String    @unique
+  description String?
+  sku         String?
+  quantity    Int       @default(0)
+  minStock    Int       @default(0)
+  unit        String
+  location    String?
+  expiryDate  DateTime  @default(now())
+  supplier    String?
+  unitPrise   Float     @default(0)
+  category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
