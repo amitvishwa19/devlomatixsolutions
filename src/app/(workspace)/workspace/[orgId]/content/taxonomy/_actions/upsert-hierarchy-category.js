@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { slug } from "@/utils/functions";
 
 
-const UpsertCategory = z.object({
+const UpsertHierarchyCategory = z.object({
     formData: z.any(),
     root: z.any(),
     orgId: z.string().optional()
@@ -44,7 +44,7 @@ const handler = async (data) => {
                 name: tmpData.name,
                 slug: slug(tmpData.name),
                 description: tmpData.description,
-                parentId: tmpData.parentId && tmpData.parentId,
+                //parentId: tmpData.parentId && tmpData.parentId,
                 level,
                 color: tmpData.color,
                 icon: tmpData.icon,
@@ -70,6 +70,27 @@ const handler = async (data) => {
             },
         })
 
+        if (data.root) {
+            parentCategory = await db.category.findFirst({
+                where: {
+                    id: data?.root?.id
+                },
+                include: {
+                    children: {
+                        include: {
+                            children: {
+                                include: {
+                                    children: true
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            })
+        }
 
 
 
@@ -86,4 +107,4 @@ const handler = async (data) => {
 }
 
 
-export const upsertCategory = createSafeAction(UpsertCategory, handler);
+export const upsertHierarchyCategory = createSafeAction(UpsertHierarchyCategory, handler);

@@ -8,20 +8,43 @@ import { slug } from "@/utils/functions";
 
 
 const DeleteCategory = z.object({
-    categoryId: z.string().optional()
+    categoryId: z.string().optional(),
+    rootId: z.string().optional()
 });
 
 const handler = async (data) => {
     let category
-    const { categoryId } = data
+    const { categoryId, rootId } = data
 
-    console.log('delete category action', categoryId)
+    console.log('delete category action', data)
     try {
         category = await db.category.delete({
             where: {
                 id: categoryId
             }
         })
+
+        if (data.rootId) {
+            category = await db.category.findFirst({
+                where: {
+                    id: rootId
+                },
+                include: {
+                    children: {
+                        include: {
+                            children: {
+                                include: {
+                                    children: true
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            })
+        }
 
     } catch (error) {
         console.log(error)

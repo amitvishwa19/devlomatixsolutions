@@ -12,11 +12,13 @@ import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CalendarIcon, Package, Loader2, Loader, Save } from 'lucide-react';
+import { CalendarIcon, Package, Loader2, Loader, Save, FolderOpen, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useAction } from '@/hooks/use-action';
 import { upsertInventory } from '../../_action/upsert-inventory';
+import MultiLevelSelect from '@/app/(workspace)/workspace/_components/MultiLevelSelect';
+import { DynamicIcon } from 'lucide-react/dynamic';
 
 const inventoryFormSchema = z.object({
     id: z.string().optional(),
@@ -35,7 +37,11 @@ const inventoryFormSchema = z.object({
 
 export default function InventoryEditor({ isOpen, onClose, inventory, onSubmit, categories }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const [selectedLabel, setSelectedLabel] = useState("");
     const isEditing = !!inventory;
+
+
 
     function generateSKU(title, prefix = "MED") {
         if (!title) return "";
@@ -215,7 +221,28 @@ export default function InventoryEditor({ isOpen, onClose, inventory, onSubmit, 
 
                                             <SelectContent>
                                                 {categories.map((cat) => (
-                                                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                                    <SelectGroup key={cat.id}>
+                                                        {/* <SelectLabel className="flex items-center gap-2 px-2 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50">
+                                                            {cat.icon ? <DynamicIcon size={14} name={cat.icon} /> : <DynamicIcon size={14} name={'folder'} />}
+                                                            {cat.name}
+                                                        </SelectLabel> */}
+                                                        <SelectItem value={cat.id} className='pl-4 font-medium text-sm'>
+                                                            <div className='flex flex-row items-center gap-2'>
+                                                                {cat.icon ? <DynamicIcon size={14} name={cat.icon} /> : <DynamicIcon size={14} name={'folder'} />}
+                                                                <span>All {cat.name}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                        {cat?.children?.map((subCat) => (
+
+                                                            <SelectItem value={subCat.id} className='pl-8 font-medium text-sm'>
+                                                                <span className="flex items-center gap-2 text-muted-foreground">
+                                                                    <ChevronRight className="h-3 w-3" />
+                                                                    <span className="text-foreground">{subCat.name}</span>
+                                                                </span>
+                                                            </SelectItem>
+                                                        ))}
+
+                                                    </SelectGroup>
                                                 ))}
                                             </SelectContent>
                                         </Select>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@/components/ui/AppIcon';
-import { CirclePlus, Loader, Plus, Save, Trash2 } from 'lucide-react';
+import { CirclePlus, Loader, Pencil, Plus, Save, Trash2, TriangleAlert } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { upsertCategory } from '../[orgId]/content/taxonomy/_actions/upsert-cate
 import { useAction } from '@/hooks/use-action';
 import { toast } from 'sonner';
 import { useInventory } from '../[orgId]/inventory/_provider/inventoryProvider';
+import { deleteCategory } from '../[orgId]/content/taxonomy/_actions/delete-category';
+import { upsertHierarchyCategory } from '../[orgId]/content/taxonomy/_actions/upsert-hierarchy-category';
 
 
 const predefinedColors = [
@@ -23,7 +25,7 @@ const predefinedColors = [
 
 
 
-const CategoryHierarchy = ({ data = [], title, category }) => {
+const CategoryHierarchy = ({ data = [], title, category: root }) => {
     const [expandedCategories, setExpandedCategories] = useState({});
     const [editor, setEditor] = useState(false)
     const { setCategory } = useInventory()
@@ -32,7 +34,7 @@ const CategoryHierarchy = ({ data = [], title, category }) => {
     const [modalState, setModalState] = useState({
         isOpen: false,
         mode: 'add',
-        root: category,
+        root: root,
         category: null,
         parentCategory: null
     });
@@ -40,6 +42,7 @@ const CategoryHierarchy = ({ data = [], title, category }) => {
     const [delModalState, setDelModalState] = useState({
         isOpen: false,
         mode: 'delete',
+        root: root,
         category: null,
         parentCategory: null
     });
@@ -62,14 +65,14 @@ const CategoryHierarchy = ({ data = [], title, category }) => {
                         ...modalState,
                         isOpen: true,
                         mode: 'subcategory',
-                        root: category,
+                        root: root,
                         category: null,
-                        parentCategory: category
+                        parentCategory: root
                     });
                 }} />
             </div>
             <div className="space-y-2">
-                {category?.children?.map((category) => (
+                {root?.children?.map((category) => (
                     <div key={category?.id} className="border border-border rounded-lg overflow-hidden">
                         <button
                             onClick={() => toggleCategory(category?.id)}
@@ -83,28 +86,44 @@ const CategoryHierarchy = ({ data = [], title, category }) => {
                                 />
                                 {category.icon ? <DynamicIcon size={16} name={category.icon} /> : <DynamicIcon size={16} name={'folder'} />}
 
-                                <div>
+                                <div className='flex flex-row items-center gap-2'>
                                     <span className="text-sm font-medium text-foreground">{category?.name}</span>
                                     <span className="text-xs text-muted-foreground">({category?.children?.length})</span>
                                 </div>
                             </div>
                             <div className='flex flex-row gap-2'>
-                                <Plus size={16} className='' onClick={(e) => {
+                                <Plus size={16} className=' cursor-pointer' onClick={(e) => {
                                     e.stopPropagation()
-                                    // setModalState({
-                                    //     ...modalState,
-                                    //     isOpen: true,
-                                    //     mode: 'subcategory',
-                                    //     category: null,
-                                    //     parentCategory: category
+                                    setModalState({
+                                        ...modalState,
+                                        isOpen: true,
+                                        root: root,
+                                        mode: 'add',
+                                        category: null,
+                                        parentCategory: category
 
-                                    // });
+                                    });
                                 }} />
-                                <Trash2 size={16} className='' onClick={(e) => {
+
+                                <Pencil size={14} className='cursor-pointer' onClick={(e) => {
+                                    e.stopPropagation()
+                                    setModalState({
+                                        ...modalState,
+                                        isOpen: true,
+                                        root: root,
+                                        mode: 'edit',
+                                        category: category,
+                                        parentCategory: category
+
+                                    });
+
+                                }} />
+                                <Trash2 size={14} className='' onClick={(e) => {
                                     e.stopPropagation()
                                     setDelModalState({
                                         isOpen: true,
                                         mode: 'delete',
+                                        root: root,
                                         category: category,
                                         parentCategory: null
                                     })
@@ -113,19 +132,47 @@ const CategoryHierarchy = ({ data = [], title, category }) => {
                         </button>
 
                         {expandedCategories?.[category?.id] && (
-                            <div className="p-3 space-y-2 bg-card">
+                            <div className="p-2 space-y-2 bg-card">
                                 <div className='w-full flex items-center justify-center'>
                                     {category?.children?.length === 0 && <span className='text-xs text-muted-foreground ml-6'>No sub items found</span>}
                                 </div>
                                 {category?.children?.map((subcategory) => (
                                     <div
                                         key={subcategory?.id}
-                                        className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors duration-200"
+                                        className="flex p-1 items-center justify-between  rounded-md hover:bg-muted/30 transition-colors duration-200 w-full "
                                     >
-                                        <div className="flex items-center gap-2 pl-6">
-                                            <Icon name="Bars3Icon" size={14} className="text-muted-foreground cursor-move" />
-                                            <span className="text-sm text-foreground">{subcategory?.name}</span>
-                                            <span className="text-xs text-muted-foreground">({subcategory?.children?.length})</span>
+                                        <div className='flex flex-row items-center justify-between w-full'>
+                                            <div className="flex items-center gap-2 pl-6">
+                                                <Icon name="Bars3Icon" size={14} className="text-muted-foreground cursor-move" />
+                                                <span className="text-sm text-foreground">{subcategory?.name}</span>
+                                                <span className="text-xs text-muted-foreground">({subcategory?.children?.length})</span>
+                                            </div>
+                                            <div className='flex flex-row items-center gap-2'>
+                                                <Pencil size={14} className='cursor-pointer' onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setModalState({
+                                                        ...modalState,
+                                                        isOpen: true,
+                                                        root: root,
+                                                        mode: 'edit',
+                                                        category: subcategory,
+                                                        parentCategory: subcategory
+
+                                                    });
+
+                                                }} />
+
+                                                <Trash2 size={14} className=' cursor-pointer' onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setDelModalState({
+                                                        isOpen: true,
+                                                        mode: 'delete',
+                                                        root: root,
+                                                        category: subcategory,
+                                                        parentCategory: null
+                                                    })
+                                                }} />
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -135,7 +182,7 @@ const CategoryHierarchy = ({ data = [], title, category }) => {
                 ))}
 
                 <div className='text-xs text-muted-foreground'>
-                    {category?.children?.length === 0 && 'No items found'}
+                    {root?.children?.length === 0 && 'No items found'}
                 </div>
             </div>
 
@@ -150,8 +197,14 @@ const CategoryHierarchy = ({ data = [], title, category }) => {
             />
 
             <CatDeleteModal
+                root={delModalState.root}
                 isOpen={delModalState.isOpen}
-                onClose={() => { setDelModalState({ ...delModalState, isOpen: false }) }}
+                onClose={(cat) => {
+                    setDelModalState({ ...delModalState, isOpen: false })
+                    if (cat) {
+                        setCategory(cat);
+                    }
+                }}
                 category={delModalState.category}
             />
         </div>
@@ -182,7 +235,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
                 name: category?.name || '',
                 description: category?.description || '',
                 color: category?.color || '#FFFF',
-                icon: category?.icon,
+                icon: category?.icon || 'folder',
                 tags: category?.tags || [],
                 parentId: parentCategory?.id || null,
                 isActive: category?.status || true,
@@ -275,7 +328,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
         return Object.keys(newErrors)?.length === 0;
     };
 
-    const { execute } = useAction(upsertCategory, {
+    const { execute } = useAction(upsertHierarchyCategory, {
         onSuccess: (data) => {
             onSave(data?.parentCategory)
             toast.success(`Category "${formData.name}" created successfully`, { id: 'new-appointment' })
@@ -293,7 +346,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
         if (validate()) {
             setLoading(true)
             //toast.loading(`Creating category "${formData?.name}"`, { id: 'new-cat' })
-            await execute({ formData, })
+            await execute({ formData, root })
         }
     };
 
@@ -323,8 +376,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
                     <DialogDescription className='text-xs'>
                         Add new category under {parentCategory?.name}, added category will reflect under parent category ({parentCategory?.name})
                     </DialogDescription>
-                    {root?.name}
-                    {root?.id}
+
                 </DialogHeader>
 
                 <div>
@@ -493,18 +545,62 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
 }
 
 
-const CatDeleteModal = ({ isOpen, onClose, category }) => {
+const CatDeleteModal = ({ isOpen, onClose, category, root }) => {
+    const [loading, setLoading] = useState(false)
+
+
+    const { execute } = useAction(deleteCategory, {
+        onSuccess: (data) => {
+            setLoading(false)
+            onClose(data.category)
+            toast.success(`Category "${category?.name}" deleted successfully`)
+        },
+        onError: (error) => {
+            setLoading(false)
+            toast.error('Oops something went wrong,please try again later');
+        }
+    })
+
+
+    const handleDelete = async () => {
+        setLoading(true)
+        await execute({ categoryId: category?.id, rootId: root?.id })
+    }
+
+
+    const handleClose = () => {
+        setLoading(false)
+        onClose()
+    }
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
-                    <DialogDescription>
-                        This action cannot be undone. This will permanently delete your account
-                        and remove your data from our servers.
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+            <DialogContent className='w-[520px] [&>button:last-child]:hidden p-0 overflow-hidden'>
+
+                <DialogHeader className=''>
+                    <DialogTitle className='flex flex-row items-center gap-2 p-4'>
+                        <TriangleAlert size={18} />
+                        <span>
+                            Delete category "{category?.name}"
+                        </span>
+                    </DialogTitle>
+                    <DialogDescription className='px-4 text-sm text-muted-foreground'>
+                        This will permanently delete the data and remove all associated data from our servers. All your files, settings, and preferences will be lost forever.
                     </DialogDescription>
                 </DialogHeader>
+
+
+
+                <DialogFooter className='p-4'>
+                    <DialogClose asChild>
+                        <Button variant="ghost" disabled={loading} size='sm'>Cancel</Button>
+                    </DialogClose>
+                    <Button variant="save" disabled={loading} size='sm' onClick={handleDelete}>
+                        {loading ? <Loader className=' animate-spin' /> : <Trash2 />}
+                        Delete Category
+                    </Button>
+                </DialogFooter>
+
             </DialogContent>
         </Dialog>
     )
