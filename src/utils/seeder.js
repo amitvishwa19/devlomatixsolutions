@@ -281,6 +281,101 @@ export function seeder() {
         }
     ];
 
+    const serviceSeed = [
+        {
+            name: "General Consultation",
+            slug: "general-consultation",
+            description: "Initial medical consultation with a general physician.",
+            price: "500",
+            insuranceCover: "partially_covered",
+            sku: "MED-CON-GEN",
+            status: true,
+        },
+        {
+            name: "Specialist Consultation",
+            slug: "specialist-consultation",
+            description: "Consultation with a medical specialist.",
+            price: "1000",
+            insuranceCover: "partially_covered",
+            sku: "MED-CON-SPL",
+            status: true,
+        },
+        {
+            name: "ECG Test",
+            slug: "ecg-test",
+            description: "Electrocardiogram to monitor heart activity.",
+            price: "700",
+            insuranceCover: "fully_covered",
+            sku: "MED-DIA-ECG",
+            status: true,
+        },
+        {
+            name: "2D Echo",
+            slug: "2d-echo",
+            description: "Ultrasound imaging of the heart.",
+            price: "2500",
+            insuranceCover: "fully_covered",
+            sku: "MED-DIA-ECHO",
+            status: true,
+        },
+        {
+            name: "Blood Test – CBC",
+            slug: "blood-test-cbc",
+            description: "Complete blood count test.",
+            price: "400",
+            insuranceCover: "fully_covered",
+            sku: "MED-LAB-CBC",
+            status: true,
+        },
+        {
+            name: "X-Ray Imaging",
+            slug: "x-ray-imaging",
+            description: "Digital X-ray imaging service.",
+            price: "800",
+            insuranceCover: "partially_covered",
+            sku: "MED-IMG-XRAY",
+            status: true,
+        },
+        {
+            name: "MRI Scan",
+            slug: "mri-scan",
+            description: "Magnetic Resonance Imaging scan.",
+            price: "6000",
+            insuranceCover: "fully_covered",
+            sku: "MED-IMG-MRI",
+            status: true,
+        },
+        {
+            name: "In-Patient Room Charges",
+            slug: "in-patient-room-charges",
+            description: "Daily hospital room charges for admitted patients.",
+            price: "3000",
+            insuranceCover: "fully_covered",
+            sku: "MED-IPD-ROOM",
+            status: true,
+        },
+        {
+            name: "Minor Surgery",
+            slug: "minor-surgery",
+            description: "Day-care minor surgical procedure.",
+            price: "8000",
+            insuranceCover: "partially_covered",
+            sku: "MED-SUR-MIN",
+            status: true,
+        },
+        {
+            name: "Emergency Services",
+            slug: "emergency-services",
+            description: "Emergency medical care and stabilization.",
+            price: "1500",
+            insuranceCover: "not_covered",
+            sku: "MED-EMR-SRV",
+            status: true,
+        },
+    ];
 
-    return { users, userRoles, permissionSeed, roleSeed, categorySeed, inventorySeed }
+
+
+
+    return { users, userRoles, permissionSeed, roleSeed, categorySeed, inventorySeed, serviceSeed }
 }

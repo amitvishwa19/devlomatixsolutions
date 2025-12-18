@@ -17,6 +17,9 @@ export function CustomBadge({ status, children }) {
         high: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
         expired: "bg-red-500/10 text-red-500 border-red-500/20",
         blank: "bg-muted-foreground -muted-foreground  border--muted-foreground ",
+        fully_covered: 'bg-green-500/10 text-green-500 border-green-500/20',
+        partially_covered: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+        not_covered: 'bg-red-500/10 text-red-500 border-red-500/20',
     };
 
     return (

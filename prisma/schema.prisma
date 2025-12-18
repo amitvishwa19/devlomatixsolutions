@@ -1047,11 +1047,12 @@ model Post {
 model Service {
   id String @id @default(cuid())
 
-  title          String
+  name           String
   slug           String  @unique
   description    String?
-  price          String?
-  insurancePrice String?
+  price          String  @default("0")
+  insuranceCover String? @default("not_covered")
+  sku            String?
 
   category   Category? @relation(fields: [categoryId], references: [id])
   categoryId String?

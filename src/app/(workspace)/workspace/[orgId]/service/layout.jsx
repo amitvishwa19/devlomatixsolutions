@@ -16,15 +16,14 @@ export default async function ServiceLayout({ children }) {
                 include: {
                     children: {
                         include: {
-                            children: {
-                                include: {
-                                    children: true
-                                }
-                            }
+                            children: true
                         }
                     }
                 }
             }
+        },
+        orderBy: {
+            createdAt: 'desc'
         }
     })
 

@@ -1,19 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import Icon from '@/components/ui/AppIcon';
 import { CirclePlus, Loader, Pencil, Plus, Save, Trash2, TriangleAlert } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { upsertCategory } from '../[orgId]/content/taxonomy/_actions/upsert-category';
 import { useAction } from '@/hooks/use-action';
 import { toast } from 'sonner';
-import { useInventory } from '../[orgId]/inventory/_provider/inventoryProvider';
 import { deleteCategory } from '../[orgId]/content/taxonomy/_actions/delete-category';
 import { upsertHierarchyCategory } from '../[orgId]/content/taxonomy/_actions/upsert-hierarchy-category';
 
@@ -25,10 +22,10 @@ const predefinedColors = [
 
 
 
-const CategoryHierarchy = ({ data = [], title, category: root }) => {
+const CategoryHierarchy = ({ data = [], title, category: root, onUpdate }) => {
     const [expandedCategories, setExpandedCategories] = useState({});
     const [editor, setEditor] = useState(false)
-    const { setCategory } = useInventory()
+
 
 
     const [modalState, setModalState] = useState({
@@ -193,7 +190,10 @@ const CategoryHierarchy = ({ data = [], title, category: root }) => {
                 parentCategory={modalState.parentCategory}
                 handleClose={() => { setModalState({ ...modalState, isOpen: false }) }}
                 mode={modalState.mode}
-                onSave={(c) => { setCategory(c) }}
+                onSave={(c) => {
+                    //setCategory(c)
+                    onUpdate(c)
+                }}
             />
 
             <CatDeleteModal
@@ -202,7 +202,8 @@ const CategoryHierarchy = ({ data = [], title, category: root }) => {
                 onClose={(cat) => {
                     setDelModalState({ ...delModalState, isOpen: false })
                     if (cat) {
-                        setCategory(cat);
+                        //setCategory(cat);
+                        onUpdate(cat)
                     }
                 }}
                 category={delModalState.category}

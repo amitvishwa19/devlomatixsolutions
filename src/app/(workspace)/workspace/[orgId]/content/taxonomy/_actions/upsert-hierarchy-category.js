@@ -87,7 +87,7 @@ const handler = async (data) => {
                     }
                 },
                 orderBy: {
-                    createdAt: 'desc'
+                    createdAt: 'asc'
                 }
             })
         }

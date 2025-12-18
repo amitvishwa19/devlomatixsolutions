@@ -7,8 +7,8 @@ import { ROLE } from "@prisma/client";
 import { slug } from "@/utils/functions";
 
 const UpsertService = z.object({
-    orgId: z.string(),
-    userId: z.string(),
+    orgId: z.string().optional(),
+    userId: z.string().optional(),
     formData: z.any().optional(),
 });
 
@@ -18,7 +18,6 @@ const handler = async (data) => {
 
     const { orgId, userId, formData } = data
     let service = {}
-    let services = []
 
 
 
@@ -29,22 +28,23 @@ const handler = async (data) => {
                 id: formData.id || '000'
             },
             create: {
-                title: formData.title,
-                slug: slug(formData.title),
+                name: formData.name,
+                slug: slug(formData.name),
                 description: formData.description,
+                sku: formData.sku,
                 categoryId: formData.category,
                 status: formData?.status,
                 price: formData?.price,
-                insurancePrice: formData?.insurancePrice,
+                insuranceCover: formData?.insuranceCover,
             },
             update: {
-                title: formData.title,
-                slug: slug(formData.title),
+                name: formData.name,
+                slug: slug(formData.name),
                 description: formData.description,
                 categoryId: formData.category,
                 status: formData?.status,
                 price: formData?.price,
-                insurancePrice: formData?.insurancePrice,
+                insuranceCover: formData?.insuranceCover,
             },
             include: {
                 category: true
@@ -60,7 +60,7 @@ const handler = async (data) => {
     }
 
     //revalidatePath(`/org/${orgId}`)
-    return { data: { service, services } };
+    return { data: { service } };
 
 }
 

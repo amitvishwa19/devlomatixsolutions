@@ -6,10 +6,10 @@ export const ServiceContext = createContext()
 
 
 export const ServiceProvider = ({ children, categories, allServices }) => {
-    const [posts, setPosts] = useState([])
+
     const [department, setDepartment] = useState([])
     const [services, setServices] = useState([])
-    const [tags, setTags] = useState([])
+
 
     useEffect(() => {
         setDepartment(categories)
@@ -22,7 +22,7 @@ export const ServiceProvider = ({ children, categories, allServices }) => {
 
 
     return (
-        <ServiceContext.Provider value={{ department, services, setServices }}>
+        <ServiceContext.Provider value={{ department, setDepartment, services, setServices }}>
             {children}
         </ServiceContext.Provider>
     )

@@ -1,315 +1,376 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from '@/components/ui/form';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, } from "@/components/ui/select"
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { useService } from '../../_provider/serviceProvider';
+import { Input } from "@/components/ui/input"
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Loader, Save } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger, } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { CalendarIcon, Package, Loader2, Loader, Save, FolderOpen, ChevronRight } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { upsertService } from '../../_action/upsert-service';
 import { useAction } from '@/hooks/use-action';
-import { useParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { DynamicIcon } from 'lucide-react/dynamic';
+import { upsertService } from '../../_action/upsert-service';
 
-export default function ServiceEditor({ isOpen, service, onClose, onSave }) {
-    const { department, setServices } = useService()
-    const [parentId, setParentId] = useState();
-    const [childId, setChildId] = useState();
-    const [loading, setLoading] = useState(false)
-    const { orgId } = useParams()
-    const { data: session } = useSession()
+const serviceFormSchema = z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, 'Name is required').max(100),
+    description: z.string().max(500).optional(),
+    category: z.string().optional(),
+    sku: z.string().max(50).optional(),
+    price: z.string().min(1, 'Price is required').max(100),
+    insuranceCover: z.string(),
+    status: z.boolean()
 
-    const selectedParent = React.useMemo(
-        () => department?.children?.find((item) => item.id === parentId),
-        [parentId, department]
-    );
+});
+
+export default function ServiceEditor({ isOpen, onClose, onSubmit, categories, service }) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const [selectedLabel, setSelectedLabel] = useState("");
+    const isEditing = !!service;
 
 
 
-    const [formData, setFormData] = useState({
-        id: '',
-        title: '',
-        category: '',
-        subcategory: '',
-        description: '',
-        price: 0,
-        insurancePrice: 0,
-        status: true
+    function generateSKU(title, prefix = "SER") {
+        if (!title) return "";
+
+        const words = title
+            .toUpperCase()
+            .replace(/[^A-Z0-9 ]/g, "") // remove special chars
+            .split(" ")
+            .filter(Boolean);
+
+        const size = words.find(w => /\d+(ML|MG|G|CM|MM|L)$/i.test(w));
+        const mainWords = words.filter(w => w !== size);
+
+        const code = mainWords
+            .slice(0, 2)               // take first 2 meaningful words
+            .map(w => w.slice(0, 3))   // first 3 letters
+            .join("-");
+
+        return [prefix, code, size].filter(Boolean).join("-");
+    }
+
+
+    const form = useForm({
+        resolver: zodResolver(serviceFormSchema),
+        defaultValues: {
+            id: '',
+            name: '',
+            description: '',
+            category: '',
+            sku: '',
+            insuranceCover: 'not_covered',
+            price: 0,
+            status: true
+        },
     });
-
-    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         if (service) {
-            setFormData({
-                id: service?.id || '',
-                title: service?.title || '',
+            form.reset({
+                id: service.id,
+                name: service.name,
+                description: service.description || '',
                 category: service?.category?.id || '',
-                subcategory: service?.subcategory || '',
-                description: service?.description || '',
-                price: service?.price || '',
-                insurancePrice: service?.insurancePrice || '',
-                billingCode: service?.billingCode || '',
-                status: service?.status || true
+                sku: service.sku || '',
+                insuranceCover: service.insuranceCover || 'not_covered',
+                price: service.price || 0,
+                status: service.status || true,
             });
-        } else if (isOpen) {
-            // Reset form when opening modal for new service
-            setFormData({
-                title: '',
-                code: '',
-                category: '',
-                subcategory: '',
+        } else {
+            form.reset({
+                id: '',
+                name: '',
                 description: '',
-                price: '',
-                insurancePrice: '',
-                billingCode: '',
+                category: '',
+                sku: '',
+                insuranceCover: 'not_covered',
+                price: 0,
                 status: true
             });
-            setErrors({});
         }
-        //console.log(service?.category?.id)
+    }, [service, form, isOpen]);
 
 
-    }, [service, isOpen]);
-
-    const handleChange = (e) => {
-        const { name, value } = e?.target;
-
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        if (errors?.[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
+    const handleNameChange = (e) => {
+        const name = e.target.value;
+        form.setValue('name', name);
+        if (!isEditing) {
+            const sku = generateSKU(name)
+            form.setValue('sku', sku);
         }
     };
 
-    const validateForm = () => {
-        const newErrors = {};
-        if (!formData?.name?.trim()) newErrors.name = 'Service name is required';
-        if (!formData?.code?.trim()) newErrors.code = 'Service code is required';
-        if (!formData?.category) newErrors.category = 'Category is required';
-        if (!formData?.price || parseFloat(formData?.price) <= 0) newErrors.price = 'Valid price is required';
-
-        setErrors(newErrors);
-        return Object.keys(newErrors)?.length === 0;
-    };
 
     const { execute } = useAction(upsertService, {
         onSuccess: (data) => {
-            console.log('upsert service action response', data)
-            setServices(prev =>
-                prev.some(item => item.id === data?.service?.id)
-                    ? prev.map(item =>
-                        item.id === data?.service?.id ? { ...item, ...data?.service } : item
-                    )
-                    : [data?.service, ...prev]
-            );
-            setLoading(false)
-            onClose()
-            toast.success(`Service "${data.service?.title}" updated successfully`)
+            onClose(data.service)
+            form.reset();
+            onSubmit(data.service)
+            toast.success(`Service "${data?.service?.name}" Added/updated successfully`)
+            setIsSubmitting(false)
         },
         onError: (error) => {
-            setLoading(false)
+            toast.error('Oops!, Something went wrong, try again later')
+            setIsSubmitting(false)
         }
     })
 
-    const handleSubmit = async (e) => {
-        e?.preventDefault();
 
-        if (formData.title === '') return toast.error('Please define a Title to create service')
-        if (formData.category === '') return toast.error('Please select a department to create service')
-        setLoading(true)
-
-        await execute({ formData, orgId, userId: session?.user?.userId })
-
-        console.log('formData', formData)
+    const handleSubmit = async (data) => {
+        setIsSubmitting(true);
+        try {
+            await execute({ formData: data })
+        } catch (error) {
+            console.error('Error submitting form:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
+
     const handleOpenChange = () => {
-
+        setIsSubmitting(false)
+        form.reset();
         onClose()
-        setFormData({
-            title: '',
-            code: '',
-            category: '',
-            subcategory: '',
-            description: '',
-            price: '',
-            insurancePrice: '',
-            billingCode: '',
-            status: true
-        });
     }
-
-    if (!isOpen) return null;
-
 
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
 
-            <DialogContent className='p-4 [&>button:last-child]:hidden'>
+            <DialogContent>
 
-                <DialogHeader className={'hidden'}>
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Package className="h-5 w-5 text-primary" />
+                        {isEditing ? 'Update Service Item' : 'Add Service Item'}
+                    </DialogTitle>
                     <DialogDescription>
-                        This action cannot be undone. This will permanently delete your account
-                        and remove your data from our servers.
+                        {isEditing
+                            ? 'Update the details of this Service item.'
+                            : 'Fill in the details to add a new Service item.'}
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} >
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                        <div className="grid gap-4 sm:grid-cols-2">
 
 
-                    <div className="flex flex-col gap-6">
-
-                        {/* Service title */}
-                        <div className='flex flex-col gap-2'>
-                            <Label >
-                                Service Name <span className="text-error">*</span>
-                            </Label>
-                            <Input
-                                type="text"
-                                name="title"
-                                value={formData?.title}
-                                onChange={handleChange}
-                                placeholder="Enter service name"
+                            {/* Name */}
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name *</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="Enter item name"
+                                                {...field}
+                                                onChange={handleNameChange}
+                                                autoFocus={false}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                            {errors?.name && <p className="text-xs text-error mt-1">{errors?.name}</p>}
-                        </div>
 
-                        {/* Service category */}
+                            {/* Category */}
+                            <FormField
+                                control={form.control}
+                                name="category"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Category</FormLabel>
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select category" />
+                                                </SelectTrigger>
+                                            </FormControl>
 
-                        <div className='flex flex-col gap-2 '>
-                            <Label>Select Department *</Label>
-                            <Select
-                                name='category'
-                                defaultValue={formData?.category}
-                                onValueChange={(value) => {
-                                    setParentId(value); setChildId(undefined);
-                                    setFormData({ ...formData, category: value })
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select department" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
+                                            <SelectContent>
+                                                {categories.map((cat) => (
+                                                    <SelectGroup key={cat.id}>
+                                                        <SelectItem value={cat.id} className='pl-4 font-medium text-sm'>
+                                                            <div className='flex flex-row items-center gap-2'>
+                                                                {cat.icon ? <DynamicIcon size={14} name={cat.icon} /> : <DynamicIcon size={14} name={'folder'} />}
+                                                                <span>All {cat.name}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                        {cat?.children?.map((subCat) => (
 
-                                        {department?.children?.map((item) => (
-                                            <SelectItem key={item.id} value={item.id}>
-                                                {item.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                                            <SelectItem value={subCat.id} className='pl-8 font-medium text-sm'>
+                                                                <span className="flex items-center gap-2 text-muted-foreground">
+                                                                    <ChevronRight className="h-3 w-3" />
+                                                                    <span className="text-foreground">{subCat.name}</span>
+                                                                </span>
+                                                            </SelectItem>
+                                                        ))}
 
-                        {/* Sub department Select */}
-                        {selectedParent?.children?.length > 0 && (
-                            <div className=''>
-                                <div className='flex flex-col gap-2'>
-                                    <Label>Select Sub Department</Label>
-                                    <Select
-                                        name='category'
-                                        value={childId}
-                                        onValueChange={(value) => {
-                                            setChildId(value);
-                                            setFormData({ ...formData, category: value })
-                                        }}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select service" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>Services</SelectLabel>
-                                                {selectedParent.children.map((child) => (
-                                                    <SelectItem key={child.id} value={child.id}>
-                                                        {child.name}
-                                                    </SelectItem>
+                                                    </SelectGroup>
                                                 ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        )}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                        {/* Price of service */}
-                        <div className='flex flex-col gap-2'>
-                            <Label > Standard Price ( ₹ INR ) <span className="text-error">*</span> </Label>
-                            <Input
-                                type="number"
+                            {/* SKU */}
+                            <FormField
+                                control={form.control}
+                                name="sku"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>SKU</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="SKU-001" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Price */}
+                            <FormField
+                                control={form.control}
                                 name="price"
-                                value={formData?.price}
-                                onChange={handleChange}
-                                step="50"
-                                min="0"
-                                placeholder="0.00"
+                                type='nuber'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Price *</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="₹ 500" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                            {errors?.price && <p className="text-xs text-error mt-1">{errors?.price}</p>}
-                        </div>
 
 
-                        {/* INsurance Price */}
-                        <div className='flex flex-col gap-2'>
-                            <Label >Insurance Price  ( ₹ INR )</Label>
-                            <Input
-                                type="number"
-                                name="insurancePrice"
-                                value={formData?.insurancePrice}
-                                onChange={handleChange}
-                                step="50"
-                                min="0"
-                                placeholder="0.00"
+
+                            {/* Insurance Covver */}
+                            <FormField
+                                control={form.control}
+                                name="insuranceCover"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Insurance Cover *</FormLabel>
+
+                                        <Select
+                                            defaultValue={'covered'}
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select insurance price" />
+                                                </SelectTrigger>
+                                            </FormControl>
+
+                                            <SelectContent>
+                                                <SelectItem value="fully_covered" className='font-medium text-sm'>FUlly Covered</SelectItem>
+                                                <SelectItem value="partially_covered" className='font-medium text-sm'>Partially Covered</SelectItem>
+                                                <SelectItem value="not_covered" className='font-medium text-sm'>Not Covered</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                        </div>
 
-                        {/* Status */}
-                        <div className='flex flex-col gap-2'>
-                            <Select name='status' defaultValue={formData.status} onValueChange={(e) => {
-                                setFormData({ ...formData, status: e })
-                                //console.log(e)
-                            }}>
-                                <SelectTrigger className="">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={true} >Active</SelectItem>
-                                    <SelectItem value={false}>InActive</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
 
-                        {/* Service Description */}
-                        <div className='flex flex-col gap-2'>
-                            <Label >Description</Label>
-                            <Textarea
-                                name="description"
-                                value={formData?.description}
-                                onChange={handleChange}
-                                rows={4}
-                                placeholder="Enter service description"
+                            {/* Status */}
+                            <FormField
+                                control={form.control}
+                                name="status"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Status *</FormLabel>
+
+                                        <Select
+                                            defaultValue={true}
+                                            value={field.value}
+                                            // onValueChange={(value) =>
+                                            //     //field.onChange(value === "active")
+                                            //     field.onChange
+                                            // }
+
+                                            onValueChange={field.onChange}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                            </FormControl>
+
+                                            <SelectContent>
+                                                <SelectItem value={true} className='font-medium text-sm'>Active</SelectItem>
+                                                <SelectItem value={false} className='font-medium text-sm'>Inactive</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
+
                         </div>
 
-                    </div>
-                </form>
+                        {/* Description - Full width */}
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            rows='4'
+                                            placeholder="Enter item description..."
+                                            className="min-h-[80px] resize-none"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="ghost" disabled={loading} size={'sm'}>Cancel</Button>
-                    </DialogClose>
-                    <Button variant={'save'} size={'sm'} disabled={loading} onClick={handleSubmit}>
-                        {loading ? <Loader className='animate-spin' /> : <Save />}
-                        Save changes
-                    </Button>
-                </DialogFooter>
+                        <DialogFooter className="gap-2 pt-4">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size={'sm'}
+                                onClick={() => onClose(false)}
+                                disabled={isSubmitting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button variant={'save'} size={'sm'} disabled={isSubmitting}>
+                                {isSubmitting ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4 " />}
+                                {isEditing ? 'Update Item' : 'Add Item'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+
             </DialogContent>
         </Dialog>
     )

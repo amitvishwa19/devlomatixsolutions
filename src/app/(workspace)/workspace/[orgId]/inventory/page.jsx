@@ -205,21 +205,6 @@ export default function InventoryPage() {
         setDeleteModal(true)
     }
 
-    const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-        });
-    };
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'INR',
-        }).format(amount);
-    };
-
 
     const filterData = useMemo(() => {
         return inventories?.filter((invoice) => {
@@ -258,26 +243,6 @@ export default function InventoryPage() {
         });
     }, [inventories, filters]);
 
-    const handleViewInvoice = (item) => {
-        setSelectedInvoice(item);
-        setIsDetailOpen(true);
-    };
-
-    const handleDeleteInvoice = (id) => {
-        setInvoices(inventories.filter((inv) => inv.id !== id));
-        toast({
-            title: 'Invoice Deleted',
-            description: 'The invoice has been successfully deleted.',
-        });
-    };
-
-    const handleCreateInvoice = (newItem) => {
-        const inventory = {
-            ...newItem,
-            id: String(Date.now()),
-        };
-        setInventories([inventories, ...inventory]);
-    };
 
     const columns = [
         {
@@ -388,7 +353,12 @@ export default function InventoryPage() {
                             />
                         </div>
                         <div className='w-full'>
-                            <CategoryHierarchy title='Inventory Hierarchy' data={categories} category={category} />
+                            <CategoryHierarchy
+                                title='Inventory Hierarchy'
+                                data={categories}
+                                category={category}
+                                onUpdate={(c) => { setCategory(c) }}
+                            />
                         </div>
 
 
