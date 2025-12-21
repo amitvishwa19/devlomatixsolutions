@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "Service" ALTER COLUMN "price" DROP DEFAULT,
-ALTER COLUMN "insurancePrice" DROP DEFAULT;

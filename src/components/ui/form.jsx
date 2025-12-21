@@ -4,6 +4,7 @@ import { Controller, FormProvider, useFormContext } from "react-hook-form";
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { AlertTriangle } from "lucide-react";
 
 const Form = FormProvider
 
@@ -63,7 +64,7 @@ const FormLabel = React.forwardRef(({ className, ...props }, ref) => {
   return (
     (<Label
       ref={ref}
-      className={cn(error && "text-red-500 font-bold", className)}
+      className={cn(error && "text-orange-500 font-bold", className)}
       htmlFor={formItemId}
       {...props} />)
   );
@@ -113,8 +114,9 @@ const FormMessage = React.forwardRef(({ className, children, ...props }, ref) =>
     (<p
       ref={ref}
       id={formMessageId}
-      className={cn("text-xs font-medium text-red-500 dark:text-muted-foreground/40 italic", className)}
+      className={cn("text-xs font-medium  text-muted-foreground/60 italic flex flex-row items-center gap-2", className)}
       {...props}>
+      <AlertTriangle size={14} />
       {body}
     </p>)
   );

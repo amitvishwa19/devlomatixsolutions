@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 export default function Database() {
     const [loading, setLoading] = useState(null)
-    const { users: user, roleSeed: role, permissionSeed: permission, doctor: doctor, patient: patient, categorySeed, inventorySeed, serviceSeed } = seeder()
+    const { users: user, roleSeed: role, permissionSeed: permission, doctor: doctor, patient: patient, categorySeed, inventorySeed, serviceSeed, paymentSeed, invoicesSeed } = seeder()
 
     const handleDatabaseSeed = (type, data) => {
         setLoading(type)
@@ -36,6 +36,41 @@ export default function Database() {
                     </Button>
 
                 </div>
+
+                <div>
+                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('doctor', user) }}>
+                        <span>Seed Doctor</span>
+                        {loading === 'doctor' && <Loader className='flex justify-end animate-spin' />}
+                    </Button>
+
+                </div>
+
+                <div>
+                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('patient', user) }}>
+                        <span>Seed Patient</span>
+                        {loading === 'patient' && <Loader className='flex justify-end animate-spin' />}
+                    </Button>
+
+                </div>
+
+                <div>
+                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('role', role) }}>
+                        <span>Seed Roles</span>
+                        {loading === 'role' && <Loader className='flex justify-end animate-spin' />}
+                    </Button>
+
+                </div>
+
+
+                <div>
+                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('permission', permission) }}>
+                        <span>Seed Permission</span>
+                        {loading === 'permission' && <Loader className='flex justify-end animate-spin' />}
+                    </Button>
+
+                </div>
+
+
                 <div>
                     <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('categories', categorySeed) }}>
                         <span>Seed Categories</span>
@@ -61,37 +96,23 @@ export default function Database() {
                 </div>
 
                 <div>
-                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('role', role) }}>
-                        <span>Seed Roles</span>
-                        {loading === 'role' && <Loader className='flex justify-end animate-spin' />}
+                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('payments', paymentSeed) }}>
+                        <span>Seed Payment</span>
+                        {loading === 'payments' && <Loader className='flex justify-end animate-spin' />}
                     </Button>
 
                 </div>
 
 
                 <div>
-                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('permission', permission) }}>
-                        <span>Seed Permission</span>
-                        {loading === 'permission' && <Loader className='flex justify-end animate-spin' />}
+                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('invoices', invoicesSeed) }}>
+                        <span>Seed Invoice</span>
+                        {loading === 'invoices' && <Loader className='flex justify-end animate-spin' />}
                     </Button>
 
                 </div>
 
-                <div>
-                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('doctor', user) }}>
-                        <span>Seed Doctor</span>
-                        {loading === 'doctor' && <Loader className='flex justify-end animate-spin' />}
-                    </Button>
 
-                </div>
-
-                <div>
-                    <Button variant={'outline'} size={'sm'} className='w-40' onClick={() => { handleDatabaseSeed('patient', user) }}>
-                        <span>Seed Patient</span>
-                        {loading === 'patient' && <Loader className='flex justify-end animate-spin' />}
-                    </Button>
-
-                </div>
 
             </div>
 

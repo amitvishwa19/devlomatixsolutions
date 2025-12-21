@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Filter, Search } from "lucide-react";
 import TableNoItemFound from "./TableNoItemFound";
+import { Button } from "@/components/ui/button";
 
 export default function DataTable({ columns, data, statusFIlter, dateFilter, filterTitle, onFiltersChange }) {
     const [globalFilter, setGlobalFilter] = useState([]);
@@ -37,8 +38,9 @@ export default function DataTable({ columns, data, statusFIlter, dateFilter, fil
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onGlobalFilterChange: setGlobalFilter,
+
         state: {
-            pagination,
+            pageSize: 15,
         },
         state: {
             sorting,
@@ -203,7 +205,31 @@ export default function DataTable({ columns, data, statusFIlter, dateFilter, fil
                 </Table>
             </div>
 
+            <div className="flex flex-row items-center justify-between">
+                <div className="text-muted-foreground flex-1 text-xs">
+                    {table.getPaginationRowModel().rows.length} of{" "}
+                    {table.getFilteredRowModel().rows.length} item(s).
+                </div>
 
+                <div className="space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        Next
+                    </Button>
+                </div>
+            </div>
         </div>
     )
 }

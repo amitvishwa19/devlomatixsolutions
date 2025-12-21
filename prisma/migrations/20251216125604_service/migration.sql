@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Service" ALTER COLUMN "price" SET DEFAULT '0',
-ALTER COLUMN "price" SET DATA TYPE TEXT,
-ALTER COLUMN "insurancePrice" SET DEFAULT '0',
-ALTER COLUMN "insurancePrice" SET DATA TYPE TEXT;

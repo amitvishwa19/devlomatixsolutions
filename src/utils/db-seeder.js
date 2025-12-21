@@ -169,13 +169,17 @@ export async function SeedDAtabase(type, data) {
             })
         }
 
+        if (type === 'categories') {
+            await db.category.createMany({
+                data: data
+            })
+        }
 
         if (type === 'inventories') {
             await db.inventory.createMany({
                 data: data
             })
         }
-
 
         if (type === 'role') {
             await db.role.createMany({
@@ -185,6 +189,18 @@ export async function SeedDAtabase(type, data) {
 
         if (type === 'permission') {
             await db.permission.createMany({
+                data: data
+            })
+        }
+
+        if (type === 'payments') {
+            await db.payment.createMany({
+                data: data
+            })
+        }
+
+        if (type === 'invoices') {
+            await db.invoice.createMany({
                 data: data
             })
         }

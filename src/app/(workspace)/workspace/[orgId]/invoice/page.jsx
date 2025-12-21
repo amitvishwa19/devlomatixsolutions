@@ -7,13 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Download, Eye } from "lucide-react";
+import { Download, Eye, Pencil, ReceiptText, Trash2 } from "lucide-react";
 import { InvoiceHeader } from './_components/InvoiceHeader';
 import { InvoiceStats } from './_components/InvoiceStats';
 import { InvoiceFilters } from './_components/InvoiceFilters';
 import { InvoiceTable } from './_components/InvoiceTable';
 import { InvoiceDetail } from './_components/InvoiceDetai';
-import { CreateInvoiceDialog } from './_components/CreateInvoiceDialog';
+import { CreateInvoiceDialog, InvoiceEditor } from './_components/InvoiceEditor';
+import { CustomBadge } from '../(misc)/_components/CustomBadge';
+import moment from 'moment';
+import { useInvoice } from './_provider/invoiceProvider';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import DataTable from '../../_components/DataTable';
+import CategoryHierarchy from '../../_components/CategoryHierarchy';
 
 
 const mockInvoices = [
@@ -139,10 +145,22 @@ const mockInvoices = [
 
 
 export default function InvoicePage() {
-    const [invoices, setInvoices] = useState(mockInvoices);
+
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    const { invoices, setInvoices, category, setCategory, services } = useInvoice()
+
+
+    const [invoiceEditor, setInvoiceEditor] = useState({
+        isOpen: false,
+        mode: 'add',
+        invoice: null,
+    })
+
+
+
     const [filters, setFilters] = useState({
         search: '',
         status: 'all',
@@ -150,7 +168,7 @@ export default function InvoicePage() {
     });
 
     const filteredInvoices = useMemo(() => {
-        return invoices.filter((invoice) => {
+        return invoices?.filter((invoice) => {
             // Search filter
             const searchLower = filters.search.toLowerCase();
             const matchesSearch =
@@ -185,6 +203,27 @@ export default function InvoicePage() {
             return matchesSearch && matchesStatus && matchesDate;
         });
     }, [invoices, filters]);
+
+    function getDueDatePriority(date, { highDays = 7, mediumDays = 30 } = {}) {
+        const today = new Date();
+        const expiry = new Date(date);
+
+        // Normalize times (avoid time-of-day issues)
+        today.setHours(0, 0, 0, 0);
+        expiry.setHours(0, 0, 0, 0);
+
+        const diffInDays = Math.ceil(
+            (expiry - today) / (1000 * 60 * 60 * 24)
+        );
+
+        // Already expired
+        if (diffInDays < 0) return "expired";
+
+        if (diffInDays <= highDays) return "high";
+        if (diffInDays <= mediumDays) return "medium";
+
+        return "low";
+    }
 
 
     const handleViewInvoice = (invoice) => {
@@ -227,6 +266,117 @@ export default function InvoicePage() {
         }
     };
 
+    const columns = [
+        {
+            accessorKey: "sku",
+            header: "Invoice#",
+        },
+        {
+            accessorKey: "subtotal",
+            header: "Sub Total",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.subtotal}</span>
+                )
+            }
+        },
+        {
+            accessorKey: "tax",
+            header: "Tax/GST",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.tax}</span>
+                )
+            }
+        },
+        {
+            accessorKey: "discount",
+            header: "Discount",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.discount}</span>
+                )
+            }
+        },
+        {
+            accessorKey: "totalAmount",
+            header: "Total Amount",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.totalAmount}</span>
+                )
+            }
+        },
+        {
+            accessorKey: "dueDate",
+            header: "Due Date",
+            cell: ({ row }) => {
+                const tootltipMsg = getDueDatePriority(row.original.dueDate)
+                return (
+                    <div className=''>
+                        <CustomBadge status={getDueDatePriority(row.original.dueDate)}>
+                            {moment(row.original.dueDate).format("MMM Do YY")}
+                        </CustomBadge>
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "status",
+            header: "Status",
+            cell: ({ row }) => {
+                const tootltipMsg = getDueDatePriority(row.original.dueDate)
+                return (
+                    <div className=''>
+                        <CustomBadge status={row.original.status}>
+                            {row.original.status}
+                        </CustomBadge>
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "category",
+            header: "Category",
+            cell: ({ row }) => {
+                return (
+                    <div>
+                        {row.original.category ?
+                            <CustomBadge status='medium' >
+                                {row?.original?.category?.icon && <DynamicIcon size={14} name={row.original.category?.icon} className='mr-2' />}
+                                <span className='text-xs'>{row.original.category?.name}</span>
+                            </CustomBadge> :
+                            <CustomBadge status='blank' className='text-xs'><span>No Category Assigned</span></CustomBadge>
+                        }
+
+                    </div>
+                )
+            }
+        },
+        {
+            id: 'action',
+            header: "Actions",
+            cell: ({ row }) => {
+
+                return (
+                    <div className='flex flex-row items-center gap-4'>
+                        <Eye size={16} className='cursor-pointer' onClick={() => { }} />
+                        <Pencil size={16} className='cursor-pointer' onClick={() => {
+                            setInvoiceEditor({
+                                isOpen: true,
+                                mode: 'edit',
+                                invoice: row.original,
+                            })
+                        }} />
+                        <Trash2 size={16} className='cursor-pointer' onClick={() => { }} />
+                    </div>
+                )
+            }
+        },
+
+    ]
+
+
 
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
@@ -237,44 +387,77 @@ export default function InvoicePage() {
                     <h2 className='text-xs text-white/50'>Manage and generate patient invoices</h2>
                 </div>
                 <div>
-                    <Button variant={'save'} size={'sm'} className='' onClick={() => { setIsCreateOpen(true) }}>
+                    <Button variant={'save'} size={'sm'} className='' onClick={() => {
+                        console.log('Open editor')
+                        setInvoiceEditor({
+                            isOpen: true,
+                            mode: 'add',
+                            invoice: null,
+                        })
+                    }}>
+                        <ReceiptText />
                         New Invoice
                     </Button>
                 </div>
             </div>
 
-            <div className='h-full flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md'>
-                <div className="w-full ">
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4'>
+                <div className='flex flex-col gap-4 p-2'>
+
+                    <div className='flex flex-row gap-2 w-full '>
 
 
-                    {/* Main Content */}
+                        <div className='min-w-[75%]'>
+                            <DataTable
+                                columns={columns}
+                                data={invoices}
+                                onFiltersChange={(e) => { console.log('filter change', e) }}
+                                filterTitle='Search invoice items......'
+                            />
+                        </div>
 
-                    <div className="space-y-6">
-                        <InvoiceStats invoices={invoices} />
-                        <InvoiceFilters filters={filters} onFiltersChange={setFilters} />
-                        <InvoiceTable
-                            invoices={filteredInvoices}
-                            onView={handleViewInvoice}
-                            onDelete={handleDeleteInvoice}
-                        />
+                        <div className='w-full'>
+                            <CategoryHierarchy
+                                title='Invoices Hierarchy'
+                                data={invoices}
+                                category={category}
+                                onUpdate={(c) => { setCategory(c) }}
+                            />
+                        </div>
+
+
                     </div>
 
+                    <InvoiceEditor
+                        isOpen={invoiceEditor.isOpen}
+                        mode={invoiceEditor.mode}
+                        services={services}
+                        onClose={() => {
+                            setInvoiceEditor(
+                                {
+                                    isOpen: false,
+                                    mode: 'add',
+                                    invoice: null,
+                                }
+                            )
+                        }}
+                    />
 
-                    {/* Invoice Detail Drawer */}
-                    <InvoiceDetail
+
+                    {/* <InvoiceDetail
                         invoice={selectedInvoice}
                         open={isDetailOpen}
                         onClose={() => setIsDetailOpen(false)}
-                    />
+                    /> */}
 
-                    {/* Create Invoice Dialog */}
-                    <CreateInvoiceDialog
+
+                    {/* <CreateInvoiceDialog
                         open={isCreateOpen}
                         onClose={() => setIsCreateOpen(false)}
                         onSave={handleCreateInvoice}
-                    />
+                    />  */}
                 </div>
-            </div>
+            </ScrollArea>
 
 
         </div >

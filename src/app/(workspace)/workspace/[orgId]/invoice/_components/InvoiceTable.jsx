@@ -45,14 +45,14 @@ export function InvoiceTable({ invoices, onView, onDelete }) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {invoices.length === 0 ? (
+                    {invoices?.length === 0 ? (
                         <TableRow>
                             <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                                 No invoices found
                             </TableCell>
                         </TableRow>
                     ) : (
-                        invoices.map((invoice, index) => (
+                        invoices?.map((invoice, index) => (
                             <TableRow
                                 key={invoice.id}
                                 className="cursor-pointer transition-colors hover:bg-muted/30 animate-fade-in"
