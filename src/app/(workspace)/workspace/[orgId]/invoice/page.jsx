@@ -20,6 +20,8 @@ import { useInvoice } from './_provider/invoiceProvider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import DataTable from '../../_components/DataTable';
 import CategoryHierarchy from '../../_components/CategoryHierarchy';
+import { DynamicIcon } from 'lucide-react/dynamic';
+import InvoiceView from './_components/InvoiceView';
 
 
 const mockInvoices = [
@@ -156,6 +158,12 @@ export default function InvoicePage() {
     const [invoiceEditor, setInvoiceEditor] = useState({
         isOpen: false,
         mode: 'add',
+        invoice: null,
+    })
+
+    const [invoiceViewer, setInvoiceViewer] = useState({
+        isOpen: false,
+        mode: 'view',
         invoice: null,
     })
 
@@ -360,7 +368,13 @@ export default function InvoicePage() {
 
                 return (
                     <div className='flex flex-row items-center gap-4'>
-                        <Eye size={16} className='cursor-pointer' onClick={() => { }} />
+                        <Eye size={16} className='cursor-pointer' onClick={() => {
+                            setInvoiceViewer({
+                                isOpen: true,
+                                mode: 'view',
+                                invoice: row.original,
+                            })
+                        }} />
                         <Pencil size={16} className='cursor-pointer' onClick={() => {
                             setInvoiceEditor({
                                 isOpen: true,
@@ -432,6 +446,8 @@ export default function InvoicePage() {
                         isOpen={invoiceEditor.isOpen}
                         mode={invoiceEditor.mode}
                         services={services}
+                        category={category}
+                        invoice={invoiceEditor.invoice}
                         onClose={() => {
                             setInvoiceEditor(
                                 {
@@ -441,6 +457,21 @@ export default function InvoicePage() {
                                 }
                             )
                         }}
+                        onSave={(invoice) => {
+                            setInvoices(prev =>
+                                prev.some(item => item.id === invoice.id)
+                                    ? prev.map(item =>
+                                        item.id === invoice.id ? { ...item, ...invoice } : item
+                                    )
+                                    : [invoice, ...prev]
+                            );
+                        }}
+                    />
+
+                    <InvoiceView
+                        isOpen={invoiceViewer.isOpen}
+                        invoice={invoiceViewer.invoice}
+
                     />
 
 

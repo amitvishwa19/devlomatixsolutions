@@ -362,13 +362,15 @@ export default function ServicePage() {
                             categories={department?.children}
                             service={serviceEditor.service}
                             onSubmit={(ser) => {
-                                setServices(prev =>
-                                    prev.some(item => item.id === ser.id)
-                                        ? prev.map(item =>
-                                            item.id === ser.id ? { ...item, ...ser } : item
-                                        )
-                                        : [ser, ...prev]
-                                );
+                                if (ser) {
+                                    setServices(prev =>
+                                        prev.some(item => item.id === ser.id)
+                                            ? prev.map(item =>
+                                                item.id === ser.id ? { ...item, ...ser } : item
+                                            )
+                                            : [ser, ...prev]
+                                    );
+                                }
                             }}
                         />
 

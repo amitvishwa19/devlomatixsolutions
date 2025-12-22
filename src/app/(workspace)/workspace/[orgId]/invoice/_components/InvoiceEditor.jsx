@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Loader, Plus, ReceiptText, Save, Trash2 } from "lucide-react";
 import { z } from "zod";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -23,16 +23,11 @@ import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
 
 const invoiceSchema = z.object({
+    id: z.string().optional(),
     sku: z.string(),
-    appointmentId: z
-        .string({
-            required_error: "Please select a appointment.",
-            invalid_type_error: "Please select a appointment."
-        })
-        .min(1, "Please select a appointment."),
+    appointmentId: z.string({ required_error: "Please select a appointment.", invalid_type_error: "Please select a appointment." }).min(1, "Please select a appointment."),
     patientId: z.string(),
-    serviceId: z.string({ required_error: "Select a service.", invalid_type_error: "Select a service." })
-        .min(1, "Select a service."),
+    serviceId: z.string({ required_error: "Select a service.", invalid_type_error: "Select a service." }).min(1, "Select a service."),
     doctorId: z.string(),
     issueDate: z.any().refine((v) => v instanceof Date, { message: "Issue date is required." }),
     dueDate: z.any().refine((v) => v instanceof Date, { message: "Due date is required." }),
@@ -46,6 +41,7 @@ const invoiceSchema = z.object({
             total: z.coerce.number().min(0, "Total cannot be negative.")
         })
     ).min(1, "No service selected! Select atleast one service to generate invoice"),
+    category: z.string().optional(),
     subTotal: z.coerce.number(),
     discount: z.coerce.number(),
     tax: z.coerce.number(),
@@ -55,15 +51,18 @@ const invoiceSchema = z.object({
 });
 
 
-export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services }) {
+export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services, category }) {
     const { appointments } = useInvoice()
     const [loading, setLoading] = useState(false)
     const FIXED_TAX_RATE = 0;
     const TAX = 0
 
+
+
     const form = useForm({
         resolver: zodResolver(invoiceSchema),
         defaultValues: {
+            id: "",
             sku: "",
             appointmentId: "",
             patientId: "",
@@ -77,9 +76,56 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
             tax: TAX,
             taxAmount: 0,
             totalAmount: 0,
-            notes: ""
+            notes: "",
+            category: ""
         }
     });
+
+    useEffect(() => {
+        if (invoice) {
+            form.reset({
+                id: invoice?.id || "",
+                sku: invoice?.sku || "",
+                appointmentId: invoice?.appointmentId || "",
+                patientId: invoice?.patientId || "",
+                doctorId: invoice?.doctorId || "",
+                issueDate: new Date(invoice?.issueDate) || new Date(),
+                dueDate: new Date(invoice?.dueDate) || new Date(),
+                status: invoice?.status || "draft",
+                items: invoice?.items || [],
+                subTotal: invoice?.subTotal || 0,
+                discount: invoice?.discount || 0,
+                tax: invoice?.tax || TAX,
+                taxAmount: invoice?.taxAmount || 0,
+                totalAmount: invoice?.totalAmount || 0,
+                notes: invoice?.notes || "",
+                category: invoice?.categoryId || "",
+                serviceId: invoice?.id || ""
+            });
+        } else {
+            form.reset({
+                id: "",
+                sku: "",
+                serviceId: "",
+                appointmentId: "",
+                patientId: "",
+                doctorId: "",
+                issueDate: new Date(),
+                dueDate: new Date(),
+                status: "draft",
+                items: [],
+                subTotal: 0,
+                discount: 0,
+                tax: TAX,
+                taxAmount: 0,
+                totalAmount: 0,
+                notes: "",
+                category: ""
+            });
+        }
+
+    }, [mode, invoice, form])
+
 
     const {
         control,
@@ -93,6 +139,7 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
         control,
         name: "items"
     });
+
 
     const items = watch("items");
     const watchItems = watch("items");
@@ -208,17 +255,21 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
     };
 
     const handleClose = () => {
+        setLoading(false);
         onClose();
         form.reset();
     };
 
     const { execute } = useAction(upsertInvoice, {
         onSuccess: (data) => {
-            console.log('@server action response', data)
-            toast.loading('new invoice created successfully', { id: 'new-invoice' })
+            onSave(data?.invoice)
+            toast.success(`${mode === 'edit' ? `Invoice ${invoice?.sku} updated successfully` : `New invoice ${data?.invoice?.sku} created successfully`}`, { id: 'new-invoice' })
+            handleClose()
             setLoading(false);
+
         },
         onError: (error) => {
+            toast.error('Oops somethig went wrong ! try again later', { id: 'new-invoice' })
             setLoading(false);
         }
     })
@@ -253,8 +304,8 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                 taxAmount: taxAmt,
                 totalAmount
             };
-            toast.loading('Creating new Invoice please wait...', { id: 'new-invoice' })
-            console.log("On Submit", payload);
+            //toast.loading('Creating new Invoice please wait...', { id: 'new-invoice' })
+
             await execute({ payload })
 
 
@@ -328,7 +379,7 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                                                 />
                                             </div>
 
-                                            <div className="grid gap-4 sm:grid-cols-3 items-center">
+                                            <div className="grid gap-4 sm:grid-cols-2 items-center">
                                                 {/* Issue date */}
                                                 <FormField
                                                     control={control}
@@ -367,6 +418,11 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                                                         </FormItem>
                                                     )}
                                                 />
+
+
+                                            </div>
+
+                                            <div className="grid gap-4 sm:grid-cols-2 items-center">
 
                                                 {/* Status */}
                                                 <FormField
@@ -408,7 +464,47 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                                                         </FormItem>
                                                     )}
                                                 />
+
+                                                {/* Category */}
+                                                <FormField
+                                                    control={control}
+                                                    name="category"
+                                                    render={({ field }) => (
+                                                        <FormItem className="flex flex-col gap-2">
+                                                            <FormLabel>
+                                                                Select a Category
+                                                            </FormLabel>
+                                                            <FormControl>
+                                                                <Select
+                                                                    value={field.value}
+                                                                    onValueChange={(value) => {
+                                                                        field.onChange(value);// still adds to items
+                                                                    }}
+                                                                >
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Select a Category" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectGroup>
+                                                                            {category?.children?.map((service) => (
+                                                                                <SelectItem key={service.id} value={service.id}>
+                                                                                    <div className="flex flex-row items-center gap-2 text-sm font-medium">
+                                                                                        {service.name}
+                                                                                    </div>
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectGroup>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+
                                             </div>
+
+
                                         </div>
                                     </Card>
 
@@ -692,7 +788,7 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                                     ) : (
                                         <Save className="mr-2 h-4 w-4" />
                                     )}
-                                    Create Invoice
+                                    {mode === 'edit' ? 'Update' : 'Create'}  Invoice
                                 </Button>
                             </SheetFooter>
 

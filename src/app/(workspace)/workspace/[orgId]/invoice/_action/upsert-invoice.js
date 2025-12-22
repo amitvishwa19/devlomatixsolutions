@@ -36,7 +36,10 @@ const handler = async (data) => {
                 tax: payload.tax,
                 discount: payload.discount,
                 totalAmount: payload?.totalAmount,
-                notes: payload.notes
+                notes: payload.notes,
+                items: payload?.items,
+                categoryId: payload?.category
+
             },
             update: {
                 id: payload?.id,
@@ -50,7 +53,8 @@ const handler = async (data) => {
                 tax: payload.tax,
                 discount: payload.discount,
                 totalAmount: payload?.totalAmount,
-                notes: payload.notes
+                notes: payload.notes,
+                categoryId: payload?.category
             },
             include: {
                 category: true

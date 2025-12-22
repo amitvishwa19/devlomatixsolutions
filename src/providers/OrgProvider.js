@@ -37,8 +37,6 @@ export const OrgProvider = ({ children }) => {
     useEffect(() => {
         if (!server) {
             refreshServer()
-        } else {
-            router.push(`/workspace/${server?.id}`)
         }
     }, [session])
 
