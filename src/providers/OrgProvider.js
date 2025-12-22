@@ -34,14 +34,15 @@ export const OrgProvider = ({ children }) => {
     const { orgId } = useParams()
     const router = useRouter()
 
-    useEffect(() => {
-        console.log('@session @server orgprovider', session, server)
-        if (!server) {
-            refreshServer()
-        } else {
-            router.push(`/workspace/${server?.id}`)
-        }
-    }, [session])
+    // useEffect(() => {
+    //     if (session) router.push('/login')
+    //     console.log('@session @server orgprovider', session, server)
+    //     if (!server) {
+    //         refreshServer()
+    //     } else {
+    //         router.push(`/workspace/${server?.id}`)
+    //     }
+    // }, [session])
 
 
 
@@ -93,7 +94,6 @@ export const OrgProvider = ({ children }) => {
 
     const { execute: getserverInfo, fieldErrors } = useAction(getServerData, {
         onSuccess: (data) => {
-            router.push(`/workspace/${data?.server?.id}`)
             setUsers(data.users)
             setDefaultServer(data.server)
             updateServer(data.server)

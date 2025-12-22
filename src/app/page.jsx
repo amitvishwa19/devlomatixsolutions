@@ -27,7 +27,7 @@ const unbounded = Unbounded({ subsets: ["latin"] });
 
 export default function WorkspacePage() {
     const { data: session, status } = useSession()
-    const { server } = useOrg()
+    const { server, updateServer, updateServers } = useOrg()
     const dispatch = useDispatch()
     const router = useRouter()
     const [progress, setProgress] = useState(0);
@@ -36,42 +36,24 @@ export default function WorkspacePage() {
     const [isSetupComplete, setIsSetupComplete] = useState(false);
     const [hospitalData, setHospitalData] = useState(null);
 
-    // const handleSetupComplete = (data) => {
-    //     setHospitalData(data);
-    //     setIsSetupComplete(true);
-    //     router.push(`/workspace/${server?.id}`)
-    // };
-
-    // useEffect(() => {
-    //     if (server) {
-    //         console.log(server)
-    //         if (!server.setup) {
-    //             setIsSetupComplete(false)
-    //             console.log('@server setup is incomplete please complete it')
-    //         } else {
-    //             router.push(`/workspace/${server?.id}`)
-    //         }
-
-    //     }
-    // }, [server])
 
 
     const { execute } = useAction(getServerData, {
         onSuccess: (data) => {
             if (data?.server) {
+                updateServer(data.server)
+                updateServers(data.servers)
                 router.push(`/workspace/${data?.server?.id}`)
             }
         },
         onError: (error) => {
             toast.error('Oops something went wrong,please try again later', { id: 'new-appointment' });
-
-
         }
     })
 
     useEffect(() => {
         console.log('home page main function getting server')
-        //execute({ userId: session?.user?.userId })
+        execute({ userId: session?.user?.userId })
     }, [session])
 
 

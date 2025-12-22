@@ -28,7 +28,7 @@ const unbounded = Unbounded({ subsets: ["latin"] });
 
 export default function WorkspacePage() {
     const { data: session, status } = useSession()
-    const { server } = useOrg()
+    const { server, updateServer, updateServers } = useOrg()
     const dispatch = useDispatch()
     const router = useRouter()
     const [progress, setProgress] = useState(0);
@@ -37,11 +37,7 @@ export default function WorkspacePage() {
     const [isSetupComplete, setIsSetupComplete] = useState(false);
     const [hospitalData, setHospitalData] = useState(null);
 
-    // const handleSetupComplete = (data) => {
-    //     setHospitalData(data);
-    //     setIsSetupComplete(true);
-    //     router.push(`/workspace/${server?.id}`)
-    // };
+
 
     // useEffect(() => {
     //     if (server) {
@@ -58,9 +54,12 @@ export default function WorkspacePage() {
 
 
     const { execute } = useAction(getServerData, {
+
         onSuccess: (data) => {
-            // setLoading(false)
-            console.log('Getting server data from page')
+            console.log('Getting server data from page', data)
+            router.push(`/workspace/${data?.server?.id}`)
+            updateServer(data.server)
+            updateServers(data.servers)
         },
         onError: (error) => {
             toast.error('Oops something went wrong,please try again later', { id: 'new-appointment' });
@@ -171,7 +170,7 @@ export default function WorkspacePage() {
                 </div>
             </div>
 
-            <SetupWizard open={!isSetupComplete} onComplete={handleSetupComplete} />
+
         </div>
     )
 }

@@ -20,6 +20,7 @@ import AppointmentSelect from "./AppointmentSelect";
 import { DatePicker } from "@/components/global/DatePicker";
 import { upsertInvoice } from "../_action/upsert-invoice";
 import { useAction } from "@/hooks/use-action";
+import { toast } from "sonner";
 
 const invoiceSchema = z.object({
     sku: z.string(),
@@ -214,6 +215,7 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
     const { execute } = useAction(upsertInvoice, {
         onSuccess: (data) => {
             console.log('@server action response', data)
+            toast.loading('new invoice created successfully', { id: 'new-invoice' })
             setLoading(false);
         },
         onError: (error) => {
@@ -223,7 +225,6 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
 
     const onSubmit = async (data) => {
 
-        //console.log('@onSUbmit', data)
         setLoading(true);
         try {
 
@@ -252,7 +253,7 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                 taxAmount: taxAmt,
                 totalAmount
             };
-
+            toast.loading('Creating new Invoice please wait...', { id: 'new-invoice' })
             console.log("On Submit", payload);
             await execute({ payload })
 
