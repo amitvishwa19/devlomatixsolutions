@@ -130,7 +130,7 @@ export default function OrgSwitcher() {
                         </div>
                     )}
 
-                    <DropdownMenuItem disabled={(hasPermission('create-org') || superAdmin()) ? false : true} className='flex flex-row gap-2 text-xs items-center' onSelect={() => {
+                    <DropdownMenuItem className='flex flex-row gap-2 text-xs items-center' onSelect={() => {
                         onOpen('neworgmodal')
                     }}>
                         <PlusCircle size={15} className='' />

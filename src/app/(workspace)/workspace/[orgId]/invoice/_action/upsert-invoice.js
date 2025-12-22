@@ -21,24 +21,48 @@ const handler = async (data) => {
 
     try {
 
-        invoice = await db.inventory.upsert({
-            where: {
-                id: formData.id || '000'
-            },
-            create: {
-                appointmentId: payload?.appointmentId,
-                issueDate: payload?.issueDate,
-                dueDate: payload?.issueDate,
-                statue: payload?.status,
-                subTotal: payload?.subTotal,
-                tax: payload.tax,
-                discount: payload.discount
-            },
-            update: {
+        // invoice = await db.invoice.upsert({
+        //     where: {
+        //         id: payload.id || '000'
+        //     },
+        //     create: {
+        //         appointmentId: payload?.appointmentId,
+        //         issueDate: payload?.issueDate,
+        //         dueDate: payload?.issueDate,
+        //         statue: payload?.status,
+        //         subTotal: payload?.subTotal,
+        //         tax: payload.tax,
+        //         discount: payload.discount,
+        //         totalAmount: payload?.todalAmount,
+        //         notes: payload.notes
+        //     },
+        //     update: {
+        //         appointmentId: payload?.appointmentId,
+        //         issueDate: payload?.issueDate,
+        //         dueDate: payload?.issueDate,
+        //         statue: payload?.status,
+        //         subTotal: payload?.subTotal,
+        //         tax: payload.tax,
+        //         discount: payload.discount,
+        //         totalAmount: payload?.todalAmount,
+        //         notes: payload.notes
+        //     },
+        //     include: {
+        //         category: true
+        //     }
+        // })
 
-            },
-            include: {
-                category: true
+        invoice = await db.invoice.create({
+            data: {
+                appointmentId: payload?.appointmentId,
+                issueDate: payload?.issueDate?.toString(),
+                dueDate: payload?.dueDate?.toString(),
+                statue: payload?.status,
+                subtotal: payload?.subTotal,
+                tax: payload.tax,
+                discount: payload.discount,
+                totalAmount: payload?.totalAmount,
+                notes: payload.notes
             }
         })
 
