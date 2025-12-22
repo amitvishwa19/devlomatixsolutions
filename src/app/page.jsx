@@ -3,18 +3,26 @@ import React, { useContext, useEffect, useState } from 'react'
 import { Poppins, Unbounded } from 'next/font/google'
 import { useSession } from 'next-auth/react'
 import Lottie, { useLottie } from "lottie-react";
+import lotte from "@/assets/lottie/loading.json";
 import { useDispatch } from 'react-redux'
 import { Activity, Heart, Shield, Users } from 'lucide-react'
 import coverImage from '@/assets/images/auth_cover_image.jpg'
 import { useRouter } from 'next/navigation';
 import { useOrg } from '@/providers/OrgProvider';
-import lotte from "@/assets/lottie/loading-pulse.json";
+import { useAction } from '@/hooks/use-action';
+import { getServerData } from './(workspace)/workspace/[orgId]/(misc)/_actions/get-servers';
+
+
 
 const textFont = Poppins({
     subsets: ['latin'],
     weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900']
 })
 const unbounded = Unbounded({ subsets: ["latin"] });
+
+
+
+
 
 
 export default function WorkspacePage() {
@@ -25,26 +33,54 @@ export default function WorkspacePage() {
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false)
 
+    const [isSetupComplete, setIsSetupComplete] = useState(false);
+    const [hospitalData, setHospitalData] = useState(null);
 
+    // const handleSetupComplete = (data) => {
+    //     setHospitalData(data);
+    //     setIsSetupComplete(true);
+    //     router.push(`/workspace/${server?.id}`)
+    // };
+
+    // useEffect(() => {
+    //     if (server) {
+    //         console.log(server)
+    //         if (!server.setup) {
+    //             setIsSetupComplete(false)
+    //             console.log('@server setup is incomplete please complete it')
+    //         } else {
+    //             router.push(`/workspace/${server?.id}`)
+    //         }
+
+    //     }
+    // }, [server])
+
+
+    const { execute } = useAction(getServerData, {
+        onSuccess: (data) => {
+            if (data?.server) {
+                router.push(`/workspace/${data?.server?.id}`)
+            }
+        },
+        onError: (error) => {
+            toast.error('Oops something went wrong,please try again later', { id: 'new-appointment' });
+
+
+        }
+    })
 
     useEffect(() => {
-        console.log('App page loaded', server)
-        if (server) {
-            router.push(`/workspace/${server?.id}`)
-        }
-    }, [server])
-
+        console.log('home page main function getting server')
+        //execute({ userId: session?.user?.userId })
+    }, [session])
 
 
     const options = {
         animationData: lotte,
         loop: true,
-        height: 20,
-        width: 20,
     };
 
     const { View } = useLottie(options);
-
 
     return (
         <div className={`flex min-h-screen items-center justify-center ${unbounded.className}`}
@@ -52,8 +88,6 @@ export default function WorkspacePage() {
             <div className="fixed inset-0 z-50  bg-black/80" >
                 <div className='flex flex-1 h-screen items-center justify-center '>
                     <div className="flex flex-col items-center justify-center space-y-8 px-4">
-
-
                         {/* Logo and Icons Animation */}
                         <div className="relative">
                             <div className="flex items-center justify-center space-x-4">
@@ -91,12 +125,10 @@ export default function WorkspacePage() {
 
                         {/* Motto Section */}
                         <div className="max-w-2xl text-center space-y-4">
-                            <div className="flex items-center justify-center ">
-                                {/* <div className="h-1 w-12 bg-primary rounded-full" /> */}
-                                <div className='h-40 w-40 '>
-                                    {View}
-                                </div>
-                                {/* <div className="h-1 w-12 bg-primary rounded-full" /> */}
+                            <div className="flex items-center justify-center space-x-6">
+                                <div className="h-1 w-12 bg-primary rounded-full" />
+                                <Heart className="h-5 w-5 text-accent animate-ping delay-200 text-sky-500" fill="currentColor" />
+                                <div className="h-1 w-12 bg-primary rounded-full" />
                             </div>
 
                             <p className="text-lg text-muted-foreground leading-relaxed">
@@ -124,9 +156,22 @@ export default function WorkspacePage() {
                             </div>
                         </div>
 
+                        {/* Progress Bar */}
+                        <div className="w-80 space-y-2">
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300 ease-out"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                            {/* <p className="text-center text-sm text-muted-foreground">
+                            Loading... {progress}%
+                        </p> */}
+                        </div>
                     </div>
                 </div>
             </div>
+
 
         </div>
     )

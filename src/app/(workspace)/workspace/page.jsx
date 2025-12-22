@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import { useOrg } from '@/providers/OrgProvider';
 import { SetupModal } from '@/components/setup/SetupModal';
 import { SetupWizard } from '@/components/setup/SetupWizard';
+import { useAction } from '@/hooks/use-action';
+import { getServerData } from './[orgId]/(misc)/_actions/get-servers';
 
 
 const textFont = Poppins({
@@ -18,6 +20,10 @@ const textFont = Poppins({
     weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900']
 })
 const unbounded = Unbounded({ subsets: ["latin"] });
+
+
+
+
 
 
 export default function WorkspacePage() {
@@ -31,24 +37,41 @@ export default function WorkspacePage() {
     const [isSetupComplete, setIsSetupComplete] = useState(false);
     const [hospitalData, setHospitalData] = useState(null);
 
-    const handleSetupComplete = (data) => {
-        setHospitalData(data);
-        setIsSetupComplete(true);
-        router.push(`/workspace/${server?.id}`)
-    };
+    // const handleSetupComplete = (data) => {
+    //     setHospitalData(data);
+    //     setIsSetupComplete(true);
+    //     router.push(`/workspace/${server?.id}`)
+    // };
 
-    useEffect(() => {
-        if (server) {
-            console.log(server)
-            if (!server.setup) {
-                setIsSetupComplete(false)
-                console.log('@server setup is incomplete please complete it')
-            } else {
-                router.push(`/workspace/${server?.id}`)
-            }
+    // useEffect(() => {
+    //     if (server) {
+    //         console.log(server)
+    //         if (!server.setup) {
+    //             setIsSetupComplete(false)
+    //             console.log('@server setup is incomplete please complete it')
+    //         } else {
+    //             router.push(`/workspace/${server?.id}`)
+    //         }
+
+    //     }
+    // }, [server])
+
+
+    const { execute } = useAction(getServerData, {
+        onSuccess: (data) => {
+            // setLoading(false)
+            console.log('Getting server data from page')
+        },
+        onError: (error) => {
+            toast.error('Oops something went wrong,please try again later', { id: 'new-appointment' });
+
 
         }
-    }, [server])
+    })
+
+    useEffect(() => {
+        execute({ userId: session?.user?.userId })
+    }, [session])
 
 
     const options = {

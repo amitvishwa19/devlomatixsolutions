@@ -1,8 +1,6 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useAction } from '@/hooks/use-action'
-import { io } from 'socket.io-client'
-import { useAuth } from './AuthProvider'
 import { useChatQuery } from '@/hooks/useChatQuery'
 import qs from "query-string";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -12,6 +10,7 @@ import { setServerRedux, setServersRedux } from '@/redux/slices/org'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { getServerData } from '@/app/(workspace)/workspace/_action/server/get-server-data'
+import { useRouter } from 'next/navigation';
 
 export const OrgContext = createContext()
 
@@ -33,11 +32,14 @@ export const OrgProvider = ({ children }) => {
     const [chatPages, setChatPages] = useState([])
     const dispatch = useDispatch()
     const { orgId } = useParams()
+    const router = useRouter()
 
     useEffect(() => {
-        //console.log('@session orgprovider', session)
+        console.log('@session @server orgprovider', session, server)
         if (!server) {
             refreshServer()
+        } else {
+            router.push(`/workspace/${server?.id}`)
         }
     }, [session])
 
@@ -91,7 +93,7 @@ export const OrgProvider = ({ children }) => {
 
     const { execute: getserverInfo, fieldErrors } = useAction(getServerData, {
         onSuccess: (data) => {
-            console.log('@getserverInfo', data)
+            router.push(`/workspace/${data?.server?.id}`)
             setUsers(data.users)
             setDefaultServer(data.server)
             updateServer(data.server)
