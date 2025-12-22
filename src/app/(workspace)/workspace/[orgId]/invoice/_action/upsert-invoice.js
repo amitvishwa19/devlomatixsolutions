@@ -21,20 +21,26 @@ const handler = async (data) => {
 
     try {
 
-        // invoice = await db.inventory.upsert({
-        //     where: {
-        //         id: formData.id || '000'
-        //     },
-        //     create: {
+        invoice = await db.inventory.upsert({
+            where: {
+                id: formData.id || '000'
+            },
+            create: {
+                appointmentId: payload?.appointmentId,
+                issueDate: payload?.issueDate,
+                dueDate: payload?.issueDate,
+                statue: payload?.status,
+                subTotal: payload?.subTotal,
+                tax: payload.tax,
+                discount: payload.discount
+            },
+            update: {
 
-        //     },
-        //     update: {
-
-        //     },
-        //     include: {
-        //         category: true
-        //     }
-        // })
+            },
+            include: {
+                category: true
+            }
+        })
 
 
     } catch (error) {
