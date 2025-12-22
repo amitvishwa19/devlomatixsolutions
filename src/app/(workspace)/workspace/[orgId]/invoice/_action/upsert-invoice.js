@@ -39,7 +39,7 @@ const handler = async (data) => {
                 notes: payload.notes
             },
             update: {
-                id: pauload?.id,
+                id: payload?.id,
                 sku: payload?.sku,
                 appointmentId: payload?.appointmentId,
                 patientId: payload?.patientId,
