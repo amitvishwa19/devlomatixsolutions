@@ -38,21 +38,6 @@ export default function WorkspacePage() {
     const [hospitalData, setHospitalData] = useState(null);
 
 
-
-    // useEffect(() => {
-    //     if (server) {
-    //         console.log(server)
-    //         if (!server.setup) {
-    //             setIsSetupComplete(false)
-    //             console.log('@server setup is incomplete please complete it')
-    //         } else {
-    //             router.push(`/workspace/${server?.id}`)
-    //         }
-
-    //     }
-    // }, [server])
-
-
     const { execute } = useAction(getServerData, {
 
         onSuccess: (data) => {
@@ -69,8 +54,19 @@ export default function WorkspacePage() {
     })
 
     useEffect(() => {
-        execute({ userId: session?.user?.userId })
-    }, [session])
+        const localServer = localStorage.getItem('server')
+        const localServers = localStorage.getItem('servers')
+
+        if (localServer && localServers) {
+            router.push(`/workspace/${localServer?.id}`)
+        } else {
+            execute({ userId: session?.user?.userId })
+        }
+
+        console.log('localServer', localServer, 'localServers', localServers)
+
+        //execute({ userId: session?.user?.userId })
+    }, [])
 
 
     const options = {

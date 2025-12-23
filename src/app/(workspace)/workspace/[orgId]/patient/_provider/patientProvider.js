@@ -8,24 +8,23 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 export const PatientContext = createContext()
 
 
-export const PatientProvider = ({ children }) => {
-    const { data: session } = useSession()
-    const { users } = useOrg()
-    const [patients, setPatients] = useState()
+export const PatientProvider = ({ children, allCategories, allPatients }) => {
+    const [patients, setPatients] = useState(allPatients)
+    const [category, setCategory] = useState(allCategories)
     const [selectedPatient, setSelectedPatient] = useState(null)
 
     useEffect(() => {
-        setPatients(users?.filter(user => user.role === ROLE.PATIENT))
+        setPatients(allPatients)
     }, [])
 
-    console.log(selectedPatient)
+
 
     function patientsMapData() {
         return users?.filter(user => user.role === ROLE.PATIENT)
     }
 
     return (
-        <PatientContext.Provider value={{ patients, patientsMapData, selectedPatient, setSelectedPatient }}>
+        <PatientContext.Provider value={{ patients, patientsMapData, selectedPatient, setSelectedPatient, category, setCategory }}>
             {children}
         </PatientContext.Provider>
     )

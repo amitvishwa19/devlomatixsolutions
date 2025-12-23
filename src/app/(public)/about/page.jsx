@@ -6,7 +6,48 @@ import React from 'react'
 import Approach from '../_component/Approach'
 import ContactArea from '../_component/ContactArea'
 import Articles from '../_component/Articles'
+import { CheckCircle2, HeartPulse, ShieldCheck, Stethoscope } from 'lucide-react'
+import HeroSection from './_components/HeroSection'
+import MissionVision from './_components/MissionVision'
+import StatsSection from './_components/StatsSection'
+import DepartmentsSection from './_components/DepartmentsSection'
+import DoctorsSection from './_components/DoctorsSection'
+import WhyChooseUs from './_components/WhyChooseUs'
+import CTASection from './_components/CTASection'
 
+const stats = [
+    { label: "Years of Excellence", value: "25+" },
+    { label: "Specialist Doctors", value: "120+" },
+    { label: "Patients Served", value: "150k+" },
+]
+
+const values = [
+    {
+        icon: HeartPulse,
+        title: "Patient‑First Care",
+        description:
+            "Every clinical decision is centered around safety, comfort, and long‑term wellbeing for patients and families.",
+    },
+    {
+        icon: ShieldCheck,
+        title: "Trusted Quality",
+        description:
+            "Evidence‑based protocols, strict infection control, and NABH‑aligned processes across all departments.",
+    },
+    {
+        icon: Stethoscope,
+        title: "Advanced Facilities",
+        description:
+            "Modern ICUs, modular operation theatres, digital diagnostics, and integrated EMR for coordinated care.",
+    },
+]
+
+const highlights = [
+    "24×7 Emergency & Trauma services with rapid triage.",
+    "Dedicated centers for Cardiology, Orthopedics, Neurosciences, Mother & Child Care, and Oncology.",
+    "Experienced multidisciplinary team with super‑specialists and critical care experts.",
+    "Cashless treatment support with leading insurance and TPAs.",
+]
 
 export default function AboutPage() {
 
@@ -45,76 +86,15 @@ export default function AboutPage() {
 
 
     return (
-        <div className=''>
-
-
-
-            <div className=' w-full'>
-                <section className="breadcrumbs">
-                    <div className="breadcrumb-sm-images">
-                        <div className="inner-banner-1 magnetic-item">
-                            <Image src={require('../../../assets/images/public/inner-banner-1.png')} alt="" height={200} />
-                        </div>
-                        <div className="inner-banner-2 magnetic-item">
-                            <Image src={require('../../../assets/images/public/inner-banner-2.png')} alt="" height={200} />
-                        </div>
-                    </div>
-                    <div className="container">
-                        <div className="row">
-                            <div className="col-12">
-                                <div className="breadcrumb-wrapper">
-                                    <div className="breadcrumb-cnt">
-                                        <span>About</span>
-                                        <h1>"Get To Know About Devlomatix"</h1>
-                                        <div className="breadcrumb-list flex flex-row items-center">
-                                            <Link href={''}>
-                                                Home
-                                            </Link>
-                                            <Image src={require('../../../assets/images/public/breadcrumb-arrow.svg')} alt="" height={10} />
-                                            <span>
-                                                About
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <Approach />
-                <ContactArea />
-                <Articles />
-
-
-
-                {/* <div className='mx-0 md:mx-32 my-10 md:py-10 relative about-potential'>
-                    <Image src={require('../../../assets/images/public/choose-vec-top-r.svg')} alt="" width={100} height={41} />
-                    <Image src={require('../../../assets/images/public/choose-vec-btm-l.svg')} alt="" width={100} height={100} />
-                    <div className="choose-title">
-                        <span>Why Choose Us</span>
-                        <h2>Unlock the potential of your business.</h2>
-                    </div>
-                    <div className='flex flex-row'>
-
-                        <div className='about-potential left'>
-
-                        </div>
-                        <div>
-
-                        </div>
-                    </div>
-                </div> */}
-
-
-
-
-
-
-            </div>
-
-
-        </div>
+        <main className="min-h-screen bg-background">
+            <HeroSection />
+            <MissionVision />
+            <StatsSection />
+            <DepartmentsSection />
+            <DoctorsSection />
+            <WhyChooseUs />
+            <CTASection />
+        </main>
 
 
     )

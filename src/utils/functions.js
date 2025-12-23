@@ -161,6 +161,62 @@ export function retrieveAndDecrypt(keyName, password) {
     return JSON.parse(new TextDecoder().decode(decrypted));
 }
 
+export function generatePatientSku(input) {
+    const { fullName, dateOfBirth, gender, primaryPhone } = input
 
+    // initials from name
+    const cleanedName = fullName.trim().replace(/\s+/g, " ")
+    const initials = cleanedName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 3)
+        .map((part) => part[0]?.toUpperCase() ?? "")
+        .join("") || "PT"
+
+    // date part: yymmdd from yyyy-mm-dd
+    let datePart = "000000"
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+        const [y, m, d] = dateOfBirth.split("-")
+        datePart = `${y.slice(2)}${m}${d}`
+    }
+
+    // phone: last 4 digits
+    const digits = primaryPhone.replace(/\D/g, "")
+    const phonePart = digits.slice(-4) || "0000"
+
+    // gender code
+    const g = gender?.toLowerCase()
+    const genderCode =
+        g === "male" ? "M" : g === "female" ? "F" : g === "other" ? "O" : "U"
+
+    // final SKU
+    return `PT-${initials}-${datePart}-${phonePart}-${genderCode}`
+}
+
+import { customAlphabet } from 'nanoid'
+const nanoid = customAlphabet('0123456789abcdef', 8); // 8 chars, 2^32 possibilities
+const DOMAIN = 'hospital.temp'; // Your custom domain
+
+export function generateUniqueTempEmail() {
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    while (attempts < maxAttempts) {
+        // Generate random local part: patient + 8 chars
+        const randomPart = `patient${nanoid()}`;
+        const tempEmail = `${randomPart}@${DOMAIN}`;
+
+        // Check if exists in DB
+
+
+
+        return tempEmail;
+
+
+        attempts++;
+    }
+
+    throw new Error('Failed to generate unique temp email after 5 attempts');
+}
 
 

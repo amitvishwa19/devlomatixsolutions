@@ -46,6 +46,25 @@ enum ENTITY_TYPE {
   CARD
 }
 
+model Setting {
+  id String @id @default(cuid())
+
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  serverId String @unique
+
+  type                String? @db.Text
+  online              Boolean @default(false)
+  offline             Boolean @default(false)
+  timing              Json?
+  slotTime            Int?
+  consultationOptions Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId])
+}
+
 model User {
   id            String  @id @default(cuid())
   uuid          String?
@@ -54,9 +73,10 @@ model User {
   firstName     String?
   lastName      String?
   username      String? @unique
-  email         String  @unique
-  phone         String?
+  email         String? @unique
+  phone         String? @unique
   avatar        String?
+  sku           String?
   emailVerified Boolean @default(false)
   status        Boolean @default(false)
   guest         Boolean @default(true)
@@ -71,7 +91,7 @@ model User {
   profileStatus      Boolean         @default(false)
   online             Boolean         @default(true)
   healthMetricItemId String?
-  demographic        Demographic?
+  demographic        Json?           @default("{}")
 
   role       ROLE             @default(PATIENT)
   roles      Role[]
@@ -134,32 +154,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@index([email])
-}
-
-model Demographic {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
-
-  firstname      String?
-  lastname       String?
-  fullname       String?
-  dob            String?
-  gender         String?
-  maritialStatus String?
-  socialId       String?
-  language       Json?
-
-  phone    String?
-  emrPhone String?
-  relation String?
-  address  Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
+  @@index([phone])
 }
 
 model Vital {
@@ -344,25 +339,6 @@ model Server {
   @@index([userId])
 }
 
-model Setting {
-  id String @id @default(cuid())
-
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  serverId String @unique
-
-  type                String? @db.Text
-  online              Boolean @default(false)
-  offline             Boolean @default(false)
-  timing              Json?
-  slotTime            Int?
-  consultationOptions Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([serverId])
-}
-
 model Care {
   id String @id @default(cuid())
 
@@ -504,10 +480,10 @@ model Appointment {
   server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
   serverId String
 
-  patient   User   @relation("PatientAppointments", fields: [patientId], references: [id])
+  patient   User   @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
   patientId String
 
-  doctor   User   @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  doctor   User   @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
   doctorId String
 
   uid            String?

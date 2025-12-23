@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet"
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { usePDF } from 'react-to-pdf';
 
 const statusColorMap = {
     DRAFT: 'bg-gray-100 text-gray-800',
@@ -153,8 +154,8 @@ const invoice = {
 };
 
 
-export default function InvoiceView({ inventory, isOpen, onClose, children }) {
-
+export default function InvoiceView({ isOpen, onClose, invoice, inventory }) {
+    const { toPDF, targetRef } = usePDF({ filename: 'page.pdf' });
 
     const amountPaid = 120 //invoice?.payments.reduce((sum, p) => sum + p.amount, 0);
     const balance = invoice?.totalAmount - amountPaid;
@@ -203,230 +204,243 @@ export default function InvoiceView({ inventory, isOpen, onClose, children }) {
     }
 
     const onDownloadPdf = () => {
+        toPDF()
+    }
 
+    const handleOnClose = () => {
+        onClose()
     }
 
     return (
-        <Sheet open={isOpen} onOpenChange={onClose}>
+        <Sheet open={isOpen} onOpenChange={handleOnClose}>
 
             <SheetContent className='bg-transparent min-w-[620px] p-2 border-l-0'>
-                <ScrollArea className="flex flex-col gap-6 rounded-xl border h-full bg-white dark:bg-darkPrimaryBackground p-6 shadow-sm">
 
-                    {/* Header */}
-                    <div className="flex flex-wrap items-start justify-between gap-4 border-b pb-4 mb-4">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-xl font-semibold">
-                                    Invoice #{invoice?.number}
-                                </h1>
-                                <span
-                                    className={cn(
-                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                                        statusColorMap[invoice?.status]
-                                    )}
-                                >
-                                    {invoice?.status.replace('_', ' ')}
-                                </span>
-                                {isOverdue && (
-                                    <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-                                        Overdue
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                Issue date:{' '}
-                                <span className="font-medium">
-                                    {new Date(invoice?.issueDate).toLocaleDateString()}
-                                </span>
-                                {' • '}
-                                Due date:{' '}
-                                <span className="font-medium">
-                                    {new Date(invoice?.dueDate).toLocaleDateString()}
-                                </span>
-                            </p>
-                            {invoice?.category && (
-                                <p className="text-xs text-gray-500">
-                                    Category: <span className="font-medium">{invoice?.category.name}</span>
-                                </p>
-                            )}
-                            {invoice?.sku && (
-                                <p className="text-xs text-gray-500">SKU: {invoice?.sku}</p>
-                            )}
-                        </div>
+                <SheetHeader className='hidden'>
+                    <SheetTitle>Edit profile</SheetTitle>
+                    <SheetDescription>
+                        Make changes to your profile here. Click save when you&apos;re done.
+                    </SheetDescription>
+                </SheetHeader>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                            {onClose && (
-                                <button
-                                    onClick={onBack}
-                                    className="rounded-md border px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                                >
-                                    Back
-                                </button>
-                            )}
-                            {onPrint && (
-                                <button
-                                    onClick={onPrint}
-                                    className="rounded-md border px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                                >
-                                    Print
-                                </button>
-                            )}
-                            {onDownloadPdf && (
-                                <button
-                                    onClick={onDownloadPdf}
-                                    className="rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-black"
-                                >
-                                    Download PDF
-                                </button>
-                            )}
-                        </div>
+
+                <ScrollArea className="flex flex-col gap-6 rounded-xl border h-full bg-white dark:bg-darkPrimaryBackground p-4 shadow-sm">
+
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+
+                        {onPrint && (
+                            <Button
+                                onClick={onPrint}
+                                variant={'outline'}
+
+                            >
+                                Print
+                            </Button>
+                        )}
+                        {onDownloadPdf && (
+                            <Button
+                                onClick={onDownloadPdf}
+                                variant={'outline'}
+
+                            >
+                                Download PDF
+                            </Button>
+                        )}
                     </div>
 
-                    {/* Clinic & patient */}
-                    <div className="grid gap-6 md:grid-cols-2 mb-4">
 
-                        <div className="space-y-1 text-sm">
-                            <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                Billed from
-                            </h2>
-                            <p className="font-medium">{invoice?.clinic.name}</p>
-                            <p className="text-gray-600 whitespace-pre-line">
-                                {invoice?.clinic.address}
-                            </p>
-                            {invoice?.clinic.phone && (
-                                <p className="text-gray-600">Phone: {invoice?.clinic.phone}</p>
-                            )}
-                            {invoice?.clinic.gstin && (
-                                <p className="text-gray-600">GSTIN: {invoice?.clinic.gstin}</p>
-                            )}
-                        </div>
+                    <div ref={targetRef}>
 
-                        <div className="space-y-1 text-sm">
-                            <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                Billed to
-                            </h2>
-                            <p className="font-medium">{invoice?.patient.name}</p>
-                            {invoice?.patient.mrn && (
-                                <p className="text-gray-600">MRN: {invoice?.patient.mrn}</p>
-                            )}
-                            {invoice?.patient.phone && (
-                                <p className="text-gray-600">Phone: {invoice?.patient.phone}</p>
-                            )}
-                            {(invoice?.patient.insuranceProvider ||
-                                invoice?.patient.insurancePolicy) && (
-                                    <p className="text-gray-600">
-                                        Insurance:{' '}
-                                        {[
-                                            invoice?.patient.insuranceProvider,
-                                            invoice?.patient.insurancePolicy,
-                                        ]
-                                            .filter(Boolean)
-                                            .join(' • ')}
+                        {/* Header */}
+                        <div className="flex flex-wrap items-start justify-between gap-4 border-b pb-4 mb-4">
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-3">
+                                    <h1 className="text-xl font-semibold">
+                                        Invoice #{invoice?.number}
+                                    </h1>
+                                    <span
+                                        className={cn(
+                                            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                            statusColorMap[invoice?.status]
+                                        )}
+                                    >
+                                        {invoice?.status.replace('_', ' ')}
+                                    </span>
+                                    {isOverdue && (
+                                        <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                                            Overdue
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-sm text-gray-500">
+                                    Issue date:{' '}
+                                    <span className="font-medium">
+                                        {new Date(invoice?.issueDate).toLocaleDateString()}
+                                    </span>
+                                    {' • '}
+                                    Due date:{' '}
+                                    <span className="font-medium">
+                                        {new Date(invoice?.dueDate).toLocaleDateString()}
+                                    </span>
+                                </p>
+                                {invoice?.category && (
+                                    <p className="text-xs text-gray-500">
+                                        Category: <span className="font-medium">{invoice?.category.name}</span>
                                     </p>
                                 )}
-                        </div>
-                    </div>
+                                {invoice?.sku && (
+                                    <p className="text-xs text-gray-500">SKU: {invoice?.sku}</p>
+                                )}
+                            </div>
 
-                    {/* Appointment context */}
-                    {invoice?.appointment && (
-                        <div className="rounded-lg bg-slate-50 dark:bg-darkFocusColor/50 px-4 py-3 text-sm mb-4">
-                            <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                Appointment
-                            </h2>
-                            <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1">
-                                <div>
-                                    <span className="text-gray-500">ID: </span>
-                                    <span className="font-medium">{invoice?.appointment.id}</span>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500">Date: </span>
-                                    <span className="font-medium">
-                                        {new Date(invoice?.appointment.date).toLocaleString()}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500">Doctor: </span>
-                                    <span className="font-medium">
-                                        {invoice?.appointment.doctorName}
-                                        {invoice?.appointment.departmentName &&
-                                            `, ${invoice?.appointment.departmentName}`}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500">Patient: </span>
-                                    <span className="font-medium">
-                                        {invoice?.appointment.patientName}
-                                    </span>
-                                </div>
+
+                        </div>
+
+                        {/* Clinic & patient */}
+                        <div className="grid gap-6 md:grid-cols-2 mb-4">
+
+                            <div className="space-y-1 text-sm">
+                                <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Billed from
+                                </h2>
+                                <p className="font-medium">{invoice?.clinic.name}</p>
+                                <p className="text-gray-600 whitespace-pre-line">
+                                    {invoice?.clinic.address}
+                                </p>
+                                {invoice?.clinic.phone && (
+                                    <p className="text-gray-600">Phone: {invoice?.clinic.phone}</p>
+                                )}
+                                {invoice?.clinic.gstin && (
+                                    <p className="text-gray-600">GSTIN: {invoice?.clinic.gstin}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-1 text-sm">
+                                <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Billed to
+                                </h2>
+                                <p className="font-medium">{invoice?.patient.name}</p>
+                                {invoice?.patient.mrn && (
+                                    <p className="text-gray-600">MRN: {invoice?.patient.mrn}</p>
+                                )}
+                                {invoice?.patient.phone && (
+                                    <p className="text-gray-600">Phone: {invoice?.patient.phone}</p>
+                                )}
+                                {(invoice?.patient.insuranceProvider ||
+                                    invoice?.patient.insurancePolicy) && (
+                                        <p className="text-gray-600">
+                                            Insurance:{' '}
+                                            {[
+                                                invoice?.patient.insuranceProvider,
+                                                invoice?.patient.insurancePolicy,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' • ')}
+                                        </p>
+                                    )}
                             </div>
                         </div>
-                    )}
 
-                    {/* Items table */}
-                    <div className="space-y-2 mb-4">
-                        <h2 className="text-sm font-semibold text-gray-800">
-                            Itemized charges
-                        </h2>
-                        <div className="overflow-hidden rounded-lg border">
-                            <table className="min-w-full divide-y divide-gray-200 text-sm dark:bg-darkFocusColor/50">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
-                                            Description
-                                        </th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
-                                            Type
-                                        </th>
-                                        <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
-                                            Qty
-                                        </th>
-                                        <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
-                                            Unit price
-                                        </th>
-                                        <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
-                                            Line total
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 bg-white dark:bg-darkFocusColor/50">
-                                    {invoice?.items.map((item, idx) => (
-                                        <tr key={item.id ?? idx}>
-                                            <td className="px-4 py-2 ">
-                                                {item.description}
-                                            </td>
-                                            <td className="px-4 py-2 ">
-                                                {item.type ? item.type : '—'}
-                                            </td>
-                                            <td className="px-4 py-2 text-right ">
-                                                {item.quantity}
-                                            </td>
-                                            <td className="px-4 py-2 text-right ">
-                                                {item.unitPrice.toFixed(2)}
-                                            </td>
-                                            <td className="px-4 py-2 text-right font-medium ">
-                                                {item.lineTotal.toFixed(2)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {invoice?.items.length === 0 && (
+                        {/* Appointment context */}
+                        {invoice?.appointment && (
+                            <div className="rounded-lg bg-slate-50 dark:bg-darkFocusColor/50 px-4 py-3 text-sm mb-4">
+                                <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Appointment
+                                </h2>
+                                <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1">
+                                    <div>
+                                        <span className="text-gray-500">ID: </span>
+                                        <span className="font-medium">{invoice?.appointment.id}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">Date: </span>
+                                        <span className="font-medium">
+                                            {new Date(invoice?.appointment.date).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">Doctor: </span>
+                                        <span className="font-medium">
+                                            {invoice?.appointment.doctorName}
+                                            {invoice?.appointment.departmentName &&
+                                                `, ${invoice?.appointment.departmentName}`}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">Patient: </span>
+                                        <span className="font-medium">
+                                            {invoice?.appointment.patientName}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Items table */}
+                        <div className="space-y-2 mb-4">
+                            <h2 className="text-sm font-semibold text-gray-800">
+                                Itemized charges
+                            </h2>
+                            <div className="overflow-hidden rounded-lg border">
+                                <table className="min-w-full divide-y divide-gray-200 text-sm dark:bg-darkFocusColor/50">
+                                    <thead className="bg-gray-50">
                                         <tr>
-                                            <td
-                                                colSpan={5}
-                                                className="px-4 py-4 text-center text-sm "
-                                            >
-                                                No items on this invoice?.
-                                            </td>
+                                            <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
+                                                Description
+                                            </th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
+                                                Type
+                                            </th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
+                                                Qty
+                                            </th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
+                                                Unit price
+                                            </th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide dark:bg-darkFocusColor">
+                                                Line total
+                                            </th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 bg-white dark:bg-darkFocusColor/50">
+                                        {invoice?.items.map((item, idx) => (
+                                            <tr key={item.id ?? idx}>
+                                                <td className="px-4 py-2 ">
+                                                    {item.description}
+                                                </td>
+                                                <td className="px-4 py-2 ">
+                                                    {item.type ? item.type : '—'}
+                                                </td>
+                                                <td className="px-4 py-2 text-right ">
+                                                    {item.quantity}
+                                                </td>
+                                                <td className="px-4 py-2 text-right ">
+                                                    {item.unitPrice.toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-2 text-right font-medium ">
+                                                    {item.lineTotal.toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {invoice?.items.length === 0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan={5}
+                                                    className="px-4 py-4 text-center text-sm "
+                                                >
+                                                    No items on this invoice?.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Totals & payments */}
-                    <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
-                        {/* Payments */}
-                        {/* <div className="space-y-2">
+                        {/* Totals & payments */}
+                        <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
+                            {/* Payments */}
+                            {/* <div className="space-y-2">
                             <h2 className="text-sm font-semibold text-gray-800">Payments</h2>
                             <div className="overflow-hidden rounded-lg border">
                                 <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -476,8 +490,8 @@ export default function InvoiceView({ inventory, isOpen, onClose, children }) {
                             </div>
                         </div> */}
 
-                        {/* Totals */}
-                        {/* <div className="space-y-2">
+                            {/* Totals */}
+                            {/* <div className="space-y-2">
                             <h2 className="text-sm font-semibold text-gray-800">Summary</h2>
                             <div className="rounded-lg border bg-gray-50 p-4 text-sm">
                                 <div className="flex justify-between py-1">
@@ -522,17 +536,19 @@ export default function InvoiceView({ inventory, isOpen, onClose, children }) {
                                 </div>
                             </div>
                         </div> */}
+                        </div>
+
+                        {/* Notes */}
+                        {invoice?.notes && (
+                            <div className="space-y-1">
+                                <h2 className="text-sm font-semibold text-gray-800">Notes</h2>
+                                <p className="whitespace-pre-line text-sm text-gray-700">
+                                    {invoice?.notes}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Notes */}
-                    {invoice?.notes && (
-                        <div className="space-y-1">
-                            <h2 className="text-sm font-semibold text-gray-800">Notes</h2>
-                            <p className="whitespace-pre-line text-sm text-gray-700">
-                                {invoice?.notes}
-                            </p>
-                        </div>
-                    )}
 
                 </ScrollArea>
 

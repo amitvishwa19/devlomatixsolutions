@@ -35,6 +35,11 @@ export const OrgProvider = ({ children }) => {
     const router = useRouter()
 
     useEffect(() => {
+
+        const localServer = localStorage.getItem('server')
+        const localServers = localStorage.getItem('servers')
+
+
         if (!server) {
             refreshServer()
         }

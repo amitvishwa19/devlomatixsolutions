@@ -86,8 +86,8 @@ export function AuthSelector({ name = false, classname }) {
             </PopoverTrigger>
 
 
-            <PopoverContent className="w-60 p-0 mx-1 bg-red-200">
-                <Command className="rounded-lg border shadow-md">
+            <PopoverContent className="w-60 p-0 mx-1 ">
+                <Command className="rounded-lg border shadow-md dark:bg-darkSecondaryBackground">
 
                     <CommandList>
 

@@ -471,7 +471,13 @@ export default function InvoicePage() {
                     <InvoiceView
                         isOpen={invoiceViewer.isOpen}
                         invoice={invoiceViewer.invoice}
-
+                        onClose={() => {
+                            setInvoiceViewer({
+                                isOpen: false,
+                                mode: 'view',
+                                invoice: null,
+                            })
+                        }}
                     />
 
 

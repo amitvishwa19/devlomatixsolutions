@@ -18,7 +18,7 @@ export default function Header() {
     const [offset, setOffset] = useState(0);
     const myRef = useRef();
 
-
+    console.log(url)
 
     const handleScroll = (e) => {
         const scroll = window.scrollY
@@ -46,6 +46,7 @@ export default function Header() {
     const navItems = [
         { title: 'Home', link: '/' },
         { title: 'About', link: '/about' },
+        { title: 'Services', link: '/service' },
         { title: 'Article', link: '/article' },
         { title: 'Contact', link: '/contact' },
         { title: 'Account', link: '/account' },
@@ -53,7 +54,7 @@ export default function Header() {
 
 
     return (
-        <div className={`header-area ${scrolling && 'bg-[#041C33] '} border-b flex flex-row items-center justify-between border-0`}>
+        <div className={`header-area ${scrolling && 'bg-[#041C33] '} border-b flex flex-row items-center justify-between border-0 z-20`}>
             <div className="header-logo">
                 <Link href="/">
                     <Image className="img-fluid" src={appLogo} alt="" height={30} />
@@ -107,8 +108,6 @@ export default function Header() {
                 <AuthSelector name={false} classname={' hover:text-[#0495FF]'} />
 
             </div>
-
-
 
         </div>
     )

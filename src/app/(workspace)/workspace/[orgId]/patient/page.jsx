@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
-import { ArrowUpDown, Eye, FilePenLine, MoreHorizontal, Trash2, UserPlus } from "lucide-react"
+import { ArrowUpDown, Eye, FilePenLine, MoreHorizontal, Save, Trash2, UserPlus } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem, } from "@/components/ui/dropdown-menu"
 import { ColumnDef, VisibilityState, flexRender, ColumnFiltersState, getFilteredRowModel, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, } from "@tanstack/react-table"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table"
@@ -21,14 +21,20 @@ import PatientSearchPage from './_component/patient-search/PatientSearchPage'
 import MedicalRecordsPage from './_component/medical-records/MedicalRecordsPage'
 import BillingManagementPage from './_component/billing-management/BillingManagementPage'
 import PatientManagementPage from './_component/patient-search/PatientManagementPage'
+import PatientEditor from './_component/patient-profile/PatientEditor'
+import DataTable from '../../_components/DataTable'
+import CategoryHierarchy from '../../_components/CategoryHierarchy'
+import { usePatient } from './_provider/patientProvider'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 
 export default function PatientPage() {
 
+    const { category, setCategory, patients } = usePatient()
     const [loading, setLoading] = useState(true)
     const { onOpen, refresh } = useModal()
-    const { users } = useOrg()
-    const patients = users?.filter(user => user.role === ROLE.PATIENT)
+
+
 
     const [active, setActive] = useState({ title: 'Patients', icon: 'accessibility', component: <PatientManagementPage /> })
     const nav = [
@@ -37,22 +43,186 @@ export default function PatientPage() {
         // { title: 'Billing', icon: 'square-activity', component: <BillingManagementPage /> }
     ]
 
-    const tempData = users?.filter(user => user.role === ROLE.PATIENT)
-        .map(user => ({
-            id: user.id,
-            uuid: user.uuid,
-            displayName: user?.medicalProfile?.personal?.firstname ? (user?.medicalProfile?.personal?.firstname + ' ' + user?.medicalProfile?.personal?.lastname) : user?.displayName,
-            age: getAge(user?.medicalProfile?.personal?.dob) ? getAge(user?.medicalProfile?.personal?.dob) + ' Yrs' : 'NA',
-            gender: user?.medicalProfile?.personal?.gender ? user?.medicalProfile?.personal?.gender : 'NA',
-            phone: user?.medicalProfile?.contact?.basic?.phone ? user?.medicalProfile?.contact?.basic?.phone : 'NA',
-            bloodgroup: user?.medicalProfile?.medicalInformation?.bloodGroup ? user?.medicalProfile?.medicalInformation?.bloodGroup : 'NA',
-            lastvisit: moment(user?.medicalProfile?.updatedAt).format('MMMM Do YYYY'),
-            user: user
-        }))
+    const [patientEditor, setPatientEditor] = useState({
+        isOpen: false,
+        mode: 'add',
+        patient: null,
+    })
+
+    const tempData = patients?.map(user => ({
+        id: user.id,
+        uuid: user.uuid,
+        displayName: user?.medicalProfile?.personal?.firstname ? (user?.medicalProfile?.personal?.firstname + ' ' + user?.medicalProfile?.personal?.lastname) : user?.displayName,
+        age: getAge(user?.medicalProfile?.personal?.dob) ? getAge(user?.medicalProfile?.personal?.dob) + ' Yrs' : 'NA',
+        gender: user?.medicalProfile?.personal?.gender ? user?.medicalProfile?.personal?.gender : 'NA',
+        phone: user?.medicalProfile?.contact?.basic?.phone ? user?.medicalProfile?.contact?.basic?.phone : 'NA',
+        bloodgroup: user?.medicalProfile?.medicalInformation?.bloodGroup ? user?.medicalProfile?.medicalInformation?.bloodGroup : 'NA',
+        lastvisit: moment(user?.medicalProfile?.updatedAt).format('MMMM Do YYYY'),
+        user: user
+    }))
+
+    const columns = [
+
+        {
+            accessorKey: "patient",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Patient
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => {
+
+                return (
+                    <div className='flex flex-row items-center gap-4'>
+                        <Avatar className='rounded-md'>
+                            <AvatarImage src={row?.orignal?.user?.avatar} alt="@shadcn" />
+                            <AvatarFallback className='rounded-md bg-sky-500 text-xl font-bold'>{row.original.user.displayName.substring(0, 1)}</AvatarFallback>
+                        </Avatar>
+                        <div className='flex flex-col'>
+                            <span>{row.original.user.displayName}</span>
+                            <span className='text-[10px] text-muted-foreground'>{row.original.user.uuid}</span>
+                        </div>
+
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "dob",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Date of Birth
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => {
+                const dob = row.original.user?.medicalProfile?.personal?.dob
+                return (
+                    <div className='text-center'>
+                        {dob ? moment(dob).format('MMMM Do, YYYY') : 'NA'}
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "phone",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Phone
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => {
+                const mobile = row.original.user?.medicalProfile?.personal?.contact
+                return (
+                    <div className='text-center'>
+                        {mobile ? mobile : 'NA'}
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "age",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Age
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+            cell: ((row) => {
+
+                return (
+                    <div>
+
+                    </div>
+                )
+            })
+        },
+        {
+            accessorKey: "gender",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Gender
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+        },
+        {
+            accessorKey: "bloodgroup",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Blood Group
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+        },
+        {
+            accessorKey: "lastvisit",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Last Visit
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+        },
+        {
+            id: "actions",
+            cell: ({ row }) => {
+                //const dispatch = useDispatch()
+                const patient = row.original
+
+                return (
+
+                    <div className='flex flex-row items-center gap-2'>
+                        <PatientEditor patient={row?.original} />
+                    </div>
+                )
+            },
+        },
+
+    ]
 
 
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
+
+
             <div className='w-full dark:bg-[#151D24] p-4 rounded-lg border flex flex-row items-center justify-between'>
                 <div>
                     <h2 className='text-xl'>Patients</h2>
@@ -61,7 +231,7 @@ export default function PatientPage() {
                     </h2>
                 </div>
                 {/* <Button variant='outline' size='sm' onClick={() => { onOpen("patient-crud", { type: 'add' }) }}>Add Patient</Button> */}
-                <ButtonGroup>
+                {/* <ButtonGroup>
                     {nav.map((item) => (
                         <Button
                             key={item.title} variant='ghost'
@@ -73,17 +243,64 @@ export default function PatientPage() {
                             <span>{item.title}</span>
                         </Button>
                     ))}
-                </ButtonGroup>
+                        
+                </ButtonGroup> */}
+                <Button
+                    variant={'save'}
+                    size={'sm'}
+                    onClick={() => {
+                        setPatientEditor({
+                            isOpen: true,
+                            mode: 'add',
+                            patient: null,
+                        })
+                    }}
+                >
+                    <Save />
+                    Add New Patient
+                </Button>
             </div>
 
-
-            {/* <div className='w-full dark:bg-[#151D24] p-4 rounded-lg border'>
-                <DataTable columns={columns} data={tempData} />
-            </div> */}
             <div className='h-full flex flex-grow w-full dark:bg-darkSecondaryBackground rounded-md py-2'>
                 <ScrollArea className='h-[85vh] w-full p-2'>
-                    {active.component}
+                    <div className='flex flex-col gap-4 p-2'>
+
+
+                        <div className='flex flex-row gap-2 w-full '>
+
+
+                            <div className='min-w-[75%]'>
+                                <DataTable
+                                    columns={columns}
+                                    data={tempData}
+                                    onFiltersChange={(e) => { console.log('filter change', e) }}
+                                    filterTitle='Search invoice items......'
+                                />
+                            </div>
+
+                            <div className='w-full'>
+                                <CategoryHierarchy
+                                    title='Patient Hierarchy'
+                                    data={[]}
+                                    category={category}
+                                    onUpdate={(c) => { setCategory(c) }}
+                                />
+                            </div>
+
+
+                        </div>
+                        <PatientEditor
+                            isOpen={patientEditor.isOpen}
+                            onClose={() => {
+                                setPatientEditor({
+                                    isOpen: false,
+                                })
+                            }}
+                        />
+                    </div>
                 </ScrollArea>
+
+
             </div>
 
         </div>
