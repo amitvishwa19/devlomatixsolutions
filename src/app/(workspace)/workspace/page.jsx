@@ -125,7 +125,7 @@ export default function WorkspacePage() {
                         <div className="max-w-2xl text-center space-y-4">
                             <div className="flex items-center justify-center space-x-6">
                                 <div className="h-1 w-12 bg-primary rounded-full" />
-                                <Heart className="h-5 w-5 text-accent animate-ping delay-200 text-sky-500" fill="currentColor" />
+                                <Heart className="h-5 w-5 text-accent animate-ping delay-200 text-pink-500" fill="currentColor" />
                                 <div className="h-1 w-12 bg-primary rounded-full" />
                             </div>
 
