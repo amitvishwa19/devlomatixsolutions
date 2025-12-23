@@ -95,6 +95,7 @@ export const OrgProvider = ({ children }) => {
 
     const { execute: getserverInfo, fieldErrors } = useAction(getServerData, {
         onSuccess: (data) => {
+            console.log('@Orgprovider @refreshuser')
             setUsers(data.users)
             setDefaultServer(data.server)
             updateServer(data.server)
