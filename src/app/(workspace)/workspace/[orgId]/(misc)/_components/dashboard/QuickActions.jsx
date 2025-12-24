@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
 import PatientAdd from '../../../patient/_component/patient-management/PatientAdd';
+import AppointmentEditor from '../../../appointment/_components/appointment-manager/AppointmentEditor';
 
 
 
@@ -47,6 +48,12 @@ export default function QuickActions() {
         patient: null,
     })
 
+    const [appointmentEditor, setAppointmentEditor] = useState({
+        isOpen: false,
+        mode: 'edit',
+        appointment: null
+    });
+
     const handleActionClick = (action) => {
         console.log('handleActionClick Clicked:', action.id)
         // do something based on action.id or action.label
@@ -60,6 +67,13 @@ export default function QuickActions() {
             console.log('@ Add new patient')
             setPatientAdd({
                 isOpen: true
+            })
+        }
+
+        if (action.id === 'quick-appointment') {
+            setAppointmentEditor({
+                isOpen: true,
+                mode: 'add',
             })
         }
 
@@ -103,6 +117,20 @@ export default function QuickActions() {
                     }
                 }}
             />
+
+            <AppointmentEditor
+                isOpen={appointmentEditor.isOpen}
+                mode={appointmentEditor.mode}
+                onClose={() => {
+                    setAppointmentEditor({
+                        isOpen: false,
+                        mode: 'add',
+                    })
+                }}
+                appointment={appointmentEditor.appointment}
+            />
+
+
         </div>
     )
 }

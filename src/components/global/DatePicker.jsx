@@ -38,11 +38,11 @@ export function DatePicker({ value, onChange, className, placeholder, disableFut
 
     return (
         <Popover open={open} onOpenChange={handleOnOpenChange}  >
-            <PopoverTrigger asChild className='p-0 m-0 w-full hover:bg-transparent'>
+            <PopoverTrigger asChild className='p-0 m-0 w-full '>
                 <Button
                     variant='ghost'
                     disabled={disabled}
-                    className={cn(' justify-between text-left font-normal border bg-background/50 hover:bg-background/50', !value && 'dark:text-slate-400 text-slate-700 ', { className })}
+                    className={cn(' justify-between text-left font-normal border  ', !value && 'dark:text-slate-400 text-slate-700')}
                 >
                     <span>{date}</span>
 
@@ -57,7 +57,7 @@ export function DatePicker({ value, onChange, className, placeholder, disableFut
                     selected={value}
                     onSelect={(date) => handleDateSelect(date)}
                     disabled={(date) => disableFutere ? date > yesterday : date < yesterday}
-                    className={'w-[250px] rounded-xl dark:bg-[#0E141B]'}
+                    className={'w-[250px] rounded-xl dark:bg-darkPrimaryBackground'}
                 />
             </PopoverContent>
         </Popover >
