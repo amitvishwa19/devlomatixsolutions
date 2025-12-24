@@ -39,6 +39,8 @@ export default function AppointmentEditor({ appointment, onCLose }) {
     const { isOpen, onClose, type: dtype, data } = useModal();
     const isModalOpen = isOpen && dtype === "add-appointment-modal";
 
+
+
     const [doctor, setDoctor] = useState({})
     const [slot, setSlot] = useState({ slot: 'morning', start: '09:00 AM', end: '01:00 PM', avaliable: false })
     const [slotTimes, setSlotTimes] = useState([])
