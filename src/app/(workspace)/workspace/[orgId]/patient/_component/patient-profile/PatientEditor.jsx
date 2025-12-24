@@ -21,6 +21,7 @@ import { upsertpatient } from '../../_action/upsert-patient'
 import { useAction } from '@/hooks/use-action'
 import { ActionTooltip } from '@/components/global/ActionTooltip'
 import { generateUniqueTempEmail } from '@/utils/functions'
+import { DatePicker } from '@/components/global/DatePicker'
 
 
 
@@ -36,10 +37,96 @@ const demographicsSchema = z.object({
     homeAddress: z.string().optional(),
 })
 
+const vitalSignsSchema = z.object({
+    bloodPressure: z.string()
+        .min(1, 'Blood pressure is required')
+        .regex(/^(\d{1,3})\/(\d{1,3})$/, 'Enter as systolic/diastolic (e.g., 120/80)')
+        .refine((val) => {
+            const [sys, dia] = val.split('/').map(Number);
+            return sys >= 70 && sys <= 250 && dia >= 40 && dia <= 150 && sys > dia;
+        }, 'Systolic 70-250, Diastolic 40-150, systolic > diastolic'),
+    heartRate: z.coerce
+        .number({ invalid_type_error: 'Enter a valid number' })
+        .min(30, 'Heart rate must be at least 30 bpm')
+        .max(220, 'Heart rate cannot exceed 220 bpm'),
+    temperature: z.coerce
+        .number({ invalid_type_error: 'Enter a valid number' })
+        .min(95, 'Temperature must be at least 95°F')
+        .max(107, 'Temperature cannot exceed 107°F'),
+    oxygenSaturation: z.coerce
+        .number({ invalid_type_error: 'Enter a valid number' })
+        .min(85, 'Oxygen saturation must be at least 85%')
+        .max(100, 'Oxygen saturation cannot exceed 100%'),
+    weight: z.coerce
+        .number({ invalid_type_error: 'Enter a valid number' })
+        .min(50, 'Weight must be at least 50 lbs')
+        .max(800, 'Weight cannot exceed 800 lbs'),
+});
+
+const insuranceSchema = z.object({
+    provider: z
+        .string()
+        .min(2, 'Insurance provider name is required')
+        .max(100, 'Provider name too long'),
+    planType: z.enum(['hmo', 'ppo', 'epo', 'pos'], {
+        required_error: 'Please select a plan type',
+    }),
+    policyNumber: z
+        .string()
+        .min(5, 'Policy number must be at least 5 characters')
+        .max(30, 'Policy number too long'),
+    groupNumber: z
+        .string()
+        .max(30, 'Group number too long')
+        .optional()
+        .or(z.literal('')),
+    effectiveDate: z
+        .string()
+        .min(1, 'Effective date is required')
+        .refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
+    expirationDate: z
+        .string()
+        .min(1, 'Expiration date is required')
+        .refine((date) => !isNaN(Date.parse(date)), 'Invalid date')
+        .refine((date) => new Date(date) > new Date(), 'Expiration date must be in the future'),
+    copay: z
+        .string()
+        .regex(/^\$?[\d,]+(\.\d{2})?$/, 'Enter valid amount (e.g., $25 or 25.00)')
+        .optional()
+        .or(z.literal('')),
+    deductible: z
+        .string()
+        .regex(/^\$?[\d,]+(\.\d{2})?$/, 'Enter valid amount (e.g., $1,500 or 1500)')
+        .optional()
+        .or(z.literal('')),
+    outOfPocketMax: z
+        .string()
+        .regex(/^\$?[\d,]+(\.\d{2})?$/, 'Enter valid amount (e.g., $5,000 or 5000)')
+        .optional()
+        .or(z.literal('')),
+    subscriberName: z
+        .string()
+        .min(2, 'Subscriber name is required')
+        .max(100, 'Name too long'),
+    relationshipToPatient: z.enum(['self', 'spouse', 'child', 'parent'], {
+        required_error: 'Please select relationship',
+    }),
+    subscriberDob: z
+        .string()
+        .min(1, 'Date of birth is required')
+        .refine((date) => {
+            const age = (new Date().getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24 * 365);
+            return age >= 0 && age <= 120;
+        }, 'Invalid date of birth'),
+    subscriberId: z
+        .string()
+        .max(30, 'Subscriber ID too long')
+        .optional()
+        .or(z.literal('')),
+});
 
 
-
-export default function PatientEditor({ patient, isOpen, onClose }) {
+export default function PatientEditor({ patient, isOpen, onClose, onSave }) {
     const [activeTab, setActiveTab] = useState("overview");
     const [patientdata, setPatientData] = useState(null)
     const [loading, setLoading] = useState(null)
@@ -64,7 +151,35 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
         },
     })
 
+    const vitalform = useForm({
+        resolver: zodResolver(vitalSignsSchema),
+        defaultValues: {
+            bloodPressure: '',
+            heartRate: 0,
+            temperature: 0,
+            oxygenSaturation: 0,
+            weight: 0,
+        },
+    });
 
+    const insuranceform = useForm({
+        resolver: zodResolver(insuranceSchema),
+        defaultValues: {
+            provider: '',
+            planType: '',
+            policyNumber: '',
+            groupNumber: '',
+            effectiveDate: '',
+            expirationDate: '',
+            copay: '',
+            deductible: '',
+            outOfPocketMax: '',
+            subscriberName: '',
+            relationshipToPatient: '',
+            subscriberDob: '',
+            subscriberId: '',
+        },
+    });
 
 
     const [vitalSigns, setVitalSigns] = useState({
@@ -250,6 +365,8 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
     const handleOnOpenclose = () => {
         setLoading(null)
         form.reset()
+        vitalform.reset()
+        insuranceSchema.reset()
         setActiveTab('overview')
         onClose()
     }
@@ -257,7 +374,7 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
 
     const { execute } = useAction(upsertpatient, {
         onSuccess: (data) => {
-            console.log('@server action data', data)
+            onSave(data.user)
             setLoading(null)
             toast.success(`${data.mode === 'add' ? 'New patient created' : 'Patient updated'} successfully`)
         },
@@ -276,8 +393,9 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
         }
     }, [generateEmail, form.watch('phone')]);
 
-    const onDemographicSubmit = async (data, type) => {
-        setLoading('demographic')
+
+    const onFormSubmit = async (data, type) => {
+        console.log('@onFormSubmit', data, type)
         await execute({ formData: data, type: type })
     }
 
@@ -285,7 +403,7 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
         <Dialog open={isOpen} onOpenChange={handleOnOpenclose}>
             <form>
 
-                <DialogContent className="bg-card min-w-[90%] max-w-[90%] min-h-[90%] max-h-[90%] [&>button:last-child]:hidden">
+                <DialogContent className="bg-card min-w-[95%] max-w-[95%] min-h-[95%] max-h-[95%] [&>button:last-child]:hidden">
 
                     <DialogHeader className={'hidden'}>
                         <DialogTitle>Edit profile</DialogTitle>
@@ -298,12 +416,12 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
                     <div className='absolute inset-0 flex flex-col gap-2'>
 
                         <div className="bg-card  rounded-md flex-1 h-full overflow-hidden">
-                            <ScrollArea className='h-[84vh] w-full overflow-hidden p-2' >
+                            <ScrollArea className='h-[90vh] w-full overflow-hidden ' >
 
-                                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-4">
 
 
-                                    <TabsList className="w-full flex flex-row items-center justify-between rounded-md mt-2">
+                                    <TabsList className="w-full flex flex-row items-center justify-between rounded-md mt-2 ">
                                         {tabs.map((tab) => (
                                             <TabsTrigger
                                                 key={tab.id}
@@ -316,99 +434,167 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
                                         ))}
                                     </TabsList>
 
-                                    <div className="mt-4  pr-2">
+                                    <div className="mt-4">
                                         {/* Overview Tab */}
                                         <TabsContent value="overview" className="space-y-4">
 
-
                                             {/* Vital Signs */}
                                             <Card className="bg-card/50 border-border">
-                                                <CardHeader className="pb-0">
-                                                    <CardTitle className="flex items-center gap-2 text-base">
-                                                        <Activity className="h-5 w-5 text-primary" />
-                                                        Vital Signs
-                                                    </CardTitle>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                                        <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Heart className="h-4 w-4 text-red-400" />
-                                                                <span className="text-sm font-medium">Blood Pressure</span>
+                                                <Form {...vitalform}>
+                                                    <form id="vital-signs-form" onSubmit={vitalform.handleSubmit((data) => {
+                                                        setLoading('vital')
+                                                        onFormSubmit(data, 'vital')
+                                                    })}>
+                                                        <CardHeader className="pb-0">
+                                                            <CardTitle className="items-center gap-2 text-base flex flex-row justify-between">
+                                                                <div className="flex flex-row items-center gap-2">
+                                                                    <Activity className="h-5 w-5 text-primary" />
+                                                                    Vital Signs
+                                                                </div>
+                                                                <button type="submit" disabled={loading === 'demographic' && true}>
+                                                                    {
+                                                                        loading === 'vital' ? <Loader className="h-5 w-5 animate-spin text-sky-500" /> : <Save className="h-5 w-5 cursor-pointer text-sky-500" />
+                                                                    }
+                                                                </button>
+                                                            </CardTitle>
+                                                        </CardHeader>
+                                                        <CardContent>
+
+                                                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+
+                                                                <FormField
+                                                                    control={vitalform.control}
+                                                                    name="bloodPressure"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel className="flex items-center gap-2 mb-2">
+                                                                                <Heart className="h-4 w-4 text-red-400" />
+                                                                                <span className="text-sm font-medium">Blood Pressure</span>
+                                                                            </FormLabel>
+                                                                            <FormControl>
+                                                                                <Input
+                                                                                    placeholder="120/80"
+                                                                                    {...field}
+                                                                                    className="bg-background/50"
+                                                                                />
+                                                                            </FormControl>
+                                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                                mmHg | Normal: 90-120/60-80 mmHg
+                                                                            </p>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
+                                                                <FormField
+                                                                    control={vitalform.control}
+                                                                    name="heartRate"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel className="flex items-center gap-2 mb-2">
+                                                                                <Zap className="h-4 w-4 text-yellow-400" />
+                                                                                <span className="text-sm font-medium">Heart Rate</span>
+                                                                            </FormLabel>
+                                                                            <FormControl>
+                                                                                <Input
+                                                                                    type="number"
+                                                                                    placeholder="72"
+                                                                                    {...field}
+                                                                                    className="bg-background/50"
+                                                                                />
+                                                                            </FormControl>
+                                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                                bpm | Normal: 60-100 bpm
+                                                                            </p>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
+                                                                <FormField
+                                                                    control={vitalform.control}
+                                                                    name="temperature"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel className="flex items-center gap-2 mb-2">
+                                                                                <Thermometer className="h-4 w-4 text-orange-400" />
+                                                                                <span className="text-sm font-medium">Temperature</span>
+                                                                            </FormLabel>
+                                                                            <FormControl>
+                                                                                <Input
+                                                                                    type="number"
+                                                                                    step="0.1"
+                                                                                    placeholder="98.6"
+                                                                                    {...field}
+                                                                                    className="bg-background/50"
+                                                                                />
+                                                                            </FormControl>
+                                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                                °F | Normal: 97-99 °F
+                                                                            </p>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
+                                                                <FormField
+                                                                    control={vitalform.control}
+                                                                    name="oxygenSaturation"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel className="flex items-center gap-2 mb-2">
+                                                                                <Activity className="h-4 w-4 text-green-400" />
+                                                                                <span className="text-sm font-medium">Oxygen Saturation</span>
+                                                                            </FormLabel>
+                                                                            <FormControl>
+                                                                                <Input
+                                                                                    type="number"
+                                                                                    placeholder="98"
+                                                                                    {...field}
+                                                                                    className="bg-background/50"
+                                                                                />
+                                                                            </FormControl>
+                                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                                % | Normal: 95-100 %
+                                                                            </p>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
+                                                                <FormField
+                                                                    control={vitalform.control}
+                                                                    name="weight"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel className="flex items-center gap-2 mb-2">
+                                                                                <Scale className="h-4 w-4 text-blue-400" />
+                                                                                <span className="text-sm font-medium">Weight</span>
+                                                                            </FormLabel>
+                                                                            <FormControl>
+                                                                                <Input
+                                                                                    type="number"
+                                                                                    placeholder="150"
+                                                                                    {...field}
+                                                                                    className="bg-background/50"
+                                                                                />
+                                                                            </FormControl>
+                                                                            <p className="text-xs text-muted-foreground mt-1">lbs</p>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
                                                             </div>
-                                                            <Input
-                                                                placeholder="120/80"
-                                                                value={vitalSigns.bloodPressure}
-                                                                onChange={(e) => setVitalSigns(prev => ({ ...prev, bloodPressure: e.target.value }))}
-                                                                className="bg-background/50"
-                                                            />
-                                                            <p className="text-xs text-muted-foreground mt-1">mmHg | Normal: 90-120 mmHg</p>
-                                                        </div>
-                                                        <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Zap className="h-4 w-4 text-yellow-400" />
-                                                                <span className="text-sm font-medium">Heart Rate</span>
-                                                            </div>
-                                                            <Input
-                                                                placeholder="72"
-                                                                value={vitalSigns.heartRate}
-                                                                onChange={(e) => setVitalSigns(prev => ({ ...prev, heartRate: e.target.value }))}
-                                                                className="bg-background/50"
-                                                            />
-                                                            <p className="text-xs text-muted-foreground mt-1">bpm | Normal: 60-100 bpm</p>
-                                                        </div>
-                                                        <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Thermometer className="h-4 w-4 text-orange-400" />
-                                                                <span className="text-sm font-medium">Temperature</span>
-                                                            </div>
-                                                            <Input
-                                                                placeholder="98.6"
-                                                                value={vitalSigns.temperature}
-                                                                onChange={(e) => setVitalSigns(prev => ({ ...prev, temperature: e.target.value }))}
-                                                                className="bg-background/50"
-                                                            />
-                                                            <p className="text-xs text-muted-foreground mt-1">°F | Normal: 97-99 °F</p>
-                                                        </div>
-                                                        <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Activity className="h-4 w-4 text-green-400" />
-                                                                <span className="text-sm font-medium">Oxygen Saturation</span>
-                                                            </div>
-                                                            <Input
-                                                                placeholder="98"
-                                                                value={vitalSigns.oxygenSaturation}
-                                                                onChange={(e) => setVitalSigns(prev => ({ ...prev, oxygenSaturation: e.target.value }))}
-                                                                className="bg-background/50"
-                                                            />
-                                                            <p className="text-xs text-muted-foreground mt-1">% | Normal: 95-100 %</p>
-                                                        </div>
-                                                        <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Scale className="h-4 w-4 text-blue-400" />
-                                                                <span className="text-sm font-medium">Weight</span>
-                                                            </div>
-                                                            <Input
-                                                                placeholder="150"
-                                                                value={vitalSigns.weight}
-                                                                onChange={(e) => setVitalSigns(prev => ({ ...prev, weight: e.target.value }))}
-                                                                className="bg-background/50"
-                                                            />
-                                                            <p className="text-xs text-muted-foreground mt-1">lbs</p>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
+
+                                                        </CardContent>
+                                                    </form>
+                                                </Form>
                                             </Card>
 
-
                                             <div className="grid md:grid-cols-2 gap-4">
-
 
                                                 {/* Demographics & Contact */}
                                                 <Card className="bg-card/50 border-border">
                                                     <Form {...form}>
                                                         <form onSubmit={form.handleSubmit((data) => {
-                                                            onDemographicSubmit(data, 'demographic')
+                                                            setLoading('demographic')
+                                                            onFormSubmit(data, 'demographic')
                                                         })}>
                                                             <CardHeader className="pb-3">
                                                                 <CardTitle className="flex flex-row items-center justify-between gap-2 text-base">
@@ -425,6 +611,7 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
                                                             </CardHeader>
 
                                                             <CardContent className="space-y-4">
+
                                                                 {/* Full name + DOB */}
                                                                 <div className="grid grid-cols-2 gap-4">
                                                                     <FormField
@@ -439,26 +626,27 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
                                                                                     <Input
                                                                                         {...field}
                                                                                         placeholder='Full name'
-                                                                                        className="bg-background/50"
+                                                                                        className="bg-background/50 "
                                                                                     />
                                                                                 </FormControl>
                                                                                 <FormMessage />
                                                                             </FormItem>
                                                                         )}
                                                                     />
+
                                                                     <FormField
                                                                         control={form.control}
                                                                         name="dateOfBirth"
                                                                         render={({ field }) => (
                                                                             <FormItem>
-                                                                                <FormLabel className="text-xs ">
-                                                                                    Date of Birth *
-                                                                                </FormLabel>
+                                                                                <FormLabel className='text-xs'>Date Of birth *</FormLabel>
                                                                                 <FormControl>
-                                                                                    <Input
-                                                                                        type="date"
-                                                                                        {...field}
-                                                                                        className="bg-background/50"
+                                                                                    <DatePicker
+                                                                                        value={field.value}
+                                                                                        onChange={field.onChange}
+                                                                                        placeholder="Select date of birth"
+                                                                                        className="bg-red-200 hover:bg-transparent"
+                                                                                        disableFutere={true}
                                                                                     />
                                                                                 </FormControl>
                                                                                 <FormMessage />
@@ -680,162 +868,270 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
 
                                                 {/* Insurance Information */}
                                                 <Card className="bg-card/50 border-border">
-                                                    <CardHeader className="pb-3">
-                                                        <CardTitle className="flex items-center gap-2 text-base">
-                                                            <Shield className="h-5 w-5 text-primary" />
-                                                            Insurance Information
-                                                        </CardTitle>
-                                                    </CardHeader>
-                                                    <CardContent className="space-y-4">
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-muted-foreground text-xs">Insurance Provider</Label>
-                                                                <Input
-                                                                    value={insurance.provider}
-                                                                    onChange={(e) => setInsurance(prev => ({ ...prev, provider: e.target.value }))}
-                                                                    className="bg-background/50"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-muted-foreground text-xs">Plan Type</Label>
-                                                                <Select
-                                                                    value={insurance.planType}
-                                                                    onValueChange={(value) => setInsurance(prev => ({ ...prev, planType: value }))}
-                                                                >
-                                                                    <SelectTrigger className="bg-background/50">
-                                                                        <SelectValue placeholder="Select" />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="hmo">HMO</SelectItem>
-                                                                        <SelectItem value="ppo">PPO</SelectItem>
-                                                                        <SelectItem value="epo">EPO</SelectItem>
-                                                                        <SelectItem value="pos">POS</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </div>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-muted-foreground text-xs">Policy Number</Label>
-                                                                <Input
-                                                                    value={insurance.policyNumber}
-                                                                    onChange={(e) => setInsurance(prev => ({ ...prev, policyNumber: e.target.value }))}
-                                                                    className="bg-background/50"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-muted-foreground text-xs">Group Number</Label>
-                                                                <Input
-                                                                    value={insurance.groupNumber}
-                                                                    onChange={(e) => setInsurance(prev => ({ ...prev, groupNumber: e.target.value }))}
-                                                                    className="bg-background/50"
-                                                                    placeholder="GRP-456789"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-muted-foreground text-xs">Effective Date</Label>
-                                                                <Input
-                                                                    type="date"
-                                                                    value={insurance.effectiveDate}
-                                                                    onChange={(e) => setInsurance(prev => ({ ...prev, effectiveDate: e.target.value }))}
-                                                                    className="bg-background/50"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-muted-foreground text-xs">Expiration Date</Label>
-                                                                <Input
-                                                                    type="date"
-                                                                    value={insurance.expirationDate}
-                                                                    onChange={(e) => setInsurance(prev => ({ ...prev, expirationDate: e.target.value }))}
-                                                                    className="bg-background/50"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="border-t border-border pt-4">
-                                                            <p className="text-sm font-medium mb-3">Coverage Details</p>
-                                                            <div className="grid grid-cols-3 gap-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-muted-foreground text-xs">Copay</Label>
-                                                                    <Input
-                                                                        value={insurance.copay}
-                                                                        onChange={(e) => setInsurance(prev => ({ ...prev, copay: e.target.value }))}
-                                                                        className="bg-background/50"
-                                                                        placeholder="$25"
-                                                                    />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-muted-foreground text-xs">Deductible</Label>
-                                                                    <Input
-                                                                        value={insurance.deductible}
-                                                                        onChange={(e) => setInsurance(prev => ({ ...prev, deductible: e.target.value }))}
-                                                                        className="bg-background/50"
-                                                                        placeholder="$1,500"
-                                                                    />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-muted-foreground text-xs">Out-of-Pocket Max</Label>
-                                                                    <Input
-                                                                        value={insurance.outOfPocketMax}
-                                                                        onChange={(e) => setInsurance(prev => ({ ...prev, outOfPocketMax: e.target.value }))}
-                                                                        className="bg-background/50"
-                                                                        placeholder="$5,000"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="border-t border-border pt-4">
-                                                            <p className="text-sm font-medium mb-3">Subscriber Information</p>
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-muted-foreground text-xs">Subscriber Name</Label>
-                                                                    <Input
-                                                                        value={insurance.subscriberName}
-                                                                        onChange={(e) => setInsurance(prev => ({ ...prev, subscriberName: e.target.value }))}
-                                                                        className="bg-background/50"
-                                                                    />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-muted-foreground text-xs">Relationship to Patient</Label>
-                                                                    <Select
-                                                                        value={insurance.relationshipToPatient}
-                                                                        onValueChange={(value) => setInsurance(prev => ({ ...prev, relationshipToPatient: value }))}
+                                                    <Form {...insuranceform}>
+                                                        <form id="insurance-form" onSubmit={insuranceform.handleSubmit((data) => {
+                                                            setLoading('insurance')
+                                                            onFormSubmit(data, 'insurance')
+                                                        })}>
+                                                            <CardHeader className="pb-3">
+                                                                <CardTitle className="flex items-center gap-2 text-base flex-row justify-between">
+                                                                    <div className="flex flex-row items-center gap-2">
+                                                                        <Shield className="h-5 w-5 text-primary" />
+                                                                        Insurance Information
+                                                                    </div>
+                                                                    <button
+                                                                        type="submit"
+                                                                        form="insurance-form"
+                                                                        disabled={loading === 'demographic' || loading === 'insurance'}
+                                                                        className="disabled:opacity-50"
                                                                     >
-                                                                        <SelectTrigger className="bg-background/50">
-                                                                            <SelectValue placeholder="Select" />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="self">Self</SelectItem>
-                                                                            <SelectItem value="spouse">Spouse</SelectItem>
-                                                                            <SelectItem value="child">Child</SelectItem>
-                                                                            <SelectItem value="parent">Parent</SelectItem>
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-                                                            </div>
-                                                            <div className="grid grid-cols-2 gap-4 mt-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-muted-foreground text-xs">Subscriber DOB</Label>
-                                                                    <Input
-                                                                        type="date"
-                                                                        value={insurance.subscriberDob}
-                                                                        onChange={(e) => setInsurance(prev => ({ ...prev, subscriberDob: e.target.value }))}
-                                                                        className="bg-background/50"
+                                                                        {loading === 'insurance' ? (
+                                                                            <Loader className="h-5 w-5 animate-spin text-sky-500" />
+                                                                        ) : (
+                                                                            <Save className="h-5 w-5 cursor-pointer text-sky-500" />
+                                                                        )}
+                                                                    </button>
+                                                                </CardTitle>
+                                                            </CardHeader>
+                                                            <CardContent className="space-y-4">
+
+                                                                <div className="grid grid-cols-2 gap-4">
+
+                                                                    <FormField
+                                                                        control={insuranceform.control}
+                                                                        name="provider"
+                                                                        render={({ field }) => (
+                                                                            <FormItem>
+                                                                                <FormLabel className="text-xs ">Insurance Provider</FormLabel>
+                                                                                <FormControl>
+                                                                                    <Input className="bg-background/50" {...field} />
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />
+                                                                    <FormField
+                                                                        control={insuranceform.control}
+                                                                        name="planType"
+                                                                        render={({ field }) => (
+                                                                            <FormItem>
+                                                                                <FormLabel className="text-xs ">Plan Type</FormLabel>
+                                                                                <FormControl>
+                                                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                                        <SelectTrigger className="bg-background/50">
+                                                                                            <SelectValue placeholder="Select" />
+                                                                                        </SelectTrigger>
+                                                                                        <SelectContent>
+                                                                                            <SelectItem value="hmo">HMO</SelectItem>
+                                                                                            <SelectItem value="ppo">PPO</SelectItem>
+                                                                                            <SelectItem value="epo">EPO</SelectItem>
+                                                                                            <SelectItem value="pos">POS</SelectItem>
+                                                                                        </SelectContent>
+                                                                                    </Select>
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
                                                                     />
                                                                 </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-muted-foreground text-xs">Subscriber ID</Label>
-                                                                    <Input
-                                                                        value={insurance.subscriberId}
-                                                                        onChange={(e) => setInsurance(prev => ({ ...prev, subscriberId: e.target.value }))}
-                                                                        className="bg-background/50"
-                                                                        placeholder="SUB-789456123"
+
+                                                                <div className="grid grid-cols-2 gap-4">
+                                                                    <FormField
+                                                                        control={insuranceform.control}
+                                                                        name="policyNumber"
+                                                                        render={({ field }) => (
+                                                                            <FormItem>
+                                                                                <FormLabel className="text-xs ">Policy Number</FormLabel>
+                                                                                <FormControl>
+                                                                                    <Input className="bg-background/50" {...field} />
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />
+                                                                    <FormField
+                                                                        control={insuranceform.control}
+                                                                        name="groupNumber"
+                                                                        render={({ field }) => (
+                                                                            <FormItem>
+                                                                                <FormLabel className="text-xs ">Group Number</FormLabel>
+                                                                                <FormControl>
+                                                                                    <Input className="bg-background/50" placeholder="GRP-456789" {...field} />
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
                                                                     />
                                                                 </div>
-                                                            </div>
-                                                        </div>
-                                                    </CardContent>
+
+                                                                <div className="grid grid-cols-2 gap-4">
+                                                                    <FormField
+                                                                        control={insuranceform.control}
+                                                                        name="effectiveDate"
+                                                                        render={({ field }) => (
+                                                                            <FormItem>
+                                                                                <FormLabel className="text-xs ">Effective Date</FormLabel>
+                                                                                <FormControl>
+                                                                                    <DatePicker
+                                                                                        value={field.value}
+                                                                                        onChange={field.onChange}
+                                                                                        placeholder="Select effective date"
+                                                                                        className="bg-red-200 hover:bg-transparent"
+                                                                                        disableFutere={true}
+                                                                                    />
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />
+                                                                    <FormField
+                                                                        control={insuranceform.control}
+                                                                        name="expirationDate"
+                                                                        render={({ field }) => (
+                                                                            <FormItem>
+                                                                                <FormLabel className="text-xs ">Expiration Date</FormLabel>
+                                                                                <FormControl>
+                                                                                    <FormControl>
+                                                                                        <DatePicker
+                                                                                            value={field.value}
+                                                                                            onChange={field.onChange}
+                                                                                            placeholder="Select date of birth"
+                                                                                            className="bg-red-200 hover:bg-transparent"
+                                                                                        />
+                                                                                    </FormControl>
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />
+                                                                </div>
+
+                                                                <div className="border-t border-border pt-4">
+                                                                    <p className="text-sm font-medium mb-3">Coverage Details</p>
+                                                                    <div className="grid grid-cols-3 gap-4">
+                                                                        <FormField
+                                                                            control={insuranceform.control}
+                                                                            name="copay"
+                                                                            render={({ field }) => (
+                                                                                <FormItem>
+                                                                                    <FormLabel className="text-xs ">Co-Payment</FormLabel>
+                                                                                    <FormControl>
+                                                                                        <Input className="bg-background/50" placeholder="1,000" {...field} />
+                                                                                    </FormControl>
+                                                                                    <FormMessage />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                        <FormField
+                                                                            control={insuranceform.control}
+                                                                            name="deductible"
+                                                                            render={({ field }) => (
+                                                                                <FormItem>
+                                                                                    <FormLabel className="text-xs ">Deductible</FormLabel>
+                                                                                    <FormControl>
+                                                                                        <Input className="bg-background/50" placeholder="1,500" {...field} />
+                                                                                    </FormControl>
+                                                                                    <FormMessage />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                        <FormField
+                                                                            control={insuranceform.control}
+                                                                            name="outOfPocketMax"
+                                                                            render={({ field }) => (
+                                                                                <FormItem>
+                                                                                    <FormLabel className="text-xs ">Out-of-Pocket Max</FormLabel>
+                                                                                    <FormControl>
+                                                                                        <Input className="bg-background/50" placeholder="5,000" {...field} />
+                                                                                    </FormControl>
+                                                                                    <FormMessage />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="border-t border-border pt-4">
+                                                                    <p className="text-sm font-medium mb-3">Subscriber Information</p>
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <FormField
+                                                                            control={insuranceform.control}
+                                                                            name="subscriberName"
+                                                                            render={({ field }) => (
+                                                                                <FormItem>
+                                                                                    <FormLabel className="text-xs ">Subscriber Name</FormLabel>
+                                                                                    <FormControl>
+                                                                                        <Input className="bg-background/50" {...field} />
+                                                                                    </FormControl>
+                                                                                    <FormMessage />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                        <FormField
+                                                                            control={insuranceform.control}
+                                                                            name="relationshipToPatient"
+                                                                            render={({ field }) => (
+                                                                                <FormItem>
+                                                                                    <FormLabel className="text-xs ">Relationship to Patient</FormLabel>
+                                                                                    <FormControl>
+                                                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                                            <SelectTrigger className="bg-background/50">
+                                                                                                <SelectValue placeholder="Select" />
+                                                                                            </SelectTrigger>
+                                                                                            <SelectContent>
+                                                                                                <SelectItem value="self">Self</SelectItem>
+                                                                                                <SelectItem value="spouse">Spouse</SelectItem>
+                                                                                                <SelectItem value="child">Child</SelectItem>
+                                                                                                <SelectItem value="parent">Parent</SelectItem>
+                                                                                            </SelectContent>
+                                                                                        </Select>
+                                                                                    </FormControl>
+                                                                                    <FormMessage />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-4 mt-4">
+                                                                        <FormField
+                                                                            control={insuranceform.control}
+                                                                            name="subscriberDob"
+                                                                            render={({ field }) => (
+                                                                                <FormItem>
+                                                                                    <FormLabel className="text-xs ">Subscriber DOB</FormLabel>
+                                                                                    <FormControl>
+                                                                                        <FormControl>
+                                                                                            <DatePicker
+                                                                                                value={field.value}
+                                                                                                onChange={field.onChange}
+                                                                                                placeholder="Select date of birth"
+                                                                                                className="bg-red-200 hover:bg-transparent"
+                                                                                                disableFutere={true}
+                                                                                            />
+                                                                                        </FormControl>
+                                                                                    </FormControl>
+                                                                                    <FormMessage />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                        <FormField
+                                                                            control={insuranceform.control}
+                                                                            name="subscriberId"
+                                                                            render={({ field }) => (
+                                                                                <FormItem>
+                                                                                    <FormLabel className="text-xs ">Subscriber ID</FormLabel>
+                                                                                    <FormControl>
+                                                                                        <Input className="bg-background/50" placeholder="SUB-789456123" {...field} />
+                                                                                    </FormControl>
+                                                                                    <FormMessage />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                            </CardContent>
+                                                        </form>
+                                                    </Form>
                                                 </Card>
                                             </div>
                                         </TabsContent>
@@ -1158,7 +1454,7 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
                             </ScrollArea>
 
                         </div>
-                        <div className="flex justify-end gap-3 p-4 border-t border-border">
+                        {/* <div className="flex justify-end gap-3 p-4 border-t border-border">
                             <Button variant="outline" size='sm' onClick={onClose}>
                                 Cancel
                             </Button>
@@ -1166,7 +1462,7 @@ export default function PatientEditor({ patient, isOpen, onClose }) {
                                 <Save className="h-4 w-4 mr-2" />
                                 Save Patient
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
 
                 </DialogContent>

@@ -24,7 +24,7 @@ export const PatientProvider = ({ children, allCategories, allPatients }) => {
     }
 
     return (
-        <PatientContext.Provider value={{ patients, patientsMapData, selectedPatient, setSelectedPatient, category, setCategory }}>
+        <PatientContext.Provider value={{ patients, setPatients, patientsMapData, selectedPatient, setSelectedPatient, category, setCategory }}>
             {children}
         </PatientContext.Provider>
     )

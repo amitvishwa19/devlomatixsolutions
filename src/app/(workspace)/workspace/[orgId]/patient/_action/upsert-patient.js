@@ -42,7 +42,8 @@ const handler = async (data) => {
                 user = await db.user.update({
                     where: { id: existingUser.id },
                     data: {
-                        name: formData.name,
+                        name: formData.fullName,
+                        displayName: formData.fullName,
                         phone: formData.primaryPhone,
                         role: ROLE.PATIENT,
                         demographic: formData,
@@ -55,7 +56,8 @@ const handler = async (data) => {
                 user = await db.user.create({
                     data: {
                         sku,
-                        name: formData.name,
+                        name: formData.fullName,
+                        displayName: formData.fullName,
                         phone: formData.primaryPhone,
                         role: ROLE.PATIENT,
                         demographic: formData,

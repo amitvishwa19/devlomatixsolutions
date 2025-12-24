@@ -30,7 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function PatientPage() {
 
-    const { category, setCategory, patients } = usePatient()
+    const { category, setCategory, patients, setPatients } = usePatient()
     const [loading, setLoading] = useState(true)
     const { onOpen, refresh } = useModal()
 
@@ -295,6 +295,17 @@ export default function PatientPage() {
                                 setPatientEditor({
                                     isOpen: false,
                                 })
+                            }}
+                            onSave={(patient) => {
+                                if (patient) {
+                                    setPatients(prev =>
+                                        prev.some(item => item.id === patient.id)
+                                            ? prev.map(item =>
+                                                item.id === patient.id ? { ...item, ...patient } : item
+                                            )
+                                            : [patient, ...prev]
+                                    );
+                                }
                             }}
                         />
                     </div>

@@ -10,7 +10,7 @@ import moment from 'moment'
 import { useDispatch } from 'react-redux'
 
 
-export function DatePicker({ value, onChange, className, placeholder }) {
+export function DatePicker({ value, onChange, className, placeholder, disableFutere = false }) {
 
     const [open, setOpen] = useState(false)
     const [date, setDate] = useState(value ? format(value, 'dd MMM yyyy') : placeholder || format(new Date(), "dd MMM yyyy"))
@@ -32,11 +32,10 @@ export function DatePicker({ value, onChange, className, placeholder }) {
 
     return (
         <Popover open={open} onOpenChange={handleOnOpenChange}  >
-            <PopoverTrigger asChild className='p-0 m-0 w-full'>
+            <PopoverTrigger asChild className='p-0 m-0 w-full hover:bg-transparent'>
                 <Button
                     variant='ghost'
-
-                    className={cn(' justify-between text-left font-normal border hover:bg-primary/10', !value && 'dark:text-slate-400 text-slate-700')}
+                    className={cn(' justify-between text-left font-normal border hover:bg-transparent', !value && 'dark:text-slate-400 text-slate-700 ', { className })}
                 >
                     <span>{date}</span>
                     <CalendarDays size={10} className='' />
@@ -49,7 +48,7 @@ export function DatePicker({ value, onChange, className, placeholder }) {
                     mode='single'
                     selected={value}
                     onSelect={(date) => handleDateSelect(date)}
-                    disabled={(date) => date < yesterday}
+                    disabled={(date) => disableFutere ? date > yesterday : date < yesterday}
                     className={'w-[250px] rounded-xl dark:bg-[#0E141B]'}
                 />
             </PopoverContent>
