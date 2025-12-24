@@ -4,9 +4,6 @@ import { NewOrgModal } from "@/app/(workspace)/workspace/[orgId]/(misc)/_compone
 import AddMemberModal from "@/app/(workspace)/workspace/[orgId]/(misc)/_components/settings/_components/AddMemberModal";
 import { DeleteOrdModal } from "@/app/(workspace)/workspace/[orgId]/(misc)/_components/settings/_components/DeleteOrdModal";
 import SettingsModal from "@/app/(workspace)/workspace/[orgId]/(misc)/_components/settings/SettingsModal";
-import AddAppointmentModal from "@/app/(workspace)/workspace/[orgId]/appointment/_components/AddAppointmentModal";
-import AppointmentCrud from "@/app/(workspace)/workspace/[orgId]/appointment/_components/AppointmentCrud";
-import QuickAppointment from "@/app/(workspace)/workspace/[orgId]/appointment/_components/appointment-manager/BookAppointment";
 import { AIPostGenerator } from "@/app/(workspace)/workspace/[orgId]/content/_components/AIPostGenerator";
 import { PreviewDialouge } from "@/app/(workspace)/workspace/[orgId]/content/_components/post-generator/components/PreviewDialouge";
 import { AddInvoice } from "@/app/(workspace)/workspace/[orgId]/invoice/_components/AddInvoice";
@@ -22,7 +19,7 @@ import { useEffect, useState } from "react";
 import BookAppointment from "@/app/(workspace)/workspace/[orgId]/appointment/_components/appointment-manager/BookAppointment";
 import ViewAppointment from "@/app/(workspace)/workspace/[orgId]/appointment/_components/appointment-manager/ViewAppointment";
 import DeleteAppointment from "@/app/(workspace)/workspace/[orgId]/appointment/_components/appointment-manager/DeleteAppointment";
-import PatientEditor from "@/app/(workspace)/workspace/[orgId]/patient/_component/patient-profile/PatientEditor";
+
 
 
 
@@ -47,8 +44,8 @@ export const OrgModalProvider = () => {
 
             <LeaveServerModal />
             <DeleteServerModal />
-            <AddAppointmentModal />
-            <AppointmentCrud />
+
+
 
 
             <BookAppointment />

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { CalendarDays, Calendar as CalenderIcon } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover"
@@ -10,10 +10,10 @@ import moment from 'moment'
 import { useDispatch } from 'react-redux'
 
 
-export function DatePicker({ value, onChange, className, placeholder, disableFutere = false }) {
+export function DatePicker({ value, onChange, className, placeholder, disableFutere = false, disabled }) {
 
     const [open, setOpen] = useState(false)
-    const [date, setDate] = useState(value ? format(value, 'dd MMM yyyy') : placeholder || format(new Date(), "dd MMM yyyy"))
+    const [date, setDate] = useState(value ? format(value, 'dd MMM yyyy') : placeholder)
     const yesterday = new Date()
 
     yesterday.setDate(yesterday.getDate())
@@ -25,6 +25,12 @@ export function DatePicker({ value, onChange, className, placeholder, disableFut
         setDate(moment(d).format('MMM Do YY'))
     }
 
+    useEffect(() => {
+        if (value) {
+            setDate(format(value, 'dd MMM yyyy'))
+        }
+    }, [value])
+
 
     const handleOnOpenChange = () => {
         setOpen(!open)
@@ -35,9 +41,11 @@ export function DatePicker({ value, onChange, className, placeholder, disableFut
             <PopoverTrigger asChild className='p-0 m-0 w-full hover:bg-transparent'>
                 <Button
                     variant='ghost'
-                    className={cn(' justify-between text-left font-normal border hover:bg-transparent', !value && 'dark:text-slate-400 text-slate-700 ', { className })}
+                    disabled={disabled}
+                    className={cn(' justify-between text-left font-normal border bg-background/50 hover:bg-background/50', !value && 'dark:text-slate-400 text-slate-700 ', { className })}
                 >
                     <span>{date}</span>
+
                     <CalendarDays size={10} className='' />
 
                 </Button>

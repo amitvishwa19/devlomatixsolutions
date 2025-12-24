@@ -22,6 +22,7 @@ import { useAction } from '@/hooks/use-action'
 import { ActionTooltip } from '@/components/global/ActionTooltip'
 import { generateUniqueTempEmail } from '@/utils/functions'
 import { DatePicker } from '@/components/global/DatePicker'
+import Demographics from './_components/Demographics'
 
 
 
@@ -126,13 +127,13 @@ const insuranceSchema = z.object({
 });
 
 
-export default function PatientEditor({ patient, isOpen, onClose, onSave }) {
+export default function PatientEditor({ patient, isOpen, onClose, onSave, mode }) {
     const [activeTab, setActiveTab] = useState("overview");
     const [patientdata, setPatientData] = useState(null)
     const [loading, setLoading] = useState(null)
     const [tempEmail, setTempEmail] = useState('');
     const [generateEmail, setGenerateEmail] = useState(false);
-
+    const [modalClose, setModalClose] = useState(false)
 
     const form = useForm({
         resolver: zodResolver(demographicsSchema),
@@ -364,6 +365,7 @@ export default function PatientEditor({ patient, isOpen, onClose, onSave }) {
 
     const handleOnOpenclose = () => {
         setLoading(null)
+        setModalClose(true)
         form.reset()
         vitalform.reset()
         insuranceform.reset()
@@ -403,7 +405,7 @@ export default function PatientEditor({ patient, isOpen, onClose, onSave }) {
         <Dialog open={isOpen} onOpenChange={handleOnOpenclose}>
             <form>
 
-                <DialogContent className="bg-card min-w-[95%] max-w-[95%] min-h-[95%] max-h-[95%] [&>button:last-child]:hidden">
+                <DialogContent className="bg-card min-w-[90%] max-w-[90%] min-h-[90%] max-h-[90%] [&>button:last-child]:hidden">
 
                     <DialogHeader className={'hidden'}>
                         <DialogTitle>Edit profile</DialogTitle>
@@ -590,283 +592,7 @@ export default function PatientEditor({ patient, isOpen, onClose, onSave }) {
                                             <div className="grid md:grid-cols-2 gap-4">
 
                                                 {/* Demographics & Contact */}
-                                                <Card className="bg-card/50 border-border">
-
-
-                                                    <Form {...form}>
-                                                        <form onSubmit={form.handleSubmit((data) => {
-                                                            setLoading('demographic')
-                                                            onFormSubmit(data, 'demographic')
-                                                        })}>
-                                                            <CardHeader className="pb-3">
-                                                                <CardTitle className="flex flex-row items-center justify-between gap-2 text-base">
-                                                                    <div className="flex flex-row items-center gap-2">
-                                                                        <User className="h-5 w-5 text-primary" />
-                                                                        Demographics &amp; Contact
-                                                                    </div>
-                                                                    <button type="submit" disabled={loading === 'demographic' && true}>
-                                                                        {
-                                                                            loading === 'demographic' ? <Loader className="h-5 w-5 animate-spin text-sky-500" /> : <Save className="h-5 w-5 cursor-pointer text-sky-500" />
-                                                                        }
-                                                                    </button>
-                                                                </CardTitle>
-                                                            </CardHeader>
-
-                                                            <CardContent className="space-y-4">
-
-                                                                {/* Full name + DOB */}
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="fullName"
-                                                                        render={({ field }) => (
-                                                                            <FormItem>
-                                                                                <FormLabel className="text-xs ">
-                                                                                    Full Name *
-                                                                                </FormLabel>
-                                                                                <FormControl>
-                                                                                    <Input
-                                                                                        {...field}
-                                                                                        placeholder='Full name'
-                                                                                        className="bg-background/50 "
-                                                                                    />
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="dateOfBirth"
-                                                                        render={({ field }) => (
-                                                                            <FormItem>
-                                                                                <FormLabel className='text-xs'>Date Of birth *</FormLabel>
-                                                                                <FormControl>
-                                                                                    <DatePicker
-                                                                                        value={field.value}
-                                                                                        onChange={field.onChange}
-                                                                                        placeholder="Select date of birth"
-                                                                                        className="bg-red-200 hover:bg-transparent"
-                                                                                        disableFutere={true}
-                                                                                    />
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-                                                                </div>
-
-                                                                {/* Gender + Marital status */}
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="gender"
-                                                                        render={({ field }) => (
-                                                                            <FormItem>
-                                                                                <FormLabel className="text-xs ">
-                                                                                    Gender *
-                                                                                </FormLabel>
-                                                                                <FormControl>
-                                                                                    <Select
-                                                                                        onValueChange={field.onChange}
-                                                                                        value={field.value}
-                                                                                    >
-                                                                                        <SelectTrigger className="bg-background/50">
-                                                                                            <SelectValue placeholder="Select" />
-                                                                                        </SelectTrigger>
-                                                                                        <SelectContent>
-                                                                                            <SelectItem value="male">Male</SelectItem>
-                                                                                            <SelectItem value="female">Female</SelectItem>
-                                                                                            <SelectItem value="other">Other</SelectItem>
-                                                                                        </SelectContent>
-                                                                                    </Select>
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="maritalStatus"
-                                                                        render={({ field }) => (
-                                                                            <FormItem>
-                                                                                <FormLabel className="text-xs ">
-                                                                                    Marital Status
-                                                                                </FormLabel>
-                                                                                <FormControl>
-                                                                                    <Select
-                                                                                        onValueChange={field.onChange}
-                                                                                        value={field.value || ""}
-                                                                                    >
-                                                                                        <SelectTrigger className="bg-background/50">
-                                                                                            <SelectValue placeholder="Select" />
-                                                                                        </SelectTrigger>
-                                                                                        <SelectContent>
-                                                                                            <SelectItem value="single">Single</SelectItem>
-                                                                                            <SelectItem value="married">Married</SelectItem>
-                                                                                            <SelectItem value="divorced">Divorced</SelectItem>
-                                                                                            <SelectItem value="widowed">Widowed</SelectItem>
-                                                                                        </SelectContent>
-                                                                                    </Select>
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-                                                                </div>
-
-                                                                {/* Social ID + Language */}
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="socialIdNumber"
-                                                                        render={({ field }) => (
-                                                                            <FormItem>
-                                                                                <FormLabel className="text-xs ">
-                                                                                    Social ID Number
-                                                                                </FormLabel>
-                                                                                <FormControl>
-                                                                                    <Input
-                                                                                        {...field}
-                                                                                        placeholder="MRN-2024-001"
-                                                                                        className="bg-background/50"
-                                                                                    />
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="preferredLanguage"
-                                                                        render={({ field }) => (
-                                                                            <FormItem>
-                                                                                <FormLabel className="text-xs ">
-                                                                                    Preferred Language
-                                                                                </FormLabel>
-                                                                                <FormControl>
-                                                                                    <Select
-                                                                                        onValueChange={field.onChange}
-                                                                                        value={field.value || ""}
-                                                                                    >
-                                                                                        <SelectTrigger className="bg-background/50">
-                                                                                            <SelectValue placeholder="Select" />
-                                                                                        </SelectTrigger>
-                                                                                        <SelectContent>
-                                                                                            <SelectItem value="english">English</SelectItem>
-                                                                                            <SelectItem value="spanish">Spanish</SelectItem>
-                                                                                            <SelectItem value="hindi">Hindi</SelectItem>
-                                                                                            <SelectItem value="chinese">Chinese</SelectItem>
-                                                                                            <SelectItem value="arabic">Arabic</SelectItem>
-                                                                                        </SelectContent>
-                                                                                    </Select>
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-                                                                </div>
-
-                                                                {/* Contact info */}
-                                                                <div className="border-t border-border pt-4">
-                                                                    <p className="mb-3 text-sm font-medium">
-                                                                        Contact Information
-                                                                    </p>
-
-                                                                    <div className="grid grid-cols-2 gap-4">
-                                                                        <FormField
-                                                                            control={form.control}
-                                                                            name="primaryPhone"
-                                                                            render={({ field }) => (
-                                                                                <FormItem>
-                                                                                    <FormLabel className="text-xs ">
-                                                                                        Primary Phone *
-                                                                                    </FormLabel>
-                                                                                    <FormControl>
-                                                                                        <Input
-                                                                                            {...field}
-                                                                                            className="bg-background/50"
-                                                                                            placeholder="(91) 9723-123-123"
-                                                                                        />
-                                                                                    </FormControl>
-                                                                                    <FormMessage />
-                                                                                </FormItem>
-                                                                            )}
-                                                                        />
-                                                                        <FormField
-                                                                            control={form.control}
-                                                                            name="emergencyPhone"
-                                                                            render={({ field }) => (
-                                                                                <FormItem>
-                                                                                    <FormLabel className="text-xs ">
-                                                                                        Emergency Phone
-                                                                                    </FormLabel>
-                                                                                    <FormControl>
-                                                                                        <Input
-                                                                                            {...field}
-                                                                                            className="bg-background/50"
-                                                                                            placeholder="(91) 9723-123-123"
-                                                                                        />
-                                                                                    </FormControl>
-                                                                                    <FormMessage />
-                                                                                </FormItem>
-                                                                            )}
-                                                                        />
-                                                                    </div>
-
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="email"
-                                                                        render={({ field }) => (
-                                                                            <FormItem className="mt-4">
-                                                                                <FormLabel className="text-xs flex flex-row items-center gap-2">
-                                                                                    Email Address *
-                                                                                    <ActionTooltip label='Dont have email id ? click to generate temperory email id'>
-                                                                                        <InfoIcon size={16} className=' cursor-pointer' onClick={() => {
-                                                                                            form.setValue('email', generateUniqueTempEmail());
-                                                                                            form.watch('email')
-                                                                                        }} />
-                                                                                    </ActionTooltip>
-                                                                                </FormLabel>
-                                                                                <FormControl>
-                                                                                    <Input
-                                                                                        type="email"
-                                                                                        {...field}
-                                                                                        className="bg-background/50"
-                                                                                        placeholder="patient@email.com"
-                                                                                        readOnly={!!tempEmail}
-                                                                                    />
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name="homeAddress"
-                                                                        render={({ field }) => (
-                                                                            <FormItem className="mt-4">
-                                                                                <Label className="text-xs ">
-                                                                                    Home Address
-                                                                                </Label>
-                                                                                <FormControl>
-                                                                                    <Textarea
-                                                                                        {...field}
-                                                                                        rows={2}
-                                                                                        className="bg-background/50"
-                                                                                    />
-                                                                                </FormControl>
-                                                                                <FormMessage />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />
-                                                                </div>
-                                                            </CardContent>
-                                                        </form>
-                                                    </Form>
-                                                </Card>
+                                                <Demographics close={modalClose} patient={patient} onSave={() => { console.log('Demogrphic chNGE SAVES') }} />
 
                                                 {/* Insurance Information */}
                                                 <Card className="bg-card/50 border-border">

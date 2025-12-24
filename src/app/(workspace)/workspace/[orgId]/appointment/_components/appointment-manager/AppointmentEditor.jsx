@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { CalendarDays, CalendarIcon, Loader, Mic, Play, Save, Square, SquarePause } from 'lucide-react'
+import { CalendarDays, CalendarIcon, ClipboardClock, Loader, Mic, Play, Save, Square, SquarePause } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import moment from 'moment'
@@ -26,18 +26,13 @@ import { cn } from '@/lib/utils'
 
 
 
-export default function AppointmentEditor({ appointment, onCLose }) {
+export default function AppointmentEditor({ isOpen, appointment, onClose, data }) {
 
     const { data: session } = useSession()
     const { orgId } = useParams()
     const { server, servers, users, refreshServer } = useOrg()
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
-    const [open, setOpen] = useState(false)
-    const [listning, setListning] = useState(false)
-    const [pauseListning, setPauseListning] = useState(false)
-    const { isOpen, onClose, type: dtype, data } = useModal();
-    const isModalOpen = isOpen && dtype === "add-appointment-modal";
 
     const [doctor, setDoctor] = useState({})
     const [slot, setSlot] = useState({ slot: 'morning', start: '09:00 AM', end: '01:00 PM', avaliable: false })
@@ -169,7 +164,7 @@ export default function AppointmentEditor({ appointment, onCLose }) {
             setDoctor(server)
             setAppointmentData({ ...appointmentData, doctorId: server?.userId })
         }
-    }, [server, isModalOpen])
+    }, [server])
 
     const handleOpenChange = () => {
         onClose()
@@ -202,7 +197,7 @@ export default function AppointmentEditor({ appointment, onCLose }) {
             refreshServer().then((e) => {
                 setLoading(false)
                 toast.success('New appointment created successfully', { id: 'new-appointment' });
-                onCLose()
+                onClose()
             })
         },
         onError: (error) => {
@@ -220,284 +215,290 @@ export default function AppointmentEditor({ appointment, onCLose }) {
     }
 
     return (
-        <div className='flex flex-col gap-4  h-full'>
-            {/* <div className='self-center'>
-                <h2 className='text-md'>Book New Appointment</h2>
-            </div> */}
-            <div className='flex flex-1 flex-col gap-4 flex-wrap'>
+        <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+            <SheetContent className='min-w-[620px] bg-transparent border-l-0 p-2'>
 
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-2 space-y-6">
+                <div className='bg-card h-full rounded-md'>
+                    <SheetHeader className=''>
+                        <SheetTitle className='flex flex-row items-center gap-2'>
+                            <ClipboardClock className='h-5 w-5 text-sky-500' />
+                            <span>Book new Appointment</span>
+                        </SheetTitle>
+                        <SheetDescription className='text-xs text-muted-foreground'>
+                            Schedule your appointment today with ease – our secure online booking system connects
+                            you with trusted healthcare professionals at times that fit your busy schedule.
+                        </SheetDescription>
+                    </SheetHeader>
 
-
-                    <div className='flex flex-row items-center gap-2'>
-
-                        {/* Doctor */}
-                        <div className='flex flex-col gap-2 w-full'>
-                            <Label >Select Doctor *</Label>
-                            <Select
-                                disabled={server?.members.filter(member => member.user.role === ROLE.DOCTOR).length === 0 ? true : false}
-                                defaultValue={server?.userId}
-                                name='doctorId'
-                                onValueChange={(id) => {
-                                    setDoctor(server?.members.find(member => member.userId === id).user?.servers[0])
-                                    setAppointmentData({ ...appointmentData, doctorId: server?.members.find(member => member.userId === id).user?.servers[0].userId })
-                                    console.log('doctor', server?.members.find(member => member.userId === id).user?.servers[0])
-                                }}
-                            >
-                                <SelectTrigger className="">
-                                    <SelectValue placeholder="Select a doctor" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {server?.members.filter(member => member.user.role === ROLE.DOCTOR)?.map((item) => {
-
-                                            return (
-                                                <SelectItem key={item?.user?.id} value={item?.user?.id} >
-                                                    <div className='flex flex-row items-center gap-2'>
-                                                        <Avatar className='h-6 w-6 rounded-md'>
-                                                            <AvatarImage src={item?.user?.avatar} alt="@shadcn" />
-                                                            <AvatarFallback className='rounded-md dark:bg-sky-600'>{item?.user?.displayName?.substring(0, 1)}</AvatarFallback>
-                                                        </Avatar>
-                                                        {item.user.displayName}
-
-                                                    </div>
-                                                </SelectItem>
-                                            )
-                                        })}
-
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Patients */}
-                        <div className='flex flex-col gap-2 w-full'>
-                            <Label >Select Patient *</Label>
-                            <Select
-                                defaultValue={appointmentData?.patientId}
-                                disabled={users?.filter(user => user.role === ROLE.PATIENT).length === 0 ? true : false}
-                                name='patientId'
-                                onValueChange={(id) => {
-                                    setAppointmentData({ ...appointmentData, patientId: id })
-                                }}
-                                className='m-0'
-                            >
-                                <SelectTrigger className="">
-                                    <>
-                                        <SelectValue placeholder='Select a Patient' />
-
-                                    </>
-                                </SelectTrigger>
-                                <SelectContent className='dark:bg-[#0E141B]'>
-                                    <SelectGroup>
-                                        {users?.filter(user => user.role === ROLE.PATIENT)?.map((item, index) => {
-
-                                            return (
-                                                <SelectItem key={item.id} value={item?.id}>
-                                                    <div className='flex gap-2 items-center'>
-                                                        <Avatar className='h-6 w-6 rounded-sm'>
-                                                            <AvatarFallback className='text-xs bg-blue-600 rounded-sm'>{item.displayName?.substring(0, 1)}</AvatarFallback>
-                                                        </Avatar>
-                                                        {item.displayName}
-                                                    </div>
-                                                </SelectItem>
-                                            )
-                                        })}
-
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                    </div>
+                    <div className='p-2'>
+                        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-2 space-y-6">
 
 
-                    <div className='flex flex-row items-center gap-2'>
-                        {/* Appointment Date */}
-                        <div className='flex flex-col gap-2 w-full'>
-                            <Label>Appointment date *</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost"
-                                        className={cn("w-full pl-3 text-left font-normal border",
-                                            "text-muted-foreground")}>
-                                        {<span>{moment(appointmentData.date).format('Do MMM YY')}</span>}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 bg-popover z-50"
-                                    align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={''}
-                                        onSelect={(e) => {
-                                            console.log(moment(e).format())
-                                            setAppointmentData({ ...appointmentData, date: moment(e).format() })
+                            <div className='flex flex-row items-center gap-2'>
+
+                                {/* Doctor */}
+                                <div className='flex flex-col gap-2 w-full'>
+                                    <Label >Select Doctor *</Label>
+                                    <Select
+                                        disabled={server?.members.filter(member => member.user.role === ROLE.DOCTOR).length === 0 ? true : false}
+                                        defaultValue={server?.userId}
+                                        name='doctorId'
+                                        onValueChange={(id) => {
+                                            setDoctor(server?.members.find(member => member.userId === id).user?.servers[0])
+                                            setAppointmentData({ ...appointmentData, doctorId: server?.members.find(member => member.userId === id).user?.servers[0].userId })
+                                            console.log('doctor', server?.members.find(member => member.userId === id).user?.servers[0])
                                         }}
-                                        disabled={(date) => date < yesterday}
-                                        className={cn("p-3  nter - events - auto dark:bg-darkPrimaryBackground w-[250px] outline-none")}
+                                    >
+                                        <SelectTrigger className="">
+                                            <SelectValue placeholder="Select a doctor" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {server?.members.filter(member => member.user.role === ROLE.DOCTOR)?.map((item) => {
 
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                                                    return (
+                                                        <SelectItem key={item?.user?.id} value={item?.user?.id} >
+                                                            <div className='flex flex-row items-center gap-2'>
+                                                                <Avatar className='h-6 w-6 rounded-md'>
+                                                                    <AvatarImage src={item?.user?.avatar} alt="@shadcn" />
+                                                                    <AvatarFallback className='rounded-md dark:bg-sky-600'>{item?.user?.displayName?.substring(0, 1)}</AvatarFallback>
+                                                                </Avatar>
+                                                                {item.user.displayName}
 
-                        {/* Appointment visit type */}
-                        <div className='flex flex-col gap-2 w-full'>
-                            <Label>Visit type *</Label>
-                            <Select defaultValue='consultation' onValueChange={(e) => { setAppointmentData({ ...appointmentData, visitType: e }) }}>
-                                <SelectTrigger className="">
-                                    <SelectValue placeholder="Select Visit Purpose" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {visitPurposes.map(item => (
-                                        <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
+                                                            </div>
+                                                        </SelectItem>
+                                                    )
+                                                })}
+
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Patients */}
+                                <div className='flex flex-col gap-2 w-full'>
+                                    <Label >Select Patient *</Label>
+                                    <Select
+                                        defaultValue={appointmentData?.patientId}
+                                        disabled={users?.filter(user => user.role === ROLE.PATIENT).length === 0 ? true : false}
+                                        name='patientId'
+                                        onValueChange={(id) => {
+                                            setAppointmentData({ ...appointmentData, patientId: id })
+                                        }}
+                                        className='m-0'
+                                    >
+                                        <SelectTrigger className="">
+                                            <>
+                                                <SelectValue placeholder='Select a Patient' />
+
+                                            </>
+                                        </SelectTrigger>
+                                        <SelectContent className='dark:bg-[#0E141B]'>
+                                            <SelectGroup>
+                                                {users?.filter(user => user.role === ROLE.PATIENT)?.map((item, index) => {
+
+                                                    return (
+                                                        <SelectItem key={item.id} value={item?.id}>
+                                                            <div className='flex gap-2 items-center'>
+                                                                <Avatar className='h-6 w-6 rounded-sm'>
+                                                                    <AvatarFallback className='text-xs bg-blue-600 rounded-sm'>{item.displayName?.substring(0, 1)}</AvatarFallback>
+                                                                </Avatar>
+                                                                {item.displayName}
+                                                            </div>
+                                                        </SelectItem>
+                                                    )
+                                                })}
+
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                            </div>
 
 
-                    {/* Slot Selector */}
-                    <div className='flex flex-col gap-2 flex-wrap'>
-                        <Label className='text-sm'>Appointment Slots</Label>
-                        <div className=' flex-col md:flex-row items-center justify-around gap-2  grid grid-cols-2 p-1'>
-                            {(doctor?.setting?.timing ? doctor?.setting?.timing : hospitalDefaultSettings?.timing)?.map((item, index) => {
+                            <div className='flex flex-row items-center gap-2'>
+                                {/* Appointment Date */}
+                                <div className='flex flex-col gap-2 w-full'>
+                                    <Label>Appointment date *</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost"
+                                                className={cn("w-full pl-3 text-left font-normal border",
+                                                    "text-muted-foreground")}>
+                                                {<span>{moment(appointmentData.date).format('Do MMM YY')}</span>}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 bg-popover z-50"
+                                            align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={''}
+                                                onSelect={(e) => {
+                                                    console.log(moment(e).format())
+                                                    setAppointmentData({ ...appointmentData, date: moment(e).format() })
+                                                }}
+                                                disabled={(date) => date < yesterday}
+                                                className={cn("p-3  nter - events - auto dark:bg-darkPrimaryBackground w-[250px] outline-none")}
 
-                                return (
-                                    <div key={index} className='w-full'>
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
 
-                                        <Button key={index}
-                                            variant={'ghost'}
-                                            disabled={!item.avaliable}
-                                            className={`flex flex-row p-4 h-12 w-full 
+                                {/* Appointment visit type */}
+                                <div className='flex flex-col gap-2 w-full'>
+                                    <Label>Visit type *</Label>
+                                    <Select defaultValue='consultation' onValueChange={(e) => { setAppointmentData({ ...appointmentData, visitType: e }) }}>
+                                        <SelectTrigger className="">
+                                            <SelectValue placeholder="Select Visit Purpose" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {visitPurposes.map(item => (
+                                                <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+
+                            {/* Slot Selector */}
+                            <div className='flex flex-col gap-2 flex-wrap'>
+                                <Label className='text-sm'>Appointment Slots</Label>
+                                <div className=' flex-col md:flex-row items-center justify-around gap-2  grid grid-cols-2 p-1'>
+                                    {(doctor?.setting?.timing ? doctor?.setting?.timing : hospitalDefaultSettings?.timing)?.map((item, index) => {
+
+                                        return (
+                                            <div key={index} className='w-full'>
+
+                                                <Button key={index}
+                                                    variant={'ghost'}
+                                                    disabled={!item.avaliable}
+                                                    className={`flex flex-row p-4 h-12 w-full 
                                                                 bg-primary/20 items-center justify-center rounded-md 
                                                                 dark:bg-darkFocusColor/60 
                                                                 hover:dark:bg-darkFocusColor
                                                                  transition-all
                                                                  hover:ring-[0.8px]
                                                                  ${slot?.slot === item.slot && item.avaliable && 'bg-primary/30 dark:bg-darkFocusColor ring-[0.8px]'} border flex flex-row items-center `
-                                            }
-                                            onClick={() => {
-                                                //handleSlotChange(item)
-                                                setSlot(item)
-                                                setAppointmentData({ ...appointmentData, slot: item })
-                                            }}
-                                        >
+                                                    }
+                                                    onClick={() => {
+                                                        //handleSlotChange(item)
+                                                        setSlot(item)
+                                                        setAppointmentData({ ...appointmentData, slot: item })
+                                                    }}
+                                                >
 
-                                            <div className='flex flex-col items-center justify-center'>
-                                                <span className={`capitalize ${!item.avaliable && ' line-through'}`}>{item.slot}</span>
-                                                <span className={` capitalize text-xs text-muted-foreground  ${!item.avaliable && ' line-through'}`}>{item.start} - {item.end}</span>
+                                                    <div className='flex flex-col items-center justify-center'>
+                                                        <span className={`capitalize ${!item.avaliable && ' line-through'}`}>{item.slot}</span>
+                                                        <span className={` capitalize text-xs text-muted-foreground  ${!item.avaliable && ' line-through'}`}>{item.start} - {item.end}</span>
+                                                    </div>
+                                                </Button>
+
                                             </div>
-                                        </Button>
-
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
 
 
-                    {/* Sleect Time */}
-                    <div className='flex flex-col gap-2 flex-wrap'>
-                        <Label className='text-sm'>Appointment Time</Label>
-                        <div
-                            className='flex flex-row flex-wrap items-center  gap-2 '
+                            {/* Sleect Time */}
+                            <div className='flex flex-col gap-2 flex-wrap'>
+                                <Label className='text-sm'>Appointment Time</Label>
+                                <div
+                                    className='flex flex-row flex-wrap items-center  gap-2 '
 
-                        >
-                            {slotTimes?.map((item, index) => {
-                                let isBooked = false
-                                doctor?.appointments?.map((appointment) => {
-                                    if (appointment?.doctorId === doctor?.userId && appointment?.time === item && moment(appointment?.date).format('Do MMM') === moment(appointmentData?.date).format('Do MMM')) {
-                                        isBooked = true
-                                    }
-                                })
+                                >
+                                    {slotTimes?.map((item, index) => {
+                                        let isBooked = false
+                                        doctor?.appointments?.map((appointment) => {
+                                            if (appointment?.doctorId === doctor?.userId && appointment?.time === item && moment(appointment?.date).format('Do MMM') === moment(appointmentData?.date).format('Do MMM')) {
+                                                isBooked = true
+                                            }
+                                        })
 
-                                return (
-                                    <div key={index}>
-                                        <Button
-                                            variant='ghost'
-                                            disabled={isBooked ? true : false || (parseTime(item) && !futureDate())}
-                                            className={`
+                                        return (
+                                            <div key={index}>
+                                                <Button
+                                                    variant='ghost'
+                                                    disabled={isBooked ? true : false || (parseTime(item) && !futureDate())}
+                                                    className={`
                                                             border w-20 
                                                             ${time === item && 'dark:bg-[#161F2B] ring-[0.8px]'}
                                                             hover:ring-[0.8px]
                                                         `}
-                                            onClick={() => {
-                                                setAppointmentData({ ...appointmentData, time: item })
-                                                setTime(item)
-                                                console.log(item)
-                                            }}
-                                        >
-                                            <span className={`text-xs ${(isBooked || (parseTime(item) && !futureDate())) && 'line-through'}`}>
-                                                {item}
-                                            </span>
+                                                    onClick={() => {
+                                                        setAppointmentData({ ...appointmentData, time: item })
+                                                        setTime(item)
+                                                        console.log(item)
+                                                    }}
+                                                >
+                                                    <span className={`text-xs ${(isBooked || (parseTime(item) && !futureDate())) && 'line-through'}`}>
+                                                        {item}
+                                                    </span>
 
-                                        </Button>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
+                                                </Button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
 
-                    {/* consultationOptions */}
-                    <div className='flex flex-col gap-2'>
-                        <Label className='text-sm'>Appointment Type</Label>
-                        <div className='grid grid-flow-col grid-col-4 gap-2 m-1'>
-                            {
-                                options?.map((item, index) => {
+                            {/* consultationOptions */}
+                            <div className='flex flex-col gap-2'>
+                                <Label className='text-sm'>Appointment Type</Label>
+                                <div className='grid grid-flow-col grid-col-4 gap-2 m-1'>
+                                    {
+                                        options?.map((item, index) => {
 
-                                    return (
-                                        <Button
-                                            key={index}
-                                            disabled={!item.status}
-                                            variant={'ghost'}
-                                            className={
-                                                `border h-12 bg-primary/20 dark:hover:bg-darkFocusColor dark:bg-darkFocusColor/60 hover:ring-[0.8px]
+                                            return (
+                                                <Button
+                                                    key={index}
+                                                    disabled={!item.status}
+                                                    variant={'ghost'}
+                                                    className={
+                                                        `border h-12 bg-primary/20 dark:hover:bg-darkFocusColor dark:bg-darkFocusColor/60 hover:ring-[0.8px]
                                                          ${type.type === item.type && item.status && 'bg-primary/30 dark:bg-darkFocusColor ring-[0.8px]'}
                                                          w-full`
-                                            }
-                                            onClick={() => {
-                                                setType(item)
-                                                setAppointmentData({ ...appointmentData, type: item })
-                                            }}
-                                        >
-                                            <div className='flex flex-row p-4 items-center justify-center gap-2'>
-                                                <DynamicIcon name={item.icon} size={52} className='h-10 line-through' />
-                                                <span className={`capitalize ${!item.status && 'line-through'}`}>{item.type}</span>
-                                            </div>
-                                        </Button>
+                                                    }
+                                                    onClick={() => {
+                                                        setType(item)
+                                                        setAppointmentData({ ...appointmentData, type: item })
+                                                    }}
+                                                >
+                                                    <div className='flex flex-row p-4 items-center justify-center gap-2'>
+                                                        <DynamicIcon name={item.icon} size={52} className='h-10 line-through' />
+                                                        <span className={`capitalize ${!item.status && 'line-through'}`}>{item.type}</span>
+                                                    </div>
+                                                </Button>
 
-                                    )
-                                })
-                            }
-                        </div>
+                                            )
+                                        })
+                                    }
+                                </div>
+                            </div>
+
+                            {/* Appointment Notes */}
+                            <div className='flex flex-col gap-2'>
+                                <div className='flex flex-row gap-2 items-center'>
+                                    <Label className='text-sm font-light'>Notes</Label>
+                                    <VoiceToText onChange={(e) => {
+                                        setAppointmentData({ ...appointmentData, note: e })
+                                    }} />
+
+                                </div>
+                                <Textarea className='text-xs' rows='6' disabled={loading} value={appointmentData.note} onChange={(e) => { setAppointmentData({ ...appointmentData, note: e }) }} />
+
+                            </div>
+
+                        </form>
                     </div>
 
-                    {/* Appointment Notes */}
-                    <div className='flex flex-col gap-2'>
-                        <div className='flex flex-row gap-2 items-center'>
-                            <Label className='text-sm font-light'>Notes</Label>
-                            <VoiceToText onChange={(e) => {
-                                setAppointmentData({ ...appointmentData, note: e })
-                            }} />
+                </div>
 
-                        </div>
-                        <Textarea className='text-xs' rows='6' disabled={loading} value={appointmentData.note} onChange={(e) => { setAppointmentData({ ...appointmentData, note: e }) }} />
-
-                    </div>
-
-                </form>
-            </div>
-
-            <div className='flex flex-row items-center gap-2 justify-end p-4'>
-                <Button disabled={loading} variant="ghost" size={'sm'} onClick={() => { handleOpenChange() }}>Cancel</Button>
-                <Button disabled={loading} variant="save" size={'sm'} onClick={handleSaveData}>
-                    {loading ? <Loader className=' animate-spin' /> : <Save />}
-                    Book Now
-                </Button>
-            </div>
-        </div>
+            </SheetContent>
+        </Sheet>
     )
 }

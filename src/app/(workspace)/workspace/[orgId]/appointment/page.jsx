@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useEffectEvent, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { capitalizeFirstLetter } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useModal } from '@/hooks/useModal'
 import { useOrg } from '@/providers/OrgProvider'
@@ -12,19 +11,18 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import moment from 'moment'
 import StatusSelector from './_components/StatusSelector'
-import { DynamicIcon } from 'lucide-react/dynamic';
 import { DatePicker } from '@/components/global/DatePicker'
 import { setSelectedAppointment, setSelectedAppointments } from './_redux/appointment-slice'
 import { Bell, Calendar, CalendarRange, Eye, FilePenLine, Megaphone, MoreHorizontal, Pencil, Trash2, Trash2Icon, View } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { ActionTooltip } from '@/components/global/ActionTooltip'
-import BookAppointment from './_components/appointment-manager/BookAppointment'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import ViewAppointment from './_components/appointment-manager/ViewAppointment'
-import EditAppointment from './_components/appointment-manager/EditAppointment'
 import { useSocket } from '@/providers/SocketProvider'
 import { useSession } from 'next-auth/react'
 import { ROLE } from '@prisma/client'
+import EditAppointment from './_components/appointment-manager/EditAppointment'
+import AppointmentEditor from './_components/appointment-manager/AppointmentEditor'
 
 
 export default function Appointments() {
@@ -72,10 +70,10 @@ export default function Appointments() {
         });
     };
 
-    const [editAppointment, setEditAppointment] = useState({
+    const [appointmentEditor, setAppointmentEditor] = useState({
         isOpen: false,
         mode: 'edit',
-
+        appointment: null
     });
 
 
@@ -229,7 +227,12 @@ export default function Appointments() {
                     <h2 className='text-xs text-white/50'>Manage all your appointments</h2>
                 </div>
                 <div className='flex flex-row gap-2'>
-                    <Button variant='save' size='sm' onClick={() => { onOpen('book-appointment') }}>
+                    <Button variant='save' size='sm' onClick={() => {
+                        setAppointmentEditor({
+                            isOpen: true,
+                            mode: 'add',
+                        })
+                    }}>
                         <CalendarRange />
                         Book Appointment
                     </Button>
@@ -246,12 +249,25 @@ export default function Appointments() {
                 appointment={viewAppointment?.appointment}
             />
 
-            <EditAppointment
-                isOpen={editAppointment?.isOpen}
-                onClose={() => { setEditAppointment({ ...editAppointment, isOpen: false }) }}
-                appointment={editAppointment?.appointment}
+            {/* <EditAppointment
+                isOpen={appointmentEditor?.isOpen}
+                onClose={() => { appointmentEditor({ ...editAppointment, isOpen: false }) }}
+                appointment={appointmentEditor?.appointment}
 
+            /> */}
+
+            <AppointmentEditor
+                isOpen={appointmentEditor.isOpen}
+                mode={appointmentEditor.mode}
+                onClose={() => {
+                    setAppointmentEditor({
+                        isOpen: false,
+                        mode: 'add',
+                    })
+                }}
             />
+
+
         </div >
     )
 }
