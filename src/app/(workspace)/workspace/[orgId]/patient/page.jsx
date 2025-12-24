@@ -26,6 +26,7 @@ import DataTable from '../../_components/DataTable'
 import CategoryHierarchy from '../../_components/CategoryHierarchy'
 import { usePatient } from './_provider/patientProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import PatientAdd from './_component/patient-management/PatientAdd'
 
 
 export default function PatientPage() {
@@ -48,6 +49,13 @@ export default function PatientPage() {
         mode: 'add',
         patient: null,
     })
+
+    const [patientAdd, setPatientAdd] = useState({
+        isOpen: false,
+        mode: 'add',
+        patient: null,
+    })
+
 
     const tempData = patients?.map(user => ({
         id: user.id,
@@ -249,7 +257,7 @@ export default function PatientPage() {
                     variant={'save'}
                     size={'sm'}
                     onClick={() => {
-                        setPatientEditor({
+                        setPatientAdd({
                             isOpen: true,
                             mode: 'add',
                             patient: null,
@@ -294,6 +302,27 @@ export default function PatientPage() {
                             onClose={() => {
                                 setPatientEditor({
                                     isOpen: false,
+                                })
+                            }}
+                            onSave={(patient) => {
+                                if (patient) {
+                                    setPatients(prev =>
+                                        prev.some(item => item.id === patient.id)
+                                            ? prev.map(item =>
+                                                item.id === patient.id ? { ...item, ...patient } : item
+                                            )
+                                            : [patient, ...prev]
+                                    );
+                                }
+                            }}
+                        />
+
+
+                        <PatientAdd
+                            isOpen={patientAdd.isOpen}
+                            onClose={() => {
+                                setPatientAdd({
+                                    isOpen: false
                                 })
                             }}
                             onSave={(patient) => {

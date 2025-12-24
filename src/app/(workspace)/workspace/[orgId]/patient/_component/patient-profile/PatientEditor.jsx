@@ -366,7 +366,7 @@ export default function PatientEditor({ patient, isOpen, onClose, onSave }) {
         setLoading(null)
         form.reset()
         vitalform.reset()
-        insuranceSchema.reset()
+        insuranceform.reset()
         setActiveTab('overview')
         onClose()
     }
@@ -591,6 +591,8 @@ export default function PatientEditor({ patient, isOpen, onClose, onSave }) {
 
                                                 {/* Demographics & Contact */}
                                                 <Card className="bg-card/50 border-border">
+
+
                                                     <Form {...form}>
                                                         <form onSubmit={form.handleSubmit((data) => {
                                                             setLoading('demographic')

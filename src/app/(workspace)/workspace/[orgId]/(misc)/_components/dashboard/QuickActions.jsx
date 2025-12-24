@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Plus, Calendar, FileText, UserPlus, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
+import PatientAdd from '../../../patient/_component/patient-management/PatientAdd';
 
 
 
@@ -40,6 +41,12 @@ export default function QuickActions() {
         },
     ];
 
+    const [patientAdd, setPatientAdd] = useState({
+        isOpen: false,
+        mode: 'add',
+        patient: null,
+    })
+
     const handleActionClick = (action) => {
         console.log('handleActionClick Clicked:', action.id)
         // do something based on action.id or action.label
@@ -48,6 +55,13 @@ export default function QuickActions() {
             onOpen(action.id)
         }
 
+
+        if (action.id === 'new-patient') {
+            console.log('@ Add new patient')
+            setPatientAdd({
+                isOpen: true
+            })
+        }
 
     }
 
@@ -69,6 +83,26 @@ export default function QuickActions() {
                     </Button>
                 ))}
             </div>
+
+            <PatientAdd
+                isOpen={patientAdd.isOpen}
+                onClose={() => {
+                    setPatientAdd({
+                        isOpen: false
+                    })
+                }}
+                onSave={(patient) => {
+                    if (patient) {
+                        // setPatients(prev =>
+                        //     prev.some(item => item.id === patient.id)
+                        //         ? prev.map(item =>
+                        //             item.id === patient.id ? { ...item, ...patient } : item
+                        //         )
+                        //         : [patient, ...prev]
+                        // );
+                    }
+                }}
+            />
         </div>
     )
 }
