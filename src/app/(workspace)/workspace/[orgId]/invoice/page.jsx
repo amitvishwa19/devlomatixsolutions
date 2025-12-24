@@ -1,18 +1,10 @@
 'use client'
 import React, { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { useModal } from '@/hooks/useModal'
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Download, Eye, Pencil, ReceiptText, Trash2 } from "lucide-react";
-import { InvoiceHeader } from './_components/InvoiceHeader';
 import { InvoiceStats } from './_components/InvoiceStats';
-import { InvoiceFilters } from './_components/InvoiceFilters';
-import { InvoiceTable } from './_components/InvoiceTable';
-import { InvoiceDetail } from './_components/InvoiceDetai';
 import { CreateInvoiceDialog, InvoiceEditor } from './_components/InvoiceEditor';
 import { CustomBadge } from '../(misc)/_components/CustomBadge';
 import moment from 'moment';
@@ -418,6 +410,7 @@ export default function InvoicePage() {
             <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4'>
                 <div className='flex flex-col gap-4 p-2'>
 
+                    <InvoiceStats invoices={invoices} />
                     <div className='flex flex-row gap-2 w-full '>
 
 

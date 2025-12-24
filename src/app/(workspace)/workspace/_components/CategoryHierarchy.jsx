@@ -53,7 +53,7 @@ const CategoryHierarchy = ({ data = [], title, category: root, onUpdate }) => {
     };
 
     return (
-        <div className="bg-card border rounded-lg p-4 w-full">
+        <div className="bg-card border rounded-md p-4 w-full">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-foreground">{title}</h3>
                 <CirclePlus size={18} className=' cursor-pointer text-sky-500' onClick={() => {

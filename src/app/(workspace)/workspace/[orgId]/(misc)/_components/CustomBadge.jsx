@@ -17,8 +17,8 @@ export function CustomBadge({ status, children }) {
         inprogress: "bg-teal-500/10 text-teal-500 border-teal-500/20",
         completed: "bg-green-500/10 text-green-500 border-green-500/20",
         confirmed: "bg-violet-500/10 text-violet-500 border-violet-500/20",
-
-
+        noshow: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+        cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
 
 
 

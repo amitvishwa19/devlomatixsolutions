@@ -27,6 +27,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import DataTable from '../../_components/DataTable'
 import CategoryHierarchy from '../../_components/CategoryHierarchy'
 import { useAppointment } from './_provider/appointmentProvider'
+import DatePeriodSelector from '../(misc)/_components/DatePeriodSelector'
 
 
 export default function Appointments() {
@@ -254,7 +255,11 @@ export default function Appointments() {
                                 data={data}
                                 onFiltersChange={(e) => { console.log('filter change', e) }}
                                 filterTitle='Search appointments......'
-                            />
+                            >
+                                <div>
+                                    <DatePeriodSelector />
+                                </div>
+                            </DataTable>
                         </div>
 
                         <div className='w-full'>

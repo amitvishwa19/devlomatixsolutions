@@ -2,6 +2,14 @@ import React from 'react'
 import { AppointmentProvider } from './_provider/appointmentProvider'
 import { db } from '@/lib/db'
 
+export const metadata = {
+    title: {
+        default: 'Appointments',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
+
 export default async function AppointmentLayout({ children }) {
 
     const categories = await db.category.findFirst({

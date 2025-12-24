@@ -84,14 +84,14 @@ export default function AppointmentEditorCopy({ isOpen, appointment, onClose, da
         if (appointment) {
             form.reset({
                 patientId: appointment?.patientDetails?.id || '',
-                doctorId: server?.userId || '',
+                doctorId: appointment?.doctorDetails?.id || '',
                 serverId: params.orgId || '',
-                date: new Date().toISOString().split('T')[0],
-                slot: hospitalDefaultSettings?.timing?.[0] || null,
-                time: '',
-                visitType: 'consultation',
-                type: { type: 'clinic', status: false, charge: 250, icon: 'hospital' },
-                note: ''
+                date: new Date(appointment?.date) || new Date().toISOString().split('T')[0],
+                slot: appointment?.slot || null,
+                time: appointment?.time || '',
+                visitType: appointment?.visitType || 'consultation',
+                type: appointment?.time || { type: 'clinic', status: false, charge: 250, icon: 'hospital' },
+                note: appointment?.note || ''
             })
 
         } else {
