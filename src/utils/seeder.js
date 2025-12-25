@@ -154,10 +154,10 @@ export function seeder() {
             description: "Generate insights and reports for operational and clinical data."
         },
         {
-            name: "Emergency Services",
-            slug: "emergency-services",
+            name: "Prescription Services",
+            slug: "prescription-services",
             icon: "siren",
-            description: "Manage emergency admissions, triage, and urgent care workflows."
+            description: "Manage priscription, triage, and urgent care workflows."
         },
         {
             name: "Inventory & Supplies",

@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 
 
 
-export function InvoiceStats({ invoices }) {
+export function PrescriptionStats({ invoices }) {
     const totalRevenue = invoices?.reduce((sum, inv) => sum + inv.totalAmount, 0);
     const paidAmount = invoices?.filter((inv) => inv.status === 'paid').reduce((sum, inv) => sum + inv.totalAmount, 0);
     const pendingAmount = invoices?.filter((inv) => inv.status === 'pending').reduce((sum, inv) => sum + inv.totalAmount, 0);
@@ -48,7 +48,7 @@ export function InvoiceStats({ invoices }) {
             {stats.map((stat, index) => (
                 <Card
                     key={stat.label}
-                    className="p-5 shadow-card animate-fade-in border-0"
+                    className="p-5 shadow-card animate-fade-in border rounded-lg"
                     style={{ animationDelay: `${index * 50}ms` }}
                 >
                     <div className="flex items-center gap-4">

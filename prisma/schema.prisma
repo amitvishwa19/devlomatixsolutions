@@ -508,18 +508,20 @@ model Appointment {
 model Prescription {
   id String @id @default(cuid())
 
-  // user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // userId String @unique
-
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   appointmentId String      @unique
 
-  title        String?  @db.Text
-  description  String?  @db.Text
-  prescription Json?
-  status       Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String?
+
+  sku       String
+  diagnosis String? @db.Text
+  items     Json?
+  status    String  @default("draft")
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([appointmentId])
 }
@@ -1076,7 +1078,7 @@ model Credential {
 model Category {
   id          String  @id @default(cuid())
   name        String
-  slug        String  @unique
+  slug        String //@unique
   description String?
   icon        String? @default("folder")
   color       String?
@@ -1094,9 +1096,10 @@ model Category {
   posts       Post[]
   tags        Tag[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  invoices  Invoice[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  invoices      Invoice[]
+  prescriptions Prescription[]
 
   //@@unique([parentId, sortOrder]) // Siblings unique sort order
   @@index([parentId]) // Helpful for lookups (get children)

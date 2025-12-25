@@ -199,33 +199,34 @@ export default function DataTable({ columns, data, statusFIlter, dateFilter, fil
                         )}
                     </TableBody>
                 </Table>
+                <div className="flex flex-row items-center justify-between  dark:bg-darkPrimaryBackground p-2 rounded-md">
+                    <div className="text-muted-foreground flex-1 text-xs">
+                        {table.getPaginationRowModel().rows.length} of{" "}
+                        {table.getFilteredRowModel().rows.length} item(s).
+                    </div>
+
+                    <div className="space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
             </div>
 
-            <div className="flex flex-row items-center justify-between">
-                <div className="text-muted-foreground flex-1 text-xs">
-                    {table.getPaginationRowModel().rows.length} of{" "}
-                    {table.getFilteredRowModel().rows.length} item(s).
-                </div>
 
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div>
         </div>
     )
 }

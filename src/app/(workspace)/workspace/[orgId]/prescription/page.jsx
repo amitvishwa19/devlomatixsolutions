@@ -3,31 +3,39 @@ import React from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Clock, CheckCircle2, XCircle, Plus, Pill, } from 'lucide-react';
+import { FileText, Clock, CheckCircle2, XCircle, Plus, Pill, FilePlus, Eye, Pencil, Trash2, } from 'lucide-react';
 import { StatsCard } from './_components/StatsCard';
 import { PrescriptionList } from './_components/PrescriptionList';
 import { PrescriptionDetail } from './_components/PrescriptionDetai';
-import { AddPrescriptionDialog } from './_components/AddPrescriptionDialog';
+import { AddPrescriptionDialog, PrescriptionEditor } from './_components/PrescriptionEditor';
 import { mockPrescriptions } from './data';
-
-
-
-
-
+import { usePrescription } from './_provider/PrescriptionProvider';
+import CategoryHierarchy from '../../_components/CategoryHierarchy';
+import { PrescriptionStats } from './_components/PrescriptionStats';
+import { CustomBadge } from '../(misc)/_components/CustomBadge';
+import DataTable from '../../_components/DataTable';
+import { DynamicIcon } from 'lucide-react/dynamic';
 
 
 export default function PrescriptionPage() {
-    const [prescriptions, setPrescriptions] = useState(mockPrescriptions);
+    //const [prescriptions, setPrescriptions] = useState(mockPrescriptions);
     const [selectedPrescription, setSelectedPrescription] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const { category, setCategory, prescriptions, setPrescriptions, appointments } = usePrescription()
 
-    const stats = {
-        total: prescriptions.length,
-        pending: prescriptions.filter((p) => p.status === 'pending').length,
-        dispensed: prescriptions.filter((p) => p.status === 'dispensed').length,
-        cancelled: prescriptions.filter((p) => p.status === 'cancelled').length,
-    };
+    // const stats = {
+    //     total: prescriptions.length,
+    //     pending: prescriptions.filter((p) => p.status === 'pending').length,
+    //     dispensed: prescriptions.filter((p) => p.status === 'dispensed').length,
+    //     cancelled: prescriptions.filter((p) => p.status === 'cancelled').length,
+    // };
+
+    const [prescriptionEditor, setPrescriptionEditor] = useState({
+        isOpen: false,
+        mode: 'view',
+        prescription: null,
+    })
 
     const handleViewPrescription = (prescription) => {
         setSelectedPrescription(prescription);
@@ -71,6 +79,109 @@ export default function PrescriptionPage() {
     };
 
 
+    const columns = [
+        {
+            accessorKey: "sku",
+            header: "Invoice#",
+        },
+        {
+            accessorKey: "subtotal",
+            header: "Sub Total",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.subtotal}</span>
+                )
+            }
+        },
+        {
+            accessorKey: "tax",
+            header: "Tax/GST",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.tax}</span>
+                )
+            }
+        },
+        {
+            accessorKey: "discount",
+            header: "Discount",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.discount}</span>
+                )
+            }
+        },
+        {
+            accessorKey: "totalAmount",
+            header: "Total Amount",
+            cell: ({ row }) => {
+                return (
+                    <span>₹ {row.original.totalAmount}</span>
+                )
+            }
+        },
+
+        {
+            accessorKey: "status",
+            header: "Status",
+            cell: ({ row }) => {
+
+                return (
+                    <div className=''>
+                        <CustomBadge status={row.original.status}>
+                            {row.original.status}
+                        </CustomBadge>
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "category",
+            header: "Category",
+            cell: ({ row }) => {
+                return (
+                    <div>
+                        {row.original.category ?
+                            <CustomBadge status='medium' >
+                                {row?.original?.category?.icon && <DynamicIcon size={14} name={row.original.category?.icon} className='mr-2' />}
+                                <span className='text-xs'>{row.original.category?.name}</span>
+                            </CustomBadge> :
+                            <CustomBadge status='blank' className='text-xs'><span>No Category Assigned</span></CustomBadge>
+                        }
+
+                    </div>
+                )
+            }
+        },
+        {
+            id: 'action',
+            header: "Actions",
+            cell: ({ row }) => {
+
+                return (
+                    <div className='flex flex-row items-center gap-4'>
+                        <Eye size={16} className='cursor-pointer' onClick={() => {
+                            setInvoiceViewer({
+                                isOpen: true,
+                                mode: 'view',
+                                invoice: row.original,
+                            })
+                        }} />
+                        <Pencil size={16} className='cursor-pointer' onClick={() => {
+                            setInvoiceEditor({
+                                isOpen: true,
+                                mode: 'edit',
+                                invoice: row.original,
+                            })
+                        }} />
+                        <Trash2 size={16} className='cursor-pointer' onClick={() => { }} />
+                    </div>
+                )
+            }
+        },
+
+    ]
+
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
@@ -80,57 +191,74 @@ export default function PrescriptionPage() {
                     <h2 className='text-xs text-muted-foreground'>Digital Prescriptions: Doctors create Rx with dosage, frequency, duration, and instructions</h2>
                 </div>
                 <div>
-                    <Button variant='outline' size='sm' onClick={() => setAddDialogOpen(true)}>
+                    <Button variant='save' size='sm' onClick={() => setPrescriptionEditor({
+                        isOpen: true,
+                        mode: 'add',
+                        prescription: null,
+                    })}>
+                        <FilePlus />
                         Add Prescription
                     </Button>
                 </div>
             </div>
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md pr-4'>
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md '>
 
-                <main className="flex flex-col gap-4">
-                    {/* Stats Section */}
-                    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <StatsCard
-                            title="Total Prescriptions"
-                            value={stats.total}
-                            description="All time"
-                            icon={FileText}
-                            iconClassName="bg-primary/10 text-primary"
-                        />
-                        <StatsCard
-                            title="Pending"
-                            value={stats.pending}
-                            description="Awaiting dispensing"
-                            icon={Clock}
-                            iconClassName="bg-warning/10 text-warning"
-                        />
-                        <StatsCard
-                            title="Dispensed"
-                            value={stats.dispensed}
-                            description="Completed"
-                            icon={CheckCircle2}
-                            iconClassName="bg-success/10 text-success"
-                        />
-                        <StatsCard
-                            title="Cancelled"
-                            value={stats.cancelled}
-                            description="Void prescriptions"
-                            icon={XCircle}
-                            iconClassName="bg-destructive/10 text-destructive"
-                        />
-                    </section>
 
-                    {/* Prescriptions List */}
-                    <section className="space-y-4">
+                <div className='flex flex-col gap-4 p-2'>
 
-                        <PrescriptionList
-                            prescriptions={prescriptions}
-                            onView={handleViewPrescription}
-                        />
-                    </section>
+                    <PrescriptionStats invoices={prescriptions} />
+                    <div className='flex flex-row gap-2 w-full '>
 
-                </main>
+
+                        <div className='min-w-[75%]'>
+                            <DataTable
+                                columns={columns}
+                                data={prescriptions}
+                                onFiltersChange={(e) => { console.log('filter change', e) }}
+                                filterTitle='Search prescription items......'
+                            />
+                        </div>
+
+                        <div className='w-full'>
+                            <CategoryHierarchy
+                                title='Prescription Hierarchy'
+                                category={category}
+                                onUpdate={(c) => { setCategory(c) }}
+                            />
+                        </div>
+
+
+                    </div>
+
+
+
+                    <PrescriptionEditor
+                        isOpen={prescriptionEditor.isOpen}
+                        mode={prescriptionEditor.mode}
+                        appointments={appointments}
+                        categories={category?.children}
+                        onClose={() => {
+                            setPrescriptionEditor({
+                                isOpen: false
+                            })
+                        }}
+                        onSave={(prescription) => {
+                            if (prescription) {
+                                setPrescriptions(prev =>
+                                    prev.some(item => item.id === prescription.id)
+                                        ? prev.map(item =>
+                                            item.id === prescription.id ? { ...item, ...prescription } : item
+                                        )
+                                        : [prescription, ...prev]
+                                );
+                            }
+                        }}
+
+                    />
+
+                </div>
+
                 {/* Prescription Detail Dialog */}
                 <PrescriptionDetail
                     prescription={selectedPrescription}
@@ -140,11 +268,11 @@ export default function PrescriptionPage() {
                 />
 
                 {/* Add Prescription Dialog */}
-                <AddPrescriptionDialog
+                {/* <AddPrescriptionDialog
                     open={addDialogOpen}
                     onOpenChange={setAddDialogOpen}
                     onAdd={handleAddPrescription}
-                />
+                /> */}
 
             </ScrollArea>
 

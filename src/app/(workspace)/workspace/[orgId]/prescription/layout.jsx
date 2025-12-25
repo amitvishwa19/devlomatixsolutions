@@ -1,23 +1,20 @@
 import React from 'react'
-import { InventoryProvider } from './_provider/inventoryProvider'
+import { PrescriptionProvider } from './_provider/PrescriptionProvider'
 import { db } from '@/lib/db'
-
 
 export const metadata = {
     title: {
-        default: 'Inventory',
+        default: 'Prescriptions',
         template: `%s | ${process.env.APP_NAME}`
     },
     description: 'Devlomatix',
 }
 
-
-export default async function InventoryLayout({ children }) {
-
+export default async function PrescriptionLayout({ children }) {
 
     const categories = await db.category.findFirst({
         where: {
-            slug: 'inventory-supplies'
+            slug: 'prescription-services'
         },
         include: {
             children: {
@@ -35,9 +32,19 @@ export default async function InventoryLayout({ children }) {
         }
     })
 
-    const inventories = await db.inventory.findMany({
+    const prescriptions = await db.prescription.findMany({
         include: {
-            category: true
+            category: true,
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+
+    const appointments = await db.appointment.findMany({
+        include: {
+            patient: true,
+            doctor: true
         },
         orderBy: {
             createdAt: 'desc'
@@ -45,10 +52,10 @@ export default async function InventoryLayout({ children }) {
     })
 
     return (
-        <InventoryProvider allCategories={categories?.children} allInventories={inventories} rawCategory={categories}>
+        <PrescriptionProvider allCategories={categories} allPrescriptions={prescriptions} allAppointments={appointments}>
             <div>
                 {children}
             </div>
-        </InventoryProvider>
+        </PrescriptionProvider>
     )
 }
