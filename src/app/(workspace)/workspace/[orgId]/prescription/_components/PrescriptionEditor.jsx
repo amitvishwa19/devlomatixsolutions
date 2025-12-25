@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, User, Stethoscope, Pill, BookHeart, CirclePlus } from 'lucide-react';
+import { Plus, Trash2, User, Stethoscope, Pill, BookHeart, CirclePlus, Save } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { z } from "zod";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -24,7 +24,7 @@ const emptyMedication = {
     dosage: '',
     frequency: '',
     duration: '',
-    instructions: '',
+    instruction: '',
 };
 
 const generateSku = () => {
@@ -37,7 +37,7 @@ const generateSku = () => {
         .toString()
         .padStart(6, "0");
 
-    return `PRS-${random}-${dd}-${mm}-${yy}`;
+    return `RX-${random}-${dd}-${mm}-${yy}`;
 };
 
 const prescriptionSchema = z.object({
@@ -60,7 +60,7 @@ const prescriptionSchema = z.object({
     status: z.enum(["draft", "pending", "dispensed", "cancelled"], { required_error: "Please select a status." }),
 });
 
-export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appointments, categories }) {
+export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appointments, categories, prescription, mode }) {
     const patients = [];
     const doctors = [];
 
@@ -70,8 +70,7 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
     const [notes, setNotes] = useState('');
     const [medications, setMedications] = useState([{ ...emptyMedication }]);
 
-
-
+    console.log(prescription)
 
     const form = useForm({
         resolver: zodResolver(prescriptionSchema),
@@ -86,6 +85,34 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
             status: "draft",
         }
     });
+
+    useEffect(() => {
+        if (prescription) {
+            form.reset({
+                id: prescription.id || "",
+                sku: prescription.sku || "",
+                appointmentId: prescription.appointmentId || "",
+                diagnosis: prescription.diagnosis || "",
+                category: prescription.category || "",
+                items: prescription.items || [],
+                notes: prescription.notes || "",
+                status: prescription.status || "draft",
+            })
+        } else {
+            form.reset({
+                id: "",
+                sku: generateSku(),
+                appointmentId: "",
+                diagnosis: "",
+                category: "",
+                items: [],
+                notes: "",
+                status: "draft",
+            })
+        }
+
+    }, [form, prescription, isOpen])
+
 
     const { control, handleSubmit, watch, setValue, reset, formState: { errors } } = form;
 
@@ -108,13 +135,13 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
 
     // ✅ AUTO ADD ONE EMPTY LINE WHEN MODAL OPENS
     useEffect(() => {
-        if (isOpen && fields.length === 0) {
+        if (isOpen && fields.length === 0 && mode === 'add') {
             append(emptyMedication);
         }
         if (!isOpen) {
             reset();
         }
-    }, [isOpen, fields.length, append, reset]);
+    }, [isOpen, fields.length, append, reset, mode]);
 
 
     const handleOpenChange = () => {
@@ -396,7 +423,7 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
                                                     <div>
                                                         <FormField
                                                             control={control}
-                                                            name={`items.${index}.instructions`}
+                                                            name={`items.${index}.instruction`}
                                                             render={({ field }) => (
                                                                 <FormItem>
                                                                     <FormLabel className='text-xs'>
@@ -451,13 +478,15 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
 
                                 </div>
                             </ScrollArea>
+
+
                             <div className='flex flex-row justify-end mt-4'>
                                 <Button variant="ghost" onClick={() => onOpenChange(false)}>
                                     Cancel
                                 </Button>
                                 <Button variant={'save'} type="submit" className="gap-2">
-                                    <Plus className="h-4 w-4" />
-                                    Create Prescription
+                                    <Save className="h-4 w-4" />
+                                    {mode === 'add' ? 'Create' : 'Update'} Prescription
                                 </Button>
                             </div>
                         </form>

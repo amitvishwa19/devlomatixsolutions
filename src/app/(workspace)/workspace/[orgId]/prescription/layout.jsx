@@ -35,6 +35,16 @@ export default async function PrescriptionLayout({ children }) {
     const prescriptions = await db.prescription.findMany({
         include: {
             category: true,
+            appointment: {
+                include: {
+                    patient: true,
+                    doctor: {
+                        include: {
+                            profile: true
+                        }
+                    }
+                }
+            }
         },
         orderBy: {
             createdAt: 'desc'

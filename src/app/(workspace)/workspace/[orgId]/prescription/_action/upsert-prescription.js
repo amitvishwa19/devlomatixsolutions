@@ -44,7 +44,17 @@ const handler = async (data) => {
                 status: formData.status
             },
             include: {
-                category: true
+                category: true,
+                appointment: {
+                    include: {
+                        patient: true,
+                        doctor: {
+                            include: {
+                                profile: true
+                            }
+                        }
+                    }
+                }
             }
         })
 
