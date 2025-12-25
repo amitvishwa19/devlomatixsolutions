@@ -81,7 +81,7 @@ const CategoryHierarchy = ({ data = [], title, category: root, onUpdate }) => {
                                     size={16}
                                     className="text-muted-foreground"
                                 />
-                                {category.icon ? <DynamicIcon size={16} name={category.icon} /> : <DynamicIcon size={16} name={'folder'} />}
+                                {category.icon ? <DynamicIcon size={16} name={category.icon} color={category?.color || 'currentColor'} /> : <DynamicIcon size={16} name={'folder'} color={category?.color || 'currentColor'} />}
 
                                 <div className='flex flex-row items-center gap-2'>
                                     <span className="text-sm font-medium text-foreground">{category?.name}</span>

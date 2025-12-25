@@ -30,13 +30,13 @@ const handler = async (data) => {
                 appointmentId: formData.appointmentId,
                 diagnosis: formData.diagnosis,
                 items: formData.items,
-                categoryId: formData.category,
+                categoryId: formData.category || null,
                 notes: formData.notes,
                 status: formData.status
             },
             update: {
                 sku: formData.sku,
-                appointmentId: formData.appointmentId,
+                appointmentId: formData.appointmentId || null,
                 diagnosis: formData.diagnosis,
                 items: formData.items,
                 categoryId: formData.category,
@@ -55,7 +55,10 @@ const handler = async (data) => {
                         }
                     }
                 }
-            }
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
         })
 
 

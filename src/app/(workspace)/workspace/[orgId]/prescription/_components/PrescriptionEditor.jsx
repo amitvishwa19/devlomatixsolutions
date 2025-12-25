@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, User, Stethoscope, Pill, BookHeart, CirclePlus, Save } from 'lucide-react';
+import { Plus, Trash2, User, Stethoscope, Pill, BookHeart, CirclePlus, Save, Loader, ChevronRight } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { z } from "zod";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -16,6 +16,7 @@ import AppointmentSelect from '../../invoice/_components/AppointmentSelect';
 import { useAction } from '@/hooks/use-action';
 import { upsertPrescription } from '../_action/upsert-prescription';
 import { toast } from 'sonner'
+import { DynamicIcon } from 'lucide-react/dynamic';
 
 
 const emptyMedication = {
@@ -61,6 +62,7 @@ const prescriptionSchema = z.object({
 });
 
 export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appointments, categories, prescription, mode }) {
+    const [loading, setLoading] = useState(false)
     const patients = [];
     const doctors = [];
 
@@ -70,7 +72,6 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
     const [notes, setNotes] = useState('');
     const [medications, setMedications] = useState([{ ...emptyMedication }]);
 
-    console.log(prescription)
 
     const form = useForm({
         resolver: zodResolver(prescriptionSchema),
@@ -145,6 +146,7 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
 
 
     const handleOpenChange = () => {
+        setLoading(false)
         onClose()
         form.reset()
     }
@@ -153,6 +155,7 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
         onSuccess: (data) => {
             toast.success('New Prescription created successfully', { id: 'new-prescription' })
             onSave(data?.prescription)
+            handleOpenChange()
         },
         onError: (error) => {
             toast.error('Oops somethig went wrong ! try again later', { id: 'new-prescription' })
@@ -161,7 +164,7 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
     })
 
     const onSubmit = async (formData) => {
-        console.log(formData)
+        setLoading(true)
         toast.loading('Creating new prescription, please wait....', { id: 'new-prescription' })
         await execute({ formData })
     }
@@ -251,6 +254,8 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
 
                                         {/* Status and category */}
                                         <div className='grid grid-cols-2 gap-4'>
+
+
                                             {/* Status Select */}
                                             <FormField
                                                 control={control}
@@ -275,24 +280,44 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
                                                     </FormItem>
                                                 )}
                                             />
-                                            {/* Category Select */}
+
+                                            {/* Category */}
                                             <FormField
-                                                control={control}
+                                                control={form.control}
                                                 name="category"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel className='text-xs'>Category</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <FormLabel>Category</FormLabel>
+                                                        <Select
+                                                            value={field.value}
+                                                            onValueChange={field.onChange}
+                                                        >
                                                             <FormControl>
                                                                 <SelectTrigger>
                                                                     <SelectValue placeholder="Select category" />
                                                                 </SelectTrigger>
                                                             </FormControl>
+
                                                             <SelectContent>
-                                                                {categories.map((category) => (
-                                                                    <SelectItem key={category.id} value={category.id}>
-                                                                        {category.name}
-                                                                    </SelectItem>
+                                                                {categories.map((cat) => (
+                                                                    <SelectGroup key={cat.id}>
+                                                                        <SelectItem value={cat.id} className='pl-4 font-medium text-sm'>
+                                                                            <div className='flex flex-row items-center gap-2'>
+                                                                                {cat.icon ? <DynamicIcon size={14} name={cat.icon} /> : <DynamicIcon size={14} name={'folder'} />}
+                                                                                <span>All {cat.name}</span>
+                                                                            </div>
+                                                                        </SelectItem>
+                                                                        {cat?.children?.map((subCat) => (
+
+                                                                            <SelectItem key={subCat.id} value={subCat.id} className='pl-8 font-medium text-sm'>
+                                                                                <span className="flex items-center gap-2 text-muted-foreground">
+                                                                                    <ChevronRight className="h-3 w-3" />
+                                                                                    <span className="text-foreground">{subCat.name}</span>
+                                                                                </span>
+                                                                            </SelectItem>
+                                                                        ))}
+
+                                                                    </SelectGroup>
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
@@ -300,6 +325,7 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
                                                     </FormItem>
                                                 )}
                                             />
+
 
                                         </div>
 
@@ -481,11 +507,11 @@ export function PrescriptionEditor({ isOpen, onClose, onOpenChange, onSave, appo
 
 
                             <div className='flex flex-row justify-end mt-4'>
-                                <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                                <Button variant="ghost" disabled={loading} onClick={() => onOpenChange(false)}>
                                     Cancel
                                 </Button>
-                                <Button variant={'save'} type="submit" className="gap-2">
-                                    <Save className="h-4 w-4" />
+                                <Button variant={'save'} disabled={loading} type="submit" className="gap-2">
+                                    {loading ? <Loader className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                     {mode === 'add' ? 'Create' : 'Update'} Prescription
                                 </Button>
                             </div>

@@ -515,7 +515,7 @@ model Prescription {
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   appointmentId String      @unique
 
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category   Category? @relation(fields: [categoryId], references: [id])
   categoryId String?
 
   sku       String
@@ -1095,15 +1095,15 @@ model Category {
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
 
-  services    Service[]
-  inventories Inventory[]
-  posts       Post[]
-  tags        Tag[]
-
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  services      Service[]
+  inventories   Inventory[]
+  posts         Post[]
+  tags          Tag[]
   invoices      Invoice[]
   prescriptions Prescription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   //@@unique([parentId, sortOrder]) // Siblings unique sort order
   @@index([parentId]) // Helpful for lookups (get children)

@@ -58,7 +58,10 @@ const handler = async (data) => {
             },
             include: {
                 category: true
-            }
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
         })
 
         // invoice = await db.invoice.create({

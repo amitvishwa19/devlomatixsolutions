@@ -3,12 +3,8 @@ import React from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Clock, CheckCircle2, XCircle, Plus, Pill, FilePlus, Eye, Pencil, Trash2, User, Stethoscope, } from 'lucide-react';
-import { StatsCard } from './_components/StatsCard';
-import { PrescriptionList } from './_components/PrescriptionList';
-import { PrescriptionDetail } from './_components/PrescriptionDetai';
+import { FilePlus, Eye, Pencil, Trash2, User, Stethoscope, } from 'lucide-react';
 import { AddPrescriptionDialog, PrescriptionEditor } from './_components/PrescriptionEditor';
-import { mockPrescriptions } from './data';
 import { usePrescription } from './_provider/PrescriptionProvider';
 import CategoryHierarchy from '../../_components/CategoryHierarchy';
 import { PrescriptionStats } from './_components/PrescriptionStats';
@@ -21,13 +17,10 @@ import PrescriptionView from './_components/PrescriptionView';
 import { PrescriptionDelete } from './_components/PrescriptionDelete';
 
 export default function PrescriptionPage() {
-    //const [prescriptions, setPrescriptions] = useState(mockPrescriptions);
-    const [selectedPrescription, setSelectedPrescription] = useState(null);
-    const [detailOpen, setDetailOpen] = useState(false);
-    const [addDialogOpen, setAddDialogOpen] = useState(false);
+
     const { category, setCategory, prescriptions, setPrescriptions, appointments } = usePrescription()
 
-    console.log(prescriptions)
+
 
     const [prescriptionEditor, setPrescriptionEditor] = useState({
         isOpen: false,
@@ -249,7 +242,7 @@ export default function PrescriptionPage() {
 
                 <div className='flex flex-col gap-4 p-2'>
 
-                    <PrescriptionStats invoices={prescriptions} />
+                    <PrescriptionStats prescriptions={prescriptions} />
                     <div className='flex flex-row gap-2 w-full '>
 
 
@@ -300,43 +293,35 @@ export default function PrescriptionPage() {
 
                     />
 
+                    <PrescriptionView
+                        isOpen={prescriptionView.isOpen}
+                        prescription={prescriptionView.prescription}
+                        onClose={() => {
+                            setPrescriptionView({
+                                isOpen: false
+                            })
+                        }}
+                    />
+
+                    <PrescriptionDelete
+                        isOpen={prescriptionDelete.isOpen}
+                        prescription={prescriptionDelete.prescription}
+                        onClose={() => {
+                            setPrescriptionDelete({
+                                isOpen: false,
+                                prescription: null
+                            })
+                        }}
+                        onSave={(p) => {
+                            setPrescriptions(prescriptions?.filter(pres => pres.id !== p.id))
+                            setPrescriptionDelete({
+                                isOpen: false,
+                                prescription: null
+                            })
+                        }}
+                    />
+
                 </div>
-
-                {/* Prescription Detail Dialog */}
-                <PrescriptionDetail
-                    prescription={selectedPrescription}
-                    open={detailOpen}
-                    onOpenChange={setDetailOpen}
-                    onStatusChange={handleStatusChange}
-                />
-
-                <PrescriptionView
-                    isOpen={prescriptionView.isOpen}
-                    prescription={prescriptionView.prescription}
-                    onClose={() => {
-                        setPrescriptionView({
-                            isOpen: false
-                        })
-                    }}
-                />
-
-                <PrescriptionDelete
-                    isOpen={prescriptionDelete.isOpen}
-                    prescription={prescriptionDelete.prescription}
-                    onClose={() => {
-                        setPrescriptionDelete({
-                            isOpen: false,
-                            prescription: null
-                        })
-                    }}
-                    onSave={(p) => {
-                        setPrescriptions(prescriptions?.filter(pres => pres.id !== p.id))
-                        setPrescriptionDelete({
-                            isOpen: false,
-                            prescription: null
-                        })
-                    }}
-                />
 
             </ScrollArea>
 

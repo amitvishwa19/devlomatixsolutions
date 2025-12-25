@@ -3,40 +3,34 @@ import { Card } from '@/components/ui/card';
 
 
 
-export function PrescriptionStats({ invoices }) {
-    const totalRevenue = invoices?.reduce((sum, inv) => sum + inv.totalAmount, 0);
-    const paidAmount = invoices?.filter((inv) => inv.status === 'paid').reduce((sum, inv) => sum + inv.totalAmount, 0);
-    const pendingAmount = invoices?.filter((inv) => inv.status === 'pending').reduce((sum, inv) => sum + inv.totalAmount, 0);
-    const overdueAmount = invoices?.filter((inv) => inv.status === 'draft').reduce((sum, inv) => sum + inv.totalAmount, 0);
+export function PrescriptionStats({ prescriptions }) {
 
-
-    console.log(invoices?.reduce((sum, invoice) => sum + invoice.totalAmount, 0))
 
     const stats = [
         {
-            label: 'Total Revenue',
-            value: `₹${totalRevenue?.toLocaleString('en-US', { minimumFractionDigits: 0 })}`,
+            label: 'Prscriptions',
+            value: `${prescriptions?.length}`,
             icon: IndianRupee,
             color: 'text-primary',
             bgColor: 'bg-primary/10',
         },
         {
-            label: 'Paid',
-            value: `₹${paidAmount?.toLocaleString('en-US', { minimumFractionDigits: 0 })}`,
+            label: 'Dispensed',
+            value: `${prescriptions?.filter(pris => pris?.status === 'dispensed')?.length}`,
             icon: CheckCircle,
             color: 'text-success',
             bgColor: 'bg-success/10',
         },
         {
             label: 'Pending',
-            value: `₹${pendingAmount?.toLocaleString('en-US', { minimumFractionDigits: 0 })}`,
+            value: `${prescriptions?.filter(pris => pris?.status === 'cancelled')?.length}`,
             icon: Clock,
             color: 'text-warning',
             bgColor: 'bg-warning/10',
         },
         {
             label: 'Draft',
-            value: `₹${overdueAmount?.toLocaleString('en-US', { minimumFractionDigits: 0 })}`,
+            value: `${prescriptions?.filter(pris => pris?.status === 'draft')?.length}`,
             icon: AlertTriangle,
             color: 'text-destructive',
             bgColor: 'bg-destructive/10',

@@ -1,8 +1,17 @@
-'use server'
 import React from 'react'
 import { ServiceProvider } from './_provider/serviceProvider'
 import { db } from '@/lib/db'
-import { OrderBy } from 'unsplash-js'
+
+
+
+export const metadata = {
+    title: {
+        default: 'Services',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
+
 
 export default async function ServiceLayout({ children }) {
 

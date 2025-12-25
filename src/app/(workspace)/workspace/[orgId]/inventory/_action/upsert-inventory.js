@@ -56,7 +56,10 @@ const handler = async (data) => {
             },
             include: {
                 category: true
-            }
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
         })
 
 
