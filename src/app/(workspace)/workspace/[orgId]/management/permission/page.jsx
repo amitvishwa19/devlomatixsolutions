@@ -1,280 +1,118 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { Separator } from '@/components/ui/separator'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ArrowUpDown, Eye, FilePenLine, MoreHorizontal, Trash2 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem, } from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useAction } from '@/hooks/use-action'
-import { useModal } from '@/hooks/useModal'
-import { permissionManagement } from '../_action/permission-management'
-import { ColumnDef, VisibilityState, flexRender, ColumnFiltersState, getFilteredRowModel, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, } from "@tanstack/react-table"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table"
-import { useSelector } from 'react-redux'
-import { useOrg } from '@/providers/OrgProvider'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import React, { useState } from 'react'
+import { useManagement } from '../_provider/managementProvider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Grid3X3, List } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { PermissionMatrix } from '../_components/permission/PermissionMatrix';
 
+export default function PermissionPage() {
+    const [view, setView] = useState('matrix');
+    const { permissions, roles } = useManagement()
 
-export default function Permission() {
-    const permissions = useSelector((state) => state.management.permissions)
-    const [loading, setLoading] = useState(true)
-    //const [permissions, setPermissions] = useState([])
-    const { onOpen, refresh } = useModal()
-    const { hasPermission } = useOrg()
+    const groupedPermissions = permissions?.reduce((acc, permission) => {
+        if (!acc[permission.category]) {
+            acc[permission.category] = [];
+        }
+        acc[permission.category].push(permission);
+        return acc;
+    }, {});
 
-
-    const columns = [
-        {
-            accessorKey: "title",
-            header: ({ column }) => {
-                return (
-                    <Button
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Title
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
-                )
-            },
-        },
-        {
-            accessorKey: "description",
-            header: ({ column }) => {
-                return (
-                    <Button
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Description
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
-                )
-            },
-        },
-        {
-            accessorKey: "status",
-            header: ({ column }) => {
-                return (
-                    <Button
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Status
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
-                )
-            },
-            cell: (({ row }) => {
-                return (
-
-                    <div className=''>
-                        {
-                            row.original.status === true
-                                ? <Badge variant="outline" className='mr-1 mb-1 whitespace-nowrap text-inherit bg-green-400 text-slate-800'>
-                                    Active
-                                </Badge>
-                                : <Badge variant="outline" className='mr-1 mb-1 whitespace-nowrap text-inherit bg-red-400 text-slate-800'>
-                                    Inactive
-                                </Badge>
-                        }
-
-                    </div>
-                )
-            })
-        },
-
-        {
-            id: "actions",
-            cell: ({ row }) => {
-                return (
-                    <DropdownMenu className='ring-0	flex justify-end'>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 w-8 p-0 ring-0 focus-visible:ring-0  border-none">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className='dark:bg-darkPrimaryBackground'>
-                            <DropdownMenuItem onClick={() => {
-                                onOpen("editPermission", { permission: row.original })
-                            }}>Edit
-                                <FilePenLine className="h-4 w-4 ml-auto" />
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                                onOpen("deletePermission", { id: row.original.id })
-                            }}>Delete
-                                <Trash2 className="h-4 w-4 ml-auto" />
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )
-            },
-        },
-    ]
-
+    console.log('groupedPermissions', groupedPermissions)
 
     return (
-        <div className='flex flex-col gap-4'>
-            <div className='w-full dark:bg-[#151D24] p-4 rounded-lg border flex flex-row items-center justify-between'>
+        <div className='absolute inset-0 flex flex-col gap-2 p-2'>
+
+            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-lg border flex flex-row items-center justify-between'>
                 <div>
                     <h2 className='text-xl'>Permissions</h2>
-                    <h2 className='text-xs text-white/50'>Manage all permissions for your app roles</h2>
-                </div>
-                <div >
-                    <Button variant='outline' size='sm' onClick={() => { onOpen("addPermission", { permissions }) }}>Add Permission</Button>
+                    <h2 className='text-xs text-muted-foreground'>View and manage permission assignments across roles.</h2>
                 </div>
             </div>
 
-            <div className='w-full dark:bg-[#151D24] p-4 rounded-lg border'>
-                <Datatable columns={columns} data={permissions} />
-            </div>
-        </div>
-    )
-}
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4'>
+                <div className='flex flex-col gap-4 p-2'>
 
 
-const Datatable = ({ columns, data, }) => {
-    const [sorting, setSorting] = useState([])
-    const [columnFilters, setColumnFilters] = useState([])
-    const [columnVisibility, setColumnVisibility] = useState({})
-    const [rowSelection, setRowSelection] = useState({})
+                    <Tabs value={view} onValueChange={(v) => setView('matrix' | 'list')} className="space-y-6">
+                        <TabsList>
+                            <TabsTrigger value="matrix" className="gap-2">
+                                <Grid3X3 className="h-4 w-4" />
+                                Matrix View
+                            </TabsTrigger>
+                            <TabsTrigger value="list" className="gap-2">
+                                <List className="h-4 w-4" />
+                                List View
+                            </TabsTrigger>
+                        </TabsList>
 
-    const table = useReactTable({
-        data,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        onSortingChange: setSorting,
-        getSortedRowModel: getSortedRowModel(),
-        onColumnFiltersChange: setColumnFilters,
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        //onRowSelectionChange: setRowSelection,
-        state: {
-            sorting,
-            columnFilters,
-            columnVisibility,
-        },
-    })
+                        <TabsContent value="matrix" className="animate-fade-in">
+                            <PermissionMatrix roles={roles} />
+                        </TabsContent>
 
-    return (
-        <div>
-            <div className="flex items-center py-4">
-
-                <Input
-                    placeholder="Filter Permission..."
-                    value={(table.getColumn("title")?.getFilterValue()) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("title")?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
-                            Columns
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {table
-                            .getAllColumns()
-                            .filter(
-                                (column) => column.getCanHide()
-                            )
-                            .map((column) => {
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                )
-                            })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
+                        <TabsContent value="list" className="animate-fade-in">
+                            <div className="space-y-6">
+                                {(Object?.entries(groupedPermissions)).map(
+                                    ([category, permissions]) => (
+                                        <div
+                                            key={category}
+                                            className="rounded-xl border border-border bg-card p-6 shadow-soft"
+                                        >
+                                            <h3 className="text-lg font-semibold text-card-foreground mb-4">
+                                                {PERMISSION_CATEGORIES[category].label}
+                                            </h3>
+                                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                                {permissions.map((permission) => {
+                                                    const rolesWithPermission = roles.filter((r) =>
+                                                        r.permissions.includes(permission.id)
+                                                    );
+                                                    return (
+                                                        <div
+                                                            key={permission.id}
+                                                            className="rounded-lg border border-border p-4 transition-colors hover:bg-muted/30"
+                                                        >
+                                                            <h4 className="font-medium text-card-foreground">
+                                                                {permission.name}
+                                                            </h4>
+                                                            <p className="text-sm text-muted-foreground mt-1">
+                                                                {permission.description}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-1.5 mt-3">
+                                                                {rolesWithPermission.map((role) => (
+                                                                    <Badge
+                                                                        key={role.id}
+                                                                        variant="outline"
+                                                                        className="text-xs"
+                                                                        style={{ borderColor: role.color, color: role.color }}
+                                                                    >
+                                                                        {role.name}
+                                                                    </Badge>
+                                                                ))}
+                                                                {rolesWithPermission.length === 0 && (
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        No roles assigned
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     )
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </Button>
-            </div>
-        </div>
-    )
-}
+                                )}
+                            </div>
+                        </TabsContent>
+                    </Tabs>
 
 
-const Loader = () => {
-    return (
-        <div className="flex flex-col items-center gap-2 mt-4">
-            <Skeleton className="flex w-full h-12" />
-            <Skeleton className="flex w-full h-12" />
-            <Skeleton className="flex w-full h-12" />
-            <Skeleton className="flex w-full h-12" />
+
+
+
+
+                </div>
+            </ScrollArea>
         </div>
     )
 }

@@ -18,7 +18,7 @@ import { getAge } from '@/utils/functions'
 import moment from 'moment'
 import { useParams, useRouter } from 'next/navigation'
 import { usePatient } from '../../_provider/patientProvider'
-import PatientEditor from '../patient-profile/PatientEditor'
+import PatientEditor from '../patient-management/PatientEditor'
 
 
 

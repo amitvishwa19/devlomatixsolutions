@@ -62,23 +62,23 @@ export default function AppointmentSelect({ appointments, value, onSelect, onVal
 
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} className='bg-red-200'>
 
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between h-auto min-h-[3rem] px-4 py-3 bg-card border-border hover:bg-accent/50 transition-all duration-200"
+                    className="w-full justify-between h-auto min-h-[3rem] px-4 py-3 bg-card border-border hover:bg-accent/50 transition-all duration-200 bg-red-100"
                 >
                     {selectedAppointment ? (
                         <div className="flex items-center gap-3 text-left">
                             <div className="flex flex-col">
                                 <span className="font-medium text-foreground">
-                                    {selectedAppointment.patient.displayName}
+                                    {selectedAppointment?.patient?.displayName}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                    Dr. {selectedAppointment.doctor.name} • {moment(selectedAppointment.date).format("MMM Do YY")} at {selectedAppointment.time}
+                                    Dr. {selectedAppointment?.doctor?.name} • {moment(selectedAppointment.date).format("MMM Do YY")} at {selectedAppointment.time}
                                 </span>
                             </div>
                             <CustomBadge className={cn("ml-auto", getStatusColor(selectedAppointment.status))} status={selectedAppointment.status}>
@@ -92,10 +92,10 @@ export default function AppointmentSelect({ appointments, value, onSelect, onVal
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[500px] p-0 bg-popover border-border shadow-lg" align="start">
-                <Command shouldFilter={false} className="bg-transparent">
+            <PopoverContent className="flex w-[555px] p-0 bg-card border-border shadow-lg " align="start">
+                <Command shouldFilter={false} className="bg-transparent ">
 
-                    <div className="flex items-center border-b border-border px-3">
+                    <div className="flex items-center border-b border-border px-3 ">
                         <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
                         <input
                             placeholder="Search by patient, doctor, date, status..."
@@ -137,10 +137,10 @@ export default function AppointmentSelect({ appointments, value, onSelect, onVal
                                             <div className="flex items-center gap-2">
                                                 <User className="h-4 w-4 text-medical-patient text-sky-500" />
                                                 <span className="font-medium text-foreground">
-                                                    {appointment.patient.displayName}
+                                                    {appointment?.patient?.displayName}
                                                 </span>
                                                 <span className="text-xs text-muted-foreground">
-                                                    {appointment.patient.phone}
+                                                    {appointment?.patient?.phone}
                                                 </span>
                                             </div>
 
@@ -148,10 +148,10 @@ export default function AppointmentSelect({ appointments, value, onSelect, onVal
                                             <div className="flex items-center gap-2">
                                                 <Stethoscope className="h-4 w-4 text-medical-doctor text-green-500" />
                                                 <span className="text-sm text-foreground">
-                                                    Dr. {appointment.doctor.displayName}
+                                                    Dr. {appointment?.doctor?.displayName}
                                                 </span>
                                                 <span className="text-xs text-muted-foreground">
-                                                    {appointment.doctor.specialization || 'Cardiology'}
+                                                    {appointment?.doctor?.specialization || 'Cardiology'}
                                                 </span>
                                             </div>
 

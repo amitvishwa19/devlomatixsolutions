@@ -234,7 +234,7 @@ export default function InventoryEditor({ isOpen, onClose, inventory, onSubmit, 
                                                         </SelectItem>
                                                         {cat?.children?.map((subCat) => (
 
-                                                            <SelectItem value={subCat.id} className='pl-8 font-medium text-sm'>
+                                                            <SelectItem key={subCat.id} value={subCat.id} className='pl-8 font-medium text-sm'>
                                                                 <span className="flex items-center gap-2 text-muted-foreground">
                                                                     <ChevronRight className="h-3 w-3" />
                                                                     <span className="text-foreground">{subCat.name}</span>

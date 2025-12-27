@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Loader, Plus, ReceiptText, Save, Trash2 } from "lucide-react";
+import { AlertCircle, ChevronRight, Loader, Plus, ReceiptIndianRupee, ReceiptText, Save, Trash2 } from "lucide-react";
 import { z } from "zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,7 @@ import { DatePicker } from "@/components/global/DatePicker";
 import { upsertInvoice } from "../_action/upsert-invoice";
 import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
+import { DynamicIcon } from "lucide-react/dynamic";
 
 const invoiceSchema = z.object({
     id: z.string().optional(),
@@ -324,13 +325,9 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                 <div className='bg-card h-full rounded-md p-2'>
 
                     <SheetHeader>
-                        <SheetTitle>
-                            {mode === 'add' && (
-                                <div className='flex flex-row gap-2 items-center'>
-                                    <ReceiptText size={18} />
-                                    Create new Invoice
-                                </div>
-                            )}
+                        <SheetTitle className="flex flex-row items-center gap-2">
+                            <ReceiptIndianRupee className="h-5 w-5 text-sky-500" />
+                            {mode === 'add' ? 'Create new Invoice' : invoice?.sku}
                         </SheetTitle>
                         <SheetDescription className='text-xs text-muted-foreground'>
                             Generate detailed and accurate invoices effortlessly — streamline your hospital’s billing process with precision and reliability.
@@ -347,6 +344,7 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                                     {/* Header card */}
                                     <Card className="p-2 rounded-md bg-primary/10 dark:bg-darkFocusColor/50">
                                         <div className="flex flex-col gap-4">
+
                                             {/* Appointment */}
                                             <div>
                                                 <FormField
@@ -465,45 +463,53 @@ export function InvoiceEditor({ isOpen, onClose, onSave, mode, invoice, services
                                                     )}
                                                 />
 
+
                                                 {/* Category */}
                                                 <FormField
-                                                    control={control}
+                                                    control={form.control}
                                                     name="category"
                                                     render={({ field }) => (
-                                                        <FormItem className="flex flex-col gap-2">
-                                                            <FormLabel>
-                                                                Select a Category
-                                                            </FormLabel>
-                                                            <FormControl>
-                                                                <Select
-                                                                    value={field.value}
-                                                                    onValueChange={(value) => {
-                                                                        field.onChange(value);// still adds to items
-                                                                    }}
-                                                                >
+                                                        <FormItem>
+                                                            <FormLabel>Category</FormLabel>
+                                                            <Select
+                                                                value={field.value}
+                                                                onValueChange={field.onChange}
+                                                            >
+                                                                <FormControl>
                                                                     <SelectTrigger>
-                                                                        <SelectValue placeholder="Select a Category" />
+                                                                        <SelectValue placeholder="Select category" />
                                                                     </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectGroup>
-                                                                            {category?.children?.map((service) => (
-                                                                                <SelectItem key={service.id} value={service.id}>
-                                                                                    <div className="flex flex-row items-center gap-2 text-sm font-medium">
-                                                                                        {service.name}
-                                                                                    </div>
+                                                                </FormControl>
+
+                                                                <SelectContent>
+                                                                    {category?.children?.map((cat) => (
+                                                                        <SelectGroup key={cat.id}>
+                                                                            <SelectItem value={cat.id} className='pl-4 font-medium text-sm'>
+                                                                                <div className='flex flex-row items-center gap-2'>
+                                                                                    {cat.icon ? <DynamicIcon size={14} name={cat.icon} /> : <DynamicIcon size={14} name={'folder'} />}
+                                                                                    <span>All {cat.name}</span>
+                                                                                </div>
+                                                                            </SelectItem>
+                                                                            {cat?.children?.map((subCat) => (
+
+                                                                                <SelectItem key={subCat.id} value={subCat.id} className='pl-8 font-medium text-sm'>
+                                                                                    <span className="flex items-center gap-2 text-muted-foreground">
+                                                                                        <ChevronRight className="h-3 w-3" />
+                                                                                        <span className="text-foreground">{subCat.name}</span>
+                                                                                    </span>
                                                                                 </SelectItem>
                                                                             ))}
+
                                                                         </SelectGroup>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </FormControl>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
                                                 />
 
                                             </div>
-
 
                                         </div>
                                     </Card>

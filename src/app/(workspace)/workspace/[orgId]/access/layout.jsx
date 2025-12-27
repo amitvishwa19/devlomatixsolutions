@@ -1,0 +1,53 @@
+import React from 'react'
+import { db } from '@/lib/db'
+import { AccessProvider } from './_provider/accessProvider'
+
+
+
+
+export const metadata = {
+    title: {
+        default: 'Access Control',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
+
+
+
+export default async function AccessLayout({ children }) {
+
+    const user = await db.user.findMany({
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+
+    const roles = await db.role.findMany({
+        include: {
+            permissions: true,
+            users: true
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+
+
+    const permissions = await db.permission.findMany({
+        orderBy: {
+            createdAt: 'desc'
+        },
+        include: {
+            category: true
+        }
+    })
+
+    return (
+        <AccessProvider allUsers={user} allRoles={roles} allPermissions={permissions}>
+            <div>
+                {children}
+            </div>
+        </AccessProvider>
+    )
+}

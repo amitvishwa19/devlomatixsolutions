@@ -2,6 +2,16 @@ import React from 'react'
 import { InventoryProvider } from './_provider/inventoryProvider'
 import { db } from '@/lib/db'
 
+
+export const metadata = {
+    title: {
+        default: 'Inventory',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
+
+
 export default async function InventoryLayout({ children }) {
 
 

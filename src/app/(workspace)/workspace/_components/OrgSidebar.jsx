@@ -102,6 +102,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         icon='layout-dashboard'
                     />
 
+                    <SidebarSingleItem
+                        title='Ipd/Opd'
+                        link={`/workspace/${server?.id}/ipdopd`}
+                        selected={url.split('/')[3] === 'ipdopd'}
+                        icon='workflow'
+                    />
+
                     <SidebarItem onExpand={onExpand} title={'Content Management'} value={'content'} icon='Sparkles' >
                         <div className='flex flex-col' onClick={() => { console.log('first') }}>
 
@@ -298,6 +305,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     />
 
                     <SidebarSingleItem
+                        title='Rooms & Beds'
+                        link={`/workspace/${server?.id}/accommodation`}
+                        selected={url.split('/')[3] === 'accommodation'}
+                        icon='bed'
+                    />
+
+                    <SidebarSingleItem
                         title='Inventory'
                         link={`/workspace/${server?.id}/inventory`}
                         selected={url.split('/')[3] === 'inventory'}
@@ -319,8 +333,15 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         icon='credit-card'
                     />
 
+                    <SidebarSingleItem
+                        title='Access Management'
+                        link={`/workspace/${server?.id}/access`}
+                        selected={url.split('/')[3] === 'access'}
+                        icon='shield-user'
+                    />
+
                     {/* {(hasRole('management') || superadmin()) && ( */}
-                    <SidebarItem onExpand={onExpand} title={'Management'} value={'management'} icon='ShieldUser' >
+                    {/* <SidebarItem onExpand={onExpand} title={'Management'} value={'management'} icon='ShieldUser' >
 
                         <div className='flex flex-col' onClick={() => { console.log('first') }}>
 
@@ -343,8 +364,42 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                             />
 
                         </div>
+                    </SidebarItem> */}
+
+
+
+
+                    <SidebarItem onExpand={onExpand} title={'Management'} value={'management'} icon='ShieldUser' >
+
+                        <div className='flex flex-col' onClick={() => { console.log('first') }}>
+
+                            <SidebarSubItem
+                                title='Dashboard'
+                                link={`/workspace/${server?.id}/management`}
+                                selected={url.split('/')[3] === 'management' && url.split('/').length === 4}
+                            />
+
+                            <SidebarSubItem
+                                title='Users'
+                                link={`/workspace/${server?.id}/management/user`}
+                                selected={url.split('/')[4] === 'user'}
+                            />
+
+                            <SidebarSubItem
+                                title='Roles'
+                                link={`/workspace/${server?.id}/management/role`}
+                                selected={url.split('/')[4] === 'role'}
+                            />
+
+                            <SidebarSubItem
+                                title='Permissions'
+                                link={`/workspace/${server?.id}/management/permission`}
+                                selected={url.split('/')[4] === 'permission'}
+                            />
+
+                        </div>
                     </SidebarItem>
-                    {/* )} */}
+
 
 
 

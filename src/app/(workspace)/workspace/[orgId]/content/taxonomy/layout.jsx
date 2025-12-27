@@ -1,4 +1,3 @@
-'use server'
 import React from 'react'
 import { TaxonomyProvider } from './_provider/taxanomyProvider'
 import { db } from '@/lib/db'
@@ -6,6 +5,13 @@ import { db } from '@/lib/db'
 
 
 
+export const metadata = {
+    title: {
+        default: 'Taxonomy',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
 
 export default async function TaxonomyLayout({ children }) {
     //const { orgId } = useParams()

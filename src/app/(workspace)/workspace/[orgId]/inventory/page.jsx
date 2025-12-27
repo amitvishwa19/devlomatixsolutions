@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, Pencil, Save, Search, Trash2 } from 'lucide-react';
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { InventoryDialog } from './_components/InventoryDialog';
 import { useModal } from '@/hooks/useModal';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +20,8 @@ import InventoryView from './_components/inventory-management/InventoryView';
 import InventoryEditor from './_components/inventory-management/InventoryEditor';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import InventoryDelete from './_components/inventory-management/InventoryDelete';
+import { useOrg } from '@/providers/OrgProvider';
+import { useRealTimeSocket } from '@/hooks/use-socket';
 
 
 const mockData = [
@@ -147,7 +149,6 @@ const mockData = [
 export default function InventoryPage() {
     const { inventories, setInventories, categories, setCategories, category, setCategory } = useInventory()
 
-
     const [active, setActive] = useState({ id: 'dashboard', component: <InventoryDashboard /> })
     const nav = [
         { id: 'dashboard', icon: '', component: <InventoryDashboard /> },
@@ -204,6 +205,7 @@ export default function InventoryPage() {
         setSelectedINventory(e)
         setDeleteModal(true)
     }
+
 
 
     const filterData = useMemo(() => {
@@ -337,6 +339,7 @@ export default function InventoryPage() {
                     <Save />
                     New Inventory
                 </Button>
+
             </div>
 
             <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4'>

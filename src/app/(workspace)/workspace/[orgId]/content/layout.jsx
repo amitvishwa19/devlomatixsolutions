@@ -1,6 +1,14 @@
-'use server'
 import { ContentProvider } from './_provider/contentProvider'
 import { db } from '@/lib/db'
+
+
+export const metadata = {
+    title: {
+        default: 'Content',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
 
 
 export default async function ContentLayout({ children }) {

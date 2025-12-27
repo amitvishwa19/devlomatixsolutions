@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
-import { ArrowUpDown, Eye, FilePenLine, MoreHorizontal, Save, Trash2, UserPlus } from "lucide-react"
+import { ArrowUpDown, Eye, FilePenLine, MoreHorizontal, Pencil, Save, Trash2, UserPlus } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem, } from "@/components/ui/dropdown-menu"
 import { ColumnDef, VisibilityState, flexRender, ColumnFiltersState, getFilteredRowModel, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, } from "@tanstack/react-table"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table"
@@ -21,11 +21,12 @@ import PatientSearchPage from './_component/patient-search/PatientSearchPage'
 import MedicalRecordsPage from './_component/medical-records/MedicalRecordsPage'
 import BillingManagementPage from './_component/billing-management/BillingManagementPage'
 import PatientManagementPage from './_component/patient-search/PatientManagementPage'
-import PatientEditor from './_component/patient-profile/PatientEditor'
+import PatientEditor from './_component/patient-management/PatientEditor'
 import DataTable from '../../_components/DataTable'
 import CategoryHierarchy from '../../_components/CategoryHierarchy'
 import { usePatient } from './_provider/patientProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import PatientAdd from './_component/patient-management/PatientAdd'
 
 
 export default function PatientPage() {
@@ -34,20 +35,18 @@ export default function PatientPage() {
     const [loading, setLoading] = useState(true)
     const { onOpen, refresh } = useModal()
 
-
-
-    const [active, setActive] = useState({ title: 'Patients', icon: 'accessibility', component: <PatientManagementPage /> })
-    const nav = [
-        // { title: 'Patients', icon: 'accessibility', component: <PatientManagementPage /> },
-        // { title: 'Medical Records', icon: 'square-activity', component: <MedicalRecordsPage /> },
-        // { title: 'Billing', icon: 'square-activity', component: <BillingManagementPage /> }
-    ]
-
     const [patientEditor, setPatientEditor] = useState({
         isOpen: false,
         mode: 'add',
         patient: null,
     })
+
+    const [patientAdd, setPatientAdd] = useState({
+        isOpen: false,
+        mode: 'add',
+        patient: null,
+    })
+
 
     const tempData = patients?.map(user => ({
         id: user.id,
@@ -187,30 +186,44 @@ export default function PatientPage() {
                 )
             },
         },
-        {
-            accessorKey: "lastvisit",
-            header: ({ column }) => {
-                return (
-                    <Button
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Last Visit
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
-                )
-            },
-        },
+        // {
+        //     accessorKey: "lastvisit",
+        //     header: ({ column }) => {
+        //         return (
+        //             <Button
+        //                 variant="ghost"
+        //                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        //             >
+        //                 Last Visit
+        //                 <ArrowUpDown className="ml-2 h-4 w-4" />
+        //             </Button>
+        //         )
+        //     },
+        //     cell: ({ row }) => {
+        //         return (
+        //             <div>
+
+        //                 {moment(row.original.updatedAt).subtract(1, 'days').calendar()}
+        //             </div>
+        //         )
+        //     }
+        // },
         {
             id: "actions",
             cell: ({ row }) => {
-                //const dispatch = useDispatch()
                 const patient = row.original
-
                 return (
 
-                    <div className='flex flex-row items-center gap-2'>
-                        <PatientEditor patient={row?.original} />
+                    <div className='flex flex-row items-center gap-4'>
+                        <Eye className='h-4 w-4 cursor-pointer' onClick={() => {
+                            setPatientEditor({
+                                isOpen: true,
+                                mode: 'view',
+                                patient: row.original,
+                            })
+                        }} />
+                        <Pencil className='h-4 w-4 cursor-pointer' />
+
                     </div>
                 )
             },
@@ -249,7 +262,7 @@ export default function PatientPage() {
                     variant={'save'}
                     size={'sm'}
                     onClick={() => {
-                        setPatientEditor({
+                        setPatientAdd({
                             isOpen: true,
                             mode: 'add',
                             patient: null,
@@ -294,6 +307,29 @@ export default function PatientPage() {
                             onClose={() => {
                                 setPatientEditor({
                                     isOpen: false,
+                                })
+                            }}
+                            patient={patientEditor.patient}
+                            mode={patientEditor.mode}
+                            onSave={(patient) => {
+                                if (patient) {
+                                    setPatients(prev =>
+                                        prev.some(item => item.id === patient.id)
+                                            ? prev.map(item =>
+                                                item.id === patient.id ? { ...item, ...patient } : item
+                                            )
+                                            : [patient, ...prev]
+                                    );
+                                }
+                            }}
+                        />
+
+
+                        <PatientAdd
+                            isOpen={patientAdd.isOpen}
+                            onClose={() => {
+                                setPatientAdd({
+                                    isOpen: false
                                 })
                             }}
                             onSave={(patient) => {

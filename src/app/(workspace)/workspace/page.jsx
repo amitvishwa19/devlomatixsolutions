@@ -54,19 +54,28 @@ export default function WorkspacePage() {
     })
 
     useEffect(() => {
-        const localServer = localStorage.getItem('server')
-        const localServers = localStorage.getItem('servers')
+        // const localServer = JSON.parse(localStorage.getItem('server'))
+        // const localServers = JSON.parse(localStorage.getItem('servers'))
 
-        if (localServer && localServers) {
-            router.push(`/workspace/${localServer?.id}`)
-        } else {
+        // console.log(JSON.parse(localServer))
+
+        // if (localServer && localServers) {
+        //     router.push(`/workspace/${localServer?.id}`)
+        // } else {
+        //     execute({ userId: session?.user?.userId })
+        // }
+
+        //console.log('localServer', localServer, 'localServers', localServers)
+        if (session) {
             execute({ userId: session?.user?.userId })
         }
 
-        console.log('localServer', localServer, 'localServers', localServers)
+    }, [session])
 
-        //execute({ userId: session?.user?.userId })
-    }, [])
+
+    const getLocalServerInfo = async () => {
+
+    }
 
 
     const options = {

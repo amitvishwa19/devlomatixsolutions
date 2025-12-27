@@ -53,7 +53,7 @@ const CategoryHierarchy = ({ data = [], title, category: root, onUpdate }) => {
     };
 
     return (
-        <div className="bg-card border rounded-lg p-4 w-full">
+        <div className="bg-card border rounded-md p-4 w-full">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-foreground">{title}</h3>
                 <CirclePlus size={18} className=' cursor-pointer text-sky-500' onClick={() => {
@@ -81,7 +81,7 @@ const CategoryHierarchy = ({ data = [], title, category: root, onUpdate }) => {
                                     size={16}
                                     className="text-muted-foreground"
                                 />
-                                {category.icon ? <DynamicIcon size={16} name={category.icon} /> : <DynamicIcon size={16} name={'folder'} />}
+                                {category.icon ? <DynamicIcon size={16} name={category.icon} color={category?.color || 'currentColor'} /> : <DynamicIcon size={16} name={'folder'} color={category?.color || 'currentColor'} />}
 
                                 <div className='flex flex-row items-center gap-2'>
                                     <span className="text-sm font-medium text-foreground">{category?.name}</span>
@@ -524,6 +524,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
                             variant="ghost"
                             onClick={handleClose}
                             disabled={loading}
+                            size='sm'
                             className="transition-colors duration-200"
                         >
                             Cancel
@@ -533,6 +534,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
                         variant='save'
                         onClick={handleSubmit}
                         disabled={loading}
+                        size='sm'
                         className=" transition-all duration-200 flex items-center gap-2"
                     >
                         {loading ? <Loader className=' animate-spin' /> : <Save />}

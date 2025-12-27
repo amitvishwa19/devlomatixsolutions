@@ -22,6 +22,8 @@ const handler = async (data) => {
 
     try {
 
+
+
         if (type === 'demographic') {
             console.log('upsert user data')
 
