@@ -1,45 +1,48 @@
-'use client'
-import React, { useEffect } from 'react'
-import { ManagementModalProvider } from './_provider/ManagementModalProvider'
-import { useDispatch } from 'react-redux'
-import { management } from './_action/management'
-import { useAction } from '@/hooks/use-action'
-import { useOrg } from '@/providers/OrgProvider'
-import { setLoading } from '@/redux/slices/org'
-import { setPermissions, setRoles, setUsers } from './_redux/management-slice'
-import { toast } from 'sonner'
-
-export default function ManagementLayout({ children }) {
-    const dispatch = useDispatch()
-    const { server } = useOrg()
-
-    useEffect(() => {
-        dispatch(setLoading(true))
-        execute({ serverId: server?.id })
-
-    }, [server])
+import React from 'react'
+import { db } from '@/lib/db'
+import { ManagementProvider } from './_provider/managementProvider'
 
 
-    const { execute } = useAction(management, {
-        onSuccess: (data) => {
-            //console.log(data)
-            dispatch(setLoading(false))
-            dispatch(setUsers(JSON.stringify(data.users)))
-            dispatch(setPermissions(JSON.stringify(data?.permissions)))
-            dispatch(setRoles(JSON.stringify(data?.roles)))
 
-        },
-        onError: (error) => {
-            setLoading(false)
-            console.log(error.message)
+export const metadata = {
+    title: {
+        default: 'Management',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
+
+
+
+export default async function ManagementLayout({ children }) {
+
+    const user = await db.user.findMany({
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+
+    const roles = await db.role.findMany({
+        orderBy: {
+            createdAt: 'desc'
         }
     })
 
 
+    const permissions = await db.permission.findMany({
+        orderBy: {
+            createdAt: 'desc'
+        },
+        include: {
+            category: true
+        }
+    })
+
     return (
-        <div>
-            <ManagementModalProvider />
-            {children}
-        </div>
+        <ManagementProvider allUsers={user} allRoles={roles} allPermissions={permissions}>
+            <div>
+                {children}
+            </div>
+        </ManagementProvider>
     )
 }

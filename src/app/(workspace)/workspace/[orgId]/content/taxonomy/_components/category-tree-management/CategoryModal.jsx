@@ -333,6 +333,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                     <Button
                         variant="ghost"
                         onClick={onClose}
+                        size='sm'
                         className="transition-colors duration-200"
                     >
                         Cancel
@@ -341,6 +342,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, category, mode, parentCategory
                         variant='save'
                         onClick={handleSubmit}
                         disabled={loading}
+                        size='sm'
                         className=" transition-all duration-200 flex items-center gap-2"
                     >
                         {loading ? <Loader className=' animate-spin' /> : <Save />}

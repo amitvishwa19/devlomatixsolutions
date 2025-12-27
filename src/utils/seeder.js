@@ -65,14 +65,97 @@ export function seeder() {
     ]
 
     const permissionSeed = [
-        { title: 'role-create', description: 'Create new management roles', status: true },
-        { title: 'role-moderate', description: 'Moderate management roles and actions', status: true },
-        { title: 'user-create', description: 'Create new user', status: true },
-        { title: 'user-moderate', description: 'Moderate user actions', status: true },
-        { title: 'user-view', description: 'View users ', status: true },
-        { title: 'create-org', description: 'User can create new organization ', status: true },
-        { title: 'delete-org', description: 'User can delete  organization ', status: true }
-    ]
+        // Patients
+        { value: 'patients.view', title: 'View Patients', description: 'View patient list and profiles', status: true, categoryId: null },
+        { value: 'patients.create', title: 'Create Patients', description: 'Add new patients to the system', status: true, categoryId: null },
+        { value: 'patients.edit', title: 'Edit Patients', description: 'Modify patient information', status: true, categoryId: null },
+        { value: 'patients.delete', title: 'Delete Patients', description: 'Remove patients from the system', status: true, categoryId: null },
+
+        // Doctors
+        { value: 'doctors.view', title: 'View Doctors', description: 'View doctor profiles and details', status: true, categoryId: null },
+        { value: 'doctors.create', title: 'Create Doctors', description: 'Add new doctors to the system', status: true, categoryId: null },
+        { value: 'doctors.edit', title: 'Edit Doctors', description: 'Modify doctor information', status: true, categoryId: null },
+        { value: 'doctors.delete', title: 'Delete Doctors', description: 'Remove doctors from the system', status: true, categoryId: null },
+
+        // Departments
+        { value: 'departments.view', title: 'View Departments', description: 'View hospital departments', status: true, categoryId: null },
+        { value: 'departments.create', title: 'Create Departments', description: 'Add new departments', status: true, categoryId: null },
+        { value: 'departments.edit', title: 'Edit Departments', description: 'Modify department details', status: true, categoryId: null },
+        { value: 'departments.delete', title: 'Delete Departments', description: 'Remove departments', status: true, categoryId: null },
+
+        // Admissions & Discharge
+        { value: 'admissions.view', title: 'View Admissions', description: 'View patient admission records', status: true, categoryId: null },
+        { value: 'admissions.create', title: 'Admit Patients', description: 'Admit patients to hospital', status: true, categoryId: null },
+        { value: 'admissions.edit', title: 'Edit Admissions', description: 'Modify admission details', status: true, categoryId: null },
+        { value: 'discharge.process', title: 'Process Discharge', description: 'Discharge patients from hospital', status: true, categoryId: null },
+
+        // Labs & Diagnostics
+        { value: 'labs.view', title: 'View Lab Tests', description: 'View laboratory test records', status: true, categoryId: null },
+        { value: 'labs.create', title: 'Create Lab Tests', description: 'Order new lab tests', status: true, categoryId: null },
+        { value: 'labs.edit', title: 'Edit Lab Tests', description: 'Modify lab test details', status: true, categoryId: null },
+        { value: 'labs.approve', title: 'Approve Lab Results', description: 'Approve and verify lab results', status: true, categoryId: null },
+
+        // Pharmacy & Inventory
+        { value: 'pharmacy.view', title: 'View Pharmacy', description: 'View medicines and prescriptions', status: true, categoryId: null },
+        { value: 'pharmacy.dispense', title: 'Dispense Medicines', description: 'Dispense medicines to patients', status: true, categoryId: null },
+        { value: 'pharmacy.return', title: 'Return Medicines', description: 'Process returned medicines', status: true, categoryId: null },
+        { value: 'inventory.view', title: 'View Inventory', description: 'View medical inventory and stock', status: true, categoryId: null },
+        { value: 'inventory.create', title: 'Add Inventory', description: 'Add new inventory items', status: true, categoryId: null },
+        { value: 'inventory.update', title: 'Update Inventory', description: 'Update inventory stock levels', status: true, categoryId: null },
+
+        // Insurance & Claims
+        { value: 'insurance.view', title: 'View Insurance', description: 'View patient insurance details', status: true, categoryId: null },
+        { value: 'insurance.verify', title: 'Verify Insurance', description: 'Verify insurance eligibility', status: true, categoryId: null },
+        { value: 'claims.create', title: 'Create Claims', description: 'Create insurance claims', status: true, categoryId: null },
+        { value: 'claims.process', title: 'Process Claims', description: 'Process insurance claims', status: true, categoryId: null },
+
+        // Rooms & Beds
+        { value: 'rooms.view', title: 'View Rooms', description: 'View hospital rooms and wards', status: true, categoryId: null },
+        { value: 'beds.assign', title: 'Assign Beds', description: 'Assign beds to patients', status: true, categoryId: null },
+        { value: 'beds.transfer', title: 'Transfer Beds', description: 'Transfer patients between beds', status: true, categoryId: null },
+
+        // Staff
+        { value: 'staff.view', title: 'View Staff', description: 'View staff list and profiles', status: true, categoryId: null },
+        { value: 'staff.create', title: 'Create Staff', description: 'Add new staff members', status: true, categoryId: null },
+        { value: 'staff.edit', title: 'Edit Staff', description: 'Modify staff information', status: true, categoryId: null },
+        { value: 'staff.delete', title: 'Delete Staff', description: 'Remove staff members', status: true, categoryId: null },
+
+        // Appointments
+        { value: 'appointments.view', title: 'View Appointments', description: 'View all appointments', status: true, categoryId: null },
+        { value: 'appointments.create', title: 'Create Appointments', description: 'Schedule new appointments', status: true, categoryId: null },
+        { value: 'appointments.edit', title: 'Edit Appointments', description: 'Modify existing appointments', status: true, categoryId: null },
+        { value: 'appointments.delete', title: 'Cancel Appointments', description: 'Cancel scheduled appointments', status: true, categoryId: null },
+
+        // Records
+        { value: 'records.view', title: 'View Records', description: 'Access medical records', status: true, categoryId: null },
+        { value: 'records.create', title: 'Create Records', description: 'Add new medical records', status: true, categoryId: null },
+        { value: 'records.edit', title: 'Edit Records', description: 'Modify medical records', status: true, categoryId: null },
+        { value: 'records.export', title: 'Export Records', description: 'Export medical records', status: true, categoryId: null },
+
+        // Billing
+        { value: 'billing.view', title: 'View Billing', description: 'View invoices and payments', status: true, categoryId: null },
+        { value: 'billing.create', title: 'Create Invoices', description: 'Generate new invoices', status: true, categoryId: null },
+        { value: 'billing.process', title: 'Process Payments', description: 'Handle payment processing', status: true, categoryId: null },
+        { value: 'billing.refund', title: 'Issue Refunds', description: 'Process refunds', status: true, categoryId: null },
+
+        // Reports
+        { value: 'reports.view', title: 'View Reports', description: 'Access system reports', status: true, categoryId: null },
+        { value: 'reports.create', title: 'Generate Reports', description: 'Create custom reports', status: true, categoryId: null },
+        { value: 'reports.export', title: 'Export Reports', description: 'Export reports to files', status: true, categoryId: null },
+
+        // Security & Notifications
+        { value: 'audit.view', title: 'View Audit Logs', description: 'View system audit logs', status: true, categoryId: null },
+        { value: 'audit.export', title: 'Export Audit Logs', description: 'Export audit logs', status: true, categoryId: null },
+        { value: 'sessions.terminate', title: 'Terminate Sessions', description: 'Force logout active sessions', status: true, categoryId: null },
+        { value: 'notifications.view', title: 'View Notifications', description: 'View system notifications', status: true, categoryId: null },
+        { value: 'notifications.send', title: 'Send Notifications', description: 'Send SMS, email, or app notifications', status: true, categoryId: null },
+
+        // Settings
+        { value: 'settings.view', title: 'View Settings', description: 'View system settings', status: true, categoryId: null },
+        { value: 'settings.edit', title: 'Edit Settings', description: 'Modify system settings', status: true, categoryId: null },
+        { value: 'settings.roles', title: 'Manage Roles', description: 'Create and edit roles', status: true, categoryId: null },
+    ];
+
 
     const categorySeed = [
         {
@@ -170,9 +253,14 @@ export function seeder() {
             slug: "notifications-alerts",
             icon: "bell",
             description: "Send alerts for appointments, emergencies, and system updates."
+        },
+        {
+            name: "Roles & Permissions",
+            slug: "roles-permissions",
+            icon: "shield",
+            description: "Manage roles and permissions for the organization and manage workflow."
         }
     ];
-
 
     const inventorySeed = [
         {

@@ -6,6 +6,13 @@ import { db } from '@/lib/db'
 
 
 
+export const metadata = {
+    title: {
+        default: 'Taxonomy',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
 
 export default async function TaxonomyLayout({ children }) {
     //const { orgId } = useParams()

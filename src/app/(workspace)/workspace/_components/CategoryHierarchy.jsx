@@ -524,6 +524,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
                             variant="ghost"
                             onClick={handleClose}
                             disabled={loading}
+                            size='sm'
                             className="transition-colors duration-200"
                         >
                             Cancel
@@ -533,6 +534,7 @@ const HierarchyEditorModal = ({ isOpen, handleClose, onSave, root, category, par
                         variant='save'
                         onClick={handleSubmit}
                         disabled={loading}
+                        size='sm'
                         className=" transition-all duration-200 flex items-center gap-2"
                     >
                         {loading ? <Loader className=' animate-spin' /> : <Save />}
