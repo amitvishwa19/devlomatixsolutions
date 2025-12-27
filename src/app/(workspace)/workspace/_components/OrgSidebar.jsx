@@ -102,6 +102,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         icon='layout-dashboard'
                     />
 
+                    <SidebarSingleItem
+                        title='Workflow'
+                        link={`/workspace/${server?.id}/workflow`}
+                        selected={url.split('/')[3] === 'workflow'}
+                        icon='person-standing'
+                    />
+
                     <SidebarItem onExpand={onExpand} title={'Content Management'} value={'content'} icon='Sparkles' >
                         <div className='flex flex-col' onClick={() => { console.log('first') }}>
 

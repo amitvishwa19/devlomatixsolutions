@@ -1,4 +1,3 @@
-'use server'
 import { ContentProvider } from './_provider/contentProvider'
 import { db } from '@/lib/db'
 

@@ -1,4 +1,3 @@
-'use server'
 import React from 'react'
 import { TaxonomyProvider } from './_provider/taxanomyProvider'
 import { db } from '@/lib/db'
