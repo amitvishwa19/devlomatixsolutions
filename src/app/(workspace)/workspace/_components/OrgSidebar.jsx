@@ -103,10 +103,10 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     />
 
                     <SidebarSingleItem
-                        title='Workflow'
-                        link={`/workspace/${server?.id}/workflow`}
-                        selected={url.split('/')[3] === 'workflow'}
-                        icon='person-standing'
+                        title='Ipd/Opd'
+                        link={`/workspace/${server?.id}/ipdopd`}
+                        selected={url.split('/')[3] === 'ipdopd'}
+                        icon='workflow'
                     />
 
                     <SidebarItem onExpand={onExpand} title={'Content Management'} value={'content'} icon='Sparkles' >
@@ -331,6 +331,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         link={`/workspace/${server?.id}/payment`}
                         selected={url.split('/')[3] === 'payment'}
                         icon='credit-card'
+                    />
+
+                    <SidebarSingleItem
+                        title='Access Management'
+                        link={`/workspace/${server?.id}/access`}
+                        selected={url.split('/')[3] === 'access'}
+                        icon='shield-user'
                     />
 
                     {/* {(hasRole('management') || superadmin()) && ( */}
