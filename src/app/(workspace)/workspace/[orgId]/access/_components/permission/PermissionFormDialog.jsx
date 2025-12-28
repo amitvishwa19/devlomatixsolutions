@@ -11,9 +11,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAccess } from '../../_provider/accessProvider';
 import { Loader, Save } from 'lucide-react';
+import { upsertPermission } from '../../_action/upsert-permission';
+import { useSession } from 'next-auth/react';
+import { useAction } from '@/hooks/use-action';
+import { toast } from 'sonner';
 
 
 const permissionSchema = z.object({
+    id: z.string().optional(),
     title: z.string().min(2, 'Role name must be at least 2 characters').max(50),
     description: z.string().min(10, 'Description must be at least 10 characters').max(200),
     color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format').optional(),
@@ -29,10 +34,12 @@ const colorPresets = [
 export function PermissionFormDialog({ open, onOpenChange, permission, onSubmit }) {
     const { roles, permissions } = useAccess()
     const [loading, setLoading] = useState()
+    const { data: session } = useSession()
 
     const form = useForm({
         resolver: zodResolver(permissionSchema),
         defaultValues: {
+            id: '',
             title: '',
             description: '',
             color: '#0d9488',
@@ -43,6 +50,7 @@ export function PermissionFormDialog({ open, onOpenChange, permission, onSubmit 
     useEffect(() => {
         if (permission) {
             form.reset({
+                id: permission.id,
                 title: permission.title,
                 description: permission.description,
                 color: permission.color,
@@ -50,6 +58,7 @@ export function PermissionFormDialog({ open, onOpenChange, permission, onSubmit 
             });
         } else {
             form.reset({
+                id: '',
                 title: '',
                 description: '',
                 color: '#0d9488',
@@ -58,17 +67,35 @@ export function PermissionFormDialog({ open, onOpenChange, permission, onSubmit 
         }
     }, [permission, form]);
 
-    const handleSubmit = (data) => {
-        onSubmit(data);
-        onOpenChange(false);
+    const { execute } = useAction(upsertPermission, {
+        onSuccess: (data) => {
+            onSubmit(data?.permission)
+            setLoading(false);
+            handleClose()
+            toast.success('Permission created successfully', { id: 'new-permission' })
+        },
+        onError: (error) => {
+            console.log(error)
+            toast.error('Oops somethig went wrong ! try again later', { id: 'new-invoice' })
+            setLoading(false);
+        }
+    })
+
+    const handleSubmit = async (data) => {
+        setLoading(true);
+        toast.loading('Creating permission, please wait....', { id: 'new-permission' })
+        await execute({ userId: session.user?.userId, formData: data })
     };
 
 
-
+    const handleClose = () => {
+        form.reset()
+        onOpenChange()
+    }
 
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="max-w-2xl  overflow-hidden flex flex-col">
                 <DialogHeader>
                     <DialogTitle>{permission ? 'Edit Permission' : 'Create New Permission'}</DialogTitle>
@@ -81,6 +108,7 @@ export function PermissionFormDialog({ open, onOpenChange, permission, onSubmit 
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-hidden">
                         <div className="flex-1 pr-4 h-[70vh]">
                             <div className="space-y-6 pb-4">
+
                                 <div className="grid gap-4 md:grid-cols-2 p-2">
                                     <FormField
                                         control={form.control}

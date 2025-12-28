@@ -6,19 +6,21 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PermissionCard from '../permission/PermissionCard';
 import { PermissionFormDialog } from '../permission/PermissionFormDialog';
-import { DeleteConfirmDialog } from './DeleteConfirmDialog';
-import { toast } from '@/hooks/use-toast';
+import { PermissionDelete } from '../permission/PermissionDelete';
+
 
 export default function Permissions() {
-    const { roles, permissions } = useAccess()
+    const { roles, permissions, setPermissions } = useAccess()
     const [permissionSearchQuery, setPermissionSearchQuery] = useState('');
-
 
 
     const [isPermissionFormOpen, setIssPermissionFormOpen] = useState(false);
     const [editingsPermission, setEditingsPermission] = useState(null);
     const [deletingsPermission, setDeletingsPermission] = useState(null);
-
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        permission: null
+    })
 
     // Filtered data
     const filteredPermissions = permissions.filter(
@@ -28,34 +30,27 @@ export default function Permissions() {
     );
 
     const handleCreatePermission = (data) => {
-        const newRole = {
-            ...data,
-            id: crypto.randomUUID(),
-            userCount: 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        setRoles([...roles, newRole]);
-        toast({
-            title: 'Role Created',
-            description: `${data.title} has been created successfully.`,
-        });
+        if (data) {
+            setPermissions(prev =>
+                prev.some(item => item.id === data.id)
+                    ? prev.map(item =>
+                        item.id === data.id ? { ...item, ...data } : item
+                    )
+                    : [data, ...prev]
+            );
+        }
     };
 
     const handleUpdatePermission = (data) => {
-        if (!editingRole) return;
-        setRoles(
-            roles.map((r) =>
-                r.id === editingRole.id
-                    ? { ...r, ...data, updatedAt: new Date() }
-                    : r
-            )
-        );
-        setEditingRole(null);
-        toast({
-            title: 'Role Updated',
-            description: `${data.name} has been updated successfully.`,
-        });
+        if (data) {
+            setPermissions(prev =>
+                prev.some(item => item.id === data.id)
+                    ? prev.map(item =>
+                        item.id === data.id ? { ...item, ...data } : item
+                    )
+                    : [data, ...prev]
+            );
+        }
     };
 
     const handleDeletePermission = (e) => {
@@ -105,7 +100,12 @@ export default function Permissions() {
                                     permission={permission}
                                     rolesWithPermission={rolesWithPermission}
                                     onEdit={handleEditPermission}
-                                    onDelete={handleDeletePermission}
+                                    onDelete={(p) => {
+                                        setDeleteModal({
+                                            isOpen: true,
+                                            permission: p
+                                        })
+                                    }}
                                 />
                             </div>
                         );
@@ -130,12 +130,18 @@ export default function Permissions() {
                 onSubmit={editingsPermission ? handleUpdatePermission : handleCreatePermission}
             />
 
-            <DeleteConfirmDialog
-                open={!!deletingsPermission}
-                onOpenChange={(open) => !open && setDeletingsPermission(null)}
-                title="Delete Permission"
-                description={`Are you sure you want to delete "${deletingsPermission?.title}"? This action cannot be undone. Users with this role will need to be reassigned.`}
-                onConfirm={handleDeletePermission}
+            <PermissionDelete
+                open={deleteModal.isOpen}
+                onClose={(permission) => {
+                    setDeleteModal({
+                        isOpen: false,
+                        permission: false
+                    })
+                    if (permission) {
+                        setPermissions(permissions.filter(per => per.id !== permission.id))
+                    }
+                }}
+                data={deleteModal?.permission}
             />
         </div>
     )
