@@ -11,9 +11,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAccess } from '../../_provider/accessProvider';
 import { Loader, Save } from 'lucide-react';
+import { useAction } from '@/hooks/use-action';
+import { upsertRole } from '../../_action/upsert-role';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 
 
 const roleSchema = z.object({
+    id: z.string().optional(),
     title: z.string().min(2, 'Role name must be at least 2 characters').max(50),
     description: z.string().min(10, 'Description must be at least 10 characters').max(200),
     color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format'),
@@ -28,6 +33,9 @@ const colorPresets = [
 export function RoleFormDialog({ open, onOpenChange, role, onSubmit }) {
     const { roles, permissions } = useAccess()
     const [loading, setLoading] = useState()
+    const { data: session } = useSession()
+
+    console.log(role)
 
     const form = useForm({
         resolver: zodResolver(roleSchema),
@@ -42,13 +50,17 @@ export function RoleFormDialog({ open, onOpenChange, role, onSubmit }) {
     useEffect(() => {
         if (role) {
             form.reset({
+                id: role.id,
                 title: role.title,
                 description: role.description,
                 color: role.color,
-                permissions: role.permissions,
+                permissions: role.permissions?.map((p) =>
+                    p === 'string' ? p : p.id
+                ) ?? [],
             });
         } else {
             form.reset({
+                id: '',
                 title: '',
                 description: '',
                 color: '#0d9488',
@@ -56,11 +68,6 @@ export function RoleFormDialog({ open, onOpenChange, role, onSubmit }) {
             });
         }
     }, [role, form]);
-
-    const handleSubmit = (data) => {
-        onSubmit(data);
-        onOpenChange(false);
-    };
 
     const selectedPermissions = form.watch('permissions');
     const allSelected = selectedPermissions.length === permissions?.length;
@@ -73,8 +80,33 @@ export function RoleFormDialog({ open, onOpenChange, role, onSubmit }) {
         }
     };
 
+    const { execute } = useAction(upsertRole, {
+        onSuccess: (data) => {
+            onSubmit(data?.role)
+            setLoading(false);
+            handleOpenChange()
+            toast.success('Role created successfully', { id: 'new-role' })
+        },
+        onError: (error) => {
+            console.log(error)
+            toast.error('ROle already exists,please try again', { id: 'new-role' })
+            setLoading(false);
+        }
+    })
+
+    const handleSubmit = async (data) => {
+        setLoading(true)
+        toast.loading('Creating role, please wait....', { id: 'new-role' })
+        await execute({ userId: session?.user?.userId, formData: data })
+    };
+
+    const handleOpenChange = () => {
+        setLoading(false);
+        onOpenChange()
+    }
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="max-w-2xl h-[90vh] overflow-hidden flex flex-col">
                 <DialogHeader>
                     <DialogTitle>{role ? 'Edit Role' : 'Create New Role'}</DialogTitle>
@@ -88,6 +120,8 @@ export function RoleFormDialog({ open, onOpenChange, role, onSubmit }) {
                         <div className="flex-1 pr-4 h-[70vh]">
                             <div className="space-y-6 pb-4">
                                 <div className="grid gap-4 md:grid-cols-2 p-2">
+
+
                                     <FormField
                                         control={form.control}
                                         name="title"
