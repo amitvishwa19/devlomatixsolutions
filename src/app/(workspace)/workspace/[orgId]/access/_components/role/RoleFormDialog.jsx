@@ -35,7 +35,7 @@ export function RoleFormDialog({ open, onOpenChange, role, onSubmit }) {
     const [loading, setLoading] = useState()
     const { data: session } = useSession()
 
-    console.log(role)
+
 
     const form = useForm({
         resolver: zodResolver(roleSchema),
@@ -209,8 +209,8 @@ export function RoleFormDialog({ open, onOpenChange, role, onSubmit }) {
                                             <FormDescription>
                                                 Select the permissions for this role.
                                             </FormDescription>
-                                            <ScrollArea className="rounded-lg border border-border px-4 py-4 mt-2 h-[40vh]">
-                                                <div className="grid gap-3 sm:grid-cols-2">
+                                            <ScrollArea className="rounded-lg border border-border p-2 mt-2 h-[40vh]">
+                                                <div className="grid gap-3 sm:grid-cols-2 m-2">
                                                     {permissions?.map((permission) => (
                                                         <FormField
                                                             key={permission.id}

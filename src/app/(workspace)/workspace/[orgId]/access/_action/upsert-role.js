@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { v4 as uuidv4 } from 'uuid'
 import { ROLE } from "@prisma/client";
 import { slug } from "@/utils/functions";
+import { connect } from "http2";
 
 const UpsertRole = z.object({
     userId: z.string(),
@@ -24,8 +25,6 @@ const handler = async (data) => {
     try {
         const perms = formData?.permissions.map((i) => { return { id: i }; })
 
-
-
         role = await db.role.upsert({
             where: {
                 id: formData.id || '000'
@@ -39,35 +38,38 @@ const handler = async (data) => {
                 title: formData?.title,
                 description: formData?.description,
                 color: formData?.color,
+                permissions: {
+                    connect: perms
+                }
             },
             include: {
                 permissions: true
             },
         })
 
-        if (formData?.permissions.length > 0) {
-            formData?.permissions.map(async (p) => {
-                role = await db.role.update({
-                    where: {
-                        id: role.id
-                    },
-                    data: {
-                        permissions: {
-                            set: perms
-                        },
-                    },
-                })
-            })
-        }
+        // if (formData?.permissions.length > 0) {
+        //     formData?.permissions.map(async (p) => {
+        //         role = await db.role.update({
+        //             where: {
+        //                 id: role.id
+        //             },
+        //             data: {
+        //                 permissions: {
+        //                     set: perms
+        //                 },
+        //             },
+        //         })
+        //     })
+        // }
 
-        temprole = await db.role.findFirst({
-            where: {
-                id: role.id
-            },
-            include: {
-                permissions: true
-            },
-        })
+        // temprole = await db.role.findFirst({
+        //     where: {
+        //         id: role.id
+        //     },
+        //     include: {
+        //         permissions: true
+        //     },
+        // })
 
 
         console.log('@role server action', temprole)
@@ -81,7 +83,7 @@ const handler = async (data) => {
     }
 
     //revalidatePath(`/org/${orgId}`)
-    return { data: { role: temprole } };
+    return { data: { role } };
 
 }
 

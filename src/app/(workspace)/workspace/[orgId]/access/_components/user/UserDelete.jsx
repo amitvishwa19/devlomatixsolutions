@@ -1,24 +1,23 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from '@/components/ui/alert-dialog';
+
 import { useAction } from '@/hooks/use-action';
 import { Loader, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { deletePermission } from '../../_action/delete-permission';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
-import { deleteRole } from '../../_action/delete-role';
+import { deleteUser } from '../../_action/delete-user';
 
 
-export function RoleDelete({ open, onClose, data }) {
+export function UserDelete({ open, onClose, data }) {
     const [loading, setLoading] = useState()
     const { data: session } = useSession()
 
-    const { execute } = useAction(deleteRole, {
+    const { execute } = useAction(deleteUser, {
         onSuccess: (data) => {
-            onClose(data?.role)
+            onClose(data?.user)
             setLoading(false)
-            toast.success('Role deleted successfully...', { id: 'new-permission' })
+            toast.success(`User "${data.user.displayName}" deleted successfully...`)
         },
         onError: (error) => {
             console.log(error)
@@ -29,7 +28,7 @@ export function RoleDelete({ open, onClose, data }) {
 
     const handleOnDelete = async () => {
         setLoading(true)
-        await execute({ userId: session?.user?.userId, roleId: data?.id })
+        await execute({ userId: session?.user?.userId, deleteUserId: data?.id })
     }
 
     const handleOpenClose = () => {
@@ -46,10 +45,10 @@ export function RoleDelete({ open, onClose, data }) {
                 <DialogHeader>
                     <DialogTitle className='flex flex-row items-center gap-2 text-sm'>
                         <Trash2 className='h-5 w-5 text-sky-500' />
-                        Delete Role
+                        Delete User
                     </DialogTitle>
                     <DialogDescription className='text-sm text-muted-foreground'>
-                        Are you sure you want to delete "{data?.title}"? This action cannot be undone. Users with this role will need to be reassigned.
+                        Are you sure you want to delete "{data?.displayName}"? This action cannot be undone. Users will be deleted from system.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -64,7 +63,7 @@ export function RoleDelete({ open, onClose, data }) {
                         disabled={loading}
                     >
                         {loading ? <Loader className=' animate-spin' /> : <Trash2 />}
-                        Delete Role
+                        Delete User
                     </Button>
                 </DialogFooter>
 

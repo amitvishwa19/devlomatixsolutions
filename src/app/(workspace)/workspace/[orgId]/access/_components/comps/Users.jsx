@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Filter, Plus, Search } from 'lucide-react'
+import { Edit, Eye, Filter, MoreHorizontal, MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
 import { useAccess } from '../../_provider/accessProvider'
 import { Button } from '@/components/ui/button'
@@ -8,18 +8,31 @@ import { UserTable } from '../user/UserTable'
 import { ROLE } from '@prisma/client'
 import { UserFormDialog } from '../user/UserFormDialog'
 import { DeleteConfirmDialog } from './DeleteConfirmDialog'
+import { CustomBadge } from '../../../(misc)/_components/CustomBadge'
+import DataTable from '@/app/(workspace)/workspace/_components/DataTable'
+import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { UserDelete } from '../user/UserDelete'
 
 export default function Users() {
-    const { roles, users } = useAccess()
+    const { roles, users, setUsers } = useAccess()
     const [userSearchQuery, setUserSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [roleFilter, setRoleFilter] = useState('all');
     const [isUserFormOpen, setIsUserFormOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null);
-    const [deletingUser, setDeletingUser] = useState(null);
+    const [editingUser, setEditingUser] = useState({
+        isOpen: false,
+        mode: 'add',
+        user: null
+    });
+    const [deletingUser, setDeletingUser] = useState({
+        isOpen: false,
+        mode: 'delete',
+        user: null
+    });
 
 
-    const filteredUser = useMemo(() => users?.filter(usr => usr.role !== ROLE.PATIENT), [])
+    const filteredUser = useMemo(() => users?.filter(usr => usr.role !== ROLE.PATIENT), [users])
 
     const filteredUsers = filteredUser?.filter((user) => {
         const matchesSearch =
@@ -83,8 +96,129 @@ export default function Users() {
         setEditingUser(null);
     };
 
+    const getInitials = (name) => {
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    const columns = [
+        {
+            accessorKey: "info",
+            header: "User",
+            cell: ({ row }) => {
+                return (
+                    <div className='flex flex-row gap-2 items-center'>
+                        <Avatar className='rounded-md'>
+                            <AvatarImage src={row.original.avatar} />
+                            <AvatarFallback><span className='text-xs'>{getInitials(row.original.displayName)}</span></AvatarFallback>
+                        </Avatar>
+                        <div className='flex flex-col'>
+                            <span>{row.original.displayName}</span>
+                            <span className='text-xs text-muted-foreground'>{row.original.email}</span>
+                        </div>
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "depaartment",
+            header: "Department",
+            cell: ({ row }) => {
+                return (
+                    <CustomBadge status={`${row.original.department ? 'success' : 'na'}`}>
+                        {row.original.department ? row.original.department : 'No Department Assigned'}
+                    </CustomBadge>
+                )
+            }
+        },
+        {
+            accessorKey: "roles",
+            header: "Roles",
+            cell: ({ row }) => {
+
+                return (
+                    <div className='flex flex-row items-center gap-2 flex-wrap'>
+                        <div>{row.original.roles.length === 0 && <CustomBadge status='blank'>No Role Assigned</CustomBadge>}</div>
+                        {row.original.roles?.map((role, index) => (
+                            <CustomBadge key={index} status='info'>{role.title}</CustomBadge>
+                        ))}
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "status",
+            header: "Status",
+            cell: ({ row }) => {
+
+                return (
+                    <div className=''>
+                        <CustomBadge status={row.original.status ? 'success' : 'na'}>
+                            {row.original.status ? 'Active' : 'InActive'}
+                        </CustomBadge>
+                    </div>
+                )
+            }
+        },
+        {
+            id: 'action',
+            header: "Actions",
+            cell: ({ row }) => {
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                className=" group-hover:opacity-100 transition-opacity"
+                            >
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() =>
+                                setEditingUser({
+                                    isOpen: true,
+                                    mode: 'edit',
+                                    user: row.original
+                                })
+                            }>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit User
+                            </DropdownMenuItem>
+                            {/* <DropdownMenuItem>
+                                <Mail className="mr-2 h-4 w-4" />
+                                Send Email
+                            </DropdownMenuItem> */}
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setDeletingUser({
+                                        isOpen: true,
+                                        mode: 'delete',
+                                        user: row.original
+                                    })
+                                }
+                                className="text-orange-500 focus:orange-600"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete User
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )
+            }
+        },
+
+    ]
+
     return (
         <div className='flex flex-col gap-4'>
+
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <div className="relative flex-1 max-w-sm">
@@ -130,19 +264,24 @@ export default function Users() {
                         </Select>
                     </div>
                 </div>
-                <Button onClick={handleAddNewUser} variant={'save'} size='sm'>
+                <Button onClick={() => {
+                    setEditingUser({
+                        isOpen: true,
+                        mode: 'add',
+                        user: null
+                    })
+                }} variant={'save'} size='sm'>
                     <Plus className="mr-2 h-4 w-4" />
                     Add User
                 </Button>
             </div>
 
-            <UserTable
-                users={filteredUsers}
-                roles={roles}
-                onRoleChange={handleRoleChange}
-                onEdit={handleEditUser}
-                onDelete={setDeletingUser}
-            />
+
+            <div>
+                <DataTable columns={columns} data={filteredUser} />
+            </div>
+
+
 
             {filteredUsers.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -152,19 +291,42 @@ export default function Users() {
 
             {/* User Form Dialog */}
             <UserFormDialog
-                open={isUserFormOpen}
-                onOpenChange={setIsUserFormOpen}
-                user={editingUser}
+                open={editingUser.isOpen}
+                onOpenChange={() => {
+                    setEditingUser({
+                        isOpen: false,
+                        mode: 'add',
+                        user: null
+                    })
+                }}
+                user={editingUser.user}
+                mode={deletingUser.mode}
                 roles={roles}
-                onSubmit={handleUserFormSubmit}
+                onSubmit={(user) => {
+                    setUsers(prev =>
+                        prev.some(item => item.id === user.id)
+                            ? prev.map(item =>
+                                item.id === user.id ? { ...item, ...user } : item
+                            )
+                            : [user, ...prev]
+                    );
+                }}
             />
 
             {/* User Delete Confirmation */}
-            <DeleteConfirmDialog
-                open={!!deletingUser}
-                onOpenChange={(open) => !open && setDeletingUser(null)}
-                title="Delete User"
-                description={`Are you sure you want to delete "${deletingUser?.displayName}"? This action cannot be undone.`}
+            <UserDelete
+                open={deletingUser.isOpen}
+                onClose={(user) => {
+                    setDeletingUser({
+                        isOpen: false,
+                        mode: 'add',
+                        user: null
+                    })
+                    if (user) {
+                        setUsers(users.filter((usr => usr.id !== user.id && user.role !== ROLE.PATIENT)))
+                    }
+                }}
+                data={deletingUser.user}
                 onConfirm={handleDeleteUser}
             />
 

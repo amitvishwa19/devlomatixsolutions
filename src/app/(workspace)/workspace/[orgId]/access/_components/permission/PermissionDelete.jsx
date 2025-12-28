@@ -43,8 +43,8 @@ export function PermissionDelete({ open, onClose, data }) {
 
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className='flex flex-row items-center gap-2'>
-                        <Trash2 />
+                    <DialogTitle className='flex flex-row items-center gap-2 text-sm'>
+                        <Trash2 className='h-5 w-5 text-sky-500' />
                         Delete Permission
                     </DialogTitle>
                     <DialogDescription className='text-sm text-muted-foreground'>
