@@ -108,26 +108,11 @@ export function AuthSelector({ name = false, classname }) {
                                 </CommandGroup>
 
                                 <CommandSeparator />
-
-
-                                <CommandGroup className='fles flex-col gap-4'>
-
-                                    <CommandItem onSelect={handleAdmin} className=' cursor-pointer aria-selected:bg-transparent hover:bg-accent'>
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        <span>Admin</span>
-                                    </CommandItem>
-
-
-
-
-
-                                </CommandGroup>
-                                <CommandSeparator />
                                 <CommandGroup>
 
                                     <CommandItem onSelect={handleOrg} className=' cursor-pointer aria-selected:bg-transparent hover:bg-accent'>
                                         <Rocket className="mr-2 h-4 w-4" />
-                                        <span>My Workspaces</span>
+                                        <span>Workspaces</span>
                                     </CommandItem>
 
                                     {

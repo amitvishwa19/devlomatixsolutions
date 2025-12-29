@@ -9,6 +9,7 @@ import Image from 'next/image';
 import logo from '@/assets/images/logo/logo.png'
 import { usePathname } from 'next/navigation';
 import ThemeSwitcher from '@/components/global/ThemeSwitch';
+import { AuthSelector } from '@/components/global/AuthSelector';
 
 const navLinks = [
     { name: 'Home', path: '/' },
@@ -58,6 +59,7 @@ const Header = () => {
                             Book Appointment
                         </Button>
                     </AppointmentDialog>
+                    <AuthSelector />
                 </div>
 
                 {/* Mobile Menu Button */}
