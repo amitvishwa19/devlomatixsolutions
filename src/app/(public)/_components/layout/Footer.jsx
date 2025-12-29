@@ -1,5 +1,8 @@
 import { Heart, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import Link from 'next/link';
+import logo from '@/assets/images/logo/logo.png'
+import Image from 'next/image';
+
 
 const Footer = () => {
     return (
@@ -9,10 +12,7 @@ const Footer = () => {
                     {/* Brand */}
                     <div className="space-y-4">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-hero">
-                                <Heart className="h-5 w-5 text-primary-foreground" />
-                            </div>
-                            <span className="text-xl font-bold text-foreground">MediCare</span>
+                            <Image src={logo} alt='logo' height={30} />
                         </Link>
                         <p className="text-muted-foreground text-sm leading-relaxed">
                             Providing exceptional healthcare services with compassion and excellence. Your health is our priority.
@@ -83,10 +83,10 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="mt-12 pt-8 border-t border-border">
+                <div className="mt-8 pt-8 border-t border-border">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <p className="text-sm text-muted-foreground">
-                            © 2024 MediCare. All rights reserved.
+                            © 2024 Healthyfine. All rights reserved.
                         </p>
                         <div className="flex gap-6">
                             <span className="text-sm text-muted-foreground hover:text-primary cursor-pointer transition-colors">
