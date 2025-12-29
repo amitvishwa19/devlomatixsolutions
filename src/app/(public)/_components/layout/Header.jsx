@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import AppointmentDialog from '../AppointmentDialog';
 import Link from 'next/link';
-import { useTheme } from '@/providers/ThemeProvider';
 import Image from 'next/image';
 import logo from '@/assets/images/logo/logo.png'
 import { usePathname } from 'next/navigation';
+import ThemeSwitcher from '@/components/global/ThemeSwitch';
 
 const navLinks = [
     { name: 'Home', path: '/' },
@@ -20,9 +20,6 @@ const navLinks = [
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
-    //const theme = 'light'
-    const { theme, toggleTheme } = useTheme();
-    //const location = useLocation();
     const path = usePathname()
 
     console.log(path)
@@ -55,18 +52,7 @@ const Header = () => {
 
                 {/* Actions */}
                 <div className="hidden md:flex items-center gap-3">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleTheme}
-                        className="rounded-xl"
-                    >
-                        {theme === 'light' ? (
-                            <Moon className="h-5 w-5" />
-                        ) : (
-                            <Sun className="h-5 w-5" />
-                        )}
-                    </Button>
+                    <ThemeSwitcher />
                     <AppointmentDialog>
                         <Button variant="hero" size="default">
                             Book Appointment
@@ -76,18 +62,7 @@ const Header = () => {
 
                 {/* Mobile Menu Button */}
                 <div className="flex md:hidden items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => { console.log('toggle theme') }}
-                        className="rounded-xl"
-                    >
-                        {theme === 'light' ? (
-                            <Moon className="h-5 w-5" />
-                        ) : (
-                            <Sun className="h-5 w-5" />
-                        )}
-                    </Button>
+                    <ThemeSwitcher />
                     <Button
                         variant="ghost"
                         size="icon"
