@@ -1,22 +1,59 @@
 'use client'
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from './AppProvider'
+// import React, { useContext, useEffect, useState } from 'react'
+// import { AppContext } from './AppProvider'
 
 
-export function ThemeProvider({ children }) {
+// export function ThemeProvider({ children }) {
 
-    const { theme } = useContext(AppContext)
-    const [mounted, setMounted] = useState(false)
+//     const { theme } = useContext(AppContext)
+//     const [mounted, setMounted] = useState(false)
 
+
+//     useEffect(() => {
+//         setMounted(true)
+//     }, [])
+
+
+//     if (mounted) {
+//         return (
+//             <div className={theme}>{children}</div>
+//         )
+//     }
+// }
+
+
+import React, { createContext, useContext, useEffect, useState } from 'react';
+
+const ThemeContext = createContext(undefined);
+
+export const ThemeProvider = ({ children }) => {
+    const [theme, setTheme] = useState(() => {
+        const saved = localStorage.getItem('theme');
+        return (saved) || 'light';
+    });
 
     useEffect(() => {
-        setMounted(true)
-    }, [])
+        const root = window.document.documentElement;
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
 
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
-    if (mounted) {
-        return (
-            <div className={theme}>{children}</div>
-        )
+    return (
+        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+            {children}
+        </ThemeContext.Provider>
+    );
+};
+
+export const useTheme = () => {
+    const context = useContext(ThemeContext);
+    if (!context) {
+        throw new Error('useTheme must be used within a ThemeProvider');
     }
-}
+    return context;
+};
