@@ -13,7 +13,7 @@ export function InventoryStatus() {
     const lowStockCount = inventory.filter(item => (item.stock / item.threshold) * 100 < 50).length;
 
     return (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-darkSecondaryBackground p-5 shadow-card animate-slide-up" style={{ animationDelay: "650ms" }}>
+        <div className="rounded-md border border-border/50 bg-card  p-5 shadow-card animate-slide-up" style={{ animationDelay: "650ms" }}>
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     <Package className="h-5 w-5 text-primary" />

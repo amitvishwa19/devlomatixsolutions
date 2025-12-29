@@ -350,7 +350,7 @@ export default function AppointmentCalenderPage() {
                 </div>
             </div>
 
-            <div className=' flex flex-1 dark:bg-darkSecondaryBackground h-full rounded-md'>
+            <div className=' flex flex-1 dark:bg-darkSecondaryBackground h-full rounded-md border'>
 
                 {viewType === 'month' && (
                     <div className="flex flex-col w-full p-2">

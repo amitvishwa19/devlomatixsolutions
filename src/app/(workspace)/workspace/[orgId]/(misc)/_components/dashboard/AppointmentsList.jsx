@@ -73,7 +73,7 @@ export default function AppointmentsList({ appointments, count }) {
     const { orgId } = useOrg()
     const router = useRouter()
     return (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-darkSecondaryBackground shadow-card animate-slide-up" style={{ animationDelay: "200ms" }}>
+        <div className="rounded-md border border-border/50 bg-card  shadow-card animate-slide-up" style={{ animationDelay: "200ms" }}>
 
             <div className="flex items-center justify-between border-b border-border/50 p-5">
                 <div>

@@ -17,7 +17,7 @@ export function StatsCard({
     iconClassName,
 }) {
     return (
-        <Card className='group dark:bg-darkSecondaryBackground shadow-sm border rounded-md flex-1 p-2'>
+        <Card className='group bg-card shadow-sm border rounded-md flex-1 p-2'>
             <CardContent className="p-2">
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">

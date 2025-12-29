@@ -57,7 +57,7 @@ export function NotificationsPanel() {
     const unreadCount = notifications.filter(n => n.unread).length;
 
     return (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-darkSecondaryBackground shadow-card animate-slide-up" style={{ animationDelay: "600ms" }}>
+        <div className="rounded-md border border-border/50 bg-card  shadow-card animate-slide-up" style={{ animationDelay: "600ms" }}>
             <div className="flex items-center justify-between border-b border-border/50 p-5">
                 <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold text-foreground">Notifications</h3>

@@ -25,9 +25,6 @@ export default function ContentPage() {
 
     const [selected, setSelected] = useState(navigationItems[0])
 
-
-
-
     const metricsData = {
         credits: 1250,
         postsGenerated: 87,
@@ -157,7 +154,7 @@ export default function ContentPage() {
 
 
 
-            <ScrollArea className='h-[70vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md'>
+            <ScrollArea className='h-[70vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md border'>
                 {selected.component}
             </ScrollArea>
 

@@ -1,4 +1,3 @@
-'use server'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Inter, Unbounded, Geist, Geist_Mono, Roboto } from "next/font/google";
 import OrgSidebar from '../_components/OrgSidebar';
@@ -11,6 +10,14 @@ import Loader from '@/components/global/Loader';
 
 const inter = Inter({ subsets: ["latin"] });
 const font = Roboto({ subsets: ["latin"] });
+
+export const metadata = {
+    title: {
+        default: 'Dashboard',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
 
 export default async function layout({ children }) {
 

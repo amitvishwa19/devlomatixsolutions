@@ -141,7 +141,7 @@ export default function ServicePage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-lg border flex flex-row items-center justify-between'>
+            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
                 <div>
                     <h2 className='text-xl'>Service Catalog Dashboard</h2>
                     <h2 className='text-xs text-muted-foreground'>Comprehensive oversight of medical services, pricing, and system performance</h2>
@@ -165,7 +165,7 @@ export default function ServicePage() {
                 </div>
             </div>
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground  rounded-md pr-2'>
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground  rounded-md pr-2 border'>
                 <div className='flex flex-col gap-4 p-2'>
                     <ServiceStats services={services} />
 

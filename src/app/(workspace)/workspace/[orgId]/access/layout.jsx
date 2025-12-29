@@ -18,6 +18,9 @@ export const metadata = {
 export default async function AccessLayout({ children }) {
 
     const user = await db.user.findMany({
+        include: {
+            roles: true
+        },
         orderBy: {
             createdAt: 'desc'
         }

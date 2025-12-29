@@ -6,25 +6,26 @@ import { v4 as uuidv4 } from 'uuid'
 import { ROLE } from "@prisma/client";
 import { slug } from "@/utils/functions";
 
-const DeleteInventory = z.object({
-    inventoryId: z.string()
+const DeleteRole = z.object({
+    userId: z.string(),
+    roleId: z.string()
 });
 
 const handler = async (data) => {
 
 
 
-    const { inventoryId } = data
-    let inventory = {}
+    const { roleId } = data
+    let role
 
 
 
 
     try {
 
-        inventory = await db.inventory.delete({
+        role = await db.role.delete({
             where: {
-                id: inventoryId
+                id: roleId
             }
         })
 
@@ -37,9 +38,9 @@ const handler = async (data) => {
     }
 
     //revalidatePath(`/org/${orgId}`)
-    return { data: { inventory } };
+    return { data: { role } };
 
 }
 
 
-export const deleteInventory = createSafeAction(DeleteInventory, handler);
+export const deleteRole = createSafeAction(DeleteRole, handler);

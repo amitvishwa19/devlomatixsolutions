@@ -2,9 +2,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Edit, MoreHorizontal, Trash2 } from 'lucide-react'
-import React from 'react'
+import React, { useState } from 'react'
 
 export default function PermissionCard({ permission, onEdit, onDelete, rolesWithPermission }) {
+
     return (
         <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:shadow-medium animate-fade-in flex flex-row justify-between">
             <div className="absolute left-0 top-0 h-full w-1 rounded-l-xl" style={{ backgroundColor: permission?.color }} />
@@ -50,7 +51,7 @@ export default function PermissionCard({ permission, onEdit, onDelete, rolesWith
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => onDelete(permission)}
-                        className="text-destructive focus:text-destructive"
+                        className="text-orange-500 focus:text-orange-500"
                     >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete Permission

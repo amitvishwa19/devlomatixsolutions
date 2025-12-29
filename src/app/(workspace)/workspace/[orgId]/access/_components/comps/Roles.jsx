@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { RoleCard } from '../role/RoleCard'
 import { RoleFormDialog } from '../role/RoleFormDialog'
 import { DeleteConfirmDialog } from './DeleteConfirmDialog'
+import { RoleDelete } from '../role/RoleDelete'
 
 export default function Roles() {
     const { roles, setRoles } = useAccess()
@@ -16,6 +17,15 @@ export default function Roles() {
     const [editingRole, setEditingRole] = useState(null);
     const [deletingRole, setDeletingRole] = useState(null);
 
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        role: null
+    })
+
+
+
+
+
     // Filtered data
     const filteredRoles = roles.filter(
         (role) =>
@@ -24,34 +34,23 @@ export default function Roles() {
     );
 
     const handleCreateRole = (data) => {
-        const newRole = {
-            ...data,
-            id: crypto.randomUUID(),
-            userCount: 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        setRoles([...roles, newRole]);
-        toast({
-            title: 'Role Created',
-            description: `${data.title} has been created successfully.`,
-        });
+        setRoles(prev =>
+            prev.some(item => item.id === data.id)
+                ? prev.map(item =>
+                    item.id === data.id ? { ...item, ...data } : item
+                )
+                : [data, ...prev]
+        );
     };
 
     const handleUpdateRole = (data) => {
-        if (!editingRole) return;
-        setRoles(
-            roles.map((r) =>
-                r.id === editingRole.id
-                    ? { ...r, ...data, updatedAt: new Date() }
-                    : r
-            )
+        setRoles(prev =>
+            prev.some(item => item.id === data.id)
+                ? prev.map(item =>
+                    item.id === data.id ? { ...item, ...data } : item
+                )
+                : [data, ...prev]
         );
-        setEditingRole(null);
-        toast({
-            title: 'Role Updated',
-            description: `${data.name} has been updated successfully.`,
-        });
     };
 
     const handleDeleteRole = () => {
@@ -94,7 +93,12 @@ export default function Roles() {
                         key={role.id}
                         role={role}
                         onEdit={handleEditRole}
-                        onDelete={setDeletingRole}
+                        onDelete={(r) => {
+                            setDeleteModal({
+                                isOpen: true,
+                                role: r
+                            })
+                        }}
                     />
                 ))}
             </div>
@@ -117,14 +121,19 @@ export default function Roles() {
                 onSubmit={editingRole ? handleUpdateRole : handleCreateRole}
             />
 
-            <DeleteConfirmDialog
-                open={!!deletingRole}
-                onOpenChange={(open) => !open && setDeletingRole(null)}
-                title="Delete Role"
-                description={`Are you sure you want to delete "${deletingRole?.name}"? This action cannot be undone. Users with this role will need to be reassigned.`}
-                onConfirm={handleDeleteRole}
+            <RoleDelete
+                open={deleteModal.isOpen}
+                onClose={(role) => {
+                    setDeleteModal({
+                        isOpen: false,
+                        role: false
+                    })
+                    if (role) {
+                        setRoles(roles.filter(per => per.id !== role.id))
+                    }
+                }}
+                data={deleteModal?.role}
             />
-
 
         </div>
     )

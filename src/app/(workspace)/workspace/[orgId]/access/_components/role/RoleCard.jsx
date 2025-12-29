@@ -40,7 +40,7 @@ export function RoleCard({ role, onEdit, onDelete }) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => onDelete(role)}
-                            className="text-destructive focus:text-destructive"
+                            className="text-orange-500 focus:text-orange-600"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete Role

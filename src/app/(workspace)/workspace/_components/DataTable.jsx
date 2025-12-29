@@ -191,7 +191,7 @@ export default function DataTable({ columns, data, statusFIlter, dateFilter, fil
                                 </TableRow>
                             ))
                         ) : (
-                            <TableRow>
+                            <TableRow className="group">
                                 <TableCell colSpan={columns.length} className="h-24 text-center">
                                     <TableNoItemFound />
                                 </TableCell>
