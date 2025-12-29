@@ -6,11 +6,13 @@ import { cn } from '@/lib/utils';
 import AppointmentDialog from '../AppointmentDialog';
 import Link from 'next/link';
 import { useTheme } from '@/providers/ThemeProvider';
-
+import Image from 'next/image';
+import logo from '@/assets/images/logo/logo.png'
+import { usePathname } from 'next/navigation';
 
 const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Features', path: '/features' },
+    { name: 'Features', path: '/feature' },
     { name: 'About', path: '/about' },
     { name: 'Blog', path: '/blog' },
     { name: 'Contact', path: '/contact' },
@@ -21,16 +23,16 @@ const Header = () => {
     //const theme = 'light'
     const { theme, toggleTheme } = useTheme();
     //const location = useLocation();
+    const path = usePathname()
+
+    console.log(path)
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
             <div className="container mx-auto flex h-20 items-center justify-between px-4">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-hero">
-                        <Heart className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <span className="text-xl font-bold text-foreground">MediCare</span>
+                    <Image src={logo} alt='logo' height={30} />
                 </Link>
 
                 {/* Desktop Navigation */}
@@ -41,9 +43,9 @@ const Header = () => {
                             href={link.path}
                             className={cn(
                                 "text-sm font-medium transition-colors hover:text-primary",
-                                // location.pathname === link.path
-                                //     ? "text-primary"
-                                //     : "text-muted-foreground"
+                                path === link.path
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
                             )}
                         >
                             {link.name}

@@ -9,6 +9,7 @@ module.exports = {
       // fontFamily: {
       //   sans: ["DM Sans", "system-ui", "sans-serif"],
       // },
+
       borderRadius: {
         lg: '10px',
         md: '6px',
