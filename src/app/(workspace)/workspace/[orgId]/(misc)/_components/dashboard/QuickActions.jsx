@@ -81,7 +81,7 @@ export default function QuickActions() {
 
 
     return (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-darkSecondaryBackground p-5 shadow-card animate-slide-up" style={{ animationDelay: "400ms" }}>
+        <div className="rounded-md border border-border/50 bg-card  p-5 shadow-card animate-slide-up" style={{ animationDelay: "400ms" }}>
             <h3 className="mb-4 text-lg font-semibold text-foreground">Quick Actions</h3>
 
             <div className="grid grid-cols-2 gap-3">

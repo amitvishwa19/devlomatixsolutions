@@ -7,8 +7,6 @@ import SettingsModal from "@/app/(workspace)/workspace/[orgId]/(misc)/_component
 import { AIPostGenerator } from "@/app/(workspace)/workspace/[orgId]/content/_components/AIPostGenerator";
 import { PreviewDialouge } from "@/app/(workspace)/workspace/[orgId]/content/_components/post-generator/components/PreviewDialouge";
 import { AddInvoice } from "@/app/(workspace)/workspace/[orgId]/invoice/_components/AddInvoice";
-import { DeleteUser } from "@/app/(workspace)/workspace/[orgId]/management_old/user/DeleteModal";
-import { EditUser } from "@/app/(workspace)/workspace/[orgId]/management_old/user/EditModal";
 import { DeletePatient } from "@/app/(workspace)/workspace/[orgId]/patient/_component/DeleteModal";
 import PatientCrudModal from "@/app/(workspace)/workspace/[orgId]/patient/_component/PatientCrudModal";
 import DeleteServerModal from "@/app/(workspace)/workspace/_components/DeleteServerModal";
@@ -56,8 +54,7 @@ export const OrgModalProvider = () => {
 
 
             <ManageAccount />
-            <EditUser />
-            <DeleteUser />
+
 
             <DeleteOrdModal />
 

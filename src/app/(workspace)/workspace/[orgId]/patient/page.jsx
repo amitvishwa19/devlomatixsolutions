@@ -236,28 +236,14 @@ export default function PatientPage() {
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
 
-            <div className='w-full dark:bg-[#151D24] p-4 rounded-lg border flex flex-row items-center justify-between'>
+            <div className='w-full dark:bg-[#151D24] p-4 rounded-md border flex flex-row items-center justify-between'>
                 <div>
                     <h2 className='text-xl'>Patients</h2>
                     <h2 className='text-xs text-white/50'>
                         Search and access patient records using multiple criteria for efficient clinical operations
                     </h2>
                 </div>
-                {/* <Button variant='outline' size='sm' onClick={() => { onOpen("patient-crud", { type: 'add' }) }}>Add Patient</Button> */}
-                {/* <ButtonGroup>
-                    {nav.map((item) => (
-                        <Button
-                            key={item.title} variant='ghost'
-                            size={'sm'}
-                            className={`border w-40 capitalize hover:bg-primary/20 dark:hover:bg-darkFocusColor ${active.title === item.title && 'bg-primary/20 dark:bg-darkFocusColor'}`}
-                            onClick={() => { setActive(item) }}
-                        >
-                            <DynamicIcon name={item.icon} />
-                            <span>{item.title}</span>
-                        </Button>
-                    ))}
-                        
-                </ButtonGroup> */}
+
                 <Button
                     variant={'save'}
                     size={'sm'}
@@ -274,7 +260,7 @@ export default function PatientPage() {
                 </Button>
             </div>
 
-            <div className='h-full flex flex-grow w-full dark:bg-darkSecondaryBackground rounded-md py-2'>
+            <div className='h-full flex flex-grow w-full dark:bg-darkSecondaryBackground rounded-md py-2 border'>
                 <ScrollArea className='h-[85vh] w-full p-2'>
                     <div className='flex flex-col gap-4 p-2'>
 

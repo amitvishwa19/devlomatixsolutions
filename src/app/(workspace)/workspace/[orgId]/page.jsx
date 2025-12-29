@@ -21,6 +21,7 @@ import { InventoryStatus } from './(misc)/_components/dashboard/InventoryStatus'
 import { NotificationsPanel } from './(misc)/_components/dashboard/NotificationsPanel'
 import { RevenueChart } from './(misc)/_components/dashboard/RevenueChart'
 import moment from 'moment'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 
 
@@ -107,82 +108,96 @@ export default function Dashboard() {
 
 
     return (
-        <div className='flex flex-col gap-y-2'>
+        <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-[#151D24] p-4 rounded-lg border'>
-                <h2 className='text-xl font-semibold'>Dashboard</h2>
-                <h2 className='text-xs text-white/50'> Complete overview of all hospital operations and patient management. Monitor. Manage. Move forward.</h2>
-            </div>
+            <div className='w-full dark:bg-darkSecondaryBackground p-4 rounded-md border flex flex-row items-center justify-between'>
+                <div>
+                    <h2 className='text-xl'>Dashboard</h2>
+                    <h2 className='text-xs text-white/50'>
+                        Complete overview of all hospital operations and patient management. Monitor. Manage. Move forward.
+                    </h2>
+                </div>
 
-
-
-            <div className='grid gap-2 md:grid-cols-2 lg:grid-cols-4'>
-
-                <StatsCard
-                    title="Today's Revenue"
-                    value={`₹ ${todaysCompletedCharge || 0}`}
-                    change={formatChangeFromYesterday(todaysCompletedCharge, yesterdayCompletedCharge)}
-                    changeType='positive'
-                    icon={'indian-rupee'}
-                    iconColor='#00FFFF'
-                    iconClassName='bg-[#172E3A]'
-                />
-
-                <StatsCard
-                    title="Today's Appointments"
-                    value={todayAppointments?.length || 0}
-                    change={`${todayAppointments?.filter(a => a.status !== 'completed').length} pending`}
-                    changeType='positive'
-                    icon={'calendar'}
-                    iconColor='#7FFFD4'
-                    iconClassName='bg-[#172E3A]'
-                />
-
-                <StatsCard
-                    title='Active Doctors'
-                    value='7'
-                    change='2 on leave'
-                    changeType='positive'
-                    icon={'stethoscope'}
-                    iconColor='#50C878'
-                    iconClassName='bg-[#172E3A]'
-                />
-
-                <StatsCard
-                    title='Avaliable Beds'
-                    value='12'
-                    change='-8% from yesterday'
-                    changeType='negative'
-                    icon={'bed-double'}
-                    iconColor='#CF9FFF'
-                    iconClassName='bg-[#172E3A]'
-                />
 
             </div>
 
 
-            <div className="grid gap-2 lg:grid-cols-3">
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md p-2 border'>
+                <div className='flex flex-col gap-2'>
 
-                {/* Left Column - Appointments */}
-                <div className="lg:col-span-2 space-y-2">
-                    <AppointmentsList appointments={todayAppointments} count={5} />
-                    {/* <RecentPatients /> */}
-                    <div className='grid gap-2 lg:grid-cols-2'>
-                        <UpcomingTasks />
-                        <InventoryStatus />
+
+                    <div className='grid gap-2 md:grid-cols-2 lg:grid-cols-4'>
+
+                        <StatsCard
+                            title="Today's Revenue"
+                            value={`₹ ${todaysCompletedCharge || 0}`}
+                            change={formatChangeFromYesterday(todaysCompletedCharge, yesterdayCompletedCharge)}
+                            changeType='positive'
+                            icon={'indian-rupee'}
+                            iconColor='#00FFFF'
+                            iconClassName='bg-[#172E3A]'
+                        />
+
+                        <StatsCard
+                            title="Today's Appointments"
+                            value={todayAppointments?.length || 0}
+                            change={`${todayAppointments?.filter(a => a.status !== 'completed').length} pending`}
+                            changeType='positive'
+                            icon={'calendar'}
+                            iconColor='#7FFFD4'
+                            iconClassName='bg-[#172E3A]'
+                        />
+
+                        <StatsCard
+                            title='Active Doctors'
+                            value='7'
+                            change='2 on leave'
+                            changeType='positive'
+                            icon={'stethoscope'}
+                            iconColor='#50C878'
+                            iconClassName='bg-[#172E3A]'
+                        />
+
+                        <StatsCard
+                            title='Avaliable Beds'
+                            value='12'
+                            change='-8% from yesterday'
+                            changeType='negative'
+                            icon={'bed-double'}
+                            iconColor='#CF9FFF'
+                            iconClassName='bg-[#172E3A]'
+                        />
+
                     </div>
-                    <RevenueChart />
-                </div>
 
-                {/* Right Column - Quick Actions & Overview */}
-                <div className="space-y-2">
-                    <QuickActions />
-                    {/* <DoctorSchedule /> */}
-                    <NotificationsPanel />
-                    <ClinicOverview />
-                </div>
 
-            </div>
+                    <div className="grid gap-2 lg:grid-cols-3">
+
+                        {/* Left Column - Appointments */}
+                        <div className="lg:col-span-2 space-y-2">
+                            <AppointmentsList appointments={todayAppointments} count={5} />
+                            {/* <RecentPatients /> */}
+                            <div className='grid gap-2 lg:grid-cols-2'>
+                                <UpcomingTasks />
+                                <InventoryStatus />
+                            </div>
+                            <RevenueChart />
+                        </div>
+
+                        {/* Right Column - Quick Actions & Overview */}
+                        <div className="space-y-2">
+                            <QuickActions />
+                            {/* <DoctorSchedule /> */}
+                            <NotificationsPanel />
+                            <ClinicOverview />
+                        </div>
+
+                    </div>
+                </div>
+            </ScrollArea>
+
+
+
             {/* <div className='h-96 bg-red-200' /> */}
 
         </div>

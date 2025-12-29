@@ -119,7 +119,7 @@ export default function IpdOpdPage() {
                 </div>
             </div>
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md p-2'>
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md p-2 border'>
                 <div className='flex flex-col gap-4'>
 
                     {/* Stats */}

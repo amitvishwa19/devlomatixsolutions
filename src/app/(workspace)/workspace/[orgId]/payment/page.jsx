@@ -52,7 +52,7 @@ export default function PaymentPage() {
 
 
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-lg border flex flex-row items-center justify-between'>
+            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
                 <div>
                     <h2 className='text-xl'>Payment Processing</h2>
                     <h2 className='text-xs text-white/50'>Process and track patient payments</h2>

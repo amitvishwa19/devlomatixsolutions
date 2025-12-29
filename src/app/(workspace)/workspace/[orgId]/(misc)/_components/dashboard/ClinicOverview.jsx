@@ -7,7 +7,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 
 export default function ClinicOverview() {
     return (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-darkSecondaryBackground p-6 shadow-card animate-slide-up" style={{ animationDelay: "500ms" }}>
+        <div className="rounded-md border border-border/50 bg-card  p-6 shadow-card animate-slide-up" style={{ animationDelay: "500ms" }}>
             <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">Weekly Overview</h3>
                 <span className="text-sm text-muted-foreground">Nov 22 - Nov 28</span>

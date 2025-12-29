@@ -16,7 +16,7 @@ export function RevenueChart() {
     const growth = ((currentRevenue - previousRevenue) / previousRevenue * 100).toFixed(1);
 
     return (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-darkSecondaryBackground p-5 shadow-card animate-slide-up lg:col-span-2" style={{ animationDelay: "750ms" }}>
+        <div className="rounded-md border border-border/50 bg-card p-5 shadow-card animate-slide-up lg:col-span-2" style={{ animationDelay: "750ms" }}>
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="text-lg font-semibold text-foreground">Revenue Overview</h3>

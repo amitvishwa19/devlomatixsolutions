@@ -45,7 +45,7 @@ export default function TaxanomyPage() {
             </div>
 
 
-            <div className='h-full  w-full dark:bg-darkSecondaryBackground rounded-md py-2 overflow-hidden'>
+            <div className='h-full  w-full dark:bg-darkSecondaryBackground rounded-md py-2 overflow-hidden border'>
                 <ScrollArea className=' mt-0 p-4 flex flex-col gap-4 h-[90vh]  '>
                     {active.component}
                 </ScrollArea>

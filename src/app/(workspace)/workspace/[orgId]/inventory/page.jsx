@@ -325,7 +325,7 @@ export default function InventoryPage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-lg border flex flex-row items-center justify-between'>
+            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
                 <div>
                     <h2 className='text-xl'>Inventory Management</h2>
                     <h2 className='text-xs text-muted-foreground'>Manage hospital inventory items</h2>
@@ -342,7 +342,7 @@ export default function InventoryPage() {
 
             </div>
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4'>
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4 border'>
                 <div className='flex flex-col gap-4 p-2'>
                     <InventoryStats inventories={inventories} />
 

@@ -55,7 +55,7 @@ const priorityBg = {
 
 export function UpcomingTasks() {
     return (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-darkSecondaryBackground p-5 shadow-card animate-slide-up" style={{ animationDelay: "450ms" }}>
+        <div className="rounded-md border border-border/50 bg-card  p-5 shadow-card animate-slide-up" style={{ animationDelay: "450ms" }}>
             <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">Today's Tasks</h3>
                 <span className="text-sm text-muted-foreground">
