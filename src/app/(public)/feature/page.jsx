@@ -1,4 +1,5 @@
-'use client'
+'use client';
+
 import {
     LayoutDashboard,
     Calendar,
@@ -56,8 +57,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { useState } from 'react';
 import AppointmentDialog from '../_components/AppointmentDialog';
+import { useState } from 'react';
 
 const coreModules = [
     { icon: LayoutDashboard, name: 'Dashboard', description: 'Centralized command-and-control with real-time monitoring' },
@@ -76,6 +77,14 @@ const coreModules = [
     { icon: Syringe, name: 'Lab Management', description: 'Laboratory tests and results tracking' },
     { icon: Microscope, name: 'Diagnostics', description: 'Imaging and diagnostic reports management' },
     { icon: Pill, name: 'Pharmacy', description: 'Medicine inventory and dispensing system' },
+    { icon: Bed, name: 'Bed Management', description: 'Real-time bed occupancy and allocation' },
+    { icon: Bell, name: 'Notifications', description: 'Smart alerts and reminders system' },
+    { icon: Clipboard, name: 'EMR/EHR', description: 'Electronic medical records management' },
+    { icon: Activity, name: 'Vitals Tracking', description: 'Patient vital signs monitoring' },
+    { icon: Phone, name: 'Telemedicine', description: 'Virtual consultation and video calls' },
+    { icon: BarChart3, name: 'Reports', description: 'Custom analytics and report generation' },
+    { icon: RefreshCw, name: 'Queue Management', description: 'Patient flow and waiting optimization' },
+    { icon: MessageSquare, name: 'Chat & Communication', description: 'Internal team messaging system' },
 ];
 
 const functionalAreas = [
@@ -168,6 +177,10 @@ const targetUsers = [
     { icon: Receipt, title: 'Accounts / Billing Team', description: 'Financial operations and reporting' },
     { icon: Syringe, title: 'Lab Technicians', description: 'Test management and reporting' },
     { icon: Pill, title: 'Pharmacists', description: 'Medicine dispensing and tracking' },
+    { icon: HeartPulse, title: 'Nurses', description: 'Patient care and vitals monitoring' },
+    { icon: Clipboard, title: 'Medical Records Staff', description: 'EMR/EHR management and documentation' },
+    { icon: Phone, title: 'IT Administrator', description: 'System configuration and support' },
+    { icon: BarChart3, title: 'Data Analysts', description: 'Reports, insights and analytics' },
 ];
 
 const benefits = [
@@ -237,6 +250,10 @@ const integrations = [
     { icon: Globe, name: 'Telemedicine', description: 'Zoom, Google Meet integration' },
     { icon: Activity, name: 'Health Devices', description: 'IoT medical device sync' },
     { icon: Database, name: 'HL7/FHIR', description: 'Healthcare data standards' },
+    { icon: Smartphone, name: 'Mobile Apps', description: 'iOS & Android native apps' },
+    { icon: Shield, name: 'Insurance', description: 'Claims processing integration' },
+    { icon: FileText, name: 'E-Prescriptions', description: 'Digital prescription systems' },
+    { icon: BarChart3, name: 'BI Tools', description: 'Power BI, Tableau, Looker' },
 ];
 
 const howItWorks = [
@@ -310,16 +327,105 @@ const faqs = [
     },
 ];
 
+const pricingPlans = [
+    {
+        name: 'Starter',
+        price: '₹10,000',
+        period: '/month',
+        description: 'Perfect for small clinics and practices',
+        popular: false,
+        features: [
+            'Up to 50 patients/day',
+            'Patient Management',
+            'Appointment Scheduling',
+            'Basic Reports',
+            'Email Support',
+            '1 Admin User',
+            'Basic Dashboard',
+        ],
+    },
+    {
+        name: 'Professional',
+        price: '₹15,000',
+        period: '/month',
+        description: 'Ideal for growing hospitals',
+        popular: true,
+        features: [
+            'Up to 200 patients/day',
+            'Everything in Starter',
+            'Inventory Management',
+            'Multi-location Support',
+            'Advanced Analytics',
+            'Priority Support',
+            '5 Admin Users',
+            'Lab & Pharmacy Module',
+            'SMS Notifications',
+        ],
+    },
+    {
+        name: 'Enterprise',
+        price: '₹25,000',
+        period: '/month',
+        description: 'For large healthcare facilities',
+        popular: false,
+        features: [
+            'Unlimited patients',
+            'Everything in Professional',
+            'Custom Integrations',
+            'Dedicated Account Manager',
+            'White-labeling',
+            'Unlimited Users',
+            'On-premise Deployment',
+            'SLA Guarantee',
+            'Training & Onboarding',
+            'API Access',
+        ],
+    },
+    {
+        name: 'Custom',
+        price: 'Contact Us',
+        period: '',
+        description: 'Tailored solutions for unique needs',
+        popular: false,
+        isCustom: true,
+        features: [
+            'Fully customized modules',
+            'Bespoke workflow design',
+            'Custom UI/UX branding',
+            'Third-party system integrations',
+            'Custom reporting & dashboards',
+            'Dedicated development team',
+            'Priority feature requests',
+            'Custom SLA & support terms',
+            'On-site training & deployment',
+            'Ongoing maintenance & updates',
+        ],
+    },
+];
+
 const comparisonPlans = [
-    { feature: 'Patient Management', starter: true, professional: true, enterprise: true },
-    { feature: 'Appointment Scheduling', starter: true, professional: true, enterprise: true },
-    { feature: 'Basic Reports', starter: true, professional: true, enterprise: true },
-    { feature: 'Inventory Management', starter: false, professional: true, enterprise: true },
-    { feature: 'Multi-location Support', starter: false, professional: true, enterprise: true },
-    { feature: 'Advanced Analytics', starter: false, professional: true, enterprise: true },
-    { feature: 'Custom Integrations', starter: false, professional: false, enterprise: true },
-    { feature: 'Dedicated Support', starter: false, professional: false, enterprise: true },
-    { feature: 'White-labeling', starter: false, professional: false, enterprise: true },
+    { feature: 'Patient Management', starter: true, professional: true, enterprise: true, custom: true },
+    { feature: 'Appointment Scheduling', starter: true, professional: true, enterprise: true, custom: true },
+    { feature: 'Basic Reports', starter: true, professional: true, enterprise: true, custom: true },
+    { feature: 'Dashboard Access', starter: true, professional: true, enterprise: true, custom: true },
+    { feature: 'Email Support', starter: true, professional: true, enterprise: true, custom: true },
+    { feature: 'Inventory Management', starter: false, professional: true, enterprise: true, custom: true },
+    { feature: 'Multi-location Support', starter: false, professional: true, enterprise: true, custom: true },
+    { feature: 'Advanced Analytics', starter: false, professional: true, enterprise: true, custom: true },
+    { feature: 'Lab & Pharmacy Module', starter: false, professional: true, enterprise: true, custom: true },
+    { feature: 'SMS Notifications', starter: false, professional: true, enterprise: true, custom: true },
+    { feature: 'Priority Support', starter: false, professional: true, enterprise: true, custom: true },
+    { feature: 'Android App', starter: false, professional: true, enterprise: true, custom: true },
+    { feature: 'iOS App', starter: false, professional: false, enterprise: true, custom: true },
+    { feature: 'Custom Integrations', starter: false, professional: false, enterprise: true, custom: true },
+    { feature: 'Dedicated Account Manager', starter: false, professional: false, enterprise: true, custom: true },
+    { feature: 'White-labeling', starter: false, professional: false, enterprise: true, custom: true },
+    { feature: 'On-premise Deployment', starter: false, professional: false, enterprise: true, custom: true },
+    { feature: 'API Access', starter: false, professional: false, enterprise: true, custom: true },
+    { feature: 'SLA Guarantee', starter: false, professional: false, enterprise: true, custom: true },
+    { feature: 'Fully Customized Modules', starter: false, professional: false, enterprise: false, custom: true },
+    { feature: 'Bespoke Workflow Design', starter: false, professional: false, enterprise: false, custom: true },
+    { feature: 'Dedicated Development Team', starter: false, professional: false, enterprise: false, custom: true },
 ];
 
 const Features = () => {
@@ -331,7 +437,7 @@ const Features = () => {
                 <div className="blob blob-1" />
                 <div className="blob blob-2" />
 
-                <div className=" relative mx-auto px-4">
+                <div className="   relative mx-auto px-4">
                     <div className="text-center max-w-4xl mx-auto">
                         <div
                             className="inline-flex items-center gap-2 rounded-full glass px-5 py-2.5 text-sm font-medium mb-8 animate-fade-in"
@@ -388,7 +494,7 @@ const Features = () => {
 
             {/* Stats Section */}
             <section className="relative py-16 bg-primary/5">
-                <div className=" mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                         {stats.map((stat, index) => (
                             <div
@@ -410,7 +516,7 @@ const Features = () => {
             <section className="relative py-20 bg-card/50">
                 <div className="section-divider absolute top-0" />
 
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                             One Dashboard for <span className="text-sky-500">Everything</span>
@@ -448,7 +554,7 @@ const Features = () => {
 
             {/* How It Works */}
             <section className="relative py-24 lg:py-32">
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <Layers className="h-4 w-4 text-primary" />
@@ -488,7 +594,7 @@ const Features = () => {
                 <div className="blob blob-3" />
                 <div className="section-divider absolute top-0" />
 
-                <div className="  relative mx-auto px-4">
+                <div className="   relative mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <Target className="h-4 w-4 text-primary" />
@@ -531,7 +637,7 @@ const Features = () => {
 
             {/* Modules Grid */}
             <section className="relative py-24">
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <LayoutDashboard className="h-4 w-4 text-primary" />
@@ -571,7 +677,7 @@ const Features = () => {
             <section className="relative py-24 bg-card/50">
                 <div className="section-divider absolute top-0" />
 
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <Layers className="h-4 w-4 text-primary" />
@@ -607,7 +713,7 @@ const Features = () => {
             <section className="relative py-24 lg:py-32">
                 <div className="absolute inset-0 gradient-mesh opacity-50" />
 
-                <div className="  relative mx-auto px-4">
+                <div className="   relative mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <Users className="h-4 w-4 text-primary" />
@@ -643,7 +749,7 @@ const Features = () => {
             <section className="relative py-24 bg-card/30">
                 <div className="section-divider absolute top-0" />
 
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -687,7 +793,7 @@ const Features = () => {
             <section className="relative py-24 lg:py-32">
                 <div className="blob blob-1" />
 
-                <div className="  relative mx-auto px-4">
+                <div className="   relative mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <Shield className="h-4 w-4 text-primary" />
@@ -723,7 +829,7 @@ const Features = () => {
             <section className="relative py-24 bg-card/50">
                 <div className="section-divider absolute top-0" />
 
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <Star className="h-4 w-4 text-primary" />
@@ -754,58 +860,146 @@ const Features = () => {
                 </div>
             </section>
 
-            {/* Comparison Table */}
+            {/* Pricing Cards */}
             <section className="relative py-24 lg:py-32">
-                <div className="  mx-auto px-4">
+                <div className="blob blob-2" />
+
+                <div className="   relative mx-auto px-4">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
+                            <CreditCard className="h-4 w-4 text-primary" />
+                            Pricing
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                            Simple, Transparent <span className="text-sky-500">Pricing</span>
+                        </h2>
+                        <p className="text-lg text-muted-foreground">
+                            Choose the plan that fits your hospital's needs
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
+                        {pricingPlans.map((plan, index) => (
+                            <div
+                                key={plan.name}
+                                className={`relative rounded-3xl p-8 animate-slide-up flex flex-col ${plan.popular
+                                    ? 'glass-strong border-2 border-primary shadow-glow'
+                                    : 'glass'
+                                    }`}
+                                style={{ animationDelay: `${index * 0.1}s` }}
+                            >
+                                {plan.popular && (
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                                        <span className="badge-gradient text-sm px-4 py-1">Most Popular</span>
+                                    </div>
+                                )}
+                                <div className="text-center mb-8">
+                                    <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
+                                    <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                                    <div className="flex items-baseline justify-center gap-1">
+                                        <span className="text-4xl md:text-5xl font-bold text-sky-500">{plan.price}</span>
+                                        <span className="text-muted-foreground">{plan.period}</span>
+                                    </div>
+                                </div>
+                                <ul className="space-y-3 mb-8 flex-1">
+                                    {plan.features.map((feature) => (
+                                        <li key={feature} className="flex items-center gap-3 text-muted-foreground">
+                                            <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                                            <span className="text-sm">{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <AppointmentDialog>
+                                    <Button
+                                        className="w-full gradient-primary text-primary-foreground shadow-glow hover:shadow-[0_0_60px_hsl(217_91%_60%/0.4)]"
+                                        size="lg"
+                                    >
+                                        Get Started
+                                        <ArrowRight className="h-4 w-4 ml-2" />
+                                    </Button>
+                                </AppointmentDialog>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Comparison Table */}
+            <section className="relative py-24 bg-card/50">
+                <div className="section-divider absolute top-0" />
+
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <Layers className="h-4 w-4 text-primary" />
                             Compare Plans
                         </div>
                         <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                            Choose the Right <span className="text-sky-500">Plan for You</span>
+                            Detailed <span className="text-sky-500">Feature Comparison</span>
                         </h2>
                     </div>
 
-                    <div className="max-w-4xl mx-auto overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-border">
-                                    <th className="text-left py-4 px-4 font-semibold text-foreground">Feature</th>
-                                    <th className="text-center py-4 px-4 font-semibold text-foreground">Starter</th>
-                                    <th className="text-center py-4 px-4 font-semibold text-primary">Professional</th>
-                                    <th className="text-center py-4 px-4 font-semibold text-foreground">Enterprise</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {comparisonPlans.map((plan, index) => (
-                                    <tr key={plan.feature} className="border-b border-border/50">
-                                        <td className="py-4 px-4 text-muted-foreground">{plan.feature}</td>
-                                        <td className="text-center py-4 px-4">
-                                            {plan.starter ? (
-                                                <Check className="h-5 w-5 text-primary mx-auto" />
-                                            ) : (
-                                                <Minus className="h-5 w-5 text-muted-foreground/30 mx-auto" />
-                                            )}
-                                        </td>
-                                        <td className="text-center py-4 px-4 bg-primary/5">
-                                            {plan.professional ? (
-                                                <Check className="h-5 w-5 text-primary mx-auto" />
-                                            ) : (
-                                                <Minus className="h-5 w-5 text-muted-foreground/30 mx-auto" />
-                                            )}
-                                        </td>
-                                        <td className="text-center py-4 px-4">
-                                            {plan.enterprise ? (
-                                                <Check className="h-5 w-5 text-primary mx-auto" />
-                                            ) : (
-                                                <Minus className="h-5 w-5 text-muted-foreground/30 mx-auto" />
-                                            )}
-                                        </td>
+                    <div className="max-w-6xl mx-auto glass rounded-2xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-border bg-primary/5">
+                                        <th className="text-left py-5 px-6 font-semibold text-foreground">Feature</th>
+                                        <th className="text-center py-5 px-4">
+                                            <div className="font-semibold text-foreground">Starter</div>
+                                            <div className="text-sm text-primary font-bold">₹10,000/mo</div>
+                                        </th>
+                                        <th className="text-center py-5 px-4 bg-primary/10">
+                                            <div className="font-semibold text-primary">Professional</div>
+                                            <div className="text-sm text-primary font-bold">₹15,000/mo</div>
+                                        </th>
+                                        <th className="text-center py-5 px-4">
+                                            <div className="font-semibold text-foreground">Enterprise</div>
+                                            <div className="text-sm text-primary font-bold">₹25,000/mo</div>
+                                        </th>
+                                        <th className="text-center py-5 px-4">
+                                            <div className="font-semibold text-foreground">Custom</div>
+                                            <div className="text-sm text-primary font-bold">Contact Us</div>
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {comparisonPlans.map((plan, index) => (
+                                        <tr key={plan.feature} className="border-b border-border/30 hover:bg-primary/5 transition-colors">
+                                            <td className="py-4 px-6 text-foreground font-medium">{plan.feature}</td>
+                                            <td className="text-center py-4 px-4">
+                                                {plan.starter ? (
+                                                    <Check className="h-5 w-5 text-primary mx-auto" />
+                                                ) : (
+                                                    <X className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                                                )}
+                                            </td>
+                                            <td className="text-center py-4 px-4 bg-primary/5">
+                                                {plan.professional ? (
+                                                    <Check className="h-5 w-5 text-primary mx-auto" />
+                                                ) : (
+                                                    <X className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                                                )}
+                                            </td>
+                                            <td className="text-center py-4 px-4">
+                                                {plan.enterprise ? (
+                                                    <Check className="h-5 w-5 text-primary mx-auto" />
+                                                ) : (
+                                                    <X className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                                                )}
+                                            </td>
+                                            <td className="text-center py-4 px-4">
+                                                {plan.custom ? (
+                                                    <Check className="h-5 w-5 text-primary mx-auto" />
+                                                ) : (
+                                                    <X className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -814,7 +1008,7 @@ const Features = () => {
             <section className="relative py-24 bg-card/30">
                 <div className="section-divider absolute top-0" />
 
-                <div className="  relative mx-auto px-4">
+                <div className="   relative mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <TrendingUp className="h-4 w-4 text-primary" />
@@ -845,7 +1039,7 @@ const Features = () => {
 
             {/* FAQs */}
             <section className="relative py-24 lg:py-32">
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
                             <HelpCircle className="h-4 w-4 text-primary" />
@@ -881,7 +1075,7 @@ const Features = () => {
             <section className="relative py-20 bg-card/50">
                 <div className="section-divider absolute top-0" />
 
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="max-w-4xl mx-auto text-center">
                         <div className="glass rounded-3xl p-10 md:p-14">
                             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
@@ -904,7 +1098,7 @@ const Features = () => {
 
             {/* CTA Section */}
             <section className="relative py-24 lg:py-32">
-                <div className="  mx-auto px-4">
+                <div className="   mx-auto px-4">
                     <div className="relative rounded-[2.5rem] overflow-hidden">
                         <div className="absolute inset-0 gradient-primary" />
                         <div className="absolute inset-0 opacity-30">
@@ -922,7 +1116,7 @@ const Features = () => {
                                 Join 500+ healthcare facilities already using our platform to streamline operations.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <AppointmentDialog>
+                                {/* <AppointmentDialog>
                                     <Button
                                         size="lg"
                                         className="bg-background text-primary hover:bg-background/90 shadow-lg hover:shadow-xl transition-all duration-300 text-base px-10"
@@ -930,11 +1124,11 @@ const Features = () => {
                                         Start Free Trial
                                         <ArrowRight className="h-5 w-5 ml-2" />
                                     </Button>
-                                </AppointmentDialog>
+                                </AppointmentDialog> */}
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 text-base px-10"
+                                    className="border-primary-foreground/30 text-white hover:bg-primary-foreground/10 text-base px-10"
                                 >
                                     Schedule Demo
                                 </Button>

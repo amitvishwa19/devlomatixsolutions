@@ -111,7 +111,7 @@ export default function WorkspacePage() {
 
                         {/* App Title */}
                         <div className="text-center space-y-2">
-                            <h1 className="text-3xl font-bold text-foreground">
+                            <h1 className="text-3xl font-bold text-white">
                                 Caring for Health Beyond Treatment. Organizing Care, Empowering Lives
                             </h1>
                             <div className='flex items-center justify-center'>

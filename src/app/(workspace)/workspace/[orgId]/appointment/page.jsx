@@ -4,30 +4,22 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Button } from '@/components/ui/button'
 import { useModal } from '@/hooks/useModal'
 import { useOrg } from '@/providers/OrgProvider'
-import { flexRender, getFilteredRowModel, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, } from "@tanstack/react-table"
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import moment from 'moment'
 import StatusSelector from './_components/StatusSelector'
-import { DatePicker } from '@/components/global/DatePicker'
-import { setSelectedAppointment, setSelectedAppointments } from './_redux/appointment-slice'
 import { Bell, Calendar, CalendarRange, Eye, FilePenLine, Megaphone, MoreHorizontal, Pencil, Trash2, Trash2Icon, View } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { ActionTooltip } from '@/components/global/ActionTooltip'
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import ViewAppointment from './_components/appointment-manager/ViewAppointment'
 import { useSocket } from '@/providers/SocketProvider'
 import { useSession } from 'next-auth/react'
 import { ROLE } from '@prisma/client'
-import EditAppointment from './_components/appointment-manager/EditAppointment'
 import AppointmentEditor from './_components/appointment-manager/AppointmentEditor'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import DataTable from '../../_components/DataTable'
 import CategoryHierarchy from '../../_components/CategoryHierarchy'
 import { useAppointment } from './_provider/appointmentProvider'
 import DatePeriodSelector from '../(misc)/_components/DatePeriodSelector'
+import { DataTable } from '../(misc)/_components/DataTable'
 
 
 export default function Appointments() {
@@ -255,11 +247,8 @@ export default function Appointments() {
                                 data={data}
                                 onFiltersChange={(e) => { console.log('filter change', e) }}
                                 filterTitle='Search appointments......'
-                            >
-                                <div>
-                                    <DatePeriodSelector />
-                                </div>
-                            </DataTable>
+                            />
+
                         </div>
 
                         <div className='w-full'>

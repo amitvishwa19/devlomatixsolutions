@@ -1,0 +1,42 @@
+import { ArticleProvider } from './_provider/articleProvider'
+import { db } from '@/lib/db'
+
+
+export const metadata = {
+    title: {
+        default: 'Articles',
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+}
+
+
+export default async function ContentLayout({ children }) {
+
+    const posts = await db.post.findMany({
+        include: {
+            categories: true,
+            tags: true,
+            user: true,
+            server: true
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    })
+    const categories = await db.category.findMany({
+        include: {
+            children: true
+        }
+    })
+    const tags = await db.tag.findMany()
+
+    return (
+        <ArticleProvider sposts={posts} scategories={categories} stags={tags}>
+            <div>
+                {children}
+            </div>
+        </ArticleProvider>
+
+    )
+}

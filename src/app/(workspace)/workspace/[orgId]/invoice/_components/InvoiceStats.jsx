@@ -10,7 +10,7 @@ export function InvoiceStats({ invoices }) {
     const overdueAmount = invoices?.filter((inv) => inv.status === 'draft').reduce((sum, inv) => sum + inv.totalAmount, 0);
 
 
-    console.log(invoices?.reduce((sum, invoice) => sum + invoice.totalAmount, 0))
+
 
     const stats = [
         {
@@ -48,7 +48,7 @@ export function InvoiceStats({ invoices }) {
             {stats.map((stat, index) => (
                 <Card
                     key={stat.label}
-                    className="p-5 shadow-card animate-fade-in border-0"
+                    className="p-5 shadow-card animate-fade-in border"
                     style={{ animationDelay: `${index * 50}ms` }}
                 >
                     <div className="flex items-center gap-4">

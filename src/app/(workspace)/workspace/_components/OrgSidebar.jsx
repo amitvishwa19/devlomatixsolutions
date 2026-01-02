@@ -83,7 +83,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
 
 
     return (
-        <div className='flex-col min-h-full text-primary  w-[246px] dark:bg-[#171F26]/90 relative border border-l-0'>
+        <div className='flex-col min-h-full text-primary  w-[246px] dark:bg-darkSecondaryBackground relative border border-l-0'>
 
             <div className=' w-[246px] p-2'>
                 <OrgSwitcher />
@@ -103,13 +103,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     />
 
                     <SidebarSingleItem
-                        title='Ipd/Opd'
-                        link={`/workspace/${server?.id}/ipdopd`}
-                        selected={url.split('/')[3] === 'ipdopd'}
+                        title='Workflow'
+                        link={`/workspace/${server?.id}/workflow`}
+                        selected={url.split('/')[3] === 'workflow'}
                         icon='workflow'
                     />
 
-                    <SidebarItem onExpand={onExpand} title={'Content Management'} value={'content'} icon='Sparkles' >
+                    {/* <SidebarItem onExpand={onExpand} title={'Content Management'} value={'content'} icon='Sparkles' >
                         <div className='flex flex-col' onClick={() => { console.log('first') }}>
 
                             <SidebarSubItem
@@ -127,10 +127,10 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                             />
 
                         </div>
-                    </SidebarItem>
+                    </SidebarItem> */}
 
 
-                    <SidebarItem onExpand={onExpand} title={'Channels'} value={'channel'} icon='Rss' >
+                    {/* <SidebarItem onExpand={onExpand} title={'Channels'} value={'channel'} icon='Rss' >
                         <div className='flex flex-col'>
                             <div className='mt-2'>
                                 <OrgSearch
@@ -260,7 +260,28 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                                 </div>
                             )}
                         </div>
-                    </SidebarItem>
+                    </SidebarItem> */}
+
+                    {/* <SidebarSingleItem
+                        title='Collaboration'
+                        link={`/workspace/${server?.id}/collaboration`}
+                        selected={url.split('/')[3] === 'collaboration'}
+                        icon='messages-square'
+                    /> */}
+
+                    <SidebarSingleItem
+                        title='Documents'
+                        link={`/workspace/${server?.id}/document`}
+                        selected={url.split('/')[3] === 'document'}
+                        icon='files'
+                    />
+
+                    <SidebarSingleItem
+                        title='Articles'
+                        link={`/workspace/${server?.id}/article`}
+                        selected={url.split('/')[3] === 'article'}
+                        icon='sparkles'
+                    />
 
                     <SidebarSingleItem
                         title='Taxonomy'
@@ -305,6 +326,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     />
 
                     <SidebarSingleItem
+                        title='Laboratory'
+                        link={`/workspace/${server?.id}/laboratory`}
+                        selected={url.split('/')[3] === 'laboratory'}
+                        icon='flask-conical'
+                    />
+
+                    <SidebarSingleItem
                         title='Rooms & Beds'
                         link={`/workspace/${server?.id}/accommodation`}
                         selected={url.split('/')[3] === 'accommodation'}
@@ -331,6 +359,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         link={`/workspace/${server?.id}/payment`}
                         selected={url.split('/')[3] === 'payment'}
                         icon='credit-card'
+                    />
+
+                    <SidebarSingleItem
+                        title='Communication'
+                        link={`/workspace/${server?.id}/communication`}
+                        selected={url.split('/')[3] === 'communication'}
+                        icon='megaphone'
                     />
 
                     <SidebarSingleItem

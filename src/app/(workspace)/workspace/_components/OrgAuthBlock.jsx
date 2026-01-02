@@ -9,6 +9,7 @@ import { useOrg } from '@/providers/OrgProvider'
 import { toast } from 'sonner'
 import { useApp } from '@/providers/AppProvider'
 import { Skeleton } from '@/components/ui/skeleton'
+import SettingsModal from '../[orgId]/setting/SettingModal'
 
 
 export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
@@ -19,6 +20,12 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
     const { refreshServer } = useOrg()
     const [light, setLight] = useState(true)
     const { theme, themeToggle } = useApp()
+
+    const [settingModal, setSettingModal] = useState({
+        isOpen: false,
+        mode: 'add',
+        settings: null
+    })
 
 
     useEffect(() => {
@@ -83,7 +90,18 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
                             Account
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem className='flex flex-row gap-2' onClick={() => { onOpen('orgsetting') }}>
+                        {/* <DropdownMenuItem className='flex flex-row gap-2' onClick={() => { onOpen('orgsetting') }}>
+                            <Settings size={15} className='text-muted-foreground' />
+                            Settings
+                        </DropdownMenuItem> */}
+
+                        <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
+                            setSettingModal({
+                                isOpen: true,
+                                mode: 'open',
+                                setting: null
+                            })
+                        }}>
                             <Settings size={15} className='text-muted-foreground' />
                             Settings
                         </DropdownMenuItem>
@@ -132,6 +150,18 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
                         Log out
                     </DropdownMenuItem>
                 </DropdownMenuContent>
+
+                <SettingsModal
+                    isOpen={settingModal.isOpen}
+                    onClose={() => {
+                        setSettingModal({
+                            isOpen: false,
+                            mode: 'close',
+                            settings: null
+                        })
+                    }}
+
+                />
             </DropdownMenu>
         </div>
     )

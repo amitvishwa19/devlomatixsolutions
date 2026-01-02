@@ -9,12 +9,12 @@ import { usePrescription } from './_provider/PrescriptionProvider';
 import CategoryHierarchy from '../../_components/CategoryHierarchy';
 import { PrescriptionStats } from './_components/PrescriptionStats';
 import { CustomBadge } from '../(misc)/_components/CustomBadge';
-import DataTable from '../../_components/DataTable';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { HoverCard, HoverCardContent, HoverCardTrigger, } from "@/components/ui/hover-card"
 import { format } from 'date-fns';
 import PrescriptionView from './_components/PrescriptionView';
 import { PrescriptionDelete } from './_components/PrescriptionDelete';
+import { DataTable } from '../(misc)/_components/DataTable';
 
 export default function PrescriptionPage() {
 

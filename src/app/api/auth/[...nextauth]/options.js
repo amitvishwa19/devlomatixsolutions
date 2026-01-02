@@ -79,9 +79,8 @@ export const authOptions = {
             let server
 
 
+
             if (token) {
-
-
                 usr = await db.user.upsert({
                     where: {
                         email: token.email

@@ -1,23 +1,18 @@
 'use client'
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import { Eye, HandHelping, IndianRupee, LayoutDashboard, Pencil, Plus, ReceiptIndianRupee, Trash2 } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import Dashboard from './_components/service-catalog-dashboard/Dashboard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Service from './_components/service-management/Service';
-import Pricing from './_components/pricing-management/Pricing';
-import Billing from './_components/billing-integration/Billing';
-import ServiceManagementInteractive from './_components/service-management/ServiceManagementInteractive';
 import ServiceStats from './_components/service-management/ServiceStats';
 import { useService } from './_provider/serviceProvider';
 import CategoryHierarchy from '../../_components/CategoryHierarchy';
-import DataTable from '../../_components/DataTable';
 import { CustomBadge } from '../(misc)/_components/CustomBadge';
-import ServiceEditModal from './_components/service-management/ServiceEditModal';
 import ServiceEditor from './_components/service-management/ServiceEditor';
 import ServiceDelete from './_components/service-management/ServiceDelete';
+import { DataTable } from '../(misc)/_components/DataTable';
 
 export default function ServicePage() {
     const [active, setActive] = useState({ label: 'Services', icon: 'hand-helping', component: <Service /> })

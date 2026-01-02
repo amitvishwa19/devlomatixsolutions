@@ -3,16 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, Pencil, Save, Search, Trash2 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react'
-import { InventoryDialog } from './_components/InventoryDialog';
-import { useModal } from '@/hooks/useModal';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import { InventoryDashboard } from './_components/InventoryDashboard';
 import InventoryStats from './_components/inventory-management/InventoryStats';
-import InventoryFilter from './_components/inventory-management/InventoryFilter';
 import { InventoryTable } from './_components/InventoryTable';
 import { useInventory } from './_provider/inventoryProvider';
-import DataTable from '../../_components/DataTable';
 import moment from 'moment';
 import { CustomBadge } from '../(misc)/_components/CustomBadge';
 import CategoryHierarchy from '../../_components/CategoryHierarchy';
@@ -20,8 +15,8 @@ import InventoryView from './_components/inventory-management/InventoryView';
 import InventoryEditor from './_components/inventory-management/InventoryEditor';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import InventoryDelete from './_components/inventory-management/InventoryDelete';
-import { useOrg } from '@/providers/OrgProvider';
-import { useRealTimeSocket } from '@/hooks/use-socket';
+import { DataTable } from '../(misc)/_components/DataTable';
+
 
 
 const mockData = [

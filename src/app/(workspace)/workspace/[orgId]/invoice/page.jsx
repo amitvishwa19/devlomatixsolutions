@@ -10,10 +10,10 @@ import { CustomBadge } from '../(misc)/_components/CustomBadge';
 import moment from 'moment';
 import { useInvoice } from './_provider/invoiceProvider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import DataTable from '../../_components/DataTable';
 import CategoryHierarchy from '../../_components/CategoryHierarchy';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import InvoiceView from './_components/InvoiceView';
+import { DataTable } from '../(misc)/_components/DataTable';
 
 
 const mockInvoices = [
@@ -382,7 +382,7 @@ export default function InvoicePage() {
 
     ]
 
-
+    console.log(invoices)
 
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>

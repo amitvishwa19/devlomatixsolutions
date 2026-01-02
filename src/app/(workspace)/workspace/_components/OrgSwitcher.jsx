@@ -62,12 +62,12 @@ export default function OrgSwitcher() {
 
 
                                 <div className='flex flex-row items-center gap-2'>
-                                    <Avatar className='h-10 w-10 rounded-md'>
+                                    <Avatar className='h-10 w-10 rounded-md border'>
                                         <AvatarImage src={server?.imageUrl} alt="@shadcn" className='grayscale' />
                                         <AvatarFallback className='rounded-md font-bold text-2xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
                                     </Avatar>
                                     <div className='flex flex-col capitalize'>
-                                        <span className='text-sm'>{server?.name}</span>
+                                        <span className='text-sm font-bold'>{server?.name}</span>
                                         <span className='text-xs text-muted-foreground'> {server?.user?.email}</span>
                                     </div>
                                 </div>

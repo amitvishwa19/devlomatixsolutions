@@ -4,15 +4,13 @@ import { Edit, Eye, Filter, MoreHorizontal, MoreVertical, Pencil, Plus, Search, 
 import React, { useMemo, useState } from 'react'
 import { useAccess } from '../../_provider/accessProvider'
 import { Button } from '@/components/ui/button'
-import { UserTable } from '../user/UserTable'
 import { ROLE } from '@prisma/client'
 import { UserFormDialog } from '../user/UserFormDialog'
-import { DeleteConfirmDialog } from './DeleteConfirmDialog'
 import { CustomBadge } from '../../../(misc)/_components/CustomBadge'
-import DataTable from '@/app/(workspace)/workspace/_components/DataTable'
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { UserDelete } from '../user/UserDelete'
+import { DataTable } from '../../../(misc)/_components/DataTable'
 
 export default function Users() {
     const { roles, users, setUsers } = useAccess()
