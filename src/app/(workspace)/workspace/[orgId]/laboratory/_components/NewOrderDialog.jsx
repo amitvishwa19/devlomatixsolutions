@@ -16,8 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { labTests, patients } from '@/data/mockLabData';
 import { FlaskConical, Barcode } from 'lucide-react';
+import { labTests, patients } from '../mockLabData';
 
 const specimenTypes = ['Blood', 'Urine', 'Stool', 'Saliva', 'CSF', 'Tissue', 'Sputum', 'Swab'];
 
@@ -48,10 +48,10 @@ export function NewOrderDialog({ open, onOpenChange, onCreateOrder }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const patient = patients.find(p => p.id === patientId);
     const selectedTests = labTests.filter(t => selectedTestIds.includes(t.id));
-    
+
     if (!patient || selectedTests.length === 0) return;
 
     const specimenId = `SPEC-${String(Date.now()).slice(-6)}`;
@@ -197,8 +197,8 @@ export function NewOrderDialog({ open, onOpenChange, onCreateOrder }) {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={!patientId || selectedTestIds.length === 0 || selectedSpecimenTypes.length === 0 || !orderedBy}
             >
               Create Order

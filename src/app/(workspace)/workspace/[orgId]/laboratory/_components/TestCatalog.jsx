@@ -26,12 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { labTests as initialTests } from '@/data/mockLabData';
-import { 
-  Plus, 
-  Search, 
-  Edit2, 
-  TestTube, 
+import { labTests as initialTests } from '../mockLabData';
+import {
+  Plus,
+  Search,
+  Edit2,
+  TestTube,
   DollarSign,
   Clock,
   Beaker,
@@ -48,7 +48,7 @@ export function TestCatalog() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTest, setEditingTest] = useState(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     testCode: '',
@@ -69,7 +69,7 @@ export function TestCatalog() {
   });
 
   const filteredTests = tests.filter(test => {
-    const matchesSearch = 
+    const matchesSearch =
       test.testCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       test.testName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || test.category === categoryFilter;
@@ -127,7 +127,7 @@ export function TestCatalog() {
     }
 
     if (editingTest) {
-      setTests(prev => prev.map(t => 
+      setTests(prev => prev.map(t =>
         t.id === editingTest.id ? { ...t, ...formData } : t
       ));
       toast.success('Test updated successfully');
@@ -143,7 +143,7 @@ export function TestCatalog() {
   };
 
   const handleToggleActive = (testId) => {
-    setTests(prev => prev.map(t => 
+    setTests(prev => prev.map(t =>
       t.id === testId ? { ...t, isActive: !t.isActive } : t
     ));
   };
@@ -352,7 +352,7 @@ export function TestCatalog() {
             {/* Parameters Section */}
             <div className="space-y-4">
               <Label className="text-base font-medium">Test Parameters</Label>
-              
+
               <div className="flex gap-2 items-end">
                 <div className="flex-1 space-y-1">
                   <Label className="text-xs">Name</Label>

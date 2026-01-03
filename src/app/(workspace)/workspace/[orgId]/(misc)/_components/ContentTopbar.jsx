@@ -22,8 +22,9 @@ export function ContentTopbar({ title = '', description = '', icon = null, actio
             </div>
             {action && (
                 <div>
-                    <Button variant='save' size='sm' className='flex flex-row items-center gap-2' onClick={handleAcionClick}>
-                        <DynamicIcon name={actionIcon} className='h-5 w-5 ' />
+                    <Button size='sm' className='flex flex-row items-center gap-2 ' onClick={handleAcionClick}>
+                        {actionIcon && <DynamicIcon name={actionIcon} className='h-5 w-5 ' />}
+
                         {actionName}
                     </Button>
                 </div>

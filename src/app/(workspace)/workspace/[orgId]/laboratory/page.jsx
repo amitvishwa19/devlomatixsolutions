@@ -3,6 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { FlaskConical } from 'lucide-react'
 import React from 'react'
 import { ContentTopbar } from '../(misc)/_components/ContentTopbar'
+import LabManagement from './_components/LabManagement'
 
 export default function LaboratoryPage() {
     return (
@@ -19,7 +20,9 @@ export default function LaboratoryPage() {
             />
 
             <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4 border'>
-
+                <div>
+                    <LabManagement />
+                </div>
             </ScrollArea>
 
 

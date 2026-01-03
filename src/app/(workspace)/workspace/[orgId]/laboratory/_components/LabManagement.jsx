@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { useOrders } from '@/hooks/useLabData';
 import { StatCard } from './StatCard';
 import { OrdersTable } from './OrdersTable';
 import { NewOrderDialog } from './NewOrderDialog';
@@ -19,11 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  FlaskConical, 
-  ClipboardList, 
-  Clock, 
-  Activity, 
+import {
+  FlaskConical,
+  ClipboardList,
+  Clock,
+  Activity,
   CheckCircle2,
   AlertTriangle,
   Plus,
@@ -33,8 +32,9 @@ import {
   BarChart3,
   Package
 } from 'lucide-react';
+import { useOrders } from '../_hooks/useLabData';
 
-export function LabManagement() {
+export default function LabManagement() {
   const { orders, create, update, updateStatus, getStats } = useOrders();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -53,14 +53,14 @@ export function LabManagement() {
   });
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
+    const matchesSearch =
       order.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.patient.mrn.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.tests.some(t => t.testName.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -87,7 +87,7 @@ export function LabManagement() {
     <div className="min-h-screen bg-background">
       {/* Background gradient */}
       <div className="fixed inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent pointer-events-none" />
-      
+
       <div className="relative max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -126,33 +126,33 @@ export function LabManagement() {
           <TabsContent value="orders" className="space-y-6">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <StatCard 
-                title="Total Orders" 
-                value={stats.total} 
+              <StatCard
+                title="Total Orders"
+                value={stats.total}
                 icon={ClipboardList}
                 accentColor="primary"
               />
-              <StatCard 
-                title="Pending" 
-                value={stats.pending} 
+              <StatCard
+                title="Pending"
+                value={stats.pending}
                 icon={Clock}
                 accentColor="warning"
               />
-              <StatCard 
-                title="Processing" 
-                value={stats.processing} 
+              <StatCard
+                title="Processing"
+                value={stats.processing}
                 icon={Activity}
                 accentColor="info"
               />
-              <StatCard 
-                title="Completed" 
-                value={stats.completed} 
+              <StatCard
+                title="Completed"
+                value={stats.completed}
                 icon={CheckCircle2}
                 accentColor="success"
               />
-              <StatCard 
-                title="Urgent/STAT" 
-                value={stats.urgent} 
+              <StatCard
+                title="Urgent/STAT"
+                value={stats.urgent}
                 icon={AlertTriangle}
                 accentColor="destructive"
               />
@@ -203,7 +203,7 @@ export function LabManagement() {
                 <FlaskConical className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">No orders found</h3>
                 <p className="text-muted-foreground">
-                  {searchQuery || statusFilter !== 'all' 
+                  {searchQuery || statusFilter !== 'all'
                     ? 'Try adjusting your search or filter criteria'
                     : 'Create a new lab order to get started'}
                 </p>

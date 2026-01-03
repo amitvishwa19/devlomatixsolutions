@@ -1,6 +1,5 @@
 import { SettingsSection } from "../SettingsSection";
 import { SettingsCard } from "../SettingsCard";
-import { AddressMapPicker } from "../AddressMapPicker";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

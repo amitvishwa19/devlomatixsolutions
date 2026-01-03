@@ -362,6 +362,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     />
 
                     <SidebarSingleItem
+                        title='Pharmacy'
+                        link={`/workspace/${server?.id}/pharmacy`}
+                        selected={url.split('/')[3] === 'pharmacy'}
+                        icon='tablets'
+                    />
+
+                    <SidebarSingleItem
                         title='Communication'
                         link={`/workspace/${server?.id}/communication`}
                         selected={url.split('/')[3] === 'communication'}
