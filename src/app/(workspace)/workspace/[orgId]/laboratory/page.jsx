@@ -2,6 +2,7 @@
 import { ScrollArea } from '@/components/ui/scroll-area'
 import React from 'react'
 import { ContentTopbar } from '../(misc)/_components/ContentTopbar'
+import { LabManagement } from './_components/LabManagement'
 
 export default function LaboratoryPage() {
     return (
@@ -10,7 +11,7 @@ export default function LaboratoryPage() {
             <ContentTopbar
                 title='Laboratory Management'
                 description='Accelerate research, ensure reliability, and enhance care with technology'
-                icon='flask'
+                icon='flask-conical'
                 action={false}
                 actionName='Quick Bill'
                 actionIcon='receipt-indian-rupee'
@@ -18,7 +19,7 @@ export default function LaboratoryPage() {
             />
 
             <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md border'>
-
+                <LabManagement />
             </ScrollArea>
 
 

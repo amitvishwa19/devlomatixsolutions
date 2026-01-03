@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Patient model
+model Patient {
+  id        String     @id @default(cuid())
+  name      String
+  age       Int
+  gender    String
+  contact   String
+  mrn       String     @unique // Medical Record Number
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  orders    LabOrder[]
+}
+
+// Lab Test Category
+model TestCategory {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  tests LabTest[]
+}
+
+// Lab Test model
+model LabTest {
+  id           String              @id @default(cuid())
+  testCode     String              @unique
+  testName     String
+  categoryId   String
+  category     TestCategory        @relation(fields: [categoryId], references: [id])
+  price        Float
+  specimenType String
+  parameters   TestParameter[]
+  orderTests   LabOrderTest[]
+  qcSamples    QCSample[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+// Test Parameter model
+model TestParameter {
+  id             String      @id @default(cuid())
+  name           String
+  unit           String
+  normalRangeMin Float?
+  normalRangeMax Float?
+  normalRange    String?     // For text-based ranges like "Negative"
+  testId         String
+  test           LabTest     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  results        TestResult[]
+}
+
+// Lab Order model
+model LabOrder {
+  orderId          String            @id @default(cuid())
+  patientId        String
+  patient          Patient           @relation(fields: [patientId], references: [id])
+  status           OrderStatus       @default(PENDING)
+  priority         Priority          @default(ROUTINE)
+  orderDate        DateTime          @default(now())
+  completedDate    DateTime?
+  notes            String?
+  tests            LabOrderTest[]
+  specimenTracking SpecimenTracking?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+// Junction table for Lab Order and Tests
+model LabOrderTest {
+  id        String       @id @default(cuid())
+  orderId   String
+  order     LabOrder     @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  testId    String
+  test      LabTest      @relation(fields: [testId], references: [id])
+  results   TestResult[]
+  createdAt DateTime     @default(now())
+
+  @@unique([orderId, testId])
+}
+
+// Test Result model
+model TestResult {
+  id            String        @id @default(cuid())
+  orderTestId   String
+  orderTest     LabOrderTest  @relation(fields: [orderTestId], references: [id], onDelete: Cascade)
+  parameterId   String
+  parameter     TestParameter @relation(fields: [parameterId], references: [id])
+  value         String
+  isAbnormal    Boolean       @default(false)
+  isCritical    Boolean       @default(false)
+  remarks       String?
+  enteredBy     String?
+  enteredAt     DateTime      @default(now())
+  verifiedBy    String?
+  verifiedAt    DateTime?
+}
+
+// Specimen Tracking model
+model SpecimenTracking {
+  id            String    @id @default(cuid())
+  orderId       String    @unique
+  order         LabOrder  @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  specimenId    String    @unique
+  collectedAt   DateTime?
+  collectedBy   String?
+  receivedAt    DateTime?
+  receivedBy    String?
+  processedAt   DateTime?
+  processedBy   String?
+  specimenType  String?
+  volume        String?
+  condition     String?
+  rejectionNote String?
+}
+
+// Quality Control Sample model
+model QCSample {
+  id              String     @id @default(cuid())
+  lotNumber       String
+  testId          String
+  test            LabTest    @relation(fields: [testId], references: [id])
+  expectedValue   Float
+  acceptableMin   Float
+  acceptableMax   Float
+  results         QCResult[]
+  expiryDate      DateTime?
+  createdAt       DateTime   @default(now())
+}
+
+// QC Result model
+model QCResult {
+  id         String   @id @default(cuid())
+  sampleId   String
+  sample     QCSample @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  value      Float
+  status     String   // "pass" or "fail"
+  testedAt   DateTime @default(now())
+  testedBy   String?
+}
+
+// Critical Alert model
+model CriticalAlert {
+  id          String   @id @default(cuid())
+  orderId     String
+  testName    String
+  parameter   String
+  value       String
+  criticalMsg String
+  notifiedAt  DateTime @default(now())
+  acknowledged Boolean @default(false)
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+}
+
+// Enums
+enum OrderStatus {
+  PENDING
+  SPECIMEN_COLLECTED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  ROUTINE
+  URGENT
+  STAT
+}
