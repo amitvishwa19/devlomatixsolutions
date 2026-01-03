@@ -66,7 +66,7 @@ export function getAge(dateString) {
     return age < 0 ? 0 : age; // prevent negative age
 }
 
-const getInitials = (fullName) => {
+export function getInitials(fullName) {
     if (!fullName) return ''
 
     const parts = fullName.trim().split(/\s+/)
