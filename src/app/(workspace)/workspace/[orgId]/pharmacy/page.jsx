@@ -13,18 +13,6 @@ export default function PharmacyPage() {
 
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <div>
-                        <h2 className='text-xl'>Pharmacy Management</h2>
-                    </div>
-                    <h2 className='text-xs text-muted-foreground italic'>Bringing technology and healthcare together to simplify pharmacy workflows and elevate patient safety</h2>
-                </div>
-                <div>
-
-                </div>
-            </div>
-
             <ContentTopbar
                 title='Pharmacy Management'
                 description='Bringing technology and healthcare together to simplify pharmacy workflows and elevate patient safety'

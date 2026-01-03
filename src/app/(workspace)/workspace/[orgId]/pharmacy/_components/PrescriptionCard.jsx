@@ -33,7 +33,7 @@ export function PrescriptionCard({ prescription, onDispense, onCancel, onCreateB
           {getStatusBadge(prescription.status)}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 ">
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Stethoscope className="w-4 h-4" />
