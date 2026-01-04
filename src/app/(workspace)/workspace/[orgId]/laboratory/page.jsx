@@ -3,8 +3,14 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import React from 'react'
 import { ContentTopbar } from '../(misc)/_components/ContentTopbar'
 import { LabManagement } from './_components/LabManagement'
+import supabase from '@/supabase/client'
+
+
+
 
 export default function LaboratoryPage() {
+
+    console.log(supabase)
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
