@@ -83,7 +83,7 @@ const Header = () => {
                         {navLinks.map((link) => (
                             <Link
                                 key={link.path}
-                                to={link.path}
+                                href={link.path}
                                 onClick={() => setIsOpen(false)}
                                 className={cn(
                                     "rounded-lg px-4 py-3 text-sm font-medium transition-colors",
@@ -94,6 +94,7 @@ const Header = () => {
                             >
                                 {link.name}
                             </Link>
+
                         ))}
                         <AppointmentDialog>
                             <Button variant="hero" className="mt-2 w-full">
