@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Download, 
-  Maximize, 
-  Minimize, 
-  Play, 
-  Pause, 
+import {
+  Download,
+  Maximize,
+  Minimize,
+  Play,
+  Pause,
   Grid3X3,
   X,
   Loader2,
@@ -18,16 +18,16 @@ const formatTime = (seconds) => {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  
+
   if (hrs > 0) {
     return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-const PresentationControls = ({ 
-  currentSlide, 
-  totalSlides, 
+const PresentationControls = ({
+  currentSlide,
+  totalSlides,
   onGoToSlide,
   isAutoPlaying,
   onToggleAutoPlay,
@@ -238,7 +238,7 @@ const PresentationControls = ({
           // Wait for DOM/layout + fonts/images + initial animations to finish
           await waitForFonts();
           await wait(50);
-          
+
           if (exportCancelledRef.current) {
             root.unmount();
             break;
@@ -277,7 +277,7 @@ const PresentationControls = ({
           pdf.addImage(imgData, "JPEG", 0, 0, 1920, 1080);
 
           root.unmount();
-          
+
           setExportProgress(Math.round(((i + 1) / slideComponents.length) * 100));
         }
 
@@ -309,7 +309,7 @@ const PresentationControls = ({
   return (
     <>
       {/* Control Bar */}
-      <motion.div 
+      <motion.div
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
@@ -319,7 +319,7 @@ const PresentationControls = ({
           variant="ghost"
           size="icon"
           onClick={onToggleAutoPlay}
-          className="glass hover:bg-primary/20"
+          className=" hover:bg-primary/20"
           title={isAutoPlaying ? "Pause autoplay" : "Start autoplay"}
         >
           {isAutoPlaying ? (
@@ -333,7 +333,7 @@ const PresentationControls = ({
           variant="ghost"
           size="icon"
           onClick={() => setShowGrid(true)}
-          className="glass hover:bg-primary/20"
+          className=" hover:bg-primary/20"
           title="View all slides"
         >
           <Grid3X3 className="w-4 h-4" />
@@ -343,7 +343,7 @@ const PresentationControls = ({
           variant="ghost"
           size="icon"
           onClick={toggleFullscreen}
-          className="glass hover:bg-primary/20"
+          className=" hover:bg-primary/20"
           title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
         >
           {isFullscreen ? (
@@ -358,7 +358,7 @@ const PresentationControls = ({
           size="icon"
           onClick={exportToPDF}
           disabled={isExporting}
-          className="glass hover:bg-primary/20"
+          className=" hover:bg-primary/20"
           title="Export to PDF"
         >
           {isExporting ? (
@@ -369,7 +369,7 @@ const PresentationControls = ({
         </Button>
 
         {/* Timer Display */}
-        <div className="glass px-3 py-2 rounded-full flex items-center gap-2" title="Presentation duration">
+        <div className=" px-3 py-2 rounded-full flex items-center gap-2" title="Presentation duration">
           <Clock className="w-4 h-4 text-primary" />
           <span className="font-mono text-sm font-medium text-foreground">
             {formatTime(elapsedTime)}
@@ -390,7 +390,7 @@ const PresentationControls = ({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass p-8 rounded-2xl max-w-md w-full mx-4 text-center"
+              className="  p-8 rounded-2xl max-w-md w-full mx-4 text-center"
             >
               <div className="mb-6">
                 <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
@@ -467,22 +467,21 @@ const PresentationControls = ({
                         onGoToSlide(index);
                         setShowGrid(false);
                       }}
-                      className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105 hover:shadow-xl ${
-                        currentSlide === index
-                          ? "border-primary ring-2 ring-primary/50"
-                          : "border-border hover:border-primary/50"
-                      }`}
+                      className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105 hover:shadow-xl ${currentSlide === index
+                        ? "border-primary ring-2 ring-primary/50"
+                        : "border-border hover:border-primary/50"
+                        }`}
                     >
                       {/* Scaled down slide preview */}
                       <div className="absolute inset-0 origin-top-left scale-[0.15] w-[666%] h-[666%] pointer-events-none overflow-hidden">
                         <SlideComponent />
                       </div>
-                      
+
                       {/* Slide number overlay */}
                       <div className="absolute bottom-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm rounded text-xs font-medium text-foreground">
                         {index + 1}
                       </div>
-                      
+
                       {currentSlide === index && (
                         <div className="absolute top-2 right-2 px-2 py-1 bg-primary rounded text-xs font-medium text-primary-foreground">
                           Current

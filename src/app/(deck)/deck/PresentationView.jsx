@@ -26,6 +26,7 @@ import CTASlide from "./slides/CTASlide";
 import PresentationControls from "./PresentationControls";
 import SlideNavigation from "./SlideNavigation";
 import SpeakerNotesPanel from "./SpeakerNotesPanel";
+import ThemeSwitcher from "@/components/global/ThemeSwitch";
 //import ThemeToggle from "@/components/ThemeToggle";
 
 
@@ -246,6 +247,9 @@ const PresentationView = () => {
       <div className="blob blob-1" />
       <div className="blob blob-2" />
       <div className="blob blob-3" />
+
+      {/* Theme Toggle */}
+      <ThemeSwitcher />
 
 
       {/* Presentation Controls */}
