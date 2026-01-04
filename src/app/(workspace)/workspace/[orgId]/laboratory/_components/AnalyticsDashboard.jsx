@@ -18,10 +18,10 @@ import {
   AreaChart,
 } from 'recharts';
 import { format, differenceInHours, subDays, startOfDay } from 'date-fns';
-import { 
-  TrendingUp, 
-  Clock, 
-  PieChart as PieChartIcon, 
+import {
+  TrendingUp,
+  Clock,
+  PieChart as PieChartIcon,
   BarChart3,
   Activity
 } from 'lucide-react';
@@ -95,15 +95,15 @@ export function AnalyticsDashboard({ orders }) {
 
     const avgTat = completedOrders.length > 0
       ? completedOrders.reduce((acc, o) => {
-          if (o.completedAt) {
-            return acc + differenceInHours(o.completedAt, o.collectedAt);
-          }
-          return acc;
-        }, 0) / completedOrders.length
+        if (o.completedAt) {
+          return acc + differenceInHours(o.completedAt, o.collectedAt);
+        }
+        return acc;
+      }, 0) / completedOrders.length
       : 0;
 
-    const completionRate = orders.length > 0 
-      ? Math.round((completedOrders.length / orders.length) * 100) 
+    const completionRate = orders.length > 0
+      ? Math.round((completedOrders.length / orders.length) * 100)
       : 0;
 
     return {
@@ -120,15 +120,7 @@ export function AnalyticsDashboard({ orders }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-primary/10 text-primary">
-          <BarChart3 className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold">Analytics Dashboard</h2>
-          <p className="text-sm text-muted-foreground">Lab performance metrics and trends</p>
-        </div>
-      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-card border-border">
@@ -179,32 +171,32 @@ export function AnalyticsDashboard({ orders }) {
                 <AreaChart data={analytics.dailyOrders}>
                   <defs>
                     <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))" 
+                  <XAxis
+                    dataKey="date"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                   />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))" 
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
                     labelFormatter={(label, payload) => payload[0]?.payload?.fullDate || label}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="hsl(var(--primary))" 
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke="hsl(var(--primary))"
                     fill="url(#colorOrders)"
                     strokeWidth={2}
                     name="Orders"
@@ -240,9 +232,9 @@ export function AnalyticsDashboard({ orders }) {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
@@ -265,41 +257,41 @@ export function AnalyticsDashboard({ orders }) {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={analytics.statusTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))" 
+                  <XAxis
+                    dataKey="date"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                   />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))" 
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="pending" 
-                    stroke="hsl(var(--warning))" 
+                  <Line
+                    type="monotone"
+                    dataKey="pending"
+                    stroke="hsl(var(--warning))"
                     strokeWidth={2}
                     dot={{ fill: 'hsl(var(--warning))' }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="processing" 
-                    stroke="hsl(var(--info))" 
+                  <Line
+                    type="monotone"
+                    dataKey="processing"
+                    stroke="hsl(var(--info))"
                     strokeWidth={2}
                     dot={{ fill: 'hsl(var(--info))' }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="completed" 
-                    stroke="hsl(var(--success))" 
+                  <Line
+                    type="monotone"
+                    dataKey="completed"
+                    stroke="hsl(var(--success))"
                     strokeWidth={2}
                     dot={{ fill: 'hsl(var(--success))' }}
                   />
@@ -321,29 +313,29 @@ export function AnalyticsDashboard({ orders }) {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.turnaroundTimes} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
+                  <XAxis
                     type="number"
-                    stroke="hsl(var(--muted-foreground))" 
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                   />
-                  <YAxis 
+                  <YAxis
                     type="category"
-                    dataKey="testCode" 
-                    stroke="hsl(var(--muted-foreground))" 
+                    dataKey="testCode"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     width={60}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
                     formatter={(value) => [`${value} hours`, 'Avg. TAT']}
                   />
-                  <Bar 
-                    dataKey="avgTime" 
-                    fill="hsl(var(--primary))" 
+                  <Bar
+                    dataKey="avgTime"
+                    fill="hsl(var(--primary))"
                     radius={[0, 4, 4, 0]}
                   />
                 </BarChart>
@@ -362,7 +354,7 @@ export function AnalyticsDashboard({ orders }) {
             <div className="flex gap-6">
               {analytics.priorityBreakdown.map((item, index) => (
                 <div key={item.name} className="flex items-center gap-3">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />

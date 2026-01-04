@@ -445,10 +445,10 @@ const SidebarSingleItem = ({ title, link, icon, selected }) => {
         <div className='p-2 -mb-2'>
             <Link
                 href={link}
-                className={`p-2 px-2 flex items-center gap-2 cursor-pointer 
-                            hover:bg-primary/10 hover:dark:bg-darkFocusColor  rounded-sm 
+                className={`p-1 px-2 flex items-center gap-2 cursor-pointer 
+                            hover:bg-primary/10 hover:dark:bg-[#475569]  rounded-md 
                             text-slate-600 dark:text-white/80   
-                            ${selected && 'bg-primary/10 dark:bg-darkFocusColor border'}`}
+                            ${selected && 'bg-primary/10 dark:bg-[#475569] border'}`}
             >
                 <DynamicIcon name={icon} size={16} />
                 <span className='text-sm font-semibold'>
