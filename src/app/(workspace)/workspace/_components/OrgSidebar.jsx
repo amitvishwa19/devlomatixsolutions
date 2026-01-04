@@ -83,7 +83,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
 
 
     return (
-        <div className='flex-col min-h-full text-primary  w-[246px] dark:bg-darkSecondaryBackground relative border border-l-0'>
+        <div className='flex-col min-h-full text-primary  w-[246px]  relative '>
 
             <div className=' w-[246px] p-2'>
                 <OrgSwitcher />

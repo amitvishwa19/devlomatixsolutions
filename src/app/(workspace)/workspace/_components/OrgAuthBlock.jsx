@@ -39,7 +39,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
 
                 <DropdownMenuTrigger asChild className=''>
                     {session ? (
-                        <div variant="ghost" className={`p-1 dark:hover:bg-[#1C2736] ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
+                        <div variant="ghost" className={`p-1  ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
 
                             <div className='flex flex-row items-center gap-2'>
                                 <Avatar className='h-10 w-10 rounded-md'>
@@ -64,7 +64,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
                     )}
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="dark:bg-darkSecondaryBackground w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={2}>
+                <DropdownMenuContent className="dark:bg-darkSecondaryBackground w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={12}>
 
                     <DropdownMenuLabel className="p-0 font-normal">
                         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">

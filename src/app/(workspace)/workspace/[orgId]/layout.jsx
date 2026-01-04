@@ -44,21 +44,20 @@ export default async function layout({ children }) {
         <QueryProvider>
             <OrgModalProvider />
             <DataProvider >
-                <div className={`flex h-screen max-w-screen ${font.className} overflow-hidden `}>
+                <div className={`flex h-screen max-w-screen ${font.className} overflow-hidden dark:bg-darkbackground`}>
                     <div className='h-screen flex-grow hidden xl:flex '>
-                        {/* <OrgNavigation /> */}
                         <OrgSidebar />
                     </div>
-                    <div className='flex  flex-col w-full h-screen dark:bg-[#0E141B]'>
-                        <div className='md:hidden'><TopNav /></div>
-
-                        <ScrollArea className='h-full relative flex-1 p-0'>
-                            <div className='p-2'>
+                    <div className='flex  flex-col w-full h-screen '>
+                        <div className='h-10'>
+                            <TopNav />
+                        </div>
+                        <div className='h-full relative flex-1 p-2'>
+                            <ScrollArea className='h-full relative flex-1 p-0 bg-primary/10 dark:bg-darkcontent rounded-md '>
                                 {children}
-                            </div>
-                            <div className='h-4' />
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
+                        </div>
                     </div>
                     {/* <Loader /> */}
                 </div>

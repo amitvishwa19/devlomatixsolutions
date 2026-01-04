@@ -17,7 +17,7 @@ export function TopNav() {
     //console.log('@@path', paths)
 
     return (
-        <div className=' bg-primary/20 text-foreground dark:bg-[#171F26] min-h-12  flex items-center justify-between border border-t-0 border-l-0 p-2'>
+        <div className='  text-foreground  flex items-center justify-between p-2'>
             <div>
                 <div className='ml-2'>
                     <MobileToggleMenu />

@@ -13,7 +13,7 @@
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 215 25% 27%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
@@ -86,8 +86,8 @@
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 10%;
-    --card-foreground: '#0E141B';
+    --card: 220 20% 7%;
+    --card-foreground: 0 0% 98%;
 
     --popover: 222 47% 10%;
     --popover-foreground: 210 40% 98%;

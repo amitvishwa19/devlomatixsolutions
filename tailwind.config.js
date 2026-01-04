@@ -17,7 +17,6 @@ module.exports = {
       },
       colors: {
         darkPrimaryBackground: '#0E141B',
-        //darkPrimaryBackground: '#101318',
         darkSecondaryBackground: '#171F26',
         darkFocusColor: '#1C2736',
         border: "hsl(var(--border))",
@@ -25,6 +24,8 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        darkbackground: '#1C1C1C',
+        darkcontent: '#181716',
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

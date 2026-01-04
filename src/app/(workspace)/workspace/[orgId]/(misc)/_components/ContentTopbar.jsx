@@ -4,13 +4,13 @@ import { FlaskConical } from 'lucide-react'
 import { DynamicIcon, icon } from 'lucide-react/dynamic'
 import React from 'react'
 
-export function ContentTopbar({ title = '', description = '', icon = null, action = false, actionName = '', actionIcon = '', onActionClick }) {
+export function ContentTopbar({ title = '', description = '', icon = null, action = false, actionName = '', actionIcon = '', onActionClick, actionComp }) {
 
     const handleAcionClick = () => {
         onActionClick()
     }
     return (
-        <div className='w-full dark:bg-darkSecondaryBackground p-4 rounded-md border flex flex-row items-center justify-between'>
+        <div className='w-full  p-4 rounded-md  flex flex-row items-center justify-between'>
             <div className='flex flex-col gap-1'>
                 <h2 className='text-xl flex flex-row items-center gap-2'>
                     {icon && <DynamicIcon name={icon} className='h-5 w-5 text-sky-500' />}
@@ -29,6 +29,8 @@ export function ContentTopbar({ title = '', description = '', icon = null, actio
                     </Button>
                 </div>
             )}
+
+            {actionComp && actionComp}
         </div>
     )
 }

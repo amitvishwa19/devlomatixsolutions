@@ -110,10 +110,10 @@ export default function Dashboard() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground p-4 rounded-md border flex flex-row items-center justify-between'>
+            <div className='w-full  p-4 rounded-md  flex flex-row items-center justify-between'>
                 <div>
                     <h2 className='text-xl'>Dashboard</h2>
-                    <h2 className='text-xs text-white/50'>
+                    <h2 className='text-xs text-muted-foreground'>
                         Complete overview of all hospital operations and patient management. Monitor. Manage. Move forward.
                     </h2>
                 </div>
@@ -122,7 +122,7 @@ export default function Dashboard() {
             </div>
 
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md p-2 border'>
+            <ScrollArea className='h-[85vh] flex flex-grow rounded-md p-2 '>
                 <div className='flex flex-col gap-2'>
 
 

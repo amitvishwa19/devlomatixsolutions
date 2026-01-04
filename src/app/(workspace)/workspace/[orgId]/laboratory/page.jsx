@@ -12,23 +12,8 @@ export default function LaboratoryPage() {
 
     console.log(supabase)
     return (
-        <div className='absolute inset-0 flex flex-col gap-2 p-2'>
-
-            <ContentTopbar
-                title='Laboratory Management'
-                description='Accelerate research, ensure reliability, and enhance care with technology'
-                icon='flask-conical'
-                action={false}
-                actionName='Quick Bill'
-                actionIcon='receipt-indian-rupee'
-                onActionClick={() => { setQuickBillDialogOpen(true) }}
-            />
-
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md border'>
-                <LabManagement />
-            </ScrollArea>
-
-
-        </div >
+        <div className=''>
+            <LabManagement />
+        </div>
     )
 }

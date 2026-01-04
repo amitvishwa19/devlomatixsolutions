@@ -10,7 +10,7 @@ const accentStyles = {
 
 export function StatCard({ title, value, icon: Icon, accentColor = 'primary' }) {
   return (
-    <div className="glass-card rounded-xl p-5 animate-fade-in hover:border-primary/30 transition-all duration-300">
+    <div className="bg-card border rounded-xl p-5 animate-fade-in hover:border-primary/30 transition-all duration-300">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
