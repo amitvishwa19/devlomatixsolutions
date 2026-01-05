@@ -25,16 +25,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { Appointment, Doctor, Patient } from "./types";
 
-interface CreateAppointmentSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  doctors: Doctor[];
-  patients: Patient[];
-  onSubmit: (data: Omit<Appointment, "id" | "createdAt" | "updatedAt">) => void;
-  selectedDate?: Date;
-}
+
+
 
 const appointmentTypes = [
   { value: "consultation", label: "Consultation" },
@@ -60,22 +53,22 @@ export function CreateAppointmentSheet({
   patients,
   onSubmit,
   selectedDate,
-}: CreateAppointmentSheetProps) {
+}) {
   const [title, setTitle] = useState("");
   const [patientId, setPatientId] = useState("");
   const [doctorId, setDoctorId] = useState("");
-  const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
+  const [date, setDate] = useState < Date | undefined > (selectedDate || new Date());
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("09:30");
-  const [type, setType] = useState<string>("consultation");
+  const [type, setType] = useState < string > ("consultation");
   const [notes, setNotes] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const selectedPatient = patients.find((p) => p.id === patientId);
     const selectedDoctor = doctors.find((d) => d.id === doctorId);
-    
+
     if (!selectedPatient || !selectedDoctor || !date) return;
 
     onSubmit({
@@ -89,7 +82,7 @@ export function CreateAppointmentSheet({
       startTime,
       endTime,
       status: "scheduled",
-      type: type as Appointment["type"],
+      type: type,
       notes: notes || undefined,
     });
 
@@ -110,7 +103,7 @@ export function CreateAppointmentSheet({
         <SheetHeader>
           <SheetTitle>Schedule New Appointment</SheetTitle>
         </SheetHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-5 mt-6">
           <div className="space-y-2">
             <Label htmlFor="title">Appointment Title</Label>

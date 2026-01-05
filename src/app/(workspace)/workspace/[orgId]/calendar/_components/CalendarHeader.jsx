@@ -1,17 +1,8 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CalendarView } from "./types";
 import { format } from "date-fns";
 
-interface CalendarHeaderProps {
-    selectedDate: Date;
-    calendarView: CalendarView;
-    onViewChange: (view: CalendarView) => void;
-    onPrevious: () => void;
-    onNext: () => void;
-    onToday: () => void;
-    onCreateAppointment: () => void;
-}
+
 
 export function CalendarHeader({
     selectedDate,
@@ -21,7 +12,7 @@ export function CalendarHeader({
     onNext,
     onToday,
     onCreateAppointment,
-}: CalendarHeaderProps) {
+}) {
     const getHeaderTitle = () => {
         if (calendarView === "month") {
             return format(selectedDate, "MMMM yyyy");
@@ -57,7 +48,7 @@ export function CalendarHeader({
 
                 {/* View Switcher */}
                 <div className="flex items-center bg-secondary/30 rounded-lg p-1">
-                    {(["month", "week", "day"] as CalendarView[]).map((view) => (
+                    {(["month", "week", "day"]).map((view) => (
                         <Button
                             key={view}
                             variant={calendarView === view ? "secondary" : "ghost"}

@@ -25,16 +25,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { Appointment, Doctor, Patient } from "./types";
 
-interface EditAppointmentSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  appointment: Appointment | null;
-  doctors: Doctor[];
-  patients: Patient[];
-  onSubmit: (id: string, data: Partial<Appointment>) => void;
-}
+
 
 const appointmentTypes = [
   { value: "consultation", label: "Consultation" },
@@ -69,15 +61,15 @@ export function EditAppointmentSheet({
   doctors,
   patients,
   onSubmit,
-}: EditAppointmentSheetProps) {
+}) {
   const [title, setTitle] = useState("");
   const [patientId, setPatientId] = useState("");
   const [doctorId, setDoctorId] = useState("");
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState < Date | undefined > (new Date());
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("09:30");
-  const [type, setType] = useState<string>("consultation");
-  const [status, setStatus] = useState<string>("scheduled");
+  const [type, setType] = useState < string > ("consultation");
+  const [status, setStatus] = useState < string > ("scheduled");
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
@@ -94,14 +86,14 @@ export function EditAppointmentSheet({
     }
   }, [appointment]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!appointment) return;
 
     const selectedPatient = patients.find((p) => p.id === patientId);
     const selectedDoctor = doctors.find((d) => d.id === doctorId);
-    
+
     if (!selectedPatient || !selectedDoctor || !date) return;
 
     onSubmit(appointment.id, {
@@ -114,8 +106,8 @@ export function EditAppointmentSheet({
       date,
       startTime,
       endTime,
-      status: status as Appointment["status"],
-      type: type as Appointment["type"],
+      status: status,
+      type: type,
       notes: notes || undefined,
     });
   };
@@ -128,7 +120,7 @@ export function EditAppointmentSheet({
         <SheetHeader>
           <SheetTitle>Edit Appointment</SheetTitle>
         </SheetHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-5 mt-6">
           <div className="space-y-2">
             <Label htmlFor="title">Appointment Title</Label>

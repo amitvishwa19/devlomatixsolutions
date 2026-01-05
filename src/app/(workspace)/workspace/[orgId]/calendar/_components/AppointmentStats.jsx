@@ -1,19 +1,16 @@
 import { Calendar, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Appointment } from "./types";
 import { isToday, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 
-interface AppointmentStatsProps {
-  appointments: Appointment[];
-}
 
-export function AppointmentStats({ appointments }: AppointmentStatsProps) {
+
+export function AppointmentStats({ appointments }) {
   const today = new Date();
   const weekStart = startOfWeek(today);
   const weekEnd = endOfWeek(today);
 
   const todayCount = appointments.filter((apt) => isToday(new Date(apt.date))).length;
-  const weekCount = appointments.filter((apt) => 
+  const weekCount = appointments.filter((apt) =>
     isWithinInterval(new Date(apt.date), { start: weekStart, end: weekEnd })
   ).length;
   const completedCount = appointments.filter((apt) => apt.status === "completed").length;
@@ -53,7 +50,7 @@ export function AppointmentStats({ appointments }: AppointmentStatsProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat, index) => (
-        <Card 
+        <Card
           key={stat.label}
           className="animate-fade-in"
           style={{ animationDelay: `${index * 100}ms` }}

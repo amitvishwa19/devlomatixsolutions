@@ -20,19 +20,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Appointment } from "./types";
 
-interface ViewAppointmentSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  appointment: Appointment | null;
-  onEdit: (appointment: Appointment) => void;
-  onDelete: (id: string) => void;
-  onConfirm: (id: string) => void;
-  onCancel: (id: string) => void;
-}
 
-const statusVariants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
+
+
+const statusVariants = {
   scheduled: { variant: "outline", label: "Scheduled" },
   confirmed: { variant: "default", label: "Confirmed" },
   "in-progress": { variant: "secondary", label: "In Progress" },
@@ -41,7 +33,7 @@ const statusVariants: Record<string, { variant: "default" | "secondary" | "destr
   "no-show": { variant: "destructive", label: "No Show" },
 };
 
-const typeColors: Record<string, string> = {
+const typeColors = {
   consultation: "bg-info/10 text-info",
   "follow-up": "bg-primary/10 text-primary",
   procedure: "bg-warning/10 text-warning",
@@ -57,7 +49,7 @@ export function ViewAppointmentSheet({
   onDelete,
   onConfirm,
   onCancel,
-}: ViewAppointmentSheetProps) {
+}) {
   if (!appointment) return null;
 
   const canConfirm = appointment.status === "scheduled";

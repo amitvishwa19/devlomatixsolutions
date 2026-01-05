@@ -2,14 +2,10 @@ import { CalendarDays, User, Stethoscope } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, isToday, isTomorrow } from "date-fns";
-import { Appointment } from "./types";
 
-interface UpcomingAppointmentsProps {
-  appointments: Appointment[];
-  onAppointmentClick: (appointment: Appointment) => void;
-}
 
-const typeColors: Record<string, string> = {
+
+const typeColors = {
   consultation: "bg-info/10 text-info",
   "follow-up": "bg-primary/10 text-primary",
   procedure: "bg-warning/10 text-warning",
@@ -17,8 +13,8 @@ const typeColors: Record<string, string> = {
   checkup: "bg-success/10 text-success",
 };
 
-export function UpcomingAppointments({ appointments, onAppointmentClick }: UpcomingAppointmentsProps) {
-  const getDateLabel = (date: Date) => {
+export function UpcomingAppointments({ appointments, onAppointmentClick }) {
+  const getDateLabel = (date) => {
     if (isToday(date)) return "Today";
     if (isTomorrow(date)) return "Tomorrow";
     return format(date, "EEE, MMM d");

@@ -1,17 +1,10 @@
 import { format, isSameMonth, isSameDay, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Appointment, CalendarView } from "./types";
 
-interface CalendarGridProps {
-  days: Date[];
-  selectedDate: Date;
-  calendarView: CalendarView;
-  getAppointmentsForDay: (date: Date) => Appointment[];
-  onDayClick: (date: Date) => void;
-  onAppointmentClick: (appointment: Appointment) => void;
-}
 
-const statusColors: Record<string, string> = {
+
+
+const statusColors = {
   scheduled: "bg-info/20 text-info border-info/30",
   confirmed: "bg-success/20 text-success border-success/30",
   "in-progress": "bg-warning/20 text-warning border-warning/30",
@@ -27,7 +20,7 @@ export function CalendarGrid({
   getAppointmentsForDay,
   onDayClick,
   onAppointmentClick,
-}: CalendarGridProps) {
+}) {
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   if (calendarView === "month") {

@@ -2,14 +2,10 @@ import { Clock, User, Stethoscope } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Appointment } from "./types";
 
-interface TodayAppointmentsProps {
-  appointments: Appointment[];
-  onAppointmentClick: (appointment: Appointment) => void;
-}
 
-const statusVariants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
+
+const statusVariants = {
   scheduled: { variant: "outline", label: "Scheduled" },
   confirmed: { variant: "default", label: "Confirmed" },
   "in-progress": { variant: "secondary", label: "In Progress" },
@@ -18,7 +14,7 @@ const statusVariants: Record<string, { variant: "default" | "secondary" | "destr
   "no-show": { variant: "destructive", label: "No Show" },
 };
 
-export function TodayAppointments({ appointments, onAppointmentClick }: TodayAppointmentsProps) {
+export function TodayAppointments({ appointments, onAppointmentClick }) {
   return (
     <Card>
       <CardHeader className="pb-3">

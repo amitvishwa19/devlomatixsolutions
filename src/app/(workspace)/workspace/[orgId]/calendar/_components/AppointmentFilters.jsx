@@ -7,13 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AppointmentFilters as FiltersType, Doctor } from "./types";
 
-interface AppointmentFiltersProps {
-  filters: FiltersType;
-  onFiltersChange: (filters: FiltersType) => void;
-  doctors: Doctor[];
-}
+
 
 const statuses = [
   { value: "scheduled", label: "Scheduled" },
@@ -44,7 +39,7 @@ export function AppointmentFilters({
   filters,
   onFiltersChange,
   doctors,
-}: AppointmentFiltersProps) {
+}) {
   const hasFilters = filters.status || filters.type || filters.doctorId || filters.department;
 
   const clearFilters = () => {
