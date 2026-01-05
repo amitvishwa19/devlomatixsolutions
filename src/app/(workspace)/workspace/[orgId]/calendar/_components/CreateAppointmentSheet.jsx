@@ -57,10 +57,10 @@ export function CreateAppointmentSheet({
   const [title, setTitle] = useState("");
   const [patientId, setPatientId] = useState("");
   const [doctorId, setDoctorId] = useState("");
-  const [date, setDate] = useState < Date | undefined > (selectedDate || new Date());
+  const [date, setDate] = useState(selectedDate || new Date());
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("09:30");
-  const [type, setType] = useState < string > ("consultation");
+  const [type, setType] = useState("consultation");
   const [notes, setNotes] = useState("");
 
   const handleSubmit = (e) => {

@@ -1,7 +1,3 @@
-// Types
-export * from "./types";
-
-// Components
 export { DocumentCard } from "./DocumentCard";
 export { DocumentFilters } from "./DocumentFilters";
 export { DocumentList } from "./DocumentList";
