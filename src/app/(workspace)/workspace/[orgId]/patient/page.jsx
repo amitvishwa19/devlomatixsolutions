@@ -22,11 +22,13 @@ import MedicalRecordsPage from './_component/medical-records/MedicalRecordsPage'
 import BillingManagementPage from './_component/billing-management/BillingManagementPage'
 import PatientManagementPage from './_component/patient-search/PatientManagementPage'
 import PatientEditor from './_component/patient-management/PatientEditor'
-import DataTable from '../../_components/DataTable'
+
 import CategoryHierarchy from '../../_components/CategoryHierarchy'
 import { usePatient } from './_provider/patientProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import PatientAdd from './_component/patient-management/PatientAdd'
+import { ContentTopbar } from '../(misc)/_components/ContentTopbar'
+import { DataTable } from '../(misc)/_components/DataTable'
 
 
 export default function PatientPage() {
@@ -236,15 +238,12 @@ export default function PatientPage() {
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
 
-            <div className='w-full dark:bg-[#151D24] p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl'>Patients</h2>
-                    <h2 className='text-xs text-white/50'>
-                        Search and access patient records using multiple criteria for efficient clinical operations
-                    </h2>
-                </div>
 
-                <Button
+            <ContentTopbar
+                title='Patients'
+                description='Search and access patient records using multiple criteria for efficient clinical operations'
+                icon='accessibility'
+                actionComp={<Button
                     variant={'save'}
                     size={'sm'}
                     onClick={() => {
@@ -257,84 +256,84 @@ export default function PatientPage() {
                 >
                     <Save />
                     Add New Patient
-                </Button>
-            </div>
-
-            <div className='h-full flex flex-grow w-full dark:bg-darkSecondaryBackground rounded-md py-2 border'>
-                <ScrollArea className='h-[85vh] w-full p-2'>
-                    <div className='flex flex-col gap-4 p-2'>
+                </Button>}
+            />
 
 
-                        <div className='flex flex-row gap-2 w-full '>
+            <ScrollArea className='h-[85vh] w-full'>
+                <div className='flex flex-col gap-4 p-2'>
 
 
-                            <div className='min-w-[75%]'>
-                                <DataTable
-                                    columns={columns}
-                                    data={tempData}
-                                    onFiltersChange={(e) => { console.log('filter change', e) }}
-                                    filterTitle='Search invoice items......'
-                                />
-                            </div>
-
-                            <div className='w-full'>
-                                <CategoryHierarchy
-                                    title='Patient Hierarchy'
-                                    data={[]}
-                                    category={category}
-                                    onUpdate={(c) => { setCategory(c) }}
-                                />
-                            </div>
+                    <div className='flex flex-row gap-2 w-full '>
 
 
+                        <div className='min-w-[75%]'>
+                            <DataTable
+                                columns={columns}
+                                data={tempData}
+                                onFiltersChange={(e) => { console.log('filter change', e) }}
+                                filterTitle='Search invoice items......'
+                            />
                         </div>
-                        <PatientEditor
-                            isOpen={patientEditor.isOpen}
-                            onClose={() => {
-                                setPatientEditor({
-                                    isOpen: false,
-                                })
-                            }}
-                            patient={patientEditor.patient}
-                            mode={patientEditor.mode}
-                            onSave={(patient) => {
-                                if (patient) {
-                                    setPatients(prev =>
-                                        prev.some(item => item.id === patient.id)
-                                            ? prev.map(item =>
-                                                item.id === patient.id ? { ...item, ...patient } : item
-                                            )
-                                            : [patient, ...prev]
-                                    );
-                                }
-                            }}
-                        />
+
+                        <div className='w-full'>
+                            <CategoryHierarchy
+                                title='Patient Hierarchy'
+                                data={[]}
+                                category={category}
+                                onUpdate={(c) => { setCategory(c) }}
+                            />
+                        </div>
 
 
-                        <PatientAdd
-                            isOpen={patientAdd.isOpen}
-                            onClose={() => {
-                                setPatientAdd({
-                                    isOpen: false
-                                })
-                            }}
-                            onSave={(patient) => {
-                                if (patient) {
-                                    setPatients(prev =>
-                                        prev.some(item => item.id === patient.id)
-                                            ? prev.map(item =>
-                                                item.id === patient.id ? { ...item, ...patient } : item
-                                            )
-                                            : [patient, ...prev]
-                                    );
-                                }
-                            }}
-                        />
                     </div>
-                </ScrollArea>
+                    <PatientEditor
+                        isOpen={patientEditor.isOpen}
+                        onClose={() => {
+                            setPatientEditor({
+                                isOpen: false,
+                            })
+                        }}
+                        patient={patientEditor.patient}
+                        mode={patientEditor.mode}
+                        onSave={(patient) => {
+                            if (patient) {
+                                setPatients(prev =>
+                                    prev.some(item => item.id === patient.id)
+                                        ? prev.map(item =>
+                                            item.id === patient.id ? { ...item, ...patient } : item
+                                        )
+                                        : [patient, ...prev]
+                                );
+                            }
+                        }}
+                    />
 
 
-            </div>
+                    <PatientAdd
+                        isOpen={patientAdd.isOpen}
+                        onClose={() => {
+                            setPatientAdd({
+                                isOpen: false
+                            })
+                        }}
+                        onSave={(patient) => {
+                            if (patient) {
+                                setPatients(prev =>
+                                    prev.some(item => item.id === patient.id)
+                                        ? prev.map(item =>
+                                            item.id === patient.id ? { ...item, ...patient } : item
+                                        )
+                                        : [patient, ...prev]
+                                );
+                            }
+                        }}
+                    />
+                </div>
+            </ScrollArea>
+
+
+
 
         </div>
     )

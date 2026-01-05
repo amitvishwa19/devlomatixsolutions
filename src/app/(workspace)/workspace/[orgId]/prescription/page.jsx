@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import PrescriptionView from './_components/PrescriptionView';
 import { PrescriptionDelete } from './_components/PrescriptionDelete';
 import { DataTable } from '../(misc)/_components/DataTable';
+import { ContentTopbar } from '../(misc)/_components/ContentTopbar';
 
 export default function PrescriptionPage() {
 
@@ -220,24 +221,21 @@ export default function PrescriptionPage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl'>Prescription Management</h2>
-                    <h2 className='text-xs text-muted-foreground'>Digital Prescriptions: Doctors create Rx with dosage, frequency, duration, and instructions</h2>
-                </div>
-                <div>
-                    <Button variant='save' size='sm' onClick={() => setPrescriptionEditor({
-                        isOpen: true,
-                        mode: 'add',
-                        prescription: null,
-                    })}>
-                        <FilePlus />
-                        Add Prescription
-                    </Button>
-                </div>
-            </div>
+            <ContentTopbar
+                title='Prescription Management'
+                description='Digital Prescriptions: Doctors create Rx with dosage, frequency, duration, and instructions'
+                icon='clipboard-plus'
+                actionComp={<Button variant='save' size='sm' onClick={() => setPrescriptionEditor({
+                    isOpen: true,
+                    mode: 'add',
+                    prescription: null,
+                })}>
+                    <FilePlus />
+                    Add Prescription
+                </Button>}
+            />
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md border'>
+            <ScrollArea className='h-[85vh] flex flex-grow  rounded-md '>
 
 
                 <div className='flex flex-col gap-4 p-2'>

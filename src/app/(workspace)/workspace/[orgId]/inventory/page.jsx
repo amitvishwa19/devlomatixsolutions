@@ -16,6 +16,7 @@ import InventoryEditor from './_components/inventory-management/InventoryEditor'
 import { DynamicIcon } from 'lucide-react/dynamic';
 import InventoryDelete from './_components/inventory-management/InventoryDelete';
 import { DataTable } from '../(misc)/_components/DataTable';
+import { ContentTopbar } from '../(misc)/_components/ContentTopbar';
 
 
 
@@ -320,24 +321,22 @@ export default function InventoryPage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl'>Inventory Management</h2>
-                    <h2 className='text-xs text-muted-foreground'>Manage hospital inventory items</h2>
-                </div>
-
-                <Button
+            <ContentTopbar
+                title='Inventory Management'
+                description='Efficient supplies, safer care — smart inventory control for every ward, every shift, every patient'
+                icon=''
+                actionComp={<Button
                     variant='save'
                     size='sm'
                     onClick={setInventoryEditor}
                 >
                     <Save />
                     New Inventory
-                </Button>
+                </Button>}
 
-            </div>
+            />
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md pr-4 border'>
+            <ScrollArea className='h-[85vh] flex flex-grow rounded-md'>
                 <div className='flex flex-col gap-4 p-2'>
                     <InventoryStats inventories={inventories} />
 

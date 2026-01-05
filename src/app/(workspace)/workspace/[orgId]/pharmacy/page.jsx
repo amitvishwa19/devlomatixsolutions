@@ -23,7 +23,7 @@ export default function PharmacyPage() {
                 onActionClick={() => { setQuickBillDialogOpen(true) }}
             />
 
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground p-2 rounded-md border'>
+            <ScrollArea className='h-[85vh] flex flex-grow rounded-md'>
                 <PharmacyManagement />
             </ScrollArea>
 

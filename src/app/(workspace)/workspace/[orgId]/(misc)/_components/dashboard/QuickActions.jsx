@@ -1,136 +1,36 @@
-import React, { useState } from 'react'
-import { Plus, Calendar, FileText, UserPlus, Stethoscope } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useParams, useRouter } from 'next/navigation';
-import { useModal } from '@/hooks/useModal';
-import PatientAdd from '../../../patient/_component/patient-management/PatientAdd';
-//import AppointmentEditor from '../../../appointment/_components/appointment-manager/AppointmentEditor';
+import { UserPlus, Calendar, FileText, Pill, Upload, BedDouble } from "lucide-react";
 
+const actions = [
+  { label: "Add Patient", icon: UserPlus },
+  { label: "New Appointment", icon: Calendar },
+  { label: "Create Invoice", icon: FileText },
+  { label: "Prescription", icon: Pill },
+  { label: "Upload Doc", icon: Upload },
+  { label: "Manage Beds", icon: BedDouble },
+];
 
-
-
-export default function QuickActions() {
-    const router = useRouter()
-    const { orgId } = useParams()
-    const { onOpen } = useModal()
-
-    const actions = [
-        {
-            id: 'quick-appointment',
-            label: "Book Appointment",
-            icon: Calendar,
-            variant: "outline",
-
-        },
-        {
-            id: 'new-patient',
-            label: "New Patient",
-            icon: UserPlus,
-            variant: "outline",
-        },
-        {
-            id: 'new-prescription',
-            label: "Write Prescription",
-            icon: FileText,
-            variant: "outline",
-        },
-        {
-            id: 'new-consultation',
-            label: "Start Consultation",
-            icon: Stethoscope,
-            variant: "outline",
-        },
-    ];
-
-    const [patientAdd, setPatientAdd] = useState({
-        isOpen: false,
-        mode: 'add',
-        patient: null,
-    })
-
-    const [appointmentEditor, setAppointmentEditor] = useState({
-        isOpen: false,
-        mode: 'edit',
-        appointment: null
-    });
-
-    const handleActionClick = (action) => {
-        console.log('handleActionClick Clicked:', action.id)
-        // do something based on action.id or action.label
-
-        if (action.id === 'quick-appointment') {
-            onOpen(action.id)
-        }
-
-
-        if (action.id === 'new-patient') {
-            console.log('@ Add new patient')
-            setPatientAdd({
-                isOpen: true
-            })
-        }
-
-        if (action.id === 'quick-appointment') {
-            setAppointmentEditor({
-                isOpen: true,
-                mode: 'add',
-            })
-        }
-
-    }
-
-
-    return (
-        <div className="rounded-md border border-border/50 bg-card  p-5 shadow-card animate-slide-up" style={{ animationDelay: "400ms" }}>
-            <h3 className="mb-4 text-lg font-semibold text-foreground">Quick Actions</h3>
-
-            <div className="grid grid-cols-2 gap-3">
-                {actions.map((action) => (
-                    <Button
-                        key={action.label}
-                        variant={action.variant}
-                        className="h-auto flex-col gap-2 py-4"
-                        onClick={() => { handleActionClick(action) }}
-                    >
-                        <action.icon className="h-5 w-5" />
-                        <span className="text-xs font-medium">{action.label}</span>
-                    </Button>
-                ))}
+export function QuickActions() {
+  return (
+    <div className="bg-card rounded-xl border border-border p-5">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-foreground">Quick Actions</h3>
+        <p className="text-xs text-muted-foreground">Frequently used tasks</p>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {actions.map((action) => (
+          <button
+            key={action.label}
+            className="flex flex-col items-center gap-2 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
+          >
+            <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/10 transition-colors">
+              <action.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
-
-            <PatientAdd
-                isOpen={patientAdd.isOpen}
-                onClose={() => {
-                    setPatientAdd({
-                        isOpen: false
-                    })
-                }}
-                onSave={(patient) => {
-                    if (patient) {
-                        // setPatients(prev =>
-                        //     prev.some(item => item.id === patient.id)
-                        //         ? prev.map(item =>
-                        //             item.id === patient.id ? { ...item, ...patient } : item
-                        //         )
-                        //         : [patient, ...prev]
-                        // );
-                    }
-                }}
-            />
-
-            {/* <AppointmentEditor
-                isOpen={appointmentEditor.isOpen}
-                mode={appointmentEditor.mode}
-                onClose={() => {
-                    setAppointmentEditor({
-                        isOpen: false,
-                        mode: 'add',
-                    })
-                }}
-                appointment={appointmentEditor.appointment}
-            /> */}
-
-
-        </div>
-    )
+            <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors text-center">
+              {action.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }

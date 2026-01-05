@@ -112,7 +112,7 @@ const SearchSuggestions = ({
                     onFocus={handleInputFocus}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
-                    className=" transition-all duration-200 ease-out"
+                    className=" transition-all duration-200 ease-out m-1"
                 />
                 {inputValue && (
                     <button

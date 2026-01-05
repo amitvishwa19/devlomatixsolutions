@@ -305,9 +305,9 @@ const SidebarSingleItem = ({ title, link, icon, selected }) => {
             <Link
                 href={link}
                 className={`py-1.5 px-2 flex items-center gap-2 cursor-pointer 
-                            hover:bg-primary/10 dark:hover:bg-darkfocus   rounded-md 
+                            hover:bg-primary/10 dark:hover:bg-card   rounded-md 
                             text-slate-600 dark:text-white/80   
-                            ${selected && 'bg-primary/10 dark:bg-darkfocus  border/10'}`}
+                            ${selected && 'bg-primary/10 dark:bg-card  border/10'}`}
             >
                 <DynamicIcon name={icon} size={16} />
                 <span className='text-sm font-semibold'>

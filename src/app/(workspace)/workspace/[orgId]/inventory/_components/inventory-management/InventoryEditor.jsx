@@ -220,7 +220,7 @@ export default function InventoryEditor({ isOpen, onClose, inventory, onSubmit, 
                                             </FormControl>
 
                                             <SelectContent>
-                                                {categories.map((cat) => (
+                                                {categories?.map((cat) => (
                                                     <SelectGroup key={cat.id}>
                                                         {/* <SelectLabel className="flex items-center gap-2 px-2 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50">
                                                             {cat.icon ? <DynamicIcon size={14} name={cat.icon} /> : <DynamicIcon size={14} name={'folder'} />}
