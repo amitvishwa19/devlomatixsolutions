@@ -83,8 +83,8 @@ export default function OrgSwitcher() {
                         </div>
                     ) : (
                         <div className='flex flex-row items-center gap-1'>
-                            <Skeleton className=" h-[48px] w-[56px]  rounded-lg" />
-                            <Skeleton className=" h-[48px] w-full  rounded-lg " />
+                            <Skeleton className=" h-[48px] w-[56px]  rounded-lg bg-card" />
+                            <Skeleton className=" h-[48px] w-full  rounded-lg bg-card " />
                         </div>
                     )}
 

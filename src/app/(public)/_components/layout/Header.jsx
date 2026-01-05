@@ -55,7 +55,7 @@ const Header = () => {
                 <div className="hidden md:flex items-center gap-3">
                     <ThemeSwitcher />
                     <AppointmentDialog>
-                        <Button variant="hero" size="default">
+                        <Button variant='default' size="default">
                             Book Appointment
                         </Button>
                     </AppointmentDialog>
@@ -97,7 +97,7 @@ const Header = () => {
 
                         ))}
                         <AppointmentDialog>
-                            <Button variant="hero" className="mt-2 w-full">
+                            <Button variant='default' size='sm' className="mt-2 w-full">
                                 Book Appointment
                             </Button>
                         </AppointmentDialog>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
 import PatientAdd from '../../../patient/_component/patient-management/PatientAdd';
-import AppointmentEditor from '../../../appointment/_components/appointment-manager/AppointmentEditor';
+//import AppointmentEditor from '../../../appointment/_components/appointment-manager/AppointmentEditor';
 
 
 
@@ -118,7 +118,7 @@ export default function QuickActions() {
                 }}
             />
 
-            <AppointmentEditor
+            {/* <AppointmentEditor
                 isOpen={appointmentEditor.isOpen}
                 mode={appointmentEditor.mode}
                 onClose={() => {
@@ -128,7 +128,7 @@ export default function QuickActions() {
                     })
                 }}
                 appointment={appointmentEditor.appointment}
-            />
+            /> */}
 
 
         </div>

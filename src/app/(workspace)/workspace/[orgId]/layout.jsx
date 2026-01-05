@@ -7,6 +7,7 @@ import { OrgModalProvider } from '@/providers/OrgModalProvider';
 import DataProvider from './(misc)/_providers/DataProvider';
 import { db } from '@/lib/db';
 import Loader from '@/components/global/Loader';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 const font = Roboto({ subsets: ["latin"] });
@@ -44,6 +45,7 @@ export default async function layout({ children }) {
         <QueryProvider>
             <OrgModalProvider />
             <DataProvider >
+
                 <div className={`flex h-screen max-w-screen ${font.className} overflow-hidden dark:bg-darkbackground`}>
                     <div className='h-screen flex-grow hidden xl:flex '>
                         <OrgSidebar />
@@ -53,14 +55,16 @@ export default async function layout({ children }) {
                             <TopNav />
                         </div>
                         <div className='h-full relative flex-1 p-2'>
-                            <ScrollArea className='h-full relative flex-1 p-0 bg-primary/10 dark:bg-darkcontent rounded-md '>
+                            <ScrollArea className='h-full relative flex-1 rounded-md bg-primary/5 dark:bg-darkcontent border'>
                                 {children}
                                 <ScrollBar orientation="horizontal" />
                             </ScrollArea>
                         </div>
                     </div>
-                    {/* <Loader /> */}
                 </div>
+
+
+
             </DataProvider>
         </QueryProvider>
     )

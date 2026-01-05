@@ -32,27 +32,11 @@ export default async function AppointmentLayout({ children }) {
         }
     })
 
-    const appointments = await db.appointment.findMany({
-        include: {
-            doctor: {
-                include: {
-                    profile: true
-                }
-            },
-            patient: {
-                include: {
-                    profile: true
-                }
-            },
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    })
+
 
 
     return (
-        <AppointmentProvider allCategories={categories} allAppointments={appointments}>
+        <AppointmentProvider allCategories={categories}>
             <div>
                 {children}
             </div>

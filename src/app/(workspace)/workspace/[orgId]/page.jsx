@@ -9,19 +9,18 @@ import { getDoctors } from './(misc)/_actions/get-doctors'
 import { getAllUsers } from './(misc)/_actions/get-users'
 import { getAppointments } from './appointment/_actions/get-appointments'
 import { setAppointments, setDoctors, setPatients } from './appointment/_redux/appointment-slice'
-import { StatsCard } from './appointment/_components/cards/StatsCard'
 import { useOrg } from '@/providers/OrgProvider'
 import AppointmentsList from './(misc)/_components/dashboard/AppointmentsList'
 import QuickActions from './(misc)/_components/dashboard/QuickActions'
 import ClinicOverview from './(misc)/_components/dashboard/ClinicOverview'
-import RecentPatients from './(misc)/_components/dashboard/RecentPatients'
-import { DoctorSchedule } from './(misc)/_components/dashboard/DoctorSchedule'
 import { UpcomingTasks } from './(misc)/_components/dashboard/UpcomingTasks'
 import { InventoryStatus } from './(misc)/_components/dashboard/InventoryStatus'
 import { NotificationsPanel } from './(misc)/_components/dashboard/NotificationsPanel'
 import { RevenueChart } from './(misc)/_components/dashboard/RevenueChart'
 import moment from 'moment'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { StatsCard } from './(misc)/_components/cards/StatsCard'
+import { ContentTopbar } from './(misc)/_components/ContentTopbar'
 
 
 
@@ -110,19 +109,13 @@ export default function Dashboard() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full  p-4 rounded-md  flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl'>Dashboard</h2>
-                    <h2 className='text-xs text-muted-foreground'>
-                        Complete overview of all hospital operations and patient management. Monitor. Manage. Move forward.
-                    </h2>
-                </div>
+            <ContentTopbar
+                title='Dashboard'
+                description="Complete overview of all hospital operations and patient management. Monitor. Manage. Move forward."
+            />
 
 
-            </div>
-
-
-            <ScrollArea className='h-[85vh] flex flex-grow rounded-md p-2 '>
+            <ScrollArea className='h-[85vh] flex flex-grow rounded-md '>
                 <div className='flex flex-col gap-2'>
 
 

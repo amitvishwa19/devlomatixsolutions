@@ -6,41 +6,26 @@ import { useModal } from '@/hooks/useModal'
 import { useOrg } from '@/providers/OrgProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import moment from 'moment'
-import { BarChart3, Bell, Calendar, CalendarRange, Eye, FilePenLine, LayoutDashboard, Megaphone, MoreHorizontal, Pencil, Plus, Stethoscope, Trash2, Trash2Icon, Users, View } from 'lucide-react'
+import StatusSelector from './_components/StatusSelector'
+import { Bell, Calendar, CalendarRange, Eye, FilePenLine, Megaphone, MoreHorizontal, Pencil, Trash2, Trash2Icon, View } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { ActionTooltip } from '@/components/global/ActionTooltip'
+import ViewAppointment from './_components/appointment-manager/ViewAppointment'
 import { useSocket } from '@/providers/SocketProvider'
 import { useSession } from 'next-auth/react'
 import { ROLE } from '@prisma/client'
+import AppointmentEditor from './_components/appointment-manager/AppointmentEditor'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import CategoryHierarchy from '../../_components/CategoryHierarchy'
 import { useAppointment } from './_provider/appointmentProvider'
+import DatePeriodSelector from '../(misc)/_components/DatePeriodSelector'
 import { DataTable } from '../(misc)/_components/DataTable'
-import { ContentTopbar } from '../(misc)/_components/ContentTopbar'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
-import DashboardContent from './_components/sections/DashboardSection'
-import AppointmentsContent from './_components/sections/AppointmentsSection'
-import DoctorsContent from './_components/sections/DoctorsSection'
-import PatientsContent from './_components/sections/PatientsSection'
-import ReportsContent from './_components/sections/ReportsSection'
-import SettingsContent from './_components/sections/SettingsSection'
-import NewAppointmentSheet from './_components/NewAppointmentSheet'
-
-const tabs = [
-    { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { value: "appointments", label: "Appointments", icon: Calendar },
-    { value: "doctors", label: "Doctors", icon: Stethoscope },
-    { value: "patients", label: "Patients", icon: Users },
-    { value: "reports", label: "Reports", icon: BarChart3 },
-];
 
 
 export default function Appointments() {
-    const [activeTab, setActiveTab] = useState("dashboard");
     const { server, servers } = useOrg()
     const { data: session } = useSession()
-    const { category, setCategory, appointments } = useAppointment()
+    const { category, setCategory } = useAppointment()
 
 
     const allAppointments = useSelector((state) => state.appointment.appointments)
@@ -52,12 +37,6 @@ export default function Appointments() {
     const dispatch = useDispatch()
     const { socket } = useSocket()
     const { newAppointmentNotification, patientInNotify } = useSocket()
-    const [appointmentSheet, setAppointmentSheet] = useState({
-        isOpen: false,
-        mode: 'view',
-    });
-
-
     const [viewAppointment, setViewAppointment] = useState({
         isOpen: false,
         mode: 'view',
@@ -232,121 +211,76 @@ export default function Appointments() {
     ]
 
     return (
-        <div className='absolute inset-0 flex flex-col gap-2'>
+        <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-
-                <ContentTopbar
-                    title='Appointments'
-                    description="Welcome back! Here' s what's happening with your appointments today."
-                    actionComp={
-                        <div className='flex flex-row items-center gap-2'>
-                            <TabsList className="flex flex-wrap justify-center gap-1 bg-card border border-border/60 p-1  rounded-lg h-auto">
-                                {tabs.map((tab) => {
-                                    const Icon = tab.icon;
-                                    return (
-                                        <TabsTrigger
-                                            key={tab.value}
-                                            value={tab.value}
-                                            className={cn(
-                                                "flex items-center gap-2  rounded-lg text-sm font-medium transition-all",
-                                                "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-glow-sm"
-                                            )}
-                                        >
-                                            <Icon className="h-4 w-4" />
-                                            <span className="hidden lg:inline">{tab.label}</span>
-                                        </TabsTrigger>
-                                    );
-                                })}
-                            </TabsList>
-                            <Button
-                                variant='default'
-                                size='md'
-                                onClick={() => {
-                                    setAppointmentSheet({
-                                        isOpen: true,
-                                        mode: 'add'
-                                    })
-                                }}
-                                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-glow-sm"
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">New Appointment</span>
-                                <span className="sm:hidden">New</span>
-                            </Button>
-                        </div>
-                    }
-                />
+            <div className='w-full dark:bg-[#151D24] p-4 rounded-md border flex flex-row items-center justify-between'>
+                <div>
+                    <h2 className='text-xl'>Appointments</h2>
+                    <h2 className='text-xs text-white/50'>Manage all your appointments</h2>
+                </div>
+                <div className='flex flex-row gap-2'>
+                    <Button variant='save' size='sm' onClick={() => {
+                        setAppointmentEditor({
+                            isOpen: true,
+                            mode: 'add',
+                        })
+                    }}>
+                        <CalendarRange />
+                        Book Appointment
+                    </Button>
+                </div>
+            </div>
 
 
-                <ScrollArea className='h-[86vh] flex flex-grow  '>
-
-                    {/* <div className='flex flex-col gap-4 p-2'>
-
-                        <div className='flex flex-row gap-2 w-full '>
 
 
-                            <div className='min-w-[75%]'>
-                                <DataTable
-                                    columns={columns}
-                                    data={data}
-                                    onFiltersChange={(e) => { console.log('filter change', e) }}
-                                    filterTitle='Search appointments......'
-                                />
+            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md p-2 border'>
 
-                            </div>
+                <div className='flex flex-col gap-4 p-2'>
 
-                            <div className='w-full'>
-                                <CategoryHierarchy
-                                    title='Appointment Hierarchy'
-                                    category={category}
-                                    onUpdate={(c) => { setCategory(c) }}
-                                />
-                            </div>
+                    <div className='flex flex-row gap-2 w-full '>
+
+
+                        <div className='min-w-[75%]'>
+                            <DataTable
+                                columns={columns}
+                                data={data}
+                                onFiltersChange={(e) => { console.log('filter change', e) }}
+                                filterTitle='Search appointments......'
+                            />
 
                         </div>
-                    </div> */}
 
-                    <div className="container mx-auto">
-                        <TabsContent value="dashboard" className="mt-0">
-                            <DashboardContent />
-                        </TabsContent>
+                        <div className='w-full'>
+                            <CategoryHierarchy
+                                title='Appointment Hierarchy'
+                                category={category}
+                                onUpdate={(c) => { setCategory(c) }}
+                            />
+                        </div>
 
-                        <TabsContent value="appointments" className="mt-0">
-                            <AppointmentsContent />
-                        </TabsContent>
-
-                        <TabsContent value="doctors" className="mt-0">
-                            <DoctorsContent />
-                        </TabsContent>
-
-                        <TabsContent value="patients" className="mt-0">
-                            <PatientsContent />
-                        </TabsContent>
-
-                        <TabsContent value="reports" className="mt-0">
-                            <ReportsContent />
-                        </TabsContent>
-
-                        <TabsContent value="settings" className="mt-0">
-                            <SettingsContent />
-                        </TabsContent>
                     </div>
-                </ScrollArea>
+                </div>
+            </ScrollArea>
 
+            <ViewAppointment
+                isOpen={viewAppointment?.isOpen}
+                onClose={() => { setViewAppointment({ ...viewAppointment, isOpen: false }) }}
+                appointment={viewAppointment?.appointment}
+            />
 
-            </Tabs>
-            <NewAppointmentSheet
-                open={appointmentSheet.isOpen}
-                onOpenChange={() => {
-                    setAppointmentSheet({
-                        isOpen: false
+            <AppointmentEditor
+                isOpen={appointmentEditor.isOpen}
+                mode={appointmentEditor.mode}
+                onClose={() => {
+                    setAppointmentEditor({
+                        isOpen: false,
+                        mode: 'add',
                     })
                 }}
-            //onSave={handleSaveAppointment}
-            //editingAppointment={editingAppointment}
-            //existingAppointments={appointments}
+                appointment={appointmentEditor.appointment}
             />
+
 
         </div >
     )
@@ -354,5 +288,22 @@ export default function Appointments() {
 
 
 
+
+const SelectorButton = ({ title, onClick, value }) => {
+
+    return (
+        <Button
+            variant="secondary"
+            className={`w-[10%] p-2 border rounded-md cursor-pointer
+                        flex items-center justify-center hover:bg-slate-400
+                        dark:bg-[#0E141B] hover:dark:bg-darkFocusColor hover:bg-primary/10    
+                        ${value === title ? 'dark:bg-darkFocusColor bg-primary/10' : ''}`}
+            onClick={() => onClick(title)}
+            size='sm'
+        >
+            <span className=' capitalize'>{title}</span>
+        </Button>
+    )
+}
 
 
