@@ -1,4 +1,3 @@
-export * from "./types";
 export { CalendarHeader } from "./CalendarHeader";
 export { CalendarGrid } from "./CalendarGrid";
 export { AppointmentFilters } from "./AppointmentFilters";
