@@ -164,9 +164,7 @@ export function MailboxTopNav({ syncGmail, isSyncing }) {
 
                 {/* User Menu */}
                 <div className="flex items-center gap-2 ml-2 pl-2 border-l border-border">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-xs font-medium text-primary">{userInitials}</span>
-                    </div>
+
                     <Button
                         variant="ghost"
                         size="icon"
