@@ -1,7 +1,0 @@
--- AlterTable
-ALTER TABLE "Invoice" ALTER COLUMN "issueDate" SET DATA TYPE TEXT,
-ALTER COLUMN "dueDate" SET DATA TYPE TEXT;
-
--- AlterTable
-ALTER TABLE "Payment" ALTER COLUMN "paymentDate" DROP DEFAULT,
-ALTER COLUMN "paymentDate" SET DATA TYPE TEXT;

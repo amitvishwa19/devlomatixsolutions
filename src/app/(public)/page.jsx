@@ -36,6 +36,8 @@ export default function HomePage() {
     return (
         <div className="min-h-screen overflow-hidden">
 
+
+            {/* hero area */}
             <section className="relative min-h-screen flex items-center py-20 lg:py-0">
                 {/* Background Effects */}
                 <div className="absolute inset-0 gradient-mesh" />
@@ -49,6 +51,8 @@ export default function HomePage() {
 
                 <div className=" relative mx-auto px-4">
                     <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
+
                         <div className="space-y-8">
                             <div
                                 className="inline-flex items-center gap-2 rounded-full glass px-5 py-2.5 text-sm font-medium animate-fade-in"
@@ -175,7 +179,7 @@ export default function HomePage() {
                                 className="text-center animate-slide-up"
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
-                                <p className="stat-number text-5xl md:text-6xl lg:text-7xl">
+                                <p className=" text-5xl md:text-6xl lg:text-7xl text-primary">
                                     {stat.number}<span className="text-3xl md:text-4xl">{stat.suffix}</span>
                                 </p>
                                 <p className="mt-3 text-muted-foreground font-medium">{stat.label}</p>
@@ -208,15 +212,19 @@ export default function HomePage() {
                         {services.map((service, index) => (
                             <Card
                                 key={service.title}
-                                className="group card-hover border-border/50 bg-card/50 glass animate-slide-up overflow-hidden"
+                                className="group card-hover border bg-card  animate-slide-up overflow-hidden hover:border-primary/30 transition-colors animate-fade-in"
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
-                                <CardContent className="p-8">
-                                    <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                                        <service.icon className="h-8 w-8 text-white" />
+                                <CardContent className="p-4">
+                                    <div className='flex flex-row items-center  gap-4'>
+                                        <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center  group-hover:scale-110 transition-transform duration-300`}>
+                                            <service.icon className="h-8 w-8 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-foreground mb-3">{service.title}</h3>
+                                            <p className="text-muted-foreground text-xs">{service.description}</p>
+                                        </div>
                                     </div>
-                                    <h3 className="text-xl font-bold text-foreground mb-3">{service.title}</h3>
-                                    <p className="text-muted-foreground leading-relaxed">{service.description}</p>
                                     <div className="mt-6 flex items-center text-primary font-medium text-sm group-hover:gap-3 transition-all">
                                         Learn more
                                         <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -244,7 +252,7 @@ export default function HomePage() {
                                     Excellence in Every{' '}
                                     <span className="text-sky-500">Aspect of Care</span>
                                 </h2>
-                                <p className="text-lg text-muted-foreground">
+                                <p className="text-md text-muted-foreground">
                                     We combine expertise, compassion, and innovation to deliver healthcare that exceeds expectations.
                                 </p>
                             </div>
@@ -253,14 +261,17 @@ export default function HomePage() {
                                 {features.map((feature, index) => (
                                     <div
                                         key={feature.title}
-                                        className="group p-6 rounded-2xl glass hover:shadow-card transition-all duration-300 animate-slide-up"
+                                        className="group p-6 rounded-2xl hover:shadow-card transition-all duration-300 animate-slide-up border hover:border-primary/30  animate-fade-in"
                                         style={{ animationDelay: `${index * 0.1}s` }}
                                     >
-                                        <div className="h-14 w-14 rounded-xl gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                            <feature.icon className="h-7 w-7 text-primary-foreground" />
+                                        <div className='flex flex-row items-center gap-4'>
+                                            <div className="h-14 w-14 rounded-xl gradient-primary flex items-center justify-centergroup-hover:scale-110 transition-transform">
+                                                <feature.icon className="h-7 w-7 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                                            </div>
                                         </div>
-                                        <h3 className="text-lg font-bold text-foreground mb-2">{feature.title}</h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                                     </div>
                                 ))}
                             </div>
@@ -298,10 +309,10 @@ export default function HomePage() {
                         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.08%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
 
                         <div className="relative px-8 py-16 md:p-20 lg:p-24 text-center">
-                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 max-w-2xl mx-auto">
+                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-6 max-w-2xl mx-auto">
                                 Ready to Take the First Step?
                             </h2>
-                            <p className="text-white/90 text-lg md:text-xl mb-10 max-w-xl mx-auto">
+                            <p className=" text-md md:text-md mb-10 max-w-xl mx-auto">
                                 Schedule your appointment today and experience healthcare that puts you first.
                             </p>
                             <AppointmentDialog>

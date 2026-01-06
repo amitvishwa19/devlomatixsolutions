@@ -34,6 +34,67 @@ CREATE TYPE "TASKTYPE" AS ENUM ('LAUNCHBROWSER');
 -- CreateEnum
 CREATE TYPE "TASKPARAMTYPES" AS ENUM ('STRING');
 
+-- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'CARD', 'UPI', 'BANK_TRANSFER', 'INSURANCE');
+
+-- CreateTable
+CREATE TABLE "GeneralSettings" (
+    "id" SERIAL NOT NULL,
+    "websiteName" TEXT NOT NULL DEFAULT 'Hospital Management System',
+    "websiteLogo" TEXT,
+    "websiteFavicon" TEXT,
+    "primaryContactEmail" TEXT NOT NULL DEFAULT 'info@hospital.com',
+    "primaryContactPhone" TEXT,
+    "address" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "zipCode" TEXT,
+    "country" TEXT NOT NULL DEFAULT 'India',
+    "facebookUrl" TEXT,
+    "twitterUrl" TEXT,
+    "linkedinUrl" TEXT,
+    "instagramUrl" TEXT,
+    "whatsappNumber" TEXT,
+    "hospitalName" TEXT NOT NULL DEFAULT 'City Hospital',
+    "hospitalLicenseNo" TEXT,
+    "registrationNo" TEXT,
+    "primaryColor" TEXT NOT NULL DEFAULT '#1C1C1C',
+    "secondaryColor" TEXT NOT NULL DEFAULT '#f8fafc',
+    "themeMode" TEXT NOT NULL DEFAULT 'light',
+    "mondayOpen" TEXT,
+    "mondayClose" TEXT,
+    "tuesdayOpen" TEXT,
+    "tuesdayClose" TEXT,
+    "emergencyPhone" TEXT,
+    "emergencyEmail" TEXT,
+    "metaTitle" TEXT NOT NULL DEFAULT 'Hospital Management System',
+    "metaDescription" TEXT,
+    "keywords" TEXT,
+    "maintenanceMode" BOOLEAN NOT NULL DEFAULT false,
+    "customDomain" TEXT,
+    "googleAnalyticsId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "GeneralSettings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Setting" (
+    "id" TEXT NOT NULL,
+    "serverId" TEXT NOT NULL,
+    "type" TEXT,
+    "online" BOOLEAN NOT NULL DEFAULT false,
+    "offline" BOOLEAN NOT NULL DEFAULT false,
+    "timing" JSONB,
+    "slotTime" INTEGER,
+    "consultationOptions" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Setting_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -43,9 +104,10 @@ CREATE TABLE "User" (
     "firstName" TEXT,
     "lastName" TEXT,
     "username" TEXT,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "phone" TEXT,
     "avatar" TEXT,
+    "sku" TEXT,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "status" BOOLEAN NOT NULL DEFAULT false,
     "guest" BOOLEAN NOT NULL DEFAULT true,
@@ -56,6 +118,8 @@ CREATE TABLE "User" (
     "profileStatus" BOOLEAN NOT NULL DEFAULT false,
     "online" BOOLEAN NOT NULL DEFAULT true,
     "healthMetricItemId" TEXT,
+    "demographic" JSONB DEFAULT '{}',
+    "department" TEXT,
     "role" "ROLE" NOT NULL DEFAULT 'PATIENT',
     "patient" JSONB,
     "insurance" JSONB,
@@ -71,32 +135,11 @@ CREATE TABLE "User" (
     "forgotPasswordTokenExpiry" TIMESTAMP(3),
     "verifyToken" TEXT,
     "verifyTokenExpiry" TIMESTAMP(3),
+    "lastActive" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Demographic" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "firstname" TEXT,
-    "lastname" TEXT,
-    "fullname" TEXT,
-    "dob" TEXT,
-    "gender" TEXT,
-    "maritialStatus" TEXT,
-    "socialId" TEXT,
-    "language" JSONB,
-    "phone" TEXT,
-    "emrPhone" TEXT,
-    "relation" TEXT,
-    "address" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Demographic_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -183,6 +226,8 @@ CREATE TABLE "Profile" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" TEXT,
+    "speciality" TEXT DEFAULT 'General Medicine',
+    "registrationNo" TEXT,
     "displayname" TEXT,
     "firstname" TEXT,
     "lastname" TEXT,
@@ -236,22 +281,6 @@ CREATE TABLE "Server" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Server_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Setting" (
-    "id" TEXT NOT NULL,
-    "serverId" TEXT NOT NULL,
-    "type" TEXT,
-    "online" BOOLEAN NOT NULL DEFAULT false,
-    "offline" BOOLEAN NOT NULL DEFAULT false,
-    "timing" JSONB,
-    "slotTime" INTEGER,
-    "consultationOptions" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Setting_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -382,10 +411,12 @@ CREATE TABLE "Appointment" (
 CREATE TABLE "Prescription" (
     "id" TEXT NOT NULL,
     "appointmentId" TEXT NOT NULL,
-    "title" TEXT,
-    "description" TEXT,
-    "prescription" JSONB,
-    "status" BOOLEAN NOT NULL DEFAULT false,
+    "categoryId" TEXT,
+    "sku" TEXT NOT NULL,
+    "diagnosis" TEXT,
+    "items" JSONB,
+    "status" TEXT NOT NULL DEFAULT 'draft',
+    "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -535,6 +566,7 @@ CREATE TABLE "Role" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
+    "color" TEXT,
     "status" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -547,10 +579,12 @@ CREATE TABLE "Role" (
 CREATE TABLE "Permission" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "color" TEXT DEFAULT '#FFFF',
     "description" TEXT NOT NULL,
     "status" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "categoryId" TEXT,
 
     CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
 );
@@ -855,6 +889,7 @@ CREATE TABLE "Service" (
     "insuranceCover" TEXT DEFAULT 'not_covered',
     "sku" TEXT,
     "categoryId" TEXT,
+    "invoiceId" TEXT,
     "status" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -881,6 +916,66 @@ CREATE TABLE "Inventory" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Inventory_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Invoice" (
+    "id" TEXT NOT NULL,
+    "patientId" TEXT,
+    "appointmentId" TEXT,
+    "categoryId" TEXT,
+    "sku" TEXT,
+    "issueDate" TEXT NOT NULL,
+    "dueDate" TEXT NOT NULL,
+    "subtotal" DOUBLE PRECISION NOT NULL,
+    "tax" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "discount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'draft',
+    "notes" TEXT,
+    "items" JSONB[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Invoice_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Payment" (
+    "id" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "method" "PaymentMethod" NOT NULL,
+    "paymentDate" TEXT NOT NULL,
+    "referenceNo" TEXT,
+    "invoiceId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Credentials" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "serviceName" TEXT NOT NULL,
+    "apiKey" TEXT,
+    "apiSecret" TEXT,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "clientId" TEXT,
+    "clientSecret" TEXT,
+    "username" TEXT,
+    "password" TEXT,
+    "endpointUrl" TEXT,
+    "webhookUrl" TEXT,
+    "region" TEXT,
+    "port" INTEGER,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Credentials_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -932,19 +1027,25 @@ CREATE TABLE "_PostToTag" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Setting_serverId_key" ON "Setting"("serverId");
+
+-- CreateIndex
+CREATE INDEX "Setting_serverId_idx" ON "Setting"("serverId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
+
+-- CreateIndex
 CREATE INDEX "User_email_idx" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Demographic_userId_key" ON "Demographic"("userId");
-
--- CreateIndex
-CREATE INDEX "Demographic_userId_idx" ON "Demographic"("userId");
+CREATE INDEX "User_phone_idx" ON "User"("phone");
 
 -- CreateIndex
 CREATE INDEX "Vital_userId_idx" ON "Vital"("userId");
@@ -987,12 +1088,6 @@ CREATE UNIQUE INDEX "Server_inviteCode_key" ON "Server"("inviteCode");
 
 -- CreateIndex
 CREATE INDEX "Server_userId_idx" ON "Server"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Setting_serverId_key" ON "Setting"("serverId");
-
--- CreateIndex
-CREATE INDEX "Setting_serverId_idx" ON "Setting"("serverId");
 
 -- CreateIndex
 CREATE INDEX "Care_patientId_idx" ON "Care"("patientId");
@@ -1115,9 +1210,6 @@ CREATE INDEX "Credit_userId_idx" ON "Credit"("userId");
 CREATE UNIQUE INDEX "Credential_name_userId_key" ON "Credential"("name", "userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
-
--- CreateIndex
 CREATE INDEX "Category_parentId_idx" ON "Category"("parentId");
 
 -- CreateIndex
@@ -1139,6 +1231,9 @@ CREATE UNIQUE INDEX "Service_slug_key" ON "Service"("slug");
 CREATE UNIQUE INDEX "Inventory_slug_key" ON "Inventory"("slug");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Credentials_userId_serviceName_key" ON "Credentials"("userId", "serviceName");
+
+-- CreateIndex
 CREATE INDEX "_UserToUserPreference_B_index" ON "_UserToUserPreference"("B");
 
 -- CreateIndex
@@ -1157,7 +1252,7 @@ CREATE INDEX "_CategoryToTag_B_index" ON "_CategoryToTag"("B");
 CREATE INDEX "_PostToTag_B_index" ON "_PostToTag"("B");
 
 -- AddForeignKey
-ALTER TABLE "Demographic" ADD CONSTRAINT "Demographic_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Setting" ADD CONSTRAINT "Setting_serverId_fkey" FOREIGN KEY ("serverId") REFERENCES "Server"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Vital" ADD CONSTRAINT "Vital_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1187,9 +1282,6 @@ ALTER TABLE "MedicalProfile" ADD CONSTRAINT "MedicalProfile_userId_fkey" FOREIGN
 ALTER TABLE "Server" ADD CONSTRAINT "Server_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Setting" ADD CONSTRAINT "Setting_serverId_fkey" FOREIGN KEY ("serverId") REFERENCES "Server"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Care" ADD CONSTRAINT "Care_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1217,13 +1309,16 @@ ALTER TABLE "ContentItems" ADD CONSTRAINT "ContentItems_fieldId_fkey" FOREIGN KE
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_serverId_fkey" FOREIGN KEY ("serverId") REFERENCES "Server"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Prescription" ADD CONSTRAINT "Prescription_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Prescription" ADD CONSTRAINT "Prescription_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1269,6 +1364,9 @@ ALTER TABLE "UserPreference" ADD CONSTRAINT "UserPreference_userId_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "Role" ADD CONSTRAINT "Role_serverId_fkey" FOREIGN KEY ("serverId") REFERENCES "Server"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Permission" ADD CONSTRAINT "Permission_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Task" ADD CONSTRAINT "Task_serverId_fkey" FOREIGN KEY ("serverId") REFERENCES "Server"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1334,7 +1432,22 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_userId_fkey" FOREIGN KEY ("userId") REFE
 ALTER TABLE "Service" ADD CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Service" ADD CONSTRAINT "Service_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Inventory" ADD CONSTRAINT "Inventory_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_UserToUserPreference" ADD CONSTRAINT "_UserToUserPreference_A_fkey" FOREIGN KEY ("A") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

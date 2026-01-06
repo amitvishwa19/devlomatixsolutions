@@ -47,6 +47,65 @@ enum ENTITY_TYPE {
   CARD
 }
 
+// schema.prisma
+
+model GeneralSettings {
+  id                  Int     @id @default(autoincrement())
+  websiteName         String  @default("Hospital Management System")
+  websiteLogo         String? // URL to logo image
+  websiteFavicon      String? // URL to favicon
+  primaryContactEmail String  @default("info@hospital.com")
+  primaryContactPhone String?
+  address             String?
+  city                String?
+  state               String?
+  zipCode             String?
+  country             String  @default("India")
+
+  // Social & Communication
+  facebookUrl    String?
+  twitterUrl     String?
+  linkedinUrl    String?
+  instagramUrl   String?
+  whatsappNumber String?
+
+  // Hospital Info
+  hospitalName      String  @default("City Hospital")
+  hospitalLicenseNo String?
+  registrationNo    String?
+
+  // Theme & UI
+  primaryColor   String @default("#1C1C1C")
+  secondaryColor String @default("#f8fafc")
+  themeMode      String @default("light") // "light" | "dark"
+
+  // Business Hours
+  mondayOpen   String?
+  mondayClose  String?
+  tuesdayOpen  String?
+  tuesdayClose String?
+  // ... (similar for other days)
+
+  // Emergency
+  emergencyPhone String?
+  emergencyEmail String?
+
+  // SEO
+  metaTitle       String  @default("Hospital Management System")
+  metaDescription String?
+  keywords        String?
+
+  // Technical
+  maintenanceMode   Boolean @default(false)
+  customDomain      String?
+  googleAnalyticsId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Ensure only one record exists
+
 model Setting {
   id String @id @default(cuid())
 
@@ -1255,4 +1314,32 @@ model Payment {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Credentials {
+  id          String @id @default(cuid())
+  userId      String // Hospital user/doctor reference
+  serviceName String // "LabCorp", "Razorpay", "WhatsApp", "Twilio", etc.
+
+  // API Authentication Fields
+  apiKey       String?
+  apiSecret    String?
+  accessToken  String?
+  refreshToken String?
+  clientId     String?
+  clientSecret String?
+  username     String?
+  password     String?
+
+  // Connection Details
+  endpointUrl String?
+  webhookUrl  String?
+  region      String? // "us-east-1", "eu-west-1"
+  port        Int?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, serviceName])
 }
