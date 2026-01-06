@@ -40,25 +40,11 @@ export default function Dashboard() {
 
 
             <ScrollArea className='h-[85vh] flex flex-grow rounded-md '>
-                <div className="space-y-6 animate-fade-in">
-                    {/* Page Header */}
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-semibold text-foreground">
-                                Welcome back, <span className="text-primary">Admin</span>
-                            </h1>
-                            <p className="text-sm text-muted-foreground mt-0.5">Here's what's happening at your hospital today.</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5 rounded-md bg-success/10 px-3 py-1.5 border border-success/20">
-                                <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                                <span className="text-xs font-medium text-success">System Online</span>
-                            </div>
-                        </div>
-                    </div>
+                <div className="space-y-2 animate-fade-in">
+
 
                     {/* Stats Grid - Top Row */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                         <StatCard
                             title="Total Patients"
                             value="2,847"
@@ -90,7 +76,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Stats Grid - Second Row */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                         <StatCard
                             title="Active Doctors"
                             value="24"
@@ -122,16 +108,16 @@ export default function Dashboard() {
                     </div>
 
                     {/* Main Content Grid */}
-                    <div className="grid gap-4 lg:grid-cols-12">
+                    <div className="grid gap-2 lg:grid-cols-12">
                         {/* Left Column */}
-                        <div className="lg:col-span-8 space-y-4">
+                        <div className="lg:col-span-8 space-y-2">
                             <RevenueChart />
                             <PatientOverview />
                             <UpcomingSurgeries />
                         </div>
 
                         {/* Right Column */}
-                        <div className="lg:col-span-4 space-y-4">
+                        <div className="lg:col-span-4 space-y-2">
                             <QuickActions />
                             <MiniCalendar />
                             <EmergencyAlerts />
@@ -140,21 +126,21 @@ export default function Dashboard() {
                     </div>
 
                     {/* Middle Grid */}
-                    <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="grid gap-2 lg:grid-cols-3">
                         <DoctorsList />
                         <StaffSchedule />
                         <InventoryStatus />
                     </div>
 
                     {/* Bottom Grid */}
-                    <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="grid gap-2 lg:grid-cols-3">
                         <DepartmentStats />
                         <BedOccupancy />
                         <PatientDemographics />
                     </div>
 
                     {/* Bottom Section */}
-                    <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="grid gap-2 lg:grid-cols-2">
                         <RecentAppointments />
                         <PerformanceMetrics />
                     </div>

@@ -156,6 +156,13 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     />
 
                     <SidebarSingleItem
+                        title='Kanban'
+                        link={`/workspace/${server?.id}/kanban`}
+                        selected={url.split('/')[3] === 'kanban'}
+                        icon='kanban'
+                    />
+
+                    <SidebarSingleItem
                         title='Taxonomy'
                         link={`/workspace/${server?.id}/content/taxonomy`}
                         selected={url.split('/')[4] === 'taxonomy'}

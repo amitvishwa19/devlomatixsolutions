@@ -93,7 +93,7 @@ export default function DocumentPage() {
                 <DocumentStats />
 
                 {/* Tabs */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 mt-4">
                     <TabsList className="bg-secondary/30">
                         <TabsTrigger value="my-documents" className="gap-2">
                             <FolderOpen className="h-4 w-4" />
@@ -223,6 +223,8 @@ export default function DocumentPage() {
 
 
             </ScrollArea>
+
+
             {/* Bulk Actions Bar */}
             <BulkActionsBar
                 selectedCount={selectedDocuments.size}
