@@ -19,8 +19,8 @@ export function WorkflowFilters({
     ];
 
     const statuses = [
-        { value: 'all', label: 'All Status', color: 'bg-muted text-muted-foreground' },
-        { value: 'pending', label: 'Pending', color: 'bg-warning/10 text-warning' },
+        { value: 'all', label: 'All Status', color: 'bg-sky-500/40 text-sky-600' },
+        { value: 'pending', label: 'Pending', color: 'bg-yellow-500/40 text-yellow-600' },
         { value: 'in-progress', label: 'In Progress', color: 'bg-info/10 text-info' },
         { value: 'completed', label: 'Completed', color: 'bg-success/10 text-success' },
         { value: 'critical', label: 'Critical', color: 'bg-destructive/10 text-destructive' },
@@ -75,9 +75,9 @@ export function WorkflowFilters({
                         key={status.value}
                         onClick={() => onStatusChange(status.value)}
                         className={cn(
-                            'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                            'px-3 py-1.5 rounded-md text-xs font-medium transition-all',
                             selectedStatus === status.value
-                                ? `${status.color} ring-2 ring-offset-2 ring-offset-background ring-current`
+                                ? `${status.color} border `
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                         )}
                     >

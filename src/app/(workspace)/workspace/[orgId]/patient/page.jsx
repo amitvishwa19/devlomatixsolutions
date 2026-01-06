@@ -64,6 +64,7 @@ export default function PatientPage() {
 
     const columns = [
 
+
         {
             accessorKey: "patient",
             header: ({ column }) => {
@@ -81,7 +82,7 @@ export default function PatientPage() {
 
                 return (
                     <div className='flex flex-row items-center gap-4'>
-                        <Avatar className='rounded-md'>
+                        <Avatar className='rounded-md h-6 w-6'>
                             <AvatarImage src={row?.orignal?.user?.avatar} alt="@shadcn" />
                             <AvatarFallback className='rounded-md bg-sky-500 text-xl font-bold'>{row.original.user.displayName.substring(0, 1)}</AvatarFallback>
                         </Avatar>

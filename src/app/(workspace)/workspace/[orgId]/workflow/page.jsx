@@ -15,6 +15,7 @@ import { PatientDetailModal } from './_components/workflow/PatientDetailModal';
 import { useFlow } from './_provider/flowProvider';
 import { DraggableKanban } from './_components/workflow/DraggableKanban';
 import { AddPatientModal } from './_components/workflow/AddPatientModal';
+import { ContentTopbar } from '../(misc)/_components/ContentTopbar';
 
 export default function IpdOpdPage() {
     const [mockpatients, setPatients] = useState(mockPatients);
@@ -143,148 +144,136 @@ export default function IpdOpdPage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl'>
-                        Workflow Management
-                    </h2>
-                    <h2 className='text-xs text-muted-foreground'>Track and manage patient journeys from admission to discharge. Comprehensive management of OPD consultations and IPD admissions </h2>
-                </div>
-                <div>
-                    <Button variant={'save'} size={'sm'} className='' onClick={() => {
+            <ContentTopbar
+                title='Workflow Management'
+                description='Track and manage patient journeys from admission to discharge. Comprehensive management of OPD consultations and IPD admissions'
+                icon='workflow'
 
-                        setAddPatientModal({
-                            isOpen: true,
-                            mode: 'add',
-                            patient: null,
-                        })
-                    }}>
-                        <Workflow />
-                        Create Flow
-                    </Button>
-                </div>
-            </div>
+            />
 
-            <div className='dark:bg-darkSecondaryBackground bg-card rounded-md flex flex-col animate-fade-in overflow-hidden' style={{ animationDelay: '0.1s' }} >
+            <div className='h-[85vh] flex flex-grow   rounded-md '>
 
-                {/* Stats */}
-                <div className="animate-fade-in p-2">
-                    <WorkflowStats patients={patients} />
-                </div>
+                <div className='  rounded-md flex flex-col gap-2 animate-fade-in overflow-hidden' style={{ animationDelay: '0.1s' }} >
 
-
-                {/* Filters & View Toggle */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-2 animate-fade-in dark:bg-darkSecondaryBackground bg-card rounded-md" >
-                    <WorkflowFilters
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        selectedType={selectedType}
-                        onTypeChange={setSelectedType}
-                        selectedStatus={selectedStatus}
-                        onStatusChange={setSelectedStatus}
-                    />
-                    <div className="flex items-center gap-1 bg-muted p-[2px] rounded-md">
-                        <button
-                            onClick={() => setViewMode('cards')}
-                            className={`p-2 rounded-md transition-all ${viewMode === 'cards'
-                                ? 'bg-card text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            <LayoutGrid className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('kanban')}
-                            className={`p-2 rounded-md transition-all ${viewMode === 'kanban'
-                                ? 'bg-card text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            <Columns3 className="w-4 h-4" />
-                        </button>
+                    {/* Stats */}
+                    <div className="animate-fade-in ">
+                        <WorkflowStats patients={patients} />
                     </div>
+
+
+                    {/* Filters & View Toggle */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4  animate-fade-in  bg-card rounded-md" >
+                        <WorkflowFilters
+                            searchQuery={searchQuery}
+                            onSearchChange={setSearchQuery}
+                            selectedType={selectedType}
+                            onTypeChange={setSelectedType}
+                            selectedStatus={selectedStatus}
+                            onStatusChange={setSelectedStatus}
+                        />
+                        <div className="flex items-center gap-1 bg-muted p-[2px] rounded-md">
+                            <button
+                                onClick={() => setViewMode('cards')}
+                                className={`p-2 rounded-md transition-all ${viewMode === 'cards'
+                                    ? 'bg-card text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                            >
+                                <LayoutGrid className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('kanban')}
+                                className={`p-2 rounded-md transition-all ${viewMode === 'kanban'
+                                    ? 'bg-card text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                            >
+                                <Columns3 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <ScrollArea className='h-[72vh] flex flex-grow relative overflow-hidden p-2'>
+
+
+                        {/* Content */}
+                        {viewMode === 'cards' ? (
+                            <section className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                                {filteredPatients.length === 0 ? (
+                                    <div className="text-center py-16">
+                                        <p className="text-muted-foreground">No patients found matching your criteria</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                        {filteredPatients.map((patient, index) => (
+                                            <div
+                                                key={patient.id}
+                                                className="animate-slide-up"
+                                                style={{ animationDelay: `${index * 0.05}s` }}
+                                            >
+                                                <PatientCard
+                                                    patient={patient}
+                                                    onAdvanceStage={handleAdvanceStage}
+                                                    onViewDetails={handleViewDetails}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        ) : (
+                            <section className="animate-fade-in " style={{ animationDelay: '0.2s' }}>
+                                <Tabs defaultValue="OPD" className="w-full ">
+                                    <TabsList className="bg-muted">
+                                        <TabsTrigger value="OPD">OPD Workflow</TabsTrigger>
+                                        <TabsTrigger value="IPD">IPD Workflow</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="OPD" className=" h-full p-0">
+                                        <DraggableKanban
+                                            patients={filteredPatients}
+                                            workflowType="OPD"
+                                            onViewDetails={handleViewDetails}
+                                            onMovePatient={handleMovePatient}
+                                        />
+                                    </TabsContent>
+                                    <TabsContent value="IPD" className=" h-full p-0">
+                                        <DraggableKanban
+                                            patients={filteredPatients}
+                                            workflowType="IPD"
+                                            onViewDetails={handleViewDetails}
+                                            onMovePatient={handleMovePatient}
+                                        />
+                                    </TabsContent>
+                                </Tabs>
+                            </section>
+                        )}
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
                 </div>
+                {/* Patient Detail Modal */}
+                <PatientDetailModal
+                    patient={selectedPatient}
+                    open={!!selectedPatient}
+                    onClose={() => setSelectedPatient(null)}
+                    onAdvanceStage={handleAdvanceStage}
+                />
 
-                <ScrollArea className='h-[72vh] flex flex-grow dark:bg-darkSecondaryBackground relative overflow-hidden p-2'>
+                <AddPatientModal
+                    patients={patients}
+                    doctors={doctors}
+                    open={addPatientModal.isOpen}
+                    mode={addPatientModal.mode}
+                    onClose={() =>
+                        setAddPatientModal({
+                            isOpen: false,
+                        })
+                    }
+                    onAddPatient={handleAddPatient}
+                    existingPatients={mockpatients}
+                />
 
-
-                    {/* Content */}
-                    {viewMode === 'cards' ? (
-                        <section className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                            {filteredPatients.length === 0 ? (
-                                <div className="text-center py-16">
-                                    <p className="text-muted-foreground">No patients found matching your criteria</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                                    {filteredPatients.map((patient, index) => (
-                                        <div
-                                            key={patient.id}
-                                            className="animate-slide-up"
-                                            style={{ animationDelay: `${index * 0.05}s` }}
-                                        >
-                                            <PatientCard
-                                                patient={patient}
-                                                onAdvanceStage={handleAdvanceStage}
-                                                onViewDetails={handleViewDetails}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-                    ) : (
-                        <section className="animate-fade-in " style={{ animationDelay: '0.2s' }}>
-                            <Tabs defaultValue="OPD" className="w-full ">
-                                <TabsList className="bg-muted">
-                                    <TabsTrigger value="OPD">OPD Workflow</TabsTrigger>
-                                    <TabsTrigger value="IPD">IPD Workflow</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="OPD" className=" h-full p-0">
-                                    <DraggableKanban
-                                        patients={filteredPatients}
-                                        workflowType="OPD"
-                                        onViewDetails={handleViewDetails}
-                                        onMovePatient={handleMovePatient}
-                                    />
-                                </TabsContent>
-                                <TabsContent value="IPD" className=" h-full p-0">
-                                    <DraggableKanban
-                                        patients={filteredPatients}
-                                        workflowType="IPD"
-                                        onViewDetails={handleViewDetails}
-                                        onMovePatient={handleMovePatient}
-                                    />
-                                </TabsContent>
-                            </Tabs>
-                        </section>
-                    )}
-                    <ScrollBar orientation="horizontal" />
-                </ScrollArea>
             </div>
-            {/* Patient Detail Modal */}
-            <PatientDetailModal
-                patient={selectedPatient}
-                open={!!selectedPatient}
-                onClose={() => setSelectedPatient(null)}
-                onAdvanceStage={handleAdvanceStage}
-            />
 
-            <AddPatientModal
-                patients={patients}
-                doctors={doctors}
-                open={addPatientModal.isOpen}
-                mode={addPatientModal.mode}
-                onClose={() =>
-                    setAddPatientModal({
-                        isOpen: false,
-                    })
-                }
-                onAddPatient={handleAddPatient}
-                existingPatients={mockpatients}
-            />
-
-
-        </div>
+        </div >
     )
 }

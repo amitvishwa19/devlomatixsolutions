@@ -68,10 +68,12 @@ export const AuthProvider = ({ children }) => {
         router.replace('/login')
     }
 
-
+    const signOut = () => {
+        console.log('Signout from auth context')
+    }
 
     return (
-        <AuthContext.Provider value={{ user, setUserSessionData, handleUserLogin, handleUserLogout }}>
+        <AuthContext.Provider value={{ user, setUserSessionData, handleUserLogin, handleUserLogout, signOut }}>
             {children}
         </AuthContext.Provider>
     )

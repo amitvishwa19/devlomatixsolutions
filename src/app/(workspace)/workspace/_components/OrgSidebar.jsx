@@ -33,23 +33,25 @@ const roleIconMap = {
 
 const navigationItems = [
     { title: "Dashboard", url: "/", icon: "layout-dashboard" },
-    { title: "Workflow", url: "/workflow", icon: "git-branch" },
+    { title: "Workflow", url: "workflow", icon: "workflow" },
     { title: "Appointment", url: "/appointment", icon: "calendar" },
-    { title: "Calendar", url: "/calendar", icon: "calendar-days" },
-    { title: "Documents", url: "/documents", icon: "file-text" },
-    { title: "Articles", url: "/articles", icon: "book-open" },
-    { title: "Taxonomy", url: "/taxonomy", icon: "tags" },
-    { title: "Patients", url: "/patients", icon: "users" },
-    { title: "Prescriptions", url: "/prescriptions", icon: "pill" },
-    { title: "Services", url: "/services", icon: "stethoscope" },
-    { title: "Laboratory", url: "/laboratory", icon: "flask-conical" },
-    { title: "Rooms & Beds", url: "/rooms-beds", icon: "bed-double" },
-    { title: "Inventory", url: "/inventory", icon: "package" },
-    { title: "Invoices", url: "/invoices", icon: "receipt" },
-    { title: "Payments", url: "/payments", icon: "credit-card" },
-    { title: "Pharmacy", url: "/pharmacy", icon: "cross" },
-    { title: "Communication", url: "/communication", icon: "message-square" },
-    { title: "Access Management", url: "/access-management", icon: "shield" },
+    { title: "Calendar", url: "calendar", icon: "calendar-days" },
+    { title: "Kanban", url: "kanban", icon: "file-text" },
+    { title: "Documents", url: "documents", icon: "file-text" },
+    { title: "Articles", url: "articles", icon: "book-open" },
+    { title: "Taxonomy", url: "taxonomy", icon: "tags" },
+    { title: "Patients", url: "patients", icon: "users" },
+    { title: "Prescriptions", url: "prescriptions", icon: "pill" },
+    { title: "Services", url: "services", icon: "stethoscope" },
+    { title: "Laboratory", url: "laboratory", icon: "flask-conical" },
+    { title: "Rooms & Beds", url: "accomodation", icon: "bed-double" },
+    { title: "Inventory", url: "inventory", icon: "package" },
+    { title: "Invoices", url: "invoices", icon: "receipt" },
+    { title: "Payments", url: "payments", icon: "credit-card" },
+    { title: "Pharmacy", url: "pharmacy", icon: "cross" },
+    { title: "Communication", url: "communication", icon: "message-square" },
+    { title: "Mailbox", url: "mailer", icon: "mails" },
+    { title: "Access Management", url: "/access", icon: "shield" },
 ];
 
 export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
@@ -96,7 +98,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
 
             <ScrollArea className='h-[90vh]'>
 
-                {/* {navigationItems?.map((nav, index) => {
+                {navigationItems?.map((nav, index) => {
                     return (
                         <SidebarSingleItem
                             key={index}
@@ -106,151 +108,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                             icon={nav.icon}
                         />
                     )
-                })} */}
-
-                <Accordion type='multiple' defaultValue={defaultAccordianValue} className='py-2'>
-
-
-
-                    <SidebarSingleItem
-                        title='Dashboard'
-                        link={`/workspace/${server?.id}`}
-                        selected={url.split('/')[3] === undefined}
-                        icon='layout-dashboard'
-                    />
-
-                    <SidebarSingleItem
-                        title='Workflow'
-                        link={`/workspace/${server?.id}/workflow`}
-                        selected={url.split('/')[3] === 'workflow'}
-                        icon='workflow'
-                    />
-
-                    <SidebarSingleItem
-                        title='Appointment'
-                        link={`/workspace/${server?.id}/appointment`}
-                        selected={url.split('/')[3] === 'appointment'}
-                        icon='newspaper'
-                    />
-
-                    <SidebarSingleItem
-                        title='Calendar'
-                        link={`/workspace/${server?.id}/calendar`}
-                        selected={url.split('/')[3] === 'calendar'}
-                        icon='calendar-days'
-                    />
-
-
-                    <SidebarSingleItem
-                        title='Documents'
-                        link={`/workspace/${server?.id}/document`}
-                        selected={url.split('/')[3] === 'document'}
-                        icon='files'
-                    />
-
-                    <SidebarSingleItem
-                        title='Articles'
-                        link={`/workspace/${server?.id}/article`}
-                        selected={url.split('/')[3] === 'article'}
-                        icon='sparkles'
-                    />
-
-                    <SidebarSingleItem
-                        title='Kanban'
-                        link={`/workspace/${server?.id}/kanban`}
-                        selected={url.split('/')[3] === 'kanban'}
-                        icon='kanban'
-                    />
-
-                    <SidebarSingleItem
-                        title='Taxonomy'
-                        link={`/workspace/${server?.id}/content/taxonomy`}
-                        selected={url.split('/')[4] === 'taxonomy'}
-                        icon='hand-helping'
-                    />
-
-
-                    <SidebarSingleItem
-                        title='Patients'
-                        link={`/workspace/${server?.id}/patient`}
-                        selected={url.split('/')[3] === 'patient'}
-                        icon='accessibility'
-                    />
-
-                    <SidebarSingleItem
-                        title='Prescriptions'
-                        link={`/workspace/${server?.id}/prescription`}
-                        selected={url.split('/')[3] === 'prescription'}
-                        icon='pill'
-                    />
-
-                    <SidebarSingleItem
-                        title='Services'
-                        link={`/workspace/${server?.id}/service`}
-                        selected={url.split('/')[3] === 'service'}
-                        icon='hand-helping'
-                    />
-
-                    <SidebarSingleItem
-                        title='Laboratory'
-                        link={`/workspace/${server?.id}/laboratory`}
-                        selected={url.split('/')[3] === 'laboratory'}
-                        icon='flask-conical'
-                    />
-
-                    <SidebarSingleItem
-                        title='Rooms & Beds'
-                        link={`/workspace/${server?.id}/accommodation`}
-                        selected={url.split('/')[3] === 'accommodation'}
-                        icon='bed'
-                    />
-
-                    <SidebarSingleItem
-                        title='Inventory'
-                        link={`/workspace/${server?.id}/inventory`}
-                        selected={url.split('/')[3] === 'inventory'}
-                        icon='brick-wall-shield'
-                    />
-
-
-                    <SidebarSingleItem
-                        title='Invoices'
-                        link={`/workspace/${server?.id}/invoice`}
-                        selected={url.split('/')[3] === 'invoice'}
-                        icon='file-text'
-                    />
-
-                    <SidebarSingleItem
-                        title='Payments'
-                        link={`/workspace/${server?.id}/payment`}
-                        selected={url.split('/')[3] === 'payment'}
-                        icon='credit-card'
-                    />
-
-                    <SidebarSingleItem
-                        title='Pharmacy'
-                        link={`/workspace/${server?.id}/pharmacy`}
-                        selected={url.split('/')[3] === 'pharmacy'}
-                        icon='tablets'
-                    />
-
-                    <SidebarSingleItem
-                        title='Communication'
-                        link={`/workspace/${server?.id}/communication`}
-                        selected={url.split('/')[3] === 'communication'}
-                        icon='megaphone'
-                    />
-
-                    <SidebarSingleItem
-                        title='Access Management'
-                        link={`/workspace/${server?.id}/access`}
-                        selected={url.split('/')[3] === 'access'}
-                        icon='shield-user'
-                    />
-
-                </Accordion>
-
-
+                })}
 
             </ScrollArea>
 
@@ -313,8 +171,8 @@ const SidebarSingleItem = ({ title, link, icon, selected }) => {
                 href={link}
                 className={`py-1.5 px-2 flex items-center gap-2 cursor-pointer 
                             hover:bg-primary/10 dark:hover:bg-card   rounded-md 
-                            text-slate-600 dark:text-white/80   
-                            ${selected && 'bg-primary/10 dark:bg-card  border/10'}`}
+                            text-muted-foreground 
+                            ${selected && 'bg-primary/10 dark:bg-card text-primary dark:text-white  border/10'}`}
             >
                 <DynamicIcon name={icon} size={16} />
                 <span className='text-sm font-semibold'>

@@ -33,6 +33,7 @@ export const OrgProvider = ({ children }) => {
     const dispatch = useDispatch()
     const { orgId } = useParams()
     const router = useRouter()
+    const [user, setUser] = useState()
 
     useEffect(() => {
 

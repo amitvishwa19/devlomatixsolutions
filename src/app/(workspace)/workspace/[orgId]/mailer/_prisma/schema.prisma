@@ -1,0 +1,531 @@
+// Prisma Schema for Mailer Project
+// Compatible with Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model Profile {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String    @unique @map("user_id") @db.Uuid
+  email                 String?
+  fullName              String?   @map("full_name")
+  avatarUrl             String?   @map("avatar_url")
+  googleAccessToken     String?   @map("google_access_token")
+  googleRefreshToken    String?   @map("google_refresh_token")
+  googleTokenExpiresAt  DateTime? @map("google_token_expires_at") @db.Timestamptz
+  timezone              String?   @default("UTC")
+  language              String?   @default("en")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  emails           Email[]
+  drafts           Draft[]
+  contacts         Contact[]
+  signatures       Signature[]
+  templates        EmailTemplate[]
+  folders          Folder[]
+  filters          EmailFilter[]
+  scheduledEmails  ScheduledEmail[]
+  notifications    Notification[]
+  settings         UserSettings?
+
+  @@map("profiles")
+}
+
+model UserSettings {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String   @unique @map("user_id") @db.Uuid
+  defaultSignatureId    String?  @map("default_signature_id") @db.Uuid
+  emailsPerPage         Int      @default(25) @map("emails_per_page")
+  autoSaveDraftInterval Int      @default(30) @map("auto_save_draft_interval") // seconds
+  sendReadReceipts      Boolean  @default(false) @map("send_read_receipts")
+  showAvatars           Boolean  @default(true) @map("show_avatars")
+  compactMode           Boolean  @default(false) @map("compact_mode")
+  keyboardShortcuts     Boolean  @default(true) @map("keyboard_shortcuts")
+  desktopNotifications  Boolean  @default(true) @map("desktop_notifications")
+  emailNotifications    Boolean  @default(true) @map("email_notifications")
+  vacationMode          Boolean  @default(false) @map("vacation_mode")
+  vacationMessage       String?  @map("vacation_message")
+  vacationStartDate     DateTime? @map("vacation_start_date") @db.Timestamptz
+  vacationEndDate       DateTime? @map("vacation_end_date") @db.Timestamptz
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile               Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// ============================================
+// EMAIL & MESSAGES
+// ============================================
+
+model Email {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  gmailId       String    @map("gmail_id")
+  threadId      String?   @map("thread_id")
+  subject       String?
+  sender        String
+  senderEmail   String?   @map("sender_email")
+  recipients    String[]  @default([])
+  cc            String[]  @default([])
+  bcc           String[]  @default([])
+  snippet       String?
+  bodyHtml      String?   @map("body_html")
+  bodyText      String?   @map("body_text")
+  labels        String[]  @default([])
+  isRead        Boolean   @default(false) @map("is_read")
+  isStarred     Boolean   @default(false) @map("is_starred")
+  isArchived    Boolean   @default(false) @map("is_archived")
+  isTrashed     Boolean   @default(false) @map("is_trashed")
+  isSpam        Boolean   @default(false) @map("is_spam")
+  isDraft       Boolean   @default(false) @map("is_draft")
+  isSent        Boolean   @default(false) @map("is_sent")
+  priority      EmailPriority @default(NORMAL)
+  folderId      String?   @map("folder_id") @db.Uuid
+  receivedAt    DateTime? @map("received_at") @db.Timestamptz
+  sentAt        DateTime? @map("sent_at") @db.Timestamptz
+  snoozedUntil  DateTime? @map("snoozed_until") @db.Timestamptz
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  profile       Profile      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  folder        Folder?      @relation(fields: [folderId], references: [id])
+  attachments   Attachment[]
+  readReceipts  ReadReceipt[]
+
+  @@unique([userId, gmailId])
+  @@index([userId])
+  @@index([threadId])
+  @@index([receivedAt])
+  @@index([isRead])
+  @@index([isArchived])
+  @@index([isTrashed])
+  @@index([folderId])
+  @@index([snoozedUntil])
+  @@map("emails")
+}
+
+model Draft {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  subject       String?
+  recipients    String[] @default([])
+  cc            String[] @default([])
+  bcc           String[] @default([])
+  bodyHtml      String?  @map("body_html")
+  bodyText      String?  @map("body_text")
+  replyToId     String?  @map("reply_to_id") @db.Uuid
+  forwardFromId String?  @map("forward_from_id") @db.Uuid
+  signatureId   String?  @map("signature_id") @db.Uuid
+  templateId    String?  @map("template_id") @db.Uuid
+  priority      EmailPriority @default(NORMAL)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile       Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  attachments   DraftAttachment[]
+
+  @@index([userId])
+  @@map("drafts")
+}
+
+model ScheduledEmail {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  subject       String?
+  recipients    String[] @default([])
+  cc            String[] @default([])
+  bcc           String[] @default([])
+  bodyHtml      String?  @map("body_html")
+  bodyText      String?  @map("body_text")
+  priority      EmailPriority @default(NORMAL)
+  scheduledFor  DateTime @map("scheduled_for") @db.Timestamptz
+  status        ScheduledEmailStatus @default(PENDING)
+  sentAt        DateTime? @map("sent_at") @db.Timestamptz
+  errorMessage  String?  @map("error_message")
+  retryCount    Int      @default(0) @map("retry_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile       Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scheduledFor])
+  @@index([status])
+  @@map("scheduled_emails")
+}
+
+model Attachment {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  emailId     String   @map("email_id") @db.Uuid
+  filename    String
+  mimeType    String   @map("mime_type")
+  size        Int
+  storagePath String?  @map("storage_path")
+  contentId   String?  @map("content_id") // For inline attachments
+  isInline    Boolean  @default(false) @map("is_inline")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  email       Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@index([emailId])
+  @@map("attachments")
+}
+
+model DraftAttachment {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  draftId     String   @map("draft_id") @db.Uuid
+  filename    String
+  mimeType    String   @map("mime_type")
+  size        Int
+  storagePath String?  @map("storage_path")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  draft       Draft    @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId])
+  @@map("draft_attachments")
+}
+
+model ReadReceipt {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  emailId     String   @map("email_id") @db.Uuid
+  recipientEmail String @map("recipient_email")
+  readAt      DateTime? @map("read_at") @db.Timestamptz
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  email       Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@index([emailId])
+  @@map("read_receipts")
+}
+
+// ============================================
+// CONTACTS & ADDRESS BOOK
+// ============================================
+
+model Contact {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  email         String
+  name          String?
+  firstName     String?  @map("first_name")
+  lastName      String?  @map("last_name")
+  company       String?
+  jobTitle      String?  @map("job_title")
+  phone         String?
+  avatarUrl     String?  @map("avatar_url")
+  notes         String?
+  isFavorite    Boolean  @default(false) @map("is_favorite")
+  lastContacted DateTime? @map("last_contacted") @db.Timestamptz
+  contactCount  Int      @default(0) @map("contact_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile       Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  groups        ContactGroupMember[]
+
+  @@unique([userId, email])
+  @@index([userId])
+  @@index([email])
+  @@index([name])
+  @@map("contacts")
+}
+
+model ContactGroup {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  description String?
+  color       String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  members     ContactGroupMember[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("contact_groups")
+}
+
+model ContactGroupMember {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contactId   String   @map("contact_id") @db.Uuid
+  groupId     String   @map("group_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  contact     Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  group       ContactGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, groupId])
+  @@map("contact_group_members")
+}
+
+// ============================================
+// TEMPLATES & SIGNATURES
+// ============================================
+
+model EmailTemplate {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  subject     String?
+  bodyHtml    String?  @map("body_html")
+  bodyText    String?  @map("body_text")
+  category    String?
+  isShared    Boolean  @default(false) @map("is_shared")
+  usageCount  Int      @default(0) @map("usage_count")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile     Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([category])
+  @@map("email_templates")
+}
+
+model Signature {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  content     String
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile     Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("signatures")
+}
+
+// ============================================
+// FOLDERS & LABELS
+// ============================================
+
+model Folder {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  color       String?
+  icon        String?
+  parentId    String?  @map("parent_id") @db.Uuid
+  position    Int      @default(0)
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile     Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  parent      Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children    Folder[] @relation("FolderHierarchy")
+  emails      Email[]
+
+  @@unique([userId, name, parentId])
+  @@index([userId])
+  @@index([parentId])
+  @@map("folders")
+}
+
+model Label {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  color       String?
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("labels")
+}
+
+// ============================================
+// FILTERS & RULES
+// ============================================
+
+model EmailFilter {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  name          String
+  isActive      Boolean  @default(true) @map("is_active")
+  priority      Int      @default(0)
+  
+  // Match conditions (all optional, combined with AND)
+  fromContains  String?  @map("from_contains")
+  toContains    String?  @map("to_contains")
+  subjectContains String? @map("subject_contains")
+  bodyContains  String?  @map("body_contains")
+  hasAttachment Boolean? @map("has_attachment")
+  
+  // Actions
+  markAsRead    Boolean  @default(false) @map("mark_as_read")
+  markAsStarred Boolean  @default(false) @map("mark_as_starred")
+  moveToFolder  String?  @map("move_to_folder") @db.Uuid
+  addLabels     String[] @default([]) @map("add_labels")
+  forwardTo     String?  @map("forward_to")
+  deleteEmail   Boolean  @default(false) @map("delete_email")
+  markAsSpam    Boolean  @default(false) @map("mark_as_spam")
+  
+  matchCount    Int      @default(0) @map("match_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  profile       Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("email_filters")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean  @default(false) @map("is_read")
+  actionUrl   String?  @map("action_url")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  profile     Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================
+// SYNC & TRACKING
+// ============================================
+
+model SyncState {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  lastHistoryId   String?  @map("last_history_id")
+  lastSyncAt      DateTime? @map("last_sync_at") @db.Timestamptz
+  lastFullSyncAt  DateTime? @map("last_full_sync_at") @db.Timestamptz
+  syncStatus      SyncStatus @default(IDLE) @map("sync_status")
+  errorMessage    String?  @map("error_message")
+  emailsProcessed Int      @default(0) @map("emails_processed")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("sync_states")
+}
+
+model SyncLog {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  syncType      String   @map("sync_type") // full, incremental, manual
+  status        SyncStatus
+  emailsSynced  Int      @default(0) @map("emails_synced")
+  duration      Int?     // milliseconds
+  errorMessage  String?  @map("error_message")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("sync_logs")
+}
+
+// ============================================
+// ANALYTICS & TRACKING
+// ============================================
+
+model EmailAnalytics {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  date            DateTime @db.Date
+  emailsSent      Int      @default(0) @map("emails_sent")
+  emailsReceived  Int      @default(0) @map("emails_received")
+  emailsRead      Int      @default(0) @map("emails_read")
+  emailsArchived  Int      @default(0) @map("emails_archived")
+  emailsDeleted   Int      @default(0) @map("emails_deleted")
+  avgResponseTime Int?     @map("avg_response_time") // minutes
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+  @@map("email_analytics")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  ERROR
+
+  @@map("sync_status")
+}
+
+enum EmailPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+
+  @@map("email_priority")
+}
+
+enum ScheduledEmailStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+
+  @@map("scheduled_email_status")
+}
+
+enum NotificationType {
+  NEW_EMAIL
+  EMAIL_REPLIED
+  SCHEDULED_SENT
+  SYNC_ERROR
+  STORAGE_WARNING
+  SYSTEM
+
+  @@map("notification_type")
+}
