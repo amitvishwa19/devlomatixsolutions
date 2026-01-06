@@ -151,15 +151,10 @@ export function TestCatalog() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10 text-primary">
-            <Beaker className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">Test Catalog</h2>
-            <p className="text-sm text-muted-foreground">Manage available lab tests and parameters</p>
-          </div>
+
+
         </div>
-        <Button onClick={() => handleOpenDialog()} className="gap-2" variant="glow">
+        <Button onClick={() => handleOpenDialog()} className="gap-2" variant="default" size='sm'>
           <Plus className="h-4 w-4" />
           Add Test
         </Button>

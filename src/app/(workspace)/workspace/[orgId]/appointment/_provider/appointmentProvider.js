@@ -1,19 +1,22 @@
 'use client'
+import { useOrg } from '@/providers/OrgProvider'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 
 export const AppointmentContext = createContext()
 
 
-export const AppointmentProvider = ({ children, allCategories }) => {
+export const AppointmentProvider = ({ children, allCategories, allAppointments }) => {
+    const { server } = useOrg()
     const [category, setCategory] = useState(null)
-    const [invoices, setInvoices] = useState(null)
-    const [services, setServices] = useState(null)
     const [appointments, setAppointments] = useState(null)
+
+
 
     useEffect(() => {
         setCategory(allCategories)
-    }, [allCategories])
+        setAppointments(allAppointments?.filter(app => app?.serverId === server?.id))
+    }, [allCategories, allAppointments, server])
 
 
 
@@ -21,7 +24,7 @@ export const AppointmentProvider = ({ children, allCategories }) => {
 
 
     return (
-        <AppointmentContext.Provider value={{ category, setCategory }}>
+        <AppointmentContext.Provider value={{ category, setCategory, appointments, setAppointments }}>
             {children}
         </AppointmentContext.Provider>
     )

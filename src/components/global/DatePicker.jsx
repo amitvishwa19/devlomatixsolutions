@@ -38,11 +38,11 @@ export function DatePicker({ value, onChange, className, placeholder, disableFut
 
     return (
         <Popover open={open} onOpenChange={handleOnOpenChange}  >
-            <PopoverTrigger asChild className='p-0 m-0 w-full '>
+            <PopoverTrigger asChild className='p-2 m-0 w-full '>
                 <Button
                     variant='ghost'
                     disabled={disabled}
-                    className={cn(' justify-between text-left font-normal border  ', !value && 'dark:text-slate-400 text-slate-700')}
+                    className={cn(' justify-between text-left font-normal border  p-4', !value && 'dark:text-slate-400 text-slate-700')}
                 >
                     <span>{date}</span>
 

@@ -17,14 +17,16 @@ module.exports = {
       },
       colors: {
         darkPrimaryBackground: '#0E141B',
-        //darkPrimaryBackground: '#101318',
         darkSecondaryBackground: '#171F26',
         darkFocusColor: '#1C2736',
+        darkfocus: '#181716',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        darkbackground: '#0C0E12',
+        darkcontent: '#111318',
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -48,6 +50,10 @@ module.exports = {
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
+        },
+        card2: {
+          DEFAULT: "hsl(var(--card2))",
+          foreground: "hsl(var(--card-foreground2))",
         },
         card: {
           DEFAULT: "hsl(var(--card))",

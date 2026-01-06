@@ -15,9 +15,7 @@ export const metadata = {
 export default async function IpdOpdLayout({ children }) {
 
     const users = await db.user.findMany({
-        include: {
-            flows: true
-        },
+
         orderBy: {
             createdAt: 'desc'
         }

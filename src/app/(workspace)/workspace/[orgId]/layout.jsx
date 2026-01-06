@@ -7,6 +7,7 @@ import { OrgModalProvider } from '@/providers/OrgModalProvider';
 import DataProvider from './(misc)/_providers/DataProvider';
 import { db } from '@/lib/db';
 import Loader from '@/components/global/Loader';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 const font = Roboto({ subsets: ["latin"] });
@@ -44,24 +45,26 @@ export default async function layout({ children }) {
         <QueryProvider>
             <OrgModalProvider />
             <DataProvider >
-                <div className={`flex h-screen max-w-screen ${font.className} overflow-hidden `}>
+
+                <div className={`flex h-screen max-w-screen ${font.className} overflow-hidden dark:bg-darkbackground`}>
                     <div className='h-screen flex-grow hidden xl:flex '>
-                        {/* <OrgNavigation /> */}
                         <OrgSidebar />
                     </div>
-                    <div className='flex  flex-col w-full h-screen dark:bg-[#0E141B]'>
-                        <div className='md:hidden'><TopNav /></div>
-
-                        <ScrollArea className='h-full relative flex-1 p-0'>
-                            <div className='p-2'>
+                    <div className='flex  flex-col w-full h-screen '>
+                        <div className='h-10'>
+                            <TopNav />
+                        </div>
+                        <div className='h-full relative flex-1 p-2'>
+                            <ScrollArea className='h-full relative flex-1 rounded-md bg-primary/5 dark:bg-darkcontent border'>
                                 {children}
-                            </div>
-                            <div className='h-4' />
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
+                        </div>
                     </div>
-                    {/* <Loader /> */}
                 </div>
+
+
+
             </DataProvider>
         </QueryProvider>
     )

@@ -12,6 +12,7 @@ import PostEditor from './_components/PostEditor'
 import Dashboard from './_components/Dashboard'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { DynamicIcon } from 'lucide-react/dynamic'
+import { ContentTopbar } from '../(misc)/_components/ContentTopbar'
 
 
 
@@ -139,46 +140,30 @@ export default function ArticlePage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl'>Article Management</h2>
-                    <h2 className='text-xs text-muted-foreground'>Schedule, Post, and Track Across All Platforms Effortlessly</h2>
-                </div>
 
-                <div className='flex flex-row items-center gap-2'>
-
-                    {/* <Button variant='save' size='sm' onClick={() => {
-                        setPostEditor({
-                            isOpen: true,
-                            mode: 'add',
-                            post: null
-                        })
-                    }} className='hover:dark:bg-darkFocusColor'>
-                        <Plus className='h-4 w-4' />
-                        New Post
-                    </Button> */}
-
-                    <ButtonGroup>
-                        {navigationItems?.map((item, index) => (
-                            <Button
-                                key={index}
-                                variant={`outline`}
-                                size='sm'
-                                className={`border ${selected.label === item.label && 'bg-primary/10 dark:bg-darkFocusColor'} hover:bg-primary/10 dark:hover:bg-darkFocusColor`}
-                                onClick={() => { setSelected(item) }}
-                            >
-                                <DynamicIcon name={item.icon} size={18} className='h-10 line-through' />
-                                {item.label}
-                            </Button>
-                        ))}
-                    </ButtonGroup>
-
-                </div>
-            </div>
+            <ContentTopbar
+                title='Article Management'
+                description='Schedule, Post, and Track Across All Platforms Effortlessly'
+                icon='sparkles'
+                actionComp={<ButtonGroup>
+                    {navigationItems?.map((item, index) => (
+                        <Button
+                            key={index}
+                            variant={`outline`}
+                            size='sm'
+                            className={`border ${selected.label === item.label && 'bg-primary/10 dark:bg-darkFocusColor'} hover:bg-primary/10 dark:hover:bg-darkFocusColor`}
+                            onClick={() => { setSelected(item) }}
+                        >
+                            <DynamicIcon name={item.icon} size={18} className='h-10 line-through' />
+                            {item.label}
+                        </Button>
+                    ))}
+                </ButtonGroup>}
+            />
 
 
 
-            <ScrollArea className='h-[70vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md border p-2'>
+            <ScrollArea className='h-[70vh] flex flex-grow rounded-md'>
                 <div>
                     {selected?.component}
                 </div>

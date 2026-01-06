@@ -25,7 +25,7 @@ const priorityConfig = {
 
 export function OrdersTable({ orders, onViewOrder, onUpdateStatus, onPrintResult, onViewTracking }) {
   return (
-    <div className="glass-card rounded-xl overflow-hidden animate-slide-up">
+    <div className="bg-card border rounded-xl overflow-hidden animate-slide-up">
       <Table>
         <TableHeader>
           <TableRow className="border-border/50 hover:bg-transparent">
@@ -52,13 +52,13 @@ export function OrdersTable({ orders, onViewOrder, onUpdateStatus, onPrintResult
               <TableCell>
                 <div>
                   <p className="font-medium">
-                    {order.tests.length === 1 
-                      ? order.tests[0].testCode 
+                    {order.tests.length === 1
+                      ? order.tests[0].testCode
                       : `${order.tests.length} tests`}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {order.tests.length === 1 
-                      ? order.tests[0].testName 
+                    {order.tests.length === 1
+                      ? order.tests[0].testName
                       : order.tests.map(t => t.testCode).join(', ')}
                   </p>
                 </div>
@@ -91,9 +91,9 @@ export function OrdersTable({ orders, onViewOrder, onUpdateStatus, onPrintResult
                     <Eye className="h-4 w-4" />
                   </Button>
                   {onViewTracking && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => onViewTracking(order)}
                       className="text-info hover:text-info"
                     >

@@ -1,203 +1,186 @@
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  UserRound,
-  FlaskConical,
-  Pill,
-  ScanLine,
-  FileSignature,
-  Shield,
-  ClipboardList,
-  File,
+import { 
+  FileText, 
+  FileImage, 
+  FileSpreadsheet, 
+  File, 
   MoreVertical,
   Download,
   Eye,
   Trash2,
-  Calendar,
-  User,
+  Share2,
+  Edit,
+  Star,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { categoryLabels } from "../_data/document";
+import { cn } from "@/lib/utils";
 
-const categoryIconMap = {
-  "patient-records": UserRound,
-  "lab-reports": FlaskConical,
-  "prescriptions": Pill,
-  "imaging": ScanLine,
-  "consent-forms": FileSignature,
-  "insurance": Shield,
-  "discharge-summary": ClipboardList,
-  "other": File,
+const typeIcons = {
+  pdf: FileText,
+  image: FileImage,
+  spreadsheet: FileSpreadsheet,
+  document: File,
+};
+
+const typeColors = {
+  pdf: "text-destructive",
+  image: "text-chart-2",
+  spreadsheet: "text-chart-5",
+  document: "text-primary",
 };
 
 const statusStyles = {
   active: "bg-success/10 text-success border-success/20",
+  archived: "bg-muted text-muted-foreground border-muted",
   pending: "bg-warning/10 text-warning border-warning/20",
-  archived: "bg-muted text-muted-foreground border-border",
 };
 
-export function DocumentCard({ document, style, viewMode = "list", onPreview }) {
-  const Icon = categoryIconMap[document.category];
+export function DocumentCard({ 
+  document, 
+  onView, 
+  onDownload, 
+  onDelete, 
+  onShare,
+  isSelected = false,
+  onSelect,
+  onToggleStar,
+  selectionMode = false
+}) {
+  const Icon = typeIcons[document.type];
 
-  const handlePreview = () => {
-    onPreview?.(document);
-  };
-
-  if (viewMode === "grid") {
-    return (
-      <div
-        className="group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-300 hover-lift animate-slide-up cursor-pointer"
-        style={style}
-        onClick={handlePreview}
-      >
-        {/* Grid View Layout */}
-        <div className="flex flex-col h-full">
-          {/* Icon & Actions */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="p-3 rounded-lg bg-primary/10 text-primary">
-              <Icon className="w-6 h-6" />
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem className="gap-2" onClick={handlePreview}>
-                  <Eye className="w-4 h-4" /> View Document
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2">
-                  <Download className="w-4 h-4" /> Download
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
-                  <Trash2 className="w-4 h-4" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1">
-            <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
-              {document.name}
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1 truncate">
-              {categoryLabels[document.category]}
-            </p>
-            {document.patientName && (
-              <p className="text-xs text-muted-foreground mt-2 truncate flex items-center gap-1">
-                <User className="w-3 h-3" />
-                {document.patientName}
-              </p>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-            <span className="text-xs text-muted-foreground">
-              {new Date(document.uploadedAt).toLocaleDateString()}
-            </span>
-            <span
-              className={cn(
-                "inline-flex px-2 py-0.5 text-xs font-medium rounded-full border capitalize",
-                statusStyles[document.status]
-              )}
-            >
-              {document.status}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // List View Layout
   return (
-    <div
-      className="group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-300 hover-lift animate-slide-up cursor-pointer"
-      style={style}
-      onClick={handlePreview}
+    <div 
+      className={cn(
+        "bg-card rounded-xl border border-border p-4 hover:border-primary/30 transition-all group relative",
+        isSelected && "border-primary bg-primary/5"
+      )}
     >
+      {(selectionMode || isSelected) && onSelect && (
+        <div className="absolute top-3 left-3 z-10">
+          <Checkbox 
+            checked={isSelected}
+            onCheckedChange={(checked) => onSelect(document, !!checked)}
+            className="bg-card"
+          />
+        </div>
+      )}
+
+      {onToggleStar && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "absolute top-3 right-3 h-7 w-7 z-10",
+            !document.starred && "opacity-0 group-hover:opacity-100",
+            "transition-opacity"
+          )}
+          onClick={() => onToggleStar(document)}
+        >
+          <Star 
+            className={cn(
+              "h-4 w-4",
+              document.starred ? "fill-warning text-warning" : "text-muted-foreground"
+            )} 
+          />
+        </Button>
+      )}
+
       <div className="flex items-start gap-4">
-        {/* Icon */}
-        <div className="p-3 rounded-lg bg-primary/10 text-primary shrink-0">
-          <Icon className="w-5 h-5" />
+        <div 
+          className={cn(
+            "h-12 w-12 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0 cursor-pointer",
+            "group-hover:bg-secondary transition-colors",
+            selectionMode && "ml-6"
+          )}
+          onClick={() => onView(document)}
+        >
+          <Icon className={cn("h-6 w-6", typeColors[document.type])} />
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+            <div className="min-w-0 cursor-pointer" onClick={() => onView(document)}>
+              <h4 className="text-sm font-medium text-foreground truncate hover:text-primary transition-colors">
                 {document.name}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {categoryLabels[document.category]}
+              </h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {document.size} • {document.uploadedAt}
               </p>
             </div>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={cn(
+                    "h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity",
+                    onToggleStar && "mr-6"
+                  )}
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem className="gap-2" onClick={handlePreview}>
-                  <Eye className="w-4 h-4" /> View Document
+                <DropdownMenuItem onClick={() => onView(document)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2">
-                  <Download className="w-4 h-4" /> Download
+                <DropdownMenuItem onClick={() => onDownload(document)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
-                  <Trash2 className="w-4 h-4" /> Delete
+                <DropdownMenuItem onClick={() => onShare(document)}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Rename
+                </DropdownMenuItem>
+                {onToggleStar && (
+                  <DropdownMenuItem onClick={() => onToggleStar(document)}>
+                    <Star className={cn("h-4 w-4 mr-2", document.starred && "fill-current")} />
+                    {document.starred ? "Remove Star" : "Add Star"}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => onDelete(document)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
-          {/* Metadata */}
-          <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <User className="w-3 h-3" />
-              {document.patientName}
-            </span>
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {new Date(document.uploadedAt).toLocaleDateString()}
-            </span>
-            <span>{document.size}</span>
-            <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-              {document.fileType}
-            </span>
-          </div>
-
-          {/* Status Badge */}
-          <div className="mt-3">
-            <span
-              className={cn(
-                "inline-flex px-2.5 py-1 text-xs font-medium rounded-full border capitalize",
-                statusStyles[document.status]
-              )}
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <Badge variant="outline" className="text-xs font-normal truncate max-w-[120px]">
+              {document.category}
+            </Badge>
+            <Badge 
+              variant="outline" 
+              className={cn("text-xs font-normal flex-shrink-0", statusStyles[document.status])}
             >
               {document.status}
-            </span>
+            </Badge>
           </div>
+
+          {document.patientName && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Patient: <span className="text-foreground">{document.patientName}</span>
+            </p>
+          )}
         </div>
       </div>
     </div>

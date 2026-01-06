@@ -57,18 +57,18 @@ export default function OrgSwitcher() {
                 <DropdownMenuTrigger asChild className=''>
 
                     {server ? (
-                        <div variant="ghost" className={`p-1 dark:hover:bg-[#1C2736] ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
+                        <div variant="ghost" className={`p-1  ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer `}>
                             <div className='flex flex-row items-center gap-2'>
 
 
                                 <div className='flex flex-row items-center gap-2'>
-                                    <Avatar className='h-10 w-10 rounded-md border'>
+                                    <Avatar className='h-6 w-6 rounded-md border'>
                                         <AvatarImage src={server?.imageUrl} alt="@shadcn" className='grayscale' />
-                                        <AvatarFallback className='rounded-md font-bold text-2xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
+                                        <AvatarFallback className='rounded-md font-bold text-xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
                                     </Avatar>
                                     <div className='flex flex-col capitalize'>
                                         <span className='text-sm font-bold'>{server?.name}</span>
-                                        <span className='text-xs text-muted-foreground'> {server?.user?.email}</span>
+                                        {/* <span className='text-xs text-muted-foreground'> {server?.user?.email}</span> */}
                                     </div>
                                 </div>
 
@@ -83,15 +83,15 @@ export default function OrgSwitcher() {
                         </div>
                     ) : (
                         <div className='flex flex-row items-center gap-1'>
-                            <Skeleton className=" h-[48px] w-[56px]  rounded-lg" />
-                            <Skeleton className=" h-[48px] w-full  rounded-lg " />
+                            <Skeleton className=" h-[48px] w-[56px]  rounded-lg bg-card" />
+                            <Skeleton className=" h-[48px] w-full  rounded-lg bg-card " />
                         </div>
                     )}
 
 
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="dark:bg-darkSecondaryBackground w-64 ml-2 rounded-md border p-2 mr-2" side='right' align='start' sideOffset={4}>
+                <DropdownMenuContent className="dark:bg-darkSecondaryBackground w-60 ml-2 rounded-md border p-2 mr-2" sideOffset={10}>
 
                     <DropdownMenuLabel className="p-0 font-normal px-2 flex flex-row items-center gap-2 text-sky-500">
                         <Layers size={15} />

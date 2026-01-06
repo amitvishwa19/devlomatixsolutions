@@ -3,7 +3,10 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useOrg } from '@/providers/OrgProvider';
 import { CalendarDays } from 'lucide-react';
-import { CalendarView } from './_components/CalendarView';
+import { ContentTopbar } from '../(misc)/_components/ContentTopbar';
+import { useAppointments } from './_hooks/useAppointments';
+import { AppointmentFilters, AppointmentStats, CalendarGrid, CalendarHeader, CreateAppointmentSheet, EditAppointmentSheet, TodayAppointments, UpcomingAppointments, ViewAppointmentSheet } from './_components';
+
 
 
 
@@ -47,27 +50,144 @@ const mockAppointments = {
 
 export default function AppointmentCalenderPage() {
     const { server } = useOrg()
+    const {
+        // Data
+        appointments,
+        calendarDays,
+        selectedDate,
+        calendarView,
+        filters,
+        doctors,
+        patients,
+        todayAppointments,
+        upcomingAppointments,
+        selectedAppointment,
 
+        // Setters
+        setCalendarView,
+        setFilters,
+
+        // Dialog states
+        createDialogOpen,
+        setCreateDialogOpen,
+        editDialogOpen,
+        setEditDialogOpen,
+        viewDialogOpen,
+        setViewDialogOpen,
+
+        // Navigation
+        navigatePrevious,
+        navigateNext,
+        navigateToday,
+
+        // CRUD operations
+        createAppointment,
+        updateAppointment,
+        deleteAppointment,
+        cancelAppointment,
+        confirmAppointment,
+
+        // Handlers
+        getAppointmentsForDay,
+        handleViewAppointment,
+        handleEditAppointment,
+        handleDayClick,
+    } = useAppointments();
 
 
     return (
-        <div className='absolute inset-0 flex flex-col gap-2 p-2'>
+        <div className='absolute inset-0 flex flex-col gap-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl flex flex-row items-center gap-2'>
-                        <CalendarDays className='h-5 w-5 text-sky-500' />
-                        Appointment Calender
-                    </h2>
-                    <h2 className='text-xs text-muted-foreground'>Appointment Calendar for Optimal Patient Flow, Real-Time Updates, and Effortless Time Management</h2>
+
+
+            <ContentTopbar
+                title='Appointment Calender'
+                description='Appointment Calendar for Optimal Patient Flow, Real-Time Updates, and Effortless Time Management'
+                icon='calendar-days'
+                actionComp={<CalendarHeader
+                    selectedDate={selectedDate}
+                    calendarView={calendarView}
+                    onViewChange={setCalendarView}
+                    onPrevious={navigatePrevious}
+                    onNext={navigateNext}
+                    onToday={navigateToday}
+                    onCreateAppointment={() => setCreateDialogOpen(true)}
+                />}
+            />
+
+            <ScrollArea className='h-[85vh] flex flex-grow  rounded-md'>
+                <div className="p-2 space-y-6 animate-fade-in">
+                    {/* Header */}
+
+
+                    {/* Stats */}
+                    <AppointmentStats appointments={appointments} />
+
+                    {/* Filters */}
+                    <AppointmentFilters
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        doctors={doctors}
+                    />
+
+                    {/* Main Content */}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Calendar Grid */}
+                        <div className="lg:col-span-3">
+                            <CalendarGrid
+                                days={calendarDays}
+                                selectedDate={selectedDate}
+                                calendarView={calendarView}
+                                getAppointmentsForDay={getAppointmentsForDay}
+                                onDayClick={handleDayClick}
+                                onAppointmentClick={handleViewAppointment}
+                            />
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="space-y-6">
+                            <TodayAppointments
+                                appointments={todayAppointments}
+                                onAppointmentClick={handleViewAppointment}
+                            />
+                            <UpcomingAppointments
+                                appointments={upcomingAppointments}
+                                onAppointmentClick={handleViewAppointment}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Create Appointment Sheet */}
+                    <CreateAppointmentSheet
+                        open={createDialogOpen}
+                        onOpenChange={setCreateDialogOpen}
+                        doctors={doctors}
+                        patients={patients}
+                        onSubmit={createAppointment}
+                        selectedDate={selectedDate}
+                    />
+
+                    {/* View Appointment Sheet */}
+                    <ViewAppointmentSheet
+                        open={viewDialogOpen}
+                        onOpenChange={setViewDialogOpen}
+                        appointment={selectedAppointment}
+                        onEdit={handleEditAppointment}
+                        onDelete={deleteAppointment}
+                        onConfirm={confirmAppointment}
+                        onCancel={cancelAppointment}
+                    />
+
+                    {/* Edit Appointment Sheet */}
+                    <EditAppointmentSheet
+                        open={editDialogOpen}
+                        onOpenChange={setEditDialogOpen}
+                        appointment={selectedAppointment}
+                        doctors={doctors}
+                        patients={patients}
+                        onSubmit={updateAppointment}
+                    />
                 </div>
-                <div>
-
-                </div>
-            </div>
-
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground rounded-md p-2 border'>
-                <CalendarView />
             </ScrollArea>
 
 

@@ -14,9 +14,7 @@ import InviteModal from "@/app/(workspace)/workspace/_components/InviteModal";
 import LeaveServerModal from "@/app/(workspace)/workspace/_components/LeaveServerModal";
 import ManageAccount from "@/app/(workspace)/workspace/_components/ManageAccount";
 import { useEffect, useState } from "react";
-import BookAppointment from "@/app/(workspace)/workspace/[orgId]/appointment/_components/appointment-manager/BookAppointment";
-import ViewAppointment from "@/app/(workspace)/workspace/[orgId]/appointment/_components/appointment-manager/ViewAppointment";
-import DeleteAppointment from "@/app/(workspace)/workspace/[orgId]/appointment/_components/appointment-manager/DeleteAppointment";
+
 
 
 
@@ -42,16 +40,6 @@ export const OrgModalProvider = () => {
 
             <LeaveServerModal />
             <DeleteServerModal />
-
-
-
-
-            <BookAppointment />
-            <ViewAppointment />
-            <DeleteAppointment />
-
-
-
 
             <ManageAccount />
 

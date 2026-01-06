@@ -1,7 +1,7 @@
 'use client'
 import React, { useContext, useEffect, useState } from 'react'
 import { ChannelType, MemberRole } from '@prisma/client';
-import { BrickWallShield, CalendarClock, ChevronDown, ChevronRight, Cog, CogIcon, CreditCard, Divide, File, FileText, Goal, Hash, KeyIcon, LayoutDashboard, LayoutDashboardIcon, Mic, Plus, PlusIcon, Settings, Settings2, ShieldAlert, ShieldCheck, Trash2, Video } from "lucide-react";
+import { BedDouble, BookOpen, BrickWallShield, Calendar, CalendarClock, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Cog, CogIcon, CreditCard, Cross, Divide, File, FileText, FlaskConical, GitBranch, Goal, Hash, KeyIcon, LayoutDashboard, LayoutDashboardIcon, MessageSquare, Mic, Package, Pill, Plus, PlusIcon, Receipt, Settings, Settings2, Shield, ShieldAlert, ShieldCheck, Sparkles, Stethoscope, Tags, Trash2, Users, Video } from "lucide-react";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/ui/accordion"
 import { useLocalStorage } from '@uidotdev/usehooks'
@@ -14,15 +14,9 @@ import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react';
 import OrgAuthBlock from './OrgAuthBlock';
 import OrgSwitcher from './OrgSwitcher';
-import OrgSearch from './OrgSearch';
-import { Separator } from '@/components/ui/separator';
-import ServerSection from './ServerSection';
-import ServerChannel from './ServerChannel';
-import ServerMember from './ServerMember';
 import { cn } from '@/lib/utils';
 import { AppIcon } from '@/components/global/AppIcon';
 import { DynamicIcon } from 'lucide-react/dynamic';
-
 
 
 const iconMap = {
@@ -36,6 +30,27 @@ const roleIconMap = {
     [MemberRole.MODERATOR]: <ShieldCheck className="h-4 w-4 mr-2 text-indigo-500" />,
     [MemberRole.ADMIN]: <ShieldAlert className="h-4 w-4 mr-2 text-rose-500" />
 }
+
+const navigationItems = [
+    { title: "Dashboard", url: "/", icon: "layout-dashboard" },
+    { title: "Workflow", url: "/workflow", icon: "git-branch" },
+    { title: "Appointment", url: "/appointment", icon: "calendar" },
+    { title: "Calendar", url: "/calendar", icon: "calendar-days" },
+    { title: "Documents", url: "/documents", icon: "file-text" },
+    { title: "Articles", url: "/articles", icon: "book-open" },
+    { title: "Taxonomy", url: "/taxonomy", icon: "tags" },
+    { title: "Patients", url: "/patients", icon: "users" },
+    { title: "Prescriptions", url: "/prescriptions", icon: "pill" },
+    { title: "Services", url: "/services", icon: "stethoscope" },
+    { title: "Laboratory", url: "/laboratory", icon: "flask-conical" },
+    { title: "Rooms & Beds", url: "/rooms-beds", icon: "bed-double" },
+    { title: "Inventory", url: "/inventory", icon: "package" },
+    { title: "Invoices", url: "/invoices", icon: "receipt" },
+    { title: "Payments", url: "/payments", icon: "credit-card" },
+    { title: "Pharmacy", url: "/pharmacy", icon: "cross" },
+    { title: "Communication", url: "/communication", icon: "message-square" },
+    { title: "Access Management", url: "/access-management", icon: "shield" },
+];
 
 export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
     const { server, servers, hasPermission, superadmin, hasRole } = useOrg()
@@ -51,11 +66,8 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
     const router = useRouter()
     const url = usePathname()
 
-
-
     const role = server?.members.find((member) => member.userId === userId)?.role;
     const { onOpen } = useModal()
-
 
     const defaultAccordianValue = Object.keys(expanded)
         .reduce((acc, key) => {
@@ -75,21 +87,26 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
     }
 
 
-
-    useEffect(() => {
-        //console.log('Superadmin', superadmin(), 'Role', hasRole('management'), 'Permission', hasPermission('moderator'))
-    }, [session])
-
-
-
     return (
-        <div className='flex-col min-h-full text-primary  w-[246px] dark:bg-darkSecondaryBackground relative border border-l-0'>
+        <div className='flex-col min-h-full text-primary  w-[246px]  relative '>
 
             <div className=' w-[246px] p-2'>
                 <OrgSwitcher />
             </div>
 
-            <ScrollArea className=''>
+            <ScrollArea className='h-[90vh]'>
+
+                {/* {navigationItems?.map((nav, index) => {
+                    return (
+                        <SidebarSingleItem
+                            key={index}
+                            title={nav.title}
+                            link={`/workspace/${server?.id}/${nav.url}`}
+                            selected={url.split('/')[3] === nav.url}
+                            icon={nav.icon}
+                        />
+                    )
+                })} */}
 
                 <Accordion type='multiple' defaultValue={defaultAccordianValue} className='py-2'>
 
@@ -109,165 +126,20 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                         icon='workflow'
                     />
 
-                    {/* <SidebarItem onExpand={onExpand} title={'Content Management'} value={'content'} icon='Sparkles' >
-                        <div className='flex flex-col' onClick={() => { console.log('first') }}>
+                    <SidebarSingleItem
+                        title='Appointment'
+                        link={`/workspace/${server?.id}/appointment`}
+                        selected={url.split('/')[3] === 'appointment'}
+                        icon='newspaper'
+                    />
 
-                            <SidebarSubItem
-                                title='Content'
-                                link={`/workspace/${server?.id}/content`}
-                                selected={url.split('/')[3] === 'content' && url.split('/').length === 4}
-                            />
+                    <SidebarSingleItem
+                        title='Calendar'
+                        link={`/workspace/${server?.id}/calendar`}
+                        selected={url.split('/')[3] === 'calendar'}
+                        icon='calendar-days'
+                    />
 
-
-
-                            <SidebarSubItem
-                                title='Taxonomy'
-                                link={`/workspace/${server?.id}/content/taxonomy`}
-                                selected={url.split('/')[3] === 'category' && url.split('/').length === 4}
-                            />
-
-                        </div>
-                    </SidebarItem> */}
-
-
-                    {/* <SidebarItem onExpand={onExpand} title={'Channels'} value={'channel'} icon='Rss' >
-                        <div className='flex flex-col'>
-                            <div className='mt-2'>
-                                <OrgSearch
-                                    data={[
-                                        {
-                                            label: "Text Channels",
-                                            type: "channel",
-                                            data: textChannels?.map((channel) => ({
-                                                id: channel.id,
-                                                name: channel.name,
-                                                icon: iconMap[channel.type],
-                                            }))
-                                        },
-                                        {
-                                            label: "Voice Channels",
-                                            type: "channel",
-                                            data: audioChannels?.map((channel) => ({
-                                                id: channel.id,
-                                                name: channel.name,
-                                                icon: iconMap[channel.type],
-                                            }))
-                                        },
-                                        {
-                                            label: "Video Channels",
-                                            type: "channel",
-                                            data: videoChannels?.map((channel) => ({
-                                                id: channel.id,
-                                                name: channel.name,
-                                                icon: iconMap[channel.type],
-                                            }))
-                                        },
-                                        {
-                                            label: "Members",
-                                            type: "member",
-                                            data: members?.map((member) => ({
-                                                id: member.id,
-                                                name: member?.user?.displayName,
-                                                icon: roleIconMap[member.role],
-                                            }))
-                                        },
-                                    ]}
-                                />
-                            </div>
-
-                            <Separator className="bg-zinc-200 dark:bg-zinc-700 rounded-md my-2" />
-
-                            {!!textChannels?.length && (
-                                <div className="mb-2">
-                                    <ServerSection
-                                        sectionType="channels"
-                                        channelType={ChannelType.TEXT}
-                                        role={role}
-                                        label="Text Channels"
-                                    />
-                                    <div className="space-y-[2px]">
-                                        {textChannels.map((channel) => (
-                                            <ServerChannel
-                                                key={channel.id}
-                                                channel={channel}
-                                                role={role}
-                                                server={server}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {!!audioChannels?.length && (
-                                <div className="mb-2">
-                                    <ServerSection
-                                        sectionType="channels"
-                                        channelType={ChannelType.AUDIO}
-                                        role={role}
-                                        label="Voice Channels"
-                                    />
-                                    <div className="space-y-[2px]">
-                                        {audioChannels.map((channel) => (
-                                            <ServerChannel
-                                                key={channel.id}
-                                                channel={channel}
-                                                role={role}
-                                                server={server}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {!!videoChannels?.length && (
-                                <div className="mb-2">
-                                    <ServerSection
-                                        sectionType="channels"
-                                        channelType={ChannelType.VIDEO}
-                                        role={role}
-                                        label="Video Channels"
-                                    />
-                                    <div className="space-y-[2px]">
-                                        {videoChannels.map((channel) => (
-                                            <ServerChannel
-                                                key={channel.id}
-                                                channel={channel}
-                                                role={role}
-                                                server={server}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {!!members?.length && (
-                                <div className="mb-2">
-                                    <ServerSection
-                                        sectionType="members"
-                                        role={role}
-                                        label="Members"
-                                        server={server}
-                                    />
-                                    <div className="space-y-[2px]">
-                                        {members.map((member) => (
-                                            <ServerMember
-                                                key={member.id}
-                                                member={member}
-                                                server={server}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </SidebarItem> */}
-
-                    {/* <SidebarSingleItem
-                        title='Collaboration'
-                        link={`/workspace/${server?.id}/collaboration`}
-                        selected={url.split('/')[3] === 'collaboration'}
-                        icon='messages-square'
-                    /> */}
 
                     <SidebarSingleItem
                         title='Documents'
@@ -284,25 +156,19 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                     />
 
                     <SidebarSingleItem
+                        title='Kanban'
+                        link={`/workspace/${server?.id}/kanban`}
+                        selected={url.split('/')[3] === 'kanban'}
+                        icon='kanban'
+                    />
+
+                    <SidebarSingleItem
                         title='Taxonomy'
                         link={`/workspace/${server?.id}/content/taxonomy`}
                         selected={url.split('/')[4] === 'taxonomy'}
                         icon='hand-helping'
                     />
 
-                    <SidebarSingleItem
-                        title='Appointment'
-                        link={`/workspace/${server?.id}/appointment`}
-                        selected={url.split('/')[3] === 'appointment'}
-                        icon='newspaper'
-                    />
-
-                    <SidebarSingleItem
-                        title='Calendar'
-                        link={`/workspace/${server?.id}/calendar`}
-                        selected={url.split('/')[3] === 'calendar'}
-                        icon='calendar-days'
-                    />
 
                     <SidebarSingleItem
                         title='Patients'
@@ -445,10 +311,10 @@ const SidebarSingleItem = ({ title, link, icon, selected }) => {
         <div className='p-2 -mb-2'>
             <Link
                 href={link}
-                className={`p-2 px-2 flex items-center gap-2 cursor-pointer 
-                            hover:bg-primary/10 hover:dark:bg-darkFocusColor  rounded-sm 
+                className={`py-1.5 px-2 flex items-center gap-2 cursor-pointer 
+                            hover:bg-primary/10 dark:hover:bg-card   rounded-md 
                             text-slate-600 dark:text-white/80   
-                            ${selected && 'bg-primary/10 dark:bg-darkFocusColor border'}`}
+                            ${selected && 'bg-primary/10 dark:bg-card  border/10'}`}
             >
                 <DynamicIcon name={icon} size={16} />
                 <span className='text-sm font-semibold'>

@@ -1,0 +1,19 @@
+// Dashboard Components
+export { ActivityFeed } from "./ActivityFeed";
+export { BedOccupancy } from "./BedOccupancy";
+export { DepartmentStats } from "./DepartmentStats";
+export { DoctorsList } from "./DoctorsList";
+export { EmergencyAlerts } from "./EmergencyAlerts";
+export { InventoryStatus } from "./InventoryStatus";
+export { LiveStats } from "./LiveStats";
+export { MiniCalendar } from "./MiniCalendar";
+export { PatientDemographics } from "./PatientDemographics";
+export { PatientOverview } from "./PatientOverview";
+export { PerformanceMetrics } from "./PerformanceMetrics";
+export { QuickActions } from "./QuickActions";
+export { RadialProgress } from "./RadialProgress";
+export { RecentAppointments } from "./RecentAppointments";
+export { RevenueChart } from "./RevenueChart";
+export { StaffSchedule } from "./StaffSchedule";
+export { StatCard } from "./StatCard";
+export { UpcomingSurgeries } from "./UpcomingSurgeries";

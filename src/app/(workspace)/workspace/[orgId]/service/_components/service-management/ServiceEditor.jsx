@@ -204,7 +204,7 @@ export default function ServiceEditor({ isOpen, onClose, onSubmit, categories, s
                                             </FormControl>
 
                                             <SelectContent>
-                                                {categories.map((cat) => (
+                                                {categories?.map((cat) => (
                                                     <SelectGroup key={cat.id}>
                                                         <SelectItem value={cat.id} className='pl-4 font-medium text-sm'>
                                                             <div className='flex flex-row items-center gap-2'>

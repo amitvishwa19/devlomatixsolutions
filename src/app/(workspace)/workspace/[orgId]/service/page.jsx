@@ -13,6 +13,7 @@ import { CustomBadge } from '../(misc)/_components/CustomBadge';
 import ServiceEditor from './_components/service-management/ServiceEditor';
 import ServiceDelete from './_components/service-management/ServiceDelete';
 import { DataTable } from '../(misc)/_components/DataTable';
+import { ContentTopbar } from '../(misc)/_components/ContentTopbar';
 
 export default function ServicePage() {
     const [active, setActive] = useState({ label: 'Services', icon: 'hand-helping', component: <Service /> })
@@ -136,31 +137,26 @@ export default function ServicePage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <div className='w-full dark:bg-darkSecondaryBackground  p-4 rounded-md border flex flex-row items-center justify-between'>
-                <div>
-                    <h2 className='text-xl'>Service Catalog Dashboard</h2>
-                    <h2 className='text-xs text-muted-foreground'>Comprehensive oversight of medical services, pricing, and system performance</h2>
-                </div>
+            <ContentTopbar
+                title='Service Catalog Dashboard'
+                description='Comprehensive oversight of medical services, pricing, and system performance'
+                icon='hand-helping'
+                actionComp={<Button
+                    variant='save'
+                    size='sm'
+                    onClick={() => {
+                        setServiceEditor({
+                            ...serviceEditor,
+                            isOpen: true
+                        })
+                    }}
+                >
+                    <Plus />
+                    Add Service
+                </Button>}
+            />
 
-                <div>
-
-                    <Button
-                        variant='save'
-                        size='sm'
-                        onClick={() => {
-                            setServiceEditor({
-                                ...serviceEditor,
-                                isOpen: true
-                            })
-                        }}
-                    >
-                        <Plus />
-                        Add Service
-                    </Button>
-                </div>
-            </div>
-
-            <ScrollArea className='h-[85vh] flex flex-grow dark:bg-darkSecondaryBackground  rounded-md pr-2 border'>
+            <ScrollArea className='h-[85vh] flex flex-grow   rounded-md '>
                 <div className='flex flex-col gap-4 p-2'>
                     <ServiceStats services={services} />
 

@@ -12,7 +12,12 @@ const CategoryTreePreview = ({ categories }) => {
                 <h2 className="text-lg font-semibold text-text-primary">Category Overview</h2>
 
             </div>
-            <div className="divide-y divide-border">
+            <div className="divide-y ">
+                {categories?.length === 0 && (
+                    <div className='p-4 flex flex-row items-center justify-center'>
+                        No Category found
+                    </div>
+                )}
                 {categories?.map((category) => (
                     <div
                         key={category?.id}
