@@ -7,8 +7,8 @@ import Image from 'next/image';
 const Footer = () => {
     return (
         <footer className="bg-card border-t border-border">
-            <div className="container mx-auto px-4 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            <div className="container mx-auto px-4 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 pb-4">
                     {/* Brand */}
                     <div className="space-y-4">
                         <Link href="/" className="flex items-center gap-2">
@@ -68,31 +68,31 @@ const Footer = () => {
                             <li className="flex items-start gap-3">
                                 <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                                 <span className="text-sm text-muted-foreground">
-                                    123 Healthcare Blvd, Medical City, MC 12345
+                                    202-10,Rajesher Plannet Vadodara Gujarat
                                 </span>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Phone className="h-5 w-5 text-primary flex-shrink-0" />
-                                <span className="text-sm text-muted-foreground">+1 (555) 123-4567</span>
+                                <span className="text-sm text-muted-foreground">(+91) 9712340450</span>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail className="h-5 w-5 text-primary flex-shrink-0" />
-                                <span className="text-sm text-muted-foreground">info@medicare.com</span>
+                                <span className="text-sm text-muted-foreground">info@devlomatix.in</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                <div className="mt-8 pt-8 border-t border-border">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="border-t border-border">
+                    <div className="flex flex-row justify-between items-center gap-4 p-4">
                         <p className="text-sm text-muted-foreground">
-                            © 2024 Healthyfine. All rights reserved.
+                            © 2024 {process.env.NEXT_PUBLIC_APP_NAME}. All rights reserved.
                         </p>
                         <div className="flex gap-6">
-                            <span className="text-sm text-muted-foreground hover:text-primary cursor-pointer transition-colors">
+                            <span className="text-sm  hover:text-primary cursor-pointer transition-colors font-semibold text-muted-foreground">
                                 Privacy Policy
                             </span>
-                            <span className="text-sm text-muted-foreground hover:text-primary cursor-pointer transition-colors">
+                            <span className="text-sm  hover:text-primary cursor-pointer transition-colors font-semibold text-muted-foreground">
                                 Terms of Service
                             </span>
                         </div>

@@ -79,6 +79,8 @@ const posts = [
 const Blog = () => {
     return (
         <div className="min-h-screen overflow-hidden">
+
+
             {/* Hero Section */}
             <section className="relative py-24 lg:py-32 overflow-hidden">
                 <div className="absolute inset-0 gradient-mesh" />
@@ -158,6 +160,7 @@ const Blog = () => {
                 <div className="blob blob-3" />
 
                 <div className="  relative mx-auto px-4">
+
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
                         <div>
                             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Latest Articles</h2>
@@ -181,7 +184,7 @@ const Blog = () => {
                         {posts.map((post, index) => (
                             <Card
                                 key={post.title}
-                                className="group card-hover overflow-hidden border-border/50 bg-card/50 glass animate-slide-up"
+                                className="group card-hover border overflow-hidden border-border bg-card glass animate-slide-up"
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <div className="relative aspect-video overflow-hidden">
@@ -219,7 +222,7 @@ const Blog = () => {
                         ))}
                     </div>
 
-                    <div className="text-center mt-16">
+                    <div className="text-center mt-4">
                         <Button variant="outline" size="lg" className="glass border-border/50 hover:border-primary/50 px-10">
                             Load More Articles
                             <ArrowRight className="h-4 w-4 ml-2" />
@@ -229,7 +232,7 @@ const Blog = () => {
             </section>
 
             {/* Newsletter */}
-            <section className="relative py-24">
+            <section className="relative">
                 <div className="  mx-auto px-4">
                     <div className="relative rounded-[2.5rem] overflow-hidden">
                         <div className="absolute inset-0 gradient-primary" />
@@ -239,21 +242,21 @@ const Blog = () => {
                         </div>
 
                         <div className="relative px-8 py-16 md:p-20 text-center">
-                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
+                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-6">
                                 Subscribe to Our Newsletter
                             </h2>
-                            <p className="text-white/90 text-lg md:text-xl mb-10 max-w-xl mx-auto">
+                            <p className="text-muted-foreground text-md md:text-md mb-10 max-w-xl mx-auto">
                                 Get the latest health tips and medical news delivered straight to your inbox.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                                 <input
                                     type="email"
                                     placeholder="Enter your email"
-                                    className="flex-1 h-14 px-6 rounded-xl border-0 bg-white/20 backdrop-blur-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                    className="flex-1 h-10 px-2 rounded-md border border-primary  backdrop-blur-sm   focus:outline-none  "
                                 />
-                                <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg h-14 px-8">
+                                <Button className="bg-white text-primary hover:bg-white/90 shadow-lg h-10 px-8">
                                     Subscribe
-                                    <ArrowRight className="h-5 w-5 ml-2" />
+                                    <ArrowRight className="h-4 w-4 ml-2" />
                                 </Button>
                             </div>
                         </div>

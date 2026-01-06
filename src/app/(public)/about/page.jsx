@@ -32,8 +32,12 @@ const values = [
 ];
 
 const About = () => {
+
+
     return (
         <div className="min-h-screen overflow-hidden">
+
+
             {/* Hero Section */}
             <section className="relative py-24 lg:py-32 overflow-hidden">
                 <div className="absolute inset-0 gradient-mesh" />
@@ -142,7 +146,7 @@ const About = () => {
                         {values.map((value, index) => (
                             <Card
                                 key={value.title}
-                                className="group card-hover text-center border-border/50 bg-card/50 glass animate-slide-up overflow-hidden"
+                                className="group card-hover text-center border bg-card  animate-slide-up overflow-hidden hover:border-primary/30 transition-colors animate-fade-in"
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <CardContent className="p-8">

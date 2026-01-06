@@ -12,14 +12,14 @@ const contactInfo = [
     {
         icon: Phone,
         title: 'Phone',
-        details: ['+1 (555) 123-4567', '+1 (555) 987-6543'],
+        details: ['+91 97123X045X', '+91 97123X045X'],
         description: 'Mon-Fri from 8am to 6pm',
         color: 'from-emerald-500 to-teal-500',
     },
     {
         icon: Mail,
         title: 'Email',
-        details: ['info@medicare.com', 'appointments@medicare.com'],
+        details: ['info@devloatix.in.com', 'contact@devlomatix.in'],
         description: 'We reply within 24 hours',
         color: 'from-blue-500 to-cyan-500',
     },
@@ -40,6 +40,7 @@ const contactInfo = [
 ];
 
 const Contact = () => {
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -82,7 +83,7 @@ const Contact = () => {
                             <Sparkles className="h-4 w-4 text-primary" />
                             Contact Us
                         </div>
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-8">
+                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-8 light:text-primary">
                             We're Here to{' '}
                             <span className="  ">Help You</span>
                         </h1>
@@ -147,8 +148,8 @@ const Contact = () => {
                                         <Label htmlFor="name" className="text-foreground font-medium">Full Name *</Label>
                                         <Input
                                             id="name"
-                                            placeholder="John Doe"
-                                            className="h-12 bg-card/50 glass border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                                            placeholder=""
+                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         />
@@ -159,7 +160,7 @@ const Contact = () => {
                                             id="email"
                                             type="email"
                                             placeholder="john@example.com"
-                                            className="h-12 bg-card/50 glass border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         />
@@ -172,8 +173,8 @@ const Contact = () => {
                                         <Input
                                             id="phone"
                                             type="tel"
-                                            placeholder="+1 (555) 000-0000"
-                                            className="h-12 bg-card/50 glass border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                                            placeholder="+91 971234X45X"
+                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
                                             value={formData.phone}
                                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         />
@@ -183,7 +184,7 @@ const Contact = () => {
                                         <Input
                                             id="subject"
                                             placeholder="How can we help?"
-                                            className="h-12 bg-card/50 glass border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
                                             value={formData.subject}
                                             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                                         />
@@ -194,8 +195,9 @@ const Contact = () => {
                                     <Label htmlFor="message" className="text-foreground font-medium">Message *</Label>
                                     <Textarea
                                         id="message"
+                                        rows='4'
                                         placeholder="Tell us more about your inquiry..."
-                                        className="min-h-[160px] bg-card/50 glass border-border/50 focus:border-primary/50 focus:ring-primary/20 resize-none"
+                                        className="min-h-[160px] bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20 resize-none"
                                         value={formData.message}
                                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                                     />
@@ -204,7 +206,7 @@ const Contact = () => {
                                 <Button
                                     type="submit"
                                     size="lg"
-                                    className="w-full sm:w-auto group gradient-primary text-primary-foreground border-0 shadow-glow hover:shadow-[0_0_80px_hsl(262_83%_58%/0.4)] transition-all duration-500 px-8"
+                                    className="w-full sm:w-auto group  text-primary-foreground border-0 shadow-glow hover:shadow-[0_0_80px_hsl(262_83%_58%/0.4)] transition-all duration-500 px-8"
                                 >
                                     Send Message
                                     <Send className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
