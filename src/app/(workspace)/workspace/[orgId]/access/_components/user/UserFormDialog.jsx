@@ -8,7 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader, Save, User } from 'lucide-react';
+import { icons, Loader, Save, User } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAction } from '@/hooks/use-action';
@@ -16,35 +16,18 @@ import { upsertUser } from '../../_action/upsert-user';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { useAccess } from '../../_provider/accessProvider';
-
+import { DepartmentMultiSelect } from './DepartmentMultiSelect';
+import { RoleSelect } from './RoleSelect';
+import { MultiSelectDropDown } from '@/components/global/MultiSelectDropDown';
 
 const userFormSchema = z.object({
     id: z.string(),
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
     email: z.string().email('Please enter a valid email address'),
-    department: z.string().min(2, 'Department is required'),
+    departments: z.array(z.string()).min(1, "Select at least one department"),
     roles: z.array(z.any()),
     status: z.boolean(['active', 'inactive']),
 });
-
-const DEPARTMENTS = [
-
-    'Cardiology',
-    'Neurology',
-    'Pediatrics',
-    'Emergency',
-    'ICU',
-    'Surgery',
-    'Radiology',
-    'Oncology',
-    'Orthopedics',
-    'Front Desk',
-    'Finance',
-    'IT',
-    'Human Resources',
-    'Pharmacy',
-    'Laboratory',
-];
 
 export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     const { data: session } = useSession()
@@ -52,14 +35,14 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     const isEditing = !!user;
     const { departments } = useAccess()
 
-    console.log(departments)
+
     const form = useForm({
         resolver: zodResolver(userFormSchema),
         defaultValues: {
             id: '',
             name: '',
             email: '',
-            department: '',
+            departments: [],
             roles: [],
             status: false,
         },
@@ -71,7 +54,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                 id: user.id || '',
                 name: user.displayName || '',
                 email: user.email || '',
-                department: user.department || '',
+                departments: user.department || [],
                 roles: user.roles?.map((p) =>
                     p === 'string' ? p : p.id
                 ) ?? [],
@@ -82,7 +65,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                 id: '',
                 name: '',
                 email: '',
-                department: '',
+                departments: [],
                 roles: [],
                 status: false,
             });
@@ -132,6 +115,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
 
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+
                             <div className='flex flex-col flex-1 gap-4'>
 
                                 <FormField
@@ -168,82 +152,49 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
 
                                 <FormField
                                     control={form.control}
-                                    name="department"
+                                    name="departments"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Department</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select as department" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {departments?.map((dept) => (
-                                                        <SelectItem key={dept.id} value={dept.id}>
-                                                            {dept?.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <FormLabel>Departments</FormLabel>
+                                            <FormControl>
+                                                <DepartmentMultiSelect
+                                                    departments={departments}
+                                                    selectedDepartments={field.value}
+                                                    onSelectionChange={field.onChange}
+                                                    placeholder="Select departments..."
+                                                />
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
 
-                                {/* ✅ MULTI-SELECT ROLES */}
+                                <MultiSelectDropDown
+                                    data={departments}
+                                    columns={2}
+                                />
+
+                                {/* Multi-Select Roles using the new component */}
                                 <FormField
                                     control={form.control}
                                     name="roles"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Roles</FormLabel>
-                                            <ScrollArea className="h-[45vh] border rounded-md p-2 mt-1">
-                                                <div className="grid grid-cols-2 gap-3 m-2">
-                                                    {roles?.map((role) => (
-                                                        <FormItem
-                                                            key={role.id}
-                                                            className="flex flex-row items-start space-x-3 space-y-0"
-                                                        >
-                                                            <FormControl>
-                                                                <Checkbox
-                                                                    checked={field.value?.includes(role.id)}
-                                                                    onCheckedChange={(checked) => {
-                                                                        return field.onChange(
-                                                                            checked
-                                                                                ? [...(field.value || []), role.id]
-                                                                                : field.value?.filter((id) => id !== role.id) || []
-                                                                        );
-                                                                    }}
-                                                                />
-                                                            </FormControl>
-                                                            <div className="space-y-1 leading-none">
-                                                                <label
-                                                                    htmlFor={role.id}
-                                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                                                >
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div
-                                                                            className="h-3 w-3 rounded-full"
-                                                                            style={{ backgroundColor: role.color }}
-                                                                        />
-                                                                        {role.title}
-                                                                    </div>
-                                                                </label>
-                                                                {role.description && (
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        {role.description}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </FormItem>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
+                                            <FormControl>
+                                                <RoleSelect
+                                                    roles={roles}
+                                                    selected={field.value}
+                                                    onChange={field.onChange}
+                                                    placeholder="Select roles..."
+                                                />
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
+
+
 
                                 {/* ✅ BOOLEAN STATUS TOGGLE */}
                                 <FormField

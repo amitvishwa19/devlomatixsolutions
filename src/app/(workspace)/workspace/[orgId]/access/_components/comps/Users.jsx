@@ -128,7 +128,7 @@ export default function Users() {
             cell: ({ row }) => {
                 return (
                     <CustomBadge status={`${row.original.department ? 'success' : 'na'}`}>
-                        {row.original.department ? row.original.department.name : 'No Department Assigned'}
+                        {row.original.department ? row.original.department : 'No Department Assigned'}
                     </CustomBadge>
                 )
             }

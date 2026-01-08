@@ -210,9 +210,10 @@ model User {
   credit Credit?
 
   //Record and prescription
-  lastActive DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  lastActive  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  departments Department[]
 
   @@index([email])
   @@index([phone])
@@ -236,8 +237,8 @@ model Department {
   isActive     Boolean @default(true)
 
   // ✅ FIXED Relations with explicit names
-  //head   User?   @relation("DepartmentHeadDoctor", fields: [headId], references: [id])
-  //headId String?
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
 
   //appointments Appointment[]
   //inventory    Inventory[]
