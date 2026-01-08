@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 export default function Database() {
     const [loading, setLoading] = useState(null)
-    const { users: user, roleSeed: role, permissionSeed: permission, doctor: doctor, patient: patient, categorySeed, inventorySeed, serviceSeed, paymentSeed, invoicesSeed } = seeder()
+
 
     const handleDatabaseSeed = (type, data) => {
         setLoading(type)

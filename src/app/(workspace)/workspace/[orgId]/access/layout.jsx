@@ -36,18 +36,22 @@ export default async function AccessLayout({ children }) {
         }
     })
 
+    const departments = await db.department.findMany({
+        where: {
+            isActive: true
+        }
+    })
+
 
     const permissions = await db.permission.findMany({
         orderBy: {
             createdAt: 'desc'
         },
-        include: {
-            category: true
-        }
+
     })
 
     return (
-        <AccessProvider allUsers={user} allRoles={roles} allPermissions={permissions}>
+        <AccessProvider allUsers={user} allRoles={roles} allPermissions={permissions} allDepartments={departments}>
             <div>
                 {children}
             </div>

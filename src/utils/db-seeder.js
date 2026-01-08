@@ -1,5 +1,4 @@
 'use server'
-
 import { db } from "@/lib/db"
 import { MemberRole, ROLE } from "@prisma/client"
 import { v4 as uuidv4 } from 'uuid'
@@ -18,6 +17,7 @@ export async function SeedDAtabase(type, data) {
                         lastName: item.lastName,
                         email: item.email,
                         displayName: item.displayName,
+                        name: item.displayName,
                         avatar: item.avatar,
                         role: item.role,
                         uuid: 'US-' + Math.floor(Math.random() * (9999999999 - 1000000000 + 1) + 1000000000).toString(),
@@ -69,6 +69,7 @@ export async function SeedDAtabase(type, data) {
                         lastName: item.lastName,
                         email: item.email,
                         displayName: item.displayName,
+                        name: item.displayName,
                         avatar: item.avatar,
                         role: ROLE.DOCTOR,
                         uuid: 'DT-' + Math.floor(Math.random() * (9999999999 - 1000000000 + 1) + 1000000000).toString(),
@@ -120,6 +121,7 @@ export async function SeedDAtabase(type, data) {
                         lastName: item.lastName,
                         email: item.email,
                         displayName: item.displayName,
+                        name: item.displayName,
                         avatar: item.avatar,
                         role: ROLE.PATIENT,
                         uuid: 'PT-' + Math.floor(Math.random() * (9999999999 - 1000000000 + 1) + 1000000000).toString(),
@@ -169,6 +171,14 @@ export async function SeedDAtabase(type, data) {
             })
         }
 
+        if (type === 'department') {
+            await db.department.deleteMany()
+            await db.department.createMany({
+                data: data
+            })
+            // console.log(data)
+        }
+
         if (type === 'categories') {
             await db.category.createMany({
                 data: data
@@ -182,12 +192,14 @@ export async function SeedDAtabase(type, data) {
         }
 
         if (type === 'role') {
+            await db.role.deleteMany()
             await db.role.createMany({
                 data: data
             })
         }
 
         if (type === 'permission') {
+            await db.permission.deleteMany()
             await db.permission.createMany({
                 data: data
             })

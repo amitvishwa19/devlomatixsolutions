@@ -15,6 +15,7 @@ import { useAction } from '@/hooks/use-action';
 import { upsertUser } from '../../_action/upsert-user';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import { useAccess } from '../../_provider/accessProvider';
 
 
 const userFormSchema = z.object({
@@ -49,8 +50,9 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     const { data: session } = useSession()
     const [loading, setloading] = useState(false)
     const isEditing = !!user;
+    const { departments } = useAccess()
 
-
+    console.log(departments)
     const form = useForm({
         resolver: zodResolver(userFormSchema),
         defaultValues: {
@@ -177,9 +179,9 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    {DEPARTMENTS.map((dept) => (
-                                                        <SelectItem key={dept} value={dept}>
-                                                            {dept}
+                                                    {departments?.map((dept) => (
+                                                        <SelectItem key={dept.id} value={dept.id}>
+                                                            {dept?.name}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -196,7 +198,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Roles</FormLabel>
-                                            <ScrollArea className="h-40 border rounded-md p-2 mt-1">
+                                            <ScrollArea className="h-[45vh] border rounded-md p-2 mt-1">
                                                 <div className="grid grid-cols-2 gap-3 m-2">
                                                     {roles?.map((role) => (
                                                         <FormItem

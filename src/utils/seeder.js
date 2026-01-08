@@ -47,6 +47,81 @@ export function seeder() {
         };
     });
 
+    const userSeed = Array.from({ length: 5 }, (_, i) => {
+        const f = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const l = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const gender = sex[Math.floor(Math.random() * sex.length)];
+        const role = roles[Math.floor(Math.random() * roles.length)];
+        const displayName = `${f} ${l}`;
+        const email = `${f.toLowerCase()}.${l.toLowerCase()}@healthyfine.com`;
+        const status = true;
+        const avaliable = avaliblity[Math.floor(Math.random() * gender.length)];
+        const online = avaliblity[Math.floor(Math.random() * gender.length)];
+
+
+        return {
+            email,
+            firstName: f,
+            lastName: l,
+            displayName,
+            avatar: `https://randomuser.me/api/portraits/${gender === "Male" ? "men" : "women"}/${Math.floor(Math.random() * 90) + 1}.jpg`,
+            gender,
+            role: 'USER',
+            avaliable,
+            online
+        };
+    });
+
+    const patientSeed = Array.from({ length: 5 }, (_, i) => {
+        const f = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const l = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const gender = sex[Math.floor(Math.random() * sex.length)];
+        const role = roles[Math.floor(Math.random() * roles.length)];
+        const displayName = `${f} ${l}`;
+        const email = `${f.toLowerCase()}.${l.toLowerCase()}@healthyfine.com`;
+        const status = true;
+        const avaliable = avaliblity[Math.floor(Math.random() * gender.length)];
+        const online = avaliblity[Math.floor(Math.random() * gender.length)];
+
+
+        return {
+            email,
+            firstName: f,
+            lastName: l,
+            displayName,
+            avatar: `https://randomuser.me/api/portraits/${gender === "Male" ? "men" : "women"}/${Math.floor(Math.random() * 90) + 1}.jpg`,
+            gender,
+            role: 'PATIENT',
+            avaliable,
+            online
+        };
+    });
+
+    const doctorSeed = Array.from({ length: 5 }, (_, i) => {
+        const f = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const l = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const gender = sex[Math.floor(Math.random() * sex.length)];
+        const role = roles[Math.floor(Math.random() * roles.length)];
+        const displayName = `${f} ${l}`;
+        const email = `${f.toLowerCase()}.${l.toLowerCase()}@healthyfine.com`;
+        const status = true;
+        const avaliable = avaliblity[Math.floor(Math.random() * gender.length)];
+        const online = avaliblity[Math.floor(Math.random() * gender.length)];
+
+
+        return {
+            email,
+            firstName: f,
+            lastName: l,
+            displayName,
+            avatar: `https://randomuser.me/api/portraits/${gender === "Male" ? "men" : "women"}/${Math.floor(Math.random() * 90) + 1}.jpg`,
+            gender,
+            role: 'DOCTOR',
+            avaliable,
+            online
+        };
+    });
+
 
 
     const userRoles = [
@@ -61,100 +136,142 @@ export function seeder() {
 
 
     const roleSeed = [
-        { title: 'management', description: 'General management permissions', status: true },
+        {
+            title: 'super-admin',
+            description: 'Full system access - controls all hospital operations and staff permissions',
+            status: true
+        },
+        {
+            title: 'hospital-admin',
+            description: 'Manages hospital settings, staff, departments, and financial oversight',
+            status: true
+        },
+        {
+            title: 'doctor',
+            description: 'Clinical access - patients, prescriptions, lab orders, appointments',
+            status: true
+        },
+        {
+            title: 'nurse',
+            description: 'Patient care - vitals, medications, room assignments, basic records',
+            status: true
+        },
+        {
+            title: 'receptionist',
+            description: 'Front desk - appointments, patient registration, basic info',
+            status: true
+        },
+        {
+            title: 'pharmacist',
+            description: 'Pharmacy management - prescriptions, inventory, drug dispensing',
+            status: true
+        },
+        {
+            title: 'lab-technician',
+            description: 'Laboratory operations - sample processing, test results, reports',
+            status: true
+        },
+        {
+            title: 'billing',
+            description: 'Financial operations - invoices, payments, insurance claims',
+            status: true
+        },
+        {
+            title: 'inventory-manager',
+            description: 'Medical supplies - stock management, procurement, expiry tracking',
+            status: true
+        },
+        {
+            title: 'it-admin',
+            description: 'Technical support - system settings, credentials, integrations',
+            status: true
+        },
+        {
+            title: 'department-head',
+            description: 'Department oversight - staff management, schedules, reports',
+            status: true
+        },
+        {
+            title: 'patient',
+            description: 'Patient portal - view appointments, prescriptions, bills, results',
+            status: true
+        }
     ]
 
     const permissionSeed = [
-        // Patients
-        { value: 'patients.view', title: 'View Patients', description: 'View patient list and profiles', status: true, categoryId: null },
-        { value: 'patients.create', title: 'Create Patients', description: 'Add new patients to the system', status: true, categoryId: null },
-        { value: 'patients.edit', title: 'Edit Patients', description: 'Modify patient information', status: true, categoryId: null },
-        { value: 'patients.delete', title: 'Delete Patients', description: 'Remove patients from the system', status: true, categoryId: null },
+        // Dashboard
+        { value: "dashboard.view", title: "View Dashboard", description: "View dashboard data", status: true, category: "dashboard" },
+        { value: "dashboard.create", title: "Create Dashboard", description: "Create dashboard items", status: true, category: "dashboard" },
+        { value: "dashboard.edit", title: "Edit Dashboard", description: "Edit dashboard items", status: true, category: "dashboard" },
+        { value: "dashboard.delete", title: "Delete Dashboard", description: "Delete dashboard items", status: true, category: "dashboard" },
+        { value: "dashboard.manage", title: "Manage Dashboard", description: "Full control of dashboard", status: true, category: "dashboard" },
+        { value: "dashboard.export", title: "Export Dashboard", description: "Export dashboard data", status: true, category: "dashboard" },
+        { value: "dashboard.import", title: "Import Dashboard", description: "Import dashboard data", status: true, category: "dashboard" },
 
-        // Doctors
-        { value: 'doctors.view', title: 'View Doctors', description: 'View doctor profiles and details', status: true, categoryId: null },
-        { value: 'doctors.create', title: 'Create Doctors', description: 'Add new doctors to the system', status: true, categoryId: null },
-        { value: 'doctors.edit', title: 'Edit Doctors', description: 'Modify doctor information', status: true, categoryId: null },
-        { value: 'doctors.delete', title: 'Delete Doctors', description: 'Remove doctors from the system', status: true, categoryId: null },
-
-        // Departments
-        { value: 'departments.view', title: 'View Departments', description: 'View hospital departments', status: true, categoryId: null },
-        { value: 'departments.create', title: 'Create Departments', description: 'Add new departments', status: true, categoryId: null },
-        { value: 'departments.edit', title: 'Edit Departments', description: 'Modify department details', status: true, categoryId: null },
-        { value: 'departments.delete', title: 'Delete Departments', description: 'Remove departments', status: true, categoryId: null },
-
-        // Admissions & Discharge
-        { value: 'admissions.view', title: 'View Admissions', description: 'View patient admission records', status: true, categoryId: null },
-        { value: 'admissions.create', title: 'Admit Patients', description: 'Admit patients to hospital', status: true, categoryId: null },
-        { value: 'admissions.edit', title: 'Edit Admissions', description: 'Modify admission details', status: true, categoryId: null },
-        { value: 'discharge.process', title: 'Process Discharge', description: 'Discharge patients from hospital', status: true, categoryId: null },
-
-        // Labs & Diagnostics
-        { value: 'labs.view', title: 'View Lab Tests', description: 'View laboratory test records', status: true, categoryId: null },
-        { value: 'labs.create', title: 'Create Lab Tests', description: 'Order new lab tests', status: true, categoryId: null },
-        { value: 'labs.edit', title: 'Edit Lab Tests', description: 'Modify lab test details', status: true, categoryId: null },
-        { value: 'labs.approve', title: 'Approve Lab Results', description: 'Approve and verify lab results', status: true, categoryId: null },
-
-        // Pharmacy & Inventory
-        { value: 'pharmacy.view', title: 'View Pharmacy', description: 'View medicines and prescriptions', status: true, categoryId: null },
-        { value: 'pharmacy.dispense', title: 'Dispense Medicines', description: 'Dispense medicines to patients', status: true, categoryId: null },
-        { value: 'pharmacy.return', title: 'Return Medicines', description: 'Process returned medicines', status: true, categoryId: null },
-        { value: 'inventory.view', title: 'View Inventory', description: 'View medical inventory and stock', status: true, categoryId: null },
-        { value: 'inventory.create', title: 'Add Inventory', description: 'Add new inventory items', status: true, categoryId: null },
-        { value: 'inventory.update', title: 'Update Inventory', description: 'Update inventory stock levels', status: true, categoryId: null },
-
-        // Insurance & Claims
-        { value: 'insurance.view', title: 'View Insurance', description: 'View patient insurance details', status: true, categoryId: null },
-        { value: 'insurance.verify', title: 'Verify Insurance', description: 'Verify insurance eligibility', status: true, categoryId: null },
-        { value: 'claims.create', title: 'Create Claims', description: 'Create insurance claims', status: true, categoryId: null },
-        { value: 'claims.process', title: 'Process Claims', description: 'Process insurance claims', status: true, categoryId: null },
-
-        // Rooms & Beds
-        { value: 'rooms.view', title: 'View Rooms', description: 'View hospital rooms and wards', status: true, categoryId: null },
-        { value: 'beds.assign', title: 'Assign Beds', description: 'Assign beds to patients', status: true, categoryId: null },
-        { value: 'beds.transfer', title: 'Transfer Beds', description: 'Transfer patients between beds', status: true, categoryId: null },
-
-        // Staff
-        { value: 'staff.view', title: 'View Staff', description: 'View staff list and profiles', status: true, categoryId: null },
-        { value: 'staff.create', title: 'Create Staff', description: 'Add new staff members', status: true, categoryId: null },
-        { value: 'staff.edit', title: 'Edit Staff', description: 'Modify staff information', status: true, categoryId: null },
-        { value: 'staff.delete', title: 'Delete Staff', description: 'Remove staff members', status: true, categoryId: null },
+        // Workflow
+        { value: "workflow.view", title: "View Workflow", description: "View workflows", status: true, category: "workflow" },
+        { value: "workflow.create", title: "Create Workflow", description: "Create workflows", status: true, category: "workflow" },
+        { value: "workflow.edit", title: "Edit Workflow", description: "Edit workflows", status: true, category: "workflow" },
+        { value: "workflow.delete", title: "Delete Workflow", description: "Delete workflows", status: true, category: "workflow" },
+        { value: "workflow.manage", title: "Manage Workflow", description: "Manage workflows", status: true, category: "workflow" },
+        { value: "workflow.export", title: "Export Workflow", description: "Export workflows", status: true, category: "workflow" },
+        { value: "workflow.import", title: "Import Workflow", description: "Import workflows", status: true, category: "workflow" },
 
         // Appointments
-        { value: 'appointments.view', title: 'View Appointments', description: 'View all appointments', status: true, categoryId: null },
-        { value: 'appointments.create', title: 'Create Appointments', description: 'Schedule new appointments', status: true, categoryId: null },
-        { value: 'appointments.edit', title: 'Edit Appointments', description: 'Modify existing appointments', status: true, categoryId: null },
-        { value: 'appointments.delete', title: 'Cancel Appointments', description: 'Cancel scheduled appointments', status: true, categoryId: null },
+        { value: "appointments.view", title: "View Appointments", description: "View appointments", status: true, category: "appointments" },
+        { value: "appointments.create", title: "Create Appointment", description: "Create appointments", status: true, category: "appointments" },
+        { value: "appointments.edit", title: "Edit Appointment", description: "Edit appointments", status: true, category: "appointments" },
+        { value: "appointments.delete", title: "Delete Appointment", description: "Delete appointments", status: true, category: "appointments" },
+        { value: "appointments.manage", title: "Manage Appointments", description: "Manage appointments", status: true, category: "appointments" },
+        { value: "appointments.export", title: "Export Appointments", description: "Export appointments", status: true, category: "appointments" },
+        { value: "appointments.import", title: "Import Appointments", description: "Import appointments", status: true, category: "appointments" },
 
-        // Records
-        { value: 'records.view', title: 'View Records', description: 'Access medical records', status: true, categoryId: null },
-        { value: 'records.create', title: 'Create Records', description: 'Add new medical records', status: true, categoryId: null },
-        { value: 'records.edit', title: 'Edit Records', description: 'Modify medical records', status: true, categoryId: null },
-        { value: 'records.export', title: 'Export Records', description: 'Export medical records', status: true, categoryId: null },
+        // Calendar
+        { value: "calendar.view", title: "View Calendar", description: "View calendar", status: true, category: "calendar" },
+        { value: "calendar.create", title: "Create Calendar Event", description: "Create calendar events", status: true, category: "calendar" },
+        { value: "calendar.edit", title: "Edit Calendar Event", description: "Edit calendar events", status: true, category: "calendar" },
+        { value: "calendar.delete", title: "Delete Calendar Event", description: "Delete calendar events", status: true, category: "calendar" },
+        { value: "calendar.manage", title: "Manage Calendar", description: "Manage calendar", status: true, category: "calendar" },
+        { value: "calendar.export", title: "Export Calendar", description: "Export calendar data", status: true, category: "calendar" },
+        { value: "calendar.import", title: "Import Calendar", description: "Import calendar data", status: true, category: "calendar" },
 
-        // Billing
-        { value: 'billing.view', title: 'View Billing', description: 'View invoices and payments', status: true, categoryId: null },
-        { value: 'billing.create', title: 'Create Invoices', description: 'Generate new invoices', status: true, categoryId: null },
-        { value: 'billing.process', title: 'Process Payments', description: 'Handle payment processing', status: true, categoryId: null },
-        { value: 'billing.refund', title: 'Issue Refunds', description: 'Process refunds', status: true, categoryId: null },
+        // Kanban
+        { value: "kanban.view", title: "View Kanban", description: "View kanban boards", status: true, category: "kanban" },
+        { value: "kanban.create", title: "Create Kanban Item", description: "Create kanban items", status: true, category: "kanban" },
+        { value: "kanban.edit", title: "Edit Kanban Item", description: "Edit kanban items", status: true, category: "kanban" },
+        { value: "kanban.delete", title: "Delete Kanban Item", description: "Delete kanban items", status: true, category: "kanban" },
+        { value: "kanban.manage", title: "Manage Kanban", description: "Manage kanban boards", status: true, category: "kanban" },
+        { value: "kanban.export", title: "Export Kanban", description: "Export kanban data", status: true, category: "kanban" },
+        { value: "kanban.import", title: "Import Kanban", description: "Import kanban data", status: true, category: "kanban" },
 
-        // Reports
-        { value: 'reports.view', title: 'View Reports', description: 'Access system reports', status: true, categoryId: null },
-        { value: 'reports.create', title: 'Generate Reports', description: 'Create custom reports', status: true, categoryId: null },
-        { value: 'reports.export', title: 'Export Reports', description: 'Export reports to files', status: true, categoryId: null },
+        // Documents
+        { value: "documents.view", title: "View Documents", description: "View documents", status: true, category: "documents" },
+        { value: "documents.create", title: "Create Document", description: "Create documents", status: true, category: "documents" },
+        { value: "documents.edit", title: "Edit Document", description: "Edit documents", status: true, category: "documents" },
+        { value: "documents.delete", title: "Delete Document", description: "Delete documents", status: true, category: "documents" },
+        { value: "documents.manage", title: "Manage Documents", description: "Manage documents", status: true, category: "documents" },
+        { value: "documents.export", title: "Export Documents", description: "Export documents", status: true, category: "documents" },
+        { value: "documents.import", title: "Import Documents", description: "Import documents", status: true, category: "documents" },
 
-        // Security & Notifications
-        { value: 'audit.view', title: 'View Audit Logs', description: 'View system audit logs', status: true, categoryId: null },
-        { value: 'audit.export', title: 'Export Audit Logs', description: 'Export audit logs', status: true, categoryId: null },
-        { value: 'sessions.terminate', title: 'Terminate Sessions', description: 'Force logout active sessions', status: true, categoryId: null },
-        { value: 'notifications.view', title: 'View Notifications', description: 'View system notifications', status: true, categoryId: null },
-        { value: 'notifications.send', title: 'Send Notifications', description: 'Send SMS, email, or app notifications', status: true, categoryId: null },
+        // Articles
+        { value: "articles.view", title: "View Articles", description: "View articles", status: true, category: "articles" },
+        { value: "articles.create", title: "Create Article", description: "Create articles", status: true, category: "articles" },
+        { value: "articles.edit", title: "Edit Article", description: "Edit articles", status: true, category: "articles" },
+        { value: "articles.delete", title: "Delete Article", description: "Delete articles", status: true, category: "articles" },
+        { value: "articles.manage", title: "Manage Articles", description: "Manage articles", status: true, category: "articles" },
+        { value: "articles.export", title: "Export Articles", description: "Export articles", status: true, category: "articles" },
+        { value: "articles.import", title: "Import Articles", description: "Import articles", status: true, category: "articles" },
 
-        // Settings
-        { value: 'settings.view', title: 'View Settings', description: 'View system settings', status: true, categoryId: null },
-        { value: 'settings.edit', title: 'Edit Settings', description: 'Modify system settings', status: true, categoryId: null },
-        { value: 'settings.roles', title: 'Manage Roles', description: 'Create and edit roles', status: true, categoryId: null },
+        // Access Management
+        { value: "access_management.view", title: "View Access Management", description: "View roles & permissions", status: true, category: "access_management" },
+        { value: "access_management.create", title: "Create Role", description: "Create roles", status: true, category: "access_management" },
+        { value: "access_management.edit", title: "Edit Role", description: "Edit roles", status: true, category: "access_management" },
+        { value: "access_management.delete", title: "Delete Role", description: "Delete roles", status: true, category: "access_management" },
+        { value: "access_management.manage", title: "Manage Access", description: "Manage access control", status: true, category: "access_management" },
+        { value: "access_management.export", title: "Export Access Data", description: "Export roles & permissions", status: true, category: "access_management" },
+        { value: "access_management.import", title: "Import Access Data", description: "Import roles & permissions", status: true, category: "access_management" },
     ];
+
 
 
     const categorySeed = [
@@ -812,7 +929,226 @@ export function seeder() {
     ];
 
 
+    // prisma/seed.js - FULL HMS Departments (42 total)
+    const departmentSeed = [
+        // =============================================================================
+        // CLINICAL DEPARTMENTS (17)
+        // =============================================================================
+        {
+            value: "emergency", name: "Emergency (ER)", code: "ER", category: "Clinical", image: "🚨", icon: "sirens", color: "#ef4444",
+            description: "24/7 Emergency & Trauma Care", headDoctorId: null, floorNumber: 1, roomCount: 12, bedCount: 25, isActive: true
+        },
+        {
+            value: "cardiology", name: "Cardiology", code: "CAR", category: "Clinical", image: "❤️", icon: "heart", color: "#dc2626",
+            description: "Heart & Vascular Conditions", headDoctorId: null, floorNumber: 3, roomCount: 8, bedCount: 20, isActive: true
+        },
+        {
+            value: "neurology", name: "Neurology", code: "NEU", category: "Clinical", image: "🧠", icon: "brain", color: "#8b5cf6",
+            description: "Brain, Spine & Nervous System", headDoctorId: null, floorNumber: 4, roomCount: 10, bedCount: 18, isActive: true
+        },
+        {
+            value: "pediatrics", name: "Pediatrics", code: "PED", category: "Clinical", image: "👶", icon: "baby", color: "#06b6d4",
+            description: "Child & Adolescent Care", headDoctorId: null, floorNumber: 2, roomCount: 15, bedCount: 30, isActive: true
+        },
+        {
+            value: "orthopedics", name: "Orthopedics", code: "ORT", category: "Clinical", image: "🦴", icon: "activity", color: "#10b981",
+            description: "Bone, Joint & Musculoskeletal", headDoctorId: null, floorNumber: 3, roomCount: 12, bedCount: 22, isActive: true
+        },
+        {
+            value: "oncology", name: "Oncology", code: "ONC", category: "Clinical", image: "🎗️", icon: "zap", color: "#7c3aed",
+            description: "Cancer Treatment & Chemotherapy", headDoctorId: null, floorNumber: 4, roomCount: 10, bedCount: 15, isActive: true
+        },
+        {
+            value: "dermatology", name: "Dermatology", code: "DER", category: "Clinical", image: "🩹", icon: "sun", color: "#ec4899",
+            description: "Skin, Hair & Nail Conditions", headDoctorId: null, floorNumber: 3, roomCount: 8, bedCount: 12, isActive: true
+        },
+        {
+            value: "gastroenterology", name: "Gastroenterology", code: "GAS", category: "Clinical", image: "🫁", icon: "stomach", color: "#f97316",
+            description: "Digestive System Disorders", headDoctorId: null, floorNumber: 3, roomCount: 8, bedCount: 16, isActive: true
+        },
+        {
+            value: "nephrology", name: "Nephrology", code: "NEP", category: "Clinical", image: "🫘", icon: "droplets", color: "#3b82f6",
+            description: "Kidney Disease & Dialysis", headDoctorId: null, floorNumber: 4, roomCount: 8, bedCount: 14, isActive: true
+        },
+        {
+            value: "pulmonology", name: "Pulmonology", code: "PUL", category: "Clinical", image: "🌬️", icon: "lungs", color: "#14b8a6",
+            description: "Lung & Respiratory Care", headDoctorId: null, floorNumber: 4, roomCount: 10, bedCount: 18, isActive: true
+        },
+        {
+            value: "endocrinology", name: "Endocrinology", code: "END", category: "Clinical", image: "⚗️", icon: "beaker", color: "#f59e0b",
+            description: "Hormone & Endocrine Disorders", headDoctorId: null, floorNumber: 4, roomCount: 6, bedCount: 12, isActive: true
+        },
+        {
+            value: "rheumatology", name: "Rheumatology", code: "RHE", category: "Clinical", image: "💪", icon: "zap", color: "#84cc16",
+            description: "Autoimmune & Joint Diseases", headDoctorId: null, floorNumber: 4, roomCount: 6, bedCount: 10, isActive: true
+        },
+        {
+            value: "urology", name: "Urology", code: "URO", category: "Clinical", image: "🔬", icon: "microwave", color: "#a855f7",
+            description: "Kidney, Bladder & Prostate", headDoctorId: null, floorNumber: 4, roomCount: 8, bedCount: 14, isActive: true
+        },
+        {
+            value: "ophthalmology", name: "Ophthalmology", code: "OFT", category: "Clinical", image: "👁️", icon: "eye", color: "#ef4444",
+            description: "Eye Care & Vision Services", headDoctorId: null, floorNumber: 3, roomCount: 6, bedCount: 10, isActive: true
+        },
+        {
+            value: "ent", name: "ENT (Otolaryngology)", code: "ENT", category: "Clinical", image: "👂", icon: "ear", color: "#06b6d4",
+            description: "Ear, Nose & Throat", headDoctorId: null, floorNumber: 3, roomCount: 8, bedCount: 14, isActive: true
+        },
+        {
+            value: "psychiatry", name: "Psychiatry", code: "PSY", category: "Clinical", image: "🧘", icon: "headphones", color: "#8b5cf6",
+            description: "Mental Health & Counseling", headDoctorId: null, floorNumber: 2, roomCount: 6, bedCount: 12, isActive: true
+        },
+        {
+            value: "obstetrics", name: "Obstetrics & Gynecology", code: "OBS", category: "Clinical", image: "🤰", icon: "baby-carriage", color: "#ec4899",
+            description: "Women's Health & Maternity", headDoctorId: null, floorNumber: 2, roomCount: 10, bedCount: 20, isActive: true
+        },
+        {
+            value: "geriatrics", name: "Geriatrics", code: "GER", category: "Clinical", image: "👴", icon: "user", color: "#6b7280",
+            description: "Elderly Care & Management", headDoctorId: null, floorNumber: 2, roomCount: 10, bedCount: 20, isActive: true
+        },
+
+        // =============================================================================
+        // SURGICAL DEPARTMENTS (6)
+        // =============================================================================
+        {
+            value: "general-surgery", name: "General Surgery", code: "GEN", category: "Surgical", image: "🔪", icon: "scissors", color: "#10b981",
+            description: "General Surgical Procedures", headDoctorId: null, floorNumber: 5, roomCount: 6, bedCount: 12, isActive: true
+        },
+        {
+            value: "cardiac-surgery", name: "Cardiac Surgery", code: "CAR", category: "Surgical", image: "💓", icon: "heart-pulse", color: "#dc2626",
+            description: "Heart Surgery & Procedures", headDoctorId: null, floorNumber: 5, roomCount: 4, bedCount: 8, isActive: true
+        },
+        {
+            value: "neuro-surgery", name: "Neurosurgery", code: "NEU", category: "Surgical", image: "🧬", icon: "brain-circuit", color: "#8b5cf6",
+            description: "Brain & Spine Surgery", headDoctorId: null, floorNumber: 5, roomCount: 4, bedCount: 8, isActive: true
+        },
+        {
+            value: "plastic-surgery", name: "Plastic Surgery", code: "PLA", category: "Surgical", image: "✨", icon: "wand-2", color: "#f59e0b",
+            description: "Reconstructive & Cosmetic Surgery", headDoctorId: null, floorNumber: 5, roomCount: 4, bedCount: 8, isActive: true
+        },
+        {
+            value: "vascular-surgery", name: "Vascular Surgery", code: "VAS", category: "Surgical", image: "🩸", icon: "droplets", color: "#ef4444",
+            description: "Vascular & Circulatory Surgery", headDoctorId: null, floorNumber: 5, roomCount: 4, bedCount: 8, isActive: true
+        },
+        {
+            value: "transplant", name: "Transplant Surgery", code: "TRA", category: "Surgical", image: "🫀", icon: "heart", color: "#7c3aed",
+            description: "Organ Transplant Procedures", headDoctorId: null, floorNumber: 5, roomCount: 4, bedCount: 8, isActive: true
+        },
+
+        // =============================================================================
+        // CRITICAL CARE DEPARTMENTS (5)
+        // =============================================================================
+        {
+            value: "icu", name: "ICU (Intensive Care)", code: "ICU", category: "Critical Care", image: "🏥", icon: "monitor", color: "#dc2626",
+            description: "Intensive Care Unit for Critical Patients", headDoctorId: null, floorNumber: 1, roomCount: 6, bedCount: 12, isActive: true
+        },
+        {
+            value: "nicu", name: "NICU (Neonatal ICU)", code: "NICU", category: "Critical Care", image: "👼", icon: "baby", color: "#06b6d4",
+            description: "Neonatal Intensive Care Unit", headDoctorId: null, floorNumber: 2, roomCount: 4, bedCount: 8, isActive: true
+        },
+        {
+            value: "picu", name: "PICU (Pediatric ICU)", code: "PICU", category: "Critical Care", image: "🧒", icon: "users", color: "#f97316",
+            description: "Pediatric Intensive Care Unit", headDoctorId: null, floorNumber: 2, roomCount: 4, bedCount: 8, isActive: true
+        },
+        {
+            value: "ccu", name: "CCU (Coronary Care)", code: "CCU", category: "Critical Care", image: "💗", icon: "heart", color: "#ec4899",
+            description: "Coronary Care Unit", headDoctorId: null, floorNumber: 1, roomCount: 4, bedCount: 8, isActive: true
+        },
+        {
+            value: "burn-unit", name: "Burn Unit", code: "BUR", category: "Critical Care", image: "🔥", icon: "flame", color: "#f59e0b",
+            description: "Burn Treatment & Care", headDoctorId: null, floorNumber: 1, roomCount: 4, bedCount: 8, isActive: true
+        },
+
+        // =============================================================================
+        // DIAGNOSTIC DEPARTMENTS (4)
+        // =============================================================================
+        {
+            value: "radiology", name: "Radiology", code: "RAD", category: "Diagnostic", image: "📷", icon: "camera", color: "#3b82f6",
+            description: "X-ray, CT, MRI & Imaging Services", headDoctorId: null, floorNumber: 0, roomCount: 8, bedCount: 0, isActive: true
+        },
+        {
+            value: "pathology", name: "Pathology", code: "PAT", category: "Diagnostic", image: "🔬", icon: "microscope", color: "#14b8a6",
+            description: "Laboratory & Tissue Analysis", headDoctorId: null, floorNumber: 0, roomCount: 6, bedCount: 0, isActive: true
+        },
+        {
+            value: "laboratory", name: "Laboratory", code: "LAB", category: "Diagnostic", image: "🧪", icon: "test-tube", color: "#10b981",
+            description: "Pathology & Diagnostic Testing", headDoctorId: null, floorNumber: 0, roomCount: 5, bedCount: 0, isActive: true
+        },
+        {
+            value: "nuclear-medicine", name: "Nuclear Medicine", code: "NUC", category: "Diagnostic", image: "☢️", icon: "radio", color: "#f97316",
+            description: "Nuclear Imaging & Therapy", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+
+        // =============================================================================
+        // SUPPORT DEPARTMENTS (8)
+        // =============================================================================
+        {
+            value: "pharmacy", name: "Pharmacy", code: "PHM", category: "Support", image: "💊", icon: "pill", color: "#8b5cf6",
+            description: "Medication Dispensing & Management", headDoctorId: null, floorNumber: 0, roomCount: 3, bedCount: 0, isActive: true
+        },
+        {
+            value: "physical-therapy", name: "Physical Therapy", code: "PHY", category: "Support", image: "🏃", icon: "dumbbell", color: "#10b981",
+            description: "Physical Rehabilitation & Therapy", headDoctorId: null, floorNumber: 0, roomCount: 6, bedCount: 0, isActive: true
+        },
+        {
+            value: "occupational-therapy", name: "Occupational Therapy", code: "OCC", category: "Support", image: "🎯", icon: "target", color: "#f59e0b",
+            description: "Occupational Rehabilitation", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+        {
+            value: "speech-therapy", name: "Speech Therapy", code: "SPE", category: "Support", image: "🗣️", icon: "volume", color: "#ec4899",
+            description: "Speech & Language Therapy", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+        {
+            value: "nutrition", name: "Nutrition & Dietetics", code: "NUT", category: "Support", image: "🥗", icon: "apple", color: "#84cc16",
+            description: "Nutrition & Diet Planning", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+        {
+            value: "social-work", name: "Social Work", code: "SOC", category: "Support", image: "🤝", icon: "users", color: "#6b7280",
+            description: "Patient Advocacy & Counseling", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+        {
+            value: "blood-bank", name: "Blood Bank", code: "BLD", category: "Support", image: "🩸", icon: "droplets", color: "#ef4444",
+            description: "Blood Storage & Transfusion", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+        {
+            value: "dialysis", name: "Dialysis Center", code: "DIA", category: "Support", image: "💉", icon: "syringe", color: "#3b82f6",
+            description: "Dialysis Treatment Services", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+
+        // =============================================================================
+        // ADMINISTRATIVE DEPARTMENTS (6)
+        // =============================================================================
+        {
+            value: "admissions", name: "Admissions", code: "ADM", category: "Administrative", image: "📝", icon: "clipboard-list", color: "#06b6d4",
+            description: "Patient Registration & Admissions", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+        {
+            value: "billing", name: "Billing & Insurance", code: "BIL", category: "Administrative", image: "💳", icon: "credit-card", color: "#f97316",
+            description: "Financial Operations & Claims", headDoctorId: null, floorNumber: 0, roomCount: 3, bedCount: 0, isActive: true
+        },
+        {
+            value: "medical-records", name: "Medical Records", code: "REC", category: "Administrative", image: "📁", icon: "folder", color: "#6b7280",
+            description: "Patient Records & Documentation", headDoctorId: null, floorNumber: 0, roomCount: 4, bedCount: 0, isActive: true
+        },
+        {
+            value: "hr", name: "Human Resources", code: "HR", category: "Administrative", image: "👥", icon: "users", color: "#8b5cf6",
+            description: "Staff Management & Recruitment", headDoctorId: null, floorNumber: 0, roomCount: 3, bedCount: 0, isActive: true
+        },
+        {
+            value: "quality", name: "Quality Assurance", code: "QUA", category: "Administrative", image: "✅", icon: "check-circle", color: "#10b981",
+            description: "Quality Control & Accreditation", headDoctorId: null, floorNumber: 0, roomCount: 3, bedCount: 0, isActive: true
+        },
+        {
+            value: "infection-control", name: "Infection Control", code: "INF", category: "Administrative", image: "🦠", icon: "shield", color: "#ef4444",
+            description: "Infection Prevention & Control", headDoctorId: null, floorNumber: 0, roomCount: 3, bedCount: 0, isActive: true
+        }
+    ];
 
 
-    return { users, userRoles, permissionSeed, roleSeed, categorySeed, inventorySeed, serviceSeed, paymentSeed, invoicesSeed }
+
+
+
+
+
+    return { users, userSeed, patientSeed, doctorSeed, userRoles, permissionSeed, roleSeed, categorySeed, inventorySeed, serviceSeed, paymentSeed, invoicesSeed, departmentSeed }
 }

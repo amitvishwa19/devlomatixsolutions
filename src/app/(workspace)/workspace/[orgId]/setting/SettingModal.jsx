@@ -19,6 +19,7 @@ import { InvoiceSettings } from './_components/sections/InvoiceSettings';
 import { InventorySettings } from './_components/sections/InventorySettings';
 import { ServicesSettings } from './_components/sections/ServicesSettings';
 import { PrescriptionSettings } from './_components/sections/PrescriptionSettings';
+import DbSeeder from './_components/sections/DbSeeder';
 
 
 
@@ -132,6 +133,7 @@ export default function SettingsModal({ isOpen, onClose, mode, settings }) {
             case "inventory": return <InventorySettings />;
             case "services": return <ServicesSettings />;
             case "prescription": return <PrescriptionSettings />;
+            case "db-seed": return <DbSeeder />;
             default: return <GeneralSettings />;
         }
     };
@@ -153,6 +155,7 @@ export default function SettingsModal({ isOpen, onClose, mode, settings }) {
                         <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
                     </div>
                     <div className="flex-1 overflow-hidden animate-fade-in " key={activeSection}>
+
                         {renderSection()}
                     </div>
                 </div>

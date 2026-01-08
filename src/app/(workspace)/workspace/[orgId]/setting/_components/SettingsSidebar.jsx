@@ -1,6 +1,7 @@
 import {
   Settings, Building2, Users, Calendar, Bell, Shield, CreditCard, Plug, UserCircle, Pill,
-  FileText, Package, Stethoscope, ClipboardList
+  FileText, Package, Stethoscope, ClipboardList,
+  DatabaseZap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +21,7 @@ const sections = [
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "security", label: "Security", icon: Shield },
   { id: "integrations", label: "Integrations", icon: Plug },
+  { id: "db-seed", label: "DB Seed", icon: DatabaseZap },
 ];
 
 export function SettingsSidebar({ activeSection, onSectionChange }) {

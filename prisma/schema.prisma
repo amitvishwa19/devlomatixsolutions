@@ -218,6 +218,35 @@ model User {
   @@index([phone])
 }
 
+model Department {
+  id       String  @id @default(cuid())
+  name     String
+  value    String  @unique
+  code     String?
+  category String
+  image    String
+  icon     String
+  color    String?
+
+  description  String?
+  headDoctorId String?
+  floorNumber  Int?
+  roomCount    Int?    @default(0)
+  bedCount     Int?    @default(0)
+  isActive     Boolean @default(true)
+
+  // ✅ FIXED Relations with explicit names
+  //head   User?   @relation("DepartmentHeadDoctor", fields: [headId], references: [id])
+  //headId String?
+
+  //appointments Appointment[]
+  //inventory    Inventory[]
+  //services     Service[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Vital {
   id String @id @default(cuid())
 
@@ -836,17 +865,17 @@ model Role {
 
 model Permission {
   id          String  @id @default(cuid())
-  title       String  @unique
+  title       String
+  value       String  @unique
   color       String? @default("#FFFF")
   description String
+  category    String?
 
   status Boolean @default(false)
   roles  Role[]
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Task {
@@ -1167,7 +1196,6 @@ model Category {
   tags          Tag[]
   invoices      Invoice[]
   prescriptions Prescription[]
-  permissions   Permission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1343,3 +1371,5 @@ model Credentials {
 
   @@unique([userId, serviceName])
 }
+
+// schema.prisma - Department model for HMS
