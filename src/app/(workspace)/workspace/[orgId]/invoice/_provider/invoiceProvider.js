@@ -1,4 +1,5 @@
 'use client'
+import { useSession } from 'next-auth/react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 
@@ -10,6 +11,7 @@ export const InvoiceProvider = ({ children, allCategories, allInvoices, allServi
     const [invoices, setInvoices] = useState(null)
     const [services, setServices] = useState(null)
     const [appointments, setAppointments] = useState(null)
+    const { data: session } = useSession()
 
     useEffect(() => {
         setCategory(allCategories)

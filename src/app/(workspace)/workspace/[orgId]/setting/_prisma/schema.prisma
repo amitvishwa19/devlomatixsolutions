@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// General Settings - Each field has its own column
+model GeneralSetting {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  
+  // Hospital Information
+  hospitalName  String?  @map("hospital_name")
+  hospitalCode  String?  @map("hospital_code")
+  contactEmail  String?  @map("contact_email")
+  contactPhone  String?  @map("contact_phone")
+  website       String?
+  address       String?
+  logo          String?
+  
+  // Localization
+  timezone      String?  @default("UTC")
+  language      String?  @default("en")
+  dateFormat    String?  @default("MM/DD/YYYY") @map("date_format")
+  timeFormat    String?  @default("12h") @map("time_format")
+  currency      String?  @default("USD")
+  
+  // Theme
+  theme         String?  @default("system")
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("generalsetting")
+}
+
+// Settings - One JSON column per section
+model Setting {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  
+  // Each section stores all its settings as JSON
+  appointments   Json?
+  billing        Json?
+  departments    Json?
+  integrations   Json?
+  inventory      Json?
+  invoice        Json?
+  notifications  Json?
+  patients       Json?
+  pharmacy       Json?
+  prescription   Json?
+  security       Json?
+  services       Json?
+  staff          Json?
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("setting")
+}

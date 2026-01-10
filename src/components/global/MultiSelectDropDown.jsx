@@ -1,8 +1,9 @@
 import * as React from "react";
 import { useState, useMemo } from "react";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
     Command,
     CommandEmpty,
@@ -16,6 +17,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import DynamicIcon from "@/components/global/DynamicIcon";
 
 const DEFAULT_CATEGORY = "General";
@@ -46,80 +48,90 @@ export function MultiSelectDropDown({
     data = [],
     value,
     onChange,
-    placeholder = "Select departments...",
+    placeholder = "Select items...",
+    searchPlaceholder = "Search...",
     className,
     columns = 1,
     maxSelection,
 }) {
     const [open, setOpen] = useState(false);
-    const [internalValue, setInternalValue] = useState([]);
+    const [internalValue, setInternalValue] = useState(value || []);
 
-    // Use controlled value if provided, otherwise use internal state
-    const selectedItems = value !== undefined ? value : internalValue;
+    // Sync internal state when external value changes
+    React.useEffect(() => {
+        if (value !== undefined) {
+            setInternalValue(value);
+        }
+    }, [value]);
+
+    // Always use internal state for selections
+    const selectedItems = internalValue;
 
     // Safe onChange handler
     const handleChange = (newValue) => {
-        if (value === undefined) {
-            setInternalValue(newValue);
-        }
+        setInternalValue(newValue);
         onChange?.(newValue);
     };
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Check if any department has a category
+    // Check if any item has a category
     const hasCategories = useMemo(() => {
-        return data.some((dept) => dept.category);
+        return data.some((item) => item.category);
     }, [data]);
 
-    // Group departments by category (or use default if no categories)
-    const groupedDepartments = useMemo(() => {
+    // Group items by category (or use default if no categories)
+    const groupedItems = useMemo(() => {
         const groups = {};
-        data.forEach((dept) => {
-            const category = dept.category || DEFAULT_CATEGORY;
+        data.forEach((item) => {
+            const category = item.category || DEFAULT_CATEGORY;
             if (!groups[category]) {
                 groups[category] = [];
             }
-            groups[category].push(dept);
+            groups[category].push(item);
         });
         return groups;
     }, [data]);
 
-    // Filter departments based on search
+    // Filter items based on search
     const filteredGroups = useMemo(() => {
-        if (!searchQuery.trim()) return groupedDepartments;
+        if (!searchQuery.trim()) return groupedItems;
 
         const query = searchQuery.toLowerCase();
         const filtered = {};
 
-        Object.entries(groupedDepartments).forEach(([category, depts]) => {
-            const matchingDepts = depts.filter(
-                (dept) =>
-                    dept.name.toLowerCase().includes(query) ||
-                    (dept.code && dept.code.toLowerCase().includes(query)) ||
-                    (dept.description && dept.description.toLowerCase().includes(query))
+        Object.entries(groupedItems).forEach(([category, items]) => {
+            const matchingItems = items.filter(
+                (item) =>
+                    item.name.toLowerCase().includes(query) ||
+                    (item.code && item.code.toLowerCase().includes(query)) ||
+                    (item.description && item.description.toLowerCase().includes(query))
             );
-            if (matchingDepts.length > 0) {
-                filtered[category] = matchingDepts;
+            if (matchingItems.length > 0) {
+                filtered[category] = matchingItems;
             }
         });
 
         return filtered;
-    }, [groupedDepartments, searchQuery]);
+    }, [groupedItems, searchQuery]);
 
-    // Get selected department values for checking
+    // Helper to get unique identifier from item (supports both id and value)
+    const getItemId = (item) => item.id ?? item.value;
+
+    // Get selected item IDs for checking
     const selectedValues = useMemo(() => {
-        return selectedItems.map((dept) => dept.value);
+        return selectedItems.map((item) => getItemId(item));
     }, [selectedItems]);
 
     // Check if max selection reached
     const isMaxReached = maxSelection !== undefined && selectedItems.length >= maxSelection;
 
-    // Toggle individual department
-    const toggleDepartment = (dept) => {
-        if (selectedValues.includes(dept.value)) {
-            handleChange(selectedItems.filter((v) => v.value !== dept.value));
+    // Toggle individual item
+    const toggleItem = (item) => {
+        const itemId = getItemId(item);
+        if (selectedValues.includes(itemId)) {
+            handleChange(selectedItems.filter((v) => getItemId(v) !== itemId));
         } else if (!isMaxReached) {
-            handleChange([...selectedItems, dept]);
+            handleChange([...selectedItems, item]);
         }
     };
 
@@ -129,8 +141,14 @@ export function MultiSelectDropDown({
     };
 
     // Remove single selection
-    const removeSelection = (deptValue) => {
-        handleChange(selectedItems.filter((v) => v.value !== deptValue));
+    const removeSelection = (itemId) => {
+        handleChange(selectedItems.filter((v) => getItemId(v) !== itemId));
+    };
+
+    // Handle remove from badge
+    const handleRemove = (itemId, e) => {
+        e.stopPropagation();
+        removeSelection(itemId);
     };
 
     // Get unique categories from data, or use default order if categories exist
@@ -148,7 +166,7 @@ export function MultiSelectDropDown({
 
         // Get all unique categories from data
         const dataCategories = new Set(
-            data.map((dept) => dept.category || DEFAULT_CATEGORY)
+            data.map((item) => item.category || DEFAULT_CATEGORY)
         );
 
         // Return categories in default order first, then any additional ones
@@ -164,125 +182,117 @@ export function MultiSelectDropDown({
         <div className={cn("w-full", className)}>
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
-                    <div
+                    <Button
+                        variant="outline"
                         role="combobox"
                         aria-expanded={open}
                         className={cn(
-                            "flex min-h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
-                            "focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-                            "cursor-pointer hover:bg-accent/50"
+                            "w-full justify-between min-h-10 h-auto",
+                            selectedItems.length > 0 ? "px-2 py-2" : "px-3"
                         )}
                     >
-                        <div className="flex flex-1 flex-wrap gap-1.5">
-                            {selectedItems.length > 0 ? (
-                                selectedItems.map((dept) => (
+                        {selectedItems.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                                {selectedItems.map((item) => (
                                     <Badge
-                                        key={dept.value}
+                                        key={getItemId(item)}
                                         variant="secondary"
-                                        className="gap-1.5 pr-1 text-xs h-6 pl-1.5 rounded-md"
-                                        style={dept.color ? {
-                                            borderLeftWidth: "3px",
-                                            borderLeftColor: dept.color,
-                                        } : undefined}
+                                        className="flex items-center gap-1 pr-1"
                                     >
-                                        {dept.icon && (
-                                            <DynamicIcon
-                                                name={dept.icon}
-                                                size={14}
-                                                className="shrink-0"
-                                                style={dept.color ? { color: dept.color } : undefined}
-                                            />
-                                        )}
-                                        <span className="max-w-[100px] truncate">{dept.name}</span>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeSelection(dept.value);
-                                            }}
-                                            className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                                        <span className="truncate max-w-[150px]">{item.name || item.title}</span>
+                                        <div
+                                            className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-muted-foreground/20 p-0.5"
+                                            onClick={(e) => handleRemove(getItemId(item), e)}
                                         >
-                                            <X className="h-3 w-3" />
-                                        </button>
+                                            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                        </div>
                                     </Badge>
-                                ))
-                            ) : (
-                                <span className="text-muted-foreground">{placeholder}</span>
-                            )}
-                        </div>
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <span className="text-muted-foreground font-normal">{placeholder}</span>
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                     <Command shouldFilter={false}>
                         <CommandInput
-                            placeholder="Search roles..."
+                            placeholder={searchPlaceholder}
                             value={searchQuery}
                             onValueChange={setSearchQuery}
                         />
-                        <CommandList>
-                            <CommandEmpty>No items found.</CommandEmpty>
-                            {categoryOrder
-                                .filter((cat) => filteredGroups[cat])
-                                .map((category) => {
-                                    const depts = filteredGroups[category];
+                        <ScrollArea className="h-[300px]">
+                            <CommandList>
+                                <CommandEmpty>No items found.</CommandEmpty>
+                                {categoryOrder
+                                    .filter((cat) => filteredGroups[cat])
+                                    .map((category) => {
+                                        const items = filteredGroups[category];
 
-                                    return (
-                                        <CommandGroup key={category} heading={hasCategories ? category : undefined}>
-                                            <div
-                                                className="grid gap-1"
-                                                style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-                                            >
-                                                {depts.map((dept) => {
-                                                    const isSelected = selectedValues.includes(dept.value);
-                                                    const isDisabled = !isSelected && isMaxReached;
-                                                    return (
-                                                        <CommandItem
-                                                            key={dept.value}
-                                                            value={dept.name}
-                                                            onSelect={() => !isDisabled && toggleDepartment(dept)}
-                                                            className={cn(
-                                                                "cursor-pointer",
-                                                                isDisabled && "opacity-50 cursor-not-allowed"
-                                                            )}
-                                                        >
-                                                            <div
+                                        return (
+                                            <CommandGroup key={category} heading={hasCategories ? category : undefined}>
+                                                <div
+                                                    className="grid gap-1"
+                                                    style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+                                                >
+                                                    {items.map((item) => {
+                                                        const itemId = getItemId(item);
+                                                        const isSelected = selectedValues.includes(itemId);
+                                                        const isDisabled = !isSelected && isMaxReached;
+                                                        return (
+                                                            <CommandItem
+                                                                key={itemId}
+                                                                value={item.name}
+                                                                onSelect={() => !isDisabled && toggleItem(item)}
                                                                 className={cn(
-                                                                    "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                                                    isSelected
-                                                                        ? "bg-primary text-primary-foreground"
-                                                                        : "opacity-50 [&_svg]:invisible"
+                                                                    "cursor-pointer",
+                                                                    isDisabled && "opacity-50 cursor-not-allowed"
                                                                 )}
                                                             >
-                                                                <Check className="h-3 w-3" />
-                                                            </div>
-                                                            <div className="flex items-center gap-2 flex-1">
-
-                                                                <div className="flex flex-col flex-1 min-w-0">
-                                                                    <span className="font-medium">{dept.name}</span>
-                                                                    {dept.description && (
-                                                                        <span className="text-xs text-muted-foreground truncate">
-                                                                            {dept.description}
-                                                                        </span>
+                                                                <div
+                                                                    className={cn(
+                                                                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                                                        isSelected
+                                                                            ? "bg-primary text-primary-foreground"
+                                                                            : "opacity-50 [&_svg]:invisible"
                                                                     )}
+                                                                >
+                                                                    <Check className="h-3 w-3" />
                                                                 </div>
-                                                            </div>
-                                                            {dept.icon && (
-                                                                <DynamicIcon
-                                                                    name={dept.icon}
-                                                                    size={16}
-                                                                    className="shrink-0 ml-auto"
-
-                                                                />
-                                                            )}
-                                                        </CommandItem>
-                                                    );
-                                                })}
-                                            </div>
-                                        </CommandGroup>
-                                    );
-                                })}
-                        </CommandList>
+                                                                <div className="flex items-center gap-2 flex-1">
+                                                                    {item.color && (
+                                                                        <span
+                                                                            className="h-3 w-3 rounded-full shrink-0"
+                                                                            style={{ backgroundColor: item.color }}
+                                                                        />
+                                                                    )}
+                                                                    <div className="flex flex-col flex-1 min-w-0">
+                                                                        <span className="font-medium">{item.name}</span>
+                                                                        {item.description && (
+                                                                            <span className="text-xs text-muted-foreground truncate">
+                                                                                {item.description}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                {item.icon && (
+                                                                    <DynamicIcon
+                                                                        name={item.icon}
+                                                                        size={16}
+                                                                        className="shrink-0 ml-auto"
+                                                                        style={{ color: item.color }}
+                                                                    />
+                                                                )}
+                                                            </CommandItem>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </CommandGroup>
+                                        );
+                                    })}
+                            </CommandList>
+                        </ScrollArea>
                     </Command>
                 </PopoverContent>
             </Popover>

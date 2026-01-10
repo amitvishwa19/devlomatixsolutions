@@ -35,6 +35,8 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     const isEditing = !!user;
     const { departments } = useAccess()
 
+    console.log('user', session)
+
 
     const form = useForm({
         resolver: zodResolver(userFormSchema),
@@ -157,11 +159,12 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                         <FormItem>
                                             <FormLabel>Departments</FormLabel>
                                             <FormControl>
-                                                <DepartmentMultiSelect
-                                                    departments={departments}
-                                                    selectedDepartments={field.value}
-                                                    onSelectionChange={field.onChange}
+                                                <MultiSelectDropDown
+                                                    data={departments}
+                                                    columns={2}
+                                                    value={field.value}
                                                     placeholder="Select departments..."
+                                                    onChange={field.onChange}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -169,10 +172,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                     )}
                                 />
 
-                                <MultiSelectDropDown
-                                    data={departments}
-                                    columns={2}
-                                />
+
 
                                 {/* Multi-Select Roles using the new component */}
                                 <FormField

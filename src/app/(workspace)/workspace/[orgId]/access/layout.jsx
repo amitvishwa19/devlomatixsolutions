@@ -2,9 +2,6 @@ import React from 'react'
 import { db } from '@/lib/db'
 import { AccessProvider } from './_provider/accessProvider'
 
-
-
-
 export const metadata = {
     title: {
         default: 'Access Control',

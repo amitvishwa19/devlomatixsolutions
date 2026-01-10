@@ -1,0 +1,374 @@
+/* 
+ * HealthyFine Deck - Standalone Styles
+ * These styles support both light and dark themes
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ===== CSS Variables - Light Theme (Default) ===== */
+.deck-root,
+.deck-root * {
+  --deck-background: 0 0% 100%;
+  --deck-foreground: 220 20% 10%;
+  --deck-card: 0 0% 98%;
+  --deck-card-foreground: 220 20% 10%;
+  --deck-primary: 210 100% 50%;
+  --deck-primary-foreground: 0 0% 100%;
+  --deck-secondary: 220 14% 92%;
+  --deck-secondary-foreground: 220 20% 20%;
+  --deck-muted: 220 14% 95%;
+  --deck-muted-foreground: 220 10% 45%;
+  --deck-accent: 220 14% 92%;
+  --deck-accent-foreground: 220 20% 20%;
+  --deck-border: 220 13% 90%;
+  --deck-input: 220 13% 90%;
+  --deck-ring: 210 100% 50%;
+  
+  /* Healthcare Colors */
+  --deck-teal: 210 100% 50%;
+  --deck-cyan: 200 80% 50%;
+  --deck-pink: 340 75% 55%;
+  --deck-purple: 270 70% 55%;
+  --deck-green: 152 60% 40%;
+}
+
+/* ===== CSS Variables - Dark Theme ===== */
+.dark .deck-root,
+.dark .deck-root * {
+  --deck-background: 222 18% 8%;
+  --deck-foreground: 220 10% 92%;
+  --deck-card: 222 16% 11%;
+  --deck-card-foreground: 220 10% 92%;
+  --deck-primary: 210 90% 55%;
+  --deck-primary-foreground: 0 0% 100%;
+  --deck-secondary: 220 14% 16%;
+  --deck-secondary-foreground: 220 10% 80%;
+  --deck-muted: 220 14% 14%;
+  --deck-muted-foreground: 220 10% 50%;
+  --deck-accent: 220 14% 18%;
+  --deck-accent-foreground: 220 10% 90%;
+  --deck-border: 220 14% 16%;
+  --deck-input: 220 14% 16%;
+  --deck-ring: 210 90% 55%;
+  
+  /* Healthcare Colors */
+  --deck-teal: 210 90% 55%;
+  --deck-cyan: 200 75% 52%;
+  --deck-pink: 340 75% 55%;
+  --deck-purple: 270 70% 55%;
+  --deck-green: 152 55% 42%;
+}
+
+/* ===== Base Deck Styles ===== */
+.deck-root {
+  background-color: hsl(var(--deck-background));
+  color: hsl(var(--deck-foreground));
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.deck-root h1,
+.deck-root h2,
+.deck-root h3,
+.deck-root h4,
+.deck-root h5,
+.deck-root h6 {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
+
+/* ===== Text Gradients ===== */
+.deck-root .text-gradient-primary,
+.deck-text-gradient-primary {
+  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.deck-root .text-gradient-secondary,
+.deck-text-gradient-secondary {
+  background: linear-gradient(135deg, hsl(var(--deck-pink)), hsl(var(--deck-purple)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Background Gradients ===== */
+.deck-root .bg-gradient-primary,
+.deck-bg-gradient-primary {
+  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+}
+
+.deck-root .bg-gradient-secondary,
+.deck-bg-gradient-secondary {
+  background: linear-gradient(135deg, hsl(var(--deck-pink)), hsl(var(--deck-purple)));
+}
+
+.deck-root .bg-gradient-dark,
+.deck-bg-gradient-dark {
+  background: linear-gradient(180deg, hsl(var(--deck-background)), hsl(var(--deck-muted)));
+}
+
+/* ===== Glass Effect ===== */
+.deck-root .glass-effect,
+.deck-glass-effect {
+  background: hsl(var(--deck-card) / 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--deck-border) / 0.5);
+}
+
+/* ===== Glow Effects ===== */
+.deck-root .glow-primary,
+.deck-glow-primary {
+  box-shadow: 0 0 40px hsl(var(--deck-teal) / 0.3),
+              0 0 80px hsl(var(--deck-teal) / 0.1);
+}
+
+.deck-root .glow-secondary,
+.deck-glow-secondary {
+  box-shadow: 0 0 40px hsl(var(--deck-pink) / 0.3),
+              0 0 80px hsl(var(--deck-pink) / 0.1);
+}
+
+/* ===== Background Patterns ===== */
+.deck-root .deck-bg-pattern,
+.deck-bg-pattern-standalone {
+  background-color: hsl(var(--deck-background));
+  background-image: 
+    linear-gradient(hsl(var(--deck-border) / 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--deck-border) / 0.4) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .deck-root .deck-bg-pattern,
+.dark .deck-bg-pattern-standalone {
+  background-image: 
+    linear-gradient(hsl(var(--deck-border) / 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--deck-border) / 0.3) 1px, transparent 1px),
+    radial-gradient(ellipse at 20% 30%, hsl(var(--deck-teal) / 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, hsl(var(--deck-pink) / 0.08) 0%, transparent 50%);
+  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+}
+
+.deck-root .grid-overlay,
+.deck-grid-overlay {
+  background-image: 
+    linear-gradient(hsl(var(--deck-border) / 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--deck-border) / 0.15) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* ===== Slide Container ===== */
+.deck-root .slide-container,
+.deck-slide-container {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ===== Slide Transitions ===== */
+.deck-root .slide-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.deck-root .slide-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.5s ease-out;
+}
+
+.deck-root .slide-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.deck-root .slide-exit-active {
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: all 0.5s ease-out;
+}
+
+/* ===== Card Styles ===== */
+.deck-root .deck-card {
+  background-color: hsl(var(--deck-card));
+  border: 1px solid hsl(var(--deck-border));
+  border-radius: 0.75rem;
+}
+
+/* ===== Button Styles ===== */
+.deck-root .deck-btn-primary {
+  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  color: hsl(var(--deck-primary-foreground));
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.deck-root .deck-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.deck-root .deck-btn-secondary {
+  background: hsl(var(--deck-card) / 0.6);
+  backdrop-filter: blur(20px);
+  color: hsl(var(--deck-foreground));
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--deck-border) / 0.5);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.deck-root .deck-btn-secondary:hover {
+  border-color: hsl(var(--deck-teal) / 0.5);
+}
+
+/* ===== Input Styles ===== */
+.deck-root input,
+.deck-root textarea {
+  background-color: hsl(var(--deck-background) / 0.5);
+  border: 1px solid hsl(var(--deck-border));
+  color: hsl(var(--deck-foreground));
+}
+
+.deck-root input::placeholder,
+.deck-root textarea::placeholder {
+  color: hsl(var(--deck-muted-foreground));
+}
+
+.deck-root input:focus,
+.deck-root textarea:focus {
+  outline: none;
+  border-color: hsl(var(--deck-teal));
+  box-shadow: 0 0 0 2px hsl(var(--deck-teal) / 0.2);
+}
+
+/* ===== Custom Scrollbar ===== */
+.deck-root::-webkit-scrollbar,
+.deck-root *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.deck-root::-webkit-scrollbar-track,
+.deck-root *::-webkit-scrollbar-track {
+  background: hsl(var(--deck-muted));
+  border-radius: 3px;
+}
+
+.deck-root::-webkit-scrollbar-thumb,
+.deck-root *::-webkit-scrollbar-thumb {
+  background: hsl(var(--deck-teal) / 0.5);
+  border-radius: 3px;
+}
+
+.deck-root::-webkit-scrollbar-thumb:hover,
+.deck-root *::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--deck-teal) / 0.7);
+}
+
+/* ===== Stat Card ===== */
+.deck-root .stat-card {
+  background: hsl(var(--deck-card) / 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--deck-border) / 0.5);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.deck-root .stat-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.deck-root .stat-card-label {
+  font-size: 0.875rem;
+  color: hsl(var(--deck-muted-foreground));
+  margin-top: 0.25rem;
+}
+
+/* ===== Feature Card ===== */
+.deck-root .feature-card {
+  background: hsl(var(--deck-card) / 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--deck-border) / 0.5);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.deck-root .feature-card:hover {
+  border-color: hsl(var(--deck-teal) / 0.5);
+  transform: translateY(-4px);
+}
+
+/* ===== Progress Bar ===== */
+.deck-root .deck-progress-bar {
+  height: 3px;
+  background-color: hsl(var(--deck-border));
+  overflow: hidden;
+}
+
+.deck-root .deck-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  transition: width 0.3s ease-out;
+}
+
+/* ===== Navigation Dots ===== */
+.deck-root .nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: hsl(var(--deck-teal) / 0.3);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.deck-root .nav-dot:hover {
+  background-color: hsl(var(--deck-teal) / 0.5);
+}
+
+.deck-root .nav-dot.active {
+  width: 24px;
+  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+}
+
+/* ===== Navigation Buttons ===== */
+.deck-root .nav-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--deck-card) / 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--deck-border) / 0.5);
+  border-radius: 9999px;
+  color: hsl(var(--deck-foreground));
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deck-root .nav-button:hover:not(:disabled) {
+  border-color: hsl(var(--deck-teal) / 0.5);
+  color: hsl(var(--deck-teal));
+}
+
+.deck-root .nav-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

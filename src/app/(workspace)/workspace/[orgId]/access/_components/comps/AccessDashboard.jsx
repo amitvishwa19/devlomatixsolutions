@@ -5,9 +5,14 @@ import { ROLE } from '@prisma/client'
 import { Activity, Key, Shield, Users } from 'lucide-react'
 import { RoleCard } from '../role/RoleCard'
 import { Button } from '@/components/ui/button'
+import { useSession } from 'next-auth/react'
+import { Access } from '../../_access-control/Access'
 
-export default function AccessDashboard() {
+export default function AccessDashboard({ user }) {
     const { users, roles, permissions } = useAccess()
+    const { data: session } = useSession()
+
+    console.log('user', user)
 
     const totalUsers = useMemo(() => users?.filter(usr => usr.role !== ROLE.PATIENT), [])
     const activelUsers = useMemo(() => users?.filter(usr => usr.status === true), [])
@@ -52,6 +57,17 @@ export default function AccessDashboard() {
 
             {/* Recent Roles */}
             <div className="space-y-4">
+
+                <Access session={session}>
+                    <div>
+                        <Button variant="outline" size='sm' className='mb-2' onClick={() => { console.log('Access controll check') }}>
+                            Access control
+                        </Button>
+                    </div>
+                </Access>
+
+
+
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-foreground">Recent Roles</h2>
                     <Button variant="outline" size='sm'>

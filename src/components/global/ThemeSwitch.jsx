@@ -21,23 +21,12 @@ export default function ThemeSwitcher({ className }) {
 
     return (
 
-        // <span className='border bg-red-100' onClick={themeToggle} style={{ cursor: 'pointer' }}>
-        //     {
-        //         light ? <BiMoon size={15} className={cn(className)} /> : <BiSun size={15} className={cn(className, 'dark:text-white')} />
-        //     }
-        // </span>
-        // <Button variant='outline' size='sm' onClick={themeToggle} className=' border-none bg-transparent hover:bg-transparent'>
-        //     {
-        //         light ? <BiMoon size={15} className={cn(className)} /> : <BiSun size={15} className={cn(className, 'dark:text-white')} />
-        //     }
-
-        // </Button >
 
         <Toggle
             onPressedChange={(e) => {
                 setAppTheme(e)
             }}
-            className='hover:bg-transparent bg-transparent '>
+            className='hover:bg-transparent bg-transparent focus:ring-0 focus:ring-offset-0 p-0 w-auto h-auto'>
             <div className='p-1 '>
                 {theme === 'dark' ?
                     (

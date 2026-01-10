@@ -9,7 +9,8 @@ import { useOrg } from '@/providers/OrgProvider'
 import { toast } from 'sonner'
 import { useApp } from '@/providers/AppProvider'
 import { Skeleton } from '@/components/ui/skeleton'
-import SettingsModal from '../[orgId]/setting/SettingModal'
+import { SettingsModal } from '../[orgId]/setting/SettingsModal'
+
 
 
 export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
@@ -64,7 +65,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
                     )}
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="dark:bg-darkSecondaryBackground w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={12}>
+                <DropdownMenuContent className="bg-card w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={12}>
 
                     <DropdownMenuLabel className="p-0 font-normal">
                         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">

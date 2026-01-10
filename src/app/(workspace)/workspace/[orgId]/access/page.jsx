@@ -12,12 +12,16 @@ import Users from './_components/comps/Users'
 import Roles from './_components/comps/Roles'
 import Permissions from './_components/comps/Permissions'
 import { ContentTopbar } from '../(misc)/_components/ContentTopbar'
+import { useSession } from 'next-auth/react'
 
 
 
 export default function Dashboard() {
+
+    const { data: session } = useSession();
+
     const routes = [
-        { value: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard', component: <AccessDashboard /> },
+        { value: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard', component: <AccessDashboard user={session?.user} /> },
         { value: 'users', label: 'Users', icon: 'user', component: <Users /> },
         { value: 'roles', label: 'Roles', icon: 'shield', component: <Roles /> },
         { value: 'permissions', label: 'Permissions', icon: 'key', component: <Permissions /> }

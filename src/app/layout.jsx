@@ -8,6 +8,7 @@ import { Providers } from "@/redux/provider";
 import { Toaster } from "sonner";
 import { OrgProvider } from "@/providers/OrgProvider";
 import { SocketProvider } from "@/providers/SocketProvider";
+import { AppThemeProvider } from "@/hooks/useTheme";
 
 
 const unbounded = Unbounded({ subsets: ["latin"] });
@@ -44,16 +45,18 @@ export default function RootLayout({ children }) {
         <SessionWrapper>
           <SocketProvider>
             <AppProvider>
-              <ThemeProvider>
-                <AuthProvider>
-                  <Providers>
-                    {/* <OrgModalProvider /> */}
-                    <OrgProvider>
-                      {children}
-                    </OrgProvider>
-                  </Providers>
-                </AuthProvider>
-              </ThemeProvider>
+              <AppThemeProvider>
+                <ThemeProvider>
+                  <AuthProvider>
+                    <Providers>
+                      {/* <OrgModalProvider /> */}
+                      <OrgProvider>
+                        {children}
+                      </OrgProvider>
+                    </Providers>
+                  </AuthProvider>
+                </ThemeProvider>
+              </AppThemeProvider>
             </AppProvider>
           </SocketProvider>
         </SessionWrapper>
