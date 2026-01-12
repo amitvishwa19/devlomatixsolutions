@@ -34,7 +34,7 @@ const roleIconMap = {
 const navigationItems = [
     { title: "Dashboard", url: "/", icon: "layout-dashboard" },
     { title: "Workflow", url: "workflow", icon: "workflow" },
-    { title: "Appointment", url: "/appointment", icon: "calendar" },
+    { title: "Appointment", url: "appointment", icon: "calendar" },
     { title: "Calendar", url: "calendar", icon: "calendar-days" },
     { title: "Kanban", url: "kanban", icon: "file-text" },
     { title: "Documents", url: "documents", icon: "file-text" },
@@ -51,7 +51,8 @@ const navigationItems = [
     { title: "Pharmacy", url: "pharmacy", icon: "cross" },
     { title: "Communication", url: "communication", icon: "message-square" },
     { title: "Mailbox", url: "mailer", icon: "mails" },
-    { title: "Access Management", url: "/access", icon: "shield" },
+    { title: "Development", url: "dev", icon: "combine" },
+    { title: "Access Management", url: "access", icon: "shield-user" },
 ];
 
 export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
@@ -88,6 +89,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
         //console.log('expanded', expanded)
     }
 
+    console.log('sidebar render', url.split('/')[3])
 
     return (
         <div className='flex-col min-h-full text-primary  w-[246px]  relative '>
@@ -96,20 +98,24 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                 <OrgSwitcher />
             </div>
 
-            <ScrollArea className='h-[90vh]'>
+            <ScrollArea className="h-[90vh]">
+                {navigationItems.map((nav, index) => {
+                    const segment = url.split("/")[3] || "/";
+                    const selected =
+                        nav.url === "/"
+                            ? segment === "/"
+                            : segment === nav.url;
 
-                {navigationItems?.map((nav, index) => {
                     return (
                         <SidebarSingleItem
                             key={index}
                             title={nav.title}
                             link={`/workspace/${server?.id}/${nav.url}`}
-                            selected={url.split('/')[3] === nav.url}
+                            selected={selected}
                             icon={nav.icon}
                         />
-                    )
+                    );
                 })}
-
             </ScrollArea>
 
             <div className='fixed bottom-0 w-[246px] p-2'>
@@ -119,49 +125,6 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
     )
 }
 
-const SidebarItem = ({ title, children, value, icon, isActive, onExpand }) => {
-    const [expanded, setExpanded] = useState(false)
-
-    const handleOnExpand = (value) => {
-        onExpand(value)
-        setExpanded(!expanded)
-    }
-
-    return (
-        <AccordionItem className='border-none rounded-md' value={value} open>
-            <AccordionTrigger
-                onClick={() => { handleOnExpand(value) }}
-                className={cn('hover:dark:bg-darkFocusColor flex item-ccenter gap-x-2 p-0 mt-2 mx-1.5 hover:bg-nuteral-500/10 transition text-start no-underline  rounded-t-md',
-                    expanded && 'bg-primary/10 dark:bg-darkPrimaryBackground/60  border ')}
-            >
-                <div className={cn(` px-2 py-2 w-full rounded-md ${expanded && 'rounded-b-none'}  font-semibold text-md flex flex-row justify-between items-center `)} >
-                    <div className='flex flex-row gap-2 items-center font-semibold text-slate-600 dark:text-white'>
-                        <AppIcon name={icon} size={14} />
-                        {title}
-                    </div>
-                    {/* {!expanded ? <ChevronRight size={14} className=' text-muted-foreground font-bold' /> : <ChevronDown size={14} className=' text-slate-600' />} */}
-                </div>
-            </AccordionTrigger>
-            <AccordionContent className={`gap-x-2 mx-[6px] p-2 px-4 bg-primary/10 dark:bg-darkPrimaryBackground/60 text-xs rounded-b-md border border-t-0`}>
-                {children}
-            </AccordionContent>
-        </AccordionItem>
-    )
-}
-
-const SidebarSubItem = ({ title, link, selected }) => {
-    const router = useRouter()
-    return (
-        <div className={`flex text-xs text-muted-foreground items-center justify-between
-                    cursor-pointer hover:bg-muted-foreground/10 p-2 rounded-md font-semibold mb-1
-                    ${selected && 'bg-muted-foreground/10 dark:bg-darkFocusColor'}`}
-            onClick={() => router.push(`${link}`)}
-        >
-            <span>{title}</span>
-
-        </div>
-    )
-}
 
 const SidebarSingleItem = ({ title, link, icon, selected }) => {
 
@@ -172,7 +135,7 @@ const SidebarSingleItem = ({ title, link, icon, selected }) => {
                 className={`py-1.5 px-2 flex items-center gap-2 cursor-pointer 
                             hover:bg-primary/10 dark:hover:bg-card   rounded-md 
                             text-muted-foreground 
-                            ${selected && 'bg-primary/10 dark:bg-card text-primary dark:text-white  border/10'}`}
+                            ${selected && 'bg-primary/10 border-l-2 border-l-primary dark:bg-card text-primary dark:text-white  border/10'}`}
             >
                 <DynamicIcon name={icon} size={16} />
                 <span className='text-sm font-semibold'>

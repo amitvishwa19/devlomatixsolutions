@@ -17,13 +17,18 @@ export default function Roles() {
     const [editingRole, setEditingRole] = useState(null);
     const [deletingRole, setDeletingRole] = useState(null);
 
-    const [deleteModal, setDeleteModal] = useState({
+    const [roleEditor, setRoleEditor] = useState({
         isOpen: false,
-        role: null
+        role: null,
+        mode: 'add'
     })
 
 
-
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        role: null,
+        mode: 'add'
+    })
 
 
     // Filtered data
@@ -81,7 +86,11 @@ export default function Roles() {
                         className="pl-10"
                     />
                 </div>
-                <Button variant='save' size='sm' onClick={() => setIsRoleFormOpen(true)}>
+                <Button variant='save' size='sm' onClick={() => setRoleEditor({
+                    isOpen: true,
+                    mode: 'add',
+                    role: null
+                })}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create Role
                 </Button>
@@ -92,11 +101,17 @@ export default function Roles() {
                     <RoleCard
                         key={role.id}
                         role={role}
-                        onEdit={handleEditRole}
+                        onEdit={() => {
+                            setRoleEditor({
+                                isOpen: true,
+                                mode: 'edit',
+                                role: role
+                            })
+                        }}
                         onDelete={(r) => {
                             setDeleteModal({
                                 isOpen: true,
-                                role: r
+                                role: role
                             })
                         }}
                     />
@@ -113,11 +128,19 @@ export default function Roles() {
             {/* Role Form Dialog */}
             <RoleFormDialog
                 open={isRoleFormOpen}
+                isOpen={roleEditor.isOpen}
                 onOpenChange={(open) => {
                     setIsRoleFormOpen(open);
                     if (!open) setEditingRole(null);
                 }}
-                role={editingRole}
+                onClose={() => {
+                    setRoleEditor({
+                        isOpen: false,
+                        role: null,
+                        mode: 'add'
+                    })
+                }}
+                role={roleEditor.role}
                 onSubmit={editingRole ? handleUpdateRole : handleCreateRole}
             />
 

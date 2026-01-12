@@ -44,10 +44,17 @@ const handler = async (data) => {
                     status: item.status,
                     color: item.color
                 },
+                include: {
+                    roles: {
+                        include: {
+                            users: true
+                        }
+                    }
+                },
             })
         );
 
-        const permissions = await db.$transaction(ops);
+        permissions = await db.$transaction(ops);
 
         console.log(formData)
 

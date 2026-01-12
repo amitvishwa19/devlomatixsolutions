@@ -9,59 +9,81 @@ import { Toaster } from "sonner";
 import { OrgProvider } from "@/providers/OrgProvider";
 import { SocketProvider } from "@/providers/SocketProvider";
 import { AppThemeProvider } from "@/hooks/useTheme";
+import { authOptions } from "./api/auth/[...nextauth]/options";
+import { getServerSession } from "next-auth";
+import { db } from "@/lib/db";
+import { AccessProvider } from "./(workspace)/workspace/[orgId]/access/_access-control/AccessContext";
 
 
 const unbounded = Unbounded({ subsets: ["latin"] });
 const inter = Inter({ subsets: ["latin"] });
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
 export const metadata = {
-  title: {
-    default: process.env.APP_NAME,
-    template: `%s | ${process.env.APP_NAME}`
-  },
-  description: 'Devlomatix',
-  icon: {
-    icon: ['/fevicon.png?v=1'],
-    apple: ['/fevicon.png?v=4'],
-    shortcut: ['/fevicon.png?v=4']
-  },
-  manifest: '/site.webmanifest'
+    title: {
+        default: process.env.APP_NAME,
+        template: `%s | ${process.env.APP_NAME}`
+    },
+    description: 'Devlomatix',
+    icon: {
+        icon: ['/fevicon.png?v=1'],
+        apple: ['/fevicon.png?v=4'],
+        shortcut: ['/fevicon.png?v=4']
+    },
+    manifest: '/site.webmanifest'
 }
 
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body className={`${inter.className} `} suppressHydrationWarning={true}>
-        <SessionWrapper>
-          <SocketProvider>
-            <AppProvider>
-              <AppThemeProvider>
-                <ThemeProvider>
-                  <AuthProvider>
-                    <Providers>
-                      {/* <OrgModalProvider /> */}
-                      <OrgProvider>
-                        {children}
-                      </OrgProvider>
-                    </Providers>
-                  </AuthProvider>
-                </ThemeProvider>
-              </AppThemeProvider>
-            </AppProvider>
-          </SocketProvider>
-        </SessionWrapper>
-        <Toaster position="top-right" className="dark:bg-sky-600" />
-      </body>
-    </html>
-  );
+export default async function RootLayout({ children }) {
+    const session = await getServerSession(authOptions);
+
+    const user = session?.user ? await db.user.findUnique({
+        where: { id: session.user.userId },
+        include: {
+            roles: {
+                include: {
+                    permissions: true,
+                },
+            },
+            profile: true,
+        },
+    }) : null;
+
+    //console.log('session server side root layout', user)
+
+    return (
+        <html lang="en">
+            <body className={`${inter.className} `} suppressHydrationWarning={true}>
+                <SessionWrapper>
+                    <SocketProvider>
+                        <AppProvider>
+                            <AppThemeProvider>
+                                <ThemeProvider>
+                                    <AuthProvider>
+                                        <AccessProvider user={user ? user : null} >
+                                            <Providers>
+                                                {/* <OrgModalProvider /> */}
+                                                <OrgProvider>
+                                                    {children}
+                                                </OrgProvider>
+                                            </Providers>
+                                        </AccessProvider>
+                                    </AuthProvider>
+                                </ThemeProvider>
+                            </AppThemeProvider>
+                        </AppProvider>
+                    </SocketProvider>
+                </SessionWrapper>
+                <Toaster position="top-right" className="dark:bg-sky-600" />
+            </body>
+        </html>
+    );
 }

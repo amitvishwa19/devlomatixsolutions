@@ -127,9 +127,12 @@ export default function Users() {
             header: "Department",
             cell: ({ row }) => {
                 return (
-                    <CustomBadge status={`${row.original.department ? 'success' : 'na'}`}>
-                        {row.original.department ? row.original.department : 'No Department Assigned'}
-                    </CustomBadge>
+                    <div className='flex flex-row items-center gap-2 flex-wrap'>
+                        <div>{row.original.departments.length === 0 && <CustomBadge status='blank'>No Department Assigned</CustomBadge>}</div>
+                        {row.original.departments?.map((department, index) => (
+                            <CustomBadge key={index} status='success'>{department.name}</CustomBadge>
+                        ))}
+                    </div>
                 )
             }
         },
@@ -301,13 +304,15 @@ export default function Users() {
                 mode={deletingUser.mode}
                 roles={roles}
                 onSubmit={(user) => {
-                    setUsers(prev =>
-                        prev.some(item => item.id === user.id)
-                            ? prev.map(item =>
-                                item.id === user.id ? { ...item, ...user } : item
-                            )
-                            : [user, ...prev]
-                    );
+                    if (user) {
+                        setUsers(prev =>
+                            prev.some(item => item.id === user.id)
+                                ? prev.map(item =>
+                                    item.id === user.id ? { ...item, ...user } : item
+                                )
+                                : [user, ...prev]
+                        );
+                    }
                 }}
             />
 

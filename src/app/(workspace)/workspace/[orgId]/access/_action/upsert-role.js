@@ -13,17 +13,21 @@ const UpsertRole = z.object({
 });
 
 const handler = async (data) => {
-
-
-
     const { userId, formData } = data
     let role
     let temprole
 
-
-
     try {
-        const perms = formData?.permissions.map((i) => { return { id: i }; })
+
+
+
+        //const perms = formData?.permissions.map((i) => { return { id: i.id }; })
+        const perms = formData.permissions
+            .filter((p) => p.status === true)
+            .map((p) => ({ id: p.id }));
+
+        //console.log('@role server action', formData.permissions.length, perms)
+
 
         role = await db.role.upsert({
             where: {
@@ -33,13 +37,16 @@ const handler = async (data) => {
                 title: formData?.title,
                 description: formData?.description,
                 color: formData?.color,
+                permissions: {
+                    connect: perms
+                }
             },
             update: {
                 title: formData?.title,
                 description: formData?.description,
                 color: formData?.color,
                 permissions: {
-                    connect: perms
+                    set: perms
                 }
             },
             include: {
@@ -47,36 +54,12 @@ const handler = async (data) => {
             },
         })
 
-        // if (formData?.permissions.length > 0) {
-        //     formData?.permissions.map(async (p) => {
-        //         role = await db.role.update({
-        //             where: {
-        //                 id: role.id
-        //             },
-        //             data: {
-        //                 permissions: {
-        //                     set: perms
-        //                 },
-        //             },
-        //         })
-        //     })
-        // }
-
-        // temprole = await db.role.findFirst({
-        //     where: {
-        //         id: role.id
-        //     },
-        //     include: {
-        //         permissions: true
-        //     },
-        // })
 
 
-        console.log('@role server action', temprole)
 
 
     } catch (error) {
-        console.log(error)
+        //console.log(error)
         return {
             message: "Oops!, something went wrong", error
         }

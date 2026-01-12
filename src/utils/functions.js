@@ -219,4 +219,17 @@ export function generateUniqueTempEmail() {
     throw new Error('Failed to generate unique temp email after 5 attempts');
 }
 
+export function titleCaseLabel(value = "") {
+    return value
+        .toString()
+        .trim()
+        .replace(/[-_]+/g, " ")          // replace - and _ with space
+        .replace(/\s+/g, " ")            // collapse multiple spaces
+        .split(" ")
+        .map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
+}
+
 

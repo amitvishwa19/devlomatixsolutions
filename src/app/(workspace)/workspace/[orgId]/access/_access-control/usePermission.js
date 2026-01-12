@@ -1,39 +1,21 @@
-import { usePermissionContext } from "./AuthContext";
+import { useAccessContext } from "./AccessContext";
 
-// Helper hook for common permission patterns
 export function usePermission() {
-  const context = usePermissionContext();
+  const access = useAccessContext();
 
-  // Return no-op functions if no context (for standalone Access usage)
-  if (!context) {
+  if (!access) {
     return {
-      hasPermission: () => false,
-      hasAnyPermission: () => false,
-      hasAllPermissions: () => false,
-      permissions: new Set(),
-      canView: () => false,
-      canCreate: () => false,
-      canEdit: () => false,
-      canDelete: () => false,
-      canManage: () => false,
+      can: () => false,
+      canAny: () => false,
+      canAll: () => false,
+      hasRole: () => false,
     };
   }
 
-  const { hasPermission, hasAnyPermission, hasAllPermissions, permissions } = context;
-
   return {
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-    permissions,
-
-    // Convenience methods for common patterns
-    canView: (category) => hasPermission(`${category}.view`),
-    canCreate: (category) => hasPermission(`${category}.create`),
-    canEdit: (category) => hasPermission(`${category}.edit`),
-    canDelete: (category) => hasPermission(`${category}.delete`),
-    canManage: (category) => hasPermission(`${category}.manage`),
-    canExport: (category) => hasPermission(`${category}.export`),
-    canImport: (category) => hasPermission(`${category}.import`),
+    can: (permission) => access.hasPermission(permission),
+    canAny: (perms) => access.hasAnyPermission(perms),
+    canAll: (perms) => access.hasAllPermissions(perms),
+    hasRole: (role) => access.hasRole(role),
   };
 }

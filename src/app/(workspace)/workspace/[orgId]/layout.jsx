@@ -5,9 +5,9 @@ import { TopNav } from '../_components/TopNav';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { OrgModalProvider } from '@/providers/OrgModalProvider';
 import DataProvider from './(misc)/_providers/DataProvider';
-import { db } from '@/lib/db';
-import Loader from '@/components/global/Loader';
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+
+
+
 
 const inter = Inter({ subsets: ["latin"] });
 const font = Roboto({ subsets: ["latin"] });
@@ -22,27 +22,7 @@ export const metadata = {
 
 export default async function layout({ children }) {
 
-    const appointments = await db.appointment.findMany({
-        include: {
-            doctor: {
-                include: {
-                    profile: true
-                }
-            },
-            patient: {
-                include: {
-                    profile: true
-                }
-            },
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    })
-
-
-
-
+    //console.log('session server side layout', user)
     return (
         <QueryProvider>
             <OrgModalProvider />
@@ -64,8 +44,6 @@ export default async function layout({ children }) {
                         </div>
                     </div>
                 </div>
-
-
 
             </DataProvider>
         </QueryProvider>

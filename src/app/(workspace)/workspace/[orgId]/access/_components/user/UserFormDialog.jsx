@@ -24,7 +24,7 @@ const userFormSchema = z.object({
     id: z.string(),
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
     email: z.string().email('Please enter a valid email address'),
-    departments: z.array(z.string()).min(1, "Select at least one department"),
+    departments: z.array(z.any()).min(1, "Select at least one department"),
     roles: z.array(z.any()),
     status: z.boolean(['active', 'inactive']),
 });
@@ -35,7 +35,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     const isEditing = !!user;
     const { departments } = useAccess()
 
-    console.log('user', session)
+    // console.log('user', user)
 
 
     const form = useForm({
@@ -56,7 +56,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                 id: user.id || '',
                 name: user.displayName || '',
                 email: user.email || '',
-                departments: user.department || [],
+                departments: user.departments || [],
                 roles: user.roles?.map((p) =>
                     p === 'string' ? p : p.id
                 ) ?? [],
@@ -74,12 +74,16 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
         }
     }, [user, form, open]);
 
+    useEffect(() => {
+        console.log("Departments value:", form.watch("departments"));
+    }, [form.watch("departments")]);
+
 
     const { execute } = useAction(upsertUser, {
         onSuccess: (data) => {
             onSubmit(data.user)
             handleOpenClose()
-            toast.success('Role created successfully', { id: 'new-user' })
+            toast.success(`${user ? 'User updated successfully' : 'User created successfully'}`, { id: 'new-user' })
         },
         onError: (error) => {
             console.log(error)
@@ -89,7 +93,9 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     })
 
     const handleSubmit = async (data) => {
+        //console.log('User data', data)
         setloading(true);
+        toast.loading(user ? 'Updating user...' : 'Creating user...', { id: 'new-user' })
         await execute({ userId: session?.user?.userId, formData: data })
     };
 
@@ -162,9 +168,9 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                                 <MultiSelectDropDown
                                                     data={departments}
                                                     columns={2}
-                                                    value={field.value}
+                                                    value={field.value}              // ← RHF value
+                                                    onChange={field.onChange}        // ← RHF setter
                                                     placeholder="Select departments..."
-                                                    onChange={field.onChange}
                                                 />
                                             </FormControl>
                                             <FormMessage />

@@ -47,7 +47,7 @@ export function CustomBadge({ status, children }) {
     };
 
     return (
-        <Badge className={cn("border capitalize  hover:bg-transparent text-xs", statusColors[status])}>
+        <Badge className={cn("border  hover:bg-transparent text-xs", statusColors[status])}>
             {children}
         </Badge>
     )

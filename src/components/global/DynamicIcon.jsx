@@ -1,27 +1,13 @@
-import React, { lazy, Suspense } from 'react';
-import { LucideProps } from 'lucide-react';
-import dynamicIconImports from 'lucide-react/dynamicIconImports';
+import React, { memo } from "react";
+import * as LucideIcons from "lucide-react";
 
-
-
-// Check if the icon name is valid
-const isValidIconName = (name) => {
-    return name in dynamicIconImports;
-};
-
-const DynamicIcon = ({ name, fallback = null, ...props }) => {
-    // Return fallback if icon name is invalid
-    if (!name || !isValidIconName(name)) {
-        return <>{fallback}</>;
+const DynamicIcon = memo(({ name, ...props }) => {
+    const IconComponent = LucideIcons[name]; // Access icon by name dynamically
+    if (!IconComponent) {
+        // If icon name is invalid, return a default icon or null
+        return <LucideIcons.AlertTriangle {...props} />; // fallback icon
     }
-
-    const LucideIcon = lazy(dynamicIconImports[name]);
-
-    return (
-        <Suspense fallback={fallback}>
-            <LucideIcon {...props} />
-        </Suspense>
-    );
-};
+    return <IconComponent {...props} />;
+});
 
 export default DynamicIcon;

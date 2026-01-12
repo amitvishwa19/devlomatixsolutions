@@ -41,7 +41,7 @@ export default function WorkspacePage() {
     const { execute } = useAction(getServerData, {
 
         onSuccess: (data) => {
-            console.log('Getting server data from page', data)
+            //console.log('Getting server data from page', data)
             router.push(`/workspace/${data?.server?.id}`)
             updateServer(data.server)
             updateServers(data.servers)

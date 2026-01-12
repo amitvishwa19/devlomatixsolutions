@@ -1,68 +1,79 @@
 /* 
  * HealthyFine Deck - Standalone Styles
- * These styles support both light and dark themes
+ * These styles are hardcoded to ensure consistent appearance
+ * regardless of the project's Tailwind configuration.
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* ===== CSS Variables - Light Theme (Default) ===== */
+/* ===== CSS Variables - Light Theme ===== */
 .deck-root,
 .deck-root * {
-  --deck-background: 0 0% 100%;
-  --deck-foreground: 220 20% 10%;
-  --deck-card: 0 0% 98%;
-  --deck-card-foreground: 220 20% 10%;
-  --deck-primary: 210 100% 50%;
-  --deck-primary-foreground: 0 0% 100%;
-  --deck-secondary: 220 14% 92%;
-  --deck-secondary-foreground: 220 20% 20%;
-  --deck-muted: 220 14% 95%;
-  --deck-muted-foreground: 220 10% 45%;
-  --deck-accent: 220 14% 92%;
-  --deck-accent-foreground: 220 20% 20%;
-  --deck-border: 220 13% 90%;
-  --deck-input: 220 13% 90%;
-  --deck-ring: 210 100% 50%;
+  --deck-background: #ffffff;
+  --deck-foreground: #1a1a2e;
+  --deck-card: #f8fafc;
+  --deck-card-foreground: #1a1a2e;
+  --deck-primary: #0066cc;
+  --deck-primary-foreground: #ffffff;
+  --deck-secondary: #e2e8f0;
+  --deck-secondary-foreground: #475569;
+  --deck-muted: #f1f5f9;
+  --deck-muted-foreground: #64748b;
+  --deck-accent: #e0f2fe;
+  --deck-accent-foreground: #0369a1;
+  --deck-border: #e2e8f0;
+  --deck-input: #e2e8f0;
+  --deck-ring: #0066cc;
   
   /* Healthcare Colors */
-  --deck-teal: 210 100% 50%;
-  --deck-cyan: 200 80% 50%;
-  --deck-pink: 340 75% 55%;
-  --deck-purple: 270 70% 55%;
-  --deck-green: 152 60% 40%;
+  --deck-teal: #0066cc;
+  --deck-cyan: #0891b2;
+  --deck-pink: #db2777;
+  --deck-purple: #9333ea;
+  --deck-green: #16a34a;
+  
+  /* Gradients */
+  --deck-gradient-primary: linear-gradient(135deg, #0066cc, #0891b2);
+  --deck-gradient-secondary: linear-gradient(135deg, #db2777, #c026d3);
+  --deck-gradient-accent: linear-gradient(135deg, #0891b2, #4f46e5);
 }
 
 /* ===== CSS Variables - Dark Theme ===== */
 .dark .deck-root,
 .dark .deck-root * {
-  --deck-background: 222 18% 8%;
-  --deck-foreground: 220 10% 92%;
-  --deck-card: 222 16% 11%;
-  --deck-card-foreground: 220 10% 92%;
-  --deck-primary: 210 90% 55%;
-  --deck-primary-foreground: 0 0% 100%;
-  --deck-secondary: 220 14% 16%;
-  --deck-secondary-foreground: 220 10% 80%;
-  --deck-muted: 220 14% 14%;
-  --deck-muted-foreground: 220 10% 50%;
-  --deck-accent: 220 14% 18%;
-  --deck-accent-foreground: 220 10% 90%;
-  --deck-border: 220 14% 16%;
-  --deck-input: 220 14% 16%;
-  --deck-ring: 210 90% 55%;
+  --deck-background: #0f1419;
+  --deck-foreground: #e8eaed;
+  --deck-card: #181d24;
+  --deck-card-foreground: #e8eaed;
+  --deck-primary: #3b9eff;
+  --deck-primary-foreground: #ffffff;
+  --deck-secondary: #252b33;
+  --deck-secondary-foreground: #c4c9d0;
+  --deck-muted: #1e242b;
+  --deck-muted-foreground: #737b87;
+  --deck-accent: #2a313a;
+  --deck-accent-foreground: #e0e3e7;
+  --deck-border: #252b33;
+  --deck-input: #252b33;
+  --deck-ring: #3b9eff;
   
   /* Healthcare Colors */
-  --deck-teal: 210 90% 55%;
-  --deck-cyan: 200 75% 52%;
-  --deck-pink: 340 75% 55%;
-  --deck-purple: 270 70% 55%;
-  --deck-green: 152 55% 42%;
+  --deck-teal: #3b9eff;
+  --deck-cyan: #38bdf8;
+  --deck-pink: #ec4899;
+  --deck-purple: #a855f7;
+  --deck-green: #22c55e;
+  
+  /* Gradients */
+  --deck-gradient-primary: linear-gradient(135deg, #3b9eff, #38bdf8);
+  --deck-gradient-secondary: linear-gradient(135deg, #ec4899, #d946ef);
+  --deck-gradient-accent: linear-gradient(135deg, #38bdf8, #6366f1);
 }
 
 /* ===== Base Deck Styles ===== */
 .deck-root {
-  background-color: hsl(var(--deck-background));
-  color: hsl(var(--deck-foreground));
+  background-color: var(--deck-background);
+  color: var(--deck-foreground);
   font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -80,84 +91,93 @@
 /* ===== Text Gradients ===== */
 .deck-root .text-gradient-primary,
 .deck-text-gradient-primary {
-  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: var(--deck-gradient-primary) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 
 .deck-root .text-gradient-secondary,
 .deck-text-gradient-secondary {
-  background: linear-gradient(135deg, hsl(var(--deck-pink)), hsl(var(--deck-purple)));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: var(--deck-gradient-secondary) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 
 /* ===== Background Gradients ===== */
 .deck-root .bg-gradient-primary,
 .deck-bg-gradient-primary {
-  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  background: var(--deck-gradient-primary) !important;
 }
 
 .deck-root .bg-gradient-secondary,
 .deck-bg-gradient-secondary {
-  background: linear-gradient(135deg, hsl(var(--deck-pink)), hsl(var(--deck-purple)));
+  background: var(--deck-gradient-secondary) !important;
 }
 
 .deck-root .bg-gradient-dark,
 .deck-bg-gradient-dark {
-  background: linear-gradient(180deg, hsl(var(--deck-background)), hsl(var(--deck-muted)));
+  background: linear-gradient(180deg, var(--deck-background), color-mix(in srgb, var(--deck-background) 80%, black)) !important;
 }
 
 /* ===== Glass Effect ===== */
 .deck-root .glass-effect,
 .deck-glass-effect {
-  background: hsl(var(--deck-card) / 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid hsl(var(--deck-border) / 0.5);
+  background: color-mix(in srgb, var(--deck-card) 80%, transparent) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid color-mix(in srgb, var(--deck-border) 50%, transparent) !important;
 }
 
 /* ===== Glow Effects ===== */
 .deck-root .glow-primary,
 .deck-glow-primary {
-  box-shadow: 0 0 40px hsl(var(--deck-teal) / 0.3),
-              0 0 80px hsl(var(--deck-teal) / 0.1);
+  box-shadow: 0 0 40px rgba(59, 158, 255, 0.3),
+              0 0 80px rgba(59, 158, 255, 0.1) !important;
 }
 
 .deck-root .glow-secondary,
 .deck-glow-secondary {
-  box-shadow: 0 0 40px hsl(var(--deck-pink) / 0.3),
-              0 0 80px hsl(var(--deck-pink) / 0.1);
+  box-shadow: 0 0 40px rgba(236, 72, 153, 0.3),
+              0 0 80px rgba(236, 72, 153, 0.1) !important;
 }
 
 /* ===== Background Patterns ===== */
 .deck-root .deck-bg-pattern,
 .deck-bg-pattern-standalone {
-  background-color: hsl(var(--deck-background));
+  background-color: var(--deck-background) !important;
   background-image: 
-    linear-gradient(hsl(var(--deck-border) / 0.4) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--deck-border) / 0.4) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px) !important;
+  background-size: 40px 40px !important;
 }
 
 .dark .deck-root .deck-bg-pattern,
 .dark .deck-bg-pattern-standalone {
+  background-color: #0f1419 !important;
   background-image: 
-    linear-gradient(hsl(var(--deck-border) / 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--deck-border) / 0.3) 1px, transparent 1px),
-    radial-gradient(ellipse at 20% 30%, hsl(var(--deck-teal) / 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 70%, hsl(var(--deck-pink) / 0.08) 0%, transparent 50%);
-  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+    linear-gradient(rgba(37, 43, 51, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 43, 51, 0.3) 1px, transparent 1px),
+    radial-gradient(ellipse at 20% 30%, rgba(59, 158, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(236, 72, 153, 0.08) 0%, transparent 50%) !important;
+  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100% !important;
 }
 
 .deck-root .grid-overlay,
 .deck-grid-overlay {
   background-image: 
-    linear-gradient(hsl(var(--deck-border) / 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--deck-border) / 0.15) 1px, transparent 1px);
-  background-size: 50px 50px;
+    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px) !important;
+  background-size: 50px 50px !important;
+}
+
+.dark .deck-root .grid-overlay,
+.dark .deck-grid-overlay {
+  background-image: 
+    linear-gradient(rgba(37, 43, 51, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 43, 51, 0.15) 1px, transparent 1px) !important;
+  background-size: 50px 50px !important;
 }
 
 /* ===== Slide Container ===== */
@@ -192,17 +212,80 @@
   transition: all 0.5s ease-out;
 }
 
+/* ===== Typography Colors ===== */
+.deck-root .text-foreground,
+.deck-text-foreground {
+  color: var(--deck-foreground) !important;
+}
+
+.deck-root .text-muted-foreground,
+.deck-text-muted {
+  color: var(--deck-muted-foreground) !important;
+}
+
+.deck-root .text-primary,
+.deck-text-primary {
+  color: var(--deck-primary) !important;
+}
+
+/* ===== Background Colors ===== */
+.deck-root .bg-background,
+.deck-bg-background {
+  background-color: var(--deck-background) !important;
+}
+
+.deck-root .bg-card,
+.deck-bg-card {
+  background-color: var(--deck-card) !important;
+}
+
+.deck-root .bg-muted,
+.deck-bg-muted {
+  background-color: var(--deck-muted) !important;
+}
+
+.deck-root .bg-primary,
+.deck-bg-primary {
+  background-color: var(--deck-primary) !important;
+}
+
+.deck-root .bg-primary\/20,
+.deck-bg-primary-20 {
+  background-color: color-mix(in srgb, var(--deck-primary) 20%, transparent) !important;
+}
+
+.deck-root .bg-primary\/10,
+.deck-bg-primary-10 {
+  background-color: color-mix(in srgb, var(--deck-primary) 10%, transparent) !important;
+}
+
+/* ===== Border Colors ===== */
+.deck-root .border-border,
+.deck-border {
+  border-color: var(--deck-border) !important;
+}
+
+.deck-root .border-primary,
+.deck-border-primary {
+  border-color: var(--deck-primary) !important;
+}
+
+.deck-root .border-primary\/50,
+.deck-border-primary-50 {
+  border-color: color-mix(in srgb, var(--deck-primary) 50%, transparent) !important;
+}
+
 /* ===== Card Styles ===== */
 .deck-root .deck-card {
-  background-color: hsl(var(--deck-card));
-  border: 1px solid hsl(var(--deck-border));
+  background-color: var(--deck-card);
+  border: 1px solid var(--deck-border);
   border-radius: 0.75rem;
 }
 
 /* ===== Button Styles ===== */
 .deck-root .deck-btn-primary {
-  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
-  color: hsl(var(--deck-primary-foreground));
+  background: var(--deck-gradient-primary);
+  color: var(--deck-primary-foreground);
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
@@ -216,39 +299,39 @@
 }
 
 .deck-root .deck-btn-secondary {
-  background: hsl(var(--deck-card) / 0.6);
+  background: color-mix(in srgb, var(--deck-card) 80%, transparent);
   backdrop-filter: blur(20px);
-  color: hsl(var(--deck-foreground));
+  color: var(--deck-foreground);
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
-  border: 1px solid hsl(var(--deck-border) / 0.5);
+  border: 1px solid color-mix(in srgb, var(--deck-border) 50%, transparent);
   cursor: pointer;
   transition: border-color 0.2s;
 }
 
 .deck-root .deck-btn-secondary:hover {
-  border-color: hsl(var(--deck-teal) / 0.5);
+  border-color: color-mix(in srgb, var(--deck-primary) 50%, transparent);
 }
 
 /* ===== Input Styles ===== */
 .deck-root input,
 .deck-root textarea {
-  background-color: hsl(var(--deck-background) / 0.5);
-  border: 1px solid hsl(var(--deck-border));
-  color: hsl(var(--deck-foreground));
+  background-color: color-mix(in srgb, var(--deck-background) 50%, transparent) !important;
+  border: 1px solid var(--deck-border) !important;
+  color: var(--deck-foreground) !important;
 }
 
 .deck-root input::placeholder,
 .deck-root textarea::placeholder {
-  color: hsl(var(--deck-muted-foreground));
+  color: var(--deck-muted-foreground) !important;
 }
 
 .deck-root input:focus,
 .deck-root textarea:focus {
-  outline: none;
-  border-color: hsl(var(--deck-teal));
-  box-shadow: 0 0 0 2px hsl(var(--deck-teal) / 0.2);
+  outline: none !important;
+  border-color: var(--deck-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--deck-primary) 20%, transparent) !important;
 }
 
 /* ===== Custom Scrollbar ===== */
@@ -260,26 +343,26 @@
 
 .deck-root::-webkit-scrollbar-track,
 .deck-root *::-webkit-scrollbar-track {
-  background: hsl(var(--deck-muted));
+  background: var(--deck-muted);
   border-radius: 3px;
 }
 
 .deck-root::-webkit-scrollbar-thumb,
 .deck-root *::-webkit-scrollbar-thumb {
-  background: hsl(var(--deck-teal) / 0.5);
+  background: color-mix(in srgb, var(--deck-primary) 50%, transparent);
   border-radius: 3px;
 }
 
 .deck-root::-webkit-scrollbar-thumb:hover,
 .deck-root *::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--deck-teal) / 0.7);
+  background: color-mix(in srgb, var(--deck-primary) 70%, transparent);
 }
 
 /* ===== Stat Card ===== */
 .deck-root .stat-card {
-  background: hsl(var(--deck-card) / 0.6);
+  background: color-mix(in srgb, var(--deck-card) 80%, transparent);
   backdrop-filter: blur(20px);
-  border: 1px solid hsl(var(--deck-border) / 0.5);
+  border: 1px solid color-mix(in srgb, var(--deck-border) 50%, transparent);
   border-radius: 1rem;
   padding: 1.5rem;
   text-align: center;
@@ -288,7 +371,7 @@
 .deck-root .stat-card-value {
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  background: var(--deck-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -296,35 +379,35 @@
 
 .deck-root .stat-card-label {
   font-size: 0.875rem;
-  color: hsl(var(--deck-muted-foreground));
+  color: var(--deck-muted-foreground);
   margin-top: 0.25rem;
 }
 
 /* ===== Feature Card ===== */
 .deck-root .feature-card {
-  background: hsl(var(--deck-card) / 0.6);
+  background: color-mix(in srgb, var(--deck-card) 80%, transparent);
   backdrop-filter: blur(20px);
-  border: 1px solid hsl(var(--deck-border) / 0.5);
+  border: 1px solid color-mix(in srgb, var(--deck-border) 50%, transparent);
   border-radius: 1rem;
   padding: 1.5rem;
   transition: border-color 0.3s, transform 0.3s;
 }
 
 .deck-root .feature-card:hover {
-  border-color: hsl(var(--deck-teal) / 0.5);
+  border-color: color-mix(in srgb, var(--deck-primary) 50%, transparent);
   transform: translateY(-4px);
 }
 
 /* ===== Progress Bar ===== */
 .deck-root .deck-progress-bar {
   height: 3px;
-  background-color: hsl(var(--deck-border));
+  background-color: var(--deck-border);
   overflow: hidden;
 }
 
 .deck-root .deck-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  background: var(--deck-gradient-primary);
   transition: width 0.3s ease-out;
 }
 
@@ -333,18 +416,18 @@
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  background-color: hsl(var(--deck-teal) / 0.3);
+  background-color: color-mix(in srgb, var(--deck-primary) 30%, transparent);
   transition: all 0.3s;
   cursor: pointer;
 }
 
 .deck-root .nav-dot:hover {
-  background-color: hsl(var(--deck-teal) / 0.5);
+  background-color: color-mix(in srgb, var(--deck-primary) 50%, transparent);
 }
 
 .deck-root .nav-dot.active {
   width: 24px;
-  background: linear-gradient(135deg, hsl(var(--deck-teal)), hsl(var(--deck-cyan)));
+  background: var(--deck-gradient-primary);
 }
 
 /* ===== Navigation Buttons ===== */
@@ -354,18 +437,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: hsl(var(--deck-card) / 0.6);
+  background: color-mix(in srgb, var(--deck-card) 80%, transparent);
   backdrop-filter: blur(20px);
-  border: 1px solid hsl(var(--deck-border) / 0.5);
+  border: 1px solid color-mix(in srgb, var(--deck-border) 50%, transparent);
   border-radius: 9999px;
-  color: hsl(var(--deck-foreground));
+  color: var(--deck-foreground);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .deck-root .nav-button:hover:not(:disabled) {
-  border-color: hsl(var(--deck-teal) / 0.5);
-  color: hsl(var(--deck-teal));
+  border-color: color-mix(in srgb, var(--deck-primary) 50%, transparent);
+  color: var(--deck-primary);
 }
 
 .deck-root .nav-button:disabled {

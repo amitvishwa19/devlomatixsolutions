@@ -2,6 +2,7 @@ import React from 'react'
 import { db } from '@/lib/db'
 import { AccessProvider } from './_provider/accessProvider'
 
+
 export const metadata = {
     title: {
         default: 'Access Control',
@@ -42,10 +43,16 @@ export default async function AccessLayout({ children }) {
 
 
     const permissions = await db.permission.findMany({
+        include: {
+            roles: {
+                include: {
+                    users: true
+                }
+            }
+        },
         orderBy: {
             createdAt: 'desc'
         },
-
     })
 
     return (

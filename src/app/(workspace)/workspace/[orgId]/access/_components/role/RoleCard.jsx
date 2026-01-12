@@ -4,6 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Users, Edit, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { titleCaseLabel } from '@/utils/functions';
+import { CustomBadge } from '../../../(misc)/_components/CustomBadge';
+import { Access } from '../../_access-control/Access';
 
 
 
@@ -14,39 +17,63 @@ export function RoleCard({ role, onEdit, onDelete }) {
 
             <div className="flex items-start justify-between">
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-card-foreground capitalize">{role?.title}</h3>
-                        <Badge variant="muted" className="text-xs">
-                            {role.permissions.length} permissions
-                        </Badge>
+                    <div className='flex flex-col'>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-card-foreground capitalize">{titleCaseLabel(role?.title)}</h3>
+                            <Badge variant="muted" className="text-xs">
+                                {role.permissions.length} permissions
+                            </Badge>
+                        </div>
+                        <p className="text-xs italic text-muted-foreground">{role?.description}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{role?.description}</p>
+
+                    <div className='flex flex-row items-center gap-2 flex-wrap'>
+                        {role?.permissions?.map((perm, index) => {
+                            return (
+
+                                <CustomBadge key={perm.id} variant="outline" status='info' className={cn("text-xs mr-1 mb-1")}>
+                                    <div className='flex flex-col'>
+                                        {perm.title}
+                                        <span className='text-xs text-muted-foreground'>
+                                            {perm.value ? ` ${perm.value}` : ''}
+                                        </span>
+                                    </div>
+                                </CustomBadge>
+
+                            )
+                        })}
+                    </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
                         <span>{role?.users?.length} users assigned</span>
                     </div>
                 </div>
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(role)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Role
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDelete(role)}
-                            className="text-orange-500 focus:text-orange-600"
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Role
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <Access>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onEdit(role)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Role
+                            </DropdownMenuItem>
+                            <Access permission="access_management.delete">
+                                <DropdownMenuItem
+                                    onClick={() => onDelete(role)}
+                                    className="text-orange-500 focus:text-orange-600"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Role
+                                </DropdownMenuItem>
+                            </Access>
+
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </Access>
             </div>
         </div>
     );

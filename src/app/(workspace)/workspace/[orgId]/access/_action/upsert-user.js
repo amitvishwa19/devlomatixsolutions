@@ -20,6 +20,8 @@ const handler = async (data) => {
     try {
 
         const nroles = formData.roles.map((i) => { return { id: i }; })
+        const depts = formData.departments.map((i) => { return { id: i.id }; })
+
         user = await db.user.upsert({
             where: {
                 id: formData.id || '000'
@@ -32,6 +34,9 @@ const handler = async (data) => {
                 roles: {
                     connect: nroles
                 },
+                departments: {
+                    connect: depts
+                },
             },
             update: {
                 displayName: formData?.name,
@@ -39,21 +44,26 @@ const handler = async (data) => {
                 department: formData?.department,
                 status: formData.status,
                 roles: {
-                    connect: nroles
+                    set: nroles
+                },
+                departments: {
+                    set: depts
                 },
             },
             include: {
-                roles: true
+                roles: true,
+                departments: true
+
             },
         })
 
-        console.log('@user server action', user)
+        console.log('@user server action', depts)
 
 
 
 
     } catch (error) {
-        console.log(error)
+        //console.log(error)
         return {
             message: "Oops!, something went wrong", error
         }
