@@ -1,16 +1,22 @@
 'use client'
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 
 export const AccessContext = createContext()
 
 
 export const AccessProvider = ({ children, allUsers, allRoles, allPermissions, allDepartments }) => {
+    const initialized = useRef(false)
+    const [users, setUsers] = useState([])
+    const [roles, setRoles] = useState([])
+    const [permissions, setPermissions] = useState([])
+    const [departments, setDepartments] = useState([])
 
-    const [users, setUsers] = useState(null)
-    const [permissions, setPermissions] = useState(null)
-    const [roles, setRoles] = useState(null)
-    const [departments, setDepartments] = useState(null)
+
+    // const [users, setUsers] = useState(allUsers)
+    // const [roles, setRoles] = useState(allRoles)
+    // const [permissions, setPermissions] = useState(allPermissions)
+    // const [departments, setDepartments] = useState(allDepartments)
 
     useEffect(() => {
         setUsers(allUsers)
@@ -18,9 +24,6 @@ export const AccessProvider = ({ children, allUsers, allRoles, allPermissions, a
         setPermissions(allPermissions)
         setDepartments(allDepartments)
     }, [allUsers, allRoles, allPermissions, allDepartments])
-
-
-
 
 
 

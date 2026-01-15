@@ -8,26 +8,34 @@ import { slug } from "@/utils/functions";
 
 const DeletePermission = z.object({
     userId: z.string(),
-    permissionId: z.string()
+    permissionsToDelete: z.any()
 });
 
 const handler = async (data) => {
 
 
 
-    const { permissionId } = data
-    let permission
+    const { permissionsToDelete, userId } = data
+    let permissions
 
-
+    console.log(permissionsToDelete)
 
 
     try {
 
-        permission = await db.permission.delete({
+        const idsToDelete = permissionsToDelete.map(p => p.id);
+
+        permissions = await db.permission.deleteMany({
             where: {
-                id: permissionId
-            }
-        })
+                id: { in: idsToDelete },
+            },
+        });
+
+        // permission = await db.permission.delete({
+        //     where: {
+        //         id: permissionId
+        //     }
+        // })
 
 
     } catch (error) {
@@ -38,7 +46,7 @@ const handler = async (data) => {
     }
 
     //revalidatePath(`/org/${orgId}`)
-    return { data: { permission } };
+    return { data: { permissions } };
 
 }
 

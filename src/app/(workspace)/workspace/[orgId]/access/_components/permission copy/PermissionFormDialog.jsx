@@ -69,6 +69,7 @@ export function PermissionFormDialog({ open, onOpenChange, permission, onSubmit 
 
     const { execute } = useAction(upsertPermission, {
         onSuccess: (data) => {
+            console.log('Server action permission')
             onSubmit(data?.permission)
             setLoading(false);
             handleClose()

@@ -1,28 +1,16 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import {
-    Search,
-    Layers,
-    Key,
-    Shield,
-    Users,
-    Plus,
-    Eye,
-    PlusCircle,
-    Pencil,
-    Trash2,
-    Settings,
-    FileDown,
-    FileUp,
-    Save,
-    Loader2,
-} from "lucide-react";
+import { Search, Layers, Key, Shield, Users, Plus, Eye, PlusCircle, Pencil, Trash2, Settings, FileDown, FileUp, Save, Loader2, Loader, } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatsCard } from "./StatsCard.jsx";
 import { PermissionRow } from "./PermissionRow.jsx";
 import PermissionEditor from "./PermissionEditor.jsx";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog.jsx";
+import { useAccess } from "../../_provider/accessProvider.js";
+import { useAction } from "@/hooks/use-action.js";
+import { upsertPermission } from "../../_action/upsert-permission.js";
+import { useSession } from "next-auth/react";
 
 const formatCategoryName = (category) => {
     if (typeof category !== "string") return "";
@@ -59,9 +47,11 @@ const samplePermissions = [
 ];
 
 export const PermissionMatrix = () => {
-    const [permissions, setPermissions] = useState(samplePermissions);
+    const { permissions, setPermissions } = useAccess()
+    //const [permissions, setPermissions] = useState(samplePermissions);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(false);
+    const { data: session } = useSession()
 
     const [editorModal, setEditorModal] = useState({
         isOpen: false,
@@ -74,6 +64,8 @@ export const PermissionMatrix = () => {
         isOpen: false,
         module: null,
     });
+
+    //console.log(permissions)
 
     const [users] = useState([]);
     const [roles] = useState([]);
@@ -213,7 +205,20 @@ export const PermissionMatrix = () => {
         toast.success(`Created ${action} permission`);
     };
 
+    const { execute } = useAction(upsertPermission, {
+        onSuccess: (data) => {
+            setLoading(false);
+            toast.success('Permission updated successfully', { id: 'update-permission' })
+        },
+        onError: (error) => {
+            console.log(error)
+            toast.error('Oops somethig went wrong ! try again later', { id: 'update-permission' })
+            setLoading(false);
+        }
+    })
+
     const handleSave = async () => {
+
         if (!originalPermissionsRef.current) {
             toast.info("No changes to save");
             return;
@@ -225,23 +230,26 @@ export const PermissionMatrix = () => {
             return original !== undefined && original !== p.status;
         });
 
+
+
         if (!newlyCreated.length && !changed.length) {
             toast.info("No changes to save");
             return;
         }
 
         setLoading(true);
+        toast.loading(`Saving permission ${newlyCreated.length + changed.length} changes`, { id: 'update-permission' });
+        await execute({ userId: session.user.userId, formData: changed })
+
+
         await new Promise((r) => setTimeout(r, 1200));
 
-        originalPermissionsRef.current = new Map(
-            permissions.map((p) => [p.id, p.status])
-        );
 
-        setLoading(false);
-        toast.success(`Saved ${newlyCreated.length + changed.length} changes`);
     };
 
-    const handleEditorSubmit = (newPermissions) => {
+
+
+    const handleEditorSubmit = async (newPermissions) => {
         console.log("New permissions:", newPermissions);
 
         setPermissions((prev) => {
@@ -253,20 +261,53 @@ export const PermissionMatrix = () => {
                 );
 
                 if (existingIndex !== -1) {
-                    updated[existingIndex] = { ...updated[existingIndex], ...newPerm };
-                } else if (newPerm.status) {
-                    updated.push({
+                    // UPDATE → replace object to trigger re-render
+                    updated[existingIndex] = {
                         ...newPerm,
-                        id: `new-${newPerm.category}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                        ...updated[existingIndex]
+                    };
+                } else if (newPerm.status) {
+                    // ADD → add to TOP
+                    updated.unshift({
+                        ...newPerm,
+                        id:
+                            newPerm.id ??
+                            `new-${newPerm.category}-${Date.now()}-${Math.random()
+                                .toString(36)
+                                .slice(2)}`,
                     });
                 }
             });
 
             return updated;
         });
+        // setPermissions((prev) => {
+        //     const updated = [...prev];
+
+        //     newPermissions.forEach((newPerm) => {
+        //         const existingIndex = updated.findIndex(
+        //             (p) => p.value === newPerm.value
+        //         );
+
+        //         if (existingIndex !== -1) {
+        //             updated[existingIndex] = { ...updated[existingIndex], ...newPerm };
+        //         } else if (newPerm.status) {
+        //             updated.push({
+        //                 ...newPerm,
+        //                 id: `new-${newPerm.category}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        //             });
+        //         }
+        //     });
+
+        //     return updated;
+        // });
 
         setEditorModal({ isOpen: false, mode: "add", category: undefined, editData: null });
     };
+
+    // useEffect(() => {
+    //     //console.log('Permissions updated:', permissions)
+    // }, [permissions])
 
     const columnHeaders = [
         { key: "view", label: "View", icon: Eye },
@@ -292,10 +333,10 @@ export const PermissionMatrix = () => {
         <div className="space-y-6 p-2">
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatsCard icon={Layers} label="Total Modules" value={stats.totalModules} loading={loading} />
-                <StatsCard icon={Key} label="Total Permissions" value={stats.totalPermissions} loading={loading} />
-                <StatsCard icon={Shield} label="Active Permissions" value={stats.activePermissions} subValue={`${stats.percentage}% enabled`} loading={loading} />
-                <StatsCard icon={Users} label="Coverage" value={`${stats.percentage}%`} loading={loading} />
+                <StatsCard icon={Layers} label="Total Modules" value={stats.totalModules} />
+                <StatsCard icon={Key} label="Total Permissions" value={stats.totalPermissions} />
+                <StatsCard icon={Shield} label="Active Permissions" value={stats.activePermissions} subValue={`${stats.percentage}% enabled`} />
+                <StatsCard icon={Users} label="Coverage" value={`${stats.percentage}%`} />
             </div>
 
             {/* Table */}
@@ -316,15 +357,14 @@ export const PermissionMatrix = () => {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setEditorModal({ isOpen: true, mode: "add", category: "new_module" })}
+                            onClick={() => setEditorModal({ isOpen: true, mode: "add", category: "" })}
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Add Permission
                         </Button>
 
                         <Button size="sm" onClick={handleSave} disabled={loading}>
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                            {!loading && "Save"}
+                            {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         </Button>
                     </div>
                 </div>
@@ -399,10 +439,12 @@ export const PermissionMatrix = () => {
                 onOpenChange={(open) => setDeleteModal((prev) => ({ ...prev, isOpen: open }))}
                 title={`Delete ${deleteModal.module?.displayName || "Module"}?`}
                 description={`This will permanently delete the "${deleteModal.module?.displayName}" module and all its permissions. This action cannot be undone.`}
+                module={deleteModal.module}
                 onConfirm={() => {
                     if (deleteModal.module) {
+                        const permissionsToDelete = permissions.filter((p) => p.category === deleteModal.module.category);
                         setPermissions((prev) => prev.filter((p) => p.category !== deleteModal.module.category));
-                        toast.success(`Deleted ${deleteModal.module.displayName} module`);
+                        //toast.success(`Deleted ${deleteModal.module.displayName} module`);
                     }
                     setDeleteModal({ isOpen: false, module: null });
                 }}

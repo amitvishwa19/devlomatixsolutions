@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Loader2, Shield, X } from "lucide-react";
+import { Plus, Pencil, Loader2, Shield, X, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,9 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { useAction } from "@/hooks/use-action";
+import { upsertPermission } from "../../_action/upsert-permission";
+import { useSession } from "next-auth/react";
 
 const defaultActionOptions = [
     { id: "view", label: "View", description: "Read-only access" },
@@ -58,6 +61,8 @@ export default function PermissionEditor({
 }) {
     const [internalOpen, setInternalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const { data: session } = useSession()
 
     const isControlled = controlledOpen !== undefined;
     const open = isControlled ? controlledOpen : internalOpen;
@@ -147,6 +152,19 @@ export default function PermissionEditor({
         toast.success(`Added "${newAction.label}" action`);
     };
 
+    const { execute } = useAction(upsertPermission, {
+        onSuccess: (data) => {
+            onSubmit?.(data.permissions);
+            handleOpenClose()
+            // toast.success('Permission created successfully', { id: 'new-permission' })
+        },
+        onError: (error) => {
+            console.log(error)
+            toast.error('Oops somethig went wrong ! try again later', { id: 'permission-form' })
+            setLoading(false);
+        }
+    })
+
     const handleSubmit = async () => {
         if (!moduleName.trim()) {
             toast.error("Module name required");
@@ -174,16 +192,20 @@ export default function PermissionEditor({
         }));
 
         setLoading(true);
-        toast.loading(mode === "edit" ? "Updating..." : "Creating...", { id: "permission-form" });
+        toast.loading(mode === "edit" ? "Updating permission , please wait..." : "Creating permission , please wait...", { id: "permission-form" });
 
         // Simulate API call
-        await new Promise((r) => setTimeout(r, 800));
+        //await new Promise((r) => setTimeout(r, 800));
 
-        onSubmit?.(permissions);
+        //onSubmit?.(permissions);
+
+        await execute({ userId: session.user?.userId, formData: permissions })
+
+
         toast.success(mode === "edit" ? "Permission updated" : "Permission created", {
             id: "permission-form",
         });
-        handleOpenClose();
+
     };
 
     const handleOpenClose = () => {
@@ -284,8 +306,12 @@ export default function PermissionEditor({
                                     {actionOptions.map((action) => (
                                         <label
                                             key={action.id}
-                                            onClick={() => handleActionToggle(action.id)}
-                                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedActions.includes(action.id)
+                                            onClick={(e) => {
+                                                handleActionToggle(action.id)
+                                                console.log('item clicked')
+                                                e.stopPropagation()
+                                            }}
+                                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all  ${selectedActions.includes(action.id)
                                                 ? "border-primary bg-primary/10"
                                                 : "border-border bg-secondary/30 hover:border-primary/50"
                                                 }`}
@@ -293,8 +319,9 @@ export default function PermissionEditor({
                                             <Checkbox
                                                 checked={selectedActions.includes(action.id)}
                                                 onClick={(e) => e.stopPropagation()}
-                                                onCheckedChange={() => handleActionToggle(action.id)}
+                                            //onCheckedChange={() => handleActionToggle(action.id)}
                                             />
+
                                             <div className="flex-1 min-w-0">
                                                 <span className="text-sm font-medium">
                                                     {action.label}
@@ -403,19 +430,23 @@ export default function PermissionEditor({
                             Cancel
                         </Button>
                         <Button onClick={handleSubmit} disabled={!isValid || loading}>
-                            {loading ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : mode === "edit" ? (
-                                <>
-                                    <Pencil className="w-4 h-4 mr-2" />
-                                    Update
-                                </>
-                            ) : (
-                                <>
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Create ({selectedActions.length})
-                                </>
-                            )}
+
+                            {
+                                mode === "edit" ? (
+                                    <>
+                                        {loading && <Loader className=" animate-spin" />}
+                                        <Pencil className="w-4 h-4 mr-2" />
+                                        Update Permission
+                                    </>
+                                ) : (
+                                    <>
+                                        {loading && <Loader className=" animate-spin" />}
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Create Permission ({selectedActions.length})
+                                    </>
+                                )
+                            }
+
                         </Button>
                     </SheetFooter>
                 </div>
