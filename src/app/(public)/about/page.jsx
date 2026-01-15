@@ -48,7 +48,7 @@ const About = () => {
                     <div className="max-w-4xl mx-auto text-center animate-fade-in">
                         <div className="inline-flex items-center gap-2 rounded-full glass px-5 py-2.5 text-sm font-medium mb-8">
                             <Sparkles className="h-4 w-4 text-primary" />
-                            About MediCare
+                            About Healthyfine
                         </div>
                         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-8">
                             Committed to Your{' '}

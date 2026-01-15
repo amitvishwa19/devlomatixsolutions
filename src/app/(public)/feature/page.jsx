@@ -59,6 +59,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import AppointmentDialog from '../_components/AppointmentDialog';
 import { useState } from 'react';
+import ContactDialog from '../_components/ContactDialog';
 
 const coreModules = [
     { icon: LayoutDashboard, name: 'Dashboard', description: 'Centralized command-and-control with real-time monitoring' },
@@ -330,8 +331,8 @@ const faqs = [
 const pricingPlans = [
     {
         name: 'Starter',
-        price: '₹10,000',
-        period: '/month',
+        //price: '₹10,000',
+
         description: 'Perfect for small clinics and practices',
         popular: false,
         features: [
@@ -346,8 +347,8 @@ const pricingPlans = [
     },
     {
         name: 'Professional',
-        price: '₹15,000',
-        period: '/month',
+        //price: '₹15,000',
+
         description: 'Ideal for growing hospitals',
         popular: true,
         features: [
@@ -364,8 +365,6 @@ const pricingPlans = [
     },
     {
         name: 'Enterprise',
-        price: '₹25,000',
-        period: '/month',
         description: 'For large healthcare facilities',
         popular: false,
         features: [
@@ -383,7 +382,6 @@ const pricingPlans = [
     },
     {
         name: 'Custom',
-        price: 'Contact Us',
         period: '',
         description: 'Tailored solutions for unique needs',
         popular: false,
@@ -457,12 +455,16 @@ const Features = () => {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                            <AppointmentDialog>
-                                <Button size="lg" className="group gradient-primary text-primary-foreground border-0 shadow-glow hover:shadow-[0_0_80px_hsl(217_91%_60%/0.4)] transition-all duration-500 text-base px-8">
-                                    Get Started Free
-                                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                            <ContactDialog>
+                                <Button
+                                    variant='default'
+                                    size="lg"
+                                    className=" shadow-lg hover:shadow-xl transition-all duration-300 text-base px-10"
+                                >
+                                    Let's get started
+                                    <ArrowRight className="h-5 w-5 ml-2" />
                                 </Button>
-                            </AppointmentDialog>
+                            </ContactDialog>
                             <Button variant="outline" size="lg" className="group glass border-border/50 hover:border-primary/50 text-base px-8">
                                 <Play className="h-5 w-5 mr-2 text-primary" />
                                 Watch Demo
@@ -494,15 +496,15 @@ const Features = () => {
 
             {/* Stats Section */}
             <section className="relative py-16 bg-primary/5">
-                <div className="   mx-auto px-4">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="mx-auto px-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 items-center justify-center">
                         {stats.map((stat, index) => (
                             <div
                                 key={stat.label}
-                                className="text-center animate-slide-up"
-                                style={{ animationDelay: `${index * 0.1}s` }}
+
                             >
-                                <p className="stat-number text-4xl md:text-5xl lg:text-6xl mb-2">
+
+                                <p className=" text-4xl text-primary md:text-5xl lg:text-6xl mb-2 font-extrabold">
                                     {stat.number}
                                 </p>
                                 <p className="text-muted-foreground font-medium">{stat.label}</p>
@@ -539,7 +541,7 @@ const Features = () => {
                         ].map((item, index) => (
                             <div
                                 key={item.label}
-                                className="group p-6 rounded-2xl glass text-center card-hover animate-slide-up"
+                                className="group p-6 rounded-2xl border  text-center card-hover animate-slide-up hover:border-primary/30 transition-colors animate-fade-in"
                                 style={{ animationDelay: `${index * 0.05}s` }}
                             >
                                 <div className="h-14 w-14 mx-auto rounded-xl gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -655,7 +657,7 @@ const Features = () => {
                         {coreModules.map((module, index) => (
                             <div
                                 key={module.name}
-                                className="group p-5 rounded-xl glass hover:shadow-card transition-all duration-300 animate-slide-up"
+                                className="group p-5 rounded-xl  hover:shadow-card duration-300 animate-slide-up border hover:border-primary/30 transition-colors animate-fade-in"
                                 style={{ animationDelay: `${index * 0.03}s` }}
                             >
                                 <div className="flex items-center gap-4">
@@ -695,10 +697,10 @@ const Features = () => {
                         {integrations.map((integration, index) => (
                             <div
                                 key={integration.name}
-                                className="group p-6 rounded-2xl glass text-center card-hover animate-slide-up"
+                                className="group p-6 rounded-2xl  text-center card-hover animate-slide-up border"
                                 style={{ animationDelay: `${index * 0.05}s` }}
                             >
-                                <div className="h-14 w-14 mx-auto rounded-xl gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <div className="h-14 w-14 mx-auto rounded-xl border gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 hover:border-primary/30 transition-colors animate-fade-in">
                                     <integration.icon className="h-7 w-7 text-primary-foreground" />
                                 </div>
                                 <h3 className="font-semibold text-foreground mb-1">{integration.name}</h3>
@@ -731,11 +733,11 @@ const Features = () => {
                         {targetUsers.map((user, index) => (
                             <div
                                 key={user.title}
-                                className="group p-6 rounded-2xl glass card-hover animate-slide-up"
+                                className="group p-6 rounded-2xl justify-center items-center   animate-slide-up border hover:border-primary/30 transition-colors animate-fade-in  "
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
-                                <div className="h-14 w-14 rounded-xl gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <user.icon className="h-7 w-7 text-primary-foreground" />
+                                <div className="h-14 w-14 rounded-xl gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ">
+                                    <user.icon className="h-7 w-7 text-primary" />
                                 </div>
                                 <h3 className="text-lg font-bold text-foreground mb-2">{user.title}</h3>
                                 <p className="text-sm text-muted-foreground">{user.description}</p>
@@ -909,15 +911,16 @@ const Features = () => {
                                         </li>
                                     ))}
                                 </ul>
-                                <AppointmentDialog>
+                                <ContactDialog>
                                     <Button
-                                        className="w-full gradient-primary text-primary-foreground shadow-glow hover:shadow-[0_0_60px_hsl(217_91%_60%/0.4)]"
-                                        size="lg"
+                                        variant='default'
+                                        size="md"
+                                        className=" shadow-lg hover:shadow-xl transition-all duration-300 text-base px-10"
                                     >
-                                        Get Started
-                                        <ArrowRight className="h-4 w-4 ml-2" />
+                                        Let's get started
+                                        <ArrowRight className="h-5 w-5 ml-2" />
                                     </Button>
-                                </AppointmentDialog>
+                                </ContactDialog>
                             </div>
                         ))}
                     </div>
@@ -947,19 +950,19 @@ const Features = () => {
                                         <th className="text-left py-5 px-6 font-semibold text-foreground">Feature</th>
                                         <th className="text-center py-5 px-4">
                                             <div className="font-semibold text-foreground">Starter</div>
-                                            <div className="text-sm text-primary font-bold">₹10,000/mo</div>
+                                            {/* <div className="text-sm text-primary font-bold">₹10,000/mo</div> */}
                                         </th>
                                         <th className="text-center py-5 px-4 bg-primary/10">
                                             <div className="font-semibold text-primary">Professional</div>
-                                            <div className="text-sm text-primary font-bold">₹15,000/mo</div>
+                                            {/* <div className="text-sm text-primary font-bold">₹15,000/mo</div> */}
                                         </th>
                                         <th className="text-center py-5 px-4">
                                             <div className="font-semibold text-foreground">Enterprise</div>
-                                            <div className="text-sm text-primary font-bold">₹25,000/mo</div>
+                                            {/* <div className="text-sm text-primary font-bold">₹25,000/mo</div> */}
                                         </th>
                                         <th className="text-center py-5 px-4">
                                             <div className="font-semibold text-foreground">Custom</div>
-                                            <div className="text-sm text-primary font-bold">Contact Us</div>
+                                            {/* <div className="text-sm text-primary font-bold">Contact Us</div> */}
                                         </th>
                                     </tr>
                                 </thead>
