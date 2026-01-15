@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { Menu, X, Sun, Moon, Heart } from 'lucide-react';
+import { Menu, X, Sun, Moon, Heart, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import AppointmentDialog from '../AppointmentDialog';
@@ -10,6 +10,7 @@ import logo from '@/assets/images/logo/logo.png'
 import { usePathname } from 'next/navigation';
 import ThemeSwitcher from '@/components/global/ThemeSwitch';
 import { AuthSelector } from '@/components/global/AuthSelector';
+import ContactDialog from '../ContactDialog';
 
 const navLinks = [
     { name: 'Home', path: '/' },
@@ -54,11 +55,16 @@ const Header = () => {
                 {/* Actions */}
                 <div className="hidden md:flex items-center gap-3">
                     <ThemeSwitcher />
-                    <AppointmentDialog>
-                        <Button variant='default' size="default">
-                            Book Appointment
+                    <ContactDialog>
+                        <Button
+                            variant='default'
+                            size="lg"
+                            className=" shadow-lg hover:shadow-xl transition-all duration-300 text-base px-10"
+                        >
+                            Let's get started
+                            <ArrowRight className="h-5 w-5 ml-2" />
                         </Button>
-                    </AppointmentDialog>
+                    </ContactDialog>
                     <AuthSelector />
                 </div>
 

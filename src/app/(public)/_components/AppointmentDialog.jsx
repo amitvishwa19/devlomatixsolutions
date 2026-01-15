@@ -105,7 +105,7 @@ const AppointmentDialog = ({ children }) => {
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 id="name"
-                                placeholder="John Doe"
+                                placeholder=""
                                 className="pl-10 bg-background border-input"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -121,7 +121,7 @@ const AppointmentDialog = ({ children }) => {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="john@example.com"
+                                    placeholder=""
                                     className="pl-10 bg-background border-input"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -136,7 +136,7 @@ const AppointmentDialog = ({ children }) => {
                                 <Input
                                     id="phone"
                                     type="tel"
-                                    placeholder="+1 (555) 000-0000"
+                                    placeholder="+91 (999) 9999999"
                                     className="pl-10 bg-background border-input"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -175,7 +175,7 @@ const AppointmentDialog = ({ children }) => {
                                     <Button
                                         variant="outline"
                                         className={cn(
-                                            "w-full justify-start text-left font-normal bg-background border-input",
+                                            "w-full justify-start text-left font-normal bg-card border-input",
                                             !date && "text-muted-foreground"
                                         )}
                                     >
@@ -192,7 +192,7 @@ const AppointmentDialog = ({ children }) => {
                                             date < new Date() || date.getDay() === 0
                                         }
                                         initialFocus
-                                        className="pointer-events-auto"
+                                        className="pointer-events-auto w-60 rounded-md"
                                     />
                                 </PopoverContent>
                             </Popover>
@@ -221,7 +221,7 @@ const AppointmentDialog = ({ children }) => {
                         </div>
                     </div>
 
-                    <Button type="submit" variant="hero" className="w-full" size="lg">
+                    <Button type="submit" variant="default" className="w-full" size="lg">
                         Confirm Appointment
                     </Button>
                 </form>

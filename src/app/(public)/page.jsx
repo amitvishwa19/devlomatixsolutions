@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AppointmentDialog from './_components/AppointmentDialog';
 import Link from 'next/link';
+import FeaturesSection from './_components/layout/FeaturesSection';
+import ContactDialog from './_components/ContactDialog';
 
 
 const services = [
@@ -70,17 +72,21 @@ export default function HomePage() {
                                 <span className="text-sky-500">Top Priority</span>
                             </h1>
 
-                            <p className="text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                            <p className="text-md md:text-sm text-muted-foreground max-w-lg leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
                                 Experience world-class healthcare with compassionate doctors, cutting-edge technology, and personalized treatment plans designed for your unique needs.
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                                <AppointmentDialog>
-                                    <Button size="lg" className="group gradient-primary text-primary-foreground border-0 shadow-glow hover:shadow-[0_0_80px_hsl(262_83%_58%/0.4)] transition-all duration-500 text-base px-8">
-                                        Book Appointment
-                                        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                <ContactDialog>
+                                    <Button
+                                        variant='default'
+                                        size="lg"
+                                        className=" shadow-lg hover:shadow-xl transition-all duration-300 text-base px-10"
+                                    >
+                                        Let's get started
+                                        <ArrowRight className="h-5 w-5 ml-2" />
                                     </Button>
-                                </AppointmentDialog>
+                                </ContactDialog>
                                 <Button variant="outline" size="lg" asChild className="group glass border-border/50 hover:border-primary/50 text-base px-8">
                                     <Link href="/about">
                                         <Play className="h-5 w-5 mr-2 text-primary" />
@@ -117,6 +123,8 @@ export default function HomePage() {
                         </div>
 
                         <div className="relative animate-fade-in" style={{ animationDelay: '0.3s' }}>
+
+
                             {/* Main image container */}
                             <div className="relative">
                                 {/* Decorative ring */}
@@ -127,7 +135,7 @@ export default function HomePage() {
 
                                 <div className="relative aspect-[4/5] max-w-md mx-auto rounded-[2rem] overflow-hidden shadow-float">
                                     <img
-                                        src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?q=80&w=2091&auto=format&fit=crop"
+                                        src="https://images.unsplash.com/photo-1637059824899-a441006a6875?q=80&w=752&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                                         alt="Professional healthcare"
                                         className="w-full h-full object-cover"
                                     />
@@ -160,6 +168,8 @@ export default function HomePage() {
                                     </div>
                                 </div>
                             </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -235,6 +245,8 @@ export default function HomePage() {
                     </div>
                 </div>
             </section>
+
+            <FeaturesSection />
 
             {/* Features Section */}
             <section className="relative py-24 lg:py-32">
@@ -315,15 +327,16 @@ export default function HomePage() {
                             <p className=" text-md md:text-md mb-10 max-w-xl mx-auto">
                                 Schedule your appointment today and experience healthcare that puts you first.
                             </p>
-                            <AppointmentDialog>
+                            <ContactDialog>
                                 <Button
+                                    variant='default'
                                     size="lg"
-                                    className="bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 text-base px-10"
+                                    className=" shadow-lg hover:shadow-xl transition-all duration-300 text-base px-10"
                                 >
-                                    Book Your Appointment
+                                    Let's get started
                                     <ArrowRight className="h-5 w-5 ml-2" />
                                 </Button>
-                            </AppointmentDialog>
+                            </ContactDialog>
                         </div>
                     </div>
                 </div>

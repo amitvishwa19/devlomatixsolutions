@@ -45,6 +45,14 @@
     --sidebar-border: 220 15% 22%;
     --sidebar-ring: 210 100% 55%;
     --sidebar-muted: 220 10% 50%;
+
+    /* Custom colors for icon backgrounds */
+    --icon-cyan: 187 100% 50%;
+    --icon-pink: 340 82% 60%;
+    --icon-purple: 270 70% 60%;
+    --icon-green: 160 84% 45%;
+    --icon-amber: 38 92% 55%;
+    --icon-blue: 210 100% 60%;
   }
 
   .dark {

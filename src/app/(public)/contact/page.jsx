@@ -1,12 +1,14 @@
 'use client'
 import { useState } from 'react';
-import { Phone, Mail, MapPin, Clock, Send, MessageSquare, Sparkles, ArrowRight } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, Send, MessageSquare, Sparkles, ArrowRight, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
+import { useAction } from '@/hooks/use-action';
+import { sendInquiryMail } from '../_action/send-mail';
+import { toast } from 'sonner';
 
 const contactInfo = [
     {
@@ -40,7 +42,7 @@ const contactInfo = [
 ];
 
 const Contact = () => {
-
+    const [loading, setLoading] = useState()
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -49,28 +51,36 @@ const Contact = () => {
         message: '',
     });
 
-    const handleSubmit = (e) => {
+    const { execute } = useAction(sendInquiryMail, {
+        onSuccess: (data) => {
+            setLoading(false)
+            toast.success('Your inquiry submitted successfully, will book a demo and connect with you', { id: 'new-contact' })
+        },
+        onError: (error) => {
+            console.log(error)
+            toast.error('Oops somethig went wrong ! try again later', { id: 'new-contact' })
+            setLoading(false);
+        }
+    })
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.name || !formData.email || !formData.message) {
-            toast({
-                title: "Please fill required fields",
-                description: "Name, email, and message are required.",
-                variant: "destructive",
-            });
+        if (!formData.name || !formData.email) {
+            toast.info('Please provide email to get started now');
             return;
         }
 
-        toast({
-            title: "Message Sent!",
-            description: "Thank you for reaching out. We'll get back to you shortly.",
-        });
+        console.log('handleContactSubmit')
+        setLoading(true)
+        await execute({ name: formData.name, email: formData.email, phone: formData.email, message: formData.message })
 
         setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     };
 
     return (
         <div className="min-h-screen overflow-hidden  w-full">
+
             {/* Hero Section */}
             <section className="relative py-24 lg:py-32 overflow-hidden">
                 <div className="absolute inset-0 gradient-mesh" />
@@ -206,8 +216,10 @@ const Contact = () => {
                                 <Button
                                     type="submit"
                                     size="lg"
+                                    disabled={loading}
                                     className="w-full sm:w-auto group  text-primary-foreground border-0 shadow-glow hover:shadow-[0_0_80px_hsl(262_83%_58%/0.4)] transition-all duration-500 px-8"
                                 >
+                                    {loading && <Loader className=' animate-spin' />}
                                     Send Message
                                     <Send className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                 </Button>
