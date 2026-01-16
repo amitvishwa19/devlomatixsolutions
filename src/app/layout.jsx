@@ -12,7 +12,8 @@ import { AppThemeProvider } from "@/hooks/useTheme";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
-import { AccessProvider } from "./(workspace)/workspace/[orgId]/access/_access-control/AccessContext";
+import { AccessProvider } from "@/providers/AccessProvider";
+
 
 
 const unbounded = Unbounded({ subsets: ["latin"] });
@@ -57,7 +58,7 @@ export default async function RootLayout({ children }) {
         },
     }) : null;
 
-    //console.log('session server side root layout', user)
+    console.log('session server side root layout', session)
 
     return (
         <html lang="en">
@@ -68,7 +69,8 @@ export default async function RootLayout({ children }) {
                             <AppThemeProvider>
                                 <ThemeProvider>
                                     <AuthProvider>
-                                        <AccessProvider user={user ? user : null} >
+
+                                        <AccessProvider user={user}>
                                             <Providers>
                                                 {/* <OrgModalProvider /> */}
                                                 <OrgProvider>
@@ -76,6 +78,7 @@ export default async function RootLayout({ children }) {
                                                 </OrgProvider>
                                             </Providers>
                                         </AccessProvider>
+
                                     </AuthProvider>
                                 </ThemeProvider>
                             </AppThemeProvider>

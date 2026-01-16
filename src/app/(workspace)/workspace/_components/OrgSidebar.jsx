@@ -89,7 +89,7 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
         //console.log('expanded', expanded)
     }
 
-    console.log('sidebar render', url.split('/')[3])
+
 
     return (
         <div className='flex-col min-h-full text-primary  w-[246px]  relative '>

@@ -5,11 +5,11 @@ import React, { useMemo, useState } from 'react'
 import { useAccess } from '../../_provider/accessProvider'
 import { Button } from '@/components/ui/button'
 import { ROLE } from '@prisma/client'
-import { UserFormDialog } from '../user/UserFormDialog'
+import { UserFormDialog } from './UserFormDialog'
 import { CustomBadge } from '../../../(misc)/_components/CustomBadge'
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { UserDelete } from '../user/UserDelete'
+import { UserDelete } from './UserDelete'
 import { DataTable } from '../../../(misc)/_components/DataTable'
 
 export default function Users() {

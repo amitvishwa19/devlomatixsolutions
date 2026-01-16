@@ -257,19 +257,8 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
 
                                 {/* Permissions */}
                                 <FormItem>
-                                    <div className="flex justify-between items-center">
-                                        <FormLabel>Permissions</FormLabel>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={toggleAll}
-                                        >
-                                            Toggle All
-                                        </Button>
-                                    </div>
 
-                                    <ScrollArea className="h-[45vh] border rounded p-3">
+                                    <ScrollArea className="h-[45vh] border rounded p-3 hover:border-primary/30 transition-colors animate-fade-in">
                                         <div className="grid gap-4 sm:grid-cols-1">
                                             {Object.entries(permissionCategories).map(
                                                 ([category, perms]) => (
@@ -293,14 +282,15 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                                 onCheckedChange={() =>
                                                                     toggleCategory(perms)
                                                                 }
+                                                                className='border border-muted-foreground'
                                                             />
                                                         </div>
 
-                                                        <div className="grid grid-cols-3 gap-2 mt-2">
+                                                        <div className="grid grid-cols-2 gap-2 mt-2">
                                                             {perms.map((p) => (
                                                                 <label
                                                                     key={p.id}
-                                                                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                                                                    className="flex items-center gap-2 text-sm"
                                                                 >
                                                                     <Checkbox
                                                                         checked={p.status}
@@ -308,7 +298,12 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                                             togglePermission(p.id)
                                                                         }
                                                                     />
-                                                                    {p.title}
+                                                                    <div className="flex flex-col">
+                                                                        {p.title}
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            {p.value}
+                                                                        </span>
+                                                                    </div>
                                                                 </label>
                                                             ))}
                                                         </div>

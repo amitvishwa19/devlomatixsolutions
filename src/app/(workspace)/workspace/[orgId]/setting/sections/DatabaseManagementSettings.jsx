@@ -14,6 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { SeedDAtabase } from "@/utils/db-seeder";
+import { seeder } from "@/utils/seeder";
 
 // Prisma data types
 const prismaDataTypes = [
@@ -1036,21 +1038,25 @@ function RelationsTab() {
     );
 }
 
+const { departmentSeed } = seeder()
+
 // Seed options with icons
 const seedOptions = [
-    { id: "users", name: "Users", description: "Populate user table", icon: Users, count: 50 },
-    { id: "patients", name: "Patients", description: "Populate patient table", icon: Users, count: 100 },
-    { id: "doctors", name: "Doctors", description: "Populate doctor table", icon: Stethoscope, count: 30 },
-    { id: "services", name: "Services", description: "Populate service table", icon: Package, count: 25 },
-    { id: "roles", name: "Roles", description: "Populate role table", icon: Key, count: 10 },
-    { id: "permissions", name: "Permissions", description: "Populate permission table", icon: Shield, count: 20 },
-    { id: "categories", name: "Categories", description: "Populate categories table", icon: Grid3X3, count: 15 },
-    { id: "appointments", name: "Appointments", description: "Populate appointments table", icon: Calendar, count: 200 },
-    { id: "departments", name: "Departments", description: "Populate department table", icon: Database, count: 12 },
-    { id: "medications", name: "Medications", description: "Populate medications table", icon: Pill, count: 100 },
-    { id: "inventories", name: "Inventories", description: "Populate inventories table", icon: Package, count: 150 },
-    { id: "invoices", name: "Invoices", description: "Populate invoice table", icon: CreditCard, count: 200 },
+    { id: "users", name: "Users", description: "Populate user table", icon: Users, count: 50, seeder: '' },
+    { id: "patients", name: "Patients", description: "Populate patient table", icon: Users, count: 100, seeder: '' },
+    { id: "doctors", name: "Doctors", description: "Populate doctor table", icon: Stethoscope, count: 30, seeder: '' },
+    { id: "services", name: "Services", description: "Populate service table", icon: Package, count: 25, seeder: '' },
+    { id: "roles", name: "Roles", description: "Populate role table", icon: Key, count: 10, seeder: '' },
+    { id: "permissions", name: "Permissions", description: "Populate permission table", icon: Shield, count: 20, seeder: '' },
+    { id: "categories", name: "Categories", description: "Populate categories table", icon: Grid3X3, count: 15, seeder: '' },
+    { id: "appointments", name: "Appointments", description: "Populate appointments table", icon: Calendar, count: 200, seeder: '' },
+    { id: "department", name: "Departments", description: "Populate department table", icon: Database, count: 12, seeder: departmentSeed },
+    { id: "medications", name: "Medications", description: "Populate medications table", icon: Pill, count: 100, seeder: '' },
+    { id: "inventories", name: "Inventories", description: "Populate inventories table", icon: Package, count: 150, seeder: '' },
+    { id: "invoices", name: "Invoices", description: "Populate invoice table", icon: CreditCard, count: 200, seeder: '' },
 ];
+
+
 
 function SeedTab() {
     const [isSeeding, setIsSeeding] = useState(false);
@@ -1062,24 +1068,31 @@ function SeedTab() {
         randomizeData: true,
     });
 
-    const handleSeed = async (option) => {
-        const toastId = toast.loading(`Seeding ${option.name} data...`);
-        setIsSeeding(true);
-        setSeedingItem(option.id);
-        setProgress(0);
 
-        const interval = setInterval(() => {
-            setProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    setIsSeeding(false);
-                    setSeedingItem(null);
-                    toast.success(`${option.count} ${option.name} records seeded successfully`, { id: toastId });
-                    return 100;
-                }
-                return prev + 10;
-            });
-        }, 150);
+
+    const handleSeed = async (option) => {
+        console.log(departmentSeed)
+        const toastId = toast.loading(`Seeding ${option.name} data...`);
+        //setIsSeeding(true);
+        //setSeedingItem(option.id);
+        //setProgress(0);
+
+        await SeedDAtabase(option?.id, option?.seeder)
+
+        toast.success(`${option.seeder.length} ${option.name} records seeded successfully`, { id: toastId });
+
+        // const interval = setInterval(() => {
+        //     setProgress(prev => {
+        //         if (prev >= 100) {
+        //             clearInterval(interval);
+        //             setIsSeeding(false);
+        //             setSeedingItem(null);
+        //             toast.success(`${option.count} ${option.name} records seeded successfully`, { id: toastId });
+        //             return 100;
+        //         }
+        //         return prev + 10;
+        //     });
+        // }, 150);
     };
 
     const handleSeedAll = async () => {
@@ -1116,7 +1129,7 @@ function SeedTab() {
             </div>
 
             {/* Seed Configuration */}
-            <Card>
+            {/* <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <Settings className="h-4 w-4" />
@@ -1163,7 +1176,7 @@ function SeedTab() {
                         />
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Progress */}
             {isSeeding && (
@@ -1180,13 +1193,7 @@ function SeedTab() {
                 </Card>
             )}
 
-            {/* Seed All Button */}
-            <div className="flex justify-end">
-                <Button onClick={handleSeedAll} disabled={isSeeding} className="gap-2">
-                    <Upload className="h-4 w-4" />
-                    Seed All Tables
-                </Button>
-            </div>
+
 
             {/* Seed Options Grid */}
             <div className="grid grid-cols-2 gap-3">

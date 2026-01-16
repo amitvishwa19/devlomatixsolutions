@@ -11,330 +11,330 @@ import { Users, Shield, Clock, Bell } from "lucide-react";
 import SectionHeader from "../_components/SectionHeader";
 
 const staffSchema = z.object({
-  // Staff ID Settings
-  staffIdPrefix: z.string().optional(),
-  idNumberLength: z.string().optional(),
-  autoGenerateId: z.boolean().optional(),
-  // Role & Permission Settings
-  defaultRole: z.string().optional(),
-  requireDepartmentAssignment: z.boolean().optional(),
-  allowMultipleDepartments: z.boolean().optional(),
-  // Schedule Settings
-  defaultShiftDuration: z.string().optional(),
-  allowOvertimeRequests: z.boolean().optional(),
-  maxOvertimeHours: z.string().optional(),
-  // Notification Settings
-  sendWelcomeEmail: z.boolean().optional(),
-  notifyOnScheduleChange: z.boolean().optional(),
-  enableMobileApp: z.boolean().optional(),
+    // Staff ID Settings
+    staffIdPrefix: z.string().optional(),
+    idNumberLength: z.string().optional(),
+    autoGenerateId: z.boolean().optional(),
+    // Role & Permission Settings
+    defaultRole: z.string().optional(),
+    requireDepartmentAssignment: z.boolean().optional(),
+    allowMultipleDepartments: z.boolean().optional(),
+    // Schedule Settings
+    defaultShiftDuration: z.string().optional(),
+    allowOvertimeRequests: z.boolean().optional(),
+    maxOvertimeHours: z.string().optional(),
+    // Notification Settings
+    sendWelcomeEmail: z.boolean().optional(),
+    notifyOnScheduleChange: z.boolean().optional(),
+    enableMobileApp: z.boolean().optional(),
 });
 
 const TEMP_USER_ID = "temp-user-123";
 
 export function StaffSettings() {
-  const form = useForm({
-    resolver: zodResolver(staffSchema),
-    defaultValues: {
-      staffIdPrefix: "STF-",
-      idNumberLength: "6",
-      autoGenerateId: true,
-      defaultRole: "nurse",
-      requireDepartmentAssignment: true,
-      allowMultipleDepartments: false,
-      defaultShiftDuration: "8",
-      allowOvertimeRequests: true,
-      maxOvertimeHours: "20",
-      sendWelcomeEmail: true,
-      notifyOnScheduleChange: true,
-      enableMobileApp: true,
-    },
-  });
+    const form = useForm({
+        resolver: zodResolver(staffSchema),
+        defaultValues: {
+            staffIdPrefix: "STF-",
+            idNumberLength: "6",
+            autoGenerateId: true,
+            defaultRole: "nurse",
+            requireDepartmentAssignment: true,
+            allowMultipleDepartments: false,
+            defaultShiftDuration: "8",
+            allowOvertimeRequests: true,
+            maxOvertimeHours: "20",
+            sendWelcomeEmail: true,
+            notifyOnScheduleChange: true,
+            enableMobileApp: true,
+        },
+    });
 
-  const onSubmit = async (data) => {
-    const toastId = toast.loading("Saving staff settings...");
-    try {
-      console.log("Staff settings:", data);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      toast.success("Staff settings saved successfully", { id: toastId });
-    } catch (error) {
-      toast.error("Failed to save settings", { id: toastId });
-    }
-  };
+    const onSubmit = async (data) => {
+        const toastId = toast.loading("Saving staff settings...");
+        try {
+            console.log("Staff settings:", data);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            toast.success("Staff settings saved successfully", { id: toastId });
+        } catch (error) {
+            toast.error("Failed to save settings", { id: toastId });
+        }
+    };
 
-  return (
-    <div className="flex flex-col h-full">
-      <SectionHeader
-        title="Staff"
-        description="Configure staff registration and management settings"
-        onSave={form.handleSubmit(onSubmit)}
-      />
+    return (
+        <div className="flex flex-col h-full">
+            <SectionHeader
+                title="Staff"
+                description="Configure staff registration and management settings"
+                onSave={form.handleSubmit(onSubmit)}
+            />
 
-      <ScrollArea className="flex-1  h-[60vh] p-4">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Staff ID Settings */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary">
-                <Users className="h-4 w-4" />
-                <span className="text-sm font-medium">Staff ID Settings</span>
-              </div>
+            <ScrollArea className="flex-1  h-[60vh] p-4">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        {/* Staff ID Settings */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 text-primary">
+                                <Users className="h-4 w-4" />
+                                <span className="text-sm font-medium">Staff ID Settings</span>
+                            </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="staffIdPrefix"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Staff ID Prefix</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="idNumberLength"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ID Number Length</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="4">4 digits</SelectItem>
-                          <SelectItem value="5">5 digits</SelectItem>
-                          <SelectItem value="6">6 digits</SelectItem>
-                          <SelectItem value="8">8 digits</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="staffIdPrefix"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Staff ID Prefix</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="idNumberLength"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>ID Number Length</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="4">4 digits</SelectItem>
+                                                    <SelectItem value="5">5 digits</SelectItem>
+                                                    <SelectItem value="6">6 digits</SelectItem>
+                                                    <SelectItem value="8">8 digits</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-              <div className="space-y-4 pt-4">
-                <FormField
-                  control={form.control}
-                  name="autoGenerateId"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Auto-generate Staff ID</FormLabel>
-                        <FormDescription>Automatically generate unique staff IDs</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                            <div className="space-y-4 pt-4">
+                                <FormField
+                                    control={form.control}
+                                    name="autoGenerateId"
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Auto-generate Staff ID</FormLabel>
+                                                <FormDescription>Automatically generate unique staff IDs</FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
 
-            {/* Role & Permission Settings */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary">
-                <Shield className="h-4 w-4" />
-                <span className="text-sm font-medium">Role & Permissions</span>
-              </div>
+                        {/* Role & Permission Settings */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 text-primary">
+                                <Shield className="h-4 w-4" />
+                                <span className="text-sm font-medium">Role & Permissions</span>
+                            </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="defaultRole"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Default Role</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="doctor">Doctor</SelectItem>
-                          <SelectItem value="nurse">Nurse</SelectItem>
-                          <SelectItem value="receptionist">Receptionist</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="technician">Technician</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="defaultRole"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Default Role</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="doctor">Doctor</SelectItem>
+                                                    <SelectItem value="nurse">Nurse</SelectItem>
+                                                    <SelectItem value="receptionist">Receptionist</SelectItem>
+                                                    <SelectItem value="admin">Admin</SelectItem>
+                                                    <SelectItem value="technician">Technician</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-              <div className="space-y-4 pt-4">
-                <FormField
-                  control={form.control}
-                  name="requireDepartmentAssignment"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Require Department Assignment</FormLabel>
-                        <FormDescription>Staff must be assigned to a department</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="allowMultipleDepartments"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Allow Multiple Departments</FormLabel>
-                        <FormDescription>Staff can be assigned to multiple departments</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                            <div className="space-y-4 pt-4">
+                                <FormField
+                                    control={form.control}
+                                    name="requireDepartmentAssignment"
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Require Department Assignment</FormLabel>
+                                                <FormDescription>Staff must be assigned to a department</FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="allowMultipleDepartments"
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Allow Multiple Departments</FormLabel>
+                                                <FormDescription>Staff can be assigned to multiple departments</FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
 
-            {/* Schedule Settings */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm font-medium">Schedule Settings</span>
-              </div>
+                        {/* Schedule Settings */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 text-primary">
+                                <Clock className="h-4 w-4" />
+                                <span className="text-sm font-medium">Schedule Settings</span>
+                            </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="defaultShiftDuration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Default Shift Duration</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="4">4 hours</SelectItem>
-                          <SelectItem value="6">6 hours</SelectItem>
-                          <SelectItem value="8">8 hours</SelectItem>
-                          <SelectItem value="10">10 hours</SelectItem>
-                          <SelectItem value="12">12 hours</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="maxOvertimeHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Max Overtime Hours (Weekly)</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="10">10 hours</SelectItem>
-                          <SelectItem value="15">15 hours</SelectItem>
-                          <SelectItem value="20">20 hours</SelectItem>
-                          <SelectItem value="30">30 hours</SelectItem>
-                          <SelectItem value="unlimited">Unlimited</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="defaultShiftDuration"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Default Shift Duration</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="4">4 hours</SelectItem>
+                                                    <SelectItem value="6">6 hours</SelectItem>
+                                                    <SelectItem value="8">8 hours</SelectItem>
+                                                    <SelectItem value="10">10 hours</SelectItem>
+                                                    <SelectItem value="12">12 hours</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="maxOvertimeHours"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Max Overtime Hours (Weekly)</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="10">10 hours</SelectItem>
+                                                    <SelectItem value="15">15 hours</SelectItem>
+                                                    <SelectItem value="20">20 hours</SelectItem>
+                                                    <SelectItem value="30">30 hours</SelectItem>
+                                                    <SelectItem value="unlimited">Unlimited</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-              <div className="space-y-4 pt-4">
-                <FormField
-                  control={form.control}
-                  name="allowOvertimeRequests"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Allow Overtime Requests</FormLabel>
-                        <FormDescription>Staff can request overtime shifts</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                            <div className="space-y-4 pt-4">
+                                <FormField
+                                    control={form.control}
+                                    name="allowOvertimeRequests"
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Allow Overtime Requests</FormLabel>
+                                                <FormDescription>Staff can request overtime shifts</FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
 
-            {/* Notification Settings */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary">
-                <Bell className="h-4 w-4" />
-                <span className="text-sm font-medium">Notifications</span>
-              </div>
+                        {/* Notification Settings */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 text-primary">
+                                <Bell className="h-4 w-4" />
+                                <span className="text-sm font-medium">Notifications</span>
+                            </div>
 
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="sendWelcomeEmail"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Send Welcome Email</FormLabel>
-                        <FormDescription>Send onboarding email to new staff members</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="notifyOnScheduleChange"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Notify on Schedule Change</FormLabel>
-                        <FormDescription>Send notifications when schedule is updated</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="enableMobileApp"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Enable Mobile App Access</FormLabel>
-                        <FormDescription>Allow staff to use mobile app for schedules</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-          </form>
-        </Form>
-      </ScrollArea>
-    </div>
-  );
+                            <div className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="sendWelcomeEmail"
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Send Welcome Email</FormLabel>
+                                                <FormDescription>Send onboarding email to new staff members</FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="notifyOnScheduleChange"
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Notify on Schedule Change</FormLabel>
+                                                <FormDescription>Send notifications when schedule is updated</FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="enableMobileApp"
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center justify-between rounded-lg border border-border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Enable Mobile App Access</FormLabel>
+                                                <FormDescription>Allow staff to use mobile app for schedules</FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+                    </form>
+                </Form>
+            </ScrollArea>
+        </div>
+    );
 }

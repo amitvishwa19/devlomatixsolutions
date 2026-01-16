@@ -1,15 +1,12 @@
 import React, { useMemo } from 'react'
-
-
 import { ROLE } from '@prisma/client'
 import { Activity, Key, Shield, Users } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
 import { useSession } from 'next-auth/react'
 import { StatCard } from './dashboard/StatCard'
 import { useAccess } from '../_provider/accessProvider'
 import { RoleCard } from './role/RoleCard'
-import { Access } from '../_access-control/Access'
+
 
 export default function AccessDashboard({ user }) {
     const { users, roles, permissions } = useAccess()
@@ -61,13 +58,13 @@ export default function AccessDashboard({ user }) {
             {/* Recent Roles */}
             <div className="space-y-4">
 
-                <Access >
-                    <div>
-                        <Button variant="outline" size='sm' className='mb-2' onClick={() => { console.log('Access controll check') }}>
-                            Access control
-                        </Button>
-                    </div>
-                </Access>
+
+                <div>
+                    <Button variant="outline" size='sm' className='mb-2' onClick={() => { console.log('Access controll check') }}>
+                        Access control
+                    </Button>
+                </div>
+
 
 
 

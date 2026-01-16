@@ -188,7 +188,7 @@ export function MultiSelectDropDown({
                                         <Badge
                                             key={id}
                                             variant="secondary"
-                                            className="flex items-center gap-1 pr-1"
+                                            className="flex items-center gap-1 pr-1 border"
                                         >
                                             <span className="truncate max-w-[150px]">
                                                 {item.name || item.title}

@@ -23,10 +23,9 @@ const handler = async (data) => {
   let setting;
 
   try {
-    setting = await db.generalSetting.upsert({
-      where: { userId },
+    setting = await db.appSettings.upsert({
+      where: { id: formData.id || 1 },
       create: {
-        userId,
         hospitalName: formData.hospitalName,
         hospitalCode: formData.hospitalCode,
         contactEmail: formData.contactEmail,
@@ -38,6 +37,7 @@ const handler = async (data) => {
         timeFormat: formData.timeFormat,
       },
       update: {
+        id: formData.id,
         hospitalName: formData.hospitalName,
         hospitalCode: formData.hospitalCode,
         contactEmail: formData.contactEmail,

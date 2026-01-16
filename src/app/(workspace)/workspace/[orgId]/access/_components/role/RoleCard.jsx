@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { titleCaseLabel } from '@/utils/functions';
 import { CustomBadge } from '../../../(misc)/_components/CustomBadge';
-import { Access } from '../../_access-control/Access';
+
 
 
 
@@ -49,31 +49,31 @@ export function RoleCard({ role, onEdit, onDelete }) {
                     </div>
                 </div>
 
-                <Access>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon-sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEdit(role)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Role
-                            </DropdownMenuItem>
-                            <Access permission="access_management.delete">
-                                <DropdownMenuItem
-                                    onClick={() => onDelete(role)}
-                                    className="text-orange-500 focus:text-orange-600"
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete Role
-                                </DropdownMenuItem>
-                            </Access>
 
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </Access>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEdit(role)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit Role
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                            onClick={() => onDelete(role)}
+                            className="text-orange-500 focus:text-orange-600"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Role
+                        </DropdownMenuItem>
+
+
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
             </div>
         </div>
     );

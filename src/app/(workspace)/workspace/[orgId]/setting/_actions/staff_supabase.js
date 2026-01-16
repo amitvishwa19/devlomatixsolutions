@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
-import supabase from "@/supabase/client";
+import { supabase } from "@/supabase/client";
 
 const UpsertStaffSetting = z.object({
   userId: z.string(),
