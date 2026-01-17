@@ -1,34 +1,33 @@
-import GoogleProvider from "next-auth/providers/google"
+import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
-import bcrypt from 'bcryptjs'
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from "uuid";
 import { MemberRole } from "@prisma/client";
 import { uuid } from "@/utils/functions";
 
-
-
+const isProd = process.env.NODE_ENV === "production";
 
 export const authOptions = {
     secret: process.env.NEXTAUTH_SECRET,
-
-    trustHost: true, // ✅ ADD THIS
+    trustHost: true,
 
     cookies: {
         sessionToken: {
-            name: "__Secure-next-auth.session-token",
+            name: isProd
+                ? "__Secure-next-auth.session-token"
+                : "next-auth.session-token",
             options: {
                 httpOnly: true,
                 sameSite: "lax",
                 path: "/",
-                secure: true,
+                secure: isProd,
             },
         },
     },
 
     providers: [
-
         GoogleProvider({
             clientId: process.env.GOOGLE_ID,
             clientSecret: process.env.GOOGLE_SECRET,
@@ -36,167 +35,124 @@ export const authOptions = {
 
         GitHubProvider({
             clientId: process.env.GITHUB_ID,
-            clientSecret: process.env.GITHUB_SECRET
+            clientSecret: process.env.GITHUB_SECRET,
         }),
 
         CredentialsProvider({
-            // The name to display on the sign in form (e.g. "Sign in with...")
             name: "Credentials",
             credentials: {
-                email: { label: "Email", type: "text", placeholder: "Email" },
-                password: { label: "Password", type: "password" }
+                email: { label: "Email", type: "text" },
+                password: { label: "Password", type: "password" },
             },
-            async authorize(credentials, req) {
 
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null;
 
+                const user = await db.user.findUnique({
+                    where: { email: credentials.email },
+                });
 
-                const user = await db.user.findFirst({
-                    where: {
-                        email: credentials.email
-                    }
-                })
+                if (!user || !user.password) return null;
 
-                const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+                const isPasswordValid = await bcrypt.compare(
+                    credentials.password,
+                    user.password
+                );
 
+                if (!isPasswordValid) return null;
 
-                console.log('isPasswordValid', isPasswordValid)
-
-                if (isPasswordValid) {
-                    return user
-                } else {
-                    return null
-                    throw new Error('Incorrect credentials')
-                }
-
-
-
-            }
-        })
+                return user;
+            },
+        }),
     ],
+
     callbacks: {
+        /**
+         * ✅ SAFE PLACE FOR DB WRITES
+         * Runs once per login
+         */
+        async signIn({ user }) {
+            if (!user?.email) return false;
 
-        // async redirect({ url, baseUrl }) {
-        //     console.log('middleware redirect after login')
-        // },
+            let dbUser = await db.user.findUnique({
+                where: { email: user.email },
+            });
 
-        async signIn({ user, account, profile, email, credentials }) {
-
-            if (account.provider === 'google') {
-
-            }
-            return true
-        },
-
-        async session({ session, token, trigger, }) {
-
-            let usr
-            let server
-
-
-
-            if (token) {
-                usr = await db.user.upsert({
-                    where: {
-                        email: token.email
-                    },
-                    update: {
-                        name: token.name,
-                        displayName: token.name,
-                        avatar: token.picture,
-                        webDeviceToken: 'sfsfsfsfsdf'
-                    },
-                    create: {
-                        email: token.email,
-                        name: token.name,
-                        displayName: token.name,
-                        avatar: token.picture,
-                        webDeviceToken: 'deviceToken',
+            if (!dbUser) {
+                dbUser = await db.user.create({
+                    data: {
+                        email: user.email,
+                        name: user.name ?? "",
+                        displayName: user.name ?? "",
+                        avatar: user.image ?? "",
                         uuid: uuid(),
-                        profile: {
-                            create: {
-                                displayname: '',
-                            }
-                        },
-                        medicalProfile: {
-                            create: {}
-                        },
-                        credit: {
-                            create: {
-                                value: 0
-                            }
-                        },
-                    },
-                })
 
-                if (usr) {
-                    server = await db.server.findFirst({
-                        where: { userId: usr.id }
-                    })
+                        profile: { create: {} },
+                        medicalProfile: { create: {} },
+                        credit: { create: { value: 0 } },
 
-                    if (!server) {
-                        server = await db.server.create({
-                            data: {
-                                userId: usr?.id,
-                                name: 'default',
+                        servers: {
+                            create: {
+                                name: "default",
                                 default: true,
-                                inviteCode: uuidv4(),
                                 selected: true,
-                                setting: {
-                                    create: {}
-                                },
+                                inviteCode: uuidv4(),
+                                setting: { create: {} },
                                 channels: {
-                                    create: [{ name: 'general', userId: usr?.id }]
+                                    create: [{ name: "general", userId: undefined }],
                                 },
                                 members: {
-                                    create: [
-                                        {
-                                            userId: usr?.id,
-                                            role: MemberRole.ADMIN
-                                        }
-                                    ]
-                                }
-                            }
-                        })
-                    }
-                }
-
-                const refreshUser = await db.user.findUnique({
-                    where: { email: usr.email },
-                    include: {
-                        roles: {
-                            include: {
-                                permissions: true
+                                    create: {
+                                        role: MemberRole.ADMIN,
+                                    },
+                                },
                             },
                         },
-                        servers: true,
                     },
-                })
-
-                session.user.userId = usr.id;
-                session.user.displayName = usr.displayName
-                session.user.avatar = usr.avatar
-                session.user.role = usr.role
-                session.user.roles = refreshUser.roles
-
+                });
             }
 
-            return session
+            return true;
         },
 
-        async jwt({ token, user, account, profile, isNewUser }) {
-            // if (user) {
-            //     console.log('jwt', 'user', user, 'token', token)
-            //}
-            return token
-        }
-    },
-    pages: {
-        signIn: '/login',
-        signOut: '/logout',
-        error: '/error', // Error code passed in query string as ?error=
-        verifyRequest: '/verify-request', // (used for check email message)
-        newUser: '/new-user' // New users will be directed here on first sign in (leave the property out if not of interest)
-    },
-    secret: process.env.NEXTAUTH_SECRET
+        /**
+         * ✅ READ-ONLY — SAFE FOR SERVER COMPONENTS
+         */
+        async session({ session, token }) {
+            if (!token?.email) return session;
 
-}
+            const usr = await db.user.findUnique({
+                where: { email: token.email },
+                include: {
+                    roles: {
+                        include: {
+                            permissions: true,
+                        },
+                    },
+                },
+            });
+
+            if (!usr) return session;
+
+            session.user.userId = usr.id;
+            session.user.displayName = usr.displayName;
+            session.user.avatar = usr.avatar;
+            session.user.role = usr.role;
+            session.user.roles = usr.roles;
+
+            return session;
+        },
+
+        async jwt({ token, user }) {
+            if (user?.email) {
+                token.email = user.email;
+            }
+            return token;
+        },
+    },
+
+    pages: {
+        signIn: "/login",
+        error: "/error",
+    },
+};
