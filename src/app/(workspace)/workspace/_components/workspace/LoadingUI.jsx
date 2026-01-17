@@ -1,42 +1,11 @@
-'use client'
-import React, { useContext, useEffect, useState } from 'react'
+
 import { Poppins, Unbounded } from 'next/font/google'
-import { useSession } from 'next-auth/react'
-import Lottie, { useLottie } from "lottie-react";
-import lotte from "@/assets/lottie/loading.json";
-import { useDispatch } from 'react-redux'
 import { Activity, Heart, Shield, Users } from 'lucide-react'
 import coverImage from '@/assets/images/auth_cover_image.jpg'
-import { useRouter } from 'next/navigation';
-import { useOrg } from '@/providers/OrgProvider';
 
-
-
-const textFont = Poppins({
-    subsets: ['latin'],
-    weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900']
-})
 const unbounded = Unbounded({ subsets: ["latin"] });
 
-
-
 export default function WorkspacePage() {
-    const { data: session, status } = useSession()
-    const { server, updateServer, updateServers } = useOrg()
-    const dispatch = useDispatch()
-    const router = useRouter()
-    const [progress, setProgress] = useState(0);
-
-
-
-
-
-    const options = {
-        animationData: lotte,
-        loop: true,
-    };
-
-    const { View } = useLottie(options);
 
     return (
         <div className={`flex min-h-screen items-center justify-center ${unbounded.className}`}
@@ -112,18 +81,7 @@ export default function WorkspacePage() {
                             </div>
                         </div>
 
-                        {/* Progress Bar */}
-                        <div className="w-80 space-y-2">
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300 ease-out"
-                                    style={{ width: `${progress}%` }}
-                                />
-                            </div>
-                            {/* <p className="text-center text-sm text-muted-foreground">
-                            Loading... {progress}%
-                        </p> */}
-                        </div>
+
                     </div>
                 </div>
             </div>

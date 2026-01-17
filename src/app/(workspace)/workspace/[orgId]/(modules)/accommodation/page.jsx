@@ -13,7 +13,8 @@ import Dashboard from './_components/page/Dashboard';
 import Rooms from './_components/page/Rooms';
 import Beds from './_components/page/Beds';
 import Status from './_components/page/Status';
-import { ContentTopbar } from '../(misc)/_components/ContentTopbar';
+import { ContentTopbar } from '../../(misc)/_components/ContentTopbar';
+
 
 
 
