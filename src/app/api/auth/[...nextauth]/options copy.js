@@ -7,9 +7,25 @@ import { v4 as uuidv4 } from "uuid";
 import { MemberRole } from "@prisma/client";
 import { uuid } from "@/utils/functions";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export const authOptions = {
     secret: process.env.NEXTAUTH_SECRET,
     trustHost: true,
+
+    cookies: {
+        sessionToken: {
+            name: isProd
+                ? "__Secure-next-auth.session-token"
+                : "next-auth.session-token",
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: isProd,
+            },
+        },
+    },
 
     providers: [
         GoogleProvider({
@@ -28,19 +44,22 @@ export const authOptions = {
                 email: { label: "Email", type: "text" },
                 password: { label: "Password", type: "password" },
             },
+
             async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null;
+
                 const user = await db.user.findUnique({
                     where: { email: credentials.email },
                 });
 
-                if (!user) return null;
+                if (!user || !user.password) return null;
 
-                const valid = await bcrypt.compare(
+                const isPasswordValid = await bcrypt.compare(
                     credentials.password,
                     user.password
                 );
 
-                if (!valid) return null;
+                if (!isPasswordValid) return null;
 
                 return user;
             },
@@ -48,48 +67,45 @@ export const authOptions = {
     ],
 
     callbacks: {
-        /** 🔑 WRITE TO DB ONLY HERE */
-        async signIn({ user, account }) {
+        /**
+         * ✅ SAFE PLACE FOR DB WRITES
+         * Runs once per login
+         */
+        async signIn({ user }) {
             if (!user?.email) return false;
 
-            const dbUser = await db.user.upsert({
+            let dbUser = await db.user.findUnique({
                 where: { email: user.email },
-                update: {
-                    name: user.name,
-                    avatar: user.image,
-                },
-                create: {
-                    email: user.email,
-                    name: user.name,
-                    avatar: user.image,
-                    uuid: uuid(),
-                    profile: { create: {} },
-                    medicalProfile: { create: {} },
-                    credit: { create: { value: 0 } },
-                },
             });
 
-            // Ensure default server exists
-            const existingServer = await db.server.findFirst({
-                where: { userId: dbUser.id },
-            });
-
-            if (!existingServer) {
-                await db.server.create({
+            if (!dbUser) {
+                dbUser = await db.user.create({
                     data: {
-                        userId: dbUser.id,
-                        name: "default",
-                        default: true,
-                        selected: true,
-                        inviteCode: uuidv4(),
-                        setting: { create: {} },
-                        channels: {
-                            create: [{ name: "general", userId: dbUser.id }],
-                        },
-                        members: {
+                        email: user.email,
+                        name: user.name ?? "",
+                        displayName: user.name ?? "",
+                        avatar: user.image ?? "",
+                        uuid: uuid(),
+
+                        profile: { create: {} },
+                        medicalProfile: { create: {} },
+                        credit: { create: { value: 0 } },
+
+                        servers: {
                             create: {
-                                userId: dbUser.id,
-                                role: MemberRole.ADMIN,
+                                name: "default",
+                                default: true,
+                                selected: true,
+                                inviteCode: uuidv4(),
+                                setting: { create: {} },
+                                channels: {
+                                    create: [{ name: "general", userId: undefined }],
+                                },
+                                members: {
+                                    create: {
+                                        role: MemberRole.ADMIN,
+                                    },
+                                },
                             },
                         },
                     },
@@ -99,31 +115,39 @@ export const authOptions = {
             return true;
         },
 
-        /** 🔑 TOKEN = SMALL + SAFE */
-        async jwt({ token, user }) {
-            if (user) {
-                token.userId = user.id;
-            }
-            return token;
-        },
-
-        /** ✅ READ ONLY — SAFE IN PROD */
+        /**
+         * ✅ READ-ONLY — SAFE FOR SERVER COMPONENTS
+         */
         async session({ session, token }) {
-            if (!token?.userId) return session;
+            if (!token?.email) return session;
 
-            const user = await db.user.findUnique({
-                where: { id: token.userId },
+            const usr = await db.user.findUnique({
+                where: { email: token.email },
                 include: {
                     roles: {
-                        include: { permissions: true },
+                        include: {
+                            permissions: true,
+                        },
                     },
                 },
             });
 
-            session.user.userId = user.id;
-            session.user.roles = user.roles;
+            if (!usr) return session;
+
+            session.user.userId = usr.id;
+            session.user.displayName = usr.displayName;
+            session.user.avatar = usr.avatar;
+            session.user.role = usr.role;
+            session.user.roles = usr.roles;
 
             return session;
+        },
+
+        async jwt({ token, user }) {
+            if (user?.email) {
+                token.email = user.email;
+            }
+            return token;
         },
     },
 

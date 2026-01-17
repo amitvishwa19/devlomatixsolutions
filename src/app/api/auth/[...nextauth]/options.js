@@ -7,27 +7,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { MemberRole } from "@prisma/client";
 import { uuid } from "@/utils/functions";
 
-const isProd = process.env.NODE_ENV === "production";
+
 
 
 export const authOptions = {
-    secret: process.env.NEXTAUTH_SECRET,
 
-    trustHost: true, // ✅ ADD THIS
-
-    cookies: {
-        sessionToken: {
-            name: isProd
-                ? "__Secure-next-auth.session-token"
-                : "next-auth.session-token",
-            options: {
-                httpOnly: true,
-                sameSite: "lax",
-                path: "/",
-                secure: isProd,
-            },
-        },
-    },
 
     providers: [
 
@@ -77,6 +61,9 @@ export const authOptions = {
     ],
     callbacks: {
 
+        // async redirect({ url, baseUrl }) {
+        //     console.log('middleware redirect after login')
+        // },
 
         async signIn({ user, account, profile, email, credentials }) {
 
