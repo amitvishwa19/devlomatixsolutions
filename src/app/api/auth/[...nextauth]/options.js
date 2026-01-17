@@ -67,9 +67,7 @@ export const authOptions = {
 
         async signIn({ user, account, profile, email, credentials }) {
 
-            if (account.provider === 'google') {
-
-            }
+            console.log('@@Auth option signback callback', user)
             return true
         },
 
