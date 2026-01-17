@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { db } from "@/lib/db";
 
 export default async function WorkspacePage() {
-    // const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
 
-    // if (!session?.user?.userId) {
-    //     redirect("/login");
-    // }
+    if (!session?.user?.userId) {
+        redirect("/login");
+    }
 
     try {
         const server = await db.server.findFirst({
@@ -21,9 +21,9 @@ export default async function WorkspacePage() {
             },
         });
 
-        // if (!server) {
-        //     redirect("/unauthorized");
-        // }
+        if (!server) {
+            redirect("/unauthorized");
+        }
 
         redirect(`/workspace/${server.id}`);
     } catch (error) {
