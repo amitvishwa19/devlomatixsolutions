@@ -1,9 +1,7 @@
-// app/(workspace)/workspace/page.tsx
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-
-import { db } from "@/lib/db";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { db } from "@/lib/db";
 
 export default async function WorkspacePage() {
     const session = await getServerSession(authOptions);
@@ -12,23 +10,24 @@ export default async function WorkspacePage() {
         redirect("/login");
     }
 
-    //console.log('session', session)
+    try {
+        const server = await db.server.findFirst({
+            where: {
+                userId: session.user.userId,
+                default: true,
+            },
+            select: {
+                id: true,
+            },
+        });
 
-    // Fetch default server/org
-    const server = await db.server.findFirst({
-        where: {
-            userId: session.user.userId,
-            default: true,
-        },
-        select: {
-            id: true,
-        },
-    });
+        if (!server) {
+            redirect("/unauthorized");
+        }
 
-    if (!server) {
+        redirect(`/workspace/${server.id}`);
+    } catch (error) {
+        console.error("Workspace redirect error:", error);
         redirect("/unauthorized");
     }
-
-    // 🚀 Instant redirect (no client delay)
-    redirect(`/workspace/${server.id}`);
 }
