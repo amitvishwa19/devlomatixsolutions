@@ -11,7 +11,21 @@ import { uuid } from "@/utils/functions";
 
 
 export const authOptions = {
+    secret: process.env.NEXTAUTH_SECRET,
 
+    trustHost: true, // ✅ ADD THIS
+
+    cookies: {
+        sessionToken: {
+            name: "__Secure-next-auth.session-token",
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: true,
+            },
+        },
+    },
 
     providers: [
 
