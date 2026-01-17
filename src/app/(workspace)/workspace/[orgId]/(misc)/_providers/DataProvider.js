@@ -1,9 +1,10 @@
 "use client";
 import { createContext, useContext, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { setAppointments } from "../../appointment/_redux/appointment-slice";
+
 import { useOrg } from "@/providers/OrgProvider";
 import { ROLE } from "@prisma/client";
+import { setAppointments } from "../../(modules)/appointment/_redux/appointment-slice";
 
 export const DataContext = createContext(null);
 

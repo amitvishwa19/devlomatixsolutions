@@ -37,13 +37,13 @@ export const OrgProvider = ({ children }) => {
 
     useEffect(() => {
 
-        const localServer = localStorage.getItem('server')
-        const localServers = localStorage.getItem('servers')
+        // const localServer = localStorage.getItem('server')
+        // const localServers = localStorage.getItem('servers')
 
 
-        if (!server) {
-            refreshServer()
-        }
+        // if (!server) {
+        //     refreshServer()
+        // }
     }, [session])
 
 
@@ -96,7 +96,7 @@ export const OrgProvider = ({ children }) => {
 
     const { execute: getserverInfo, fieldErrors } = useAction(getServerData, {
         onSuccess: (data) => {
-            console.log('@Orgprovider @refreshuser')
+
             setUsers(data.users)
             setDefaultServer(data.server)
             updateServer(data.server)

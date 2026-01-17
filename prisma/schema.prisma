@@ -50,78 +50,14 @@ enum ENTITY_TYPE {
 // schema.prisma
 
 model AppSettings {
-  id Int @id @default(autoincrement())
+  id  String @id @default(cuid())
+  key String @unique
 
-  websiteName         String  @default("Hospital Management System")
-  websiteLogo         String? // URL to logo image
-  websiteFavicon      String? // URL to favicon
-  primaryContactEmail String  @default("info@hospital.com")
-  primaryContactPhone String?
-  city                String?
-  state               String?
-  zipCode             String?
-  country             String  @default("India")
-
-  // Hospital Information
-  hospitalName      String? @map("hospital_name")
-  hospitalCode      String? @map("hospital_code")
-  contactEmail      String? @map("contact_email")
-  contactPhone      String? @map("contact_phone")
-  hospitalLicenseNo String?
-  registrationNo    String?
-  website           String?
-  address           String?
-  logo              String?
-
-  // Localization
-  timezone   String? @default("UTC")
-  language   String? @default("en")
-  dateFormat String? @default("MM/DD/YYYY") @map("date_format")
-  timeFormat String? @default("12h") @map("time_format")
-  currency   String? @default("USD")
-
-  // Social & Communication
-  facebookUrl    String?
-  twitterUrl     String?
-  linkedinUrl    String?
-  instagramUrl   String?
-  whatsappNumber String?
-
-  // Theme & UI
-  primaryColor   String @default("#1C1C1C")
-  secondaryColor String @default("#f8fafc")
-  themeMode      String @default("light") // "light" | "dark"
-
-  // Emergency
-  emergencyPhone String?
-  emergencyEmail String?
-
-  // SEO
-  metaTitle       String  @default("Hospital Management System")
-  metaDescription String?
-  keywords        String?
-
-  // Technical
-  maintenanceMode   Boolean @default(false)
-  customDomain      String?
-  googleAnalyticsId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Ensure only one record exists
-
-model Setting {
-  id String @id @default(cuid())
-
-  //user   User?   @relation(fields: [userId], references: [id])
-  //userId String?
-
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  serverId String @unique
-
-  // Each section stores all its settings as JSON
+  general       Json?
+  hospitalInfo  Json?
+  locale        Json?
+  social        Json?
+  technical     Json?
   appointments  Json?
   billing       Json?
   departments   Json?
@@ -136,12 +72,27 @@ model Setting {
   services      Json?
   staff         Json?
 
-  type                String? @db.Text
-  online              Boolean @default(false)
-  offline             Boolean @default(false)
-  timing              Json?
-  slotTime            Int?
-  consultationOptions Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Ensure only one record exists
+
+model Setting {
+  id String @id @default(cuid())
+
+  // user   User?   @relation(fields: [userId], references: [id])
+  // userId String?
+
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  serverId String @unique
+
+  // type                String? @db.Text
+  // online              Boolean @default(false)
+  // offline             Boolean @default(false)
+  // timing              Json?
+  // slotTime            Int?
+  // consultationOptions Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

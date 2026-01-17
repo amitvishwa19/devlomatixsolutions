@@ -58,8 +58,6 @@ export default async function RootLayout({ children }) {
         },
     }) : null;
 
-    console.log('session server side root layout', session)
-
     return (
         <html lang="en">
             <body className={`${inter.className} `} suppressHydrationWarning={true}>

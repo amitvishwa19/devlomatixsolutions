@@ -3,7 +3,7 @@ import { Plus, Calendar, FileText, UserPlus, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
-import PatientAdd from '../../../patient/_component/patient-management/PatientAdd';
+import PatientAdd from '../../../(modules)/patient/_component/patient-management/PatientAdd';
 //import AppointmentEditor from '../../../appointment/_components/appointment-manager/AppointmentEditor';
 
 
