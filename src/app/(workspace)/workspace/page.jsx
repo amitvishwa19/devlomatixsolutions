@@ -12,7 +12,7 @@ export default async function WorkspacePage() {
         redirect("/login");
     }
 
-    console.log('session', session)
+    //console.log('session', session)
 
     // Fetch default server/org
     const server = await db.server.findFirst({
