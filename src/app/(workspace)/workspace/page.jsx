@@ -10,27 +10,24 @@ export default async function WorkspacePage() {
         redirect("/login");
     }
 
+    let server;
     try {
-        const server = await db.server.findFirst({
+        server = await db.server.findFirst({
             where: {
                 userId: session.user.userId,
                 default: true,
             },
-            select: {
-                id: true,
-            },
+            select: { id: true },
         });
-
-        if (!server) {
-            redirect("/unauthorized");
-        }
-
-        redirect(`/workspace/${server.id}`);
     } catch (error) {
-        console.error("Workspace redirect error:", error);
+        console.error("DB error:", error);
         redirect("/unauthorized");
     }
+
+    if (!server) {
+        redirect("/unauthorized");
+    }
+
+    // ✅ Redirect to workspace if server exists
+    redirect(`/workspace/${server.id}`);
 }
-
-
-

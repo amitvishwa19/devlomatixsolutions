@@ -150,7 +150,7 @@ export const authOptions = {
             session.user.role = usr.role;
             session.user.roles = usr.roles;
 
-            console.log('@@ Auth option session', session)
+
 
             return session
         },
