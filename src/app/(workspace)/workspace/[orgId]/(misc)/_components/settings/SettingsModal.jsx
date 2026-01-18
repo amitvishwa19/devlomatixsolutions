@@ -104,7 +104,7 @@ const settingItems = [
 
 
 
-export default function SettingsModal() {
+export default function SettingsModalOld({ isOpen, onClose }) {
 
     const [selected, setSelected] = useState({
         title: 'General',
@@ -114,13 +114,14 @@ export default function SettingsModal() {
         component: <Organization title={'General'} description={'Basic application settings and overview.'} />
     })
 
-    const { isOpen, onClose, type, data } = useModal();
-    const isModalOpen = isOpen && type === "orgsetting";
 
 
+    const handleOpenChange = () => {
+        onClose()
+    }
 
     return (
-        <Dialog open={isModalOpen} onOpenChange={() => { onClose() }} modal={true}>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
 
             <DialogContent className=" dark:bg-darkPrimaryBackground min-w-[95%] md:min-w-[90%] lg:min-w-[85%] min-h-[75%] max-h-[75%] rounded-lg p-0 overflow-hidden [&>button:last-child]:hidden" >
 

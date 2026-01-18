@@ -59,6 +59,7 @@ model AppSettings {
   social        Json?
   technical     Json?
   appointments  Json?
+  consultation  Json?
   billing       Json?
   departments   Json?
   integrations  Json?
@@ -71,6 +72,8 @@ model AppSettings {
   security      Json?
   services      Json?
   staff         Json?
+  privacy       String?
+  terms         String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

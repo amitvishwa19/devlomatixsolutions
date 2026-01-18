@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { useApp } from '@/providers/AppProvider'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SettingsModal } from '../../[orgId]/(modules)/setting/SettingsModal'
+import SettingsModalOld from '../../[orgId]/(misc)/_components/settings/SettingsModal'
 
 
 
@@ -23,6 +24,12 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
     const { theme, themeToggle } = useApp()
 
     const [settingModal, setSettingModal] = useState({
+        isOpen: false,
+        mode: 'add',
+        settings: null
+    })
+
+    const [settingModalOld, setSettingModalOld] = useState({
         isOpen: false,
         mode: 'add',
         settings: null
@@ -107,6 +114,17 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
                             Settings
                         </DropdownMenuItem>
 
+                        <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
+                            setSettingModalOld({
+                                isOpen: true,
+                                mode: 'open',
+                                setting: null
+                            })
+                        }}>
+                            <Settings size={15} className='text-muted-foreground' />
+                            Settings old
+                        </DropdownMenuItem>
+
                         <DropdownMenuItem className='flex flex-row gap-2' onSelect={async () => {
                             await refreshServer()
                             setTimeout(() => {
@@ -156,6 +174,17 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
                     isOpen={settingModal.isOpen}
                     onClose={() => {
                         setSettingModal({
+                            isOpen: false,
+                            mode: 'close',
+                            settings: null
+                        })
+                    }}
+                />
+
+                <SettingsModalOld
+                    isOpen={settingModalOld.isOpen}
+                    onClose={() => {
+                        setSettingModalOld({
                             isOpen: false,
                             mode: 'close',
                             settings: null

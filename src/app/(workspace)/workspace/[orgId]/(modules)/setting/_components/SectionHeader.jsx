@@ -6,7 +6,7 @@ const SectionHeader = ({ title, description, onSave, isSaving = false, permissio
   return (
     <div className="flex items-start justify-between p-4 border-b border-border">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        <h2 className="text-sm text-foreground">{title}</h2>
         <p className="text-xs text-muted-foreground mt-1">{description}</p>
 
       </div>

@@ -17,7 +17,8 @@ const AllowedTypes = [
     "patients",
     "appointments",
     "security",
-    "integrations"
+    "integrations",
+    "consultation"
 ];
 
 const UpsertGeneralSetting = z.object({

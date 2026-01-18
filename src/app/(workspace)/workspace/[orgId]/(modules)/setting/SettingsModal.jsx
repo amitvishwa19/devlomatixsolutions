@@ -21,37 +21,43 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import SectionHeader from "./_components/SectionHeader";
 import ContentHeader from "./_components/ContentHeader";
 import DepartmentsSettings from "./sections/DepartmentsSettings";
+import { ConsultationOptions } from "./sections/ConsultationOptions";
+import { TermsConditions } from "./sections/TermsConditions";
+import { PrivacyPolicy } from "./sections/PrivacyPolicy";
 
 const sections = [
   {
     id: "general",
     label: "General",
     description: "Global hospital settings, branding, and basic configuration.",
-    icon: "settings"
+    icon: "settings",
+    component: <GeneralSettings />
   },
   {
     id: "departments",
     label: "Departments",
     description: "Configure clinical, surgical, and support departments.",
-    icon: "building-2"
+    icon: "building-2",
+    component: <DepartmentsSettings />
+  },
+  {
+    id: "consultation",
+    label: "Consultation Option",
+    description: "Connect with Trusted Doctors When You Need Them.",
+    icon: "bell-electric",
+    component: <ConsultationOptions />
   },
   {
     id: "staff",
     label: "Staff",
     description: "Manage doctors, nurses, and administrative staff profiles.",
-    icon: "users"
+    icon: "users", component: <StaffSettings />
   },
-  // {
-  //   id: "patients",
-  //   label: "Patients",
-  //   description: "Control patient records, demographics, and access rules.",
-  //   icon: "user-circle"
-  // },
   {
     id: "appointments",
     label: "Appointments",
     description: "Set rules for scheduling, slots, reminders, and calendars.",
-    icon: "calendar"
+    icon: "calendar", component: <AppointmentsSettings />
   },
   // {
   //   id: "services",
@@ -93,31 +99,50 @@ const sections = [
     id: "notifications",
     label: "Notifications",
     description: "Configure email, SMS, and in-app notification preferences.",
-    icon: "bell"
+    icon: "bell",
+    component: <NotificationsSettings />
   },
   {
     id: "security",
     label: "Security",
     description: "Manage roles, permissions, and access control policies.",
-    icon: "shield"
+    icon: "shield",
+    component: <SecuritySettings />
   },
   {
     id: "integrations",
     label: "Integrations",
     description: "Connect external lab, pharmacy, payment, and SMS providers.",
-    icon: "plug"
+    icon: "plug",
+    component: <IntegrationsSettings />
   },
   {
     id: "database",
     label: "Database Management",
     description: "Backup, maintenance, and data lifecycle configuration.",
-    icon: "database"
+    icon: "database",
+    component: <DatabaseManagementSettings />
   },
   {
     id: "credentials",
     label: "Credentials",
     description: "Store and manage API keys and integration credentials securely.",
-    icon: "key-round"
+    icon: "key-round",
+    component: <CredentialsSettings />
+  },
+  {
+    id: "terms",
+    label: "Terms & Condition",
+    description: "Set terms and condition for your organization.",
+    icon: "heart-handshake",
+    component: <TermsConditions />
+  },
+  {
+    id: "privacy",
+    label: "Privacy Policy",
+    description: "Set Privacy policy for your organization.",
+    icon: "globe-lock",
+    component: <PrivacyPolicy />
   },
 ];
 
@@ -130,6 +155,8 @@ export function SettingsModal({ open, onOpenChange, isOpen, onClose, }) {
         return <GeneralSettings />;
       case "departments":
         return <DepartmentsSettings />;
+      case "consultation":
+        return <ConsultationOptions />;
       case "staff":
         return <StaffSettings />;
       case "patients":
@@ -159,6 +186,10 @@ export function SettingsModal({ open, onOpenChange, isOpen, onClose, }) {
         return <DatabaseManagementSettings />;
       case "credentials":
         return <CredentialsSettings />;
+      case "terms":
+        return <TermsConditions />;
+      case "privacy":
+        return <PrivacyPolicy />;
       default:
         return <GeneralSettings />;
     }
@@ -171,7 +202,6 @@ export function SettingsModal({ open, onOpenChange, isOpen, onClose, }) {
         <div className="flex h-full min-h-0">
           <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} sections={sections} />
           <div className="flex-1 h-[80vh] min-h-0 bg-card overflow-hidden">
-
             <div className="h-full min-h-0 overflow-hidden">{renderSection()}</div>
           </div>
         </div>
