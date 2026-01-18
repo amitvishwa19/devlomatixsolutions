@@ -1,3 +1,4 @@
+'use client'
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -40,7 +41,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import './editor/editor-styles.css';
+// import '@/css/editor-styles.css';
 
 // ============= RESIZABLE IMAGE COMPONENT =============
 const ResizableImage = ({ node, updateAttributes, selected }) => {
@@ -413,7 +414,7 @@ const EditorToolbar = ({ editor, isFullscreen, onToggleFullscreen, onSetTheme })
 
     return (
         <div className="border-b border-border bg-muted/30 sticky top-0 z-10">
-            <div className="flex items-center gap-0.5 p-2 overflow-x-auto scrollbar-thin">
+            <div className="flex flex-row flex-wrap overflow-hidden items-center gap-0.5 p-2  scrollbar-thin">
                 {/* Undo/Redo */}
                 <div className="flex items-center shrink-0">
                     <ToolbarButton
@@ -707,31 +708,8 @@ const EditorToolbar = ({ editor, isFullscreen, onToggleFullscreen, onSetTheme })
                     </ToolbarButton>
                     <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
-                    {/* Theme Toggle */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
-                                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                                <span className="sr-only">Toggle theme</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onSetTheme('light')}>
-                                <Sun className="h-4 w-4 mr-2" /> Light
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onSetTheme('dark')}>
-                                <Moon className="h-4 w-4 mr-2" /> Dark
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onSetTheme('system')}>
-                                <Monitor className="h-4 w-4 mr-2" /> System
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
 
-                    <ToolbarButton onClick={onToggleFullscreen} title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
-                        {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                    </ToolbarButton>
+
                 </div>
             </div>
         </div>
@@ -741,7 +719,7 @@ const EditorToolbar = ({ editor, isFullscreen, onToggleFullscreen, onSetTheme })
 // ============= MAIN EDITOR COMPONENT =============
 export const AppEditor = ({
     storageKey = 'tiptap-content',
-    placeholder = 'Start writing your content...',
+    placeholder = '',
     className,
     onChange,
     maxCharacters
@@ -769,6 +747,7 @@ export const AppEditor = ({
     );
 
     const editor = useEditor({
+        immediatelyRender: false, // ✅ FIX FOR SSR
         extensions: [
             StarterKit.configure({
                 heading: { levels: [1, 2, 3] },
@@ -799,7 +778,7 @@ export const AppEditor = ({
         content: savedContent,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-4',
+                class: 'prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-4 overflow-x-auto break-words',
             },
         },
         onUpdate: ({ editor }) => {
@@ -875,8 +854,8 @@ export const AppEditor = ({
 
     return (
         <div className={cn(
-            "border border-border rounded-lg overflow-hidden bg-background shadow-sm transition-all duration-300",
-            isFullscreen && "fixed inset-0 z-50 rounded-none",
+            "border border-border rounded-lg   shadow-sm transition-all duration-300 h-full",
+            "",
             className
         )}>
             <EditorToolbar editor={editor} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} onSetTheme={setTheme} />
@@ -917,7 +896,7 @@ export const AppEditor = ({
                     </Badge>
                 )}
             </div>
-            <WordCount editor={editor} maxCharacters={maxCharacters} />
+
         </div>
     );
 };

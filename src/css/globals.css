@@ -949,6 +949,17 @@ body {
   cursor: col-resize;
 }
 
+.ProseMirror table {
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
