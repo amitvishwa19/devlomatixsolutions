@@ -26,7 +26,7 @@ export const authOptions = {
         }),
 
         CredentialsProvider({
-            // The name to display on the sign in form (e.g. "Sign in with...")
+
             name: "Credentials",
             credentials: {
                 email: { label: "Email", type: "text", placeholder: "Email" },
@@ -59,118 +59,111 @@ export const authOptions = {
             }
         })
     ],
+
     callbacks: {
 
         // async redirect({ url, baseUrl }) {
         //     console.log('middleware redirect after login')
         // },
 
-        async signIn({ user, account, profile, email, credentials }) {
+        async signIn({ user }) {
 
-            console.log('@@Auth option signback callback', user)
+            //const cookies = parse(req.headers.cookie ?? "");
+            //const deviceToken = cookies.deviceToken;
+
+            //console.log('@@device token', deviceToken)
+
+            if (!user?.email) return false;
+
+            const usr = await db.user.upsert({
+                where: {
+                    email: user.email,
+                },
+                update: {
+                    name: user.name ?? undefined,
+                    displayName: user.name ?? undefined,
+                    avatar: user.picture ?? undefined,
+                },
+                create: {
+                    email: user.email,
+                    name: user.name ?? "",
+                    displayName: user.name ?? "",
+                    avatar: user.picture ?? "",
+                    webDeviceToken: "deviceToken",
+                    uuid: uuid(),
+
+                    profile: { create: {} },
+                    medicalProfile: { create: {} },
+                    credit: { create: { value: 0 } },
+                },
+            });
+
+            if (usr) {
+                let server = await db.server.findFirst({
+                    where: { userId: usr.id },
+                });
+
+                console.log('server', server)
+
+                if (!server) {
+                    server = await db.server.create({
+                        data: {
+                            // ✅ REQUIRED by Server schema
+                            userId: usr.id,
+
+                            name: "default",
+                            default: true,
+                            selected: true,
+                            inviteCode: uuidv4(),
+                            setting: { create: {}, },
+
+                        },
+                    });
+
+                    // Create default channel
+                    await db.channel.create({
+                        data: { name: "general", serverId: server.id, userId: usr.id },
+                    });
+
+                    // Create admin member
+                    await db.member.create({
+                        data: { userId: usr.id, serverId: server.id, role: MemberRole.ADMIN },
+                    });
+
+                }
+            }
+
             return true
         },
 
         async session({ session, token, trigger, }) {
 
-            let usr
-            let server
+            if (!token?.email) return session;
 
-
-
-            if (token) {
-                usr = await db.user.upsert({
-                    where: {
-                        email: token.email
-                    },
-                    update: {
-                        name: token.name,
-                        displayName: token.name,
-                        avatar: token.picture,
-                        webDeviceToken: 'sfsfsfsfsdf'
-                    },
-                    create: {
-                        email: token.email,
-                        name: token.name,
-                        displayName: token.name,
-                        avatar: token.picture,
-                        webDeviceToken: 'deviceToken',
-                        uuid: uuid(),
-                        profile: {
-                            create: {
-                                displayname: '',
-                            }
-                        },
-                        medicalProfile: {
-                            create: {}
-                        },
-                        credit: {
-                            create: {
-                                value: 0
-                            }
+            const usr = await db.user.findUnique({
+                where: { email: token.email },
+                include: {
+                    roles: {
+                        include: {
+                            permissions: true,
                         },
                     },
-                })
+                },
+            });
 
-                if (usr) {
-                    server = await db.server.findFirst({
-                        where: { userId: usr.id }
-                    })
+            session.user.userId = usr.id;
+            session.user.displayName = usr.displayName;
+            session.user.avatar = usr.avatar;
+            session.user.role = usr.role;
+            session.user.roles = usr.roles;
 
-                    if (!server) {
-                        server = await db.server.create({
-                            data: {
-                                userId: usr?.id,
-                                name: 'default',
-                                default: true,
-                                inviteCode: uuidv4(),
-                                selected: true,
-                                setting: {
-                                    create: {}
-                                },
-                                channels: {
-                                    create: [{ name: 'general', userId: usr?.id }]
-                                },
-                                members: {
-                                    create: [
-                                        {
-                                            userId: usr?.id,
-                                            role: MemberRole.ADMIN
-                                        }
-                                    ]
-                                }
-                            }
-                        })
-                    }
-                }
-
-                const refreshUser = await db.user.findUnique({
-                    where: { email: usr.email },
-                    include: {
-                        roles: {
-                            include: {
-                                permissions: true
-                            },
-                        },
-                        servers: true,
-                    },
-                })
-
-                session.user.userId = usr.id;
-                session.user.displayName = usr.displayName
-                session.user.avatar = usr.avatar
-                session.user.role = usr.role
-                session.user.roles = refreshUser.roles
-
-            }
+            console.log('@@ Auth option session', session)
 
             return session
         },
 
         async jwt({ token, user, account, profile, isNewUser }) {
-            // if (user) {
-            //     console.log('jwt', 'user', user, 'token', token)
-            //}
+
             return token
         }
     },
