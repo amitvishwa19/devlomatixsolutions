@@ -9,10 +9,10 @@ import { Toaster } from "sonner";
 import { OrgProvider } from "@/providers/OrgProvider";
 import { SocketProvider } from "@/providers/SocketProvider";
 import { AppThemeProvider } from "@/hooks/useTheme";
-// import { authOptions } from "./api/auth/[...nextauth]/options";
-// import { getServerSession } from "next-auth";
-// import { db } from "@/lib/db";
-// import { AccessProvider } from "@/providers/AccessProvider";
+import { authOptions } from "./api/auth/[...nextauth]/options";
+import { getServerSession } from "next-auth";
+import { db } from "@/lib/db";
+import { AccessProvider } from "@/providers/AccessProvider";
 
 
 
@@ -44,19 +44,19 @@ export const metadata = {
 }
 
 export default async function RootLayout({ children }) {
-    // const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
 
-    // const user = session?.user ? await db.user.findUnique({
-    //     where: { id: session.user.userId },
-    //     include: {
-    //         roles: {
-    //             include: {
-    //                 permissions: true,
-    //             },
-    //         },
-    //         profile: true,
-    //     },
-    // }) : null;
+    const user = session?.user ? await db.user.findUnique({
+        where: { id: session.user.userId },
+        include: {
+            roles: {
+                include: {
+                    permissions: true,
+                },
+            },
+            profile: true,
+        },
+    }) : null;
 
     return (
         <html lang="en">
@@ -68,14 +68,14 @@ export default async function RootLayout({ children }) {
                                 <ThemeProvider>
                                     <AuthProvider>
 
-                                        {/* <AccessProvider user={user}> */}
-                                        <Providers>
-                                            {/* <OrgModalProvider /> */}
-                                            <OrgProvider>
-                                                {children}
-                                            </OrgProvider>
-                                        </Providers>
-                                        {/* </AccessProvider> */}
+                                        <AccessProvider user={user}>
+                                            <Providers>
+                                                {/* <OrgModalProvider /> */}
+                                                <OrgProvider>
+                                                    {children}
+                                                </OrgProvider>
+                                            </Providers>
+                                        </AccessProvider>
 
                                     </AuthProvider>
                                 </ThemeProvider>

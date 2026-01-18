@@ -91,40 +91,40 @@ export const authOptions = {
 
             //Removed the server and caannel creation
 
-            // if (usr) {
-            //     let server = await db.server.findFirst({
-            //         where: { userId: usr.id },
-            //     });
+            if (usr) {
+                let server = await db.server.findFirst({
+                    where: { userId: usr.id },
+                });
 
-            //     console.log('server', server)
+                console.log('server', server)
 
-            //     if (!server) {
-            //         server = await db.server.create({
-            //             data: {
-            //                 // ✅ REQUIRED by Server schema
-            //                 userId: usr.id,
+                if (!server) {
+                    server = await db.server.create({
+                        data: {
+                            // ✅ REQUIRED by Server schema
+                            userId: usr.id,
 
-            //                 name: "default",
-            //                 default: true,
-            //                 selected: true,
-            //                 inviteCode: uuidv4(),
-            //                 setting: { create: {}, },
+                            name: "default",
+                            default: true,
+                            selected: true,
+                            inviteCode: uuidv4(),
+                            setting: { create: {}, },
 
-            //             },
-            //         });
+                        },
+                    });
 
-            //         // Create default channel
-            //         await db.channel.create({
-            //             data: { name: "general", serverId: server.id, userId: usr.id },
-            //         });
+                    // Create default channel
+                    await db.channel.create({
+                        data: { name: "general", serverId: server.id, userId: usr.id },
+                    });
 
-            //         // Create admin member
-            //         await db.member.create({
-            //             data: { userId: usr.id, serverId: server.id, role: MemberRole.ADMIN },
-            //         });
+                    // Create admin member
+                    await db.member.create({
+                        data: { userId: usr.id, serverId: server.id, role: MemberRole.ADMIN },
+                    });
 
-            //     }
-            // }
+                }
+            }
 
             return true
         },
