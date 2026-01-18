@@ -1,11 +1,20 @@
 
+'use client'
 import { Poppins, Unbounded } from 'next/font/google'
 import { Activity, Heart, Shield, Users } from 'lucide-react'
 import coverImage from '@/assets/images/auth_cover_image.jpg'
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const unbounded = Unbounded({ subsets: ["latin"] });
 
-export default function WorkspacePage() {
+export default function WorkspaceLoader({ redirectTo }) {
+    const router = useRouter();
+
+    useEffect(() => {
+        router.push(redirectTo);
+    }, [router, redirectTo]);
+
 
     return (
         <div className={`flex min-h-screen items-center justify-center ${unbounded.className}`}

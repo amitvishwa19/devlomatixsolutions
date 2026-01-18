@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { db } from "@/lib/db";
+import WorkspaceLoader from "./_components/workspace/WorkspaceLoader";
 
 export default async function WorkspacePage() {
     const session = await getServerSession(authOptions);
@@ -21,13 +22,17 @@ export default async function WorkspacePage() {
         });
     } catch (error) {
         console.error("DB error:", error);
-        redirect("/unauthorized");
+        <WorkspaceLoader redirectTo="/unauthorized" />
     }
 
     if (!server) {
-        redirect("/unauthorized");
+        <WorkspaceLoader redirectTo="/unauthorized" />
+    } else {
+        //redirect(`/workspace/${server.id}`);
     }
 
-    // ✅ Redirect to workspace if server exists
-    redirect(`/workspace/${server.id}`);
+
+
+
+    return <WorkspaceLoader redirectTo={`/workspace/${server.id}`} />
 }
