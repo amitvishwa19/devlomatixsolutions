@@ -62,16 +62,7 @@ export const authOptions = {
 
     callbacks: {
 
-        // async redirect({ url, baseUrl }) {
-        //     console.log('middleware redirect after login')
-        // },
-
         async signIn({ user }) {
-
-            //const cookies = parse(req.headers.cookie ?? "");
-            //const deviceToken = cookies.deviceToken;
-
-            //console.log('@@device token', deviceToken)
 
             if (!user?.email) return false;
 
@@ -98,40 +89,40 @@ export const authOptions = {
                 },
             });
 
-            if (usr) {
-                let server = await db.server.findFirst({
-                    where: { userId: usr.id },
-                });
+            // if (usr) {
+            //     let server = await db.server.findFirst({
+            //         where: { userId: usr.id },
+            //     });
 
-                console.log('server', server)
+            //     console.log('server', server)
 
-                if (!server) {
-                    server = await db.server.create({
-                        data: {
-                            // ✅ REQUIRED by Server schema
-                            userId: usr.id,
+            //     if (!server) {
+            //         server = await db.server.create({
+            //             data: {
+            //                 // ✅ REQUIRED by Server schema
+            //                 userId: usr.id,
 
-                            name: "default",
-                            default: true,
-                            selected: true,
-                            inviteCode: uuidv4(),
-                            setting: { create: {}, },
+            //                 name: "default",
+            //                 default: true,
+            //                 selected: true,
+            //                 inviteCode: uuidv4(),
+            //                 setting: { create: {}, },
 
-                        },
-                    });
+            //             },
+            //         });
 
-                    // Create default channel
-                    await db.channel.create({
-                        data: { name: "general", serverId: server.id, userId: usr.id },
-                    });
+            //         // Create default channel
+            //         await db.channel.create({
+            //             data: { name: "general", serverId: server.id, userId: usr.id },
+            //         });
 
-                    // Create admin member
-                    await db.member.create({
-                        data: { userId: usr.id, serverId: server.id, role: MemberRole.ADMIN },
-                    });
+            //         // Create admin member
+            //         await db.member.create({
+            //             data: { userId: usr.id, serverId: server.id, role: MemberRole.ADMIN },
+            //         });
 
-                }
-            }
+            //     }
+            // }
 
             return true
         },
