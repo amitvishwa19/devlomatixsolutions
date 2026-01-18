@@ -89,6 +89,8 @@ export const authOptions = {
                 },
             });
 
+            //Removed the server and caannel creation
+
             // if (usr) {
             //     let server = await db.server.findFirst({
             //         where: { userId: usr.id },
