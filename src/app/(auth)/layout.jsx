@@ -36,16 +36,16 @@ export default function Layout({ children }) {
                             Beyond Treatment.
                         </h1>
 
-                        <p className="text-muted-foreground text-lg mb-8">
+                        <p className=" text-md mb-8">
                             Smart Systems. Seamless Care. Where Medicine Meets Management.
                             Because Every Detail Matters in Healthcare
                         </p>
 
-                        <ul className="space-y-3">
+                        <ul className="space-y-3 text-md">
                             {bulletPoints.map((point, i) => (
                                 <li
                                     key={i}
-                                    className="flex items-center gap-3 text-muted-foreground animate-fade-in"
+                                    className="flex items-center gap-3  animate-fade-in"
                                     style={{ animationDelay: `${0.2 + i * 0.1}s` }}
                                 >
                                     <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />

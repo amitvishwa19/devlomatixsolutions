@@ -12,6 +12,7 @@ export default async function WorkspacePage() {
     }
 
     let server;
+    let hospitals
     try {
         server = await db.server.findFirst({
             where: {
@@ -20,10 +21,26 @@ export default async function WorkspacePage() {
             },
             select: { id: true },
         });
+
+
+        hospitals = await db.hospital.findMany({
+            where: {
+                members: {
+                    some: { id: session.user.userId },
+                }
+            },
+        })
+
+
+
     } catch (error) {
         console.error("DB error:", error);
         <WorkspaceLoader redirectTo="/unauthorized" />
     }
+
+    // if (hospitals.length === 0) {
+    //     return <WorkspaceLoader />
+    // }
 
     if (!server) {
         return <WorkspaceLoader redirectTo="/unauthorized" />

@@ -71,20 +71,17 @@ export const authOptions = {
                     email: user.email,
                 },
                 update: {
-                    name: user.name ?? undefined,
                     displayName: user.name ?? undefined,
                     avatar: user.picture ?? undefined,
                 },
                 create: {
                     email: user.email,
-                    name: user.name ?? "",
                     displayName: user.name ?? "",
                     avatar: user.picture ?? "",
                     webDeviceToken: "deviceToken",
                     uuid: uuid(),
-
                     profile: { create: {} },
-                    medicalProfile: { create: {} },
+                    setting: { create: {} },
                     credit: { create: { value: 0 } },
                 },
             });
@@ -96,29 +93,26 @@ export const authOptions = {
                     where: { userId: usr.id },
                 });
 
-                console.log('server', server)
+
 
                 if (!server) {
                     server = await db.server.create({
                         data: {
                             // ✅ REQUIRED by Server schema
                             userId: usr.id,
-
                             name: "default",
                             default: true,
                             selected: true,
                             inviteCode: uuidv4(),
-                            setting: { create: {}, },
-
                         },
                     });
 
-                    // Create default channel
+                    //Create default channel
                     await db.channel.create({
                         data: { name: "general", serverId: server.id, userId: usr.id },
                     });
 
-                    // Create admin member
+                    //Create admin member
                     await db.member.create({
                         data: { userId: usr.id, serverId: server.id, role: MemberRole.ADMIN },
                     });

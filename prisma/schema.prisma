@@ -8,45 +8,124 @@ datasource db {
 }
 
 enum ROLE {
+  ADMIN
+  SUPERADMIN
   DOCTOR
   PATIENT
   NURSE
-  RECEPTIONIST
-  ADMIN
-  TECHNICIAN
-  PHARMACIST
-  HOSPITAL
-  AMBULANCE
-  PHARMACY
-  INSURANCE
+  SERVICE
   GUEST
 }
 
-enum PRIORITY {
-  LOW
-  MEDIUM
-  HIGH
+model Hospital {
+  id          String       @id @default(cuid())
+  key         String       @unique
+  departments Department[]
+  members     User[]
+
+  name           String
+  code           String  @unique
+  address        Json?
+  phone          String?
+  email          String?
+  registrationNo String?
+  licenceNo      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-enum GENDER {
-  MALE
-  FEMALE
-  OTHER
+model User {
+  id          String   @id @default(cuid())
+  uuid        String?
+  displayName String?
+  username    String?  @unique
+  email       String?  @unique
+  phone       String?  @unique
+  avatar      String?
+  isVerified  Boolean  @default(false)
+  isActive    Boolean  @default(false)
+  password    String?
+  uid         String?
+  provider    String?
+  profile     Profile?
+  setting     Setting?
+  //staffDepartments StaffDepartment[]
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id])
+
+  role     ROLE      @default(GUEST)
+  roles    Role[]
+  servers  Server[]
+  channels Channel[]
+  members  Member[]
+
+  webDeviceToken String?
+  deviceToken    String?
+  expoPushToken  String?
+  refreshToken   String?
+  accessToken    String?
+
+  forgotPasswordToken       String?
+  forgotPasswordTokenExpiry DateTime?
+
+  verifyToken       String?
+  verifyTokenExpiry DateTime?
+
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments  Appointment[] @relation("DoctorAppointments")
+
+  credit     Credit?
+  lastActive DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([phone])
 }
 
-enum ACTION {
-  CREATE
-  UPDATE
-  DELETE
+model Profile {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  info Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
-enum ENTITY_TYPE {
-  BOARD
-  LIST
-  CARD
-}
+model Setting {
+  id String @id @default(cuid())
 
-// schema.prisma
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  info Json?
+
+  // server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  // serverId String @unique
+
+  // type                String? @db.Text
+  // online              Boolean @default(false)
+  // offline             Boolean @default(false)
+  // timing              Json?
+  // slotTime            Int?
+  // consultationOptions Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //@@index([serverId])
+}
 
 model AppSettings {
   id  String @id @default(cuid())
@@ -78,127 +157,6 @@ model AppSettings {
   updatedAt DateTime @updatedAt
 }
 
-// Ensure only one record exists
-
-model Setting {
-  id String @id @default(cuid())
-
-  // user   User?   @relation(fields: [userId], references: [id])
-  // userId String?
-
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  serverId String @unique
-
-  // type                String? @db.Text
-  // online              Boolean @default(false)
-  // offline             Boolean @default(false)
-  // timing              Json?
-  // slotTime            Int?
-  // consultationOptions Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users     User[]
-
-  @@index([serverId])
-}
-
-model User {
-  id            String  @id @default(cuid())
-  uuid          String?
-  name          String?
-  displayName   String?
-  firstName     String?
-  lastName      String?
-  username      String? @unique
-  email         String? @unique
-  phone         String? @unique
-  avatar        String?
-  sku           String?
-  emailVerified Boolean @default(false)
-  status        Boolean @default(false)
-  guest         Boolean @default(true)
-  avaliable     Boolean @default(false)
-  password      String?
-
-  uid      String?
-  provider String?
-
-  profile            Profile?
-  medicalProfile     MedicalProfile?
-  profileStatus      Boolean         @default(false)
-  online             Boolean         @default(true)
-  healthMetricItemId String?
-  demographic        Json?           @default("{}")
-  department         String?
-
-  role       ROLE             @default(PATIENT)
-  roles      Role[]
-  preference UserPreference[]
-
-  members          Member[]
-  servers          Server[]
-  channels         Channel[]
-  locations        Location[]
-  documents        Document[]
-  Folder           Folder[]
-  healthMetric     HealthMetric[]
-  address          Address[]
-  fcmTokens        FcmToken[]
-  posts            Post[]
-  vitals           Vital[]
-  insurances       Insurance[]
-  medicalHistories MedicalHistory[]
-  mdications       Mdication[]
-  allergies        Allergy[]
-  records          Record[]
-  invoices         Invoice[]
-
-  // Healthyfine fields
-  patient        Json?
-  insurance      Json?
-  medicalHistory Json?
-  medications    Json?
-  visitHistory   Json?
-
-  webDeviceToken String?
-  deviceToken    String?
-  expoPushToken  String?
-  refreshToken   String?
-  accessToken    String?
-
-  forgotPasswordToken       String?
-  forgotPasswordTokenExpiry DateTime?
-
-  verifyToken       String?
-  verifyTokenExpiry DateTime?
-
-  content Content[]
-  card    Card[]
-  task    Task[]
-
-  patientAppointments Appointment[] @relation("PatientAppointments")
-  doctorAppointments  Appointment[] @relation("DoctorAppointments")
-
-  careuser     Care[] @relation(name: "patient")
-  careprovider Care[] @relation(name: "care")
-
-  //careteams           Careteam[]
-
-  credit Credit?
-
-  //Record and prescription
-  lastActive  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  departments Department[]
-  setting     Setting?     @relation(fields: [settingId], references: [id])
-  settingId   String?
-
-  @@index([email])
-  @@index([phone])
-}
-
 model Department {
   id       String  @id @default(cuid())
   name     String
@@ -216,169 +174,13 @@ model Department {
   bedCount     Int?    @default(0)
   isActive     Boolean @default(true)
 
-  // ✅ FIXED Relations with explicit names
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String?
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 
-  //appointments Appointment[]
-  //inventory    Inventory[]
-  //services     Service[]
+  members User[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Vital {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  height        String?
-  weight        String?
-  bloodPressure String?
-  heartRate     String?
-  temperature   String?
-  oxygen        String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model Insurance {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
-
-  provider   String?
-  planType   String?
-  issueDate  DateTime?
-  expiryDate DateTime?
-  coverage   String?
-  subscriber String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model MedicalHistory {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
-
-  type        String?
-  title       String?
-  description String?
-  occurance   DateTime?
-  treatment   String?
-
-  parentId String?
-  parent   MedicalHistory?  @relation("MedicalHistoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
-  children MedicalHistory[] @relation("MedicalHistoryChildren")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model Mdication {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
-
-  name     String?
-  dose     String?
-  intervel String?
-  note     String?
-
-  start DateTime?
-  end   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model Allergy {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
-
-  name          String?
-  description   String?
-  occurance     DateTime?
-  lastOccurance DateTime?
-  note          String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model Profile {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
-
-  type String? @db.Text
-
-  //Doctor profile
-  speciality     String? @default("General Medicine")
-  registrationNo String?
-
-  displayname String?   @db.Text
-  firstname   String?   @db.Text
-  lastname    String?   @db.Text
-  dob         DateTime?
-  gender      String?   @db.Text
-  weight      Float?
-  height      Float?
-  waist       Float?
-  contact     String?   @db.Text
-  bloodGroup  String?   @db.Text
-  emrcontact  String?   @db.Text
-  location    Json?
-
-  open                Boolean? @default(false)
-  timing              Json?
-  slotTime            Int?
-  consultationOptions Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model MedicalProfile {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
-
-  personal           Json?
-  contact            Json?
-  medicalInformation Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum ServerType {
-  DEFAULT
-  CUSTOM
 }
 
 model Server {
@@ -390,23 +192,19 @@ model Server {
   name        String
   description String?
   imageUrl    String?
-  inviteCode  String   @unique
-  selected    Boolean  @default(false)
-  type        String   @default("default")
-  default     Boolean  @default(false)
-  terms       String?
-  privacy     String?
-  setting     Setting?
-  setup       Boolean  @default(false)
+  inviteCode  String  @unique
+  selected    Boolean @default(false)
+  type        String  @default("default")
+  default     Boolean @default(false)
 
-  roles        Role[]
-  members      Member[]
-  channels     Channel[]
-  boards       Board[]
-  appointments Appointment[]
-  posts        Post[]
-  Task         Task[]
-  Card         Card[]
+  //roles        Role[]
+  members  Member[]
+  channels Channel[]
+  //boards       Board[]
+  //appointments Appointment[]
+  //posts        Post[]
+  //Task         Task[]
+  //Card         Card[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -414,288 +212,35 @@ model Server {
   @@index([userId])
 }
 
-model Care {
-  id String @id @default(cuid())
-
-  patient   User   @relation("patient", fields: [patientId], references: [id], onDelete: Cascade)
-  patientId String
-
-  care   User   @relation("care", fields: [careId], references: [id], onDelete: Cascade)
-  careId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([patientId])
-  @@index([careId])
+enum MemberRole {
+  DOCTOR
+  PATIENT
+  ADMIN
+  STAFF
+  USER
 }
 
-model FcmToken {
-  id     String @id @default(cuid())
-  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Member {
+  id   String     @id @default(cuid())
+  role MemberRole @default(PATIENT)
+
   userId String
-
-  type  String? @db.Text
-  token String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model Location {
-  id     String @id @default(cuid())
-  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  latitude  Float
-  longitude Float
-
-  description String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model Address {
-  id String @id @default(cuid())
-
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
 
-  address Json?
-  coords  Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model Content {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  title       String
-  slug        String
-  description String?
-  status      Boolean @default(true)
-
-  contentFields ContentField[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model ContentField {
-  id String @id @default(cuid())
-
-  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
-  contentId String
-
-  type        String
-  title       String
-  slug        String?
-  description String?
-  display     Boolean @default(true)
-
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  ContentItems ContentItems[]
-
-  @@index([contentId])
-}
-
-model ContentItems {
-  id String @id @default(cuid())
-
-  field   ContentField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  fieldId String
-
-  value String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([fieldId])
-}
-
-model ContactForm {
-  id String @id @default(cuid())
-
-  name    String?
-  company String?
-  email   String?
-  phone   String?
-  message String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum APPOINTMENTSTATUS {
-  scheduled
-  confirmed
-  inprogress
-  completed
-  noshow
-  cancelled
-}
-
-model Appointment {
-  id String @id @default(cuid())
-
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
   serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
 
-  patient   User   @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
-  patientId String
+  messages       Message[]
+  directMessages DirectMessage[]
 
-  doctor   User   @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
-  doctorId String
-
-  uid            String?
-  date           String
-  slot           Json?
-  time           String?
-  note           String?
-  additionalNote String?
-  doctorNote     String?
-  type           Json?
-  visitType      String? @default("consultation")
-  status         String  @default("scheduled")
-
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transaction  Transaction?
-  prescription Prescription?
-  //record       Record?
-  invoices     Invoice[]
-}
-
-model Prescription {
-  id String @id @default(cuid())
-
-  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  appointmentId String      @unique
-
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?
-
-  sku       String
-  diagnosis String? @db.Text
-  items     Json?
-  status    String  @default("draft")
-  notes     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([appointmentId])
-}
-
-model Transaction {
-  id String @id @default(cuid())
-
-  // payer   User   @relation("payer", fields: [payerId], references: [id], onDelete: Cascade)
-  // payerId String
-
-  // payee   User   @relation("payee", fields: [payeeId], references: [id], onDelete: Cascade)
-  // payeeId String
-  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  appointmentId String      @unique
-
-  type        String?
-  amount      Float
-  description String?
-  status      String?
-  orderId     String?
-  paymentId   String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // @@index([appointmentId])
-}
-
-model HealthRecord {
-  id String @id @default(cuid())
-
-  order       Int?
-  title       String? @db.Text
-  slug        String? @db.Text
-  description String?
-  icon        String? @db.Text
-  action      String? @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// model HealthMetricItem {
-//   id String @id @default(cuid())
-
-//   order      Int?
-//   title      String? @db.Text
-//   slug       String? @db.Text
-//   datafields Int     @default(1)
-//   suffix     String? @db.Text
-//   creator    String  @default("N/A")
-//   data       String  @default("-")
-//   date       String  @default("-")
-//   lowerRange Int?
-//   upperRange Int?
-
-//   HealthMetric HealthMetric[]
-
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-model HealthMetric {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  title     String? @db.Text
-  slug      String? @db.Text
-  unit      String? @db.Text
-  value     String? @db.Text
-  entryType String? @default("Self-Entered")
+  conversationsInitiated Conversation[] @relation("MemberOne")
+  conversationsReceived  Conversation[] @relation("MemberTwo")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
-}
-
-model Record {
-  id String @id @default(cuid())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  // appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  // appointmentId String      @unique
-
-  type         String  @db.Text
-  title        String  @db.Text
-  description  String? @db.Text
-  prescription Json?
-  owner        ROLE    @default(PATIENT)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
+  @@index([serverId])
 }
 
 enum ChannelType {
@@ -720,37 +265,6 @@ model Channel {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
-  @@index([serverId])
-}
-
-enum MemberRole {
-  DOCTOR
-  PATIENT
-  ADMIN
-  STAFF
-}
-
-model Member {
-  id   String     @id @default(cuid())
-  role MemberRole @default(PATIENT)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  messages       Message[]
-  directMessages DirectMessage[]
-
-  conversationsInitiated Conversation[] @relation("MemberOne")
-  conversationsReceived  Conversation[] @relation("MemberTwo")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
   @@index([serverId])
 }
 
@@ -813,19 +327,50 @@ model DirectMessage {
   @@index([conversationId])
 }
 
-model UserPreference {
-  id     String @id @default(cuid())
-  userId String
-  user   Board  @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum APPOINTMENTSTATUS {
+  SCHEDULED
+  CONFIRMED
+  INPROGRESS
+  COMPLETED
+  NOSHOW
+  CANCELLED
+}
 
-  emailUpdates  Boolean @default(true)
-  notifications Boolean @default(true)
+enum APPIONTMENTTYPE {
+  IPD
+  OPD
+}
+
+model Appointment {
+  id String @id @default(cuid())
+
+  // server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  // serverId String
+
+  patient   User   @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+
+  doctor   User   @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  doctorId String
+
+  uid            String?
+  date           String
+  slot           Json?
+  time           String?
+  note           String?
+  additionalNote String?
+  doctorNote     String?
+  mode           Json?
+  visitType      String?           @default("consultation")
+  status         APPOINTMENTSTATUS @default(SCHEDULED)
+  type           APPIONTMENTTYPE   @default(OPD)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  User      User[]
-
-  @@index([userId])
+  //transaction  Transaction?
+  //prescription Prescription?
+  //record       Record?
+  //invoices     Invoice[]
 }
 
 model Role {
@@ -840,8 +385,6 @@ model Role {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  server    Server?  @relation(fields: [serverId], references: [id])
-  serverId  String?
 }
 
 model Permission {
@@ -859,99 +402,6 @@ model Permission {
   updatedAt DateTime @updatedAt
 }
 
-model Task {
-  id          String   @id @default(cuid())
-  title       String
-  order       Int
-  description String?  @db.Text
-  color       String?  @db.Text
-  priority    PRIORITY @default(LOW)
-  status      Boolean  @default(true)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  assigneeId String
-  assignee   User   @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
-
-  dueDate   DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Board     Board?    @relation(fields: [boardId], references: [id])
-  boardId   String?
-  List      List?     @relation(fields: [listId], references: [id])
-  listId    String?
-
-  @@index([serverId])
-}
-
-model Board {
-  id             String  @id @default(cuid())
-  title          String
-  description    String?
-  avatar         String?
-  showBackground Boolean @default(false)
-  status         Boolean @default(true)
-
-  lists List[]
-
-  server   Server? @relation(fields: [serverId], references: [id])
-  serverId String?
-
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  UserPreference UserPreference[]
-  Card           Card[]
-  Task           Task[]
-
-  @@index([serverId])
-}
-
-model List {
-  id    String @id @default(cuid())
-  title String
-  order Int
-
-  boardId String
-  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
-
-  cards Card[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Task      Task[]
-
-  @@index([boardId])
-}
-
-model Card {
-  id          String   @id @default(cuid())
-  title       String
-  order       Int
-  description String?  @db.Text
-  color       String?  @db.Text
-  priority    PRIORITY @default(LOW)
-  status      Boolean  @default(true)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id])
-
-  listId String
-  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
-
-  boardId String?
-  board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
-
-  assigneeId String
-  assignee   User   @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
-
-  dueDate   DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([listId])
-}
-
 model AuditLog {
   id          String  @id @default(uuid())
   orgId       String?
@@ -967,165 +417,6 @@ model AuditLog {
   updatedAt DateTime @updatedAt
 }
 
-model OrgLimit {
-  id    String @id @default(uuid())
-  orgId String @unique
-  count Int    @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model OrgSubscription {
-  id    String @id @default(uuid())
-  orgId String @unique
-
-  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
-  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
-  stripePriceId          String?   @map(name: "stripe_price_id")
-  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
-}
-
-model Folder {
-  id String @id @default(cuid())
-
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String?
-
-  FIle Document[]
-
-  name   String  @db.Text
-  status Boolean @default(true)
-
-  @@index([userId])
-}
-
-model Document {
-  id String @id @default(cuid())
-
-  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  folder   Folder? @relation(fields: [folderId], references: [id])
-  folderId String?
-
-  name         String  @db.Text
-  description  String?
-  url          String
-  type         String
-  documentType String?
-  size         String
-  comment      String? @db.Text
-  status       Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-enum WORKFLOWSTATUS {
-  DRAFT
-  PUBLISHED
-}
-
-enum TASKTYPE {
-  LAUNCHBROWSER
-}
-
-enum TASKPARAMTYPES {
-  STRING
-}
-
-model Workflow {
-  id String @id @default(cuid())
-
-  userId      String
-  name        String
-  description String?
-
-  defination    String?
-  executionPlan String?
-  creditCost    Int            @default(0)
-  cron          String?
-  status        WORKFLOWSTATUS @default(DRAFT)
-
-  lastRunAt     DateTime?
-  lastRunId     String?
-  lastRunStatus String?
-  nextRunAt     DateTime?
-
-  executions WorkflowExecution[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([name, userId])
-}
-
-model WorkflowExecution {
-  id String @id @default(cuid())
-
-  workflowId     String
-  userId         String
-  trigger        String
-  status         String
-  startedAt      DateTime?
-  completedAt    DateTime?
-  creditConsumed Int       @default(0)
-  definition     String    @default("{}")
-
-  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-
-  phases WorkflowExecutionPhase[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model WorkflowExecutionPhase {
-  id String @id @default(cuid())
-
-  userId String
-  status String
-  number Int
-  node   String
-  name   String
-
-  startedAt   DateTime?
-  completedAt DateTime?
-
-  inputs  String?
-  outputs String?
-
-  creditConsumed Int?
-
-  workflowExceutionId String
-  execution           WorkflowExecution @relation(fields: [workflowExceutionId], references: [id], onDelete: Cascade)
-
-  workflowExecutionLogs WorkflowExecutionLogs[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model WorkflowExecutionLogs {
-  id       String @id @default(cuid())
-  logLevel String
-  message  String
-
-  workflowExecutionPhaseId String
-  workflowExecutionPhase   WorkflowExecutionPhase @relation(fields: [workflowExecutionPhaseId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model UserBalance {
-  userId  String @id
-  credits Int    @default(0)
-}
-
 model Credit {
   id String @id @default(cuid())
 
@@ -1138,23 +429,9 @@ model Credit {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  //@@index([userId])
 }
 
-model Credential {
-  id String @id @default(cuid())
-
-  userId String
-  name   String
-  value  String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([name, userId])
-}
-
-// schema.prisma
 model Category {
   id          String  @id @default(cuid())
   name        String
@@ -1171,12 +448,12 @@ model Category {
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
 
-  services      Service[]
-  inventories   Inventory[]
-  posts         Post[]
-  tags          Tag[]
-  invoices      Invoice[]
-  prescriptions Prescription[]
+  // services      Service[]
+  // inventories   Inventory[]
+  // posts         Post[]
+  tags Tag[]
+  // invoices      Invoice[]
+  // prescriptions Prescription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1194,7 +471,7 @@ model Tag {
   color       String  @default("#FFFF")
   status      Boolean @default(true)
 
-  posts      Post[]
+  //posts      Post[]
   categories Category[]
 
   createdAt DateTime @default(now())
@@ -1202,155 +479,3 @@ model Tag {
 
   @@index([slug])
 }
-
-model Post {
-  id String @id @default(cuid())
-
-  server   Server? @relation(fields: [serverId], references: [id])
-  serverId String?
-
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String?
-
-  title       String
-  slug        String     @unique
-  description String?
-  content     String?
-  platform    String?    @default("none")
-  excerpt     String?
-  thumbnail   String?
-  aigenerated Boolean    @default(false)
-  status      String     @default("draft")
-  categories  Category[]
-  tags        Tag[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Service {
-  id String @id @default(cuid())
-
-  name           String
-  slug           String  @unique
-  description    String?
-  price          String  @default("0")
-  insuranceCover String? @default("not_covered")
-  sku            String?
-
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?
-
-  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
-  invoiceId String?
-
-  status Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Inventory {
-  id String @id @default(cuid())
-
-  name        String
-  slug        String    @unique
-  description String?
-  sku         String?
-  quantity    Int       @default(0)
-  minStock    Int       @default(0)
-  unit        String
-  location    String?
-  expiryDate  DateTime  @default(now())
-  supplier    String?
-  unitPrise   Float     @default(0)
-  category    Category? @relation(fields: [categoryId], references: [id])
-  categoryId  String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Invoice {
-  id String @id @default(cuid())
-
-  patient   User?   @relation(fields: [patientId], references: [id])
-  patientId String?
-
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  appointmentId String?
-
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?
-
-  sku       String?
-  issueDate String
-  dueDate   String
-
-  subtotal    Float
-  tax         Float @default(0)
-  discount    Float @default(0)
-  totalAmount Float
-
-  status String  @default("draft")
-  notes  String?
-
-  items    Json[]
-  payments Payment[]
-  services Service[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum PaymentMethod {
-  CASH
-  CARD
-  UPI
-  BANK_TRANSFER
-  INSURANCE
-}
-
-model Payment {
-  id          String        @id @default(uuid())
-  amount      Float
-  method      PaymentMethod
-  paymentDate String
-  referenceNo String?
-
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  invoiceId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Credentials {
-  id          String @id @default(cuid())
-  userId      String // Hospital user/doctor reference
-  serviceName String // "LabCorp", "Razorpay", "WhatsApp", "Twilio", etc.
-
-  // API Authentication Fields
-  apiKey       String?
-  apiSecret    String?
-  accessToken  String?
-  refreshToken String?
-  clientId     String?
-  clientSecret String?
-  username     String?
-  password     String?
-
-  // Connection Details
-  endpointUrl String?
-  webhookUrl  String?
-  region      String? // "us-east-1", "eu-west-1"
-  port        Int?
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, serviceName])
-}
-
-// schema.prisma - Department model for HMS

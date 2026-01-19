@@ -17,13 +17,13 @@ export async function getWorkspaceData(userId) {
             imageUrl: true,
             inviteCode: true,
             description: true,
-            _count: {
-                select: {
-                    members: true,
-                    channels: true,
-                    appointments: true,
-                },
-            },
+            // _count: {
+            //     select: {
+            //         members: true,
+            //         channels: true,
+            //         appointments: true,
+            //     },
+            // },
 
         },
     });
@@ -35,12 +35,10 @@ export async function getWorkspaceData(userId) {
         },
         select: {
             id: true,
-            name: true,
+            displayName: true,
             email: true,
             avatar: true,
             role: true,
-            online: true,
-            status: true,
             roles: {
                 where: { status: true },
                 select: {
@@ -79,21 +77,14 @@ export async function getWorkspaceData(userId) {
         orderBy: { createdAt: 'desc' },
     });
 
-    const users = await db.user.findMany({
+    const hospital = await db.hospital.findMany({
         where: {
             members: {
-                some: {
-                    serverId: { in: servers.map(s => s.id) },
-                },
-            },
+                some: { id: userId },
+            }
         },
-        select: {
-            id: true,
-            name: true,
-            avatar: true,
-        },
-        take: 100,
-    });
+    })
+
 
     const appSettings = await db.appSettings.findFirst({
         where: { key: 'global' }
@@ -101,11 +92,13 @@ export async function getWorkspaceData(userId) {
 
 
 
+    console.log('@@hospital member', hospital)
+
     return {
+        hospital,
         defaultServer,
         currentUser,
         servers,
-        users,
         appSettings,
     };
 }

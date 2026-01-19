@@ -9,11 +9,14 @@ import NetworkBackground from '@/components/global/NetworkBackground';
 
 const unbounded = Unbounded({ subsets: ["latin"] });
 
-export default function WorkspaceLoader({ redirectTo }) {
+export default function WorkspaceLoader({ redirectTo, setup }) {
     const router = useRouter();
 
     useEffect(() => {
-        router.push(redirectTo);
+        if (redirectTo) {
+            router.push(redirectTo);
+        }
+
     }, [router, redirectTo]);
 
 
