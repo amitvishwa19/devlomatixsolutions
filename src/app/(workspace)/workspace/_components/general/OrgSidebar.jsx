@@ -38,7 +38,7 @@ const navigationItems = [
     { title: "Calendar", url: "calendar", icon: "calendar-days" },
     { title: "Kanban", url: "kanban", icon: "file-text" },
     { title: "Documents", url: "document", icon: "file-text" },
-    { title: "Articles", url: "articles", icon: "book-open" },
+    { title: "Articles", url: "article", icon: "book-open" },
     { title: "Taxonomy", url: "taxonomy", icon: "tags" },
     { title: "Patients", url: "patient", icon: "users" },
     { title: "Prescriptions", url: "prescription", icon: "pill" },

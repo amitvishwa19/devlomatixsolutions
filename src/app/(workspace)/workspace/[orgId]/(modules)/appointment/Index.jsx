@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-    LayoutDashboard,
-    Calendar,
-    Users,
-    Stethoscope,
-    BarChart3,
-    Settings as SettingsIcon,
-} from "lucide-react";
+import { LayoutDashboard, Calendar, Users, Stethoscope, BarChart3, Settings as SettingsIcon, } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/appointment/_components/ThemeToggle";
@@ -20,7 +13,7 @@ import { ReportsContent } from "@/appointment/_components/sections/ReportsSectio
 import { SettingsContent } from "@/appointment/_components/sections/SettingsSection";
 
 const tabs = [
-    { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    // { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { value: "appointments", label: "Appointments", icon: Calendar },
     { value: "doctors", label: "Doctors", icon: Stethoscope },
     { value: "patients", label: "Patients", icon: Users },
@@ -29,7 +22,7 @@ const tabs = [
 ];
 
 const Index = () => {
-    const [activeTab, setActiveTab] = useState("dashboard");
+    const [activeTab, setActiveTab] = useState("appointments");
 
     return (
         <div className="min-h-screen bg-background">

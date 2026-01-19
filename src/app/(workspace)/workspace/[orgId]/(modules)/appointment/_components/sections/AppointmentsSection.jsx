@@ -164,8 +164,8 @@ export function AppointmentsContent() {
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     const getStatValue = (key) => {
-        if (key === "total") return appointments.length;
-        return appointments.filter((a) => a.status === key).length;
+        if (key === "total") return appointments?.length;
+        return appointments?.filter((a) => a.status === key).length;
     };
 
     const handleSaveAppointment = (data) => {
@@ -231,7 +231,7 @@ export function AppointmentsContent() {
     };
 
     const handleConfirmDelete = () => {
-        setAppointments(appointments.filter(apt => apt.id !== deleteId));
+        setAppointments(appointments?.filter(apt => apt.id !== deleteId));
         toast({
             title: "Appointment Deleted",
             description: "The appointment has been successfully deleted.",
@@ -242,7 +242,7 @@ export function AppointmentsContent() {
     };
 
     const handleStatusChange = (id, newStatus) => {
-        setAppointments(appointments.map(apt =>
+        setAppointments(appointments?.map(apt =>
             apt.id === id ? { ...apt, status: newStatus } : apt
         ));
         toast({
@@ -309,7 +309,7 @@ export function AppointmentsContent() {
         }
     };
 
-    const filteredAppointments = appointments.filter((apt) => {
+    const filteredAppointments = appointments?.filter((apt) => {
         const matchesSearch =
             apt?.doctor?.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             apt?.patient?.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -319,8 +319,8 @@ export function AppointmentsContent() {
         return matchesSearch && matchesStatus && matchesDate;
     });
 
-    const appointmentToDelete = appointments.find(apt => apt.id === deleteId);
-    const todayAppointments = appointments.filter(apt => apt.date === "04 Jan 2026").length;
+    const appointmentToDelete = appointments?.find(apt => apt.id === deleteId);
+    const todayAppointments = appointments?.filter(apt => apt.date === "04 Jan 2026").length;
 
     return (
         <div>
@@ -441,7 +441,7 @@ export function AppointmentsContent() {
                         >
                             {tab.label}
                             <span className="ml-2 text-xs opacity-70">
-                                ({tab.value === "all" ? appointments.length : appointments.filter(a => a.status === tab.value).length})
+                                ({tab.value === "all" ? appointments?.length : appointments?.filter(a => a.status === tab.value).length})
                             </span>
                         </TabsTrigger>
                     ))}
@@ -463,7 +463,7 @@ export function AppointmentsContent() {
                                 : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Appointments`}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                            {filteredAppointments.length} {filteredAppointments.length === 1 ? "result" : "results"}
+                            {filteredAppointments?.length} {filteredAppointments?.length === 1 ? "result" : "results"}
                         </p>
                     </div>
 
@@ -499,7 +499,7 @@ export function AppointmentsContent() {
                 open={isDeleteOpen}
                 onOpenChange={setIsDeleteOpen}
                 onConfirm={handleConfirmDelete}
-                appointmentName={appointmentToDelete ? `${appointmentToDelete.patientName}'s appointment` : ""}
+                appointmentName={appointmentToDelete ? `${appointmentToDelete?.patientName}'s appointment` : ""}
             />
         </div>
     );

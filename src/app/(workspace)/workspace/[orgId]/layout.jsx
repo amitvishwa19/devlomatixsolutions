@@ -9,6 +9,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/options';
 import { getServerSession } from 'next-auth';
 import { WorkspaceProvider } from '../_provider/WorkspaceProvider';
 import { getWorkspaceData } from '@/lib/workspace';
+import { redirect } from 'next/navigation';
 
 
 
@@ -24,11 +25,16 @@ export const metadata = {
     description: 'Devlomatix',
 }
 
-export default async function layout({ children }) {
+export default async function layout({ params, children }) {
 
     const session = await getServerSession(authOptions);
     const data = await getWorkspaceData(session.user.userId);
 
+    const { orgId } = await params;
+
+    if (!orgId) {
+        redirect('/workspace')
+    }
 
 
 

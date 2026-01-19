@@ -26,13 +26,13 @@ export default async function WorkspacePage() {
     }
 
     if (!server) {
-        <WorkspaceLoader redirectTo="/unauthorized" />
-    } else {
-        //redirect(`/workspace/${server.id}`);
+        return <WorkspaceLoader redirectTo="/unauthorized" />
     }
 
 
 
 
     return <WorkspaceLoader redirectTo={`/workspace/${server.id}`} />
+
 }
+

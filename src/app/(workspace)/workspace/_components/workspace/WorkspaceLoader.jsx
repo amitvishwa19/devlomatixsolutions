@@ -5,6 +5,7 @@ import { Activity, Heart, Shield, Users } from 'lucide-react'
 import coverImage from '@/assets/images/auth_cover_image.jpg'
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import NetworkBackground from '@/components/global/NetworkBackground';
 
 const unbounded = Unbounded({ subsets: ["latin"] });
 
@@ -19,6 +20,7 @@ export default function WorkspaceLoader({ redirectTo }) {
     return (
         <div className={`flex min-h-screen items-center justify-center ${unbounded.className}`}
             style={{ backgroundImage: `url(${coverImage.src}) `, backgroundSize: 'cover', backgroundRepeat: "no-repeat", opacity: 1 }}>
+            <NetworkBackground />
             <div className="fixed inset-0 z-50  bg-black/80" >
                 <div className='flex flex-1 h-screen items-center justify-center '>
                     <div className="flex flex-col items-center justify-center space-y-8 px-4">

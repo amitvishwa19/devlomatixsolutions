@@ -26,7 +26,6 @@ import NewAppointmentSheet from './_components/NewAppointmentSheet'
 import { ContentTopbar } from '../../(misc)/_components/ContentTopbar'
 
 const tabs = [
-    { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { value: "appointments", label: "Appointments", icon: Calendar },
     { value: "doctors", label: "Doctors", icon: Stethoscope },
     { value: "patients", label: "Patients", icon: Users },
@@ -35,7 +34,7 @@ const tabs = [
 
 
 export default function Appointments() {
-    const [activeTab, setActiveTab] = useState("dashboard");
+    const [activeTab, setActiveTab] = useState("appointments");
     const { server, servers } = useOrg()
     const { data: session } = useSession()
     const { category, setCategory, appointments } = useAppointment()

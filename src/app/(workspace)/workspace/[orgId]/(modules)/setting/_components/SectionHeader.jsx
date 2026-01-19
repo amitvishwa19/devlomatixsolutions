@@ -17,7 +17,7 @@ const SectionHeader = ({ title, description, onSave, isSaving = false, permissio
           size="icon"
           onClick={onSave}
           disabled={isSaving}
-          className="text-muted-foreground hover:text-foreground cursor-pointer mt-4 mr-4"
+          className="text-muted-foreground hover:text-foreground cursor-pointer mt-2 mr-4"
         >
           {isSaving ? <Loader className="h-5 w-5 text-primary animate-spin" /> : <Save className="h-5 w-5 text-primary" />}
         </div>

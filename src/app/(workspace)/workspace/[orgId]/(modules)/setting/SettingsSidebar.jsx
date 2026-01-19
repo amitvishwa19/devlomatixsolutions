@@ -23,7 +23,7 @@ import { DynamicIcon } from "lucide-react/dynamic";
 
 export function SettingsSidebar({ activeSection, onSectionChange, sections = [] }) {
   return (
-    <div className="w-56 bg-card flex flex-col h-full border border-r ">
+    <div className="w-56  flex flex-col h-full border border-r ">
       <div className="p-4 flex items-center gap-2 text-sidebar-foreground">
         <Settings className="h-4 w-4" />
         <span className=" text-sm ">Organization settings</span>

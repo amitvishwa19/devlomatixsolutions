@@ -197,11 +197,11 @@ export function SettingsModal({ open, onOpenChange, isOpen, onClose, }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="min-w-[80%] max-w-[80%] min-h-[80%] max-h-[80%] p-0 gap-0 overflow-hidden bg-card border-border [&>button:last-child]:hidden">
+      <DialogContent className="min-w-[80%] max-w-[80%] min-h-[80%] max-h-[80%] p-0 gap-0 overflow-hidden bg-card  border [&>button:last-child]:hidden">
         <DialogTitle className='hidden'></DialogTitle>
         <div className="flex h-full min-h-0">
           <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} sections={sections} />
-          <div className="flex-1 h-[80vh] min-h-0 bg-card overflow-hidden">
+          <div className="flex-1 h-[80vh] min-h-0  overflow-hidden">
             <div className="h-full min-h-0 overflow-hidden">{renderSection()}</div>
           </div>
         </div>
