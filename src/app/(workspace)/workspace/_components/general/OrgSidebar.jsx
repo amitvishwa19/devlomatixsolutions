@@ -1,7 +1,7 @@
 'use client'
 import React, { useContext, useEffect, useState } from 'react'
 import { ChannelType, MemberRole } from '@prisma/client';
-import { BedDouble, BookOpen, BrickWallShield, Calendar, CalendarClock, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Cog, CogIcon, CreditCard, Cross, Divide, File, FileText, FlaskConical, GitBranch, Goal, Hash, KeyIcon, LayoutDashboard, LayoutDashboardIcon, MessageSquare, Mic, Package, Pill, Plus, PlusIcon, Receipt, Settings, Settings2, Shield, ShieldAlert, ShieldCheck, Sparkles, Stethoscope, Tags, Trash2, Users, Video } from "lucide-react";
+import { BedDouble, BookOpen, BrickWallShield, Calendar, CalendarClock, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Cog, CogIcon, CreditCard, Cross, Divide, File, FileText, FlaskConical, GitBranch, Goal, Hash, KeyIcon, LayoutDashboard, LayoutDashboardIcon, MessageSquare, Mic, Package, PanelRightClose, PanelRightOpen, Pill, Plus, PlusIcon, Receipt, Settings, Settings2, Shield, ShieldAlert, ShieldCheck, Sparkles, Stethoscope, Tags, Trash2, Users, Video } from "lucide-react";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/ui/accordion"
 import { useLocalStorage } from '@uidotdev/usehooks'
@@ -17,6 +17,7 @@ import OrgSwitcher from './OrgSwitcher';
 import { cn } from '@/lib/utils';
 import { AppIcon } from '@/components/global/AppIcon';
 import { DynamicIcon } from 'lucide-react/dynamic';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const iconMap = {
@@ -68,6 +69,8 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
     const members = server?.members.filter((member) => member.userId !== userId)
     const router = useRouter()
     const url = usePathname()
+    const [collapsed, setCollapsed] = useState(false);
+    const [sideNav, setSideNav] = useState(false)
 
     const role = server?.members.find((member) => member.userId === userId)?.role;
     const { onOpen } = useModal()
@@ -89,16 +92,41 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
         //console.log('expanded', expanded)
     }
 
+    // Read localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("sidebar-collapsed");
+        const topNav = localStorage.getItem("top-nav")
+        const value = saved === "true";
+        const mode = topNav == "true"
+        setCollapsed(value);
+        setSideNav(mode)
+    }, []);
+
+    const toggle = () => {
+        const next = !collapsed;
+        setCollapsed(next);
+
+        localStorage.setItem("sidebar-collapsed", String(next));
+        document.documentElement.style.setProperty(
+            "--sidebar-width",
+            next ? "72px" : "246px"
+        );
+    };
+
+    if (sideNav) return null
 
 
     return (
-        <div className='flex-col min-h-full text-primary  w-[246px]  relative '>
+        <div className={`flex-col min-h-full text-primary relative ${collapsed ? 'w-[50px]' : 'w-[246px]'}`}>
 
-            <div className=' w-[246px] p-2'>
-                <OrgSwitcher />
+            <div className=' p-2 flex flex-row items-center justify-between' >
+                <OrgSwitcher collapsed={collapsed} setCollapsed={setCollapsed} />
+                <span onClick={toggle} className='p-2 cursor-pointer'>
+                    {collapsed ? <PanelRightClose className='h-4 w-4 transition-all' /> : <PanelRightOpen className='h-4 w-4 transition-all' />}
+                </span>
             </div>
 
-            <ScrollArea className="h-[90vh] mt-4">
+            <ScrollArea className="h-[90vh] mt-4 ml-2">
                 {navigationItems.map((nav, index) => {
                     const segment = url.split("/")[3] || "/";
                     const selected =
@@ -113,36 +141,42 @@ export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
                             link={`/workspace/${server?.id}/${nav.url}`}
                             selected={selected}
                             icon={nav.icon}
+                            collapsed={collapsed}
                         />
                     );
                 })}
             </ScrollArea>
 
-            <div className='fixed bottom-0 w-[246px] p-2'>
-                <OrgAuthBlock />
+            <div className='fixed bottom-0  p-2'>
+                <OrgAuthBlock collapsed={collapsed} />
             </div>
         </div>
     )
 }
 
 
-const SidebarSingleItem = ({ title, link, icon, selected }) => {
-
-    return (
+const SidebarSingleItem = ({ title, link, icon, selected, collapsed }) => {
+    const item = (
         <div className='p-2 -mb-2'>
             <Link
                 href={link}
-                className={`py-1.5 px-2 flex items-center gap-2 cursor-pointer 
-                            hover:bg-primary/10 dark:hover:bg-card   rounded-md 
+                className={` px-2 flex items-center gap-2 cursor-pointer 
+                            hover:bg-primary/10 dark:hover:bg-card rounded-md  
                             text-muted-foreground 
                             ${selected && 'bg-primary/10 border-l-2 border-l-primary dark:bg-card text-primary dark:text-white  border/10'}`}
             >
-                <DynamicIcon name={icon} size={16} />
-                <span className='text-sm font-semibold'>
-                    {title}
-                </span>
+                <DynamicIcon name={icon} size={16} className={`${collapsed && ''} my-2`} />
+                {!collapsed && <span className="text-sm">{title}</span>}
             </Link>
         </div>
+    )
+
+    if (!collapsed) return item;
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>{item}</TooltipTrigger>
+            <TooltipContent side="right">{title}</TooltipContent>
+        </Tooltip>
     )
 }
 

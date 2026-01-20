@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
-import { CircleUserRound, CreditCard, EllipsisVertical, Layers, PlusCircle, ShieldUser } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CircleUserRound, CreditCard, EllipsisVertical, Layers, PlusCircle, ShieldUser } from 'lucide-react'
 import { useModal } from '@/hooks/useModal'
 import { useSession, signOut } from 'next-auth/react'
 import { useParams, usePathname, useRouter } from 'next/navigation'
@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useOrgServer, useOrgServers, useWorkspace } from '../../_provider/WorkspaceProvider'
 
-export default function OrgSwitcher() {
+export default function OrgSwitcher({ collapsed }) {
     const [open, setOpen] = useState(false)
     const { data: session } = useSession()
     const { onOpen } = useModal()
@@ -56,32 +56,28 @@ export default function OrgSwitcher() {
         <div className=''>
             <DropdownMenu onOpenChange={() => { setOpen(!open) }}>
 
-                <DropdownMenuTrigger asChild className=''>
+                <DropdownMenuTrigger asChild className='' >
 
                     {server ? (
-                        <div variant="ghost" className={`p-1  ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer `}>
-                            <div className='flex flex-row items-center gap-2'>
+                        <div variant="ghost" className={`p-1  ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
 
+                            <div className='flex flex-row items-center justify-between gap-2 '>
+                                <Avatar className='h-8 w-8 rounded-md border'>
+                                    <AvatarImage src={server?.imageUrl} alt="@shadcn" className='grayscale' />
+                                    <AvatarFallback className='rounded-md font-bold text-xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
+                                </Avatar>
 
-                                <div className='flex flex-row items-center gap-2'>
-                                    <Avatar className='h-8 w-8 rounded-md border'>
-                                        <AvatarImage src={server?.imageUrl} alt="@shadcn" className='grayscale' />
-                                        <AvatarFallback className='rounded-md font-bold text-xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
-                                    </Avatar>
+                                {!collapsed && (
                                     <div className='flex flex-col capitalize'>
                                         <span className='text-md font-extrabold'>{server?.name}</span>
                                         {/* <span className='text-xs text-muted-foreground'> {server?.user?.email}</span> */}
                                     </div>
-                                </div>
-
+                                )}
 
                             </div>
-                            {/* <div className=' capitalize'>
-                                {
-                                    server.default ? <ShieldUser size={15} /> : <EllipsisVertical size={20} />
-                                }
 
-                            </div> */}
+
+
                         </div>
                     ) : (
                         <div className='flex flex-row items-center gap-1'>
@@ -93,7 +89,9 @@ export default function OrgSwitcher() {
 
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="dark:bg-darkSecondaryBackground w-60 ml-2 rounded-md border p-2 mr-2" sideOffset={10}>
+
+
+                <DropdownMenuContent className=" w-60 ml-2 rounded-md border p-2 mr-2" sideOffset={10}>
 
                     <DropdownMenuLabel className="p-0 font-normal px-2 flex flex-row items-center gap-2 text-sky-500">
                         <Layers size={15} />

@@ -38,9 +38,9 @@ export default async function WorkspacePage() {
         <WorkspaceLoader redirectTo="/unauthorized" />
     }
 
-    // if (hospitals.length === 0) {
-    //     return <WorkspaceLoader />
-    // }
+    if (hospitals.length !== 0) {
+        return <WorkspaceLoader setup={true} />
+    }
 
     if (!server) {
         return <WorkspaceLoader redirectTo="/unauthorized" />

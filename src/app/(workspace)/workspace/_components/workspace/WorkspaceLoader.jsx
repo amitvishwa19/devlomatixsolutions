@@ -6,17 +6,17 @@ import coverImage from '@/assets/images/auth_cover_image.jpg'
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import NetworkBackground from '@/components/global/NetworkBackground';
+import { AppSetup } from './AppSetup';
 
 const unbounded = Unbounded({ subsets: ["latin"] });
 
-export default function WorkspaceLoader({ redirectTo, setup }) {
+export default function WorkspaceLoader({ redirectTo, setup = false }) {
     const router = useRouter();
 
     useEffect(() => {
         if (redirectTo) {
             router.push(redirectTo);
         }
-
     }, [router, redirectTo]);
 
 
@@ -100,7 +100,7 @@ export default function WorkspaceLoader({ redirectTo, setup }) {
                 </div>
             </div>
 
-
+            <AppSetup />
         </div>
     )
 }

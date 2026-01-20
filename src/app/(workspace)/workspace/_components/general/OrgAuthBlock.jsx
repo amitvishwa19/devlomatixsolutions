@@ -14,7 +14,7 @@ import SettingsModalOld from '../../[orgId]/(misc)/_components/settings/Settings
 
 
 
-export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
+export default function OrgAuthBlock({ side = 'right', align = 'start', collapsed }) {
     const [open, setOpen] = useState(false)
     const { data: session } = useSession()
     const { onOpen } = useModal()
@@ -22,6 +22,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
     const { refreshServer } = useOrg()
     const [light, setLight] = useState(true)
     const { theme, themeToggle } = useApp()
+    const [topnav, setTopNav] = useState(false)
 
     const [settingModal, setSettingModal] = useState({
         isOpen: false,
@@ -37,13 +38,27 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
 
 
     useEffect(() => {
+        const topNav = localStorage.getItem("top-nav")
+        const mode = topNav == "true"
+        setTopNav(mode)
+        console.log('topnav', mode)
+
         theme === 'light' ? setLight(true) : setLight(false)
     }, [theme])
+
+
+    const togglrNav = () => {
+        console.log('toggle nav')
+        const next = !topnav;
+        setTopNav(next)
+        localStorage.setItem("top-nav", String(next));
+    }
 
 
     return (
         <div className=''>
             <DropdownMenu onOpenChange={() => { setOpen(!open) }}>
+
 
                 <DropdownMenuTrigger asChild className=''>
                     {session ? (
@@ -72,104 +87,109 @@ export default function OrgAuthBlock({ side = 'right', align = 'start' }) {
                     )}
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="bg-card w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={12}>
+                {!collapsed && (
 
-                    <DropdownMenuLabel className="p-0 font-normal">
-                        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                            <Avatar className="h-8 w-8 rounded-lg">
-                                <AvatarImage src={session?.user?.avatar} alt="@shadcn" className='' />
-                                <AvatarFallback>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
-                            </Avatar>
-                            <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">{session?.user?.displayName}</span>
-                                <span className="text-muted-foreground truncate text-xs">
-                                    {session?.user?.email}
-                                </span>
-                            </div>
-                        </div>
-                    </DropdownMenuLabel>
+                    <DropdownMenuContent className="bg-card w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={12}>
 
-                    <DropdownMenuSeparator />
-
-                    <DropdownMenuGroup className='text-xs'>
-
-                        <DropdownMenuItem className='flex flex-row gap-2 text-xs'>
-                            <CircleUserRound size={15} className='text-muted-foreground' />
-                            Account
-                        </DropdownMenuItem>
-
-                        {/* <DropdownMenuItem className='flex flex-row gap-2' onClick={() => { onOpen('orgsetting') }}>
-                            <Settings size={15} className='text-muted-foreground' />
-                            Settings
-                        </DropdownMenuItem> */}
-
-                        <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
-                            setSettingModal({
-                                isOpen: true,
-                                mode: 'open',
-                                setting: null
-                            })
-                        }}>
-                            <Settings size={15} className='text-muted-foreground' />
-                            Settings
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
-                            setSettingModalOld({
-                                isOpen: true,
-                                mode: 'open',
-                                setting: null
-                            })
-                        }}>
-                            <Settings size={15} className='text-muted-foreground' />
-                            Settings old
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem className='flex flex-row gap-2' onSelect={async () => {
-                            await refreshServer()
-                            setTimeout(() => {
-                                toast.success('Organization data refreshed successfully')
-                            }, 2000);
-                        }}>
-                            <RefreshCcw size={15} className='text-muted-foreground' />
-                            Refresh Data
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem className='flex flex-row gap-2'>
-                            <Captions size={15} className='text-muted-foreground' />
-                            Billing
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem className='flex flex-row gap-2'>
-                            <Megaphone size={15} className='text-muted-foreground' />
-                            Notification
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem className='flex flex-row gap-2 items-center justify-between'>
-                            <div className='flex flex-row gap-2 items-center'>
-                                <ScanEye size={15} className='text-muted-foreground' />
-                                Appearence
-                            </div>
-                            <div className='flex flex-row gap-4 items-center'>
-                                <div className={`p-1 rounded-md border ${!light && 'bg-gray-500'}`} onClick={themeToggle} >
-                                    <Moon size={15} className=' cursor-pointer' />
-                                </div>
-                                <div className={`p-1 rounded-md border ${light && 'bg-gray-500'}`} onClick={themeToggle} >
-                                    <Sun size={15} className=' cursor-pointer' />
+                        <DropdownMenuLabel className="p-0 font-normal">
+                            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                <Avatar className="h-8 w-8 rounded-lg">
+                                    <AvatarImage src={session?.user?.avatar} alt="@shadcn" className='' />
+                                    <AvatarFallback>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
+                                </Avatar>
+                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <span className="truncate font-medium">{session?.user?.displayName}</span>
+                                    <span className="text-muted-foreground truncate text-xs">
+                                        {session?.user?.email}
+                                    </span>
                                 </div>
                             </div>
-                        </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className='flex flex-row gap-2' onSelect={() => {
-                        router.push('/')
-                        signOut()
-                    }}>
-                        <LogOut size={15} className='text-muted-foreground' />
-                        Log out
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
+                        </DropdownMenuLabel>
 
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuGroup className='text-xs'>
+
+                            <DropdownMenuItem className='flex flex-row gap-2 text-xs'>
+                                <CircleUserRound size={15} className='text-muted-foreground' />
+                                Account
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='flex flex-row gap-2' onClick={togglrNav}>
+                                <CircleUserRound size={15} className='text-muted-foreground' />
+                                {topnav ? 'Side Nav' : 'Top Nav'}
+                            </DropdownMenuItem>
+
+
+                            <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
+                                setSettingModal({
+                                    isOpen: true,
+                                    mode: 'open',
+                                    setting: null
+                                })
+                            }}>
+                                <Settings size={15} className='text-muted-foreground' />
+                                Settings
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
+                                setSettingModalOld({
+                                    isOpen: true,
+                                    mode: 'open',
+                                    setting: null
+                                })
+                            }}>
+                                <Settings size={15} className='text-muted-foreground' />
+                                Settings old
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='flex flex-row gap-2' onSelect={async () => {
+                                await refreshServer()
+                                setTimeout(() => {
+                                    toast.success('Organization data refreshed successfully')
+                                }, 2000);
+                            }}>
+                                <RefreshCcw size={15} className='text-muted-foreground' />
+                                Refresh Data
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='flex flex-row gap-2'>
+                                <Captions size={15} className='text-muted-foreground' />
+                                Billing
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='flex flex-row gap-2'>
+                                <Megaphone size={15} className='text-muted-foreground' />
+                                Notification
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='flex flex-row gap-2 items-center justify-between'>
+                                <div className='flex flex-row gap-2 items-center'>
+                                    <ScanEye size={15} className='text-muted-foreground' />
+                                    Appearence
+                                </div>
+                                <div className='flex flex-row gap-4 items-center'>
+                                    <div className={`p-1 rounded-md border ${!light && 'bg-gray-500'}`} onClick={themeToggle} >
+                                        <Moon size={15} className=' cursor-pointer' />
+                                    </div>
+                                    <div className={`p-1 rounded-md border ${light && 'bg-gray-500'}`} onClick={themeToggle} >
+                                        <Sun size={15} className=' cursor-pointer' />
+                                    </div>
+                                </div>
+                            </DropdownMenuItem>
+
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className='flex flex-row gap-2' onSelect={() => {
+                            router.push('/')
+                            signOut()
+                        }}>
+                            <LogOut size={15} className='text-muted-foreground' />
+                            Log out
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+
+                )}
                 <SettingsModal
                     isOpen={settingModal.isOpen}
                     onClose={() => {

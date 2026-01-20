@@ -48,7 +48,7 @@ export default async function layout({ params, children }) {
                         <div className='h-screen flex-grow hidden xl:flex '>
                             <OrgSidebar />
                         </div>
-                        <div className='flex  flex-col w-full h-screen '>
+                        <div className='flex  flex-col w-full h-screen transition-all'>
                             <div className='h-10'>
                                 <TopNav />
                             </div>
