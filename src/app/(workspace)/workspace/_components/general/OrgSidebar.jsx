@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { AppIcon } from '@/components/global/AppIcon';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { navigationItems } from '../../[orgId]/(misc)/data/data';
 
 
 const iconMap = {
@@ -32,29 +33,7 @@ const roleIconMap = {
     [MemberRole.ADMIN]: <ShieldAlert className="h-4 w-4 mr-2 text-rose-500" />
 }
 
-const navigationItems = [
-    { title: "Dashboard", url: "/", icon: "layout-dashboard" },
-    { title: "Workflow", url: "workflow", icon: "workflow" },
-    { title: "Appointment", url: "appointment", icon: "calendar" },
-    { title: "Calendar", url: "calendar", icon: "calendar-days" },
-    { title: "Kanban", url: "kanban", icon: "file-text" },
-    { title: "Documents", url: "document", icon: "file-text" },
-    { title: "Articles", url: "article", icon: "book-open" },
-    { title: "Taxonomy", url: "taxonomy", icon: "tags" },
-    { title: "Patients", url: "patient", icon: "users" },
-    { title: "Prescriptions", url: "prescription", icon: "pill" },
-    { title: "Services", url: "services", icon: "stethoscope" },
-    { title: "Laboratory", url: "laboratory", icon: "flask-conical" },
-    { title: "Rooms & Beds", url: "accomodation", icon: "bed-double" },
-    { title: "Inventory", url: "inventory", icon: "package" },
-    { title: "Invoices", url: "invoice", icon: "receipt" },
-    { title: "Payments", url: "payment", icon: "credit-card" },
-    { title: "Pharmacy", url: "pharmacy", icon: "cross" },
-    { title: "Communication", url: "communication", icon: "message-square" },
-    { title: "Mailbox", url: "mailer", icon: "mails" },
-    { title: "Development", url: "dev", icon: "combine" },
-    { title: "Access Management", url: "access", icon: "shield-user" },
-];
+
 
 export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
     const { server, servers, hasPermission, superadmin, hasRole } = useOrg()

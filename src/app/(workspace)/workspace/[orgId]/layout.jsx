@@ -10,6 +10,7 @@ import { getServerSession } from 'next-auth';
 import { WorkspaceProvider } from '../_provider/WorkspaceProvider';
 import { getWorkspaceData } from '@/lib/workspace';
 import { redirect } from 'next/navigation';
+import { AppTopNav } from './(misc)/_components/AppTopNav';
 
 
 
@@ -51,6 +52,7 @@ export default async function layout({ params, children }) {
                         <div className='flex  flex-col w-full h-screen transition-all'>
                             <div className='h-10'>
                                 <TopNav />
+
                             </div>
                             <div className='h-full relative flex-1 p-2'>
                                 <ScrollArea className='h-full relative flex-1 rounded-md  dark:bg-darkcontent border'>
