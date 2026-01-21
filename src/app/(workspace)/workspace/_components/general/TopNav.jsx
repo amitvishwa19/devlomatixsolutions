@@ -68,7 +68,7 @@ export function TopNav() {
     console.log(navs)
 
     return (
-        <div className='text-foreground  flex items-center justify-between p-2 '>
+        <div className='text-foreground  flex items-center justify-between p-2 mt-1'>
 
             {/* Topnav false */}
             <div>
@@ -96,12 +96,14 @@ export function TopNav() {
 
 
             {/* TopNav True */}
-            {navs.map((nav, index) => {
-                return (
-                    <DropdownItem key={index} group={nav} />
-                )
-            })}
+            <div className='flex flex-row gap-4'>
+                {navs.map((nav, index) => {
+                    return (
+                        <DropdownItem key={index} group={nav} />
+                    )
+                })}
 
+            </div>
 
 
             <div className=' justify-end'>
@@ -118,7 +120,7 @@ function DropdownItem({ group, isOpen, onMouseEnter, onMouseLeave }) {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger className='text-sm text-muted-foreground'>
+            <DropdownMenuTrigger className='text-sm text-muted-foreground focus:border-0  focus:outline-none focus:ring-0 focus-visible:ring-0 '>
                 {group?.category}
             </DropdownMenuTrigger>
             <DropdownMenuContent>

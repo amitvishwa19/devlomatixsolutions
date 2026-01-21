@@ -1,288 +1,165 @@
-'use client'
-import { useState } from "react";
 import {
-    LayoutDashboard,
-    Workflow,
-    CalendarDays,
-    Calendar,
-    Columns3,
-    FileText,
-    Newspaper,
-    Tags,
-    Users,
-    FileEdit,
-    Stethoscope,
-    FlaskConical,
-    BedDouble,
-    Package,
-    Receipt,
-    CreditCard,
-    Pill,
-    MessageSquare,
-    Mail,
-    Code2,
-    ShieldCheck,
-    ChevronDown,
-    Activity,
-    Menu,
-    X,
-} from "lucide-react";
-import { twMerge } from "tailwind-merge";
-import { clsx } from "clsx";
-import Link from "next/link";
+    NavigationMenu,
+    NavigationMenuContent,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    NavigationMenuTrigger,
+    navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
+import * as Icons from "lucide-react";
+import { LucideIcon } from "lucide-react";
+import React from "react";
 
-// Utility function - self-contained
-function cn(...inputs) {
-    return twMerge(clsx(inputs));
-}
+export const navigationItems = [
+    // DASHBOARD
+    { title: "Dashboard", url: "/", icon: "layout-dashboard", category: "Dashboard" },
 
+    // OPERATIONS
+    { title: "Workflow", url: "workflow", icon: "workflow", category: "Operations" },
+    { title: "Appointment", url: "appointment", icon: "calendar", category: "Operations" },
+    { title: "Calendar", url: "calendar", icon: "calendar-days", category: "Operations" },
+    { title: "Kanban", url: "kanban", icon: "file-text", category: "Operations" },
+    { title: "Documents", url: "document", icon: "file-text", category: "Operations" },
+    { title: "Articles", url: "article", icon: "book-open", category: "Operations" },
+    { title: "Taxonomy", url: "taxonomy", icon: "tags", category: "Operations" },
 
+    // CLINICAL
+    { title: "Patients", url: "patient", icon: "users", category: "Clinical" },
+    { title: "Prescriptions", url: "prescription", icon: "pill", category: "Clinical" },
+    { title: "Services", url: "services", icon: "stethoscope", category: "Clinical" },
+    { title: "Laboratory", url: "laboratory", icon: "flask-conical", category: "Clinical" },
+    { title: "Rooms & Beds", url: "accomodation", icon: "bed-double", category: "Clinical" },
+    { title: "Pharmacy", url: "pharmacy", icon: "cross", category: "Clinical" },
 
+    // ADMINISTRATION
+    { title: "Inventory", url: "inventory", icon: "package", category: "Administration" },
 
+    // FINANCE
+    { title: "Invoices", url: "invoice", icon: "receipt", category: "Finance" },
+    { title: "Payments", url: "payment", icon: "credit-card", category: "Finance" },
 
-// Navigation Data
-const navigationItems = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard },
-    {
-        label: "Operations",
-        icon: Workflow,
-        items: [
-            { label: "Workflow", href: "/workflow", icon: Workflow },
-            { label: "Appointment", href: "/appointment", icon: CalendarDays },
-            { label: "Calendar", href: "/calendar", icon: Calendar },
-            { label: "Kanban", href: "/kanban", icon: Columns3 },
-        ],
-    },
-    {
-        label: "Records",
-        icon: FileText,
-        items: [
-            { label: "Documents", href: "/documents", icon: FileText },
-            { label: "Articles", href: "/articles", icon: Newspaper },
-            { label: "Taxonomy", href: "/taxonomy", icon: Tags },
-            { label: "Patients", href: "/patients", icon: Users },
-            { label: "Prescriptions", href: "/prescriptions", icon: FileEdit },
-        ],
-    },
-    {
-        label: "Clinical",
-        icon: Stethoscope,
-        items: [
-            { label: "Services", href: "/services", icon: Stethoscope },
-            { label: "Laboratory", href: "/laboratory", icon: FlaskConical },
-            { label: "Rooms & Beds", href: "/rooms-beds", icon: BedDouble },
-            { label: "Pharmacy", href: "/pharmacy", icon: Pill },
-        ],
-    },
-    {
-        label: "Finance",
-        icon: CreditCard,
-        items: [
-            { label: "Invoices", href: "/invoices", icon: Receipt },
-            { label: "Payments", href: "/payments", icon: CreditCard },
-            { label: "Inventory", href: "/inventory", icon: Package },
-        ],
-    },
-    {
-        label: "Communication",
-        icon: MessageSquare,
-        items: [
-            { label: "Messages", href: "/communication", icon: MessageSquare },
-            { label: "Mailbox", href: "/mailbox", icon: Mail },
-        ],
-    },
-    {
-        label: "Admin",
-        icon: ShieldCheck,
-        items: [
-            { label: "Development", href: "/development", icon: Code2 },
-            { label: "Access Management", href: "/access-management", icon: ShieldCheck },
-        ],
-    },
+    // COMMUNICATION
+    { title: "Communication", url: "communication", icon: "message-square", category: "Communication" },
+    { title: "Mailbox", url: "mailer", icon: "mails", category: "Communication" },
+
+    // SYSTEM
+    { title: "Development", url: "dev", icon: "combine", category: "System" },
+    { title: "Access Management", url: "access", icon: "shield-user", category: "System" },
 ];
 
-// Type Guard
-function isNavGroup(item) {
-    return "items" in item;
-}
+// Convert kebab-case to PascalCase for icon lookup
+const getIconComponent = (iconName) => {
+    const pascalCase = iconName
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join("");
+    const IconsRecord = Icons;
+    return IconsRecord[pascalCase] || Icons.Circle;
+};
+
+// Group items by category
+const groupedItems = navigationItems.reduce((acc, item) => {
+    if (!acc[item.category]) {
+        acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+}, {});
+
+const categories = Object.keys(groupedItems);
 
 
 
-function DropdownMenu({ group, isOpen, onMouseEnter, onMouseLeave }) {
+const ListItem = React.forwardRef(
+    ({ className, title, icon, href, ...props }, ref) => {
+        const IconComponent = getIconComponent(icon);
+        return (
+            <li>
+                <NavigationMenuLink asChild>
+                    <a
+                        ref={ref}
+                        href={href}
+                        className={cn(
+                            "flex items-center gap-3 select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                            className
+                        )}
+                        {...props}
+                    >
+                        <IconComponent className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">{title}</span>
+                    </a>
+                </NavigationMenuLink>
+            </li>
+        );
+    }
+);
+ListItem.displayName = "ListItem";
 
-    // const isActive = group.items.some((item) => location.pathname === item.href);
-    const Icon = group.icon;
+export function AppTopNav() {
+    const dashboardItem = navigationItems.find((item) => item.category === "Dashboard");
 
     return (
-        <div
-            className="relative"
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-        >
-            <button
-                className={cn(
-                    "nav-item",
-                    // isActive && "nav-item-active"
-                )}
-            >
-                <Icon className="h-4 w-4" />
-                <span>{group.label}</span>
-                <ChevronDown
-                    className={cn(
-                        "h-3.5 w-3.5 transition-transform duration-200",
-                        isOpen && "rotate-180"
-                    )}
-                />
-            </button>
+        <div className="w-full border-b border-border bg-card shadow-sm">
+            <div className="container flex h-14 items-center">
+                <div className="mr-6 flex items-center gap-2">
+                    <Icons.Activity className="h-6 w-6 text-primary" />
+                    <span className="font-semibold text-lg text-foreground">MediCare</span>
+                </div>
 
-            <div
-                className={cn(
-                    "nav-dropdown",
-                    isOpen && "nav-dropdown-visible"
-                )}
-            >
-                {group.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    // const isItemActive = location.pathname === item.href;
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "nav-dropdown-item",
-                                // isItemActive && "bg-primary/10 text-primary"
-                            )}
-                        >
-                            <ItemIcon className="h-4 w-4" />
-                            <span>{item.label}</span>
-                        </Link>
-                    );
-                })}
+                <NavigationMenu>
+                    <NavigationMenuList>
+                        {/* Dashboard - Direct link */}
+                        {dashboardItem && (
+                            <NavigationMenuItem>
+                                <NavigationMenuLink
+                                    href={dashboardItem.url}
+                                    className={navigationMenuTriggerStyle()}
+                                >
+                                    <Icons.LayoutDashboard className="mr-2 h-4 w-4" />
+                                    Dashboard
+                                </NavigationMenuLink>
+                            </NavigationMenuItem>
+                        )}
+
+                        {/* Other categories as dropdowns */}
+                        {categories
+                            .filter((cat) => cat !== "Dashboard")
+                            .map((category) => (
+                                <NavigationMenuItem key={category}>
+                                    <NavigationMenuTrigger className="bg-transparent">
+                                        {category}
+                                    </NavigationMenuTrigger>
+                                    <NavigationMenuContent>
+                                        <ul className="grid w-[300px] gap-1 p-2 md:w-[400px] md:grid-cols-2">
+                                            {groupedItems[category].map((item) => (
+                                                <ListItem
+                                                    key={item.title}
+                                                    title={item.title}
+                                                    href={item.url}
+                                                    icon={item.icon}
+                                                />
+                                            ))}
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+                            ))}
+                    </NavigationMenuList>
+                </NavigationMenu>
+
+                <div className="ml-auto flex items-center gap-2">
+                    <button className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                        <Icons.Bell className="h-5 w-5" />
+                    </button>
+                    <button className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                        <Icons.Settings className="h-5 w-5" />
+                    </button>
+                    <div className="ml-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                        JD
+                    </div>
+                </div>
             </div>
         </div>
     );
 }
-
-// Main TopNav Component
-export function AppTopNav() {
-    const [openDropdown, setOpenDropdown] = useState(null);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-
-    return (
-        <nav className="bg-nav sticky top-0 z-50 shadow-lg">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-nav-active">
-                            <Activity className="h-6 w-6 text-white" />
-                        </div>
-                        <span className="text-lg font-semibold text-white hidden sm:block">
-                            MediCare HMS
-                        </span>
-                    </Link>
-
-                    {/* Desktop Navigation */}
-                    <div className="hidden lg:flex items-center gap-1">
-                        {navigationItems.map((item) => {
-                            if (isNavGroup(item)) {
-                                return (
-                                    <DropdownMenu
-                                        key={item.label}
-                                        group={item}
-                                        isOpen={openDropdown === item.label}
-                                        onMouseEnter={() => setOpenDropdown(item.label)}
-                                        onMouseLeave={() => setOpenDropdown(null)}
-                                    />
-                                );
-                            }
-
-                            const Icon = item.icon;
-                            // const isActive = location.pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                // className={cn("nav-item", isActive && "nav-item-active")}
-                                >
-                                    <Icon className="h-4 w-4" />
-                                    <span>{item.label}</span>
-                                </Link>
-                            );
-                        })}
-                    </div>
-
-                    {/* Mobile menu button */}
-                    <button
-                        className="lg:hidden p-2 rounded-lg text-nav-foreground hover:bg-nav-hover transition-colors"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    >
-                        {isMobileMenuOpen ? (
-                            <X className="h-6 w-6" />
-                        ) : (
-                            <Menu className="h-6 w-6" />
-                        )}
-                    </button>
-                </div>
-            </div>
-
-            {/* Mobile Navigation */}
-            {isMobileMenuOpen && (
-                <div className="lg:hidden border-t border-nav-hover">
-                    <div className="px-4 py-3 space-y-1 max-h-[70vh] overflow-y-auto">
-                        {navigationItems.map((item) => {
-                            if (isNavGroup(item)) {
-                                const GroupIcon = item.icon;
-                                return (
-                                    <div key={item.label} className="space-y-1">
-                                        <div className="nav-item text-nav-foreground/60 cursor-default">
-                                            <GroupIcon className="h-4 w-4" />
-                                            <span className="font-medium">{item.label}</span>
-                                        </div>
-                                        <div className="pl-6 space-y-1">
-                                            {item.items.map((subItem) => {
-                                                const SubIcon = subItem.icon;
-                                                // const isActive = location.pathname === subItem.href;
-                                                return (
-                                                    <Link
-                                                        key={subItem.href}
-                                                        href={subItem.href}
-                                                        className={cn(
-                                                            "nav-item",
-                                                            // isActive && "nav-item-active"
-                                                        )}
-                                                        onClick={() => setIsMobileMenuOpen(false)}
-                                                    >
-                                                        <SubIcon className="h-4 w-4" />
-                                                        <span>{subItem.label}</span>
-                                                    </Link>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                );
-                            }
-
-                            const Icon = item.icon;
-                            const isActive = 'true';
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn("nav-item", isActive && "nav-item-active")}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    <Icon className="h-4 w-4" />
-                                    <span>{item.label}</span>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-        </nav>
-    );
-}
-
-export default AppTopNav;
