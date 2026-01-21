@@ -109,6 +109,7 @@ export function AuthSelector({ name = false, classname }) {
                                 <span className='text-xs text-muted-foreground'> {session?.user?.email}</span>
                             </div>
                         </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
                     </div>
                 )}
 

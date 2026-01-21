@@ -10,7 +10,8 @@ import { getServerSession } from 'next-auth';
 import { WorkspaceProvider } from '../_provider/WorkspaceProvider';
 import { getWorkspaceData } from '@/lib/workspace';
 import { redirect } from 'next/navigation';
-import { AppTopNav } from './(misc)/_components/AppTopNav';
+import AppTopNav from './(misc)/_components/AppTopNav';
+
 
 
 
@@ -51,12 +52,13 @@ export default async function layout({ params, children }) {
                             <OrgSidebar />
                         </div>
                         <div className='flex  flex-col w-full h-screen transition-all'>
-                            <div className='h-10'>
+                            <div className=''>
                                 {/* <TopNav /> */}
                                 <AppTopNav />
+
                             </div>
-                            <div className='h-full relative flex-1 p-2'>
-                                <ScrollArea className='h-full relative flex-1 rounded-md  dark:bg-darkcontent border'>
+                            <div className='h-full relative flex-1 p-2 pt-0'>
+                                <ScrollArea className='h-full relative flex-1 rounded-md  dark:bg-darkcontent border overflow-hidden pb-2'>
                                     {children}
                                     <ScrollBar orientation="horizontal" />
                                 </ScrollArea>

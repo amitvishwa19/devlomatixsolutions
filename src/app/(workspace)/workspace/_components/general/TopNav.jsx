@@ -40,6 +40,16 @@ function buildNavigationByCategory(navigationItems) {
     }));
 }
 
+// Group items by category
+const groupedItems = navigationItems.reduce((acc, item) => {
+    if (!acc[item.category]) {
+        acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+}, {});
+
+const categories = Object.keys(groupedItems);
 
 export function TopNav() {
     const title = useSelector((state) => state.org.topnavTitle)
@@ -64,11 +74,11 @@ export function TopNav() {
     }
 
     const navs = buildNavigationByCategory(navigationItems)
-
-    console.log(navs)
+    const dashboardItem = navigationItems.find((item) => item.category === "Dashboard");
+    console.log('dashboardItem', groupedItems)
 
     return (
-        <div className='text-foreground  flex items-center justify-between p-2 mt-1'>
+        <div className='text-foreground  flex items-center justify-between'>
 
             {/* Topnav false */}
             <div>
@@ -96,14 +106,14 @@ export function TopNav() {
 
 
             {/* TopNav True */}
-            <div className='flex flex-row gap-4'>
+            {/* <div className='flex flex-row gap-4'>
                 {navs.map((nav, index) => {
                     return (
                         <DropdownItem key={index} group={nav} />
                     )
                 })}
 
-            </div>
+            </div> */}
 
 
             <div className=' justify-end'>

@@ -21,10 +21,8 @@ export const navigationItems = [
 
     // ADMINISTRATION
     { title: "Inventory", url: "inventory", icon: "package", category: "Administration" },
-
-    // FINANCE
-    { title: "Invoices", url: "invoice", icon: "receipt", category: "Finance" },
-    { title: "Payments", url: "payment", icon: "credit-card", category: "Finance" },
+    { title: "Invoices", url: "invoice", icon: "receipt", category: "Administration" },
+    { title: "Payments", url: "payment", icon: "credit-card", category: "Administration" },
 
     // COMMUNICATION
     { title: "Communication", url: "communication", icon: "message-square", category: "Communication" },
