@@ -54,91 +54,39 @@ export default function OrgSwitcher({ collapsed }) {
 
     return (
         <div className=''>
-            <DropdownMenu onOpenChange={() => { setOpen(!open) }}>
+            <div >
 
-                <DropdownMenuTrigger asChild className='' >
+                {server ? (
+                    <div variant="ghost" className={`p-1  ${open && 'bg-card '} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
 
-                    {server ? (
-                        <div variant="ghost" className={`p-1  ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
+                        <div className='flex flex-row items-center justify-between gap-2 '>
+                            <Avatar className='h-8 w-8 rounded-md border'>
+                                <AvatarImage src={server?.imageUrl} alt="@shadcn" className='grayscale' />
+                                <AvatarFallback className='rounded-md font-bold text-xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
+                            </Avatar>
 
-                            <div className='flex flex-row items-center justify-between gap-2 '>
-                                <Avatar className='h-8 w-8 rounded-md border'>
-                                    <AvatarImage src={server?.imageUrl} alt="@shadcn" className='grayscale' />
-                                    <AvatarFallback className='rounded-md font-bold text-xl capitalize'>{server?.name?.substring(0, 1)}</AvatarFallback>
-                                </Avatar>
-
-                                {!collapsed && (
-                                    <div className='flex flex-col capitalize'>
-                                        <span className='text-md font-extrabold'>{server?.name}</span>
-                                        {/* <span className='text-xs text-muted-foreground'> {server?.user?.email}</span> */}
-                                    </div>
-                                )}
-
-                            </div>
-
-
+                            {!collapsed && (
+                                <div className='flex flex-col capitalize'>
+                                    <span className='text-md font-extrabold'>{server?.name}</span>
+                                    {/* <span className='text-xs text-muted-foreground'> {server?.user?.email}</span> */}
+                                </div>
+                            )}
 
                         </div>
-                    ) : (
-                        <div className='flex flex-row items-center gap-1'>
-                            <Skeleton className=" h-[48px] w-[56px]  rounded-lg bg-card" />
-                            <Skeleton className=" h-[48px] w-full  rounded-lg bg-card " />
-                        </div>
-                    )}
-
-
-                </DropdownMenuTrigger>
 
 
 
-                <DropdownMenuContent className=" w-60 ml-2 rounded-md border p-2 mr-2" sideOffset={10}>
+                    </div>
+                ) : (
+                    <div className='flex flex-row items-center gap-1'>
+                        <Skeleton className=" h-[48px] w-[56px]  rounded-lg bg-card" />
+                        <Skeleton className=" h-[48px] w-full  rounded-lg bg-card " />
+                    </div>
+                )}
 
-                    <DropdownMenuLabel className="p-0 font-normal px-2 flex flex-row items-center gap-2 text-sky-500">
-                        <Layers size={15} />
-                        <span className='text-sm'>Departments</span>
-                    </DropdownMenuLabel>
 
-                    <DropdownMenuSeparator />
 
-                    {restServers?.length > 0 ? (
-                        <div>
-                            <DropdownMenuGroup className='flex flex-col text-xs gap-2'>
-                                {
-                                    restServers?.map((server) => {
-
-                                        return (
-                                            <DropdownMenuItem key={server.id} className='flex flex-row justify-between cursor-pointer' onSelect={() => { handleOnItemClick(server) }}>
-                                                <div className='flex flex-row gap-2 text-xs'>
-                                                    <CircleUserRound size={15} className='text-muted-foreground' />
-                                                    {server?.name}
-                                                </div>
-                                                {
-                                                    server.default && <div>
-                                                        <ShieldUser size={15} />
-                                                    </div>
-                                                }
-                                            </DropdownMenuItem>
-                                        )
-                                    })
-                                }
-                            </DropdownMenuGroup>
-                            <DropdownMenuSeparator />
-                        </div>
-                    ) : (
-                        <div>
-
-                        </div>
-                    )}
-
-                    <DropdownMenuItem className='flex flex-row gap-2 text-xs items-center' onSelect={() => {
-                        onOpen('neworgmodal')
-                    }}>
-                        <PlusCircle size={15} className='' />
-                        Add new Department
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-
-            </DropdownMenu>
+            </div>
         </div>
     )
 }

@@ -1,161 +1,284 @@
-'use client'
-import React, { useContext, useEffect, useState } from 'react'
-import { ChannelType, MemberRole } from '@prisma/client';
-import { BedDouble, BookOpen, BrickWallShield, Calendar, CalendarClock, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Cog, CogIcon, CreditCard, Cross, Divide, File, FileText, FlaskConical, GitBranch, Goal, Hash, KeyIcon, LayoutDashboard, LayoutDashboardIcon, MessageSquare, Mic, Package, PanelRightClose, PanelRightOpen, Pill, Plus, PlusIcon, Receipt, Settings, Settings2, Shield, ShieldAlert, ShieldCheck, Sparkles, Stethoscope, Tags, Trash2, Users, Video } from "lucide-react";
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/ui/accordion"
-import { useLocalStorage } from '@uidotdev/usehooks'
-import { Button } from '@/components/ui/button';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useModal } from '@/hooks/useModal';
-import { useOrg } from '@/providers/OrgProvider';
-import { usePathname } from 'next/navigation'
+import { useParams, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import OrgAuthBlock from './OrgAuthBlock';
-import OrgSwitcher from './OrgSwitcher';
-import { cn } from '@/lib/utils';
-import { AppIcon } from '@/components/global/AppIcon';
-import { DynamicIcon } from 'lucide-react/dynamic';
+import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DynamicIcon } from 'lucide-react/dynamic';
+
+import OrgSwitcher from './OrgSwitcher';
+import OrgAuthBlock from './OrgAuthBlock';
 import { navigationItems } from '../../[orgId]/(misc)/data/data';
+import { useData } from '../../[orgId]/(misc)/_providers/DataProvider';
 
 
-const iconMap = {
-    [ChannelType.TEXT]: <Hash className="mr-2 h-4 w-4" />,
-    [ChannelType.AUDIO]: <Mic className="mr-2 h-4 w-4" />,
-    [ChannelType.VIDEO]: <Video className="mr-2 h-4 w-4" />
-};
+// ------------------------------------
+// Constants
+// ------------------------------------
+const OPEN_GROUPS_KEY = 'org-sidebar-open-groups';
 
-const roleIconMap = {
-    [MemberRole.GUEST]: null,
-    [MemberRole.MODERATOR]: <ShieldCheck className="h-4 w-4 mr-2 text-indigo-500" />,
-    [MemberRole.ADMIN]: <ShieldAlert className="h-4 w-4 mr-2 text-rose-500" />
-}
+// Dashboard item
+const dashboardItem = navigationItems.find(
+    (item) => item.category === 'Dashboard'
+);
+
+// Grouped navigation (excluding Dashboard)
+const groupedNavigation = navigationItems.reduce((acc, item) => {
+    if (item.category === 'Dashboard') return acc;
+
+    if (!acc[item.category]) acc[item.category] = [];
+    acc[item.category].push(item);
+
+    return acc;
+}, {});
 
 
+// ------------------------------------
+// Sidebar Component
+// ------------------------------------
+export default function OrgSidebar() {
+    const params = useParams();
+    const { orgId } = params;
 
-export default function OrgSidebar({ storageKey = 'sidebar-state' }) {
-    const { server, servers, hasPermission, superadmin, hasRole } = useOrg()
-    const params = useParams()
-    const [expanded, setExpanded] = useLocalStorage(storageKey, {})
-    const boardId = params?.boardId
-    const { data: session } = useSession()
-    const userId = session?.user?.userId
-    const textChannels = server?.channels.filter((channel) => channel.type === ChannelType.TEXT)
-    const audioChannels = server?.channels.filter((channel) => channel.type === ChannelType.AUDIO)
-    const videoChannels = server?.channels.filter((channel) => channel.type === ChannelType.VIDEO)
-    const members = server?.members.filter((member) => member.userId !== userId)
-    const router = useRouter()
-    const url = usePathname()
+    const pathname = usePathname();
+    const segment = pathname.split('/')[3] || '/';
+
+    const { topNav } = useData();
+    useSession(); // kept to avoid breaking your auth flow
+
     const [collapsed, setCollapsed] = useState(false);
-    const [sideNav, setSideNav] = useState(false)
+    const [openGroups, setOpenGroups] = useState({});
+    const [hydrated, setHydrated] = useState(false);
 
-    const role = server?.members.find((member) => member.userId === userId)?.role;
-    const { onOpen } = useModal()
-
-    const defaultAccordianValue = Object.keys(expanded)
-        .reduce((acc, key) => {
-            if (expanded[key]) {
-                acc.push(key)
-            }
-            return acc;
-        }, [])
-
-    const onExpand = (i) => {
-        setExpanded((curr) => ({
-            ...curr,
-            [i]: Boolean(expanded[i])
-        }))
-
-        //console.log('expanded', expanded)
-    }
-
-    // Read localStorage
+    // -----------------------------
+    // Restore sidebar collapsed state
+    // -----------------------------
     useEffect(() => {
-        const saved = localStorage.getItem("sidebar-collapsed");
-        const topNav = localStorage.getItem("top-nav")
-        const value = saved === "true";
-        const mode = topNav == "true"
-        setCollapsed(value);
-        setSideNav(mode)
+        const saved = localStorage.getItem('sidebar-collapsed');
+        setCollapsed(saved === 'true');
     }, []);
 
-    const toggle = () => {
+    // -----------------------------
+    // Restore open groups from localStorage
+    // -----------------------------
+    useEffect(() => {
+        const stored = localStorage.getItem(OPEN_GROUPS_KEY);
+        if (stored) {
+            try {
+                setOpenGroups(JSON.parse(stored));
+            } catch { }
+        }
+        setHydrated(true);
+    }, []);
+
+    // -----------------------------
+    // Persist open groups
+    // -----------------------------
+    useEffect(() => {
+        if (!hydrated) return;
+        localStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify(openGroups));
+    }, [openGroups, hydrated]);
+
+    // -----------------------------
+    // Auto-open group ONLY if user
+    // has never interacted
+    // -----------------------------
+    useEffect(() => {
+        if (!hydrated) return;
+
+        Object.entries(groupedNavigation).forEach(([category, items]) => {
+            const matchesRoute = items.some((i) => i.url === segment);
+
+            setOpenGroups((prev) => {
+                // User already made a choice → respect it
+                if (category in prev) return prev;
+
+                if (matchesRoute) {
+                    return { ...prev, [category]: true };
+                }
+
+                return prev;
+            });
+        });
+    }, [segment, hydrated]);
+
+    // -----------------------------
+    // Handlers
+    // -----------------------------
+    const toggleSidebar = () => {
         const next = !collapsed;
         setCollapsed(next);
+        localStorage.setItem('sidebar-collapsed', String(next));
 
-        localStorage.setItem("sidebar-collapsed", String(next));
         document.documentElement.style.setProperty(
-            "--sidebar-width",
-            next ? "72px" : "246px"
+            '--sidebar-width',
+            next ? '72px' : '246px'
         );
     };
 
-    if (sideNav) return null
+    const toggleGroup = (category) => {
+        setOpenGroups((prev) => ({
+            ...prev,
+            [category]: !prev[category],
+        }));
+    };
 
+    if (topNav) return null;
 
+    // -----------------------------
+    // Render
+    // -----------------------------
     return (
-        <div className={`flex-col min-h-full text-primary relative ${collapsed ? 'w-[50px]' : 'w-[246px]'}`}>
-
-            <div className=' p-2 flex flex-row items-center justify-between' >
+        <div
+            className={`
+        flex flex-col min-h-full text-primary relative
+        transition-all duration-300 ease-in-out
+        ${collapsed ? 'w-[50px]' : 'w-[246px]'}
+      `}
+        >
+            {/* Header */}
+            <div className="p-2 flex items-center justify-between">
                 <OrgSwitcher collapsed={collapsed} setCollapsed={setCollapsed} />
-                <span onClick={toggle} className='p-2 cursor-pointer'>
-                    {collapsed ? <PanelRightClose className='h-4 w-4 transition-all' /> : <PanelRightOpen className='h-4 w-4 transition-all' />}
+
+                <span onClick={toggleSidebar} className="p-2 cursor-pointer">
+                    {collapsed ? (
+                        <PanelRightClose className="h-4 w-4" />
+                    ) : (
+                        <PanelRightOpen className="h-4 w-4" />
+                    )}
                 </span>
             </div>
 
-            <ScrollArea className="h-[90vh] mt-4 ml-2">
-                {navigationItems.map((nav, index) => {
-                    const segment = url.split("/")[3] || "/";
-                    const selected =
-                        nav.url === "/"
-                            ? segment === "/"
-                            : segment === nav.url;
+            {/* Navigation */}
+            <ScrollArea className="h-[85vh] mt-4 ml-2 pr-2">
+                {/* Dashboard (always visible) */}
+                {dashboardItem && (
+                    <SidebarSingleItem
+                        title={dashboardItem.title}
+                        link={`/workspace/${orgId}/${dashboardItem.url}`}
+                        selected={segment === '/'}
+                        icon={dashboardItem.icon}
+                        collapsed={collapsed}
+                    />
+                )}
+
+                {/* Grouped Navigation */}
+                {Object.entries(groupedNavigation).map(([category, items]) => {
+                    const isOpen = openGroups[category];
 
                     return (
-                        <SidebarSingleItem
-                            key={index}
-                            title={nav.title}
-                            link={`/workspace/${server?.id}/${nav.url}`}
-                            selected={selected}
-                            icon={nav.icon}
-                            collapsed={collapsed}
-                        />
+                        <div key={category} className="mt-4">
+                            {/* Group Header */}
+                            <button
+                                onClick={() => !collapsed && toggleGroup(category)}
+                                className={`
+                                        w-full px-3 py-2 flex items-center justify-between
+                                        rounded-md text-xs font-semibold uppercase
+                                        text-muted-foreground
+                                        hover:bg-primary/10
+                                        transition-colors
+                                        ${collapsed && 'justify-center'}
+                                        `}
+                            >
+                                {!collapsed && <span>{category}</span>}
+                                {!collapsed && (
+                                    <span
+                                        className={`transition-transform ${isOpen ? 'rotate-90' : ''
+                                            }`}
+                                    >
+                                        ▶
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Group Items */}
+                            <div
+                                className={`
+                                        overflow-hidden transition-all duration-300 ease-in-out
+                                        ${isOpen && !collapsed
+                                        ? 'max-h-[500px] opacity-100 mt-1'
+                                        : 'max-h-0 opacity-0'
+                                    }
+                                        `}
+                            >
+                                {items.map((nav) => (
+                                    <SidebarSingleItem
+                                        key={nav.url}
+                                        title={nav.title}
+                                        link={`/workspace/${orgId}/${nav.url}`}
+                                        selected={nav.url === segment}
+                                        icon={nav.icon}
+                                        collapsed={collapsed}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     );
                 })}
             </ScrollArea>
 
-            <div className='fixed bottom-0  p-2'>
+            {/* Footer */}
+            <div className="fixed bottom-0 p-2">
                 <OrgAuthBlock collapsed={collapsed} />
             </div>
         </div>
-    )
+    );
 }
 
 
-const SidebarSingleItem = ({ title, link, icon, selected, collapsed }) => {
+// ------------------------------------
+// Sidebar Item
+// ------------------------------------
+const SidebarSingleItem = ({
+    title,
+    link,
+    icon,
+    selected,
+    collapsed,
+}) => {
     const item = (
-        <div className='p-2 -mb-2'>
-            <Link
-                href={link}
-                className={` px-2 flex items-center gap-2 cursor-pointer 
-                            hover:bg-primary/10 dark:hover:bg-card rounded-md  
-                            text-muted-foreground 
-                            ${selected && 'bg-primary/10 border-l-2 border-l-primary dark:bg-card text-primary dark:text-white  border/10'}`}
-            >
-                <DynamicIcon name={icon} size={16} className={`${collapsed && ''} my-2`} />
-                {!collapsed && <span className="text-sm">{title}</span>}
-            </Link>
-        </div>
-    )
+        <Link
+            href={link}
+            className={`
+        px-2 py-2 flex items-center gap-3
+        rounded-md cursor-pointer
+        transition-all duration-200
+        hover:bg-primary/10 dark:hover:bg-card
+        text-muted-foreground
+        ${selected &&
+                'bg-primary/10 border-l-2 border-l-primary text-primary dark:text-white'
+                }
+      `}
+        >
+            <DynamicIcon name={icon} size={16} className="shrink-0" />
 
-    if (!collapsed) return item;
+            <span
+                className={`
+          text-sm whitespace-nowrap
+          transition-all duration-200
+          ${collapsed
+                        ? 'opacity-0 translate-x-[-6px] w-0'
+                        : 'opacity-100 translate-x-0 w-auto'
+                    }
+        `}
+            >
+                {title}
+            </span>
+        </Link>
+    );
+
+    if (!collapsed) return <div className="px-1">{item}</div>;
+
     return (
         <Tooltip>
-            <TooltipTrigger asChild>{item}</TooltipTrigger>
+            <TooltipTrigger asChild>
+                <div className="px-1">{item}</div>
+            </TooltipTrigger>
             <TooltipContent side="right">{title}</TooltipContent>
         </Tooltip>
-    )
-}
-
+    );
+};

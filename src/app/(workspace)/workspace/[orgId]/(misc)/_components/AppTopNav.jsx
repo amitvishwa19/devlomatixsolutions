@@ -18,6 +18,9 @@ import ThemeSwitcher from "@/components/global/ThemeSwitch";
 import { useOrg } from "@/providers/OrgProvider";
 import { navigationItems } from "../data/data";
 import Link from "next/link";
+import { useData } from "../_providers/DataProvider";
+import OrgAuthBlock from "../../../_components/general/OrgAuthBlock";
+import OrgSwitcher from "../../../_components/general/OrgSwitcher";
 
 
 // Group items by category
@@ -47,20 +50,19 @@ const Icon = ({ name, className }) => {
 
 
 const AppTopNav = () => {
-    const { server, servers, hasPermission, superadmin, hasRole } = useOrg()
+
     const CLOSE_DELAY_MS = 1000;
     const [openValue, setOpenValue] = useState("");
     const [viewportOffset, setViewportOffset] = useState(0);
     const closeTimerRef = useRef(null);
     const navRootRef = useRef(null);
     const triggerRefs = useRef({});
-    const [topNav, setTopNav] = useState(false)
     const isMobile = useIsMobile()
     const pathName = usePathname()
     const paths = pathName === '/' ? [''] : pathName.split('/')
     const params = useParams();
     const orgId = params?.orgId;
-
+    const { topNav, setTopNav } = useData()
 
 
     const getActiveKey = () => {
@@ -83,9 +85,9 @@ const AppTopNav = () => {
     };
 
     useEffect(() => {
-        const topNav = localStorage.getItem("top-nav")
-        const mode = topNav == "true"
-        setTopNav(mode)
+        // const topNav = localStorage.getItem("top-nav")
+        // const mode = topNav == "true"
+        // setTopNav(mode)
     }, [])
 
     const togglrNav = () => {
@@ -124,93 +126,124 @@ const AppTopNav = () => {
     };
 
     return (
-        <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-row items-center justify-between  h-14">
 
             {/* Topnav false */}
-            <div>
 
-            </div>
-
-
-            <NavigationMenu
-                ref={navRootRef}
-                className="hidden md:flex"
-                value={openValue}
-                style={{
-                    // Used by NavigationMenuViewport wrapper to position the dropdown under the trigger.
-                    ["--nav-viewport-offset"]: `${viewportOffset}px`,
-                }}
-                onValueChange={(next) => {
-                    if (next === "") {
-                        scheduleClose();
-                        return;
-                    }
-
-                    clearCloseTimer();
-                    setOpenValue(next);
-                }}
-            >
-                <NavigationMenuList>
-                    {navItems.map((navItem) => {
-
-                        const isNavActive = (navItem) => {
-                            return navItem.items.some(item => item.url === activeKey);
-                        };
+            {topNav && (
+                <div>
+                    <OrgSwitcher />
+                </div>
+            )}
 
 
-                        return (
-                            <NavigationMenuItem key={navItem.label} value={navItem.label}>
-                                {navItem.items.length === 1 ? (
-                                    <NavigationMenuLink asChild>
-                                        <Link
-                                            href={`/workspace/${orgId}/${navItem.items[0].url}  `}
-                                            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-nav-hover
+            {/* Topnav false */}
+
+            {!topNav && (
+                <div>
+                    <div className='px-2 hidden md:flex items-center gap-2'>
+                        <Breadcrumb>
+                            <BreadcrumbList>
+                                {paths.map((path, index) => (
+                                    < div key={index} className='flex items-center gap-2 text-xs'>
+                                        <BreadcrumbItem>
+                                            <BreadcrumbLink href={`${path}`} className=' capitalize'>
+                                                {path === '' ? 'dashboard' : path}
+                                            </BreadcrumbLink>
+                                        </BreadcrumbItem>
+                                        {index !== paths.length - 1 && <BreadcrumbSeparator />}
+                                    </div>
+                                ))}
+                            </BreadcrumbList>
+                        </Breadcrumb>
+                    </div>
+                </div>
+            )}
+
+
+            {topNav && (
+                <NavigationMenu
+                    ref={navRootRef}
+                    className="hidden md:flex"
+                    value={openValue}
+                    style={{
+                        // Used by NavigationMenuViewport wrapper to position the dropdown under the trigger.
+                        ["--nav-viewport-offset"]: `${viewportOffset}px`,
+                    }}
+                    onValueChange={(next) => {
+                        if (next === "") {
+                            scheduleClose();
+                            return;
+                        }
+
+                        clearCloseTimer();
+                        setOpenValue(next);
+                    }}
+                >
+                    <NavigationMenuList>
+                        {navItems.map((navItem) => {
+
+                            const isNavActive = (navItem) => {
+                                return navItem.items.some(item => item.url === activeKey);
+                            };
+
+
+                            return (
+                                <NavigationMenuItem key={navItem.label} value={navItem.label}>
+                                    {navItem.items.length === 1 ? (
+                                        <NavigationMenuLink asChild>
+                                            <Link
+                                                href={`/workspace/${orgId}/${navItem.items[0].url}  `}
+                                                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-nav-hover
                                                 ${isNavActive(navItem) && 'text-primary dark:text-white'}
                                                 `}
-                                        >
-                                            <Icon name={navItem.items[0].icon} className="h-4 w-4" />
-                                            {navItem.label}
-                                        </Link>
-                                    </NavigationMenuLink>
-                                ) : (
-                                    <>
-                                        <NavigationMenuTrigger
-                                            ref={(node) => {
-                                                triggerRefs.current[navItem.label] = node;
-                                            }}
-                                            className={`bg-transparent text-muted-foreground hover:bg-nav-hover data-[state=open]:bg-nav-hover focus:bg-transparent ${isGroupActive(navItem.items) && 'text-primary dark:text-white'}`}
-                                            onMouseEnter={() => {
-                                                clearCloseTimer();
-                                                setOpenValue(navItem.label);
-                                            }}
-                                            onMouseLeave={scheduleClose}
-                                        >
-                                            {navItem.label}
-                                        </NavigationMenuTrigger>
-                                        <NavigationMenuContent onMouseEnter={clearCloseTimer} onMouseLeave={scheduleClose}>
-                                            <ul className="grid w-[280px] gap-1 p-2 bg-dropdown-background">
-                                                {navItem.items.map((item) => (
-                                                    <ListItem
-                                                        key={item.title}
-                                                        title={item.title}
-                                                        href={`/workspace/${orgId}/${item.url}`}
-                                                        icon={item.icon}
-                                                        active={pathName === `/workspace/${orgId}/${item.url}`}
-                                                    />
-                                                ))}
-                                            </ul>
-                                        </NavigationMenuContent>
-                                    </>
-                                )}
-                            </NavigationMenuItem>
-                        )
-                    })}
-                </NavigationMenuList>
-            </NavigationMenu>
+                                            >
+                                                <Icon name={navItem.items[0].icon} className="h-4 w-4" />
+                                                {navItem.label}
+                                            </Link>
+                                        </NavigationMenuLink>
+                                    ) : (
+                                        <>
+                                            <NavigationMenuTrigger
+                                                ref={(node) => {
+                                                    triggerRefs.current[navItem.label] = node;
+                                                }}
+                                                className={`bg-transparent text-muted-foreground hover:bg-nav-hover data-[state=open]:bg-nav-hover focus:bg-transparent ${isGroupActive(navItem.items) && 'text-primary dark:text-white'}`}
+                                                onMouseEnter={() => {
+                                                    clearCloseTimer();
+                                                    setOpenValue(navItem.label);
+                                                }}
+                                                onMouseLeave={scheduleClose}
+                                            >
+                                                {navItem.label}
+                                            </NavigationMenuTrigger>
+                                            <NavigationMenuContent onMouseEnter={clearCloseTimer} onMouseLeave={scheduleClose}>
+                                                <ul className="grid w-[280px] gap-1 p-2 bg-dropdown-background">
+                                                    {navItem.items.map((item) => (
+                                                        <ListItem
+                                                            key={item.title}
+                                                            title={item.title}
+                                                            href={`/workspace/${orgId}/${item.url}`}
+                                                            icon={item.icon}
+                                                            active={pathName === `/workspace/${orgId}/${item.url}`}
+                                                        />
+                                                    ))}
+                                                </ul>
+                                            </NavigationMenuContent>
+                                        </>
+                                    )}
+                                </NavigationMenuItem>
+                            )
+                        })}
+                    </NavigationMenuList>
+                </NavigationMenu>
+            )}
+
 
             <div className=' justify-end'>
                 <div className='flex flex-row gap-4 items-center mr-4'>
                     <ThemeSwitcher />
+                    {topNav && <OrgAuthBlock side={'bottom'} align={'start'} sideOffset={2} />}
                 </div>
             </div>
         </div>

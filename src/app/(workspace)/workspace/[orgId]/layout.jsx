@@ -14,9 +14,6 @@ import AppTopNav from './(misc)/_components/AppTopNav';
 
 
 
-
-
-
 const inter = Inter({ subsets: ["latin"] });
 const font = Roboto({ subsets: ["latin"] });
 
@@ -32,10 +29,11 @@ export default async function layout({ params, children }) {
 
     const session = await getServerSession(authOptions);
     const data = await getWorkspaceData(session.user.userId);
-
     const { orgId } = await params;
 
-    if (!orgId) {
+    console.log('orgId', orgId)
+
+    if (!orgId || orgId === 'undefined') {
         redirect('/workspace')
     }
 

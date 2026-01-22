@@ -97,6 +97,7 @@
     "firebase-admin": "^13.6.0",
     "framer-motion": "^12.23.26",
     "googleapis": "^165.0.0",
+    "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
     "install": "^0.13.0",
     "jodit-react": "^5.2.38",

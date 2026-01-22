@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { useOrg } from "@/providers/OrgProvider";
@@ -13,6 +13,7 @@ export default function DataProvider({ children }) {
     const dispatch = useDispatch()
     const appointment = { id: '12rerefe43ed', name: 'Devlomatix solutions' }
     const { users } = useOrg()
+    const [topNav, setTopNav] = useState(false)
 
 
     useEffect(() => {
@@ -24,7 +25,7 @@ export default function DataProvider({ children }) {
     const patients = users?.filter(user => user.role === ROLE.PATIENT)
 
     return (
-        <DataContext.Provider value={{ appointment, patients }}>
+        <DataContext.Provider value={{ appointment, patients, topNav, setTopNav }}>
             {children}
         </DataContext.Provider>
     );

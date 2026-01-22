@@ -11,10 +11,11 @@ import { useApp } from '@/providers/AppProvider'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SettingsModal } from '../../[orgId]/(modules)/setting/SettingsModal'
 import SettingsModalOld from '../../[orgId]/(misc)/_components/settings/SettingsModal'
+import { useData } from '../../[orgId]/(misc)/_providers/DataProvider'
 
 
 
-export default function OrgAuthBlock({ side = 'right', align = 'start', collapsed }) {
+export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffset = 0, collapsed }) {
     const [open, setOpen] = useState(false)
     const { data: session } = useSession()
     const { onOpen } = useModal()
@@ -22,7 +23,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', collapse
     const { refreshServer } = useOrg()
     const [light, setLight] = useState(true)
     const { theme, themeToggle } = useApp()
-    const [topnav, setTopNav] = useState(false)
+    const { topNav, setTopNav } = useData()
 
     const [settingModal, setSettingModal] = useState({
         isOpen: false,
@@ -38,20 +39,23 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', collapse
 
 
     useEffect(() => {
-        const topNav = localStorage.getItem("top-nav")
-        const mode = topNav == "true"
-        setTopNav(mode)
-        console.log('topnav', mode)
+        // const topNav = localStorage.getItem("top-nav")
+        // const mode = topNav == "true"
+        // setTopNav(mode)
+        // console.log('topnav', mode)
 
-        theme === 'light' ? setLight(true) : setLight(false)
+        // theme === 'light' ? setLight(true) : setLight(false)
     }, [theme])
 
 
-    const togglrNav = () => {
-        console.log('toggle nav')
-        const next = !topnav;
-        setTopNav(next)
-        localStorage.setItem("top-nav", String(next));
+    const toggleNav = () => {
+        console.log('set top nav')
+        setTopNav(!topNav)
+        if (!topNav) {
+            localStorage.setItem("top-nav", true);
+        } else {
+            localStorage.setItem("top-nav", false);
+        }
     }
 
 
@@ -62,7 +66,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', collapse
 
                 <DropdownMenuTrigger asChild className=''>
                     {session ? (
-                        <div variant="ghost" className={`p-1  ${open && 'dark:bg-[#1C2736] '} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
+                        <div variant="ghost" className={`p-1  ${open && 'bg-card'} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
 
                             <div className='flex flex-row items-center gap-2'>
                                 <Avatar className='h-10 w-10 rounded-md'>
@@ -89,7 +93,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', collapse
 
                 {!collapsed && (
 
-                    <DropdownMenuContent className="bg-card w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={12}>
+                    <DropdownMenuContent className=" w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={sideOffset}>
 
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -115,9 +119,9 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', collapse
                                 Account
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem className='flex flex-row gap-2' onClick={togglrNav}>
+                            <DropdownMenuItem className='flex flex-row gap-2' onClick={() => { toggleNav() }}>
                                 <CircleUserRound size={15} className='text-muted-foreground' />
-                                {topnav ? 'Side Nav' : 'Top Nav'}
+                                {topNav ? 'Side Bar' : 'Top Nav'}
                             </DropdownMenuItem>
 
 

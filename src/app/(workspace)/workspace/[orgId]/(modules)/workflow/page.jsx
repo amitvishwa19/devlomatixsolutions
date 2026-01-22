@@ -16,6 +16,7 @@ import { useFlow } from './_provider/flowProvider';
 import { DraggableKanban } from './_components/workflow/DraggableKanban';
 import { AddPatientModal } from './_components/workflow/AddPatientModal';
 import { ContentTopbar } from '../../(misc)/_components/ContentTopbar';
+import AddWorkflow from './_components/workflow/AddWorkflow';
 
 export default function IpdOpdPage() {
     const [mockpatients, setPatients] = useState(mockPatients);
@@ -33,6 +34,12 @@ export default function IpdOpdPage() {
     console.log('allPatients', patients)
 
     const [addPatientModal, setAddPatientModal] = useState({
+        isOpen: false,
+        mode: 'add',
+        patient: null
+    })
+
+    const [addWorkflow, setAddWorkflow] = useState({
         isOpen: false,
         mode: 'add',
         patient: null
@@ -148,7 +155,15 @@ export default function IpdOpdPage() {
                 title='Workflow Management'
                 description='Track and manage patient journeys from admission to discharge. Comprehensive management of OPD consultations and IPD admissions'
                 icon='workflow'
-
+                action={true}
+                actionName='Create New Flow'
+                actionIcon='workflow'
+                onActionClick={() => {
+                    setAddPatientModal({
+                        isOpen: true,
+                        patient: null
+                    })
+                }}
             />
 
             <div className='h-[85vh] flex flex-grow   rounded-md '>
@@ -250,6 +265,8 @@ export default function IpdOpdPage() {
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
                 </div>
+
+
                 {/* Patient Detail Modal */}
                 <PatientDetailModal
                     patient={selectedPatient}
@@ -270,6 +287,16 @@ export default function IpdOpdPage() {
                     }
                     onAddPatient={handleAddPatient}
                     existingPatients={mockpatients}
+                />
+
+                <AddWorkflow
+                    open={addWorkflow.isOpen}
+                    onOpenChange={() => {
+                        setAddWorkflow({
+                            isOpen: false,
+                            patient: null
+                        })
+                    }}
                 />
 
             </div>

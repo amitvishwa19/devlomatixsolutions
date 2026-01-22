@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from '@/components/ui/button'
 import { ContextMenuItem } from '@/components/ui/context-menu'
 import { navigationItems } from '../../[orgId]/(misc)/data/data'
+import { useData } from '../../[orgId]/(misc)/_providers/DataProvider'
 
 
 
@@ -52,9 +53,7 @@ const groupedItems = navigationItems.reduce((acc, item) => {
 const categories = Object.keys(groupedItems);
 
 export function TopNav() {
-    const title = useSelector((state) => state.org.topnavTitle)
-    const server = useSelector((state) => state.org.server)
-    const params = useParams()
+    const { navMode, setNavMode } = useData()
     const pathName = usePathname()
     const isMobile = useIsMobile()
     const paths = pathName === '/' ? [''] : pathName.split('/')
@@ -64,10 +63,9 @@ export function TopNav() {
         const topNav = localStorage.getItem("top-nav")
         const mode = topNav == "true"
         setTopNav(mode)
-    }, [])
+    }, [navMode])
 
     const togglrNav = () => {
-        console.log('toggle nav')
         const next = !topNav;
         setTopNav(next)
         localStorage.setItem("top-nav", String(next));

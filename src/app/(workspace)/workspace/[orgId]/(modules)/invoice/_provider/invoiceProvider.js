@@ -12,11 +12,11 @@ export const InvoiceProvider = ({ children, allCategories, allInvoices, allServi
     const [appointments, setAppointments] = useState(null)
 
     useEffect(() => {
-        setCategory(allCategories)
-        setInvoices(allInvoices)
-        setServices(allServices)
-        setAppointments(allAppointments)
-    }, [allCategories, allInvoices, allServices, appointments])
+        setCategory(allCategories || [])
+        setInvoices(allInvoices || [])
+        setServices(allServices || [])
+        setAppointments(allAppointments || [])
+    }, [allCategories, allInvoices, allServices])
 
 
 
