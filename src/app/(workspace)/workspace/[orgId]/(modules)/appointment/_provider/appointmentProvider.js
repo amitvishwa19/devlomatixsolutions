@@ -14,8 +14,8 @@ export const AppointmentProvider = ({ children, allCategories, allAppointments }
 
 
     useEffect(() => {
-        setCategory(allCategories)
-        setAppointments(allAppointments?.filter(app => app?.serverId === server?.id))
+        setCategory(allCategories || [])
+        setAppointments(allAppointments || [])
     }, [allCategories, allAppointments, server])
 
 

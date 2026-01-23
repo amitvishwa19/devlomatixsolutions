@@ -23,6 +23,7 @@ export const navigationItems = [
     { title: "Inventory", url: "inventory", icon: "package", category: "Administration" },
     { title: "Invoices", url: "invoice", icon: "receipt", category: "Administration" },
     { title: "Payments", url: "payment", icon: "credit-card", category: "Administration" },
+    { title: "Billing", url: "billing", icon: "receipt-indian-rupee", category: "Administration" },
 
     // COMMUNICATION
     { title: "Communication", url: "communication", icon: "message-square", category: "Communication" },

@@ -61,13 +61,14 @@ const statusConfig = {
 };
 
 export function AppointmentTable({
-    appointments,
+    appointmentss,
     onView,
     onEdit,
     onDelete,
     onStatusChange,
     onSendReminder
 }) {
+    const appointments = []
     const [sortColumn, setSortColumn] = useState("date");
     const [sortDirection, setSortDirection] = useState("asc");
 

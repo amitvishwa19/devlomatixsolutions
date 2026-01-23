@@ -1,8 +1,11 @@
 //import 'aos/dist/aos.css';
 // import "@/css/public.css";
 import { Unbounded, Inter, Poppins, Roboto } from "next/font/google";
-import Footer from './_components/layout/Footer';
-import Header from './_components/layout/Header';
+import Footer from "./_components/Footer";
+import Header from "./_components/Header";
+import WhatsAppWidget from "./_components/WhatsAppWidget";
+import ExitIntentPopup from "./_components/ExitIntentPopup";
+
 
 
 const unbounded = Unbounded({ subsets: ["latin"] });
@@ -24,6 +27,8 @@ export default function PublicLayout({ children }) {
             </div>
             <div className=''>
                 <Footer />
+                <WhatsAppWidget />
+                <ExitIntentPopup />
             </div>
         </div>
     )

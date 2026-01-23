@@ -1,300 +1,357 @@
 'use client'
-import { useState } from 'react';
-import { Phone, Mail, MapPin, Clock, Send, MessageSquare, Sparkles, ArrowRight, Loader } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { useAction } from '@/hooks/use-action';
-import { sendInquiryMail } from '../_action/send-mail';
-import { toast } from 'sonner';
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import {
+    Mail, Phone, MapPin, Clock, Send,
+    MessageSquare, Building2, Users, HeadphonesIcon
+} from "lucide-react";
 
 const contactInfo = [
     {
-        icon: Phone,
-        title: 'Phone',
-        details: ['+91 97123X045X', '+91 97123X045X'],
-        description: 'Mon-Fri from 8am to 6pm',
-        color: 'from-emerald-500 to-teal-500',
+        icon: Mail,
+        title: "Email Us",
+        details: "info@carewell.com.in",
+        subtext: "We'll respond within 24 hours",
     },
     {
-        icon: Mail,
-        title: 'Email',
-        details: ['info@devloatix.in.com', 'contact@devlomatix.in'],
-        description: 'We reply within 24 hours',
-        color: 'from-blue-500 to-cyan-500',
+        icon: Phone,
+        title: "Call Us",
+        details: "+91 98765 43210",
+        subtext: "Mon-Fri, 9am-6pm IST",
     },
     {
         icon: MapPin,
-        title: 'Location',
-        details: ['123 Healthcare Blvd', 'Medical City, MC 12345'],
-        description: 'Visit us anytime',
-        color: 'from-purple-500 to-indigo-500',
+        title: "Visit Us",
+        details: "Tower A, Cyber City, Sector 24",
+        subtext: "Vadodara, Gujarat 390022",
     },
     {
         icon: Clock,
-        title: 'Working Hours',
-        details: ['Mon - Fri: 8:00 AM - 8:00 PM', 'Sat - Sun: 9:00 AM - 5:00 PM'],
-        description: 'Emergency: 24/7',
-        color: 'from-orange-500 to-amber-500',
+        title: "Business Hours",
+        details: "Monday - Friday",
+        subtext: "9:00 AM - 6:00 PM IST",
     },
 ];
 
-const Contact = () => {
-    const [loading, setLoading] = useState()
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-    });
+const inquiryTypes = [
+    { icon: MessageSquare, title: "General Inquiry", description: "Questions about our HMS solution" },
+    { icon: Building2, title: "Enterprise Sales", description: "For large hospital networks" },
+    { icon: Users, title: "Partnership", description: "Integration & reseller opportunities" },
+    { icon: HeadphonesIcon, title: "Support", description: "Technical assistance for existing customers" },
+];
 
-    const { execute } = useAction(sendInquiryMail, {
-        onSuccess: (data) => {
-            setLoading(false)
-            toast.success('Your inquiry submitted successfully, will book a demo and connect with you', { id: 'new-contact' })
-        },
-        onError: (error) => {
-            console.log(error)
-            toast.error('Oops somethig went wrong ! try again later', { id: 'new-contact' })
-            setLoading(false);
-        }
-    })
+
+
+const Contact = () => {
+
+    const { toast } = useToast();
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        organization: "",
+        phone: "",
+        inquiryType: "",
+        message: "",
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleChange = (e) => {
+        setFormData(prev => ({
+            ...prev,
+            [e.target.name]: e.target.value
+        }));
+    };
+
+    const handleInquirySelect = (type) => {
+        setFormData(prev => ({ ...prev, inquiryType: type }));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        if (!formData.name || !formData.email) {
-            toast.info('Please provide email to get started now');
-            return;
-        }
+        // Simulate form submission
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-        console.log('handleContactSubmit')
-        setLoading(true)
-        await execute({ name: formData.name, email: formData.email, phone: formData.email, message: formData.message })
+        toast({
+            title: "Message Sent!",
+            description: "Thank you for contacting us. We'll get back to you within 24 hours.",
+        });
 
-        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+        setFormData({
+            name: "",
+            email: "",
+            organization: "",
+            phone: "",
+            inquiryType: "",
+            message: "",
+        });
+        setIsSubmitting(false);
     };
 
     return (
-        <div className="min-h-screen overflow-hidden  w-full">
+        <div className="min-h-screen  w-full">
 
-            {/* Hero Section */}
-            <section className="relative py-24 lg:py-32 overflow-hidden">
-                <div className="absolute inset-0 gradient-mesh" />
-                <div className="blob blob-1" />
-                <div className="blob blob-2" />
-
-                <div className="container relative mx-auto px-4">
-                    <div className="max-w-4xl mx-auto text-center animate-fade-in">
-                        <div className="inline-flex items-center gap-2 rounded-full glass px-5 py-2.5 text-sm font-medium mb-8">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                            Contact Us
-                        </div>
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-8 light:text-primary">
-                            We're Here to{' '}
-                            <span className="  ">Help You</span>
-                        </h1>
-                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                            Have questions or need assistance? Reach out to us and our dedicated team will be happy to help.
-                        </p>
+            <main className="pt-16 md:pt-20">
+                {/* Hero Section */}
+                <section className="py-20 md:py-28 bg-gradient-to-b from-primary/5 to-background">
+                    <div className=" mx-auto px-4 md:px-8">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="text-center  mx-auto"
+                        >
+                            <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                                Get in Touch
+                            </span>
+                            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+                                Let's Start a{" "}
+                                <span className="text-primary">Conversation</span>
+                            </h1>
+                            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                                Have questions about our Hospital Management System?
+                                Our team is here to help you find the perfect solution for your healthcare facility.
+                            </p>
+                        </motion.div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Contact Info Cards */}
-            <section className="relative py-16">
-                <div className="container mx-auto px-4">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {contactInfo.map((info, index) => (
-                            <Card
-                                key={info.title}
-                                className="group card-hover border-border/50 bg-card/50 glass animate-slide-up overflow-hidden"
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                            >
-                                <CardContent className="p-6">
-                                    <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${info.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                                        <info.icon className="h-7 w-7 text-white" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-foreground mb-3">{info.title}</h3>
-                                    {info.details.map((detail, i) => (
-                                        <p key={i} className="text-foreground text-sm">{detail}</p>
-                                    ))}
-                                    <p className="text-muted-foreground text-xs mt-3 flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                        {info.description}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Contact Form & Map */}
-            <section className="relative py-16 lg:py-24">
-                <div className="container mx-auto px-4">
-                    <div className="grid lg:grid-cols-2 gap-12">
-                        {/* Form */}
-                        <div className="animate-slide-up">
-                            <div className="mb-10">
-                                <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
-                                    <MessageSquare className="h-4 w-4 text-primary" />
-                                    Send a Message
-                                </div>
-                                <h2 className="text-4xl font-bold text-foreground mb-4">
-                                    Get in <span className="  ">Touch</span>
-                                </h2>
-                                <p className="text-lg text-muted-foreground">
-                                    Fill out the form below and we'll respond as soon as possible.
-                                </p>
-                            </div>
-
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="grid sm:grid-cols-2 gap-5">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name" className="text-foreground font-medium">Full Name *</Label>
-                                        <Input
-                                            id="name"
-                                            placeholder=""
-                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email" className="text-foreground font-medium">Email Address *</Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            placeholder="john@example.com"
-                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid sm:grid-cols-2 gap-5">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone" className="text-foreground font-medium">Phone Number</Label>
-                                        <Input
-                                            id="phone"
-                                            type="tel"
-                                            placeholder="+91 971234X45X"
-                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="subject" className="text-foreground font-medium">Subject</Label>
-                                        <Input
-                                            id="subject"
-                                            placeholder="How can we help?"
-                                            className="h-12 bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20"
-                                            value={formData.subject}
-                                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="message" className="text-foreground font-medium">Message *</Label>
-                                    <Textarea
-                                        id="message"
-                                        rows='4'
-                                        placeholder="Tell us more about your inquiry..."
-                                        className="min-h-[160px] bg-card/50  border-border/50 focus:border-primary/50 focus:ring-primary/20 resize-none"
-                                        value={formData.message}
-                                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                    />
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    size="lg"
-                                    disabled={loading}
-                                    className="w-full sm:w-auto group  text-primary-foreground border-0 shadow-glow hover:shadow-[0_0_80px_hsl(262_83%_58%/0.4)] transition-all duration-500 px-8"
+                {/* Contact Info Cards */}
+                <section className="py-12 md:py-16">
+                    <div className=" mx-auto px-4 md:px-8">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                            {contactInfo.map((item, index) => (
+                                <motion.div
+                                    key={item.title}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                                    className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors text-center"
                                 >
-                                    {loading && <Loader className=' animate-spin' />}
-                                    Send Message
-                                    <Send className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                </Button>
-                            </form>
-                        </div>
-
-                        {/* Map */}
-                        <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                            <div className="relative h-full min-h-[500px] rounded-[2rem] overflow-hidden shadow-float">
-                                <div className="absolute -inset-2 gradient-primary opacity-10 blur-2xl" />
-                                <iframe
-                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9663095343008!2d-74.00425882426698!3d40.74076684379132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259bf5c1654f3%3A0xc80f9cfce5383d5d!2sGoogle!5e0!3m2!1sen!2sus!4v1639653674764!5m2!1sen!2sus"
-                                    width="100%"
-                                    height="100%"
-                                    style={{ border: 0, minHeight: '100%' }}
-                                    allowFullScreen
-                                    loading="lazy"
-                                    referrerPolicy="no-referrer-when-downgrade"
-                                    title="MediCare Location"
-                                    className="rounded-[2rem]"
-                                />
-                            </div>
+                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                        <item.icon className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <h3 className="font-display font-semibold text-foreground mb-1">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-foreground font-medium text-sm mb-1">
+                                        {item.details}
+                                    </p>
+                                    <p className="text-muted-foreground text-xs">
+                                        {item.subtext}
+                                    </p>
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* FAQ Section */}
-            <section className="relative py-24 lg:py-32">
-                <div className="absolute inset-0 gradient-mesh opacity-50" />
-                <div className="blob blob-3" />
-
-                <div className="container relative mx-auto px-4">
-                    <div className="text-center max-w-3xl mx-auto mb-16">
-                        <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium mb-6">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                            FAQ
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                            Frequently Asked{' '}
-                            <span className="  ">Questions</span>
-                        </h2>
-                        <p className="text-lg text-muted-foreground">
-                            Find quick answers to common questions about our services.
-                        </p>
-                    </div>
-
-                    <div className="max-w-3xl mx-auto space-y-4">
-                        {[
-                            { q: 'How do I schedule an appointment?', a: 'You can book an appointment online through our website, call our reception, or visit us in person.' },
-                            { q: 'What insurance plans do you accept?', a: 'We accept most major insurance plans. Please contact us to verify your specific coverage.' },
-                            { q: 'Do you offer emergency services?', a: 'Yes, our emergency department is open 24/7 for urgent medical needs.' },
-                            { q: 'Can I request a specific doctor?', a: 'Absolutely! When booking your appointment, you can request your preferred physician.' },
-                        ].map((faq, index) => (
-                            <Card
-                                key={index}
-                                className="group card-hover border-border/50 bg-card/50 glass animate-slide-up overflow-hidden"
-                                style={{ animationDelay: `${index * 0.1}s` }}
+                {/* Contact Form Section */}
+                <section className="py-16 md:py-24">
+                    <div className="container mx-auto px-4 md:px-8">
+                        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+                            {/* Form */}
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5 }}
                             >
-                                <CardContent className="p-6">
-                                    <div className="flex items-start gap-4">
-                                        <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center flex-shrink-0">
-                                            <span className="text-primary-foreground font-bold text-sm">{index + 1}</span>
+                                <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
+                                    Send Us a Message
+                                </h2>
+
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
+                                                Full Name *
+                                            </label>
+                                            <Input
+                                                id="name"
+                                                name="name"
+                                                value={formData.name}
+                                                onChange={handleChange}
+                                                placeholder="Rajesh Kumar"
+                                                required
+                                                className="bg-background"
+                                            />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-foreground mb-2">{faq.q}</h3>
-                                            <p className="text-muted-foreground text-sm leading-relaxed">{faq.a}</p>
+                                            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                                                Email Address *
+                                            </label>
+                                            <Input
+                                                id="email"
+                                                name="email"
+                                                type="email"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                placeholder="rajesh@hospital.in"
+                                                required
+                                                className="bg-background"
+                                            />
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="organization" className="block text-sm font-medium text-foreground mb-2">
+                                                Organization
+                                            </label>
+                                            <Input
+                                                id="organization"
+                                                name="organization"
+                                                value={formData.organization}
+                                                onChange={handleChange}
+                                                placeholder="Hospital Name"
+                                                className="bg-background"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
+                                                Phone Number
+                                            </label>
+                                            <Input
+                                                id="phone"
+                                                name="phone"
+                                                type="tel"
+                                                value={formData.phone}
+                                                onChange={handleChange}
+                                                placeholder="+91 98765 00000"
+                                                className="bg-background"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-3">
+                                            What can we help you with?
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {inquiryTypes.map((type) => (
+                                                <button
+                                                    key={type.title}
+                                                    type="button"
+                                                    onClick={() => handleInquirySelect(type.title)}
+                                                    className={`p-4 rounded-xl border text-left transition-all ${formData.inquiryType === type.title
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border hover:border-primary/50'
+                                                        }`}
+                                                >
+                                                    <type.icon className={`w-5 h-5 mb-2 ${formData.inquiryType === type.title ? 'text-primary' : 'text-muted-foreground'
+                                                        }`} />
+                                                    <p className="font-medium text-foreground text-sm">{type.title}</p>
+                                                    <p className="text-muted-foreground text-xs">{type.description}</p>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
+                                            Your Message *
+                                        </label>
+                                        <Textarea
+                                            id="message"
+                                            name="message"
+                                            value={formData.message}
+                                            onChange={handleChange}
+                                            placeholder="Tell us about your needs..."
+                                            rows={5}
+                                            required
+                                            className="bg-background resize-none"
+                                        />
+                                    </div>
+
+                                    <Button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full hero-gradient text-primary-foreground rounded-xl py-6 font-semibold shadow-glow hover:shadow-xl transition-all"
+                                    >
+                                        {isSubmitting ? (
+                                            "Sending..."
+                                        ) : (
+                                            <>
+                                                <Send className="w-5 h-5 mr-2" />
+                                                Send Message
+                                            </>
+                                        )}
+                                    </Button>
+                                </form>
+                            </motion.div>
+
+                            {/* Map / Additional Info */}
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5 }}
+                                className="space-y-8"
+                            >
+                                <div>
+                                    <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
+                                        Why Choose HospitalHMS?
+                                    </h2>
+                                    <div className="space-y-4">
+                                        {[
+                                            "Dedicated implementation support from day one",
+                                            "Customizable modules to fit your workflow",
+                                            "24/7 technical support for enterprise clients",
+                                            "Regular updates and new feature releases",
+                                            "Comprehensive training for your staff",
+                                        ].map((item, index) => (
+                                            <div key={index} className="flex items-start gap-3">
+                                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <div className="w-2 h-2 rounded-full bg-primary" />
+                                                </div>
+                                                <p className="text-muted-foreground">{item}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Map Placeholder */}
+                                <div className="aspect-video rounded-2xl bg-gradient-to-br from-primary/10 via-secondary to-accent/10 border border-border overflow-hidden">
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <div className="text-center">
+                                            <MapPin className="w-12 h-12 text-primary/40 mx-auto mb-3" />
+                                            <p className="text-muted-foreground text-sm">
+                                                Tower A, Cyber City, Sector 24<br />
+                                                Gurugram, Haryana 122002
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Quick Contact */}
+                                <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                                    <h3 className="font-display font-semibold text-foreground mb-2">
+                                        Need Immediate Assistance?
+                                    </h3>
+                                    <p className="text-muted-foreground text-sm mb-4">
+                                        Our sales team is available to answer your questions.
+                                    </p>
+                                    <a
+                                        href="tel:+919876543210"
+                                        className="inline-flex items-center gap-2 text-primary font-medium hover:underline"
+                                    >
+                                        <Phone className="w-4 h-4" />
+                                        +91 98765 43210
+                                    </a>
+                                </div>
+                            </motion.div>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </main>
+
         </div>
     );
 };

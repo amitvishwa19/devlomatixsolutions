@@ -55,6 +55,8 @@ export const appointmentStatus = [
     { title: "Cancelled", value: 'cancelled', icon: 'shield-x' }
 ]
 
+
+
 export const status = [
     { title: "Scheduled", value: 'scheduled', icon: 'shield' },
     { title: "Confirmed", value: 'confirmed', icon: 'shield-plus' },

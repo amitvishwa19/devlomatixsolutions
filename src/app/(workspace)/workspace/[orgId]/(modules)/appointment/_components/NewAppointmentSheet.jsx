@@ -243,7 +243,7 @@ export function NewAppointmentSheet({ open, onOpenChange, onClose, data, mode, a
     return (
         <Sheet open={open} onOpenChange={handleOpenChange}>
             <SheetContent className="bg-transparent bg-none border-0 p-2 min-w-[620px]">
-                <div className="bg-card  h-full rounded-md  border">
+                <div className="bg-card  h-full rounded-lg  border">
 
                     <SheetHeader className="space-y-4 pb-2">
                         <div className="flex items-center gap-3">

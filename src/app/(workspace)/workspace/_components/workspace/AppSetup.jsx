@@ -1590,7 +1590,7 @@ export const AppSetup = ({ onOpenChange }) => {
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={false} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl  overflow-hidden flex flex-col min-w-[80%] min-h-[80%] max-h-[80%] hide-dialog-close ">
                 <DialogHeader className="pb-0 hidden">
                     <DialogTitle className="text-xl">App Setup</DialogTitle>
