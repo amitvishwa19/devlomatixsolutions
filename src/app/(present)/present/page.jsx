@@ -45,6 +45,7 @@ import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import carewellLogo from "@/assets/images/logo/logo.png";
 import InteractiveDemoModal from "@/app/(public)/_components/InteractiveDemoModal";
+import ContactFormModal from "@/app/(public)/_components/ContactFormModal";
 
 const slides = [
     {

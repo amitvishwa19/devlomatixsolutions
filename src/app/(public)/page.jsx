@@ -53,7 +53,7 @@ export default function HomePage() {
     return (
         <div className="min-h-screen overflow-hidden w-full">
             <HeroSection />
-            <HealthcareSection />
+            {/* <HealthcareSection /> */}
             <ClientsSection />
             <ComplianceSection />
             <FeaturesSection />
