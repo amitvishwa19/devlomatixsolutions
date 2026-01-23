@@ -12,12 +12,14 @@ import Link from "next/link";
 import ThemeSwitcher from "@/components/global/ThemeSwitch";
 import { usePathname } from "next/navigation";
 import { AuthSelector } from "@/components/global/AuthSelector";
+import BookDemoModal from "./BookDemoModal";
 
 const navLinks = [
     { name: "Home", href: "/" },
     { name: "Features", href: "/feature" },
     { name: "Pricing", href: "/pricing" },
     { name: "About", href: "/about" },
+    { name: "Articles", href: "/article" },
     { name: "Contact", href: "/contact" },
 ];
 
@@ -31,6 +33,8 @@ const mockUser = {
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
     const path = usePathname()
+
+    console.log('path', path)
 
     return (
         <motion.nav
@@ -49,7 +53,7 @@ const Header = () => {
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center gap-8">
                         {navLinks.map((link) => {
-                            const isActive = path === link.href;
+                            const isActive = path === link.href || path.startsWith(link.href + "/");
                             return (
                                 <Link
                                     key={link.name}
@@ -68,6 +72,11 @@ const Header = () => {
                     {/* Desktop CTA */}
                     <div className="hidden md:flex items-center gap-4">
                         <ThemeSwitcher />
+                        <BookDemoModal>
+                            <Button variant="outline" className="rounded-lg">
+                                Book Demo
+                            </Button>
+                        </BookDemoModal>
                         <ContactFormModal title="Get Started">
                             <Button className="hero-gradient text-primary-foreground rounded-lg shadow-glow hover:shadow-xl transition-all">
                                 Let's get started

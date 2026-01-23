@@ -14,6 +14,7 @@ import { authOptions } from "./api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
 import { AccessProvider } from "@/providers/AccessProvider";
+import CookieConsent from "./(public)/_components/CookieConsent";
 
 
 
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }) {
                                                 {/* <OrgModalProvider /> */}
                                                 <OrgProvider>
                                                     {children}
+                                                    <CookieConsent />
                                                 </OrgProvider>
                                             </Providers>
                                         </AccessProvider>
