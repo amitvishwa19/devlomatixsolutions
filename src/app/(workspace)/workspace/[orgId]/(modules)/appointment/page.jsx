@@ -1,348 +1,182 @@
 'use client'
-import React, { useEffect, useEffectEvent, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Button } from '@/components/ui/button'
-import { useModal } from '@/hooks/useModal'
-import { useOrg } from '@/providers/OrgProvider'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import moment from 'moment'
-import { BarChart3, Bell, Calendar, CalendarRange, Eye, FilePenLine, LayoutDashboard, Megaphone, MoreHorizontal, Pencil, Plus, Stethoscope, Trash2, Trash2Icon, Users, View } from 'lucide-react'
-import { useParams, useRouter } from 'next/navigation'
-import { ActionTooltip } from '@/components/global/ActionTooltip'
-import { useSocket } from '@/providers/SocketProvider'
-import { useSession } from 'next-auth/react'
-import { ROLE } from '@prisma/client'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { useAppointment } from './_provider/appointmentProvider'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
-import DashboardContent from './_components/sections/DashboardSection'
-import AppointmentsContent from './_components/sections/AppointmentsSection'
-import DoctorsContent from './_components/sections/DoctorsSection'
-import PatientsContent from './_components/sections/PatientsSection'
-import ReportsContent from './_components/sections/ReportsSection'
-import SettingsContent from './_components/sections/SettingsSection'
-import NewAppointmentSheet from './_components/NewAppointmentSheet'
+import React, { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { ContentTopbar } from '../../(misc)/_components/ContentTopbar'
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { DOCTOR_SCHEDULES } from './misc/types';
+import { calculateAppointmentStats, filterAppointments } from './misc/utils';
+import { mockAppointments } from './misc/mockAppointments';
+import { DoctorAvailabilitySheet } from './components/DoctorAvailabilitySheet';
+import { WaitlistSheet } from './components/WaitlistSheet';
+import { NewAppointmentDialog } from './components/NewAppointmentDialog';
+import { AppointmentStatsCards } from './components/AppointmentStatsCards';
+import { AppointmentFilters } from './components/AppointmentFilters';
+import { AppointmentList } from './components/AppointmentList';
+import { AppointmentTableView } from './components/AppointmentTableView';
+import { AppointmentCalendarView } from './components/AppointmentCalendarView';
+import { DraggableCalendarView } from './components/DraggableCalendarView';
+import { AppointmentAnalytics } from './components/AppointmentAnalytics';
+import { AppointmentDetailSheet } from './components/AppointmentDetailSheet';
 
-const tabs = [
-    { value: "appointments", label: "Appointments", icon: Calendar },
-    { value: "doctors", label: "Doctors", icon: Stethoscope },
-    { value: "patients", label: "Patients", icon: Users },
-    { value: "reports", label: "Reports", icon: BarChart3 },
-];
+
+
 
 
 export default function Appointments() {
-    const [activeTab, setActiveTab] = useState("appointments");
-    const { server, servers } = useOrg()
-    const { data: session } = useSession()
-    const { category, setCategory, appointments } = useAppointment()
+    const [appointments, setAppointments] = useLocalStorage('hms_appointments', mockAppointments);
+    const [waitlist, setWaitlist] = useLocalStorage('hms_waitlist', []);
+    const [doctorSchedules, setDoctorSchedules] = useLocalStorage('hms_doctor_schedules', DOCTOR_SCHEDULES);
 
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [doctorFilter, setDoctorFilter] = useState('all');
+    const [dateFilter, setDateFilter] = useState(null);
+    const [viewMode, setViewMode] = useState('list');
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+    const [prefillData, setPrefillData] = useState(null);
 
-    const allAppointments = useSelector((state) => state.appointment.appointments)
-    const serverAppointments = allAppointments?.filter(appointment => appointment.serverId === server?.id)
-    const appointmentData = servers.flatMap(group => group.appointments); //All appointment of all server
-    const { onOpen } = useModal()
-    const router = useRouter()
-    const { orgId } = useParams()
-    const dispatch = useDispatch()
-    const { socket } = useSocket()
-    const { newAppointmentNotification, patientInNotify } = useSocket()
-    const [appointmentSheet, setAppointmentSheet] = useState({
-        isOpen: false,
-        mode: 'view',
-    });
+    const stats = useMemo(() => calculateAppointmentStats(appointments), [appointments]);
 
-
-    const [viewAppointment, setViewAppointment] = useState({
-        isOpen: false,
-        mode: 'view',
-        category: null,
-        parentCategory: null
-    });
-
-    useEffect(() => {
-        socket?.on('patientInNotify', (e) => {
-            const { sender, data } = e
-
-            if (e?.sender?.orgId !== orgId) {
-                console.log('Patient in notification', e)
-                setViewAppointment({
-                    isOpen: true,
-                    mode: 'view',
-                    appointment: e.data
-                });
-            }
-        })
-
-    }, [socket])
-
-
-    const handleViewAppointment = (e) => {
-        console.log('view appointment', e)
-        setViewAppointment({
-            isOpen: true,
-            mode: 'view',
-            appointment: e
+    const filteredAppointments = useMemo(() => {
+        return filterAppointments(appointments, {
+            search: searchQuery,
+            status: statusFilter,
+            department: departmentFilter,
+            doctor: doctorFilter,
+            date: dateFilter,
         });
+    }, [appointments, searchQuery, statusFilter, departmentFilter, doctorFilter, dateFilter]);
+
+    const handleAppointmentClick = (appointment) => {
+        setSelectedAppointment(appointment);
+        setDetailSheetOpen(true);
     };
 
-    const [appointmentEditor, setAppointmentEditor] = useState({
-        isOpen: false,
-        mode: 'edit',
-        appointment: null
-    });
-
-
-    const handleEditAppointment = (e) => {
-
-        setEditAppointment({
-            isOpen: true,
-            mode: 'edit',
-            appointment: e
-        });
+    const handleStatusChange = (appointmentId, newStatus) => {
+        console.log('Updating appointment status:', { appointmentId, newStatus });
+        setAppointments((prev) =>
+            prev.map((apt) =>
+                apt.id === appointmentId ? { ...apt, status: newStatus } : apt
+            )
+        );
     };
 
+    const handleAddAppointment = (newAppointment) => {
+        console.log('Adding appointment:', newAppointment);
+        setAppointments((prev) => [newAppointment, ...prev]);
+    };
 
-    //console.log(session)
-    const finaldata = session?.user?.role === ROLE.RECEPTIONIST ? appointmentData : serverAppointments
-
-    const data = finaldata?.map((item) => {
-        return {
-            id: item?.id,
-            uuid: item?.patient?.uuid,
-            patient: item?.patient?.displayName,
-            patientDetails: item?.patient,
-            doctor: 'Dr. ' + item?.doctor?.displayName,
-            doctorDetails: item?.doctor,
-            date: item?.date,
-            slot: item?.slot,
-            time: item?.time,
-            type: item?.type,
-            visitType: item?.visitType,
-            note: item?.note,
-            additionalNote: item?.additionalNote,
-            doctorNote: item?.doctorNote,
-            status: item?.status,
-            raw: item
-        }
-    })
-
-
-    const notifyDoctor = (e) => {
-        patientInNotify(e)
-    }
-
-    const columns = [
-        {
-            id: "patient",
-            accessorKey: "patient",
-            header: "Patient",
-            cell: ({ row }) => (
-                <div className='flex flex-row gap-4 items-center'>
-                    <Avatar className='rounded-md h-8 w-8'>
-                        <AvatarImage src={row?.original?.patientDetails?.avatar} alt="@shadcn" />
-                        <AvatarFallback className='rounded-md'>{row?.original?.patientDetails?.displayName?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className='flex flex-col items-start'>
-                        <span>{row.original.patient}</span>
-                        <span className='text-xs text-muted-foreground'>{row.original.uuid}</span>
-                    </div>
-                </div>
-            ),
-            enableSorting: true,
-            enableHiding: true,
-        },
-        {
-            id: "doctor",
-            accessorKey: "doctor",
-            header: "Doctor",
-            cell: ({ row }) => (
-                <div className='flex flex-col items-start'>
-                    <span>{row.original.doctor}</span>
-                    <span className='text-xs text-muted-foreground'>{row.original.doctorDetails?.uuid}</span>
-                </div>
+    const handleReschedule = (appointmentId, newDate, newTime) => {
+        console.log('Rescheduling appointment:', { appointmentId, newDate, newTime });
+        setAppointments((prev) =>
+            prev.map((apt) =>
+                apt.id === appointmentId ? { ...apt, date: newDate, time: newTime } : apt
             )
-        },
-        {
-            id: "info",
-            header: "Appointment Info",
-            cell: ({ row }) => (
-                <div className='flex flex-col '>
-                    <div>
-                        {moment(row.original.date).format("Do MMM YY")} -
-                        {row.original.time}
-                    </div>
-                    <span className=' capitalize text-xs text-muted-foreground'>{row.original.visitType}</span>
-                </div>
-            )
-        },
-        {
-            accessorKey: "status",
-            header: "Status",
-            cell: ({ row }) => <StatusSelector
-                status={row.original.status}
-                title={row.original.status}
-                id={row.original.id}
-            />
-        },
-        {
-            id: "actions",
-            enableHiding: false,
-            header: "Actions",
-            cell: ({ row }) => {
-                const appointment = row.original
+        );
+    };
 
-                return (
-                    <div className='flex flex-row items-center gap-4'>
-                        <ActionTooltip label={'Notify Doctor and open patient info'}>
-                            <Megaphone size={18} className=' cursor-pointer' onClick={() => {
-                                notifyDoctor(appointment)
-                            }} />
-                        </ActionTooltip>
-                        <ActionTooltip label={'Edit Appointment'}>
-                            <Eye size={18} className=' cursor-pointer' onClick={() => {
-                                handleViewAppointment(appointment)
-                            }} />
-                        </ActionTooltip>
+    const handleDeleteAppointment = (appointmentId) => {
+        console.log('Deleting appointment:', appointmentId);
+        setAppointments((prev) => prev.filter((apt) => apt.id !== appointmentId));
+        setSelectedAppointment(null);
+        setDetailSheetOpen(false);
+    };
 
-                        <ActionTooltip label={'Edit Appointment'}>
-                            <Pencil size={18} className=' cursor-pointer' onClick={() => {
-                                setAppointmentEditor({
-                                    isOpen: true,
-                                    mode: 'edit',
-                                    appointment: row.original
-                                })
-                            }}
-                            />
-                        </ActionTooltip>
-
-                        <ActionTooltip label={'Delete Appointment'}>
-                            <Trash2Icon size={18} className=' cursor-pointer' onClick={() => { onOpen('delete-appointment', { appointmentId: row.original.id }) }} />
-                        </ActionTooltip>
-                    </div>
-                )
-            },
-        },
-
-    ]
+    const handleScheduleFromWaitlist = (entry) => {
+        setPrefillData({
+            patientId: entry.patientId,
+            doctorId: entry.doctorId,
+        });
+    };
 
     return (
         <div className='absolute inset-0 flex flex-col gap-2'>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <ContentTopbar
+                title='Appointments'
+                description='Schedule, manage, and track all patient appointments efficiently'
+                icon='workflow'
+                actionComp={<div className="flex items-center gap-3">
+                    <DoctorAvailabilitySheet
+                        doctorSchedules={doctorSchedules}
+                        onUpdateSchedules={setDoctorSchedules}
+                    />
+                    <WaitlistSheet
+                        waitlist={waitlist}
+                        onUpdateWaitlist={setWaitlist}
+                        onScheduleFromWaitlist={handleScheduleFromWaitlist}
+                    />
+                    <NewAppointmentDialog onAddAppointment={handleAddAppointment} prefillData={prefillData} />
+                </div>}
+            />
 
-                <ContentTopbar
-                    title='Appointments'
-                    description="Welcome back! Here' s what's happening with your appointments today."
-                    actionComp={
-                        <div className='flex flex-row items-center gap-2'>
-                            <TabsList className="flex flex-wrap justify-center gap-1 bg-card border border-border/60 p-1  rounded-lg h-auto">
-                                {tabs.map((tab) => {
-                                    const Icon = tab.icon;
-                                    return (
-                                        <TabsTrigger
-                                            key={tab.value}
-                                            value={tab.value}
-                                            className={cn(
-                                                "flex items-center gap-2  rounded-lg text-sm font-medium transition-all",
-                                                "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-glow-sm"
-                                            )}
-                                        >
-                                            <Icon className="h-4 w-4" />
-                                            <span className="hidden lg:inline">{tab.label}</span>
-                                        </TabsTrigger>
-                                    );
-                                })}
-                            </TabsList>
-                            <Button
-                                variant='default'
-                                size='md'
-                                onClick={() => {
-                                    setAppointmentSheet({
-                                        isOpen: true,
-                                        mode: 'add'
-                                    })
-                                }}
-                                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-glow-sm"
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">New Appointment</span>
-                                <span className="sm:hidden">New</span>
-                            </Button>
-                        </div>
-                    }
+            {/* Header */}
+            <div className="flex items-start justify-between w-full px-2">
+                <AppointmentStatsCards stats={stats} />
+            </div>
+
+
+            {/* Filters */}
+            <div className="px-2">
+                <AppointmentFilters
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
+                    departmentFilter={departmentFilter}
+                    onDepartmentFilterChange={setDepartmentFilter}
+                    doctorFilter={doctorFilter}
+                    onDoctorFilterChange={setDoctorFilter}
+                    dateFilter={dateFilter}
+                    onDateFilterChange={setDateFilter}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
                 />
+            </div>
 
+            {/* Appointments View */}
+            <div className="flex-1 overflow-y-auto p-2">
+                {viewMode === 'list' && (
+                    <AppointmentList
+                        appointments={filteredAppointments}
+                        onAppointmentClick={handleAppointmentClick}
+                        onStatusChange={handleStatusChange}
+                    />
+                )}
+                {viewMode === 'table' && (
+                    <AppointmentTableView
+                        appointments={filteredAppointments}
+                        onAppointmentClick={handleAppointmentClick}
+                        onStatusChange={handleStatusChange}
+                    />
+                )}
+                {viewMode === 'calendar' && (
+                    <AppointmentCalendarView
+                        appointments={filteredAppointments}
+                        onAppointmentClick={handleAppointmentClick}
+                        onStatusChange={handleStatusChange}
+                    />
+                )}
+                {viewMode === 'scheduler' && (
+                    <DraggableCalendarView
+                        appointments={filteredAppointments}
+                        onAppointmentClick={handleAppointmentClick}
+                        onReschedule={handleReschedule}
+                    />
+                )}
+                {viewMode === 'analytics' && (
+                    <AppointmentAnalytics appointments={appointments} />
+                )}
+            </div>
 
-                <ScrollArea className='h-[86vh] flex flex-grow  '>
-
-                    {/* <div className='flex flex-col gap-4 p-2'>
-
-                        <div className='flex flex-row gap-2 w-full '>
-
-
-                            <div className='min-w-[75%]'>
-                                <DataTable
-                                    columns={columns}
-                                    data={data}
-                                    onFiltersChange={(e) => { console.log('filter change', e) }}
-                                    filterTitle='Search appointments......'
-                                />
-
-                            </div>
-
-                            <div className='w-full'>
-                                <CategoryHierarchy
-                                    title='Appointment Hierarchy'
-                                    category={category}
-                                    onUpdate={(c) => { setCategory(c) }}
-                                />
-                            </div>
-
-                        </div>
-                    </div> */}
-
-                    <div className="container mx-auto">
-                        <TabsContent value="dashboard" className="mt-0">
-                            <DashboardContent />
-                        </TabsContent>
-
-                        <TabsContent value="appointments" className="mt-0">
-                            <AppointmentsContent />
-                        </TabsContent>
-
-                        <TabsContent value="doctors" className="mt-0">
-                            <DoctorsContent />
-                        </TabsContent>
-
-                        <TabsContent value="patients" className="mt-0">
-                            <PatientsContent />
-                        </TabsContent>
-
-                        <TabsContent value="reports" className="mt-0">
-                            <ReportsContent />
-                        </TabsContent>
-
-                        <TabsContent value="settings" className="mt-0">
-                            <SettingsContent />
-                        </TabsContent>
-                    </div>
-                </ScrollArea>
-
-
-            </Tabs>
-            <NewAppointmentSheet
-                open={appointmentSheet.isOpen}
-                onOpenChange={() => {
-                    setAppointmentSheet({
-                        isOpen: false
-                    })
-                }}
-            //onSave={handleSaveAppointment}
-            //editingAppointment={editingAppointment}
-            //existingAppointments={appointments}
+            {/* Appointment Detail Sheet */}
+            <AppointmentDetailSheet
+                appointment={selectedAppointment}
+                open={detailSheetOpen}
+                onOpenChange={setDetailSheetOpen}
+                onStatusChange={handleStatusChange}
+                onDelete={handleDeleteAppointment}
             />
 
         </div >
