@@ -1,152 +1,141 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
-import { Divide, User, Workflow } from 'lucide-react'
-import { useState, useMemo } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { LayoutGrid, Columns3 } from 'lucide-react';
-import { mockPatients } from './_hooks/mockPatients';
-import { WorkflowStats } from './_components/workflow/WorkflowStats';
-import { WorkflowFilters } from './_components/workflow/WorkflowFilters';
-import { PatientCard } from './_components/workflow/PatientCard';
-import { IPD_WORKFLOW_STEPS, OPD_WORKFLOW_STEPS } from './_hooks/types';
-import { PatientDetailModal } from './_components/workflow/PatientDetailModal';
-import { useFlow } from './_provider/flowProvider';
-import { DraggableKanban } from './_components/workflow/DraggableKanban';
-import { AddPatientModal } from './_components/workflow/AddPatientModal';
 import { ContentTopbar } from '../../(misc)/_components/ContentTopbar';
-import AddWorkflow from './_components/workflow/AddWorkflow';
+import { mockIPDPatients, mockOPDPatients } from './_misc/mockPatients';
+import { useCallback, useState } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { calculateStats, filterPatients } from './_misc/utils';
+import { IPD_STAGES, OPD_STAGES } from './_misc/types';
+import { useToast } from '@/hooks/use-toast';
+import { NewPatientDialog } from './_components/NewPatientDialog';
+import { StatsCards } from './_components/StatsCards';
+import { WorkflowFilters } from './_components/WorkflowFilters';
+import { WorkflowTabs } from './_components/WorkflowTabs';
+import { DragDropContext } from '@hello-pangea/dnd';
+import { WorkflowColumn } from './_components/WorkflowColumn';
+import { PatientDetailSheet } from './_components/PatientDetailSheet';
+
 
 export default function IpdOpdPage() {
-    const [mockpatients, setPatients] = useState(mockPatients);
+    const [activeTab, setActiveTab] = useState('opd');
+    const [opdPatients, setOpdPatients] = useLocalStorage('hms_opd_patients', mockOPDPatients);
+    const [ipdPatients, setIpdPatients] = useLocalStorage('hms_ipd_patients', mockIPDPatients);
+
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedType, setSelectedType] = useState('all');
-    const [selectedStatus, setSelectedStatus] = useState('all');
-    const [advancedFilters, setAdvancedFilters] = useState({});
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [viewMode, setViewMode] = useState('grid');
     const [selectedPatient, setSelectedPatient] = useState(null);
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [viewMode, setViewMode] = useState('kanban');
+    const [selectedStageName, setSelectedStageName] = useState('');
+    const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
-    const { patients, doctors } = useFlow()
+    // Collapsed columns state
+    const [collapsedColumns, setCollapsedColumns] = useState({});
 
-    console.log('allPatients', patients)
-
-    const [addPatientModal, setAddPatientModal] = useState({
-        isOpen: false,
-        mode: 'add',
-        patient: null
-    })
-
-    const [addWorkflow, setAddWorkflow] = useState({
-        isOpen: false,
-        mode: 'add',
-        patient: null
-    })
-
-    const filteredPatients = useMemo(() => {
-        return mockpatients?.filter((patient) => {
-            const matchesSearch =
-                searchQuery === '' ||
-                patient.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                patient.uuid.toLowerCase().includes(searchQuery.toLowerCase())
-            //patient.assignedDoctor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            //patient.department?.toLowerCase().includes(searchQuery.toLowerCase());
-
-            const matchesType = selectedType === 'all' || patient.workflowType === selectedType;
-            const matchesStatus = selectedStatus === 'all' || patient.status === selectedStatus;
-
-            // Advanced filters
-            const matchesDoctor = !advancedFilters.doctor || patient.assignedDoctor === advancedFilters.doctor;
-            const matchesDepartment = !advancedFilters.department || patient.department === advancedFilters.department;
-            const matchesDateFrom = !advancedFilters.dateFrom || new Date(patient.admissionDate) >= advancedFilters.dateFrom;
-            const matchesDateTo = !advancedFilters.dateTo || new Date(patient.admissionDate) <= advancedFilters.dateTo;
-            const matchesAgeMin = !advancedFilters.ageMin || patient.age >= advancedFilters.ageMin;
-            const matchesAgeMax = !advancedFilters.ageMax || patient.age <= advancedFilters.ageMax;
-
-            return matchesSearch && matchesType && matchesStatus &&
-                matchesDoctor && matchesDepartment && matchesDateFrom &&
-                matchesDateTo && matchesAgeMin && matchesAgeMax;
-        });
-    }, [mockpatients, searchQuery, selectedType, selectedStatus, advancedFilters]);
-
-    const handleRefresh = () => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-            toast.success('Workflow data refreshed');
-        }, 1000);
-    };
-
-    const handleMovePatient = (patientId, newStage) => {
-        setPatients((prev) =>
-            prev.map((patient) => {
-                if (patient.id !== patientId) return patient;
-
-                const now = new Date().toISOString();
-
-                // Update the current stage history entry with completion time
-                const updatedHistory = patient.stageHistory.map((h) => {
-                    if (h.stage === patient.currentStage && !h.completedAt) {
-                        return { ...h, completedAt: now, completedBy: 'Current User' };
-                    }
-                    return h;
-                });
-
-                // Add new stage entry
-                updatedHistory.push({
-                    stage: newStage,
-                    enteredAt: now,
-                });
-
-                return {
-                    ...patient,
-                    currentStage: newStage,
-                    stageHistory: updatedHistory,
-                };
-            })
-        );
-    };
-
-    const handleAdvanceStage = (patientId) => {
-        const patient = patients.find(p => p.id === patientId);
-        if (!patient) return;
-
-        const steps = patient.workflowType === 'OPD' ? OPD_WORKFLOW_STEPS : IPD_WORKFLOW_STEPS;
-        const currentIndex = steps.findIndex((s) => s.id === patient.currentStage);
-        if (currentIndex >= steps.length - 1) return;
-
-        const nextStage = steps[currentIndex + 1].id;
-        handleMovePatient(patientId, nextStage);
-        toast.success(`Patient moved to ${steps[currentIndex + 1].name}`);
-    };
-
-    const handleViewDetails = (patient) => {
+    const handlePatientClick = (patient, stageName) => {
         setSelectedPatient(patient);
+        setSelectedStageName(stageName);
+        setDetailSheetOpen(true);
     };
 
-    const handleViewPatientById = (patientId) => {
-        const patient = patients.find(p => p.id === patientId);
-        if (patient) setSelectedPatient(patient);
+    const handleToggleCollapse = (stageId) => {
+        setCollapsedColumns(prev => ({
+            ...prev,
+            [stageId]: !prev[stageId]
+        }));
     };
 
-    const handleAddPatient = (patient) => {
-        //setPatients((prev) => [patient, ...prev]);
-        toast.success(`Patient ${patient.name} added successfully`);
+    const stats = calculateStats(opdPatients, ipdPatients);
+
+    const currentPatients = activeTab === 'opd' ? opdPatients : ipdPatients;
+    const currentStages = activeTab === 'opd' ? OPD_STAGES : IPD_STAGES;
+    const setCurrentPatients = activeTab === 'opd' ? setOpdPatients : setIpdPatients;
+
+    const opdCount = Object.values(opdPatients).flat().length;
+    const ipdCount = Object.values(ipdPatients).flat().length;
+
+    const getFilteredPatients = useCallback(
+        (stagePatients) => {
+            return filterPatients(stagePatients, searchQuery, statusFilter);
+        },
+        [searchQuery, statusFilter]
+    );
+
+    const handleDragEnd = (result) => {
+        const { source, destination } = result;
+
+        if (!destination) return;
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+        console.log('Drag end:', { source, destination });
+
+        setCurrentPatients((prev) => {
+            const newPatients = { ...prev };
+            const sourcePatients = [...newPatients[source.droppableId]];
+            const [movedPatient] = sourcePatients.splice(source.index, 1);
+
+            movedPatient.stageEnteredAt = new Date();
+
+            if (source.droppableId === destination.droppableId) {
+                sourcePatients.splice(destination.index, 0, movedPatient);
+                newPatients[source.droppableId] = sourcePatients;
+            } else {
+                const destPatients = [...newPatients[destination.droppableId]];
+                destPatients.splice(destination.index, 0, movedPatient);
+                newPatients[source.droppableId] = sourcePatients;
+                newPatients[destination.droppableId] = destPatients;
+            }
+
+            return newPatients;
+        });
     };
 
-    const handleUpdatePatient = (patientId, updates) => {
-        setPatients((prev) =>
-            prev.map((patient) =>
-                patient.id === patientId ? { ...patient, ...updates } : patient
-            )
-        );
-        // Also update the selected patient for immediate UI refresh
-        setSelectedPatient((prev) =>
-            prev?.id === patientId ? { ...prev, ...updates } : prev
-        );
+    const handleAddPatient = (patient, stageId) => {
+        console.log('Adding workflow patient:', { patient, stageId });
+        if (patient.workflowType === 'opd') {
+            setOpdPatients((prev) => ({
+                ...prev,
+                [stageId]: [...prev[stageId], patient],
+            }));
+        } else {
+            setIpdPatients((prev) => ({
+                ...prev,
+                [stageId]: [...prev[stageId], patient],
+            }));
+        }
     };
+
+    const { toast } = useToast();
+
+    const handleMoveToNextStage = (patient, currentStageId, nextStageId, nextStageName) => {
+        console.log('Moving patient to next stage:', { patient, currentStageId, nextStageId });
+
+        setCurrentPatients((prev) => {
+            const newPatients = { ...prev };
+            const sourcePatients = [...newPatients[currentStageId]];
+            const patientIndex = sourcePatients.findIndex(p => p.id === patient.id);
+
+            if (patientIndex === -1) return prev;
+
+            const [movedPatient] = sourcePatients.splice(patientIndex, 1);
+            movedPatient.stageEnteredAt = new Date();
+
+            const destPatients = [...newPatients[nextStageId]];
+            destPatients.push(movedPatient);
+
+            newPatients[currentStageId] = sourcePatients;
+            newPatients[nextStageId] = destPatients;
+
+            return newPatients;
+        });
+
+        toast({
+            title: 'Patient moved',
+            description: `${patient.name} moved to ${nextStageName}`,
+        });
+    };
+
 
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
@@ -155,148 +144,112 @@ export default function IpdOpdPage() {
                 title='Workflow Management'
                 description='Track and manage patient journeys from admission to discharge. Comprehensive management of OPD consultations and IPD admissions'
                 icon='workflow'
-                action={true}
-                actionName='Create New Flow'
-                actionIcon='workflow'
-                onActionClick={() => {
-                    setAddPatientModal({
-                        isOpen: true,
-                        patient: null
-                    })
-                }}
+
+
+
+                actionComp={
+                    <NewPatientDialog onAddPatient={handleAddPatient} workflowType={activeTab} />
+                }
             />
 
             <div className='h-[85vh] flex flex-grow   rounded-md '>
-
                 <div className='  rounded-md flex flex-col gap-2 animate-fade-in overflow-hidden' style={{ animationDelay: '0.1s' }} >
-
-                    {/* Stats */}
-                    <div className="animate-fade-in ">
-                        <WorkflowStats patients={patients} />
+                    <div>
+                        {/* Stats Cards */}
+                        <StatsCards stats={stats} />
                     </div>
-
-
-                    {/* Filters & View Toggle */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4  animate-fade-in  bg-card rounded-md" >
-                        <WorkflowFilters
-                            searchQuery={searchQuery}
-                            onSearchChange={setSearchQuery}
-                            selectedType={selectedType}
-                            onTypeChange={setSelectedType}
-                            selectedStatus={selectedStatus}
-                            onStatusChange={setSelectedStatus}
-                        />
-                        <div className="flex items-center gap-1 bg-muted p-[2px] rounded-md">
-                            <button
-                                onClick={() => setViewMode('cards')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'cards'
-                                    ? 'bg-card text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                            >
-                                <LayoutGrid className="w-4 h-4" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('kanban')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'kanban'
-                                    ? 'bg-card text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                            >
-                                <Columns3 className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-
                     <ScrollArea className='h-[72vh] flex flex-grow relative overflow-hidden p-2'>
+                        {/* Sticky Header Section */}
+                        <div className="sticky top-0 z-20 bg-background border-b border-border">
+                            <div className="p-6 space-y-4">
 
 
-                        {/* Content */}
-                        {viewMode === 'cards' ? (
-                            <section className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                                {filteredPatients.length === 0 ? (
-                                    <div className="text-center py-16">
-                                        <p className="text-muted-foreground">No patients found matching your criteria</p>
+                                {/* Filters */}
+                                <WorkflowFilters
+                                    searchQuery={searchQuery}
+                                    onSearchChange={setSearchQuery}
+                                    typeFilter={typeFilter}
+                                    onTypeFilterChange={setTypeFilter}
+                                    statusFilter={statusFilter}
+                                    onStatusFilterChange={setStatusFilter}
+                                    viewMode={viewMode}
+                                    onViewModeChange={setViewMode}
+                                />
+
+                                {/* Workflow Tabs */}
+                                <WorkflowTabs
+                                    activeTab={activeTab}
+                                    onTabChange={setActiveTab}
+                                    opdCount={opdCount}
+                                    ipdCount={ipdCount}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Kanban Board - Scrollable Content */}
+                        <div className="flex-1 p-6 pt-4">
+                            <DragDropContext onDragEnd={handleDragEnd}>
+                                {viewMode === 'grid' ? (
+                                    <div className="overflow-x-auto pb-4">
+                                        <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
+                                            {currentStages.map((stage, index) => {
+                                                const isLastStage = index === currentStages.length - 1;
+                                                const nextStage = isLastStage ? null : currentStages[index + 1];
+                                                return (
+                                                    <WorkflowColumn
+                                                        key={stage.id}
+                                                        stage={stage}
+                                                        patients={getFilteredPatients(currentPatients[stage.id] || [])}
+                                                        index={index}
+                                                        viewMode="grid"
+                                                        onPatientClick={handlePatientClick}
+                                                        isCollapsed={collapsedColumns[stage.id] || false}
+                                                        onToggleCollapse={() => handleToggleCollapse(stage.id)}
+                                                        nextStageName={nextStage?.name}
+                                                        isLastStage={isLastStage}
+                                                        onMoveToNextStage={(patient) => handleMoveToNextStage(patient, stage.id, nextStage?.id, nextStage?.name)}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                                        {filteredPatients.map((patient, index) => (
-                                            <div
-                                                key={patient.id}
-                                                className="animate-slide-up"
-                                                style={{ animationDelay: `${index * 0.05}s` }}
-                                            >
-                                                <PatientCard
-                                                    patient={patient}
-                                                    onAdvanceStage={handleAdvanceStage}
-                                                    onViewDetails={handleViewDetails}
+                                    <div className="space-y-4 pb-4">
+                                        {currentStages.map((stage, index) => {
+                                            const isLastStage = index === currentStages.length - 1;
+                                            const nextStage = isLastStage ? null : currentStages[index + 1];
+                                            return (
+                                                <WorkflowColumn
+                                                    key={stage.id}
+                                                    stage={stage}
+                                                    patients={getFilteredPatients(currentPatients[stage.id] || [])}
+                                                    index={index}
+                                                    viewMode="list"
+                                                    onPatientClick={handlePatientClick}
+                                                    isCollapsed={collapsedColumns[stage.id] || false}
+                                                    onToggleCollapse={() => handleToggleCollapse(stage.id)}
+                                                    nextStageName={nextStage?.name}
+                                                    isLastStage={isLastStage}
+                                                    onMoveToNextStage={(patient) => handleMoveToNextStage(patient, stage.id, nextStage?.id, nextStage?.name)}
                                                 />
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
-                            </section>
-                        ) : (
-                            <section className="animate-fade-in " style={{ animationDelay: '0.2s' }}>
-                                <Tabs defaultValue="OPD" className="w-full ">
-                                    <TabsList className="bg-muted">
-                                        <TabsTrigger value="OPD">OPD Workflow</TabsTrigger>
-                                        <TabsTrigger value="IPD">IPD Workflow</TabsTrigger>
-                                    </TabsList>
-                                    <TabsContent value="OPD" className=" h-full p-0">
-                                        <DraggableKanban
-                                            patients={filteredPatients}
-                                            workflowType="OPD"
-                                            onViewDetails={handleViewDetails}
-                                            onMovePatient={handleMovePatient}
-                                        />
-                                    </TabsContent>
-                                    <TabsContent value="IPD" className=" h-full p-0">
-                                        <DraggableKanban
-                                            patients={filteredPatients}
-                                            workflowType="IPD"
-                                            onViewDetails={handleViewDetails}
-                                            onMovePatient={handleMovePatient}
-                                        />
-                                    </TabsContent>
-                                </Tabs>
-                            </section>
-                        )}
+                            </DragDropContext>
+                        </div>
+
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
+
                 </div>
 
-
-                {/* Patient Detail Modal */}
-                <PatientDetailModal
+                {/* Patient Detail Sheet */}
+                <PatientDetailSheet
                     patient={selectedPatient}
-                    open={!!selectedPatient}
-                    onClose={() => setSelectedPatient(null)}
-                    onAdvanceStage={handleAdvanceStage}
-                />
-
-                <AddPatientModal
-                    patients={patients}
-                    doctors={doctors}
-                    open={addPatientModal.isOpen}
-                    mode={addPatientModal.mode}
-                    onClose={() =>
-                        setAddPatientModal({
-                            isOpen: false,
-                        })
-                    }
-                    onAddPatient={handleAddPatient}
-                    existingPatients={mockpatients}
-                />
-
-                <AddWorkflow
-                    open={addWorkflow.isOpen}
-                    onOpenChange={() => {
-                        setAddWorkflow({
-                            isOpen: false,
-                            patient: null
-                        })
-                    }}
+                    open={detailSheetOpen}
+                    onOpenChange={setDetailSheetOpen}
+                    currentStage={selectedStageName}
                 />
 
             </div>

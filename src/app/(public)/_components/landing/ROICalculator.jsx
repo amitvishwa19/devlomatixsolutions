@@ -7,9 +7,9 @@ import ContactFormModal from "../ContactFormModal";
 
 
 const ROICalculator = () => {
-    const [beds, setBeds] = useState([50]);
-    const [dailyOPD, setDailyOPD] = useState([100]);
-    const [staffCount, setStaffCount] = useState([20]);
+    const [beds, setBeds] = useState([0]);
+    const [dailyOPD, setDailyOPD] = useState([0]);
+    const [staffCount, setStaffCount] = useState([0]);
 
     const calculations = useMemo(() => {
         const bedCount = beds[0];
@@ -92,13 +92,13 @@ const ROICalculator = () => {
                                     <Slider
                                         value={beds}
                                         onValueChange={setBeds}
-                                        min={10}
+                                        min={0}
                                         max={500}
-                                        step={10}
+                                        step={1}
                                         className="w-full"
                                     />
                                     <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                                        <span>10</span>
+                                        <span>0</span>
                                         <span>500</span>
                                     </div>
                                 </div>
@@ -111,13 +111,13 @@ const ROICalculator = () => {
                                     <Slider
                                         value={dailyOPD}
                                         onValueChange={setDailyOPD}
-                                        min={20}
+                                        min={0}
                                         max={500}
-                                        step={10}
+                                        step={5}
                                         className="w-full"
                                     />
                                     <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                                        <span>20</span>
+                                        <span>0</span>
                                         <span>500</span>
                                     </div>
                                 </div>
@@ -130,13 +130,13 @@ const ROICalculator = () => {
                                     <Slider
                                         value={staffCount}
                                         onValueChange={setStaffCount}
-                                        min={5}
+                                        min={0}
                                         max={100}
-                                        step={5}
+                                        step={1}
                                         className="w-full"
                                     />
                                     <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                                        <span>5</span>
+                                        <span>0</span>
                                         <span>100</span>
                                     </div>
                                 </div>

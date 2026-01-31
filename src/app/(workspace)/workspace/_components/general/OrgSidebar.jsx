@@ -37,9 +37,7 @@ const groupedNavigation = navigationItems.reduce((acc, item) => {
 }, {});
 
 
-// ------------------------------------
-// Sidebar Component
-// ------------------------------------
+
 export default function OrgSidebar() {
     const params = useParams();
     const { orgId } = params;
@@ -54,17 +52,12 @@ export default function OrgSidebar() {
     const [openGroups, setOpenGroups] = useState({});
     const [hydrated, setHydrated] = useState(false);
 
-    // -----------------------------
-    // Restore sidebar collapsed state
-    // -----------------------------
+
     useEffect(() => {
         const saved = localStorage.getItem('sidebar-collapsed');
         setCollapsed(saved === 'true');
     }, []);
 
-    // -----------------------------
-    // Restore open groups from localStorage
-    // -----------------------------
     useEffect(() => {
         const stored = localStorage.getItem(OPEN_GROUPS_KEY);
         if (stored) {
@@ -75,18 +68,13 @@ export default function OrgSidebar() {
         setHydrated(true);
     }, []);
 
-    // -----------------------------
-    // Persist open groups
-    // -----------------------------
+
     useEffect(() => {
         if (!hydrated) return;
         localStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify(openGroups));
     }, [openGroups, hydrated]);
 
-    // -----------------------------
-    // Auto-open group ONLY if user
-    // has never interacted
-    // -----------------------------
+
     useEffect(() => {
         if (!hydrated) return;
 
@@ -106,9 +94,7 @@ export default function OrgSidebar() {
         });
     }, [segment, hydrated]);
 
-    // -----------------------------
-    // Handlers
-    // -----------------------------
+
     const toggleSidebar = () => {
         const next = !collapsed;
         setCollapsed(next);
@@ -129,16 +115,14 @@ export default function OrgSidebar() {
 
     if (topNav) return null;
 
-    // -----------------------------
-    // Render
-    // -----------------------------
+
     return (
         <div
             className={`
-        flex flex-col min-h-full text-primary relative
-        transition-all duration-300 ease-in-out
-        ${collapsed ? 'w-[50px]' : 'w-[246px]'}
-      `}
+                        flex flex-col min-h-full text-primary relative
+                        transition-all duration-300 ease-in-out
+                        ${collapsed ? 'w-[50px]' : 'w-[246px]'}
+                    `}
         >
             {/* Header */}
             <div className="p-2 flex items-center justify-between">

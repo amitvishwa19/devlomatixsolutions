@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 
 import { useOrg } from "@/providers/OrgProvider";
 import { ROLE } from "@prisma/client";
-import { setAppointments } from "../../(modules)/appointment/_redux/appointment-slice";
+// import { setAppointments } from "../../(modules)/appointment/_redux/appointment-slice";
 
 export const DataContext = createContext(null);
 
@@ -18,7 +18,7 @@ export default function DataProvider({ children }) {
 
     useEffect(() => {
         if (server) {
-            dispatch(setAppointments(JSON.stringify(server?.appointments)))
+            // dispatch(setAppointments(JSON.stringify(server?.appointments)))
         }
     }, [server])
 

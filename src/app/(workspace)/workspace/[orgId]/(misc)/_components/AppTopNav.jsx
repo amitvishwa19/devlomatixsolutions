@@ -10,7 +10,7 @@ import {
     NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { icons } from "lucide-react";
+import { icons, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useParams, usePathname } from "next/navigation";
@@ -63,6 +63,7 @@ const AppTopNav = () => {
     const params = useParams();
     const orgId = params?.orgId;
     const { topNav, setTopNav } = useData()
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
 
     const getActiveKey = () => {
@@ -128,10 +129,22 @@ const AppTopNav = () => {
     return (
         <div className="flex flex-row items-center justify-between  h-14">
 
-            {/* Topnav false */}
+
+            {/* {!topNav && sidebarCollapsed ? (
+                <PanelRightClose className="h-4 w-4 text-primary ml-2" />
+            ) : (
+                <PanelRightOpen className="h-4 w-4 text-primary ml-2" />
+            )} */}
+
+
+            {/* {sidebarCollapsed ? (
+                <PanelRightClose className="h-4 w-4 text-primary ml-2" />
+            ) : (
+                <PanelRightOpen className="h-4 w-4 text-primary ml-2" />
+            )} */}
 
             {topNav && (
-                <div>
+                <div className="ml-2">
                     <OrgSwitcher />
                 </div>
             )}
