@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Package, CheckCircle, XCircle, Ban, TrendingUp, IndianRupee } from 'lucide-react';
-import { formatCurrency } from './utils';
+import { formatCurrency } from '../utils/utils';
 
 export function ServiceStatsCards({ stats }) {
   const cards = [

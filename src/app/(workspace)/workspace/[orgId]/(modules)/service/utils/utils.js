@@ -1,5 +1,7 @@
 import { SERVICE_STATUSES, SERVICE_CATEGORIES, TAX_CATEGORIES } from './types';
 
+
+
 // Format currency in INR
 export function formatCurrency(amount) {
   return new Intl.NumberFormat('en-IN', {
@@ -51,20 +53,20 @@ export function calculateServiceStats(services) {
   const active = services.filter(s => s.status === 'active').length;
   const inactive = services.filter(s => s.status === 'inactive').length;
   const discontinued = services.filter(s => s.status === 'discontinued').length;
-  
+
   const categoryCounts = {};
   services.forEach(s => {
     categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
   });
-  
-  const avgPrice = services.length > 0 
-    ? services.reduce((sum, s) => sum + s.basePrice, 0) / services.length 
+
+  const avgPrice = services.length > 0
+    ? services.reduce((sum, s) => sum + s.basePrice, 0) / services.length
     : 0;
-  
+
   const totalRevenuePotential = services
     .filter(s => s.status === 'active')
     .reduce((sum, s) => sum + (s.basePrice * (s.usageCount || 0)), 0);
-  
+
   const topCategory = Object.entries(categoryCounts)
     .sort((a, b) => b[1] - a[1])[0];
 
@@ -84,40 +86,40 @@ export function calculateServiceStats(services) {
 // Filter services
 export function filterServices(services, filters) {
   let filtered = [...services];
-  
+
   // Search filter
   if (filters.search) {
     const searchLower = filters.search.toLowerCase();
-    filtered = filtered.filter(s => 
+    filtered = filtered.filter(s =>
       s.name.toLowerCase().includes(searchLower) ||
       s.code.toLowerCase().includes(searchLower) ||
       s.description?.toLowerCase().includes(searchLower) ||
       s.category.toLowerCase().includes(searchLower)
     );
   }
-  
+
   // Status filter
   if (filters.status && filters.status !== 'all') {
     filtered = filtered.filter(s => s.status === filters.status);
   }
-  
+
   // Category filter
   if (filters.category && filters.category !== 'all') {
     filtered = filtered.filter(s => s.category === filters.category);
   }
-  
+
   // Department filter
   if (filters.department && filters.department !== 'all') {
     filtered = filtered.filter(s => s.department === filters.department);
   }
-  
+
   // Service type filter (OPD/IPD)
   if (filters.serviceType && filters.serviceType !== 'all') {
-    filtered = filtered.filter(s => 
+    filtered = filtered.filter(s =>
       s.serviceType === filters.serviceType || s.serviceType === 'both'
     );
   }
-  
+
   // Price range filter
   if (filters.minPrice !== undefined) {
     filtered = filtered.filter(s => s.basePrice >= filters.minPrice);
@@ -125,7 +127,7 @@ export function filterServices(services, filters) {
   if (filters.maxPrice !== undefined) {
     filtered = filtered.filter(s => s.basePrice <= filters.maxPrice);
   }
-  
+
   // Sort
   if (filters.sortBy) {
     filtered.sort((a, b) => {
@@ -147,7 +149,7 @@ export function filterServices(services, filters) {
       }
     });
   }
-  
+
   return filtered;
 }
 
@@ -177,10 +179,10 @@ export function isValidHSNCode(code) {
 export function calculatePackageDiscount(includedServices, packagePrice) {
   const totalIndividualPrice = includedServices.reduce((sum, s) => sum + s.basePrice, 0);
   const discount = totalIndividualPrice - packagePrice;
-  const discountPercentage = totalIndividualPrice > 0 
-    ? (discount / totalIndividualPrice) * 100 
+  const discountPercentage = totalIndividualPrice > 0
+    ? (discount / totalIndividualPrice) * 100
     : 0;
-  
+
   return {
     totalIndividualPrice,
     packagePrice,

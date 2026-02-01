@@ -6,18 +6,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
+import {
   X, Edit, Copy, Trash2, Clock, IndianRupee, Building2, Users, Calendar,
   Shield, AlertCircle, FileText, Package, Printer, Percent, CheckCircle2
 } from 'lucide-react';
-import { formatCurrency, formatDuration, formatDate, getStatusConfig, getCategoryConfig, calculatePriceWithTax } from './utils';
-import { TAX_CATEGORIES, INSURANCE_CATEGORIES, BILLING_TYPES, SERVICE_TYPES, SERVICE_CATEGORIES } from './types';
+import { formatCurrency, formatDuration, formatDate, getStatusConfig, getCategoryConfig, calculatePriceWithTax } from '../utils/utils';
+import { TAX_CATEGORIES, INSURANCE_CATEGORIES, BILLING_TYPES, SERVICE_TYPES, SERVICE_CATEGORIES } from '../utils/types';
 import { useLocalStorage } from '@/carewell/hooks/useLocalStorage';
-import { mockServices } from './mockData';
+import { mockServices } from '../utils/mockData';
 
 export function ServiceDetailSheet({ service, open, onOpenChange, onEdit, onDuplicate, onDelete }) {
   const [allServices] = useLocalStorage('hms_services', mockServices);
-  
+
   // Get included services if this is a package - must be before any early returns
   const includedServices = useMemo(() => {
     if (!service?.isPackage || !service?.packageServices) return [];
@@ -238,7 +238,7 @@ export function ServiceDetailSheet({ service, open, onOpenChange, onEdit, onDupl
                             includedServices.map((svc) => {
                               const svcCategory = SERVICE_CATEGORIES.find(c => c.id === svc.category);
                               return (
-                                <div 
+                                <div
                                   key={svc.id}
                                   className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                                 >
@@ -320,14 +320,14 @@ export function ServiceDetailSheet({ service, open, onOpenChange, onEdit, onDupl
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={
-                        service.insuranceCategory === 'covered' 
+                        service.insuranceCategory === 'covered'
                           ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                           : service.insuranceCategory === 'partial'
-                          ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                          : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                            : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                       }
                     >
                       {insuranceCategory?.name || 'Not Specified'}

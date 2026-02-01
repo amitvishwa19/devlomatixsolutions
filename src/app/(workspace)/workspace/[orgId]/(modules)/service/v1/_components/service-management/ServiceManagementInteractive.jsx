@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import ServiceTable from './ServiceTable';
 import ServiceHierarchy from './ServiceHierarchy';
-import { useService } from '../../_provider/serviceProvider';
+import { useService } from '../../../_provider/serviceProvider';
 import ServiceEditor from './ServiceEditor';
 import ServiceDelete from './ServiceDelete';
 

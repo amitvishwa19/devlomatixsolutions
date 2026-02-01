@@ -14,7 +14,7 @@ export const navigationItems = [
     // CLINICAL
     { title: "Patients", url: "patient", icon: "users", category: "Clinical" },
     { title: "Prescriptions", url: "prescription", icon: "pill", category: "Clinical" },
-    { title: "Services", url: "services", icon: "stethoscope", category: "Clinical" },
+    { title: "Services", url: "service", icon: "stethoscope", category: "Clinical" },
     { title: "Laboratory", url: "laboratory", icon: "flask-conical", category: "Clinical" },
     { title: "Rooms & Beds", url: "accomodation", icon: "bed-double", category: "Clinical" },
     { title: "Pharmacy", url: "pharmacy", icon: "cross", category: "Clinical" },

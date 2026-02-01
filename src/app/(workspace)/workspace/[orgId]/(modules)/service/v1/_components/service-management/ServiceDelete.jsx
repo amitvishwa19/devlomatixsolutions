@@ -5,9 +5,9 @@ import { Label } from "@/components/ui/label"
 import { useAction } from "@/hooks/use-action"
 import { AlertTriangle, Loader, Trash2 } from "lucide-react"
 import { useState } from "react"
-import { deleteService } from "../../_action/delete-service"
+import { deleteService } from "../../../_action/delete-service"
 import { toast } from "sonner"
-import { useService } from "../../_provider/serviceProvider"
+import { useService } from "../../../_provider/serviceProvider"
 
 export default function ServiceDelete({ isOpen, onClose, service }) {
     const [loading, setLoading] = useState(false)

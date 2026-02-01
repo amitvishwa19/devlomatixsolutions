@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { formatCurrency, formatDuration, getStatusConfig, getCategoryConfig } from './utils';
+import { formatCurrency, formatDuration, getStatusConfig, getCategoryConfig } from '../utils/utils';
 
 export function ServiceTableView({ services, onServiceClick, onEditService }) {
   if (services.length === 0) {
@@ -49,8 +49,8 @@ export function ServiceTableView({ services, onServiceClick, onEditService }) {
             const categoryConfig = getCategoryConfig(service.category);
 
             return (
-              <TableRow 
-                key={service.id} 
+              <TableRow
+                key={service.id}
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => onServiceClick?.(service)}
               >

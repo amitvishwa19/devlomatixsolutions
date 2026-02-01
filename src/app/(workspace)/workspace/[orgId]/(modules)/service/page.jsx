@@ -1,218 +1,221 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Eye, HandHelping, IndianRupee, LayoutDashboard, Pencil, Plus, ReceiptIndianRupee, Trash2 } from 'lucide-react';
-import { DynamicIcon } from 'lucide-react/dynamic';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import Service from './_components/service-management/Service';
-import ServiceStats from './_components/service-management/ServiceStats';
-import { useService } from './_provider/serviceProvider';
-import ServiceEditor from './_components/service-management/ServiceEditor';
-import ServiceDelete from './_components/service-management/ServiceDelete';
-import CategoryHierarchy from '../../../_components/general/CategoryHierarchy';
-import { CustomBadge } from '../../(misc)/_components/CustomBadge';
-import { DataTable } from '../../(misc)/_components/DataTable';
 import { ContentTopbar } from '../../(misc)/_components/ContentTopbar';
+import { Download, Plus } from 'lucide-react';
+import { mockServices } from './utils/mockData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { calculateServiceStats, filterServices } from './utils/utils';
+import { useToast } from '@/hooks/use-toast';
+import { ServiceStatsCards } from './components/ServiceStatsCards';
+import { ServiceFilters } from './components/ServiceFilters';
+import { ServiceList } from './components/ServiceList';
+import { ServiceTableView } from './components/ServiceTableView';
+import { ServiceAnalytics } from './components';
+import { ServiceDetailSheet } from './components/ServiceDetailSheet';
+import { NewServiceDialog } from './components/NewServiceDialog';
 
 export default function ServicePage() {
-    const [active, setActive] = useState({ label: 'Services', icon: 'hand-helping', component: <Service /> })
-    const { department, setDepartment, services, setServices } = useService()
-    const [serviceEditor, setServiceEditor] = useState({
-        isOpen: false,
-        mode: 'add',
-        service: null,
-    })
+    const { toast } = useToast();
 
-    const [serviceDelete, setServiceDelete] = useState({
-        isOpen: false,
-        mode: 'delete',
-        service: null,
-    })
+    // Data state with localStorage persistence
+    const [services, setServices] = useLocalStorage('hms_services', mockServices);
 
+    // Filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [serviceTypeFilter, setServiceTypeFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('name_asc');
+    const [viewMode, setViewMode] = useState('grid');
 
+    // Sheet/Dialog states
+    const [selectedService, setSelectedService] = useState(null);
+    const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+    const [newServiceDialogOpen, setNewServiceDialogOpen] = useState(false);
+    const [editService, setEditService] = useState(null);
 
+    // Computed data
+    const stats = useMemo(() => calculateServiceStats(services), [services]);
 
-    const handleEditorModal = () => {
-        setServiceEditor(true)
-    }
+    const filteredServices = useMemo(() => {
+        return filterServices(services, {
+            search: searchQuery,
+            status: statusFilter,
+            category: categoryFilter,
+            department: departmentFilter,
+            serviceType: serviceTypeFilter,
+            sortBy,
+        });
+    }, [services, searchQuery, statusFilter, categoryFilter, departmentFilter, serviceTypeFilter, sortBy]);
 
-    const columns = [
-        {
-            accessorKey: "name",
-            header: "Name",
-            cell: ({ row }) => {
-                return (
-                    <div className='flex flex-col'>
-                        <span>{row.original.name}</span>
-                        <span className='text-xs text-muted-foreground'>{row.original.sku}</span>
-                    </div>
-                )
-            }
-        },
-        {
-            accessorKey: "price",
-            header: "Price",
-            cell: ({ row }) => (
-                <div>
-                    <span>₹ {row.original.price}</span>
-                </div>
-            )
-        },
-        {
-            accessorKey: "insuranceCover",
-            header: "Insurance Cover",
-            cell: ({ row }) => {
-                function formatInsuranceCover(value) {
-                    return value
-                        .split('_')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(' ');
-                }
+    // Handlers
+    const handleServiceClick = (service) => {
+        setSelectedService(service);
+        setDetailSheetOpen(true);
+    };
 
-                return (
-                    <div>
-                        <CustomBadge status={row.original.insuranceCover}>
-                            {formatInsuranceCover(row.original.insuranceCover)}
-                        </CustomBadge>
-                    </div>
-                )
-            }
-        },
-        {
-            accessorKey: "status",
-            header: "Status",
-            cell: ({ row }) => (
-                <div>
-                    <span>{row.original.status ? <CustomBadge status='success'>Active</CustomBadge> : <CustomBadge status='error'>InActive</CustomBadge>}</span>
-                </div>
-            )
-        },
-        {
-            accessorKey: "category",
-            header: "Category",
-            cell: ({ row }) => {
-                return (
-                    <div>
-                        {row.original.category ?
-                            <CustomBadge status='medium' >
-                                {row?.original?.category?.icon && <DynamicIcon size={14} name={row.original.category?.icon} className='mr-2' />}
-                                <span className='text-xs'>{row.original.category?.name}</span>
-                            </CustomBadge> :
-                            <CustomBadge status='blank' className='text-xs hover:bg-none'><span>No Category Assigned</span></CustomBadge>
-                        }
+    const handleAddService = (newService) => {
+        if (editService) {
+            setServices(prev => prev.map(s => s.id === newService.id ? newService : s));
+            setEditService(null);
+        } else {
+            setServices(prev => [...prev, newService]);
+        }
+    };
 
-                    </div>
-                )
-            }
-        },
-        {
-            id: 'action',
-            header: "Actions",
-            cell: ({ row }) => {
+    const handleEditService = (service) => {
+        setEditService(service);
+        setDetailSheetOpen(false);
+        setNewServiceDialogOpen(true);
+    };
 
-                return (
-                    <div className='flex flex-row items-center gap-4'>
-                        {/* <Eye size={16} className='cursor-pointer' onClick={() => { handleInventoryView(row.original) }} /> */}
-                        <Pencil size={16} className='cursor-pointer' onClick={() => {
-                            setServiceEditor({
-                                ...serviceEditor,
-                                isOpen: true,
-                                service: row.original
-                            })
-                        }} />
-                        <Trash2 size={16} className='cursor-pointer' onClick={() => {
-                            setServiceDelete({
-                                isOpen: true,
-                                mode: 'delete',
-                                service: row.original,
-                            })
-                        }} />
-                    </div>
-                )
-            }
-        },
-    ]
+    const handleDuplicateService = (service) => {
+        const duplicated = {
+            ...service,
+            id: `SVC-${String(services.length + 1).padStart(4, '0')}`,
+            code: `${service.code}-COPY`,
+            name: `${service.name} (Copy)`,
+            usageCount: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+        setServices(prev => [...prev, duplicated]);
+        setDetailSheetOpen(false);
+        toast({
+            title: 'Service Duplicated',
+            description: `${duplicated.name} has been created.`,
+        });
+    };
+
+    const handleDeleteService = (service) => {
+        setServices(prev => prev.filter(s => s.id !== service.id));
+        setDetailSheetOpen(false);
+        toast({
+            title: 'Service Deleted',
+            description: `${service.name} has been removed.`,
+            variant: 'destructive',
+        });
+    };
+
+    const handleExport = () => {
+        const dataStr = JSON.stringify(services, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'services-export.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        toast({
+            title: 'Export Complete',
+            description: `${services.length} services exported successfully.`,
+        });
+    };
 
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
             <ContentTopbar
                 title='Service Catalog Dashboard'
-                description='Comprehensive oversight of medical services, pricing, and system performance'
+                description='Manage hospital services, pricing, and categories'
                 icon='hand-helping'
-                actionComp={<Button
-                    variant='save'
-                    size='sm'
-                    onClick={() => {
-                        setServiceEditor({
-                            ...serviceEditor,
-                            isOpen: true
-                        })
-                    }}
-                >
-                    <Plus />
-                    Add Service
-                </Button>}
+                actionComp={<div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleExport}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Export
+                    </Button>
+                    <Button size="sm" onClick={() => setNewServiceDialogOpen(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Service
+                    </Button>
+                </div>}
             />
 
-            <ScrollArea className='h-[85vh] flex flex-grow   rounded-md '>
-                <div className='flex flex-col gap-4 p-2'>
-                    <ServiceStats services={services} />
+            {/* Stats Cards */}
+            <div className="shrink-0">
+                <ServiceStatsCards stats={stats} />
+            </div>
 
-                    <div className='flex flex-row gap-2 w-full '>
+            {/* Filters */}
+            <div className="shrink-0">
+                <ServiceFilters
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
+                    categoryFilter={categoryFilter}
+                    onCategoryFilterChange={setCategoryFilter}
+                    departmentFilter={departmentFilter}
+                    onDepartmentFilterChange={setDepartmentFilter}
+                    serviceTypeFilter={serviceTypeFilter}
+                    onServiceTypeFilterChange={setServiceTypeFilter}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                />
+            </div>
 
-                        <div className='min-w-[75%]'>
-                            <DataTable
-                                columns={columns}
-                                data={services}
-                                onFiltersChange={(e) => { console.log('filter change', e) }}
-                                filterTitle='Search inventory items......'
-                            />
-                        </div>
+            {/* Results Count */}
+            <div className="shrink-0 text-sm text-muted-foreground">
+                Showing {filteredServices.length} of {services.length} services
+            </div>
 
-                        <div className='w-full'>
-                            <CategoryHierarchy
-                                title='Service Hierarchy'
-                                data={department}
-                                category={department}
-                                onUpdate={(c) => {
-                                    setDepartment(c)
-                                }}
-                            />
-                        </div>
 
-                        <ServiceEditor
-                            isOpen={serviceEditor?.isOpen}
-                            onClose={() => { setServiceEditor(false) }}
-                            categories={department?.children}
-                            service={serviceEditor.service}
-                            onSubmit={(ser) => {
-                                if (ser) {
-                                    setServices(prev =>
-                                        prev.some(item => item.id === ser.id)
-                                            ? prev.map(item =>
-                                                item.id === ser.id ? { ...item, ...ser } : item
-                                            )
-                                            : [ser, ...prev]
-                                    );
-                                }
-                            }}
+            <ScrollArea className='h-[65vh] flex flex-grow   rounded-md '>
+                {/* Content Area */}
+                <div className="flex-1 overflow-y-auto pb-4">
+                    {viewMode === 'grid' && (
+                        <ServiceList
+                            services={filteredServices}
+                            onServiceClick={handleServiceClick}
                         />
-
-
-                        <ServiceDelete
-                            isOpen={serviceDelete.isOpen}
-                            onClose={() => {
-                                setServiceDelete({
-                                    isOpen: false
-                                })
-                            }}
-                            service={serviceDelete.service}
+                    )}
+                    {viewMode === 'list' && (
+                        <ServiceList
+                            services={filteredServices}
+                            onServiceClick={handleServiceClick}
                         />
-
-                    </div>
+                    )}
+                    {viewMode === 'table' && (
+                        <ServiceTableView
+                            services={filteredServices}
+                            onServiceClick={handleServiceClick}
+                            onEditService={handleEditService}
+                        />
+                    )}
+                    {viewMode === 'analytics' && (
+                        <ServiceAnalytics services={services} />
+                    )}
                 </div>
             </ScrollArea>
+
+            <div>
+                {/* Detail Sheet */}
+                <ServiceDetailSheet
+                    service={selectedService}
+                    open={detailSheetOpen}
+                    onOpenChange={setDetailSheetOpen}
+                    onEdit={handleEditService}
+                    onDuplicate={handleDuplicateService}
+                    onDelete={handleDeleteService}
+                />
+
+                {/* New/Edit Service Dialog */}
+                <NewServiceDialog
+                    open={newServiceDialogOpen}
+                    onOpenChange={(open) => {
+                        setNewServiceDialogOpen(open);
+                        if (!open) setEditService(null);
+                    }}
+                    onAdd={handleAddService}
+                    editService={editService}
+                    totalServices={services.length}
+                />
+            </div>
 
         </div >
     )

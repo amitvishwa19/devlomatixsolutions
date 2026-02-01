@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, List, LayoutGrid, Table2, BarChart3, X } from 'lucide-react';
-import { SERVICE_STATUSES, SERVICE_CATEGORIES, DEPARTMENTS, SERVICE_TYPES } from './types';
+import { SERVICE_STATUSES, SERVICE_CATEGORIES, DEPARTMENTS, SERVICE_TYPES } from '../utils/types';
 
 export function ServiceFilters({
   searchQuery,
@@ -26,9 +26,9 @@ export function ServiceFilters({
   viewMode,
   onViewModeChange,
 }) {
-  const hasFilters = statusFilter !== 'all' || categoryFilter !== 'all' || 
-                     departmentFilter !== 'all' || serviceTypeFilter !== 'all' || 
-                     searchQuery;
+  const hasFilters = statusFilter !== 'all' || categoryFilter !== 'all' ||
+    departmentFilter !== 'all' || serviceTypeFilter !== 'all' ||
+    searchQuery;
 
   const clearFilters = () => {
     onSearchChange('');

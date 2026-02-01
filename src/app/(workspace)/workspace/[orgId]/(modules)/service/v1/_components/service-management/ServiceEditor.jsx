@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useAction } from '@/hooks/use-action';
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { upsertService } from '../../_action/upsert-service';
+import { upsertService } from '../../../_action/upsert-service';
 
 const serviceFormSchema = z.object({
     id: z.string().optional(),

@@ -10,17 +10,17 @@ import { ServiceList } from './ServiceList';
 import { ServiceTableView } from './ServiceTableView';
 import { ServiceDetailSheet } from './ServiceDetailSheet';
 import { NewServiceDialog } from './NewServiceDialog';
-import { ServiceAnalytics } from './components/ServiceAnalytics';
+import { ServiceAnalytics } from './ServiceAnalytics';
 
-import { mockServices } from './mockData';
-import { calculateServiceStats, filterServices } from './utils';
+import { mockServices } from '../utils/mockData';
+import { calculateServiceStats, filterServices } from '../utils/utils';
 
 export default function ServiceDashboard() {
   const { toast } = useToast();
-  
+
   // Data state with localStorage persistence
   const [services, setServices] = useLocalStorage('hms_services', mockServices);
-  
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -29,7 +29,7 @@ export default function ServiceDashboard() {
   const [serviceTypeFilter, setServiceTypeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name_asc');
   const [viewMode, setViewMode] = useState('grid');
-  
+
   // Sheet/Dialog states
   const [selectedService, setSelectedService] = useState(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function ServiceDashboard() {
 
   // Computed data
   const stats = useMemo(() => calculateServiceStats(services), [services]);
-  
+
   const filteredServices = useMemo(() => {
     return filterServices(services, {
       search: searchQuery,
@@ -170,20 +170,20 @@ export default function ServiceDashboard() {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto pb-4">
           {viewMode === 'grid' && (
-            <ServiceList 
-              services={filteredServices} 
-              onServiceClick={handleServiceClick} 
+            <ServiceList
+              services={filteredServices}
+              onServiceClick={handleServiceClick}
             />
           )}
           {viewMode === 'list' && (
-            <ServiceList 
-              services={filteredServices} 
-              onServiceClick={handleServiceClick} 
+            <ServiceList
+              services={filteredServices}
+              onServiceClick={handleServiceClick}
             />
           )}
           {viewMode === 'table' && (
-            <ServiceTableView 
-              services={filteredServices} 
+            <ServiceTableView
+              services={filteredServices}
               onServiceClick={handleServiceClick}
               onEditService={handleEditService}
             />

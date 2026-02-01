@@ -1,9 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Clock, 
-  IndianRupee, 
-  Building2, 
+import {
+  Clock,
+  IndianRupee,
+  Building2,
   Users,
   Stethoscope,
   FlaskConical,
@@ -21,7 +21,7 @@ import {
   Pill,
   Package
 } from 'lucide-react';
-import { formatCurrency, formatDuration, getStatusConfig, getCategoryConfig } from './utils';
+import { formatCurrency, formatDuration, getStatusConfig, getCategoryConfig } from '../utils/utils';
 
 // Icon mapping for categories
 const iconMap = {
@@ -48,7 +48,7 @@ export function ServiceCard({ service, onClick }) {
   const IconComponent = iconMap[categoryConfig.icon] || Package;
 
   return (
-    <Card 
+    <Card
       className="border border-border hover:shadow-md transition-shadow cursor-pointer group"
       onClick={() => onClick?.(service)}
     >
@@ -58,7 +58,7 @@ export function ServiceCard({ service, onClick }) {
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <IconComponent className="w-5 h-5 text-primary" />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -71,12 +71,12 @@ export function ServiceCard({ service, onClick }) {
                 {statusConfig.name}
               </Badge>
             </div>
-            
+
             {/* Description */}
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
               {service.description}
             </p>
-            
+
             {/* Info Grid */}
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
@@ -96,7 +96,7 @@ export function ServiceCard({ service, onClick }) {
                 <span>{service.usageCount?.toLocaleString('en-IN') || 0} uses</span>
               </div>
             </div>
-            
+
             {/* Tags */}
             <div className="mt-3 flex flex-wrap gap-1">
               <Badge variant="secondary" className="text-xs">

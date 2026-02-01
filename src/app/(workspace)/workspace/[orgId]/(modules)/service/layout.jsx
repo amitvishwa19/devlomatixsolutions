@@ -16,41 +16,12 @@ export const metadata = {
 export default async function ServiceLayout({ children }) {
 
 
-    const categories = await db.category.findFirst({
-        where: {
-            slug: 'departments'
-        },
-        include: {
-            children: {
-                include: {
-                    children: {
-                        include: {
-                            children: true
-                        }
-                    }
-                }
-            }
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    })
-
-    //const services = []
-    const services = await db.service.findMany({
-        include: {
-            category: true
-        },
-        orderBy: {
-            createdAt: "desc",
-        },
-    })
 
 
     //console.log('categories', categories)
 
     return (
-        <ServiceProvider categories={categories} allServices={services}>
+        <ServiceProvider categories={[]} allServices={[]}>
             <div>
                 {children}
             </div>
