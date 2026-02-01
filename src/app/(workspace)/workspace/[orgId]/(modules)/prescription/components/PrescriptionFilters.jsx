@@ -2,21 +2,22 @@ import { Search, Filter, LayoutGrid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PRESCRIPTION_STATUSES } from './types';
-import { TagFilterDropdown } from '@/carewell/taxonomy/components/TaxonomySelector';
+import { PRESCRIPTION_STATUSES } from '../utils/types';
+import { TagFilterDropdown } from '../../taxonomy/components';
 
-export function PrescriptionFilters({ 
-  search, 
-  onSearchChange, 
-  status, 
+
+export function PrescriptionFilters({
+  search,
+  onSearchChange,
+  status,
   onStatusChange,
   doctor,
   onDoctorChange,
   doctors,
   tagFilter = [],
   onTagFilterChange,
-  viewMode, 
-  onViewModeChange 
+  viewMode,
+  onViewModeChange
 }) {
   return (
     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">

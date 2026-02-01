@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { getStatusConfig } from './utils';
+import { getStatusConfig } from '../utils/utils';
 
 export function PrescriptionTableView({ prescriptions, onSelectPrescription, onDeletePrescription }) {
   if (prescriptions.length === 0) {
@@ -34,8 +34,8 @@ export function PrescriptionTableView({ prescriptions, onSelectPrescription, onD
           {prescriptions.map((rx) => {
             const statusConfig = getStatusConfig(rx.status);
             return (
-              <TableRow 
-                key={rx.id} 
+              <TableRow
+                key={rx.id}
                 className="cursor-pointer"
                 onClick={() => onSelectPrescription?.(rx)}
               >
@@ -103,7 +103,7 @@ export function PrescriptionTableView({ prescriptions, onSelectPrescription, onD
                         <Printer className="w-4 h-4 mr-2" />
                         Print
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();

@@ -2,13 +2,13 @@ import { format } from 'date-fns';
 import { Pill, User, Stethoscope, RefreshCw, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getStatusConfig, getFrequencyShortLabel } from './utils';
+import { getStatusConfig, getFrequencyShortLabel } from '../utils/utils';
 
 export function PrescriptionCard({ prescription, onClick }) {
   const statusConfig = getStatusConfig(prescription.status);
 
   return (
-    <Card 
+    <Card
       className="p-4 cursor-pointer hover:shadow-md transition-shadow"
       onClick={() => onClick?.(prescription)}
     >

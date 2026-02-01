@@ -7,7 +7,7 @@ import { Calendar, Clock, GraduationCap, Mail, Phone, Pill, Printer, ScrollText,
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { format } from 'date-fns'
-import { CustomBadge } from '../../../(misc)/_components/CustomBadge'
+import { CustomBadge } from '../../../../(misc)/_components/CustomBadge'
 
 
 

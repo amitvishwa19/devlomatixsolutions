@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { MOCK_REFILL_REQUESTS } from '../refillData';
+import { MOCK_REFILL_REQUESTS } from '../utils/refillData';
 
 export function RefillManagementSheet({ open, onOpenChange, prescriptions = [], onUpdatePrescription }) {
   const [refillRequests, setRefillRequests] = useState(MOCK_REFILL_REQUESTS);
@@ -82,7 +82,7 @@ export function RefillManagementSheet({ open, onOpenChange, prescriptions = [], 
 
   const RefillRequestCard = ({ request, showActions = true }) => {
     const statusConfig = getStatusConfig(request.status);
-    
+
     return (
       <div className="p-4 border border-border rounded-lg bg-background">
         <div className="flex items-start justify-between mb-3">

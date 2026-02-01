@@ -5,17 +5,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getStatusConfig, getFrequencyLabel, getDurationLabel, getRouteLabel } from './utils';
+import { getStatusConfig, getFrequencyLabel, getDurationLabel, getRouteLabel } from '../utils/utils';
 import { QuickActionsMenu, ModuleLinkBadge } from '@/carewell/utils/crossModuleNavigation';
 
-export function PrescriptionDetailSheet({ 
-  prescription, 
-  open, 
-  onOpenChange, 
-  onDelete, 
+export function PrescriptionDetailSheet({
+  prescription,
+  open,
+  onOpenChange,
+  onDelete,
   onStatusChange,
   onSendToPharmacy,
-  onCheckInteractions 
+  onCheckInteractions
 }) {
   if (!prescription) return null;
 
@@ -54,13 +54,13 @@ export function PrescriptionDetailSheet({
                     <p className="text-sm text-muted-foreground">{prescription.patientMrn}</p>
                   </div>
                 </div>
-                <QuickActionsMenu 
+                <QuickActionsMenu
                   patientId={prescription.patientMrn}
                   patientName={prescription.patientName}
                   actions={['viewPatient', 'scheduleAppointment', 'orderLabTest', 'viewInvoices']}
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Stethoscope className="w-4 h-4" />
@@ -75,18 +75,18 @@ export function PrescriptionDetailSheet({
 
             {/* Quick Actions */}
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="flex-1 gap-1.5"
                 onClick={onSendToPharmacy}
               >
                 <Send className="w-4 h-4" />
                 Send to Pharmacy
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="flex-1 gap-1.5"
                 onClick={onCheckInteractions}
               >
@@ -133,7 +133,7 @@ export function PrescriptionDetailSheet({
                         </Badge>
                       )}
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
                       <div className="p-2 bg-secondary/30 rounded">
                         <p className="text-muted-foreground">Frequency</p>
@@ -199,8 +199,8 @@ export function PrescriptionDetailSheet({
               </h4>
               <div className="flex flex-wrap gap-2">
                 {prescription.status !== 'active' && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="text-green-600 border-green-300"
                     onClick={() => handleStatusChange('active')}
@@ -209,8 +209,8 @@ export function PrescriptionDetailSheet({
                   </Button>
                 )}
                 {prescription.status !== 'completed' && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="text-blue-600 border-blue-300"
                     onClick={() => handleStatusChange('completed')}
@@ -219,8 +219,8 @@ export function PrescriptionDetailSheet({
                   </Button>
                 )}
                 {prescription.status !== 'on-hold' && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="text-amber-600 border-amber-300"
                     onClick={() => handleStatusChange('on-hold')}
@@ -229,8 +229,8 @@ export function PrescriptionDetailSheet({
                   </Button>
                 )}
                 {prescription.status !== 'discontinued' && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="text-red-600 border-red-300"
                     onClick={() => handleStatusChange('discontinued')}
@@ -249,8 +249,8 @@ export function PrescriptionDetailSheet({
             <Printer className="w-4 h-4" />
             Print
           </Button>
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             className="gap-2"
             onClick={() => onDelete?.(prescription.id)}
           >

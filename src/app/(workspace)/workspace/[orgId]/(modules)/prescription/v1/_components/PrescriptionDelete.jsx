@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label"
 import { useAction } from "@/hooks/use-action"
 import { Loader, Trash2 } from "lucide-react"
 import { useState } from "react"
-import { deletePrescription } from "../_action/delete-prescription"
+import { deletePrescription } from "../../_action/delete-prescription"
 import { toast } from "sonner"
 
 export function PrescriptionDelete({ isOpen, onClose, prescription, onSave }) {

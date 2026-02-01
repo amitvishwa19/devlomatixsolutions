@@ -12,57 +12,8 @@ export const metadata = {
 
 export default async function PrescriptionLayout({ children }) {
 
-    const categories = await db.category.findFirst({
-        where: {
-            slug: 'prescription-services'
-        },
-        include: {
-            children: {
-                include: {
-                    children: {
-                        include: {
-                            children: true
-                        }
-                    }
-                }
-            }
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    })
-
-    const prescriptions = await db.prescription.findMany({
-        include: {
-            category: true,
-            appointment: {
-                include: {
-                    patient: true,
-                    doctor: {
-                        include: {
-                            profile: true
-                        }
-                    }
-                }
-            }
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    })
-
-    const appointments = await db.appointment.findMany({
-        include: {
-            patient: true,
-            doctor: true
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    })
-
     return (
-        <PrescriptionProvider allCategories={categories} allPrescriptions={prescriptions} allAppointments={appointments}>
+        <PrescriptionProvider>
             <div>
                 {children}
             </div>

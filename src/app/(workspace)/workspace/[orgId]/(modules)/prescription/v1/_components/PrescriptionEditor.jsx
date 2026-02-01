@@ -12,9 +12,9 @@ import { z } from "zod";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import AppointmentSelect from '../../invoice/_components/AppointmentSelect';
+import AppointmentSelect from '../../../invoice/_components/AppointmentSelect';
 import { useAction } from '@/hooks/use-action';
-import { upsertPrescription } from '../_action/upsert-prescription';
+import { upsertPrescription } from '../../_action/upsert-prescription';
 import { toast } from 'sonner'
 import { DynamicIcon } from 'lucide-react/dynamic';
 

@@ -8,12 +8,12 @@ import { PrescriptionList } from './PrescriptionList';
 import { PrescriptionTableView } from './PrescriptionTableView';
 import { PrescriptionDetailSheet } from './PrescriptionDetailSheet';
 import { NewPrescriptionDialog } from './NewPrescriptionDialog';
-import { DrugInteractionChecker, EPrescribingSheet, RefillManagementSheet, PrescriptionAnalytics } from './components';
-import { mockPrescriptions } from './mockPrescriptions';
-import { filterPrescriptions, calculateStats } from './utils';
+import { DrugInteractionChecker, EPrescribingSheet, RefillManagementSheet, PrescriptionAnalytics } from '.';
+import { mockPrescriptions } from '../utils/mockPrescriptions';
+import { filterPrescriptions, calculateStats } from '../utils/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { MOCK_REFILL_REQUESTS } from './refillData';
+import { MOCK_REFILL_REQUESTS } from '../utils/refillData';
 import { useLocalStorage } from '@/carewell/hooks/useLocalStorage';
 
 export function PrescriptionDashboard() {
@@ -24,13 +24,13 @@ export function PrescriptionDashboard() {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [showNewDialog, setShowNewDialog] = useState(false);
-  
+
   // Advanced feature states
   const [showInteractionChecker, setShowInteractionChecker] = useState(false);
   const [showEPrescribing, setShowEPrescribing] = useState(false);
   const [showRefillManagement, setShowRefillManagement] = useState(false);
   const [activeTab, setActiveTab] = useState('prescriptions');
-  
+
   const { toast } = useToast();
 
   // Pending refills count
@@ -66,7 +66,7 @@ export function PrescriptionDashboard() {
 
   const handleStatusChange = (rxId, newStatus) => {
     console.log('Updating prescription status:', { rxId, newStatus });
-    setPrescriptions(prev => prev.map(rx => 
+    setPrescriptions(prev => prev.map(rx =>
       rx.id === rxId ? { ...rx, status: newStatus } : rx
     ));
     setSelectedPrescription(prev => prev ? { ...prev, status: newStatus } : null);
@@ -96,18 +96,18 @@ export function PrescriptionDashboard() {
         </div>
         <div className="flex items-center gap-2">
           {/* Advanced Feature Buttons */}
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="gap-1.5"
             onClick={() => setShowInteractionChecker(true)}
           >
             <ShieldAlert className="w-4 h-4" />
             Interaction Check
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="gap-1.5 relative"
             onClick={() => setShowRefillManagement(true)}
           >
