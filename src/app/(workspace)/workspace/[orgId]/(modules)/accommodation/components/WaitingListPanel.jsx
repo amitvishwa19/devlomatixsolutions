@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Clock, User, AlertTriangle, Plus, ArrowUp, ArrowDown,
-  Phone, Calendar, Bed, CheckCircle, X, MoreHorizontal
+import { 
+  Clock, User, AlertTriangle, Plus, ArrowUp, ArrowDown, 
+  Phone, Calendar, Bed, CheckCircle, X, MoreHorizontal 
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -29,7 +29,7 @@ export function WaitingListPanel({ waitlist, onAdd, onAssign, onRemove, onUpdate
   });
 
   const priorityOrder = { critical: 0, high: 1, normal: 2, low: 3 };
-
+  
   const sortedWaitlist = React.useMemo(() => {
     return [...waitlist].sort((a, b) => {
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -39,7 +39,7 @@ export function WaitingListPanel({ waitlist, onAdd, onAssign, onRemove, onUpdate
   }, [waitlist]);
 
   const getMatchingBeds = (roomType) => {
-    return availableBeds.filter(({ room }) =>
+    return availableBeds.filter(({ room }) => 
       roomType === 'any' || room.type === roomType
     ).length;
   };

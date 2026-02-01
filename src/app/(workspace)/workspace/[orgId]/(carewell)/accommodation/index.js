@@ -1,3 +1,3 @@
 export { AccommodationDashboard } from './AccommodationDashboard';
-export * from './types';
-export * from './utils';
+export * from './utils/types';
+export * from './utils/utils';

@@ -12,7 +12,7 @@ import {
   CheckCircle, IndianRupee, Stethoscope
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { getRoomTypeById, getBedStatusById, getFeatureById, getLengthOfStay, formatCurrency, calculateEstimatedBill } from '../utils';
+import { getRoomTypeById, getBedStatusById, getFeatureById, getLengthOfStay, formatCurrency, calculateEstimatedBill } from '../utils/utils';
 import { QuickActionsMenu } from '@/carewell/utils/crossModuleNavigation';
 
 export function BedDetailSheet({ open, onOpenChange, bed, room, onDischarge, onTransfer, onClean, onMaintenance }) {
@@ -57,7 +57,7 @@ export function BedDetailSheet({ open, onOpenChange, bed, room, onDischarge, onT
                         <User className="h-4 w-4" />
                         Patient Information
                       </CardTitle>
-                      <QuickActionsMenu 
+                      <QuickActionsMenu
                         patientId={bed.patient.mrn}
                         patientName={bed.patient.name}
                         actions={['viewPatient', 'scheduleAppointment', 'viewPrescriptions', 'orderLabTest', 'viewInvoices']}
@@ -72,7 +72,7 @@ export function BedDetailSheet({ open, onOpenChange, bed, room, onDischarge, onT
                       </div>
                       <Badge variant="outline">{bed.patient.gender === 'M' ? 'Male' : 'Female'}, {bed.patient.age}y</Badge>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="flex items-center gap-2">
                         <Phone className="h-4 w-4 text-muted-foreground" />

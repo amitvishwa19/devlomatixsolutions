@@ -10,8 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import {
-  Wrench, Plus, CalendarIcon, Clock, User, Bed, AlertTriangle,
+import { 
+  Wrench, Plus, CalendarIcon, Clock, User, Bed, AlertTriangle, 
   CheckCircle, XCircle, Play, Pause, MoreHorizontal, Trash2, Edit
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -38,12 +38,12 @@ const MAINTENANCE_STATUS = [
 ];
 
 const generateMockMaintenanceSchedule = () => [
-  {
-    id: 'maint_1',
-    roomId: 'room_1',
-    roomNumber: 'ICU-01',
+  { 
+    id: 'maint_1', 
+    roomId: 'room_1', 
+    roomNumber: 'ICU-01', 
     bedId: null,
-    type: 'preventive',
+    type: 'preventive', 
     title: 'HVAC Filter Replacement',
     description: 'Replace air filters and check ventilation system',
     startDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
@@ -54,13 +54,13 @@ const generateMockMaintenanceSchedule = () => [
     priority: 'medium',
     notes: '',
   },
-  {
-    id: 'maint_2',
-    roomId: 'room_5',
+  { 
+    id: 'maint_2', 
+    roomId: 'room_5', 
     roomNumber: '1E-03',
     bedId: 'bed_10',
     bedNumber: '1E-03-A',
-    type: 'corrective',
+    type: 'corrective', 
     title: 'Bed Motor Repair',
     description: 'Fix malfunctioning bed elevation motor',
     startDate: new Date(),
@@ -71,12 +71,12 @@ const generateMockMaintenanceSchedule = () => [
     priority: 'high',
     notes: 'Parts ordered, awaiting delivery',
   },
-  {
-    id: 'maint_3',
-    roomId: 'room_8',
+  { 
+    id: 'maint_3', 
+    roomId: 'room_8', 
     roomNumber: '2E-05',
     bedId: null,
-    type: 'deep_clean',
+    type: 'deep_clean', 
     title: 'Post-Discharge Deep Clean',
     description: 'Complete room sanitization after infectious patient',
     startDate: addDays(new Date(), 1),
@@ -87,12 +87,12 @@ const generateMockMaintenanceSchedule = () => [
     priority: 'high',
     notes: 'Use protocol for infectious diseases',
   },
-  {
-    id: 'maint_4',
-    roomId: 'room_3',
+  { 
+    id: 'maint_4', 
+    roomId: 'room_3', 
     roomNumber: 'ICU-03',
     bedId: null,
-    type: 'inspection',
+    type: 'inspection', 
     title: 'Annual Safety Inspection',
     description: 'Fire safety and electrical compliance check',
     startDate: addDays(new Date(), 5),
@@ -129,7 +129,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
 
   // Get maintenance events for a specific date
   const getMaintenanceForDate = (date) => {
-    return maintenanceSchedule.filter(m =>
+    return maintenanceSchedule.filter(m => 
       isWithinInterval(date, { start: m.startDate, end: m.endDate }) ||
       isSameDay(m.startDate, date) ||
       isSameDay(m.endDate, date)
@@ -148,18 +148,18 @@ export function MaintenanceSchedulePanel({ rooms }) {
   // Stats
   const stats = React.useMemo(() => {
     const today = new Date();
-    const upcoming = maintenanceSchedule.filter(m =>
+    const upcoming = maintenanceSchedule.filter(m => 
       m.status === 'scheduled' && isAfter(m.startDate, today)
     ).length;
     const inProgress = maintenanceSchedule.filter(m => m.status === 'in_progress').length;
-    const overdue = maintenanceSchedule.filter(m =>
+    const overdue = maintenanceSchedule.filter(m => 
       m.status === 'scheduled' && isBefore(m.endDate, today)
     ).length;
-    const completedThisMonth = maintenanceSchedule.filter(m =>
-      m.status === 'completed' &&
+    const completedThisMonth = maintenanceSchedule.filter(m => 
+      m.status === 'completed' && 
       isWithinInterval(m.endDate, { start: startOfMonth(today), end: endOfMonth(today) })
     ).length;
-
+    
     return { upcoming, inProgress, overdue, completedThisMonth };
   }, [maintenanceSchedule]);
 
@@ -171,7 +171,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
 
     const room = rooms.find(r => r.id === newMaintenance.roomId);
     const bed = room?.beds.find(b => b.id === newMaintenance.bedId);
-
+    
     const maintenance = {
       id: `maint_${Date.now()}`,
       ...newMaintenance,
@@ -200,7 +200,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
   };
 
   const handleUpdateStatus = (id, newStatus) => {
-    setMaintenanceSchedule(prev => prev.map(m =>
+    setMaintenanceSchedule(prev => prev.map(m => 
       m.id === id ? { ...m, status: newStatus, updatedAt: new Date() } : m
     ));
     toast.success(`Maintenance status updated to ${newStatus}`);
@@ -226,7 +226,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
             Schedule and track room/bed maintenance activities
           </p>
         </div>
-
+        
         <Button onClick={() => setScheduleDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Schedule Maintenance
@@ -284,23 +284,23 @@ export function MaintenanceSchedulePanel({ rooms }) {
       {/* View Toggle & Filters */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Button
-            variant={viewMode === 'calendar' ? 'default' : 'outline'}
+          <Button 
+            variant={viewMode === 'calendar' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setViewMode('calendar')}
           >
             <CalendarIcon className="h-4 w-4 mr-2" />
             Calendar
           </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
+          <Button 
+            variant={viewMode === 'list' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setViewMode('list')}
           >
             List View
           </Button>
         </div>
-
+        
         <div className="flex items-center gap-2">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[140px]">
@@ -313,7 +313,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
               ))}
             </SelectContent>
           </Select>
-
+          
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All Types" />
@@ -349,7 +349,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                   }
                 }}
               />
-
+              
               {/* Legend */}
               <div className="mt-4 space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">Maintenance Types:</p>
@@ -364,7 +364,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
               </div>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">
@@ -386,9 +386,9 @@ export function MaintenanceSchedulePanel({ rooms }) {
                     getMaintenanceForDate(selectedDate).map(maintenance => {
                       const type = MAINTENANCE_TYPES.find(t => t.id === maintenance.type);
                       const status = MAINTENANCE_STATUS.find(s => s.id === maintenance.status);
-
+                      
                       return (
-                        <div
+                        <div 
                           key={maintenance.id}
                           className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                         >
@@ -415,7 +415,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                                 </p>
                               </div>
                             </div>
-
+                            
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -445,7 +445,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                                   <XCircle className="h-4 w-4 mr-2" />
                                   Cancel
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
+                                <DropdownMenuItem 
                                   onClick={() => handleDeleteMaintenance(maintenance.id)}
                                   className="text-destructive"
                                 >
@@ -481,9 +481,9 @@ export function MaintenanceSchedulePanel({ rooms }) {
                   filteredMaintenance.map(maintenance => {
                     const type = MAINTENANCE_TYPES.find(t => t.id === maintenance.type);
                     const status = MAINTENANCE_STATUS.find(s => s.id === maintenance.status);
-
+                    
                     return (
-                      <div
+                      <div 
                         key={maintenance.id}
                         className="p-4 hover:bg-muted/50 transition-colors flex items-center justify-between"
                       >
@@ -507,11 +507,11 @@ export function MaintenanceSchedulePanel({ rooms }) {
                             </div>
                           </div>
                         </div>
-
+                        
                         <div className="flex items-center gap-4">
                           <Badge className={status?.color}>{status?.name}</Badge>
                           <span className="text-sm text-muted-foreground">{maintenance.assignedTo}</span>
-
+                          
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -531,7 +531,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                                   Mark Complete
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem
+                              <DropdownMenuItem 
                                 onClick={() => handleDeleteMaintenance(maintenance.id)}
                                 className="text-destructive"
                               >
@@ -563,13 +563,13 @@ export function MaintenanceSchedulePanel({ rooms }) {
               Create a new maintenance schedule for a room or bed
             </DialogDescription>
           </DialogHeader>
-
+          
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Room *</Label>
-                <Select
-                  value={newMaintenance.roomId}
+                <Select 
+                  value={newMaintenance.roomId} 
                   onValueChange={(v) => setNewMaintenance(prev => ({ ...prev, roomId: v, bedId: '' }))}
                 >
                   <SelectTrigger>
@@ -584,11 +584,11 @@ export function MaintenanceSchedulePanel({ rooms }) {
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Specific Bed (Optional)</Label>
-                <Select
-                  value={newMaintenance.bedId}
+                <Select 
+                  value={newMaintenance.bedId} 
                   onValueChange={(v) => setNewMaintenance(prev => ({ ...prev, bedId: v }))}
                   disabled={!selectedRoom}
                 >
@@ -606,11 +606,11 @@ export function MaintenanceSchedulePanel({ rooms }) {
                 </Select>
               </div>
             </div>
-
+            
             <div className="space-y-2">
               <Label>Maintenance Type *</Label>
-              <Select
-                value={newMaintenance.type}
+              <Select 
+                value={newMaintenance.type} 
                 onValueChange={(v) => setNewMaintenance(prev => ({ ...prev, type: v }))}
               >
                 <SelectTrigger>
@@ -628,7 +628,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="space-y-2">
               <Label>Title *</Label>
               <Input
@@ -637,7 +637,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                 placeholder="e.g., HVAC System Check"
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
@@ -647,7 +647,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                 rows={2}
               />
             </div>
-
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Start Date *</Label>
@@ -662,8 +662,8 @@ export function MaintenanceSchedulePanel({ rooms }) {
                     <Calendar
                       mode="single"
                       selected={newMaintenance.startDate}
-                      onSelect={(date) => date && setNewMaintenance(prev => ({
-                        ...prev,
+                      onSelect={(date) => date && setNewMaintenance(prev => ({ 
+                        ...prev, 
                         startDate: date,
                         endDate: isAfter(prev.endDate, date) ? prev.endDate : date
                       }))}
@@ -672,7 +672,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                   </PopoverContent>
                 </Popover>
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Estimated Hours *</Label>
                 <Input
@@ -683,7 +683,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
                 />
               </div>
             </div>
-
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Assigned To *</Label>
@@ -693,11 +693,11 @@ export function MaintenanceSchedulePanel({ rooms }) {
                   placeholder="Team or person name"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Priority</Label>
-                <Select
-                  value={newMaintenance.priority}
+                <Select 
+                  value={newMaintenance.priority} 
                   onValueChange={(v) => setNewMaintenance(prev => ({ ...prev, priority: v }))}
                 >
                   <SelectTrigger>
@@ -713,7 +713,7 @@ export function MaintenanceSchedulePanel({ rooms }) {
               </div>
             </div>
           </div>
-
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setScheduleDialogOpen(false)}>
               Cancel

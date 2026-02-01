@@ -117,7 +117,7 @@ export function RoomListView({ rooms, onSelectBed, onSelectRoom, onAssignPatient
                           Manage Beds
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
+                        <DropdownMenuItem 
                           onClick={() => onDeleteRoom?.(room)}
                           className="text-destructive focus:text-destructive"
                         >

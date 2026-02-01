@@ -11,22 +11,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  CalendarDays, Plus, Clock, User, Bed, CheckCircle,
+import { 
+  CalendarDays, Plus, Clock, User, Bed, CheckCircle, 
   X, Phone, AlertCircle, CalendarCheck, Edit, Trash2
 } from 'lucide-react';
 import { format, formatDistanceToNow, addDays, isBefore, isAfter, isSameDay } from 'date-fns';
 import { ROOM_TYPES, ADMISSION_TYPES } from '../utils/types';
 import { getRoomTypeById, formatCurrency } from '../utils/utils';
 
-export function BedReservationPanel({
-  reservations,
-  rooms,
-  onAdd,
-  onCancel,
-  onConfirm,
+export function BedReservationPanel({ 
+  reservations, 
+  rooms, 
+  onAdd, 
+  onCancel, 
+  onConfirm, 
   onEdit,
-  onConvertToAdmission
+  onConvertToAdmission 
 }) {
   const [addDialogOpen, setAddDialogOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('upcoming');
@@ -54,8 +54,8 @@ export function BedReservationPanel({
       room.beds.forEach(bed => {
         if (bed.status === 'available' || bed.status === 'reserved') {
           // Check if bed is not already reserved for the selected date
-          const conflicting = reservations.some(r =>
-            r.specificBedId === bed.id &&
+          const conflicting = reservations.some(r => 
+            r.specificBedId === bed.id && 
             r.status === 'confirmed' &&
             newReservation.expectedArrival &&
             isSameDay(new Date(r.expectedArrival), new Date(newReservation.expectedArrival))
@@ -73,21 +73,21 @@ export function BedReservationPanel({
   const categorized = React.useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
+    
     return {
-      today: reservations.filter(r =>
-        r.status !== 'cancelled' &&
+      today: reservations.filter(r => 
+        r.status !== 'cancelled' && 
         r.status !== 'completed' &&
         isSameDay(new Date(r.expectedArrival), today)
       ),
-      upcoming: reservations.filter(r =>
-        r.status !== 'cancelled' &&
+      upcoming: reservations.filter(r => 
+        r.status !== 'cancelled' && 
         r.status !== 'completed' &&
         isAfter(new Date(r.expectedArrival), today) &&
         !isSameDay(new Date(r.expectedArrival), today)
       ),
-      past: reservations.filter(r =>
-        r.status === 'completed' ||
+      past: reservations.filter(r => 
+        r.status === 'completed' || 
         r.status === 'cancelled' ||
         (r.status !== 'admitted' && isBefore(new Date(r.expectedArrival), today))
       ),
@@ -151,8 +151,8 @@ export function BedReservationPanel({
     const isPast = isBefore(new Date(reservation.expectedArrival), new Date()) && !isToday;
 
     return (
-      <Card
-        key={reservation.id}
+      <Card 
+        key={reservation.id} 
         className={`${isToday ? 'border-primary bg-primary/5' : ''} ${isPast && reservation.status === 'confirmed' ? 'border-amber-300 bg-amber-50/50' : ''}`}
       >
         <CardContent className="p-4">
@@ -165,7 +165,7 @@ export function BedReservationPanel({
                   <Badge variant="outline" className="text-primary border-primary">Today</Badge>
                 )}
               </div>
-
+              
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-2">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Phone className="h-3.5 w-3.5" />
@@ -199,7 +199,7 @@ export function BedReservationPanel({
                   <>
                     <span>•</span>
                     <span className={reservation.depositPaid ? 'text-green-600' : 'text-amber-600'}>
-                      Deposit: {formatCurrency(reservation.depositAmount)}
+                      Deposit: {formatCurrency(reservation.depositAmount)} 
                       {reservation.depositPaid ? ' (Paid)' : ' (Pending)'}
                     </span>
                   </>
@@ -460,8 +460,8 @@ export function BedReservationPanel({
                       <PopoverTrigger asChild>
                         <Button variant="outline" className="w-full justify-start text-left font-normal">
                           <CalendarDays className="mr-2 h-4 w-4" />
-                          {newReservation.expectedArrival
-                            ? format(newReservation.expectedArrival, 'PPP')
+                          {newReservation.expectedArrival 
+                            ? format(newReservation.expectedArrival, 'PPP') 
                             : 'Select date'}
                         </Button>
                       </PopoverTrigger>
@@ -574,8 +574,8 @@ export function BedReservationPanel({
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
-            <Button
-              onClick={handleAdd}
+            <Button 
+              onClick={handleAdd} 
               disabled={!newReservation.patientName || !newReservation.patientPhone || !newReservation.specificBedId || !newReservation.expectedArrival}
             >
               <CalendarCheck className="h-4 w-4 mr-2" />

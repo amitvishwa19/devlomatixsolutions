@@ -14,8 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import {
-  Bed, Plus, Trash2, AlertTriangle, User, Settings,
+import { 
+  Bed, Plus, Trash2, AlertTriangle, User, Settings, 
   CheckCircle, XCircle, Wrench, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -42,7 +42,7 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
       const parts = b.bedNumber.split('-');
       return parts[parts.length - 1];
     });
-
+    
     for (const letter of letters) {
       if (!usedLetters.includes(letter)) {
         return letter;
@@ -54,7 +54,7 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
   const handleAddBed = () => {
     const label = newBedLabel.trim() || getNextBedLabel();
     const bedNumber = `${room.roomNumber}-${label}`;
-
+    
     // Check for duplicate
     if (beds.some(b => b.bedNumber === bedNumber)) {
       toast.error('A bed with this label already exists');
@@ -84,7 +84,7 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
 
   const handleRemoveBed = (bedId) => {
     const bed = beds.find(b => b.id === bedId);
-
+    
     if (bed?.status === 'occupied' || bed?.status === 'reserved') {
       toast.error('Cannot remove an occupied or reserved bed');
       return;
@@ -97,21 +97,21 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
 
   const handleUpdateBedStatus = (bedId, newStatus) => {
     const bed = beds.find(b => b.id === bedId);
-
+    
     // Prevent changing occupied beds
     if (bed?.status === 'occupied' && newStatus !== 'occupied') {
       toast.error('Cannot change status of an occupied bed. Discharge patient first.');
       return;
     }
 
-    setBeds(prev => prev.map(b =>
-      b.id === bedId
-        ? {
-          ...b,
-          status: newStatus,
-          housekeeping: newStatus === 'cleaning' ? 'in_progress' :
-            newStatus === 'available' ? 'clean' : b.housekeeping
-        }
+    setBeds(prev => prev.map(b => 
+      b.id === bedId 
+        ? { 
+            ...b, 
+            status: newStatus,
+            housekeeping: newStatus === 'cleaning' ? 'in_progress' : 
+                         newStatus === 'available' ? 'clean' : b.housekeeping
+          } 
         : b
     ));
     setHasChanges(true);
@@ -244,12 +244,13 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
                 beds.map((bed) => {
                   const status = getBedStatusById(bed.status);
                   const isOccupied = bed.status === 'occupied' || bed.status === 'reserved';
-
+                  
                   return (
-                    <div
+                    <div 
                       key={bed.id}
-                      className={`p-4 rounded-lg border transition-colors ${isOccupied ? 'bg-muted/30' : 'bg-card hover:bg-muted/20'
-                        }`}
+                      className={`p-4 rounded-lg border transition-colors ${
+                        isOccupied ? 'bg-muted/30' : 'bg-card hover:bg-muted/20'
+                      }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
@@ -264,7 +265,7 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
                               <Bed className="h-5 w-5" />
                             )}
                           </div>
-
+                          
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-medium">{bed.bedNumber}</h4>
@@ -272,14 +273,14 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
                                 {status.name}
                               </Badge>
                             </div>
-
+                            
                             {bed.patient && (
                               <p className="text-sm text-muted-foreground mt-1">
                                 <User className="h-3 w-3 inline mr-1" />
                                 {bed.patient.name} ({bed.patient.mrn})
                               </p>
                             )}
-
+                            
                             {/* Features */}
                             <div className="flex flex-wrap gap-1 mt-2">
                               {BED_FEATURES.slice(0, 6).map(feature => (
@@ -295,11 +296,11 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
                             </div>
                           </div>
                         </div>
-
+                        
                         <div className="flex items-center gap-2">
                           {/* Status Selector */}
-                          <Select
-                            value={bed.status}
+                          <Select 
+                            value={bed.status} 
                             onValueChange={(v) => handleUpdateBedStatus(bed.id, v)}
                             disabled={bed.status === 'occupied'}
                           >
@@ -307,7 +308,7 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {BED_STATUSES.filter(s =>
+                              {BED_STATUSES.filter(s => 
                                 s.id !== 'occupied' && s.id !== 'discharge_pending'
                               ).map(s => (
                                 <SelectItem key={s.id} value={s.id}>
@@ -316,7 +317,7 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
                               ))}
                             </SelectContent>
                           </Select>
-
+                          
                           {/* Delete Button */}
                           <Button
                             variant="ghost"
@@ -329,11 +330,11 @@ export function BedManagementDialog({ open, onOpenChange, room, onSave }) {
                           </Button>
                         </div>
                       </div>
-
+                      
                       {isOccupied && (
                         <div className="mt-2 flex items-center gap-1 text-xs text-amber-600">
                           <AlertTriangle className="h-3 w-3" />
-                          {bed.status === 'occupied'
+                          {bed.status === 'occupied' 
                             ? 'Discharge patient before modifying this bed'
                             : 'Cancel reservation before modifying this bed'
                           }

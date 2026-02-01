@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  TrendingUp, TrendingDown, AlertTriangle, Calendar,
-  Bed, Users, BarChart3, Target, ArrowRight, RefreshCw
+import { 
+  TrendingUp, TrendingDown, AlertTriangle, Calendar, 
+  Bed, Users, BarChart3, Target, ArrowRight, RefreshCw 
 } from 'lucide-react';
-import {
+import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell
@@ -33,7 +33,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
 
     rooms.forEach(room => {
       if (selectedRoomType !== 'all' && room.type !== selectedRoomType) return;
-
+      
       if (!byType[room.type]) {
         byType[room.type] = { total: 0, occupied: 0, reserved: 0, available: 0 };
       }
@@ -73,9 +73,9 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
     const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
     const utilizationRate = totalBeds > 0 ? Math.round(((occupiedBeds + reservedBeds) / totalBeds) * 100) : 0;
 
-    return {
+    return { 
       totalBeds, occupiedBeds, reservedBeds, availableBeds, maintenanceBeds,
-      occupancyRate, utilizationRate, byType, byFloor
+      occupancyRate, utilizationRate, byType, byFloor 
     };
   }, [rooms, selectedRoomType]);
 
@@ -84,11 +84,11 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
     const days = parseInt(forecastPeriod);
     const data = [];
     const today = new Date();
-
+    
     // Base values from current state
     const baseOccupancy = capacityStats.occupancyRate;
     const totalBeds = capacityStats.totalBeds;
-
+    
     // Get upcoming reservations by date
     const reservationsByDate = {};
     reservations.forEach(res => {
@@ -102,28 +102,28 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
       const date = addDays(today, i);
       const dateKey = format(date, 'yyyy-MM-dd');
       const dayOfWeek = date.getDay();
-
+      
       // Add weekly patterns (higher on weekdays)
       const weekdayFactor = dayOfWeek === 0 || dayOfWeek === 6 ? 0.85 : 1.05;
-
+      
       // Random variation
       const randomVariation = (Math.random() - 0.5) * 10;
-
+      
       // Scheduled admissions from reservations
       const scheduledAdmissions = reservationsByDate[dateKey] || 0;
       const admissionImpact = (scheduledAdmissions / totalBeds) * 100;
-
+      
       // Expected discharges (estimate based on average stay)
       const expectedDischarges = Math.floor(Math.random() * 3) + 1;
       const dischargeImpact = (expectedDischarges / totalBeds) * 100;
-
+      
       // Calculate forecasted occupancy
       let forecastedOccupancy = baseOccupancy * weekdayFactor + randomVariation + admissionImpact - dischargeImpact;
       forecastedOccupancy = Math.max(20, Math.min(100, forecastedOccupancy));
-
+      
       // Calculate confidence interval (wider for further dates)
       const confidenceSpread = 5 + (i * 0.5);
-
+      
       data.push({
         date: format(date, 'MMM dd'),
         fullDate: date,
@@ -135,7 +135,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
         availableBeds: Math.round(totalBeds * (1 - forecastedOccupancy / 100)),
       });
     }
-
+    
     return data;
   }, [forecastPeriod, capacityStats, reservations]);
 
@@ -143,13 +143,13 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
   const historicalData = React.useMemo(() => {
     const data = [];
     const today = new Date();
-
+    
     for (let i = 13; i >= 0; i--) {
       const date = subDays(today, i);
       const dayOfWeek = date.getDay();
       const weekdayFactor = dayOfWeek === 0 || dayOfWeek === 6 ? 0.85 : 1.0;
       const baseRate = 65 + Math.random() * 20;
-
+      
       data.push({
         date: format(date, 'MMM dd'),
         occupancy: Math.round(baseRate * weekdayFactor),
@@ -157,7 +157,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
         discharges: Math.floor(Math.random() * 7) + 2,
       });
     }
-
+    
     return data;
   }, []);
 
@@ -165,7 +165,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
   const roomTypeDistribution = React.useMemo(() => {
     const distribution = [];
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-
+    
     Object.entries(capacityStats.byType).forEach(([type, stats], index) => {
       const roomType = ROOM_TYPES.find(t => t.id === type);
       distribution.push({
@@ -176,14 +176,14 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
         color: colors[index % colors.length],
       });
     });
-
+    
     return distribution;
   }, [capacityStats]);
 
   // Demand forecast alerts
   const alerts = React.useMemo(() => {
     const alertList = [];
-
+    
     // High occupancy alert
     if (capacityStats.occupancyRate > 85) {
       alertList.push({
@@ -192,7 +192,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
         icon: AlertTriangle,
       });
     }
-
+    
     // ICU capacity check
     const icuStats = capacityStats.byType['icu'];
     if (icuStats && icuStats.total > 0) {
@@ -205,13 +205,13 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
         });
       }
     }
-
+    
     // Upcoming surge from reservations
-    const upcomingReservations = reservations.filter(r =>
-      r.status === 'confirmed' &&
+    const upcomingReservations = reservations.filter(r => 
+      r.status === 'confirmed' && 
       new Date(r.expectedArrival) <= addDays(new Date(), 3)
     ).length;
-
+    
     if (upcomingReservations > capacityStats.availableBeds * 0.7) {
       alertList.push({
         type: 'warning',
@@ -219,9 +219,9 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
         icon: Calendar,
       });
     }
-
+    
     // Forecast peak warning
-    const peakDay = forecastData.reduce((max, day) =>
+    const peakDay = forecastData.reduce((max, day) => 
       day.occupancy > max.occupancy ? day : max, forecastData[0]
     );
     if (peakDay && peakDay.occupancy > 90) {
@@ -231,7 +231,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
         icon: TrendingUp,
       });
     }
-
+    
     return alertList;
   }, [capacityStats, reservations, forecastData]);
 
@@ -248,7 +248,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
             Predict bed demand and optimize resource allocation
           </p>
         </div>
-
+        
         <div className="flex items-center gap-3">
           <Select value={selectedRoomType} onValueChange={setSelectedRoomType}>
             <SelectTrigger className="w-[160px]">
@@ -261,7 +261,7 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
               ))}
             </SelectContent>
           </Select>
-
+          
           <Select value={forecastPeriod} onValueChange={setForecastPeriod}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
@@ -281,10 +281,11 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
           {alerts.map((alert, index) => (
             <div
               key={index}
-              className={`flex items-center gap-3 p-3 rounded-lg border ${alert.type === 'critical' ? 'bg-destructive/10 border-destructive/30 text-destructive' :
-                  alert.type === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-700' :
-                    'bg-blue-500/10 border-blue-500/30 text-blue-700'
-                }`}
+              className={`flex items-center gap-3 p-3 rounded-lg border ${
+                alert.type === 'critical' ? 'bg-destructive/10 border-destructive/30 text-destructive' :
+                alert.type === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-700' :
+                'bg-blue-500/10 border-blue-500/30 text-blue-700'
+              }`}
             >
               <alert.icon className="h-4 w-4 flex-shrink-0" />
               <span className="text-sm font-medium">{alert.message}</span>
@@ -302,15 +303,16 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
                 <p className="text-xs text-muted-foreground">Current Occupancy</p>
                 <p className="text-2xl font-bold">{capacityStats.occupancyRate}%</p>
               </div>
-              <div className={`p-2 rounded-full ${capacityStats.occupancyRate > 85 ? 'bg-destructive/10 text-destructive' :
-                  capacityStats.occupancyRate > 70 ? 'bg-amber-500/10 text-amber-600' :
-                    'bg-green-500/10 text-green-600'
-                }`}>
+              <div className={`p-2 rounded-full ${
+                capacityStats.occupancyRate > 85 ? 'bg-destructive/10 text-destructive' :
+                capacityStats.occupancyRate > 70 ? 'bg-amber-500/10 text-amber-600' :
+                'bg-green-500/10 text-green-600'
+              }`}>
                 <Bed className="h-5 w-5" />
               </div>
             </div>
-            <Progress
-              value={capacityStats.occupancyRate}
+            <Progress 
+              value={capacityStats.occupancyRate} 
               className="h-1.5 mt-3"
             />
           </CardContent>
@@ -361,8 +363,8 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
               <div>
                 <p className="text-xs text-muted-foreground">Upcoming Admissions</p>
                 <p className="text-2xl font-bold">
-                  {reservations.filter(r =>
-                    r.status === 'confirmed' &&
+                  {reservations.filter(r => 
+                    r.status === 'confirmed' && 
                     new Date(r.expectedArrival) <= addDays(new Date(), parseInt(forecastPeriod))
                   ).length}
                 </p>
@@ -400,12 +402,12 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="date" className="text-xs" tick={{ fontSize: 10 }} />
                     <YAxis domain={[0, 100]} className="text-xs" tick={{ fontSize: 10 }} unit="%" />
-                    <Tooltip
+                    <Tooltip 
                       contentStyle={{ fontSize: 12 }}
                       formatter={(value, name) => [
                         `${value}%`,
-                        name === 'occupancy' ? 'Forecast' :
-                          name === 'upperBound' ? 'Upper Bound' : 'Lower Bound'
+                        name === 'occupancy' ? 'Forecast' : 
+                        name === 'upperBound' ? 'Upper Bound' : 'Lower Bound'
                       ]}
                     />
                     <Legend />
@@ -435,16 +437,17 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-
+              
               {/* Daily breakdown */}
               <div className="mt-4 grid grid-cols-7 gap-2">
                 {forecastData.slice(0, 7).map((day, index) => (
-                  <div
+                  <div 
                     key={index}
-                    className={`p-2 rounded text-center border ${day.occupancy > 85 ? 'bg-destructive/10 border-destructive/30' :
-                        day.occupancy > 70 ? 'bg-amber-500/10 border-amber-500/30' :
-                          'bg-green-500/10 border-green-500/30'
-                      }`}
+                    className={`p-2 rounded text-center border ${
+                      day.occupancy > 85 ? 'bg-destructive/10 border-destructive/30' :
+                      day.occupancy > 70 ? 'bg-amber-500/10 border-amber-500/30' :
+                      'bg-green-500/10 border-green-500/30'
+                    }`}
                   >
                     <p className="text-[10px] text-muted-foreground">{day.date}</p>
                     <p className="text-sm font-semibold">{day.occupancy}%</p>
@@ -533,13 +536,13 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-
+                
                 <div className="space-y-3">
                   {roomTypeDistribution.map((type, index) => (
                     <div key={index} className="flex items-center justify-between p-2 rounded border">
                       <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
+                        <div 
+                          className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: type.color }}
                         />
                         <span className="text-sm font-medium">{type.name}</span>
@@ -606,14 +609,14 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
                   <div>
                     <p className="text-sm font-medium">Consider Overflow Planning</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      With {capacityStats.occupancyRate}% occupancy, prepare contingency beds
+                      With {capacityStats.occupancyRate}% occupancy, prepare contingency beds 
                       or coordinate with partner facilities.
                     </p>
                   </div>
                 </div>
               </div>
             )}
-
+            
             {capacityStats.maintenanceBeds > 0 && (
               <div className="p-3 rounded-lg border bg-blue-500/5 border-blue-500/20">
                 <div className="flex items-start gap-2">
@@ -621,34 +624,34 @@ export function CapacityPlanningPanel({ rooms, reservations = [] }) {
                   <div>
                     <p className="text-sm font-medium">Expedite Maintenance</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {capacityStats.maintenanceBeds} beds under maintenance.
+                      {capacityStats.maintenanceBeds} beds under maintenance. 
                       Prioritize repairs to increase availability.
                     </p>
                   </div>
                 </div>
               </div>
             )}
-
+            
             <div className="p-3 rounded-lg border bg-green-500/5 border-green-500/20">
               <div className="flex items-start gap-2">
                 <TrendingUp className="h-4 w-4 text-green-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Optimize Discharge Timing</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Schedule discharges before noon to maximize bed turnover
+                    Schedule discharges before noon to maximize bed turnover 
                     for afternoon admissions.
                   </p>
                 </div>
               </div>
             </div>
-
+            
             <div className="p-3 rounded-lg border bg-purple-500/5 border-purple-500/20">
               <div className="flex items-start gap-2">
                 <Calendar className="h-4 w-4 text-purple-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Stagger Elective Admissions</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Distribute elective surgeries across weekdays to
+                    Distribute elective surgeries across weekdays to 
                     maintain consistent occupancy levels.
                   </p>
                 </div>

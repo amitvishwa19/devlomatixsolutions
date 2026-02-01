@@ -10,8 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  DoorOpen, IndianRupee, FileText, Sparkles,
+import { 
+  DoorOpen, IndianRupee, FileText, Sparkles, 
   Printer, Send, CheckCircle, AlertTriangle, Receipt
 } from 'lucide-react';
 import { format, differenceInDays, differenceInHours } from 'date-fns';
@@ -32,13 +32,13 @@ const GST_RATES = {
   recovery: 0.12,
 };
 
-export function DischargeBillingDialog({
-  open,
-  onOpenChange,
-  bed,
-  room,
+export function DischargeBillingDialog({ 
+  open, 
+  onOpenChange, 
+  bed, 
+  room, 
   onDischarge,
-  onGenerateInvoice
+  onGenerateInvoice 
 }) {
   const [dischargeType, setDischargeType] = React.useState('normal');
   const [notes, setNotes] = React.useState('');
@@ -59,33 +59,33 @@ export function DischargeBillingDialog({
     const dischargeDate = new Date();
     const days = Math.max(1, differenceInDays(dischargeDate, admissionDate) || 1);
     const hours = differenceInHours(dischargeDate, admissionDate) % 24;
-
+    
     // Room charges
     const dailyRate = room.dailyRate;
     const roomCharges = days * dailyRate;
-
+    
     // Calculate partial day charges (if hours > 12, count as full day)
     const partialDayCharge = hours > 12 ? dailyRate : hours > 0 ? dailyRate * 0.5 : 0;
-
+    
     // GST
     const gstRate = GST_RATES[room.type] || 0;
     const subtotalRoom = roomCharges + partialDayCharge;
     const roomGst = subtotalRoom * gstRate;
-
+    
     // Additional charges
     const additionalTotal = additionalCharges.reduce((sum, c) => sum + c.amount, 0);
     const additionalGst = additionalCharges.reduce((sum, c) => sum + (c.amount * (c.gstRate || 0)), 0);
-
+    
     // Subtotal before discount
     const subtotal = subtotalRoom + additionalTotal;
     const totalGst = roomGst + additionalGst;
-
+    
     // Discount
     const discountAmount = (subtotal * discountPercent) / 100;
-
+    
     // Deposit already paid
     const depositPaid = bed.admission.depositPaid || 0;
-
+    
     // Grand total
     const grandTotal = subtotal + totalGst - discountAmount;
     const balanceDue = grandTotal - depositPaid;
@@ -121,7 +121,7 @@ export function DischargeBillingDialog({
   };
 
   const updateCharge = (id, field, value) => {
-    setAdditionalCharges(additionalCharges.map(c =>
+    setAdditionalCharges(additionalCharges.map(c => 
       c.id === id ? { ...c, [field]: value } : c
     ));
   };
@@ -148,7 +148,7 @@ export function DischargeBillingDialog({
     };
 
     onDischarge?.(dischargeData);
-
+    
     if (generateInvoice && billing) {
       onGenerateInvoice?.({
         patientName: bed.patient?.name,
@@ -285,9 +285,9 @@ export function DischargeBillingDialog({
                             <SelectItem value="0.28">28%</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button
-                          size="icon"
-                          variant="ghost"
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
                           className="h-8 w-8"
                           onClick={() => removeCharge(charge.id)}
                         >
@@ -421,7 +421,7 @@ export function DischargeBillingDialog({
             {/* Checklist */}
             <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
               <p className="text-sm font-medium">Discharge Checklist</p>
-
+              
               <div className="flex items-center space-x-2">
                 <Checkbox id="billing" checked={confirmBilling} onCheckedChange={setConfirmBilling} />
                 <label htmlFor="billing" className="text-sm flex items-center gap-2">
@@ -461,8 +461,8 @@ export function DischargeBillingDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
+          <Button 
+            onClick={handleSubmit} 
             disabled={!canComplete}
             variant={dischargeType === 'against_advice' ? 'destructive' : 'default'}
           >

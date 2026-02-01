@@ -100,16 +100,17 @@ export function AdmitPatientDialog({ open, onOpenChange, bed, room, onAdmit }) {
                 className="pl-9"
               />
             </div>
-
+            
             {/* Patient Results */}
             <div className="max-h-40 overflow-y-auto border rounded-lg divide-y">
               {filteredPatients.map(patient => (
                 <div
                   key={patient.id}
-                  className={`p-3 cursor-pointer transition-colors ${selectedPatient?.id === patient.id
+                  className={`p-3 cursor-pointer transition-colors ${
+                    selectedPatient?.id === patient.id
                       ? 'bg-primary/10 border-primary'
                       : 'hover:bg-muted/50'
-                    }`}
+                  }`}
                   onClick={() => setSelectedPatient(patient)}
                 >
                   <div className="flex items-center justify-between">

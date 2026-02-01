@@ -29,11 +29,11 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
     amenities: [],
     features: [],
   });
-
+  
   const [errors, setErrors] = React.useState({});
 
   const availableAmenities = [
-    'AC', 'TV', 'WiFi', 'Attached Bathroom', 'Refrigerator',
+    'AC', 'TV', 'WiFi', 'Attached Bathroom', 'Refrigerator', 
     'Microwave', 'Sofa Bed', 'Dining Table', 'Intercom', 'Nurse Call'
   ];
 
@@ -65,28 +65,28 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
 
   const validateForm = () => {
     const newErrors = {};
-
+    
     if (!formData.roomNumber.trim()) {
       newErrors.roomNumber = 'Room number is required';
     } else if (existingRoomNumbers?.includes(formData.roomNumber.trim())) {
       newErrors.roomNumber = 'Room number already exists';
     }
-
+    
     if (formData.bedsCount < 1 || formData.bedsCount > 10) {
       newErrors.bedsCount = 'Beds count must be between 1 and 10';
     }
-
+    
     if (formData.dailyRate < 0) {
       newErrors.dailyRate = 'Daily rate cannot be negative';
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       toast.error('Please fix the validation errors');
       return;
@@ -94,11 +94,11 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
 
     // Generate room ID
     const roomId = `room_${Date.now()}`;
-
+    
     // Generate beds
     const beds = [];
     const bedLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-
+    
     for (let i = 0; i < formData.bedsCount; i++) {
       beds.push({
         id: `bed_${Date.now()}_${i}`,
@@ -131,7 +131,7 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
     };
 
     onAdd(newRoom);
-
+    
     // Reset form
     setFormData({
       roomNumber: '',
@@ -145,7 +145,7 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
     });
     setErrors({});
     onOpenChange(false);
-
+    
     toast.success(`Room ${newRoom.roomNumber} created with ${beds.length} bed(s)`);
   };
 
@@ -206,7 +206,7 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
             {/* Basic Info */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Basic Information</h3>
-
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="roomNumber">Room Number *</Label>
@@ -282,7 +282,7 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
             {/* Capacity & Pricing */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Capacity & Pricing</h3>
-
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="bedsCount">Number of Beds *</Label>

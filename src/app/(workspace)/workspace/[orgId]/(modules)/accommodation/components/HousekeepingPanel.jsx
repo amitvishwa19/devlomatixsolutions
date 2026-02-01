@@ -160,7 +160,7 @@ export function HousekeepingPanel({ rooms, onUpdateHousekeeping, onAssignStaff }
                 const roomType = getRoomTypeById(alert.roomType);
                 const floor = getFloorById(alert.floor);
                 const wing = getWingById(alert.wing);
-
+                
                 return (
                   <Card key={alert.id} className="border-border">
                     <CardContent className="p-3">

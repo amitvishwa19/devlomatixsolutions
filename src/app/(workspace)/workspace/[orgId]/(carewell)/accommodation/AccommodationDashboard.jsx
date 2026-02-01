@@ -4,81 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Bed, Plus, RefreshCw, LayoutGrid, Map, List, 
+import {
+  Bed, Plus, RefreshCw, LayoutGrid, Map, List,
   Sparkles, BarChart3, Clock, DoorOpen, AlertCircle,
   Users, Stethoscope, Monitor, FileText, Activity, CalendarCheck, TrendingUp, Wrench
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { generateInitialData } from './mockData';
-import { filterRooms, getUpcomingDischarges, getHousekeepingAlerts, calculateOccupancyStats } from './utils';
+import { generateInitialData } from './utils/mockData';
+import { filterRooms, getUpcomingDischarges, getHousekeepingAlerts, calculateOccupancyStats } from './utils/utils';
 import { isSameDay } from 'date-fns';
-import {
-  OccupancyStatsCards,
-  FloorPlanView,
-  RoomListView,
-  BedDetailSheet,
-  AdmitPatientDialog,
-  TransferPatientDialog,
-  DischargePatientDialog,
-  DischargeBillingDialog,
-  HousekeepingPanel,
-  AccommodationAnalytics,
-  AccommodationFilters,
-  UpcomingDischargesPanel,
-  WaitingListPanel,
-  WardRoundsPanel,
-  EquipmentTrackingPanel,
-  ShiftHandoverPanel,
-  PatientConditionBoard,
-  BedReservationPanel,
-  AddRoomDialog,
-  EditRoomDialog,
-  DeleteRoomDialog,
-  CapacityPlanningPanel,
-  MaintenanceSchedulePanel,
-  BedManagementDialog,
-} from './components';
 
-// Mock data generators
-const generateMockWaitlist = () => [
-  { id: 'wl_1', patientName: 'Ramesh Gupta', patientPhone: '+91 98765 43220', preferredRoomType: 'icu', priority: 'critical', reason: 'Post-surgery ICU monitoring needed', addedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), status: 'waiting' },
-  { id: 'wl_2', patientName: 'Suman Verma', patientPhone: '+91 98765 43221', preferredRoomType: 'private', priority: 'normal', reason: 'Elective surgery admission', addedAt: new Date(Date.now() - 12 * 60 * 60 * 1000), status: 'waiting' },
-  { id: 'wl_3', patientName: 'Deepak Sharma', patientPhone: '+91 98765 43222', preferredRoomType: 'general_ward', priority: 'low', reason: 'Observation', addedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), status: 'waiting' },
-];
 
-const generateMockRounds = () => [
-  { id: 'round_1', doctor: 'Dr. Sharma', scheduledTime: new Date(Date.now() + 2 * 60 * 60 * 1000), patients: ['bed_1', 'bed_2', 'bed_5'], status: 'scheduled', notes: 'Morning rounds - ICU patients' },
-  { id: 'round_2', doctor: 'Dr. Patel', scheduledTime: new Date(Date.now() - 1 * 60 * 60 * 1000), patients: ['bed_10', 'bed_15'], status: 'in_progress', notes: 'Follow-up rounds' },
-  { id: 'round_3', doctor: 'Dr. Kumar', scheduledTime: new Date(Date.now() - 4 * 60 * 60 * 1000), patients: ['bed_20', 'bed_22', 'bed_25'], status: 'completed', notes: 'Post-surgery check' },
-];
 
-const generateMockEquipment = () => [
-  { id: 'eq_1', type: 'ventilator', serialNumber: 'VEN-001-2024', status: 'in_use', assignedBed: 'ICU-01-A', lastMaintenance: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-  { id: 'eq_2', type: 'patient_monitor', serialNumber: 'MON-005-2024', status: 'available', assignedBed: '', lastMaintenance: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) },
-  { id: 'eq_3', type: 'infusion_pump', serialNumber: 'INF-012-2024', status: 'in_use', assignedBed: '1E-03-A', lastMaintenance: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000) },
-  { id: 'eq_4', type: 'defibrillator', serialNumber: 'DEF-002-2024', status: 'available', assignedBed: '', lastMaintenance: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-  { id: 'eq_5', type: 'ecg_machine', serialNumber: 'ECG-008-2024', status: 'maintenance', assignedBed: '', lastMaintenance: new Date() },
-];
-
-const generateMockHandovers = () => [
-  { id: 'ho_1', fromNurse: 'Nurse Priya', toNurse: 'Nurse Rajan', shift: 'morning', timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), status: 'acknowledged', generalNotes: 'Stable night shift. ICU-02 patient needs close monitoring.', patientNotes: [{ bedId: 'bed_1', notes: 'Vitals stable, continue current medication' }] },
-  { id: 'ho_2', fromNurse: 'Nurse Rajan', toNurse: 'Nurse Meera', shift: 'afternoon', timestamp: new Date(), status: 'pending', generalNotes: 'New admission in 1E-05. Lab results pending for 2E-03.', patientNotes: [{ bedId: 'bed_5', notes: 'Blood sugar elevated, notify doctor' }, { bedId: 'bed_10', notes: 'Scheduled for discharge tomorrow' }] },
-];
-
-const generateMockReservations = () => [
-  { id: 'res_1', patientName: 'Anil Kumar', patientPhone: '+91 98765 43230', roomType: 'private', specificBedId: 'bed_25', bedNumber: '1E-08-A', roomNumber: '1E-08', expectedArrival: new Date(Date.now() + 24 * 60 * 60 * 1000), expectedDuration: 5, admissionType: 'elective', diagnosis: 'Knee replacement surgery', doctor: 'Patel', depositAmount: 50000, depositPaid: true, status: 'confirmed', dailyRate: 6000, createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000) },
-  { id: 'res_2', patientName: 'Meena Devi', patientPhone: '+91 98765 43231', roomType: 'semi_private', specificBedId: 'bed_30', bedNumber: '2E-03-A', roomNumber: '2E-03', expectedArrival: new Date(), expectedDuration: 3, admissionType: 'elective', diagnosis: 'Cataract surgery', doctor: 'Sharma', depositAmount: 20000, depositPaid: false, status: 'confirmed', dailyRate: 3500, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-  { id: 'res_3', patientName: 'Vijay Singh', patientPhone: '+91 98765 43232', roomType: 'icu', specificBedId: 'bed_3', bedNumber: 'ICU-03-A', roomNumber: 'ICU-03', expectedArrival: new Date(Date.now() + 48 * 60 * 60 * 1000), expectedDuration: 7, admissionType: 'emergency', diagnosis: 'Post cardiac surgery', doctor: 'Kumar', depositAmount: 100000, depositPaid: true, status: 'confirmed', dailyRate: 15000, createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000) },
-];
-
-const getCurrentShift = () => {
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 14) return 'morning';
-  if (hour >= 14 && hour < 22) return 'afternoon';
-  return 'night';
-};
 
 export function AccommodationDashboard() {
   const navigate = useNavigate();
@@ -88,7 +26,7 @@ export function AccommodationDashboard() {
   const [equipment, setEquipment] = useLocalStorage('carewell-equipment', () => generateMockEquipment());
   const [handovers, setHandovers] = useLocalStorage('carewell-handovers', () => generateMockHandovers());
   const [reservations, setReservations] = useLocalStorage('carewell-reservations', () => generateMockReservations());
-  
+
   const [activeTab, setActiveTab] = React.useState('beds');
   const [viewMode, setViewMode] = React.useState('floor');
   const [filters, setFilters] = React.useState({
@@ -153,8 +91,8 @@ export function AccommodationDashboard() {
   // Today's reservations
   const todayReservations = React.useMemo(() => {
     const today = new Date();
-    return reservations.filter(r => 
-      r.status === 'confirmed' && 
+    return reservations.filter(r =>
+      r.status === 'confirmed' &&
       isSameDay(new Date(r.expectedArrival), today)
     ).length;
   }, [reservations]);
@@ -349,7 +287,7 @@ export function AccommodationDashboard() {
   };
 
   const handleAssignFromWaitlist = (entry) => {
-    const match = availableBeds.find(({ room }) => 
+    const match = availableBeds.find(({ room }) =>
       entry.preferredRoomType === 'any' || room.type === entry.preferredRoomType
     );
     if (match) {
@@ -669,8 +607,8 @@ export function AccommodationDashboard() {
           {viewMode === 'grid' && (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredRooms.map(room => (
-                <Card 
-                  key={room.id} 
+                <Card
+                  key={room.id}
                   className="cursor-pointer hover:border-primary/50 transition-colors"
                   onClick={() => {
                     setSelectedRoom(room);
@@ -742,7 +680,7 @@ export function AccommodationDashboard() {
               setWaitlist(prev => prev.map(w => {
                 if (w.id === id) {
                   const currentIdx = priorities.indexOf(w.priority);
-                  const newIdx = direction === 'up' 
+                  const newIdx = direction === 'up'
                     ? Math.min(currentIdx + 1, priorities.length - 1)
                     : Math.max(currentIdx - 1, 0);
                   return { ...w, priority: priorities[newIdx] };

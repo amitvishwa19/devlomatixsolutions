@@ -14,32 +14,45 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { FLOORS, WINGS, ROOM_TYPES, BED_FEATURES } from '../utils/types';
 
-export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }) {
+export function EditRoomDialog({ open, onOpenChange, room, onSave, existingRoomNumbers }) {
   const [formData, setFormData] = React.useState({
     roomNumber: '',
     floor: 'ground',
     wing: 'east',
     type: 'general_ward',
-    bedsCount: 1,
     dailyRate: 2000,
     amenities: [],
     features: [],
   });
-
+  
   const [errors, setErrors] = React.useState({});
 
   const availableAmenities = [
-    'AC', 'TV', 'WiFi', 'Attached Bathroom', 'Refrigerator',
+    'AC', 'TV', 'WiFi', 'Attached Bathroom', 'Refrigerator', 
     'Microwave', 'Sofa Bed', 'Dining Table', 'Intercom', 'Nurse Call'
   ];
 
+  // Initialize form when room changes
+  React.useEffect(() => {
+    if (room) {
+      setFormData({
+        roomNumber: room.roomNumber || '',
+        floor: room.floor || 'ground',
+        wing: room.wing || 'east',
+        type: room.type || 'general_ward',
+        dailyRate: room.dailyRate || 2000,
+        amenities: room.amenities || [],
+        features: room.features || [],
+      });
+    }
+  }, [room]);
+
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when field is edited
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
@@ -65,139 +78,69 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
 
   const validateForm = () => {
     const newErrors = {};
-
+    
     if (!formData.roomNumber.trim()) {
       newErrors.roomNumber = 'Room number is required';
-    } else if (existingRoomNumbers?.includes(formData.roomNumber.trim())) {
+    } else if (
+      formData.roomNumber.trim() !== room?.roomNumber &&
+      existingRoomNumbers?.includes(formData.roomNumber.trim())
+    ) {
       newErrors.roomNumber = 'Room number already exists';
     }
-
-    if (formData.bedsCount < 1 || formData.bedsCount > 10) {
-      newErrors.bedsCount = 'Beds count must be between 1 and 10';
-    }
-
+    
     if (formData.dailyRate < 0) {
       newErrors.dailyRate = 'Daily rate cannot be negative';
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       toast.error('Please fix the validation errors');
       return;
     }
 
-    // Generate room ID
-    const roomId = `room_${Date.now()}`;
-
-    // Generate beds
-    const beds = [];
-    const bedLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-
-    for (let i = 0; i < formData.bedsCount; i++) {
-      beds.push({
-        id: `bed_${Date.now()}_${i}`,
-        bedNumber: `${formData.roomNumber}-${bedLetters[i]}`,
-        status: 'available',
-        housekeeping: 'clean',
-        lastCleaned: new Date(),
-        patient: null,
-        admission: null,
-        expectedDischarge: null,
-        patientCondition: null,
-        vitals: null,
-        reservation: null,
-      });
-    }
-
-    // Create room object
-    const newRoom = {
-      id: roomId,
+    const updatedRoom = {
+      ...room,
       roomNumber: formData.roomNumber.trim(),
       floor: formData.floor,
       wing: formData.wing,
       type: formData.type,
-      beds,
       dailyRate: formData.dailyRate,
       amenities: formData.amenities,
       features: formData.features,
-      lastInspection: new Date(),
-      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    onAdd(newRoom);
+    // Update bed numbers if room number changed
+    if (formData.roomNumber.trim() !== room.roomNumber) {
+      updatedRoom.beds = room.beds.map(bed => ({
+        ...bed,
+        bedNumber: bed.bedNumber.replace(room.roomNumber, formData.roomNumber.trim()),
+      }));
+    }
 
-    // Reset form
-    setFormData({
-      roomNumber: '',
-      floor: 'ground',
-      wing: 'east',
-      type: 'general_ward',
-      bedsCount: 1,
-      dailyRate: 2000,
-      amenities: [],
-      features: [],
-    });
-    setErrors({});
+    onSave(updatedRoom);
     onOpenChange(false);
-
-    toast.success(`Room ${newRoom.roomNumber} created with ${beds.length} bed(s)`);
+    toast.success(`Room ${updatedRoom.roomNumber} updated successfully`);
   };
 
-  const handleClose = () => {
-    setFormData({
-      roomNumber: '',
-      floor: 'ground',
-      wing: 'east',
-      type: 'general_ward',
-      bedsCount: 1,
-      dailyRate: 2000,
-      amenities: [],
-      features: [],
-    });
-    setErrors({});
-    onOpenChange(false);
-  };
-
-  // Auto-suggest room number based on floor and wing
-  const suggestRoomNumber = () => {
-    const floorPrefix = FLOORS.find(f => f.id === formData.floor)?.shortName || 'G';
-    const wingPrefix = formData.wing.charAt(0).toUpperCase();
-    const randomNum = Math.floor(Math.random() * 20) + 1;
-    const suggested = `${floorPrefix}${wingPrefix}-${String(randomNum).padStart(2, '0')}`;
-    handleChange('roomNumber', suggested);
-  };
-
-  // Auto-suggest daily rate based on room type
-  React.useEffect(() => {
-    const rates = {
-      icu: 15000,
-      private: 6000,
-      semi_private: 3500,
-      general_ward: 2000,
-      isolation: 8000,
-      emergency: 5000,
-      pediatric: 4000,
-      maternity: 5000,
-    };
-    handleChange('dailyRate', rates[formData.type] || 2000);
-  }, [formData.type]);
+  if (!room) return null;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Add New Room
+            <Pencil className="h-5 w-5" />
+            Edit Room {room.roomNumber}
           </DialogTitle>
           <DialogDescription>
-            Create a new room with beds in the hospital accommodation system
+            Update room details. Bed configuration cannot be changed here.
           </DialogDescription>
         </DialogHeader>
 
@@ -206,22 +149,17 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
             {/* Basic Info */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Basic Information</h3>
-
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="roomNumber">Room Number *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="roomNumber"
-                      value={formData.roomNumber}
-                      onChange={(e) => handleChange('roomNumber', e.target.value)}
-                      placeholder="e.g., 1E-05"
-                      className={errors.roomNumber ? 'border-destructive' : ''}
-                    />
-                    <Button type="button" variant="outline" size="sm" onClick={suggestRoomNumber}>
-                      Auto
-                    </Button>
-                  </div>
+                  <Input
+                    id="roomNumber"
+                    value={formData.roomNumber}
+                    onChange={(e) => handleChange('roomNumber', e.target.value)}
+                    placeholder="e.g., 1E-05"
+                    className={errors.roomNumber ? 'border-destructive' : ''}
+                  />
                   {errors.roomNumber && (
                     <p className="text-xs text-destructive">{errors.roomNumber}</p>
                   )}
@@ -279,28 +217,20 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
               </div>
             </div>
 
-            {/* Capacity & Pricing */}
+            {/* Pricing */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Capacity & Pricing</h3>
-
+              <h3 className="text-sm font-medium text-muted-foreground">Pricing</h3>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bedsCount">Number of Beds *</Label>
-                  <Input
-                    id="bedsCount"
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={formData.bedsCount}
-                    onChange={(e) => handleChange('bedsCount', parseInt(e.target.value) || 1)}
-                    className={errors.bedsCount ? 'border-destructive' : ''}
-                  />
-                  {errors.bedsCount && (
-                    <p className="text-xs text-destructive">{errors.bedsCount}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Beds will be labeled {formData.roomNumber || 'ROOM'}-A, {formData.roomNumber || 'ROOM'}-B, etc.
-                  </p>
+                  <Label>Current Beds</Label>
+                  <div className="flex gap-1 flex-wrap">
+                    {room.beds.map(bed => (
+                      <Badge key={bed.id} variant="outline" className="text-xs">
+                        {bed.bedNumber} ({bed.status})
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -345,11 +275,11 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
                 {availableAmenities.map(amenity => (
                   <div key={amenity} className="flex items-center space-x-2">
                     <Checkbox
-                      id={amenity}
+                      id={`edit-${amenity}`}
                       checked={formData.amenities.includes(amenity)}
                       onCheckedChange={() => toggleAmenity(amenity)}
                     />
-                    <Label htmlFor={amenity} className="text-sm font-normal cursor-pointer">
+                    <Label htmlFor={`edit-${amenity}`} className="text-sm font-normal cursor-pointer">
                       {amenity}
                     </Label>
                   </div>
@@ -360,12 +290,12 @@ export function AddRoomDialog({ open, onOpenChange, onAdd, existingRoomNumbers }
         </ScrollArea>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleSubmit}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Room
+            <Pencil className="h-4 w-4 mr-2" />
+            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>

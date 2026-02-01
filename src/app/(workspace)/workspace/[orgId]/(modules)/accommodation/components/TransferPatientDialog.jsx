@@ -24,20 +24,20 @@ export function TransferPatientDialog({ open, onOpenChange, bed, room, allRooms,
     const beds = [];
     allRooms.forEach(r => {
       if (r.id === room?.id) return; // Exclude current room
-
+      
       r.beds.forEach(b => {
         if (b.status === 'available') {
           // Apply filters
           if (filterFloor !== 'all' && r.floor !== filterFloor) return;
           if (filterWing !== 'all' && r.wing !== filterWing) return;
           if (filterType !== 'all' && r.type !== filterType) return;
-
+          
           if (searchQuery) {
             const query = searchQuery.toLowerCase();
             if (!b.bedNumber.toLowerCase().includes(query) &&
-              !r.roomNumber.toLowerCase().includes(query)) return;
+                !r.roomNumber.toLowerCase().includes(query)) return;
           }
-
+          
           beds.push({ bed: b, room: r });
         }
       });
@@ -174,8 +174,9 @@ export function TransferPatientDialog({ open, onOpenChange, bed, room, allRooms,
                     return (
                       <div
                         key={b.id}
-                        className={`p-3 cursor-pointer transition-colors ${isSelected ? 'bg-primary/10' : 'hover:bg-muted/50'
-                          }`}
+                        className={`p-3 cursor-pointer transition-colors ${
+                          isSelected ? 'bg-primary/10' : 'hover:bg-muted/50'
+                        }`}
                         onClick={() => {
                           setSelectedBed(b);
                           setSelectedRoom(r);

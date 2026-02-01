@@ -150,7 +150,7 @@ export function AccommodationAnalytics({ rooms }) {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
+                    <Tooltip 
                       formatter={(value, name) => [`${value} beds`, name]}
                     />
                     <Legend />
@@ -173,10 +173,10 @@ export function AccommodationAnalytics({ rooms }) {
                     <XAxis dataKey="day" className="text-xs" />
                     <YAxis domain={[0, 100]} className="text-xs" />
                     <Tooltip formatter={(value) => [`${value}%`, 'Occupancy']} />
-                    <Line
-                      type="monotone"
-                      dataKey="occupancy"
-                      stroke="hsl(var(--primary))"
+                    <Line 
+                      type="monotone" 
+                      dataKey="occupancy" 
+                      stroke="hsl(var(--primary))" 
                       strokeWidth={2}
                       dot={{ fill: 'hsl(var(--primary))' }}
                     />
@@ -248,8 +248,8 @@ export function AccommodationAnalytics({ rooms }) {
                 <BarChart data={revenueByType}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="name" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip
+                  <YAxis className="text-xs" tickFormatter={(v) => `₹${(v/1000).toFixed(0)}K`} />
+                  <Tooltip 
                     formatter={(value) => [formatCurrency(value), '']}
                   />
                   <Legend />

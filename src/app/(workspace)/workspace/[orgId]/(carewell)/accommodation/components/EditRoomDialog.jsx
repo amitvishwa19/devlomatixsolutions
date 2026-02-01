@@ -16,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { FLOORS, WINGS, ROOM_TYPES, BED_FEATURES } from '../types';
+import { FLOORS, WINGS, ROOM_TYPES, BED_FEATURES } from '../utils/types';
 
 export function EditRoomDialog({ open, onOpenChange, room, onSave, existingRoomNumbers }) {
   const [formData, setFormData] = React.useState({
@@ -28,11 +28,11 @@ export function EditRoomDialog({ open, onOpenChange, room, onSave, existingRoomN
     amenities: [],
     features: [],
   });
-  
+
   const [errors, setErrors] = React.useState({});
 
   const availableAmenities = [
-    'AC', 'TV', 'WiFi', 'Attached Bathroom', 'Refrigerator', 
+    'AC', 'TV', 'WiFi', 'Attached Bathroom', 'Refrigerator',
     'Microwave', 'Sofa Bed', 'Dining Table', 'Intercom', 'Nurse Call'
   ];
 
@@ -78,7 +78,7 @@ export function EditRoomDialog({ open, onOpenChange, room, onSave, existingRoomN
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.roomNumber.trim()) {
       newErrors.roomNumber = 'Room number is required';
     } else if (
@@ -87,18 +87,18 @@ export function EditRoomDialog({ open, onOpenChange, room, onSave, existingRoomN
     ) {
       newErrors.roomNumber = 'Room number already exists';
     }
-    
+
     if (formData.dailyRate < 0) {
       newErrors.dailyRate = 'Daily rate cannot be negative';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the validation errors');
       return;
@@ -149,7 +149,7 @@ export function EditRoomDialog({ open, onOpenChange, room, onSave, existingRoomN
             {/* Basic Info */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Basic Information</h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="roomNumber">Room Number *</Label>
@@ -220,7 +220,7 @@ export function EditRoomDialog({ open, onOpenChange, room, onSave, existingRoomN
             {/* Pricing */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Pricing</h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Current Beds</Label>

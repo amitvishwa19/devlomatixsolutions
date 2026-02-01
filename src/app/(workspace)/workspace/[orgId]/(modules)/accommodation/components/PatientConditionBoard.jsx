@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Activity, AlertCircle, TrendingUp, TrendingDown,
+import { 
+  Activity, AlertCircle, TrendingUp, TrendingDown, 
   Heart, Thermometer, Wind, Droplet, CheckCircle
 } from 'lucide-react';
 import { getRoomTypeById, getBedStatusById } from '../utils/utils';
@@ -104,10 +104,11 @@ export function PatientConditionBoard({ rooms, onUpdateCondition }) {
           const count = conditionStats[condition.id] || 0;
           const Icon = condition.icon;
           return (
-            <Card
+            <Card 
               key={condition.id}
-              className={`cursor-pointer transition-all ${filterCondition === condition.id ? 'ring-2 ring-primary' : ''
-                }`}
+              className={`cursor-pointer transition-all ${
+                filterCondition === condition.id ? 'ring-2 ring-primary' : ''
+              }`}
               onClick={() => setFilterCondition(filterCondition === condition.id ? 'all' : condition.id)}
             >
               <CardContent className="p-2 text-center">
@@ -128,19 +129,20 @@ export function PatientConditionBoard({ rooms, onUpdateCondition }) {
           {filteredPatients.map(({ bed, room, roomType, condition, vitals }) => {
             const conditionInfo = getCondition(condition);
             const ConditionIcon = conditionInfo.icon;
-            const hasAbnormalVitals = VITAL_INDICATORS.some(v =>
+            const hasAbnormalVitals = VITAL_INDICATORS.some(v => 
               vitals[v.id] && isVitalAbnormal(v, vitals[v.id])
             );
 
             return (
-              <Card
+              <Card 
                 key={bed.id}
-                className={`transition-all hover:shadow-md ${condition === 'critical' || condition === 'deteriorating'
-                    ? 'border-red-300 bg-red-50/30'
-                    : hasAbnormalVitals
-                      ? 'border-amber-300 bg-amber-50/30'
-                      : ''
-                  }`}
+                className={`transition-all hover:shadow-md ${
+                  condition === 'critical' || condition === 'deteriorating' 
+                    ? 'border-red-300 bg-red-50/30' 
+                    : hasAbnormalVitals 
+                    ? 'border-amber-300 bg-amber-50/30'
+                    : ''
+                }`}
               >
                 <CardContent className="p-3">
                   <div className="flex items-start justify-between mb-2">
@@ -166,7 +168,7 @@ export function PatientConditionBoard({ rooms, onUpdateCondition }) {
                       const value = vitals[indicator.id];
                       const Icon = indicator.icon;
                       const abnormal = value && isVitalAbnormal(indicator, value);
-
+                      
                       return (
                         <Tooltip key={indicator.id}>
                           <TooltipTrigger>

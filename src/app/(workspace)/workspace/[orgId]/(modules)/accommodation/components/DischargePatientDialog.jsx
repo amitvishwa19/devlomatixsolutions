@@ -159,7 +159,7 @@ export function DischargePatientDialog({ open, onOpenChange, bed, room, onDischa
           {isPending && (
             <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
               <p className="text-sm font-medium">Discharge Checklist</p>
-
+              
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="billing"
@@ -201,8 +201,8 @@ export function DischargePatientDialog({ open, onOpenChange, bed, room, onDischa
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button
-            onClick={handleSubmit}
+          <Button 
+            onClick={handleSubmit} 
             disabled={isPending && !canComplete}
             variant={dischargeType === 'against_advice' ? 'destructive' : 'default'}
           >

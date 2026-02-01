@@ -90,7 +90,7 @@ export function FloorPlanView({ rooms, onSelectBed, onSelectRoom }) {
                             </div>
                             <ChevronRight className="h-4 w-4 text-muted-foreground" />
                           </div>
-
+                          
                           {/* Bed Grid */}
                           <div className="flex flex-wrap gap-1">
                             {room.beds.map(bed => {

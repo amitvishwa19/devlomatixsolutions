@@ -8,8 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  FileText, Plus, Clock, CheckCircle, AlertCircle,
+import { 
+  FileText, Plus, Clock, CheckCircle, AlertCircle, 
   User, Bed, ArrowRight, Send
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -50,7 +50,7 @@ export function ShiftHandoverPanel({ handovers, rooms, currentShift, onCreateHan
         notes: notes[bedId] || '',
       })),
     });
-
+    
     setSelectedBeds([]);
     setNotes({});
     setGeneralNotes('');
@@ -60,7 +60,7 @@ export function ShiftHandoverPanel({ handovers, rooms, currentShift, onCreateHan
   };
 
   const toggleBed = (bedId) => {
-    setSelectedBeds(prev =>
+    setSelectedBeds(prev => 
       prev.includes(bedId) ? prev.filter(id => id !== bedId) : [...prev, bedId]
     );
   };
@@ -217,7 +217,7 @@ export function ShiftHandoverPanel({ handovers, rooms, currentShift, onCreateHan
                 <div className="border rounded-lg divide-y max-h-60 overflow-y-auto">
                   {occupiedBeds.map(({ bed, room, roomType }) => (
                     <div key={bed.id} className="p-3">
-                      <div
+                      <div 
                         className="flex items-center gap-3 cursor-pointer"
                         onClick={() => toggleBed(bed.id)}
                       >

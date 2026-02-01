@@ -25,8 +25,8 @@ export function UpcomingDischargesPanel({ rooms, onInitiateDischarge, onViewBed 
     const isUrgent = discharge.hoursUntil >= 0 && discharge.hoursUntil <= 4;
 
     return (
-      <Card
-        key={discharge.id}
+      <Card 
+        key={discharge.id} 
         className={`border ${isOverdue ? 'border-red-200 bg-red-50/50' : isUrgent ? 'border-amber-200 bg-amber-50/50' : ''}`}
       >
         <CardContent className="p-3">
@@ -62,18 +62,18 @@ export function UpcomingDischargesPanel({ rooms, onInitiateDischarge, onViewBed 
                 {isOverdue ? 'Overdue' : formatDistanceToNow(new Date(discharge.expectedDischarge), { addSuffix: true })}
               </p>
               <div className="flex gap-1 mt-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
                   className="h-7 text-xs"
                   onClick={() => onViewBed?.(discharge)}
                 >
                   View
                 </Button>
                 {!discharge.isPending && (
-                  <Button
-                    size="sm"
-                    variant="outline"
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
                     className="h-7 text-xs"
                     onClick={() => onInitiateDischarge?.(discharge)}
                   >

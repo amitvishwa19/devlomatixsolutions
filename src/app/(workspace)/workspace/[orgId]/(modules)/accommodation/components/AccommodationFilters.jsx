@@ -7,15 +7,15 @@ import { Search, X, Filter, LayoutGrid, List, Map } from 'lucide-react';
 import { FLOORS, WINGS, ROOM_TYPES, BED_STATUSES } from '../utils/types';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-export function AccommodationFilters({
-  filters,
-  onFiltersChange,
-  viewMode,
+export function AccommodationFilters({ 
+  filters, 
+  onFiltersChange, 
+  viewMode, 
   onViewModeChange,
   totalRooms,
-  filteredRooms
+  filteredRooms 
 }) {
-  const activeFiltersCount = Object.entries(filters).filter(([key, value]) =>
+  const activeFiltersCount = Object.entries(filters).filter(([key, value]) => 
     value && value !== 'all' && key !== 'search'
   ).length + (filters.search ? 1 : 0);
 
@@ -52,8 +52,8 @@ export function AccommodationFilters({
         </div>
 
         {/* Floor Filter */}
-        <Select
-          value={filters.floor || 'all'}
+        <Select 
+          value={filters.floor || 'all'} 
           onValueChange={(value) => onFiltersChange({ ...filters, floor: value })}
         >
           <SelectTrigger className="w-36 h-9">
@@ -68,8 +68,8 @@ export function AccommodationFilters({
         </Select>
 
         {/* Wing Filter */}
-        <Select
-          value={filters.wing || 'all'}
+        <Select 
+          value={filters.wing || 'all'} 
           onValueChange={(value) => onFiltersChange({ ...filters, wing: value })}
         >
           <SelectTrigger className="w-36 h-9">
@@ -84,8 +84,8 @@ export function AccommodationFilters({
         </Select>
 
         {/* Room Type Filter */}
-        <Select
-          value={filters.type || 'all'}
+        <Select 
+          value={filters.type || 'all'} 
           onValueChange={(value) => onFiltersChange({ ...filters, type: value })}
         >
           <SelectTrigger className="w-40 h-9">
@@ -100,8 +100,8 @@ export function AccommodationFilters({
         </Select>
 
         {/* Status Filter */}
-        <Select
-          value={filters.status || 'all'}
+        <Select 
+          value={filters.status || 'all'} 
           onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
         >
           <SelectTrigger className="w-40 h-9">

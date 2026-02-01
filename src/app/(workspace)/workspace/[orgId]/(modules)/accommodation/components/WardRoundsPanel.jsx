@@ -8,9 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  ClipboardList, Plus, User, Clock, CheckCircle,
-  AlertCircle, FileText, Stethoscope
+import { 
+  ClipboardList, Plus, User, Clock, CheckCircle, 
+  AlertCircle, FileText, Stethoscope 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getRoomTypeById } from '../utils/utils';
@@ -120,10 +120,11 @@ export function WardRoundsPanel({ rounds, rooms, onAddRound, onCompleteRound, on
             </div>
           ) : (
             rounds.map(round => (
-              <Card
-                key={round.id}
-                className={`cursor-pointer transition-colors hover:border-primary/50 ${round.status === 'in_progress' ? 'border-amber-300 bg-amber-50/30' : ''
-                  }`}
+              <Card 
+                key={round.id} 
+                className={`cursor-pointer transition-colors hover:border-primary/50 ${
+                  round.status === 'in_progress' ? 'border-amber-300 bg-amber-50/30' : ''
+                }`}
                 onClick={() => setSelectedRound(round)}
               >
                 <CardContent className="p-3">
@@ -131,11 +132,12 @@ export function WardRoundsPanel({ rounds, rooms, onAddRound, onCompleteRound, on
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{round.doctor}</span>
-                        <Badge
+                        <Badge 
                           variant={round.status === 'completed' ? 'default' : 'outline'}
-                          className={`text-[10px] ${round.status === 'in_progress' ? 'bg-amber-100 text-amber-800 border-amber-200' :
-                              round.status === 'completed' ? 'bg-green-100 text-green-800' : ''
-                            }`}
+                          className={`text-[10px] ${
+                            round.status === 'in_progress' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                            round.status === 'completed' ? 'bg-green-100 text-green-800' : ''
+                          }`}
                         >
                           {round.status.replace('_', ' ')}
                         </Badge>
@@ -211,8 +213,9 @@ export function WardRoundsPanel({ rounds, rooms, onAddRound, onCompleteRound, on
                   {occupiedBeds.map(({ bed, room, roomType }) => (
                     <div
                       key={bed.id}
-                      className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${newRound.patients.includes(bed.id) ? 'bg-primary/10' : 'hover:bg-muted'
-                        }`}
+                      className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
+                        newRound.patients.includes(bed.id) ? 'bg-primary/10' : 'hover:bg-muted'
+                      }`}
                       onClick={() => togglePatient(bed.id)}
                     >
                       <Checkbox checked={newRound.patients.includes(bed.id)} />
