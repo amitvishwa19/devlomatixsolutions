@@ -2,8 +2,8 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, User, Stethoscope, FlaskConical, AlertTriangle } from 'lucide-react';
-import { formatLabDate, getInitials, calculateTurnaround } from './utils';
-import { TEST_ORDER_STATUS_LABELS, TEST_ORDER_STATUS_COLORS, PRIORITY_LEVELS, TEST_CATEGORIES } from './types';
+import { formatLabDate, getInitials, calculateTurnaround } from '../utils/utils';
+import { TEST_ORDER_STATUS_LABELS, TEST_ORDER_STATUS_COLORS, PRIORITY_LEVELS, TEST_CATEGORIES } from '../utils/types';
 import { AssignedTags } from '@/carewell/taxonomy/components/TaxonomySelector';
 
 export function TestOrderCard({ order, onClick }) {

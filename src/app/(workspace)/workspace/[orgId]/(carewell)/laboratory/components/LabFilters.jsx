@@ -3,7 +3,7 @@ import { Search, List, TableProperties } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TEST_ORDER_STATUS, TEST_ORDER_STATUS_LABELS, PRIORITY_LEVELS, TEST_CATEGORIES } from './types';
+import { TEST_ORDER_STATUS, TEST_ORDER_STATUS_LABELS, PRIORITY_LEVELS, TEST_CATEGORIES } from '../utils/types';
 import { TagFilterDropdown } from '@/carewell/taxonomy/components/TaxonomySelector';
 
 export function LabFilters({

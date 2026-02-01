@@ -1,3 +1,3 @@
-export { default as LaboratoryDashboard } from './LaboratoryDashboard';
-export * from './types';
-export * from './utils';
+export { default as LaboratoryDashboard } from './components/LaboratoryDashboard';
+export * from './utils/types';
+export * from './utils/utils';

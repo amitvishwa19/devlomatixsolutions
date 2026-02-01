@@ -1,15 +1,15 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '@/carewell/hooks/useLocalStorage';
-import { mockTestOrders, mockEquipment } from './mockData';
-import { calculateLabStats, filterTestOrders } from './utils';
+import { mockTestOrders, mockEquipment } from '../utils/mockData';
+import { calculateLabStats, filterTestOrders } from '../utils/utils';
 import { LabStatsCards } from './LabStatsCards';
 import { LabFilters } from './LabFilters';
 import { TestOrderList } from './TestOrderList';
 import { TestOrderTableView } from './TestOrderTableView';
 import { TestOrderDetailSheet } from './TestOrderDetailSheet';
 import { NewTestOrderDialog } from './NewTestOrderDialog';
-import { EquipmentSheet, QualityControlSheet, SampleCollectionSheet } from './components';
-import { LabAnalytics } from './components/LabAnalytics';
+import { EquipmentSheet, QualityControlSheet, SampleCollectionSheet } from '.';
+import { LabAnalytics } from './LabAnalytics';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Settings, CheckSquare, TestTube } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function LaboratoryDashboard() {
   const { toast } = useToast();
   const [orders, setOrders] = useLocalStorage('hms_lab_orders', mockTestOrders);
   const [equipment] = useLocalStorage('hms_lab_equipment', mockEquipment);
-  
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -27,7 +27,7 @@ export default function LaboratoryDashboard() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState([]);
   const [viewMode, setViewMode] = useState('list');
-  
+
   // Dialogs/Sheets
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function LaboratoryDashboard() {
 
   // Computed
   const stats = useMemo(() => calculateLabStats(orders), [orders]);
-  
+
   const filteredOrders = useMemo(() => {
     let result = filterTestOrders(orders, {
       search: searchQuery,
@@ -46,13 +46,13 @@ export default function LaboratoryDashboard() {
       priority: priorityFilter,
       category: categoryFilter,
     });
-    
+
     if (tagFilter.length > 0) {
       result = result.filter((order) =>
         tagFilter.some((tagId) => order.tags?.includes(tagId))
       );
     }
-    
+
     return result;
   }, [orders, searchQuery, statusFilter, priorityFilter, categoryFilter, tagFilter]);
 

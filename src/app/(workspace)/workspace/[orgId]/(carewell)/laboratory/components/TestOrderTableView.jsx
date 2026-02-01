@@ -2,8 +2,8 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertTriangle } from 'lucide-react';
-import { formatLabDate, calculateTurnaround } from './utils';
-import { TEST_ORDER_STATUS_LABELS, TEST_ORDER_STATUS_COLORS, TEST_CATEGORIES } from './types';
+import { formatLabDate, calculateTurnaround } from '../utils/utils';
+import { TEST_ORDER_STATUS_LABELS, TEST_ORDER_STATUS_COLORS, TEST_CATEGORIES } from '../utils/types';
 
 export function TestOrderTableView({ orders, onOrderClick }) {
   if (orders.length === 0) {

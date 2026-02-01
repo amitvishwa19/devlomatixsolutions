@@ -13,9 +13,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, X, FlaskConical, Search } from 'lucide-react';
-import { COMMON_TESTS, TEST_CATEGORIES, PRIORITY_LEVELS } from './types';
-import { formatCurrency } from './utils';
-import { useFormValidationToast } from '@/carewell/hooks/useFormValidationToast';
+import { COMMON_TESTS, TEST_CATEGORIES, PRIORITY_LEVELS } from '../utils/types';
+import { formatCurrency } from '../utils/utils';
+import { useFormValidationToast } from '../../hooks/useFormValidationToast';
+
 
 const schema = z.object({
   patientName: z.string().min(1, 'Patient name is required'),
@@ -72,7 +73,7 @@ export function NewTestOrderDialog({ open, onOpenChange, onSubmit }) {
 
   const onFormSubmit = (data) => {
     console.log('Form data:', data);
-    
+
     if (selectedTests.length === 0) {
       toast({
         title: 'No tests selected',
@@ -114,7 +115,7 @@ export function NewTestOrderDialog({ open, onOpenChange, onSubmit }) {
     reset();
     setSelectedTests([]);
     onOpenChange(false);
-    
+
     toast({
       title: 'Test order created',
       description: `Order ${newOrder.orderNumber} has been created successfully.`,
@@ -137,7 +138,7 @@ export function NewTestOrderDialog({ open, onOpenChange, onSubmit }) {
                   <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                     Patient Information
                   </h3>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2">
                       <Label htmlFor="patientName">Patient Name *</Label>
@@ -231,9 +232,8 @@ export function NewTestOrderDialog({ open, onOpenChange, onSubmit }) {
                         return (
                           <div
                             key={test.id}
-                            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
-                              isSelected ? 'bg-primary/10' : 'hover:bg-muted'
-                            }`}
+                            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-primary/10' : 'hover:bg-muted'
+                              }`}
                             onClick={() => isSelected ? handleRemoveTest(test.id) : handleAddTest(test)}
                           >
                             <div className="flex items-center gap-2">

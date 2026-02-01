@@ -6,21 +6,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  User, Calendar, Stethoscope, FlaskConical, Clock, CheckCircle2, 
-  Printer, Download, AlertTriangle, ArrowUpRight, ArrowDownRight, X 
+import {
+  User, Calendar, Stethoscope, FlaskConical, Clock, CheckCircle2,
+  Printer, Download, AlertTriangle, ArrowUpRight, ArrowDownRight, X
 } from 'lucide-react';
-import { formatLabDate, getInitials, calculateTurnaround, formatCurrency } from './utils';
-import { 
-  TEST_ORDER_STATUS, TEST_ORDER_STATUS_LABELS, TEST_ORDER_STATUS_COLORS, 
-  PRIORITY_LEVELS, RESULT_STATUS_COLORS 
-} from './types';
+import { formatLabDate, getInitials, calculateTurnaround, formatCurrency } from '../utils/utils';
+import {
+  TEST_ORDER_STATUS, TEST_ORDER_STATUS_LABELS, TEST_ORDER_STATUS_COLORS,
+  PRIORITY_LEVELS, RESULT_STATUS_COLORS
+} from '../utils/types';
 import { AssignedTags } from '@/carewell/taxonomy/components/TaxonomySelector';
 import { QuickActionsMenu } from '@/carewell/utils/crossModuleNavigation';
 
 export function TestOrderDetailSheet({ order, open, onOpenChange, onStatusChange }) {
   const [activeTab, setActiveTab] = useState('overview');
-  
+
   if (!order) return null;
 
   const statusLabel = TEST_ORDER_STATUS_LABELS[order.status];
@@ -75,7 +75,7 @@ export function TestOrderDetailSheet({ order, open, onOpenChange, onStatusChange
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <QuickActionsMenu 
+                <QuickActionsMenu
                   patientId={order.patient.mrn}
                   patientName={order.patient.name}
                   actions={['viewPatient', 'scheduleAppointment', 'viewPrescriptions', 'viewInvoices']}
@@ -85,7 +85,7 @@ export function TestOrderDetailSheet({ order, open, onOpenChange, onStatusChange
                 </Button>
               </div>
             </div>
-            
+
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
               {nextStatus && (
@@ -144,7 +144,7 @@ export function TestOrderDetailSheet({ order, open, onOpenChange, onStatusChange
                       )}
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-center gap-2 text-sm">
