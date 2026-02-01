@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSubTrigger, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
-import { Captions, CircleUserRound, EllipsisVertical, LogOut, Megaphone, Moon, RefreshCcw, ScanEye, Settings, ShieldUser, Sun } from 'lucide-react'
+import { Captions, CircleQuestionMark, CircleUserRound, EllipsisVertical, LogOut, Megaphone, Moon, RefreshCcw, ScanEye, Settings, ShieldUser, Sun } from 'lucide-react'
 import { useModal } from '@/hooks/useModal'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SettingsModal } from '../../[orgId]/(modules)/setting/SettingsModal'
 import SettingsModalOld from '../../[orgId]/(misc)/_components/settings/SettingsModal'
 import { useData } from '../../[orgId]/(misc)/_providers/DataProvider'
+import Documentation from '../../[orgId]/(misc)/_components/docs/components/DocumentationModal'
 
 
 
@@ -37,16 +38,11 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
         settings: null
     })
 
-
-    useEffect(() => {
-        // const topNav = localStorage.getItem("top-nav")
-        // const mode = topNav == "true"
-        // setTopNav(mode)
-        // console.log('topnav', mode)
-
-        // theme === 'light' ? setLight(true) : setLight(false)
-    }, [theme])
-
+    const [documentModal, setDocumentModal] = useState({
+        isOpen: false,
+        mode: 'add',
+        settings: null
+    })
 
     const toggleNav = () => {
         console.log('set top nav')
@@ -157,9 +153,13 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                                 Refresh Data
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem className='flex flex-row gap-2'>
-                                <Captions size={15} className='text-muted-foreground' />
-                                Billing
+                            <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
+                                setDocumentModal({
+                                    isOpen: true
+                                })
+                            }}>
+                                <CircleQuestionMark size={15} className='text-muted-foreground' />
+                                Docs
                             </DropdownMenuItem>
 
                             <DropdownMenuItem className='flex flex-row gap-2'>
@@ -212,6 +212,15 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                             isOpen: false,
                             mode: 'close',
                             settings: null
+                        })
+                    }}
+                />
+
+                <Documentation
+                    isOpen={documentModal.isOpen}
+                    onClose={() => {
+                        setDocumentModal({
+                            isOpen: false
                         })
                     }}
 

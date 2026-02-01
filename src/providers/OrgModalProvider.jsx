@@ -7,8 +7,8 @@ import SettingsModal from "@/app/(workspace)/workspace/[orgId]/(misc)/_component
 import { AIPostGenerator } from "@/app/(workspace)/workspace/[orgId]/(modules)/content/_components/AIPostGenerator";
 import { PreviewDialouge } from "@/app/(workspace)/workspace/[orgId]/(modules)/content/_components/post-generator/components/PreviewDialouge";
 
-import { DeletePatient } from "@/app/(workspace)/workspace/[orgId]/(modules)/patient/_component/DeleteModal";
-import PatientCrudModal from "@/app/(workspace)/workspace/[orgId]/(modules)/patient/_component/PatientCrudModal";
+import { DeletePatient } from "@/app/(workspace)/workspace/[orgId]/(modules)/patient/v1/_component/DeleteModal";
+import PatientCrudModal from "@/app/(workspace)/workspace/[orgId]/(modules)/patient/v1/_component/PatientCrudModal";
 import { AddInvoice } from "@/app/(workspace)/workspace/[orgId]/(modules)/payment/_components/AddInvoice";
 import DeleteServerModal from "@/app/(workspace)/workspace/_components/general/DeleteServerModal";
 import InviteModal from "@/app/(workspace)/workspace/_components/general/InviteModal";

@@ -34,7 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { PRIORITY_CONFIG, TASK_TYPE_CONFIG, COLUMN_CONFIG } from '../types';
+import { PRIORITY_CONFIG, TASK_TYPE_CONFIG, COLUMN_CONFIG } from '../../types';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({

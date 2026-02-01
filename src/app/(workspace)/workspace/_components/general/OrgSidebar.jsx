@@ -16,9 +16,6 @@ import { navigationItems } from '../../[orgId]/(misc)/data/data';
 import { useData } from '../../[orgId]/(misc)/_providers/DataProvider';
 
 
-// ------------------------------------
-// Constants
-// ------------------------------------
 const OPEN_GROUPS_KEY = 'org-sidebar-open-groups';
 
 // Dashboard item

@@ -1,8 +1,8 @@
-import { 
-  User, 
-  Calendar, 
-  Clock, 
-  Building2, 
+import {
+  User,
+  Calendar,
+  Clock,
+  Building2,
   Stethoscope,
   AlertCircle,
   Tag,
@@ -28,18 +28,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PRIORITY_CONFIG, TASK_TYPE_CONFIG, COLUMN_CONFIG } from '../types';
+import { PRIORITY_CONFIG, TASK_TYPE_CONFIG, COLUMN_CONFIG } from '../../types';
 import { QuickActionButtons } from '@/carewell/utils/crossModuleNavigation';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-export function TaskDetailSheet({ 
-  task, 
-  open, 
-  onOpenChange, 
-  onUpdate, 
+export function TaskDetailSheet({
+  task,
+  open,
+  onOpenChange,
+  onUpdate,
   onMoveToColumn,
-  columns 
+  columns
 }) {
   if (!task) return null;
 
@@ -62,8 +62,8 @@ export function TaskDetailSheet({
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className={cn('text-xs', priorityConfig.textColor, priorityConfig.bgLight)}
                   >
                     {priorityConfig.label} Priority
@@ -198,7 +198,7 @@ export function TaskDetailSheet({
                   <MessageSquare className="w-4 h-4" />
                   Notes
                 </h4>
-                <Textarea 
+                <Textarea
                   placeholder="Add notes about this task..."
                   className="min-h-[100px]"
                 />

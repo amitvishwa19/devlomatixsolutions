@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PRIORITY_CONFIG, TASK_TYPE_CONFIG } from '../../types';
+import { PRIORITY_CONFIG, TASK_TYPE_CONFIG } from '../utils/types';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 

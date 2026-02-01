@@ -138,10 +138,10 @@ export function QuickActionsMenu({ patientId, patientName, actions = [], classNa
  * QuickActionButtons - Individual action buttons for cross-module navigation
  */
 export function QuickActionButtons({ patientId, patientName, actions = [], size = 'sm', variant = 'outline' }) {
-    const navigate = useNavigate();
+    const router = useRouter();
 
     const handleNavigate = (action) => {
-        navigate(action.route, {
+        router.push(action.route, {
             state: {
                 patientId,
                 patientName,

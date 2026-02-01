@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PRIORITY_CONFIG, TASK_TYPE_CONFIG } from '../../types';
+import { PRIORITY_CONFIG, TASK_TYPE_CONFIG } from '../utils/types';
 
 export function KanbanFilters({
   filters,
