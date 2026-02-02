@@ -21,7 +21,8 @@ import Link from "next/link";
 import { useData } from "../_providers/DataProvider";
 import OrgAuthBlock from "../../../_components/general/OrgAuthBlock";
 import OrgSwitcher from "../../../_components/general/OrgSwitcher";
-
+import { DynamicIcon } from "lucide-react/dynamic";
+import Documentation from '@/app/(workspace)/workspace/[orgId]/(misc)/_components/docs/components/DocumentationModal'
 
 // Group items by category
 const groupedItems = navigationItems.reduce((acc, item) => {
@@ -85,11 +86,11 @@ const AppTopNav = () => {
         );
     };
 
-    useEffect(() => {
-        // const topNav = localStorage.getItem("top-nav")
-        // const mode = topNav == "true"
-        // setTopNav(mode)
-    }, [])
+    const [documentModal, setDocumentModal] = useState({
+        isOpen: false,
+        mode: 'add',
+        settings: null
+    })
 
     const togglrNav = () => {
         console.log('toggle nav')
@@ -256,9 +257,27 @@ const AppTopNav = () => {
             <div className=' justify-end'>
                 <div className='flex flex-row gap-4 items-center mr-4'>
                     <ThemeSwitcher />
+                    <div className=" cursor-pointer" onClick={() => {
+                        setDocumentModal({
+                            isOpen: true
+                        })
+                    }}>
+                        <DynamicIcon name='circle-question-mark' size={'18'} />
+                    </div>
                     {topNav && <OrgAuthBlock side={'bottom'} align={'start'} sideOffset={2} />}
                 </div>
             </div>
+
+
+            <Documentation
+                isOpen={documentModal.isOpen}
+                onClose={() => {
+                    setDocumentModal({
+                        isOpen: false
+                    })
+                }}
+
+            />
         </div>
     );
 };
