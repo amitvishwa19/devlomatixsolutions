@@ -23,6 +23,8 @@ import OrgAuthBlock from "../../../_components/general/OrgAuthBlock";
 import OrgSwitcher from "../../../_components/general/OrgSwitcher";
 import { DynamicIcon } from "lucide-react/dynamic";
 import Documentation from '@/app/(workspace)/workspace/[orgId]/(misc)/_components/docs/components/DocumentationModal'
+import NotificationModal from "./notification/NotificationModal";
+
 
 // Group items by category
 const groupedItems = navigationItems.reduce((acc, item) => {
@@ -90,6 +92,10 @@ const AppTopNav = () => {
         isOpen: false,
         mode: 'add',
         settings: null
+    })
+
+    const [notificationModal, setNotificationModal] = useState({
+        isOpen: false
     })
 
     const togglrNav = () => {
@@ -255,7 +261,8 @@ const AppTopNav = () => {
 
 
             <div className=' justify-end'>
-                <div className='flex flex-row gap-4 items-center mr-4'>
+                <div className='flex flex-row gap-2 items-center mr-8'>
+
                     <ThemeSwitcher />
                     <div className=" cursor-pointer" onClick={() => {
                         setDocumentModal({
@@ -264,9 +271,20 @@ const AppTopNav = () => {
                     }}>
                         <DynamicIcon name='circle-question-mark' size={'18'} />
                     </div>
+
+                    <div className="cursor-pointer" onClick={() => {
+                        setNotificationModal({
+                            isOpen: true
+                        })
+                    }}>
+                        <DynamicIcon name='bell-ring' size='18' />
+                    </div>
+
                     {topNav && <OrgAuthBlock side={'bottom'} align={'start'} sideOffset={2} />}
+
                 </div>
             </div>
+
 
 
             <Documentation
@@ -278,6 +296,18 @@ const AppTopNav = () => {
                 }}
 
             />
+
+            <NotificationModal
+                isOpen={notificationModal.isOpen}
+                onClose={() => {
+                    setNotificationModal({
+                        isOpen: false
+                    })
+                }}
+            />
+
+
+
         </div>
     );
 };
