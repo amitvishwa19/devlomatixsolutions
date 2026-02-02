@@ -130,20 +130,25 @@ export default function OrgSidebar() {
                 <Link href={'/'} className='flex flex-row items-center gap-2'>
                     <Avatar className='rounded-lg'>
                         <AvatarImage src="https://github.com/shadcn.pngd" />
-                        <AvatarFallback className='rounded-lg border font-extrabold text-xl'>{getInitials(process.env.NEXT_PUBLIC_APP_NAME)}</AvatarFallback>
+                        <AvatarFallback className='rounded-lg border font-bold text-xl'>{getInitials(process.env.NEXT_PUBLIC_APP_NAME)}</AvatarFallback>
                     </Avatar>
-                    <span className=' font-extrabold text-xl'>
-                        {process.env.NEXT_PUBLIC_APP_NAME}
-                    </span>
+                    {
+                        !collapsed && (
+                            <span className=' font-bold text-xl'>
+                                {process.env.NEXT_PUBLIC_APP_NAME}
+                            </span>
+                        )
+                    }
+
                 </Link>
 
-                <span onClick={toggleSidebar} className="p-2 cursor-pointer">
+                {/* <span onClick={toggleSidebar} className="p-2 cursor-pointer">
                     {collapsed ? (
                         <PanelRightClose className="h-4 w-4" />
                     ) : (
                         <PanelRightOpen className="h-4 w-4" />
                     )}
-                </span>
+                </span> */}
             </div>
 
             {/* Navigation */}

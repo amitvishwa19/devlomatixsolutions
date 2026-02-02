@@ -13,6 +13,7 @@ import { SettingsModal } from '../../[orgId]/(modules)/setting/SettingsModal'
 import SettingsModalOld from '../../[orgId]/(misc)/_components/settings/SettingsModal'
 import { useData } from '../../[orgId]/(misc)/_providers/DataProvider'
 import Documentation from '../../[orgId]/(misc)/_components/docs/components/DocumentationModal'
+import { getInitials } from '@/utils/functions'
 
 
 
@@ -62,15 +63,15 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
                 <DropdownMenuTrigger asChild className=''>
                     {session ? (
-                        <div variant="ghost" className={`p-1  ${open && 'bg-card'} rounded-md flex flex-row items-center justify-between cursor-pointer`}>
+                        <div variant="ghost" className={`p-1  ${open && 'bg-card'} rounded-md flex flex-row items-center justify-between cursor-pointer text-primary`}>
 
                             <div className='flex flex-row items-center gap-2'>
                                 <Avatar className='h-10 w-10 rounded-md'>
                                     <AvatarImage src={session?.user?.avatar} alt="@shadcn" className='grayscale' />
-                                    <AvatarFallback className='rounded-md capitalize'>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
+                                    <AvatarFallback className='rounded-md capitalize font-bold text-xl border'>{getInitials(session?.user?.displayName)}</AvatarFallback>
                                 </Avatar>
                                 <div className='flex flex-col'>
-                                    <span className='text-sm'>{session?.user?.displayName}</span>
+                                    <span className='text-sm font-semibold'>{session?.user?.displayName}</span>
                                     <span className='text-muted-foreground truncate text-xs'>{session?.user?.email}</span>
                                 </div>
                             </div>
@@ -194,6 +195,8 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                     </DropdownMenuContent>
 
                 )}
+
+
                 <SettingsModal
                     isOpen={settingModal.isOpen}
                     onClose={() => {

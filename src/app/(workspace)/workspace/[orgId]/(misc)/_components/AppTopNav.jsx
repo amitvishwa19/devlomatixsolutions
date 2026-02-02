@@ -105,6 +105,17 @@ const AppTopNav = () => {
         localStorage.setItem("top-nav", String(next));
     }
 
+    const toggleSidebar = () => {
+        const next = !sidebarCollapsed;
+        setSidebarCollapsed(next);
+        localStorage.setItem('sidebar-collapsed', String(next));
+
+        document.documentElement.style.setProperty(
+            '--sidebar-width',
+            next ? '72px' : '246px'
+        );
+    };
+
 
     useLayoutEffect(() => {
         if (!openValue) return;
@@ -136,25 +147,6 @@ const AppTopNav = () => {
     return (
         <div className="flex flex-row items-center justify-between  h-14">
 
-
-            {/* {!topNav && sidebarCollapsed ? (
-                <PanelRightClose className="h-4 w-4 text-primary ml-2" />
-            ) : (
-                <PanelRightOpen className="h-4 w-4 text-primary ml-2" />
-            )} */}
-
-
-            {/* {sidebarCollapsed ? (
-                <PanelRightClose className="h-4 w-4 text-primary ml-2" />
-            ) : (
-                <PanelRightOpen className="h-4 w-4 text-primary ml-2" />
-            )} */}
-
-            {topNav && (
-                <div className="ml-2">
-                    <OrgSwitcher />
-                </div>
-            )}
 
 
             {/* Topnav false */}

@@ -23,6 +23,7 @@ export const navigationItems = [
     { title: "Inventory", url: "inventory", icon: "package", category: "Administration" },
     { title: "Invoices", url: "invoice", icon: "receipt", category: "Administration" },
     { title: "Billing", url: "billing", icon: "receipt-indian-rupee", category: "Administration" },
+    { title: "Access Management", url: "access", icon: "shield-user", category: "Administration" },
 
     // COMMUNICATION
     { title: "Communication", url: "communication", icon: "message-square", category: "Communication" },
@@ -31,5 +32,5 @@ export const navigationItems = [
 
     // SYSTEM
     { title: "Development", url: "dev", icon: "combine", category: "System" },
-    { title: "Access Management", url: "access", icon: "shield-user", category: "System" },
+
 ];
