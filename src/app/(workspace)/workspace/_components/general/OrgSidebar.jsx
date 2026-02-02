@@ -14,6 +14,8 @@ import OrgSwitcher from './OrgSwitcher';
 import OrgAuthBlock from './OrgAuthBlock';
 import { navigationItems } from '../../[orgId]/(misc)/data/data';
 import { useData } from '../../[orgId]/(misc)/_providers/DataProvider';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getInitials } from '@/utils/functions';
 
 
 const OPEN_GROUPS_KEY = 'org-sidebar-open-groups';
@@ -123,7 +125,17 @@ export default function OrgSidebar() {
         >
             {/* Header */}
             <div className="p-2 flex items-center justify-between">
-                <OrgSwitcher collapsed={collapsed} setCollapsed={setCollapsed} />
+                {/* <OrgSwitcher collapsed={collapsed} setCollapsed={setCollapsed} /> */}
+
+                <Link href={'/'} className='flex flex-row items-center gap-2'>
+                    <Avatar className='rounded-lg'>
+                        <AvatarImage src="https://github.com/shadcn.pngd" />
+                        <AvatarFallback className='rounded-lg border font-extrabold text-xl'>{getInitials(process.env.NEXT_PUBLIC_APP_NAME)}</AvatarFallback>
+                    </Avatar>
+                    <span className=' font-extrabold text-xl'>
+                        {process.env.NEXT_PUBLIC_APP_NAME}
+                    </span>
+                </Link>
 
                 <span onClick={toggleSidebar} className="p-2 cursor-pointer">
                     {collapsed ? (
@@ -135,7 +147,7 @@ export default function OrgSidebar() {
             </div>
 
             {/* Navigation */}
-            <ScrollArea className="h-[85vh] mt-4 ml-2 pr-2">
+            <ScrollArea className="h-[85vh] flex-1 mt-4 ml-2 pr-2">
                 {/* Dashboard (always visible) */}
                 {dashboardItem && (
                     <SidebarSingleItem
@@ -203,7 +215,7 @@ export default function OrgSidebar() {
             </ScrollArea>
 
             {/* Footer */}
-            <div className="fixed bottom-0 p-2">
+            <div className="p-2">
                 <OrgAuthBlock collapsed={collapsed} />
             </div>
         </div>
@@ -211,9 +223,7 @@ export default function OrgSidebar() {
 }
 
 
-// ------------------------------------
-// Sidebar Item
-// ------------------------------------
+
 const SidebarSingleItem = ({
     title,
     link,
