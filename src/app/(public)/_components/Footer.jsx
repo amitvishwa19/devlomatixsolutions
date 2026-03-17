@@ -20,7 +20,7 @@ const Footer = () => {
                         <p className="text-background/70 mb-6 max-w-xs">Comprehensive hospital management system designed to streamline healthcare operations.</p>
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 text-sm text-background/70"><Mail className="w-4 h-4" /><span>contact@carewell.devlomatix.in</span></div>
-                            <div className="flex items-center gap-3 text-sm text-background/70"><Phone className="w-4 h-4" /><span>(+91) 9712340450</span></div>
+                            <div className="flex items-center gap-3 text-sm text-background/70"><Phone className="w-4 h-4" /><span>(+91) 9825632772</span></div>
                             <div className="flex items-center gap-3 text-sm text-background/70"><MapPin className="w-4 h-4" /><span>Vadodara, Gujarat</span></div>
                         </div>
                     </div>

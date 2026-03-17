@@ -71,7 +71,7 @@ const VideoTestimonialsSection = () => {
                 className="group bg-background rounded-2xl overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300"
               >
                 {/* Video Thumbnail */}
-                <div 
+                <div
                   className="relative aspect-video cursor-pointer overflow-hidden"
                   onClick={() => setActiveVideo(testimonial)}
                 >
@@ -81,7 +81,7 @@ const VideoTestimonialsSection = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-background/40 group-hover:bg-background/20 transition-colors" />
-                  
+
                   {/* Play Button */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -96,7 +96,7 @@ const VideoTestimonialsSection = () => {
                   <p className="text-sm text-muted-foreground italic mb-4 line-clamp-3">
                     "{testimonial.quote}"
                   </p>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <span className="text-primary font-semibold">{testimonial.name[0]}</span>
@@ -136,7 +136,7 @@ const VideoTestimonialsSection = () => {
               >
                 <X className="h-6 w-6 text-white" />
               </button>
-              
+
               <iframe
                 src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1`}
                 title={`${activeVideo.name} testimonial`}
