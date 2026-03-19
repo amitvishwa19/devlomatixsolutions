@@ -82,8 +82,10 @@ const AuthLayout = ({ children, title, subtitle }) => {
     return (
         <div className="min-h-screen flex flex-row w-full">
             <NetworkBackground />
+
+
             {/* Left Section - Loader Content (70%) */}
-            <div className="flex w-[70%] min-h-screen relative overflow-hidden bg-gradient-to-br from-primary/40 via-primary to-primary/60">
+            <div className="hidden md:block md:w-[70%] min-h-screen relative overflow-hidden bg-gradient-to-br from-primary/40 via-primary to-primary/60">
                 {/* Animated Network Background */}
                 <div className="absolute inset-0">
                     <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -219,7 +221,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
             </div>
 
             {/* Right Section - Form (30%) */}
-            <div className="w-[30%] flex flex-col items-center justify-center p-8 bg-background min-h-screen overflow-y-auto">
+            <div className="w-full md:w-[30%] flex flex-col items-center justify-center p-8 bg-background min-h-screen overflow-y-auto">
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex justify-center mb-8">
