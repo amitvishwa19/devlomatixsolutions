@@ -19,16 +19,16 @@ export default function PublicLayout({ children }) {
     return (
         <div className={`${font.className} flex flex-col  min-h-screen overflow-x-auto `} >
             <div className=''>
-                <Header />
+                {/* <Header /> */}
             </div>
 
             <div className='flex grow' >
                 {children}
             </div>
             <div className=''>
-                <Footer />
-                <WhatsAppWidget />
-                <ExitIntentPopup />
+                {/* <Footer /> */}
+                {/* <WhatsAppWidget /> */}
+                {/* <ExitIntentPopup /> */}
             </div>
         </div>
     )
