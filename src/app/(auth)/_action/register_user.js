@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import { Mail } from "@/utils/Mail";
 import RegisterationMail from "@/emails/RegisterationMail";
 import { v4 as uuidv4 } from 'uuid'
-import { MemberRole } from "@prisma/client";
+import { MemberRole, ROLE } from "@prisma/client";
 
 const UserRegister = z.object({
     email: z.string(),
@@ -44,9 +44,12 @@ const handler = async (data) => {
 
         user = await db.user.create({
             data: {
-                email, password: hashedPassword, displayName, name: displayName
+                email, password: hashedPassword, displayName,
             }
         })
+
+
+        //console.log('user registration test', 'displayName', displayName)
 
         if (user) {
             verifyToken = jwt.sign({ id: user.id }, process.env.APP_SECRET, { expiresIn: '1d' })
@@ -71,12 +74,10 @@ const handler = async (data) => {
                                 create: [{ name: 'general', userId: user?.id }]
                             },
                             members: {
-                                create: [
-                                    {
-                                        userId: user?.id,
-                                        role: MemberRole.ADMIN
-                                    }
-                                ]
+                                create: [{
+                                    userId: user?.id,
+                                    role: MemberRole.ADMIN
+                                }]
                             }
                         }
                     })
@@ -85,15 +86,15 @@ const handler = async (data) => {
 
             //await sendEmail({ email, emailType: 'verify', userId: user.id, token: verifyToken })
             //TODO: send email verification
-            await Mail(
-                { to: user.email, subject: `Activate your ${process.env.APP_NAME} account` },
-                <RegisterationMail
-                    mailData={
-                        { to: user.email, token: verifyToken }
-                    }
-                />
-            )
-            console.log('Send email verification')
+            // await Mail(
+            //     { to: user.email, subject: `Activate your ${process.env.APP_NAME} account` },
+            //     <RegisterationMail
+            //         mailData={
+            //             { to: user.email, token: verifyToken }
+            //         }
+            //     />
+            // )
+            // console.log('Send email verification')
         }
 
 

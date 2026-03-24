@@ -72,10 +72,10 @@ export default async function RootLayout({ children }) {
                                         <AccessProvider user={user}>
                                             <Providers>
                                                 {/* <OrgModalProvider /> */}
-                                              
-                                                    {children}
-                                                    {/* <CookieConsent /> */}
-                                                
+
+                                                {children}
+                                                {/* <CookieConsent /> */}
+
                                             </Providers>
                                         </AccessProvider>
 

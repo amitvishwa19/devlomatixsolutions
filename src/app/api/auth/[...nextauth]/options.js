@@ -1,6 +1,16 @@
-import GoogleProvider from "next-auth/providers/google"
-import CredentialsProvider from "next-auth/providers/credentials";
-import GitHubProvider from "next-auth/providers/github";
+import Google from "next-auth/providers/google"
+import Credentials from "next-auth/providers/credentials";
+import GitHub from "next-auth/providers/github";
+
+const GoogleProvider = Google.default || Google;
+const GitHubProvider = GitHub.default || GitHub;
+const CredentialsProvider = Credentials.default || Credentials;
+
+console.log('NextAuth Providers:', {
+    Google: typeof GoogleProvider,
+    GitHub: typeof GitHubProvider,
+    Credentials: typeof CredentialsProvider
+});
 import bcrypt from 'bcryptjs'
 import { db } from "@/lib/db";
 import { v4 as uuidv4 } from 'uuid'

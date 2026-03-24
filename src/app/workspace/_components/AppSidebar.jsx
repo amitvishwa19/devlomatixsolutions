@@ -5,8 +5,6 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupConte
 import { useParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight, MessageSquare } from 'lucide-react'
-import Image from 'next/image'
-import logo from '@/assets/logo/acstechHublogo.png'
 import { DynamicIcon } from 'lucide-react/dynamic'
 import OrgAuthBlock from './OrgAuthBlock'
 import { AppLogo } from '@/components/global/AppLogo'

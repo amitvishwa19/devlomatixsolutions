@@ -28,43 +28,43 @@ const handler = async (data) => {
 
     try {
 
-        user = await db.user.findUnique({
-            where: {
-                email: email,
-            },
-        })
+        // user = await db.user.findUnique({
+        //     where: {
+        //         email: email,
+        //     },
+        // })
 
-        if (!user) {
-            return { error: "No account found with  this email", }
-        }
+        // if (!user) {
+        //     return { error: "No account found with  this email", }
+        // }
 
         // if (!user.emailVerified) {
         //     return { error: "Email not verified", }
         // }
 
-        const validPassword = await bcryptjs.compare(password, user.password)
+        //const validPassword = await bcryptjs.compare(password, user.password)
 
-        if (!validPassword) {
-            return { error: "Authentication failed, please check provided credentials", }
-        }
+        // if (!validPassword) {
+        //     return { error: "Authentication failed, please check provided credentials", }
+        // }
 
-        const accessToken = jwt.sign({ id: user.id }, process.env.APP_SECRET, { expiresIn: '1d' })
-        const refreshToken = jwt.sign({ id: user.id, email }, process.env.APP_SECRET, { expiresIn: '10d' })
+        //const accessToken = jwt.sign({ id: user.id }, process.env.APP_SECRET, { expiresIn: '1d' })
+        ///const refreshToken = jwt.sign({ id: user.id, email }, process.env.APP_SECRET, { expiresIn: '10d' })
 
-        await db.user.update({
-            where: { email: email },
-            data: { refreshToken },
-        })
+        // await db.user.update({
+        //     where: { email: email },
+        //     data: { refreshToken },
+        // })
 
-        user = {
-            id: user?.id,
-            uid: user?.uid,
-            displayName: user?.displayName,
-            email: user?.email,
-            avatar: user?.avatar,
-            accessToken,
-            refreshToken
-        }
+        // user = {
+        //     id: user?.id,
+        //     uid: user?.uid,
+        //     displayName: user?.displayName,
+        //     email: user?.email,
+        //     avatar: user?.avatar,
+        //     accessToken,
+        //     refreshToken
+        // }
 
         // server = await db.server.create({
         //     data: {
@@ -91,7 +91,7 @@ const handler = async (data) => {
         // cookies().set('DEVUSRAT', accessToken)
         // cookies().set('DEVUSRRT', refreshToken)
         // cookies().set('DEVUSR', JSON.stringify(user))
-        setSession(user)
+        // setSession(user)
 
 
     } catch (error) {

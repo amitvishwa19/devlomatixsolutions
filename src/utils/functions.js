@@ -23,7 +23,6 @@ export function slug(text) {
         .replace(/^-+|-+$/g, '');      // Remove leading/trailing hyphens
 }
 
-import { db } from '@/lib/db';
 import { put } from '@vercel/blob'
 export function fileToUrl(files) {
     let formData = new FormData()

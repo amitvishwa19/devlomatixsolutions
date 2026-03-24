@@ -8,7 +8,6 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useApp } from '@/providers/AppProvider'
-import { useOrg } from '@/providers/OrgProvider'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getInitials } from '@/utils/functions'
 
@@ -19,11 +18,10 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
     const { data: session } = useSession()
     const { onOpen } = useModal()
     const router = useRouter()
-    
+
     // Hooks from providers
-    const { refreshServer } = useOrg()
     const { themeToggle, theme } = useApp()
-    
+
     const light = theme === 'light'
 
 
@@ -136,15 +134,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                                 Settings old
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem className='flex flex-row gap-2' onSelect={async () => {
-                                await refreshServer()
-                                setTimeout(() => {
-                                    toast.success('Organization data refreshed successfully')
-                                }, 2000);
-                            }}>
-                                <RefreshCcw size={15} className='text-muted-foreground' />
-                                Refresh Data
-                            </DropdownMenuItem>
+
 
                             <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
                                 setDocumentModal({

@@ -2,8 +2,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useContext, useEffect, useState } from 'react'
-import lightLogo from '@/assets/images/devlomatix_light.png'
-import darkLogo from '@/assets/images/logo/logo.png'
+import lightLogo from '@/assets/logo/light_logo.png'
+import darkLogo from '@/assets/logo/dark_logo.png'
 import { cn } from '@/lib/utils'
 import { AppContext } from '@/providers/AppProvider'
 
