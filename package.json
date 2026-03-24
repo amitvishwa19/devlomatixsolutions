@@ -80,6 +80,7 @@
     "@uidotdev/usehooks": "^2.4.1",
     "@uploadthing/react": "^7.3.3",
     "@vercel/blob": "^2.0.0",
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "@xyflow/react": "^12.9.2",
     "aos": "^2.3.4",
     "axios": "^1.13.2",
