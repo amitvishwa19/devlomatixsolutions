@@ -1,10 +1,9 @@
 //import 'aos/dist/aos.css';
-// import "@/css/public.css";
+import "@/css/public.css";
 import { Unbounded, Inter, Poppins, Roboto } from "next/font/google";
-import Footer from "./_components/Footer";
-import Header from "./_components/Header";
-import WhatsAppWidget from "./_components/WhatsAppWidget";
-import ExitIntentPopup from "./_components/ExitIntentPopup";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+
 
 
 
@@ -19,16 +18,14 @@ export default function PublicLayout({ children }) {
     return (
         <div className={`${font.className} flex flex-col  min-h-screen overflow-x-auto `} >
             <div className=''>
-                <Header />
+                <Navbar />
             </div>
 
-            <div className='flex grow' >
+            <div className='flex grow w-full ' >
                 {children}
             </div>
             <div className=''>
                 <Footer />
-                <WhatsAppWidget />
-                <ExitIntentPopup />
             </div>
         </div>
     )

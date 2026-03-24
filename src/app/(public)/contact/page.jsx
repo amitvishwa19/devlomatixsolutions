@@ -1,151 +1,129 @@
 'use client'
+import React, { useState } from 'react'
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import {
-    Mail, Phone, MapPin, Clock, Send,
-    MessageSquare, Building2, Users, HeadphonesIcon
-} from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import PageTransition from '../components/PageTransition';
+
+
+const contactSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Please enter a valid email"),
+    company: z.string().optional(),
+    subject: z.string().min(5, "Subject must be at least 5 characters"),
+    message: z.string().min(20, "Message must be at least 20 characters"),
+});
+;
 
 const contactInfo = [
     {
         icon: Mail,
         title: "Email Us",
-        details: "info@carewell.com.in",
-        subtext: "We'll respond within 24 hours",
+        details: "hello@acstechhub.com",
+        description: "We'll respond within 24 hours",
     },
     {
         icon: Phone,
         title: "Call Us",
         details: "+91 98765 43210",
-        subtext: "Mon-Fri, 9am-6pm IST",
+        description: "Mon-Fri from 9am to 6pm IST",
     },
     {
         icon: MapPin,
         title: "Visit Us",
-        details: "Tower A, Cyber City, Sector 24",
-        subtext: "Vadodara, Gujarat 390022",
+        details: "Cyber Hub, DLF Phase 2",
+        description: "Gurugram, Haryana 122002",
     },
     {
         icon: Clock,
         title: "Business Hours",
         details: "Monday - Friday",
-        subtext: "9:00 AM - 6:00 PM IST",
+        description: "9:00 AM - 6:00 PM PST",
     },
 ];
 
-const inquiryTypes = [
-    { icon: MessageSquare, title: "General Inquiry", description: "Questions about our HMS solution" },
-    { icon: Building2, title: "Enterprise Sales", description: "For large hospital networks" },
-    { icon: Users, title: "Partnership", description: "Integration & reseller opportunities" },
-    { icon: HeadphonesIcon, title: "Support", description: "Technical assistance for existing customers" },
-];
 
+export default function ContactPage() {
 
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
-const Contact = () => {
-
-    const { toast } = useToast();
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        organization: "",
-        phone: "",
-        inquiryType: "",
-        message: "",
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        reset,
+    } = useForm({
+        resolver: zodResolver(contactSchema),
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleChange = (e) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
+    const onSubmit = async (data) => {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        console.log("Contact form submitted:", data);
+        setIsSubmitted(true);
+        toast.success("Message sent successfully!");
+        reset();
+        setTimeout(() => setIsSubmitted(false), 3000);
     };
 
-    const handleInquirySelect = (type) => {
-        setFormData(prev => ({ ...prev, inquiryType: type }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        // Simulate form submission
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        toast({
-            title: "Message Sent!",
-            description: "Thank you for contacting us. We'll get back to you within 24 hours.",
-        });
-
-        setFormData({
-            name: "",
-            email: "",
-            organization: "",
-            phone: "",
-            inquiryType: "",
-            message: "",
-        });
-        setIsSubmitting(false);
-    };
 
     return (
-        <div className="min-h-screen  w-full">
+        <PageTransition>
+            <div className="min-h-screen bg-background">
 
-            <main className="pt-16 md:pt-20">
+
                 {/* Hero Section */}
-                <section className="py-20 md:py-28 bg-gradient-to-b from-primary/5 to-background">
-                    <div className=" mx-auto px-4 md:px-8">
+                <section className="pt-32 pb-20 relative">
+                    <div className="absolute inset-0 grid-pattern opacity-20" />
+                    <div className="container mx-auto px-6 relative z-10">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
-                            className="text-center  mx-auto"
+                            className="text-center max-w-3xl mx-auto"
                         >
-                            <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                                Get in Touch
+                            <span className="text-primary text-sm font-medium tracking-wider uppercase">
+                                Contact Us
                             </span>
-                            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-                                Let's Start a{" "}
-                                <span className="text-primary">Conversation</span>
+                            <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
+                                Let's Start a <span className="gradient-text">Conversation</span>
                             </h1>
-                            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                                Have questions about our Hospital Management System?
-                                Our team is here to help you find the perfect solution for your healthcare facility.
+                            <p className="text-muted-foreground text-lg md:text-xl">
+                                Have a project in mind? We'd love to hear from you. Send us a message
+                                and we'll respond as soon as possible.
                             </p>
                         </motion.div>
                     </div>
                 </section>
 
                 {/* Contact Info Cards */}
-                <section className="py-12 md:py-16">
-                    <div className=" mx-auto px-4 md:px-8">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                            {contactInfo.map((item, index) => (
+                <section className="py-12">
+                    <div className="container mx-auto px-6">
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {contactInfo.map((info, index) => (
                                 <motion.div
-                                    key={item.title}
+                                    key={index}
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
                                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors text-center"
+                                    viewport={{ once: true }}
+                                    className="glass-card p-6 text-center"
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                                        <item.icon className="w-6 h-6 text-primary" />
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-[hsl(260,100%,65%,0.2)] flex items-center justify-center mx-auto mb-4">
+                                        <info.icon className="w-6 h-6 text-primary" />
                                     </div>
                                     <h3 className="font-display font-semibold text-foreground mb-1">
-                                        {item.title}
+                                        {info.title}
                                     </h3>
-                                    <p className="text-foreground font-medium text-sm mb-1">
-                                        {item.details}
-                                    </p>
-                                    <p className="text-muted-foreground text-xs">
-                                        {item.subtext}
-                                    </p>
+                                    <p className="text-foreground font-medium">{info.details}</p>
+                                    <p className="text-sm text-muted-foreground">{info.description}</p>
                                 </motion.div>
                             ))}
                         </div>
@@ -153,207 +131,183 @@ const Contact = () => {
                 </section>
 
                 {/* Contact Form Section */}
-                <section className="py-16 md:py-24">
-                    <div className="container mx-auto px-4 md:px-8">
-                        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-                            {/* Form */}
+                <section className="py-20">
+                    <div className="container mx-auto px-6">
+                        <div className="grid lg:grid-cols-2 gap-16 items-start">
+                            {/* Left Column - Info */}
                             <motion.div
-                                initial={{ opacity: 0, x: -20 }}
+                                initial={{ opacity: 0, x: -30 }}
                                 whileInView={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.6 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5 }}
                             >
-                                <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
-                                    Send Us a Message
+                                <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
+                                    Ready to Transform Your{" "}
+                                    <span className="gradient-text">Business</span>?
                                 </h2>
+                                <p className="text-muted-foreground text-lg mb-8">
+                                    Whether you're looking to build a new product, automate processes,
+                                    or modernize your existing systems, we're here to help you succeed.
+                                </p>
 
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
-                                                Full Name *
-                                            </label>
-                                            <Input
-                                                id="name"
-                                                name="name"
-                                                value={formData.name}
-                                                onChange={handleChange}
-                                                placeholder="Rajesh Kumar"
-                                                required
-                                                className="bg-background"
-                                            />
+                                <div className="space-y-6">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <CheckCircle className="w-5 h-5 text-primary" />
                                         </div>
                                         <div>
-                                            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                                                Email Address *
-                                            </label>
-                                            <Input
-                                                id="email"
-                                                name="email"
-                                                type="email"
-                                                value={formData.email}
-                                                onChange={handleChange}
-                                                placeholder="rajesh@hospital.in"
-                                                required
-                                                className="bg-background"
-                                            />
+                                            <h4 className="font-semibold text-foreground mb-1">
+                                                Free Consultation
+                                            </h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                Get a free 30-minute consultation to discuss your project
+                                                requirements.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label htmlFor="organization" className="block text-sm font-medium text-foreground mb-2">
-                                                Organization
-                                            </label>
-                                            <Input
-                                                id="organization"
-                                                name="organization"
-                                                value={formData.organization}
-                                                onChange={handleChange}
-                                                placeholder="Hospital Name"
-                                                className="bg-background"
-                                            />
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <CheckCircle className="w-5 h-5 text-primary" />
                                         </div>
                                         <div>
-                                            <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
-                                                Phone Number
-                                            </label>
-                                            <Input
-                                                id="phone"
-                                                name="phone"
-                                                type="tel"
-                                                value={formData.phone}
-                                                onChange={handleChange}
-                                                placeholder="+91 98765 00000"
-                                                className="bg-background"
-                                            />
+                                            <h4 className="font-semibold text-foreground mb-1">
+                                                Custom Solutions
+                                            </h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                Every project is unique. We create tailored solutions for
+                                                your specific needs.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-3">
-                                            What can we help you with?
-                                        </label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {inquiryTypes.map((type) => (
-                                                <button
-                                                    key={type.title}
-                                                    type="button"
-                                                    onClick={() => handleInquirySelect(type.title)}
-                                                    className={`p-4 rounded-xl border text-left transition-all ${formData.inquiryType === type.title
-                                                        ? 'border-primary bg-primary/5'
-                                                        : 'border-border hover:border-primary/50'
-                                                        }`}
-                                                >
-                                                    <type.icon className={`w-5 h-5 mb-2 ${formData.inquiryType === type.title ? 'text-primary' : 'text-muted-foreground'
-                                                        }`} />
-                                                    <p className="font-medium text-foreground text-sm">{type.title}</p>
-                                                    <p className="text-muted-foreground text-xs">{type.description}</p>
-                                                </button>
-                                            ))}
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <CheckCircle className="w-5 h-5 text-primary" />
                                         </div>
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
-                                            Your Message *
-                                        </label>
-                                        <Textarea
-                                            id="message"
-                                            name="message"
-                                            value={formData.message}
-                                            onChange={handleChange}
-                                            placeholder="Tell us about your needs..."
-                                            rows={5}
-                                            required
-                                            className="bg-background resize-none"
-                                        />
-                                    </div>
-
-                                    <Button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="w-full hero-gradient text-primary-foreground rounded-xl py-6 font-semibold shadow-glow hover:shadow-xl transition-all"
-                                    >
-                                        {isSubmitting ? (
-                                            "Sending..."
-                                        ) : (
-                                            <>
-                                                <Send className="w-5 h-5 mr-2" />
-                                                Send Message
-                                            </>
-                                        )}
-                                    </Button>
-                                </form>
-                            </motion.div>
-
-                            {/* Map / Additional Info */}
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5 }}
-                                className="space-y-8"
-                            >
-                                <div>
-                                    <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
-                                        Why Choose HospitalHMS?
-                                    </h2>
-                                    <div className="space-y-4">
-                                        {[
-                                            "Dedicated implementation support from day one",
-                                            "Customizable modules to fit your workflow",
-                                            "24/7 technical support for enterprise clients",
-                                            "Regular updates and new feature releases",
-                                            "Comprehensive training for your staff",
-                                        ].map((item, index) => (
-                                            <div key={index} className="flex items-start gap-3">
-                                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <div className="w-2 h-2 rounded-full bg-primary" />
-                                                </div>
-                                                <p className="text-muted-foreground">{item}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Map Placeholder */}
-                                <div className="aspect-video rounded-2xl bg-gradient-to-br from-primary/10 via-secondary to-accent/10 border border-border overflow-hidden">
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <div className="text-center">
-                                            <MapPin className="w-12 h-12 text-primary/40 mx-auto mb-3" />
-                                            <p className="text-muted-foreground text-sm">
-                                                Tower A, Cyber City, Sector 24<br />
-                                                Gurugram, Haryana 122002
+                                        <div>
+                                            <h4 className="font-semibold text-foreground mb-1">
+                                                Dedicated Support
+                                            </h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                Our team provides ongoing support throughout and after your
+                                                project.
                                             </p>
                                         </div>
                                     </div>
                                 </div>
+                            </motion.div>
 
-                                {/* Quick Contact */}
-                                <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                                    <h3 className="font-display font-semibold text-foreground mb-2">
-                                        Need Immediate Assistance?
-                                    </h3>
-                                    <p className="text-muted-foreground text-sm mb-4">
-                                        Our sales team is available to answer your questions.
-                                    </p>
-                                    <a
-                                        href="tel:+919876543210"
-                                        className="inline-flex items-center gap-2 text-primary font-medium hover:underline"
+                            {/* Right Column - Form */}
+                            <motion.div
+                                initial={{ opacity: 0, x: 30 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.6 }}
+                                viewport={{ once: true }}
+                                className="glass-card p-8"
+                            >
+                                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                                    <div className="grid sm:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name">Full Name *</Label>
+                                            <Input
+                                                id="name"
+                                                placeholder="Rahul Sharma"
+                                                {...register("name")}
+                                                className={errors.name ? "border-destructive" : ""}
+                                            />
+                                            {errors.name && (
+                                                <p className="text-sm text-destructive">{errors.name.message}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="email">Email *</Label>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                placeholder="rahul@company.in"
+                                                {...register("email")}
+                                                className={errors.email ? "border-destructive" : ""}
+                                            />
+                                            {errors.email && (
+                                                <p className="text-sm text-destructive">{errors.email.message}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid sm:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="company">Company</Label>
+                                            <Input
+                                                id="company"
+                                                placeholder="Your Company"
+                                                {...register("company")}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="subject">Subject *</Label>
+                                            <Input
+                                                id="subject"
+                                                placeholder="Project Inquiry"
+                                                {...register("subject")}
+                                                className={errors.subject ? "border-destructive" : ""}
+                                            />
+                                            {errors.subject && (
+                                                <p className="text-sm text-destructive">
+                                                    {errors.subject.message}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="message">Message *</Label>
+                                        <Textarea
+                                            id="message"
+                                            placeholder="Tell us about your project..."
+                                            rows={6}
+                                            {...register("message")}
+                                            className={errors.message ? "border-destructive" : ""}
+                                        />
+                                        {errors.message && (
+                                            <p className="text-sm text-destructive">{errors.message.message}</p>
+                                        )}
+                                    </div>
+
+                                    <Button
+                                        type="submit"
+                                        variant="hero"
+                                        size="lg"
+                                        className="w-full"
+                                        disabled={isSubmitting || isSubmitted}
                                     >
-                                        <Phone className="w-4 h-4" />
-                                        +91 98765 43210
-                                    </a>
-                                </div>
+                                        {isSubmitting ? (
+                                            <span className="flex items-center gap-2">
+                                                <motion.div
+                                                    animate={{ rotate: 360 }}
+                                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                    className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
+                                                />
+                                                Sending...
+                                            </span>
+                                        ) : isSubmitted ? (
+                                            <span className="flex items-center gap-2">
+                                                <CheckCircle className="w-5 h-5" />
+                                                Message Sent!
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-2">
+                                                <Send className="w-5 h-5" />
+                                                Send Message
+                                            </span>
+                                        )}
+                                    </Button>
+                                </form>
                             </motion.div>
                         </div>
                     </div>
                 </section>
-            </main>
 
-        </div>
-    );
-};
 
-export default Contact;
+            </div>
+        </PageTransition>
+    )
+}

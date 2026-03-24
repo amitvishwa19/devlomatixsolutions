@@ -7,14 +7,13 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { Providers } from "@/redux/provider";
 import { Toaster } from "sonner";
-import { OrgProvider } from "@/providers/OrgProvider";
 import { SocketProvider } from "@/providers/SocketProvider";
 import { AppThemeProvider } from "@/hooks/useTheme";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
 import { AccessProvider } from "@/providers/AccessProvider";
-import CookieConsent from "./(public)/_components/CookieConsent";
+//import CookieConsent from "./(public)/_components/CookieConsent";
 
 
 
@@ -73,10 +72,10 @@ export default async function RootLayout({ children }) {
                                         <AccessProvider user={user}>
                                             <Providers>
                                                 {/* <OrgModalProvider /> */}
-                                                <OrgProvider>
+                                              
                                                     {children}
-                                                    <CookieConsent />
-                                                </OrgProvider>
+                                                    {/* <CookieConsent /> */}
+                                                
                                             </Providers>
                                         </AccessProvider>
 

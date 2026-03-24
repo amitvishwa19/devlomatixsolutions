@@ -32,31 +32,38 @@ export const authOptions = {
                 email: { label: "Email", type: "text", placeholder: "Email" },
                 password: { label: "Password", type: "password" }
             },
-            async authorize(credentials, req) {
 
 
-
+            async authorize(credentials) {
+                // 1. Find user
                 const user = await db.user.findFirst({
-                    where: {
-                        email: credentials.email
-                    }
-                })
+                    where: { email: credentials.email }
+                });
 
-                const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
-
-
-                console.log('isPasswordValid', isPasswordValid)
-
-                if (isPasswordValid) {
-                    return user
-                } else {
-                    return null
-                    throw new Error('Incorrect credentials')
+                // 2. USER NOT FOUND
+                if (!user) {
+                    return Promise.reject(new Error("USER_NOT_FOUND"));
                 }
 
+                // 3. HAS NO PASSWORD (Google/Github user)
+                if (!user.password) {
+                    return Promise.reject(new Error("NO_PASSWORD"));
+                }
 
+                // 4. Validate password
+                const isPasswordValid = await bcrypt.compare(
+                    credentials.password,
+                    user.password
+                );
 
+                if (!isPasswordValid) {
+                    return Promise.reject(new Error("WRONG_PASSWORD"));
+                }
+
+                // 5. SUCCESS
+                return user;
             }
+
         })
     ],
 

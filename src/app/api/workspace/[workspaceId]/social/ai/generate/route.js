@@ -1,0 +1,124 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { logger } from "@/lib/logger";
+
+export async function POST(req, { params }) {
+    try {
+        const { workspaceId } = await params;
+        const session = await getServerSession(authOptions);
+        const body = await req.json();
+        const { prompt, mode, context } = body;
+
+        await logger.info(`AI Content Request: ${mode}`, {
+            workspaceId,
+            userId: session?.user?.userId,
+            type: 'AI',
+            details: { mode, promptLength: prompt?.length }
+        });
+
+        if (!prompt && mode !== 'TAGS') {
+            return NextResponse.json({ message: "Prompt is required" }, { status: 400 });
+        }
+
+        const apiKey = process.env.GEMENI_API_KEY || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        
+        if (!apiKey) {
+            console.error("[AI_GENERATE] No API key found in environment variables");
+            return NextResponse.json({ message: "Gemini API key not configured" }, { status: 500 });
+        }
+        
+        console.log("[AI_GENERATE] Gemini request initiated...");
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        let systemPrompt = "";
+        let finalPrompt = "";
+
+        switch (mode) {
+            case 'IMPROVE':
+                systemPrompt = "You are an expert social media manager. Your task is to improve the provided social media post content. Make it more engaging, professional, and optimized for social platforms. Maintain the original meaning but enhance the impact. Return only the improved content text, no other commentary.";
+                finalPrompt = `Original Content: "${context}"\nUser Instructions: "${prompt}"`;
+                break;
+            case 'TAGS':
+                systemPrompt = "You are a social media tagging expert. Generate 5-8 relevant, trending hashtags for the provided post content. Return ONLY a comma-separated list of tags without the '#' symbol. For example: marketing, tech, business. Do not include any other text.";
+                finalPrompt = `Post Content: "${context || prompt}"`;
+                break;
+            case 'REPURPOSE':
+                if (prompt === 'TWITTER_THREAD') {
+                    systemPrompt = "You are a Twitter viral growth expert. Transform the provided article into a high-engagement Twitter thread (3-5 tweets). Each tweet should be under 280 characters. Use numbers (1/n) and threads-style formatting. Return the thread text with each tweet separated by a clear line break.";
+                } else if (prompt === 'LINKEDIN_POST') {
+                    systemPrompt = "You are a LinkedIn thought leader. Repurpose the provided article into a compelling LinkedIn post. Use professional formatting, line breaks for readability, and include a 'hook' at the beginning. Return only the post content.";
+                } else {
+                    systemPrompt = "Repurpose the provided article into a new format as requested by the user. Maintain the core message but optimize for the target audience.";
+                }
+                finalPrompt = `Article Content: "${context}"`;
+                break;
+            case 'SEO':
+                systemPrompt = "You are a Semantic SEO expert. Analyze the provided content against the target keyword. Provide a score (0-100), identify top keywords used with their frequency, and list 3-5 high-impact recommendations for improvement. Return your response as a JSON object with this structure: { \"score\": number, \"keywords\": [ { \"word\": string, \"count\": number } ], \"recommendations\": [ string ] }. Return ONLY the JSON object, no other text.";
+                finalPrompt = `Target Keyword: "${prompt}"\n\nArticle Content: "${context}"`;
+                break;
+            case 'GENERATE':
+            default:
+                systemPrompt = "You are an expert social media content creator. Generate a compelling social media post based on the user's prompt. Provide a short internal reference title and the full post body content. Format your response exactly as follows:\nTITLE: [The Title]\nCONTENT: [The Body]";
+                finalPrompt = prompt;
+                break;
+        }
+
+        const chat = model.startChat({
+            history: [
+                {
+                    role: "user",
+                    parts: [{ text: systemPrompt }],
+                },
+                {
+                    role: "model",
+                    parts: [{ text: "Understood. Please provide the details." }],
+                },
+            ],
+        });
+
+        const result = await chat.sendMessage(finalPrompt);
+        const responseText = result.response.text();
+
+        if (mode === 'GENERATE') {
+            const titleMatch = responseText.match(/TITLE:\s*(.*)/i);
+            const contentMatch = responseText.match(/CONTENT:\s*([\s\S]*)/i);
+
+            return NextResponse.json({
+                title: titleMatch ? titleMatch[1].trim() : "Generated Post",
+                content: contentMatch ? contentMatch[1].trim() : responseText
+            });
+        }
+
+        if (mode === 'TAGS') {
+            const tagsList = responseText.split(',').map(tag => tag.trim().replace(/^#/, ''));
+            return NextResponse.json({ tags: tagsList });
+        }
+
+        if (mode === 'SEO') {
+            try {
+                // Remove any markdown code block formatting if present
+                const cleanJson = responseText.replace(/```json|```/g, '').trim();
+                const seoData = JSON.parse(cleanJson);
+                return NextResponse.json(seoData);
+            } catch (e) {
+                console.error("[SEO_PARSE_ERROR]", e, responseText);
+                return NextResponse.json({ score: 0, keywords: [], recommendations: ["Failed to parse SEO data"] });
+            }
+        }
+
+        return NextResponse.json({ content: responseText });
+
+    } catch (error) {
+        await logger.error(`AI Generation Failed: ${error.message}`, {
+            workspaceId: params?.workspaceId,
+            type: 'AI',
+            details: { stack: error.stack, error }
+        });
+        console.error("[AI_GENERATE_ERROR]", error);
+        return NextResponse.json({ message: error.message || "Failed to generate content" }, { status: 500 });
+    }
+}

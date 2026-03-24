@@ -6,9 +6,9 @@ import { getWebDeviceToken, messaging } from '@/utils/firebase';
 import { onMessage } from "firebase/messaging";
 import { useAuth } from './AuthProvider';
 import { useSession } from 'next-auth/react';
-import { registerGuest } from '@/app/(workspace)/workspace/_action/misc/register-guest';
+//import { registerGuest } from '@/app/(workspace)/workspace/_action/misc/register-guest';
 import { useAction } from '@/hooks/use-action';
-import { updateDeviceToken } from '@/app/(workspace)/workspace/_action/misc/update-devicetoken';
+//import { updateDeviceToken } from '@/app/(workspace)/workspace/_action/misc/update-devicetoken';
 
 export const AppContext = createContext()
 
@@ -23,7 +23,7 @@ export const AppProvider = ({ children }) => {
 
     //NOtification permission
     useEffect(() => {
-        getDeviceToken()
+        //getDeviceToken()
     }, [])
 
     const getDeviceToken = async () => {
@@ -52,20 +52,20 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         if (deviceToken) {
             if (!session) {
-                registerGuestUser({ deviceToken: deviceToken })
+                //registerGuestUser({ deviceToken: deviceToken })
             }
         }
     }, [deviceToken])
 
     useEffect(() => {
         if (session && deviceToken) {
-            updateTocken({ userId: session?.user?.userId, deviceToken })
+            //updateTocken({ userId: session?.user?.userId, deviceToken })
         }
     }, [session])
 
 
-    const { execute: registerGuestUser } = useAction(registerGuest)
-    const { execute: updateTocken } = useAction(updateDeviceToken)
+    //const { execute: registerGuestUser } = useAction(registerGuest)
+    //const { execute: updateTocken } = useAction(updateDeviceToken)
 
 
     useEffect(() => {

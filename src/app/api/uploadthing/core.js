@@ -23,6 +23,14 @@ export const ourFileRouter = {
 
     messageFile: f(['image', 'pdf'])
         .middleware(() => handleAuth())
-        .onUploadComplete(() => { })
+        .onUploadComplete(() => { }),
+
+    documentUploader: f(["image", "pdf", "text", "blob"])
+        .middleware(() => handleAuth())
+        .onUploadComplete(({ metadata, file }) => {
+            console.log("Upload complete for userId:", metadata.userId);
+            console.log("File URL", file.url);
+            return { uploadedBy: metadata.userId };
+        }),
 };
 
