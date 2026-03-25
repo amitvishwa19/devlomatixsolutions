@@ -218,7 +218,7 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
                     </div>
 
                     {/* Body */}
-                    <div className="relative group">
+                    <div className="relative group overflow-x-auto">
                         <div className="absolute -inset-4 bg-gradient-to-b from-primary/5 to-transparent rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                         <div 
                             className="relative prose prose-invert max-w-none text-base leading-loose font-medium text-foreground/80 selection:bg-primary/30"

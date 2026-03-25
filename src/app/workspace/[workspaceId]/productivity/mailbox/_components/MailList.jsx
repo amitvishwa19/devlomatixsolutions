@@ -19,8 +19,8 @@ export const MailList = ({
     onRefresh
 }) => {
     return (
-        <div className="flex-1 flex flex-col h-full min-h-0 bg-transparent border-r border-border/20">
-            <div className="p-4 border-b border-border/20 bg-background/5 backdrop-blur-sm flex-shrink-0">
+        <div className="flex-1 flex flex-col h-full min-h-0 bg-transparent border-r border-border/20 w-full overflow-hidden">
+            <div className="pl-4 pr-6 py-4 border-b border-border/20 bg-background/5 backdrop-blur-sm flex-shrink-0">
                 <div className="flex items-center gap-2">
                     <div className="relative flex-1 group">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -43,7 +43,7 @@ export const MailList = ({
                 </div>
             </div>
 
-            <ScrollArea className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-64 space-y-4 opacity-50">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -66,7 +66,7 @@ export const MailList = ({
                                     layout
                                     onClick={() => onSelect(message.id)}
                                     className={cn(
-                                        "pl-4 pr-14 py-4 cursor-pointer transition-all hover:bg-muted/30 relative group",
+                                        "w-full pl-4 pr-12 py-4 cursor-pointer transition-all hover:bg-muted/30 relative group overflow-hidden",
                                         selectedId === message.id ? "bg-primary/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary" : ""
                                     )}
                                 >
@@ -103,7 +103,7 @@ export const MailList = ({
                         </AnimatePresence>
                     </div>
                 )}
-            </ScrollArea>
+            </div>
         </div>
     );
 };

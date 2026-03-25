@@ -5,5 +5,9 @@ export default function WorkspacePage({ params: paramsPromise }) {
     const params = use(paramsPromise);
     const workspaceId = params?.workspaceId;
 
-    return <WorkspaceDashboard workspaceId={workspaceId} />;
+    return (
+        <div className='w-full h-full p-4'>
+            <WorkspaceDashboard workspaceId={workspaceId} />
+        </div>
+    );
 }
