@@ -23,7 +23,8 @@ import {
     Briefcase,
     Sparkles,
     LayoutGrid,
-    List as ListIcon
+    List as ListIcon,
+    FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,7 +79,8 @@ export default function TalentDatabasePage() {
         score: c.aiMatchScore ? (c.aiMatchScore / 20).toFixed(1) : "N/A",
         location: c.location || "N/A",
         applied: new Date(c.createdAt).toLocaleDateString(),
-        tags: c.skills || []
+        tags: c.skills || [],
+        resumeUrl: c.resumeUrl || null
     })) : [];
 
     const filteredTalents = talents.filter(t =>
@@ -240,6 +242,17 @@ export default function TalentDatabasePage() {
                                                 >
                                                     <ExternalLink size={14} />
                                                 </Button>
+                                                {candidate.resumeUrl && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-lg opacity-40 hover:opacity-100 hover:bg-emerald-500 hover:text-white transition-all shadow-none"
+                                                        onClick={() => window.open(candidate.resumeUrl, '_blank')}
+                                                        title="View Resume"
+                                                    >
+                                                        <FileText size={14} />
+                                                    </Button>
+                                                )}
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-40 hover:opacity-100">
@@ -326,6 +339,16 @@ export default function TalentDatabasePage() {
                                             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl opacity-40 hover:opacity-100">
                                                 <Mail size={16} />
                                             </Button>
+                                            {candidate.resumeUrl && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-10 w-10 rounded-xl opacity-40 hover:opacity-100 hover:text-emerald-500"
+                                                    onClick={() => window.open(candidate.resumeUrl, '_blank')}
+                                                >
+                                                    <FileText size={16} />
+                                                </Button>
+                                            )}
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl opacity-40 hover:opacity-100">

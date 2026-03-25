@@ -63,7 +63,7 @@ export default function AppSidebar() {
         { type: 'child', title: "Trash", url: `${baseDocPath}/trash`, icon: "trash", category: "documents" },
 
         // Applicant tracking system
-        { type: 'parent', title: "ATS", url: `${baseAtsPath}`, icon: "file", category: "ats" },
+        { type: 'parent', title: "ATS Management", url: `${baseAtsPath}`, icon: "user", category: "ats" },
         { type: 'child', title: "Dashboard", url: `${baseAtsPath}`, icon: "bar-chart-3", category: "ats" },
         { type: 'child', title: "Analytics", url: `${baseAtsPath}/analytics`, icon: "bar-chart-3", category: "ats" },
         { type: 'child', title: "Jobs", url: `${baseAtsPath}/jobs`, icon: "bar-chart-3", category: "ats" },
@@ -76,7 +76,7 @@ export default function AppSidebar() {
         { type: 'child', title: "Dashboard", url: `${baseProductivityPath}/`, icon: "bar-chart-3", category: "productivity" },
         { type: 'child', title: "Kanban", url: `${baseProductivityPath}/kanban`, icon: "bar-chart-3", category: "productivity" },
         { type: 'child', title: "Mailbox", url: `${baseProductivityPath}/mailbox`, icon: "mail", category: "productivity" },
-        // { type: 'child', title: "Uploads", url: `${baseDocPath}/uploads`, icon: "bar-chart-3", category: "productivity" },
+        { type: 'child', title: "Message", url: `${baseProductivityPath}/message`, icon: "bar-chart-3", category: "productivity" },
         // { type: 'child', title: "Trash", url: `${baseDocPath}/trash`, icon: "trash", category: "productivity" },
 
         // Access Management
@@ -190,7 +190,7 @@ export default function AppSidebar() {
                                                 size={18}
                                                 className="shrink-0 text-muted-foreground"
                                             />
-                                            <span className="flex-1 text-left group-data-[collapsible=icon]:hidden">
+                                            <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
                                                 {parent.title}
                                             </span>
                                             <ChevronRight

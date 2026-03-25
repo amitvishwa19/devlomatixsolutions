@@ -27,52 +27,99 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import axios from 'axios';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export const ApplyModal = ({ job, isOpen, onClose }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [resume, setResume] = useState(null);
+    const [resumeUrl, setResumeUrl] = useState("");
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        phone: "",
+        portfolioUrl: ""
+    });
 
     if (!job) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!resume) {
+        if (!resumeUrl) {
             toast.error("Please upload your resume");
             return;
         }
 
         setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        toast.success("Application submitted successfully!");
+        try {
+            const response = await axios.post(`/api/public/jobs/${job.id}/apply`, {
+                ...formData,
+                resumeUrl
+            });
+
+            if (response.data.success) {
+                setIsSuccess(true);
+                toast.success(response.data.message || "Application submitted successfully!");
+            } else {
+                toast.error(response.data.error || "Failed to submit application");
+            }
+        } catch (error) {
+            console.error("[APPLY_ERROR]", error);
+            toast.error(error.response?.data?.error || "Internal Server Error");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const extension = file.name.split('.').pop().toLowerCase();
-            const allowedExtensions = ['pdf', 'doc', 'docx'];
+        if (!file) return;
 
-            if (!allowedExtensions.includes(extension)) {
-                toast.error("Only PDF or Word documents are allowed");
-                return;
-            }
+        const allowedTypes = [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/pdf'
+        ];
 
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error("File size must be less than 5MB");
-                return;
-            }
-            setResume(file);
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Only PDF or Word documents are allowed");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("File size must be less than 5MB");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+            const { data, error } = await supabase.storage
+                .from('resumes')
+                .upload(fileName, file);
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('resumes')
+                .getPublicUrl(fileName);
+
+            setResumeUrl(publicUrl);
+            toast.success("Resume uploaded successfully!");
+        } catch (error) {
+            console.error("[UPLOAD_ERROR]", error);
+            toast.error("Failed to upload resume to Supabase");
+        } finally {
+            setIsUploading(false);
         }
     };
 
     const handleClose = () => {
         setIsSuccess(false);
-        setResume(null);
+        setResumeUrl("");
+        setFormData({ name: "", email: "", phone: "", portfolioUrl: "" });
         onClose();
     };
 
@@ -124,7 +171,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                                         <Briefcase size={14} className="text-primary" /> {job.type}
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                                        <DollarSign size={14} className="text-primary" /> {job.salary}
+                                        <DollarSign size={14} className="text-primary" /> {job.salaryRange || job.salary || 'Competitive'}
                                     </div>
                                 </div>
                             </div>
@@ -182,44 +229,74 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Full Name</label>
-                                    <Input required placeholder="Amit Sharma" className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" />
+                                    <Input 
+                                        required 
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="Amit Sharma" 
+                                        className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
+                                    />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Email</label>
-                                        <Input required type="email" placeholder="john@example.com" className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" />
+                                        <Input 
+                                            required 
+                                            type="email" 
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            placeholder="laksh@example.com" 
+                                            className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Phone</label>
-                                        <Input required placeholder="+91 98765 43210" className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" />
+                                        <Input 
+                                            required 
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            placeholder="+91 98765 43210" 
+                                            className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
+                                        />
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Portfolio / LinkedIn</label>
-                                    <Input placeholder="https://..." className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" />
+                                    <Input 
+                                        value={formData.portfolioUrl}
+                                        onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
+                                        placeholder="https://..." 
+                                        className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Resume (Word/PDF only)</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Resume (PDF/Word only)</label>
                                     <div
-                                        className={`relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 flex flex-col items-center justify-center gap-3 bg-muted/20 ${resume ? 'border-primary/50 bg-primary/5' : 'border-border/60 hover:border-primary/40'}`}
+                                        className={`relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 flex flex-col items-center justify-center gap-3 bg-muted/20 ${resumeUrl ? 'border-primary/50 bg-primary/5' : 'border-border/60 hover:border-primary/40'}`}
                                     >
                                         <input
                                             type="file"
-                                            accept=".pdf,.doc,.docx"
+                                            accept=".pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                                             onChange={handleFileChange}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                                            disabled={isUploading}
                                         />
-                                        {resume ? (
+                                        {isUploading ? (
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                                <p className="text-[11px] font-bold text-primary">Uploading...</p>
+                                            </div>
+                                        ) : resumeUrl ? (
                                             <>
                                                 <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
                                                     <FileText size={20} />
                                                 </div>
                                                 <div className="text-center">
-                                                    <p className="text-[11px] font-black truncate max-w-[200px]">{resume.name}</p>
-                                                    <p className="text-[9px] font-bold text-muted-foreground opacity-60">Click to change</p>
+                                                    <p className="text-[11px] font-black truncate max-w-[200px]">Resume Uploaded</p>
+                                                    <p className="text-[9px] font-bold text-muted-foreground opacity-60">Click to replace</p>
                                                 </div>
                                             </>
                                         ) : (

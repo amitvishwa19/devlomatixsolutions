@@ -128,7 +128,8 @@ export default function CandidateProfilePage() {
         ],
         scorecards: candidateData.scorecards || [],
         notes: candidateData.notes || [],
-        communications: []
+        communications: [],
+        resumeUrl: candidateData.resumeUrl || null
     };
 
     const [noteText, setNoteText] = useState("");
@@ -353,9 +354,23 @@ export default function CandidateProfilePage() {
                                             </div>
                                         </div>
                                     </div>
-                                    <Button variant="outline" className="w-full h-12 rounded-lg font-black uppercase tracking-widest text-[9px] gap-2 border-border/40 bg-muted/20 hover:bg-primary/5 hover:border-primary/20 transition-all">
+                                    <Button 
+                                        variant="outline" 
+                                        disabled={!candidate.resumeUrl}
+                                        onClick={() => window.open(candidate.resumeUrl, '_blank')}
+                                        className="w-full h-12 rounded-lg font-black uppercase tracking-widest text-[9px] gap-2 border-border/40 bg-muted/20 hover:bg-primary/5 hover:border-primary/20 transition-all"
+                                    >
                                         <Download size={14} /> Download Resume
                                     </Button>
+                                    {candidate.resumeUrl && (
+                                        <Button 
+                                            variant="ghost" 
+                                            onClick={() => window.open(candidate.resumeUrl, '_blank')}
+                                            className="w-full h-8 text-[9px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 mt-2"
+                                        >
+                                            <ExternalLink size={12} className="mr-2" /> View Resume In New Tab
+                                        </Button>
+                                    )}
                                 </CardContent>
                             </Card>
                             
