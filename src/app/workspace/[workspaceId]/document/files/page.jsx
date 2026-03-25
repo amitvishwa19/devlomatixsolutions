@@ -233,7 +233,7 @@ export default function FilesPage() {
     });
 
     return (
-        <div className="flex flex-col h-full space-y-6 animate-fade-in w-full max-w-[1400px] mx-auto py-2 pr-6">
+        <div className="flex flex-col h-full space-y-6 animate-fade-in w-full p-2">
             {/* Header Section */}
             <div className="flex items-start justify-between">
                 <div>

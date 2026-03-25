@@ -201,7 +201,7 @@ export default function CategoryManagementPage() {
     );
 
     return (
-        <div className=" animate-fade-in">
+        <div className=" animate-fade-in p-2">
             {/* Local Modal */}
             <AddCategoryModal />
 

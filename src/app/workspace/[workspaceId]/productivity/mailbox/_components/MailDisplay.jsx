@@ -11,7 +11,8 @@ import {
     MoreVertical, 
     Loader2,
     X,
-    Maximize2
+    Maximize2,
+    Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 import axios from '@/utils/axios';
 import { useParams } from 'next/navigation';
+import TipTap from '@/components/global/TipTap';
 
 export const MailDisplay = ({ messageId, accountId, onAction }) => {
     const params = useParams();
@@ -36,17 +38,21 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
     const [replyBody, setReplyBody] = useState('');
     const [replyTo, setReplyTo] = useState('');
     const [replySubject, setReplySubject] = useState('');
+    const [summary, setSummary] = useState(null);
+    const [summaryLoading, setSummaryLoading] = useState(false);
 
     useEffect(() => {
         if (!messageId) {
             setMessage(null);
             setIsReplying(false);
             setIsForwarding(false);
+            setSummary(null);
             return;
         }
 
         const fetchMessage = async () => {
             setLoading(true);
+            setSummary(null);
             try {
                 const res = await axios.get(`/api/workspace/${workspaceId}/productivity/mailbox/${messageId}`, {
                     params: { accountId }
@@ -61,6 +67,21 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
 
         fetchMessage();
     }, [messageId, workspaceId, accountId]);
+
+    const handleSummarize = async () => {
+        if (summaryLoading) return;
+        setSummaryLoading(true);
+        try {
+            const res = await axios.post(`/api/workspace/${workspaceId}/productivity/mailbox/${messageId}/summarize`, {
+                accountId
+            });
+            setSummary(res.data.summary);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSummaryLoading(false);
+        }
+    };
 
     const handleReply = () => {
         setReplyTo(message.from);
@@ -170,8 +191,18 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
                     <Button variant="ghost" size="sm" onClick={handleForward} className="h-9 px-3 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-wider hover:bg-primary/10">
                         <Forward className="w-3.5 h-3.5" /> Forward
                     </Button>
-                    <Separator orientation="vertical" className="h-4 mx-1 opacity-20" />
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
+                    <Separator orientation="vertical" className="h-4 mx-1 opacity-20" />
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleSummarize} 
+                        disabled={summaryLoading || !messageId}
+                        className="h-9 px-3 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-wider hover:bg-primary/10 text-primary shadow-sm hover:shadow-md transition-all active:scale-95"
+                    >
+                        {summaryLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                        Summarize
+                    </Button>
                 </div>
             </div>
 
@@ -215,6 +246,21 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
                                 </span>
                             </div>
                         </div>
+
+                        {summary && (
+                            <div className="p-6 rounded-[2rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-xl animate-in zoom-in-95 duration-500 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl -z-10 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 rounded-xl bg-primary/20 text-primary shadow-inner">
+                                        <Sparkles className="w-4 h-4" />
+                                    </div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">AI Bottom Line</h4>
+                                </div>
+                                <p className="text-sm font-bold leading-relaxed text-foreground/90 italic">
+                                    "{summary}"
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Body */}
@@ -261,12 +307,12 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
                                 />
                             </div>
                         </div>
-                        <textarea 
-                            className="w-full min-h-[150px] bg-white/5 border border-white/5 rounded-3xl p-6 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                            placeholder="Type your message here..."
-                            value={replyBody}
-                            onChange={(e) => setReplyBody(e.target.value)}
-                        />
+                        <div className="min-h-[300px] max-h-[500px] flex flex-col bg-white/5 border border-white/5 rounded-3xl overflow-hidden shadow-inner">
+                            <TipTap 
+                                data={replyBody} 
+                                onChange={(val) => setReplyBody(val)} 
+                            />
+                        </div>
                         <div className="flex justify-end gap-3 pt-2">
                             <Button variant="ghost" size="sm" onClick={() => { setIsReplying(false); setIsForwarding(false); }} className="rounded-xl font-bold px-6">Cancel</Button>
                             <Button size="sm" onClick={sendResponse} className="rounded-xl font-extrabold px-8 bg-primary hover:bg-primary/90 text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20">

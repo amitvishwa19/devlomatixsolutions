@@ -55,6 +55,7 @@ const Navbar = () => {
         { name: "Case Studies", href: "/casestudy" },
         { name: "Articles", href: "/article" },
         { name: "About", href: "/about" },
+        { name: "Careers", href: "/career" },
         { name: "Contact", href: "/contact" },
     ];
 

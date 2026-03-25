@@ -72,7 +72,7 @@ export default function TrashPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl h-full overflow-y-auto pr-2 pb-10">
+        <div className="space-y-4 h-full overflow-y-auto p-2">
             <div>
                 <h1 className="text-2xl font-semibold tracking-tight">Recycle Bin</h1>
                 <p className="text-muted-foreground text-sm mt-1 uppercase font-black tracking-widest opacity-60">

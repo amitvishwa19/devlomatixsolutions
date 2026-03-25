@@ -1,13 +1,11 @@
-'use client';
-
-import React from 'react';
-import { Search, Loader2, Star, Paperclip, MoreVertical, RefreshCw } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Search, Loader2, Star, Paperclip, MoreVertical, RefreshCw, Inbox } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 export const MailList = ({
     messages = [],
@@ -18,6 +16,15 @@ export const MailList = ({
     onSearchChange,
     onRefresh
 }) => {
+    const parentRef = useRef(null);
+
+    const rowVirtualizer = useVirtualizer({
+        count: messages.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 110,
+        overscan: 5,
+    });
+
     return (
         <div className="flex-1 flex flex-col h-full min-h-0 bg-transparent border-r border-border/20 w-full overflow-hidden">
             <div className="pl-4 pr-6 py-4 border-b border-border/20 bg-background/5 backdrop-blur-sm flex-shrink-0">
@@ -43,7 +50,10 @@ export const MailList = ({
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            <div 
+                ref={parentRef}
+                className="flex-1 min-h-0 overflow-y-auto custom-scrollbar"
+            >
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-64 space-y-4 opacity-50">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -55,18 +65,30 @@ export const MailList = ({
                         <span className="text-[10px] font-bold tracking-widest uppercase">No messages found</span>
                     </div>
                 ) : (
-                    <div className="divide-y divide-border/10">
-                        <AnimatePresence mode="popLayout">
-                            {messages.map((message) => (
+                    <div 
+                        style={{
+                            height: `${rowVirtualizer.getTotalSize()}px`,
+                            width: '100%',
+                            position: 'relative',
+                        }}
+                    >
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const message = messages[virtualRow.index];
+                            return (
                                 <motion.div
                                     key={message.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    layout
+                                    initial={{ opacity: 0, x: -5 }}
+                                    animate={{ opacity: 1, x: 0 }}
                                     onClick={() => onSelect(message.id)}
+                                    style={{
+                                        position: 'absolute',
+                                        top: `${virtualRow.start}px`,
+                                        left: 0,
+                                        width: '100%',
+                                        height: `${virtualRow.size}px`,
+                                    }}
                                     className={cn(
-                                        "w-full pl-4 pr-12 py-4 cursor-pointer transition-all hover:bg-muted/30 relative group overflow-hidden",
+                                        "w-full pl-4 pr-12 py-4 cursor-pointer transition-all hover:bg-muted/30 relative group overflow-hidden border-b border-border/10",
                                         selectedId === message.id ? "bg-primary/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary" : ""
                                     )}
                                 >
@@ -99,14 +121,11 @@ export const MailList = ({
                                         <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
                                     </div>
                                 </motion.div>
-                            ))}
-                        </AnimatePresence>
+                            );
+                        })}
                     </div>
                 )}
             </div>
         </div>
     );
 };
-
-// Need Inbox for empty state
-import { Inbox } from 'lucide-react';

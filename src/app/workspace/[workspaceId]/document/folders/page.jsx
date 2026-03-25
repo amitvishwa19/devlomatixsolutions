@@ -168,7 +168,7 @@ export default function FoldersPage() {
     );
 
     return (
-        <div className="space-y-6 max-w-7xl h-full overflow-y-auto pr-2 pb-10">
+        <div className="space-y-4  h-full overflow-y-auto p-2">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Folders</h1>
@@ -178,23 +178,23 @@ export default function FoldersPage() {
                 </div>
 
 
-                <ShareModal 
-                isOpen={isShareModalOpen} 
-                onOpenChange={setIsShareModalOpen} 
-                document={folderToShare} 
-                workspaceId={workspaceId} 
-                onShareComplete={fetchFolders} 
-            />
+                <ShareModal
+                    isOpen={isShareModalOpen}
+                    onOpenChange={setIsShareModalOpen}
+                    document={folderToShare}
+                    workspaceId={workspaceId}
+                    onShareComplete={fetchFolders}
+                />
 
-            <FolderDetailsModal
-                isOpen={isDetailsModalOpen}
-                onOpenChange={setIsDetailsModalOpen}
-                folder={selectedFolderDetails}
-                workspaceId={workspaceId}
-                onDelete={handleDeleteFolder}
-            />
+                <FolderDetailsModal
+                    isOpen={isDetailsModalOpen}
+                    onOpenChange={setIsDetailsModalOpen}
+                    folder={selectedFolderDetails}
+                    workspaceId={workspaceId}
+                    onDelete={handleDeleteFolder}
+                />
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button className="gap-2 active:scale-[0.97] transition-transform bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                             <FolderPlus className="h-4 w-4" />

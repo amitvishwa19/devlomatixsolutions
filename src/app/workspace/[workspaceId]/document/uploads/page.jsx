@@ -105,7 +105,7 @@ export default function UploadsPage() {
             // We simulate progress since Supabase JS client doesn't support progress events natively in standard 'upload'
             // For real progress, one would need to use TUS or XMLHttpRequest.
             let progressInterval = setInterval(() => {
-                setUploadQueue(current => current.map(u => 
+                setUploadQueue(current => current.map(u =>
                     u.id === uploadId ? { ...u, progress: Math.min(u.progress + 10, 90) } : u
                 ));
             }, 500);
@@ -134,15 +134,15 @@ export default function UploadsPage() {
                 parentId: null
             });
 
-            setUploadQueue(current => current.map(u => 
+            setUploadQueue(current => current.map(u =>
                 u.id === uploadId ? { ...u, progress: 100, status: "complete" } : u
             ));
-            
+
             toast.success(`${file.name} uploaded successfully`);
             fetchHistory();
         } catch (error) {
             console.error("Upload error:", error);
-            setUploadQueue(current => current.map(u => 
+            setUploadQueue(current => current.map(u =>
                 u.id === uploadId ? { ...u, status: "failed" } : u
             ));
             toast.error(`Failed to upload ${file.name}`);
@@ -171,7 +171,7 @@ export default function UploadsPage() {
     const failedCount = uploadQueue.filter(u => u.status === "failed").length;
 
     return (
-        <div className="space-y-6 max-w-7xl h-full overflow-y-auto pr-2 pb-10">
+        <div className="space-y-4 h-full overflow-y-auto p-2">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Uploads</h1>
@@ -179,27 +179,26 @@ export default function UploadsPage() {
                         {combinedList.length} total uploads · {activeCount} in progress
                     </p>
                 </div>
-                <Button 
+                <Button
                     onClick={() => fileInputRef.current?.click()}
                     className="gap-2 active:scale-[0.97] transition-transform bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
                 >
                     <Plus className="h-4 w-4" />
                     Upload Files
                 </Button>
-                <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileSelect} 
-                    className="hidden" 
-                    multiple 
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    multiple
                 />
             </div>
 
             {/* Drop zone */}
             <Card
-                className={`border-2 border-dashed p-10 text-center transition-all duration-300 animate-fade-up cursor-pointer group hover:bg-muted/5 ${
-                    dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-muted-foreground/20"
-                }`}
+                className={`border-2 border-dashed p-10 text-center transition-all duration-300 animate-fade-up cursor-pointer group hover:bg-muted/5 ${dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-muted-foreground/20"
+                    }`}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
@@ -239,7 +238,7 @@ export default function UploadsPage() {
                         <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center">
                             <Clock className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest text-center">No recent uploads<br/><span className="text-[10px] font-medium lowercase">Your upload history will appear here</span></p>
+                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest text-center">No recent uploads<br /><span className="text-[10px] font-medium lowercase">Your upload history will appear here</span></p>
                     </div>
                 ) : (
                     combinedList.map((upload) => {
@@ -274,9 +273,9 @@ export default function UploadsPage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {upload.status === "failed" && (
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm" 
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
                                             onClick={() => {
                                                 // Simplified retry: just clear from queue and the user can re-pick
                                                 removeUpload(upload.id);
@@ -287,9 +286,9 @@ export default function UploadsPage() {
                                             Retry
                                         </Button>
                                     )}
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => removeUpload(upload.id)}
                                         className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all"
                                     >

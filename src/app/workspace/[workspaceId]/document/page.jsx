@@ -12,7 +12,7 @@ export default function DocumentPage() {
     console.log(workspaceId, session?.user?.userId);
 
     return (
-        <div className="flex-1 h-full overflow-y-auto">
+        <div className="flex-1 h-full overflow-y-auto p-2">
 
 
 

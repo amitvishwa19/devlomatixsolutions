@@ -53,7 +53,7 @@ export default function ArticlePage() {
     }, [fetchPosts]);
 
     return (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in p-2">
             {/* Local Modals */}
             <AddPostModal />
             <AddCredentialModal />
@@ -89,7 +89,7 @@ export default function ArticlePage() {
                     </Button>
                 </div>
             </div>
-            
+
             <RecentLogsWidget workspaceId={workspaceId} />
 
             {/* Quick Stats */}
