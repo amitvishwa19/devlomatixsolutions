@@ -17,13 +17,12 @@ export default function WorkspaceLayout({ children }) {
                     <div className="p-2">
                         <AppTopNav />
                     </div>
-                    <div className='h-full relative flex-1 pt-0 overflow-hidden'>
-                        <ScrollArea className='h-full relative flex-1 border  rounded-md bg-card/50  overflow-hidden pb-4'>
-                            <div className="min-h-full">
+                    <div className='flex-1 min-h-0 relative pt-0 overflow-hidden'>
+                        <div className='h-full relative border rounded-md bg-card/50 overflow-hidden'>
+                            <div className="h-full overflow-hidden">
                                 {children}
                             </div>
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
+                        </div>
                     </div>
                 </SidebarInset>
             </SidebarProvider>

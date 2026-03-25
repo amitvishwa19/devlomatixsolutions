@@ -9,12 +9,12 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const MailList = ({ 
-    messages = [], 
-    selectedId, 
-    onSelect, 
-    loading = false, 
-    search = '', 
+export const MailList = ({
+    messages = [],
+    selectedId,
+    onSelect,
+    loading = false,
+    search = '',
     onSearchChange,
     onRefresh
 }) => {
@@ -31,9 +31,9 @@ export const MailList = ({
                             className="pl-10 h-10 bg-muted/40 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[11px] tracking-widest"
                         />
                     </div>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onRefresh}
                         disabled={loading}
                         className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all shadow-sm"
@@ -66,18 +66,18 @@ export const MailList = ({
                                     layout
                                     onClick={() => onSelect(message.id)}
                                     className={cn(
-                                        "p-4 cursor-pointer transition-all hover:bg-muted/30 relative group",
+                                        "pl-4 pr-14 py-4 cursor-pointer transition-all hover:bg-muted/30 relative group",
                                         selectedId === message.id ? "bg-primary/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary" : ""
                                     )}
                                 >
-                                    <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center justify-between gap-4 mb-1">
                                         <h4 className={cn(
-                                            "text-xs truncate max-w-[180px]",
+                                            "text-xs truncate flex-1",
                                             !message.isRead ? "font-extrabold text-foreground" : "font-semibold text-muted-foreground"
                                         )}>
                                             {message.from}
                                         </h4>
-                                        <span className="text-[10px] text-muted-foreground font-bold whitespace-nowrap">
+                                        <span className="text-[10px] text-muted-foreground font-bold whitespace-nowrap flex-shrink-0">
                                             {formatDistanceToNow(new Date(message.date), { addSuffix: true })}
                                         </span>
                                     </div>
@@ -93,8 +93,8 @@ export const MailList = ({
                                     <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed opacity-70">
                                         {message.snippet}
                                     </p>
-                                    
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                    <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                         <Star className={cn("w-3.5 h-3.5", message.isStarred ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground")} />
                                         <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
                                     </div>
