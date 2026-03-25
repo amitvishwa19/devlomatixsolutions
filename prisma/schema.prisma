@@ -58,6 +58,9 @@ model User {
   kanbanActivities          KanbanActivity[]
   members                   Member[]
   channels                  Channel[]
+  jobs                      Job[]
+  atsNotes                  AtsNote[]
+  scorecards                Scorecard[]
 
   @@index([email])
   @@index([phone])
@@ -726,4 +729,178 @@ model KanbanActivity {
 
   @@index([taskId])
   @@index([userId])
+}
+
+// --- ATS: Recruitment Hub ---
+
+model Job {
+  id              String        @id @default(cuid())
+  title           String
+  description     String        @db.Text
+  department      String?
+  location        String?
+  type            String        @default("FULL_TIME")
+  salaryRange     String?
+  status          JobStatus     @default(DRAFT)
+  workspaceId     String
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications    Application[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+enum JobStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+model Candidate {
+  id              String        @id @default(cuid())
+  name            String
+  email           String        @unique
+  phone           String?
+  location        String?
+  resumeUrl       String?
+  avatarUrl       String?
+  summary         String?       @db.Text
+  skills          String[]      @default([])
+  
+  // AI Parsing Results
+  aiSummary       String?       @db.Text
+  aiMatchScore    Int?
+  parsedData      Json?
+  
+  applications    Application[]
+  
+  workspaceId     String
+  userId          String
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([workspaceId])
+  @@index([email])
+}
+
+model Application {
+  id              String        @id @default(cuid())
+  jobId           String
+  job             Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidateId     String
+  candidate       Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  stage           String        @default("APPLIED")
+  status          String        @default("ACTIVE")
+  
+  source          String?
+  referredById    String?
+  
+  scorecards      Scorecard[]
+  interviews      Interview[]
+  notes           AtsNote[]
+  offers          Offer[]
+  
+  workspaceId     String
+  
+  appliedAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([stage])
+  @@index([workspaceId])
+}
+
+model Interview {
+  id              String        @id @default(cuid())
+  applicationId   String
+  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  title           String
+  startTime       DateTime
+  endTime         DateTime
+  location        String?
+  
+  status          InterviewStatus @default(SCHEDULED)
+  feedback        String?       @db.Text
+  
+  interviewers    String[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([applicationId])
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Scorecard {
+  id              String        @id @default(cuid())
+  applicationId   String
+  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  interviewerId   String
+  interviewer     User          @relation(fields: [interviewerId], references: [id], onDelete: Cascade)
+  stage           String
+  score           Float
+  feedback        String?       @db.Text
+  attributes      Json?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([applicationId])
+  @@index([interviewerId])
+}
+
+model AtsNote {
+  id              String        @id @default(cuid())
+  applicationId   String
+  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text            String        @db.Text
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([applicationId])
+  @@index([userId])
+}
+
+model Offer {
+  id              String        @id @default(cuid())
+  applicationId   String
+  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  salary          String?
+  startDate       DateTime?
+  status          OfferStatus   @default(DRAFT)
+  offerLetterUrl  String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([applicationId])
+}
+
+enum OfferStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
 }

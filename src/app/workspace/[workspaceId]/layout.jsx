@@ -19,9 +19,10 @@ export default function WorkspaceLayout({ children }) {
                     </div>
                     <div className='flex-1 min-h-0 relative pt-0 overflow-hidden'>
                         <div className='h-full relative border rounded-md bg-card/50 overflow-hidden'>
-                            <div className="h-full overflow-hidden">
+                            <ScrollArea className="h-full overflow-hidden">
                                 {children}
-                            </div>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
                         </div>
                     </div>
                 </SidebarInset>

@@ -24,6 +24,7 @@ export default function AppSidebar() {
     const baseAccessPath = `/workspace/${workspaceId}/management`
     const systemPath = `/workspace/${workspaceId}/system`
     const baseProductivityPath = `/workspace/${workspaceId}/productivity`
+    const baseAtsPath = `/workspace/${workspaceId}/ats`
 
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
@@ -60,6 +61,15 @@ export default function AppSidebar() {
         { type: 'child', title: "Folders", url: `${baseDocPath}/folders`, icon: "bar-chart-3", category: "documents" },
         { type: 'child', title: "Uploads", url: `${baseDocPath}/uploads`, icon: "bar-chart-3", category: "documents" },
         { type: 'child', title: "Trash", url: `${baseDocPath}/trash`, icon: "trash", category: "documents" },
+
+        // Applicant tracking system
+        { type: 'parent', title: "ATS", url: `${baseAtsPath}`, icon: "file", category: "ats" },
+        { type: 'child', title: "Dashboard", url: `${baseAtsPath}`, icon: "bar-chart-3", category: "ats" },
+        { type: 'child', title: "Analytics", url: `${baseAtsPath}/analytics`, icon: "bar-chart-3", category: "ats" },
+        { type: 'child', title: "Jobs", url: `${baseAtsPath}/jobs`, icon: "bar-chart-3", category: "ats" },
+        { type: 'child', title: "Candidates", url: `${baseAtsPath}/candidates`, icon: "bar-chart-3", category: "ats" },
+        { type: 'child', title: "Pipeline", url: `${baseAtsPath}/pipeline`, icon: "bar-chart-3", category: "ats" },
+
 
         // Productivity Manager
         { type: 'parent', title: "Productivity", url: `${baseProductivityPath}`, icon: "folder-kanban", category: "productivity" },
