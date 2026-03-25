@@ -26,7 +26,7 @@ const AuthLayout = ({ children }) => {
             <div className="hidden lg:flex flex-col justify-center w-[50%] xl:w-[55%] px-12 xl:px-24 min-h-screen relative z-10">
                 {/* Header/Logo (Top Left) */}
                 <div className="absolute top-8 left-12 xl:left-24">
-                    <AppLogo link={'/'} />
+                    <AppLogo link={'/'} size={150} />
                 </div>
 
                 {/* Main Hero Text */}

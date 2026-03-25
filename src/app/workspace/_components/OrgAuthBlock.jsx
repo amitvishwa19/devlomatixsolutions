@@ -44,7 +44,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
         settings: null
     })
 
-
+    console.log(session?.user?.image)
 
 
     return (
@@ -58,7 +58,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
                             <div className='flex flex-row items-center gap-2'>
                                 <Avatar className='h-10 w-10 rounded-md'>
-                                    <AvatarImage src={session?.user?.avatar} alt="@shadcn" className='grayscale' />
+                                    <AvatarImage src={session?.user?.image} alt="@shadcn" className='' />
                                     <AvatarFallback className='rounded-md capitalize font-bold text-xl border'>{getInitials(session?.user?.displayName)}</AvatarFallback>
                                 </Avatar>
                                 {!collapsed && (
@@ -90,7 +90,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarImage src={session?.user?.avatar} alt="@shadcn" className='' />
+                                    <AvatarImage src={session?.user?.image || session?.user?.image} alt="@shadcn" className='' />
                                     <AvatarFallback>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -177,9 +177,6 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                     </DropdownMenuContent>
 
                 )}
-
-
-
 
 
             </DropdownMenu>

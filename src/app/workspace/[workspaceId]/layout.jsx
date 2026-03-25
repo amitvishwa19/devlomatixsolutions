@@ -19,7 +19,7 @@ export default function WorkspaceLayout({ children }) {
                     </div>
                     <div className='h-full relative flex-1 pt-0 overflow-hidden'>
                         <ScrollArea className='h-full relative flex-1 border  rounded-md bg-card/50  overflow-hidden pb-4'>
-                            <div className="min-h-full p-4">
+                            <div className="min-h-full">
                                 {children}
                             </div>
                             <ScrollBar orientation="horizontal" />

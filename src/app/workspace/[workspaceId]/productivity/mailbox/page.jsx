@@ -8,10 +8,10 @@ import { MailSidebar } from './_components/MailSidebar';
 import { MailList } from './_components/MailList';
 import { MailDisplay } from './_components/MailDisplay';
 import { Button } from '@/components/ui/button';
-import { 
-    Mail, 
-    Link as LinkIcon, 
-    RefreshCw, 
+import {
+    Mail,
+    Link as LinkIcon,
+    RefreshCw,
     Settings,
     LayoutGrid,
     Search,
@@ -43,8 +43,8 @@ export default function MailboxPage() {
         setLoading(true);
         try {
             const res = await axios.get(`/api/workspace/${workspaceId}/productivity/mailbox`, {
-                params: { 
-                    label: folder, 
+                params: {
+                    label: folder,
                     q: query,
                     accountId: selectedAccountId
                 }
@@ -60,13 +60,13 @@ export default function MailboxPage() {
                 } else {
                     setMessages(res.data.messages || []);
                 }
-                
+
                 setAccounts(res.data.accounts || []);
                 setLabels(res.data.labels || []);
                 if (res.data.activeAccountId && !selectedAccountId) {
                     setSelectedAccountId(res.data.activeAccountId);
                 }
-                
+
                 // If success param found, show toast
                 if (searchParams.get('success')) {
                     toast.success("Gmail connected successfully!");
@@ -109,8 +109,8 @@ export default function MailboxPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[85vh] p-8 animate-fade-in">
                 <div className="relative mb-12">
-                   <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-150 animate-pulse"></div>
-                   <div className="relative bg-card/20 backdrop-blur-xl border border-white/10 p-10 rounded-[3rem] shadow-2xl flex flex-col items-center max-w-md text-center">
+                    <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-150 animate-pulse"></div>
+                    <div className="relative bg-card/20 backdrop-blur-xl border border-white/10 p-10 rounded-[3rem] shadow-2xl flex flex-col items-center max-w-md text-center">
                         <div className="bg-primary/20 w-24 h-24 rounded-3xl flex items-center justify-center mb-8 rotate-12 group hover:rotate-0 transition-transform duration-500">
                             <Mail className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
                         </div>
@@ -118,33 +118,33 @@ export default function MailboxPage() {
                         <p className="text-sm text-muted-foreground font-bold leading-relaxed mb-10 opacity-70">
                             Sync your workspace with Gmail to manage your communications efficiently without leaving the platform.
                         </p>
-                        <Button 
+                        <Button
                             onClick={handleConnect}
                             className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
                         >
                             <LinkIcon className="w-5 h-5 mr-3" /> Link Google Account
                         </Button>
                         <div className="mt-8 pt-8 border-t border-white/5 w-full flex flex-col items-center gap-4 opacity-40">
-                             <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest"><RefreshCw className="w-3 h-3" /> Real-time sync</div>
                                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest"><Settings className="w-3 h-3" /> Secure OAuth</div>
-                             </div>
-                             <div className="text-[8px] font-mono text-muted-foreground break-all max-w-xs">
+                            </div>
+                            <div className="text-[8px] font-mono text-muted-foreground break-all max-w-xs">
                                 UID: {session?.user?.userId || "Loading..."}
-                             </div>
+                            </div>
                         </div>
-                   </div>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex h-[88vh] bg-card/5 rounded-3xl overflow-hidden border border-border/40 shadow-2xl backdrop-blur-sm animate-in zoom-in-95 duration-500">
+        <div className="flex h-full rounded-md overflow-hidden border border-border/40 shadow-2xl backdrop-blur-sm animate-in zoom-in-95 duration-500">
             {/* Folder Sidebar */}
-            <MailSidebar 
-                activeFolder={activeFolder} 
-                onFolderChange={setActiveFolder} 
+            <MailSidebar
+                activeFolder={activeFolder}
+                onFolderChange={setActiveFolder}
                 counts={counts}
                 accounts={accounts}
                 labels={labels}
@@ -154,20 +154,21 @@ export default function MailboxPage() {
 
             {/* Message List Pane */}
             <div className="w-[450px] flex flex-col h-full bg-background/20">
-                <MailList 
+                <MailList
                     messages={messages}
                     selectedId={selectedMessageId}
                     onSelect={setSelectedMessageId}
                     loading={loading}
                     search={search}
                     onSearchChange={setSearch}
+                    onRefresh={() => fetchMessages()}
                 />
             </div>
 
             {/* Message Detail Pane */}
             <div className="flex-1 flex flex-col h-full bg-background/5 overflow-hidden">
-                <MailDisplay 
-                    messageId={selectedMessageId} 
+                <MailDisplay
+                    messageId={selectedMessageId}
                     accountId={selectedAccountId}
                     onAction={handleAction}
                 />
