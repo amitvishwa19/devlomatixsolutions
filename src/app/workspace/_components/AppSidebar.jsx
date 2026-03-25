@@ -65,7 +65,7 @@ export default function AppSidebar() {
         { type: 'parent', title: "Productivity", url: `${baseProductivityPath}`, icon: "folder-kanban", category: "productivity" },
         { type: 'child', title: "Dashboard", url: `${baseProductivityPath}/`, icon: "bar-chart-3", category: "productivity" },
         { type: 'child', title: "Kanban", url: `${baseProductivityPath}/kanban`, icon: "bar-chart-3", category: "productivity" },
-        // { type: 'child', title: "Folders", url: `${baseDocPath}/folders`, icon: "bar-chart-3", category: "productivity" },
+        { type: 'child', title: "Mailbox", url: `${baseProductivityPath}/mailbox`, icon: "mail", category: "productivity" },
         // { type: 'child', title: "Uploads", url: `${baseDocPath}/uploads`, icon: "bar-chart-3", category: "productivity" },
         // { type: 'child', title: "Trash", url: `${baseDocPath}/trash`, icon: "trash", category: "productivity" },
 

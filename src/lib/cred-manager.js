@@ -173,6 +173,24 @@ async function testYouTube(credentials) {
 }
 
 /**
+ * Google / Gmail API
+ * Required keys: access_token (or accessToken)
+ */
+async function testGoogle(credentials) {
+    const token = credentials.access_token || credentials.accessToken || credentials.token;
+    if (!token) return { success: false, message: 'Missing access_token in credentials' };
+
+    const { ok, data } = await fetchWithTimeout(
+        'https://www.googleapis.com/oauth2/v2/userinfo',
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (ok && data?.email) {
+        return { success: true, message: `Connected as ${data.email}`, data };
+    }
+    return { success: false, message: data?.error?.message || 'Connection failed', data };
+}
+
+/**
  * Generic / Custom — just verifies credentials are non-empty
  */
 async function testGeneric(credentials) {
@@ -207,6 +225,8 @@ const PLATFORM_TESTERS = {
     LINKEDIN:   testLinkedIn,
     WHATSAPP:   testWhatsApp,
     YOUTUBE:    testYouTube,
+    GOOGLE:     testGoogle,
+    GMAIL:      testGoogle,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

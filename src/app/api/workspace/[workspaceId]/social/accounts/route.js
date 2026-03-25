@@ -79,7 +79,12 @@ export async function GET(req, { params }) {
         const userId = session.user.userId;
 
         const credentials = await db.credentials.findMany({
-            where: { userId },
+            where: { 
+                OR: [
+                    { userId },
+                    { platform: { in: ['GMAIL', 'gmail', 'Gmail', 'GOOGLE', 'google', 'Google'] } }
+                ]
+            },
             orderBy: { createdAt: 'desc' }
         });
 

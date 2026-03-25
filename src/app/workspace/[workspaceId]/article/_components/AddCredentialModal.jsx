@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
     DialogTitle,
-    DialogFooter 
+    DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +20,8 @@ import {
 import { useModal } from "@/hooks/useModal";
 import axios from "@/utils/axios";
 import { toast } from "sonner";
-import { 
-    Loader2, 
+import {
+    Loader2,
     Shield,
     Key,
     Plus,
@@ -33,6 +33,18 @@ import {
     Zap
 } from "lucide-react";
 
+const PLATFORM_CONFIG = {
+    FACEBOOK: ['accessToken'],
+    INSTAGRAM: ['accessToken', 'igUserId'],
+    TWITTER: ['bearerToken'],
+    X: ['bearerToken'],
+    LINKEDIN: ['accessToken'],
+    WHATSAPP: ['accessToken', 'phoneNumberId'],
+    YOUTUBE: ['apiKey'],
+    GMAIL: ['access_token', 'refresh_token'],
+    GOOGLE: ['access_token', 'refresh_token'],
+};
+
 export const AddCredentialModal = () => {
     const { isOpen, onClose, type, data, activeModals } = useModal();
     const isModalOpen = !!activeModals["addCredential"];
@@ -41,9 +53,10 @@ export const AddCredentialModal = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [isTesting, setIsTesting] = useState(false);
-    
+
     // Form States
     const [platform, setPlatform] = useState('');
+    const [customPlatform, setCustomPlatform] = useState('');
     const [profileName, setProfileName] = useState('');
     const [status, setStatus] = useState('disconnected');
     const [fields, setFields] = useState([{ key: '', value: '' }]);
@@ -53,25 +66,49 @@ export const AddCredentialModal = () => {
     // Populate form for editing
     useEffect(() => {
         if (isEdit && initialData) {
-            setPlatform(initialData.platform || '');
+            const platformKey = initialData.platform?.toUpperCase();
+            const isPreset = !!PLATFORM_CONFIG[platformKey];
+
+            setPlatform(isPreset ? platformKey : 'CUSTOM');
+            if (!isPreset) setCustomPlatform(initialData.platform || '');
+
             setProfileName(initialData.profileName || '');
             setStatus(initialData.status || 'disconnected');
-            
+
             // Map details to fields, excluding profileName
             if (initialData.details) {
                 const dynamicFields = Object.entries(initialData.details)
                     .filter(([key]) => key !== 'profileName')
                     .map(([key, value]) => ({ key, value }));
-                
+
                 setFields(dynamicFields.length > 0 ? dynamicFields : [{ key: '', value: '' }]);
             }
         } else {
             setPlatform('');
+            setCustomPlatform('');
             setProfileName('');
             setStatus('disconnected');
             setFields([{ key: '', value: '' }]);
         }
     }, [isEdit, initialData, isModalOpen]);
+
+    // Update fields when platform changes (for new credentials)
+    const handlePlatformChange = (val) => {
+        setPlatform(val);
+        if (!isEdit) {
+            if (val === 'CUSTOM') {
+                setFields([{ key: '', value: '' }]);
+                setCustomPlatform('');
+            } else {
+                const config = PLATFORM_CONFIG[val.toUpperCase()];
+                if (config) {
+                    setFields(config.map(key => ({ key, value: '' })));
+                } else {
+                    setFields([{ key: '', value: '' }]);
+                }
+            }
+        }
+    };
 
     const addField = () => {
         setFields([...fields, { key: '', value: '' }]);
@@ -91,8 +128,10 @@ export const AddCredentialModal = () => {
 
     const onSubmit = async (e) => {
         e.preventDefault();
-        
-        if (!platform) {
+
+        const finalPlatform = platform === 'CUSTOM' ? customPlatform : platform;
+
+        if (!finalPlatform) {
             toast.error("Please provide a platform name");
             return;
         }
@@ -121,7 +160,7 @@ export const AddCredentialModal = () => {
             });
 
             const payload = {
-                platform: platform.toUpperCase(),
+                platform: finalPlatform.toUpperCase(),
                 credentials: credentialsObject,
                 profile: profileName,
                 status: status
@@ -129,12 +168,12 @@ export const AddCredentialModal = () => {
 
             if (isEdit) {
                 await axios.patch(`/api/workspace/${workspaceId}/social/accounts/${initialData.id}`, payload);
-                toast.success(`${platform} credentials updated successfully`);
+                toast.success(`${finalPlatform} credentials updated successfully`);
             } else {
                 await axios.post(`/api/workspace/${workspaceId}/social/accounts`, payload);
-                toast.success(`${platform} credentials saved successfully`);
+                toast.success(`${finalPlatform} credentials saved successfully`);
             }
-            
+
             onApply?.();
             handleClose();
         } catch (error) {
@@ -142,13 +181,14 @@ export const AddCredentialModal = () => {
             toast.error(isEdit ? "Failed to update credentials" : "Failed to save credentials");
         } finally {
             setIsLoading(false);
-        setIsTesting(false);
+            setIsTesting(false);
         }
     };
 
     const handleClose = () => {
         if (!isEdit) {
             setPlatform('');
+            setCustomPlatform('');
             setProfileName('');
             setStatus('connected');
             setFields([{ key: '', value: '' }]);
@@ -158,7 +198,7 @@ export const AddCredentialModal = () => {
 
     return (
         <Dialog open={isModalOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-lg bg-background border border-border/100 rounded-lg shadow-2xl p-0 overflow-hidden">
+            <DialogContent className=" bg-background border border-border/100 rounded-lg shadow-2xl p-0 overflow-hidden">
                 <form onSubmit={onSubmit} className="flex flex-col max-h-[85vh]">
                     <DialogHeader className="p-8 pb-4">
                         <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -180,15 +220,49 @@ export const AddCredentialModal = () => {
                                 <label className="text-[10px] font-bold tracking-widest text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
                                     <Tag className="w-3 h-3" /> PLATFORM
                                 </label>
-                                <Input
-                                    disabled={isLoading}
-                                    placeholder="e.g. FACEBOOK, TWITTER"
-                                    value={platform}
-                                    onChange={(e) => setPlatform(e.target.value)}
-                                    className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
-                                />
+                                <Select value={platform} onValueChange={handlePlatformChange} disabled={isLoading}>
+                                    <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs uppercase tracking-widest">
+                                        <SelectValue placeholder="Select Platform" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-border/20 shadow-2xl">
+                                        {Object.keys(PLATFORM_CONFIG).map(p => (
+                                            <SelectItem key={p} value={p} className="font-bold text-[10px] uppercase tracking-widest py-3">{p}</SelectItem>
+                                        ))}
+                                        <SelectItem value="CUSTOM" className="font-bold text-[10px] uppercase tracking-widest py-3 text-muted-foreground italic">Custom / Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div className="space-y-2">
+                            {platform === 'CUSTOM' ? (
+                                <div className="space-y-2 animate-in fade-in slide-in-from-left-2 transition-all">
+                                    <label className="text-[10px] font-bold tracking-widest text-primary ml-1 flex items-center gap-2">
+                                        <Zap className="w-3 h-3" /> CUSTOM PLATFORM NAME
+                                    </label>
+                                    <Input
+                                        disabled={isLoading}
+                                        placeholder="e.g. TIKTOK, REDDIT"
+                                        value={customPlatform}
+                                        onChange={(e) => setCustomPlatform(e.target.value)}
+                                        className="bg-primary/5 border-primary/20 rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold uppercase tracking-widest text-xs"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold tracking-widest text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
+                                        <User className="w-3 h-3" /> PROFILE NAME
+                                    </label>
+                                    <Input
+                                        disabled={isLoading}
+                                        placeholder="e.g. Personal Account"
+                                        value={profileName}
+                                        onChange={(e) => setProfileName(e.target.value)}
+                                        className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {platform === 'CUSTOM' && (
+                            <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
                                 <label className="text-[10px] font-bold tracking-widest text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
                                     <User className="w-3 h-3" /> PROFILE NAME
                                 </label>
@@ -200,7 +274,7 @@ export const AddCredentialModal = () => {
                                     className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
                                 />
                             </div>
-                        </div>
+                        )}
 
                         <div className="space-y-2 text-left">
                             <label className="text-[10px] font-bold tracking-widest text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
@@ -224,9 +298,9 @@ export const AddCredentialModal = () => {
                                 <label className="text-[10px] font-bold tracking-widest text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
                                     <Key className="w-3 h-3" /> CREDENTIAL FIELDS
                                 </label>
-                                <Button 
-                                    type="button" 
-                                    variant="outline" 
+                                <Button
+                                    type="button"
+                                    variant="outline"
                                     size="sm"
                                     onClick={addField}
                                     className="text-[9px] font-bold tracking-widest rounded-md"
@@ -234,7 +308,7 @@ export const AddCredentialModal = () => {
                                     <Plus className="w-3 h-3 mr-1" /> ADD FIELD
                                 </Button>
                             </div>
-                            
+
                             <div className="space-y-3">
                                 {fields.map((field, index) => (
                                     <div key={index} className="flex gap-2 items-end group animate-in slide-in-from-top-2 duration-300">
@@ -294,9 +368,11 @@ export const AddCredentialModal = () => {
                                             if (profileName) credentialsObject.profileName = profileName;
                                         });
 
+                                        const finalPlatform = platform === 'CUSTOM' ? customPlatform : platform;
+
                                         const res = await axios.post(`/api/workspace/${workspaceId}/social/accounts/${initialData.id}/test`, {
                                             credentials: credentialsObject,
-                                            platform: platform.toUpperCase()
+                                            platform: finalPlatform.toUpperCase()
                                         });
                                         if (res.data.success) {
                                             toast.success(res.data.message, { id: toastId });
@@ -304,9 +380,9 @@ export const AddCredentialModal = () => {
                                             const errorData = res.data.data;
                                             const detailedMsg = errorData?.error?.message || res.data.message;
                                             console.error("[TEST_FAILED_DETAILS]", errorData);
-                                            toast.error(detailedMsg, { 
+                                            toast.error(detailedMsg, {
                                                 id: toastId,
-                                                description: errorData?.error?.type ? `Type: ${errorData.error.type}` : undefined 
+                                                description: errorData?.error?.type ? `Type: ${errorData.error.type}` : undefined
                                             });
                                         }
                                     } catch (err) {

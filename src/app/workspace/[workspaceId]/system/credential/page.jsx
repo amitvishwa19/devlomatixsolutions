@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import axios from '@/utils/axios';
 import { useModal } from '@/hooks/useModal';
-import { 
-    Plus, 
-    Search, 
-    ShieldCheck, 
-    Database, 
-    Edit2, 
-    Trash2, 
+import {
+    Plus,
+    Search,
+    ShieldCheck,
+    Database,
+    Edit2,
+    Trash2,
     MoreVertical,
     CheckCircle2,
     AlertCircle,
@@ -106,7 +106,7 @@ export default function CredentialPage() {
         }
     };
 
-    const filteredAccounts = accounts.filter(acc => 
+    const filteredAccounts = accounts.filter(acc =>
         acc.platform.toLowerCase().includes(searchQuery.toLowerCase()) ||
         acc.profileName.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -122,7 +122,7 @@ export default function CredentialPage() {
                         Manage your encrypted platform access tokens and API keys securely.
                     </p>
                 </div>
-                <Button 
+                <Button
                     onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts })}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md font-extrabold uppercase tracking-widest text-[10px] h-10 px-6 shadow-lg shadow-primary/20 transition-all active:scale-95"
                 >
@@ -200,7 +200,7 @@ export default function CredentialPage() {
                     </div>
                 </div>
             ) : filteredAccounts.length === 0 ? (
-                <div className="h-[400px] flex flex-col items-center justify-center bg-muted/5 rounded-3xl border border-dashed border-border/60">
+                <div className="h-[200px] flex flex-col items-center justify-center bg-muted/5 rounded-3xl border border-dashed border-border/60">
                     <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mb-4">
                         <Key className="w-8 h-8 text-muted-foreground/40" />
                     </div>
@@ -208,7 +208,7 @@ export default function CredentialPage() {
                     <p className="text-sm font-medium text-muted-foreground mt-1 max-w-sm text-center px-4">
                         Add your first API key or access token to start cross-platform publishing.
                     </p>
-                    <Button 
+                    <Button
                         variant="outline"
                         onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts })}
                         className="mt-6 border-dashed border-primary/20 hover:border-primary/40 text-primary font-bold text-[10px] uppercase tracking-widest rounded-md px-8"
@@ -228,23 +228,23 @@ export default function CredentialPage() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-52 rounded-2xl shadow-2xl border-border/20 p-2">
-                                        <DropdownMenuItem 
+                                        <DropdownMenuItem
                                             onClick={() => handleTestConnection(account.id, account.platform)}
                                             disabled={testingId === account.id}
                                             className="cursor-pointer font-bold px-3 py-2.5 rounded-xl gap-3 text-amber-500 hover:bg-amber-500/10"
                                         >
-                                            {testingId === account.id 
-                                                ? <Loader2 className="w-4 h-4 animate-spin" /> 
+                                            {testingId === account.id
+                                                ? <Loader2 className="w-4 h-4 animate-spin" />
                                                 : <Zap className="w-4 h-4" />
                                             } Test Connection
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem 
+                                        <DropdownMenuItem
                                             onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts, initialData: account })}
                                             className="cursor-pointer font-bold px-3 py-2.5 rounded-xl gap-3"
                                         >
                                             <Edit2 className="w-4 h-4 text-primary" /> Edit
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem 
+                                        <DropdownMenuItem
                                             onClick={() => setDeleteId(account.id)}
                                             className="cursor-pointer font-bold px-3 py-2.5 rounded-xl text-rose-500 hover:bg-rose-500/10 gap-3"
                                         >
@@ -259,8 +259,8 @@ export default function CredentialPage() {
                                     <Database className="w-6 h-6 text-primary" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="text-sm font-black tracking-tight truncate">{account.platform}</h4>
-                                    <p className="text-[10px] font-bold text-muted-foreground truncate opacity-70 uppercase tracking-wider">{account.profileName}</p>
+                                    <h4 className="text-sm font-bold truncate">{account.platform}</h4>
+                                    <p className="text-[10px] font-bold text-muted-foreground truncate opacity-70 ">{account.profileName}</p>
                                 </div>
                             </div>
 
@@ -277,12 +277,11 @@ export default function CredentialPage() {
                                 </div>
 
                                 <div className="flex items-center justify-between pt-4 border-t border-border/10">
-                                    <Badge 
-                                        className={`gap-1 font-bold text-[9px] uppercase tracking-wider px-2 h-5 border-none ${
-                                            account.expired ? 'bg-rose-500/10 text-rose-500' :
+                                    <Badge
+                                        className={`gap-1 font-bold text-[9px] uppercase tracking-wider px-2 h-5 border-none ${account.expired ? 'bg-rose-500/10 text-rose-500' :
                                             account.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500' :
-                                            'bg-muted/10 text-muted-foreground'
-                                        }`}
+                                                'bg-muted/10 text-muted-foreground'
+                                            }`}
                                     >
                                         {account.expired ? (
                                             <><AlertCircle size={10} /> Expired</>
@@ -316,7 +315,7 @@ export default function CredentialPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter className="p-8 pt-4 flex flex-row gap-4 bg-muted/20">
                         <AlertDialogCancel className="rounded-md text-[10px] font-bold tracking-widest uppercase flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleDelete();
