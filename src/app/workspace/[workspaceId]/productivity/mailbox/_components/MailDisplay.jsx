@@ -118,9 +118,9 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
     if (!message) return null;
 
     return (
-        <div className="flex-1 flex flex-col h-full min-w-0 bg-transparent animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 bg-transparent animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Toolbar */}
-            <div className="flex items-center justify-between p-3 border-b border-white/5 bg-background/40 backdrop-blur-xl">
+            <div className="flex items-center justify-between p-3 border-b border-white/5 bg-background/40 backdrop-blur-xl flex-shrink-0">
                 <div className="flex items-center gap-1">
                     <TooltipProvider>
                         <Tooltip>
@@ -176,7 +176,7 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
             </div>
 
             {/* Content Area */}
-            <ScrollArea className="flex-1 bg-background/5">
+            <ScrollArea className="flex-1 min-h-0 bg-background/5">
                 <div className="p-8 max-w-4xl mx-auto space-y-10">
                     {/* Header Info */}
                     <div className="space-y-8 animate-in slide-in-from-top-4 duration-500">

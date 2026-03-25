@@ -17,8 +17,8 @@ export const MailList = ({
     onSearchChange 
 }) => {
     return (
-        <div className="flex-1 flex flex-col min-w-0 bg-transparent border-r border-border/20">
-            <div className="p-4 border-b border-border/20 bg-background/5 backdrop-blur-sm">
+        <div className="flex-1 flex flex-col h-full min-h-0 bg-transparent border-r border-border/20">
+            <div className="p-4 border-b border-border/20 bg-background/5 backdrop-blur-sm flex-shrink-0">
                 <div className="relative group">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input
@@ -30,7 +30,7 @@ export const MailList = ({
                 </div>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-64 space-y-4 opacity-50">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />

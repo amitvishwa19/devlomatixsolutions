@@ -112,8 +112,8 @@ export const MailSidebar = ({
             </div>
 
             <div className="pt-6 border-t border-border/20 flex-1 min-h-0 flex flex-col">
-                <h3 className="px-3 text-[10px] font-bold text-muted-foreground tracking-[0.2em] mb-4 uppercase opacity-50">User Labels</h3>
-                <ScrollArea className="flex-1">
+                <h3 className="px-3 text-[10px] font-bold text-muted-foreground tracking-[0.2em] mb-4 uppercase opacity-50 flex-shrink-0">User Labels</h3>
+                <ScrollArea className="flex-1 min-h-0">
                     <div className="space-y-1 pr-3">
                         {userLabels.length > 0 ? userLabels.map(label => (
                             <Button 
