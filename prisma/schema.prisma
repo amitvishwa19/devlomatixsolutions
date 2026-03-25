@@ -778,6 +778,8 @@ model Candidate {
   parsedData      Json?
   
   applications    Application[]
+  scorecards      Scorecard[]
+  notes           AtsNote[]
   
   workspaceId     String
   userId          String
@@ -848,36 +850,47 @@ enum InterviewStatus {
 
 model Scorecard {
   id              String        @id @default(cuid())
-  applicationId   String
-  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId   String?
+  application     Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   
+  candidateId     String
+  candidate       Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
   interviewerId   String
   interviewer     User          @relation(fields: [interviewerId], references: [id], onDelete: Cascade)
-  stage           String
-  score           Float
+  
+  stage           String?
+  score           Float?        @default(0)
   feedback        String?       @db.Text
+  recommendation  String?
   attributes      Json?
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   @@index([applicationId])
+  @@index([candidateId])
   @@index([interviewerId])
 }
 
 model AtsNote {
   id              String        @id @default(cuid())
-  applicationId   String
-  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId   String?
+  application     Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   
+  candidateId     String
+  candidate       Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
   userId          String
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   text            String        @db.Text
+  isPrivate       Boolean       @default(false)
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   @@index([applicationId])
+  @@index([candidateId])
   @@index([userId])
 }
 

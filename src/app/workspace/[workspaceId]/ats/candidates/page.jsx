@@ -41,6 +41,12 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/select';
+import { CandidateModal } from '../_components/CandidateModal';
+
+import useSWR from 'swr';
+import axios from 'axios';
+
+const fetcher = url => axios.get(url).then(res => res.data);
 
 export default function TalentDatabasePage() {
     const { workspaceId } = useParams();
@@ -49,14 +55,20 @@ export default function TalentDatabasePage() {
     const [selectedDepartment, setSelectedDepartment] = useState("all");
     const [selectedStatus, setSelectedStatus] = useState("all");
 
-    const talents = [
-        { id: "c1", name: "Rahul Sharma", role: "Sr. Frontend Engineer", email: "rahul@example.com", status: "Interview", score: 4.8, location: "Delhi", applied: "2d ago", tags: ["React", "Next.js"] },
-        { id: "c2", name: "Ananya Iyer", role: "Product Designer", email: "ananya@example.com", status: "Offer", score: 4.9, location: "Mumbai", applied: "5d ago", tags: ["Figma", "UI/UX"] },
-        { id: "c3", name: "Vikram Malhotra", role: "Backend Architect", email: "vikram@example.com", status: "Screening", score: 4.2, location: "Bangalore", applied: "1w ago", tags: ["Go", "K8s"] },
-        { id: "c4", name: "Sanya Gupta", role: "HR Generalist", email: "sanya@example.com", status: "Technical", score: 3.5, location: "Pune", applied: "3d ago", tags: ["Recruitment", "Operations"] },
-        { id: "c5", name: "Amit Verma", role: "Full Stack Dev", email: "amit@example.com", status: "Rejected", score: 3.8, location: "Noida", applied: "10d ago", tags: ["Node.js", "React"] },
-        { id: "c6", name: "Meera Reddy", role: "QA Lead", email: "meera@example.com", status: "Interview", score: 4.5, location: "Hyderabad", applied: "4d ago", tags: ["Automation", "Selenium"] },
-    ];
+    const { data: candidates, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/candidates`, fetcher);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    const talents = candidates ? candidates.map(c => ({
+        id: c.id,
+        name: c.name,
+        role: c.applications?.[0]?.job?.title || "Candidate",
+        email: c.email,
+        status: c.applications?.[0]?.stage || "Applied",
+        score: c.aiMatchScore ? (c.aiMatchScore / 20).toFixed(1) : "N/A",
+        location: c.location || "N/A",
+        applied: new Date(c.createdAt).toLocaleDateString(),
+        tags: c.skills || []
+    })) : [];
 
     const filteredTalents = talents.filter(t =>
         t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,7 +88,10 @@ export default function TalentDatabasePage() {
                         <Download className="w-4 h-4 mr-2 opacity-50" />
                         Export Talent
                     </Button>
-                    <Button className="h-10 rounded-md px-6 font-black uppercase tracking-widest text-[10px] bg-primary shadow-lg shadow-primary/20">
+                    <Button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="h-10 rounded-md px-6 font-black uppercase tracking-widest text-[10px] bg-primary shadow-lg shadow-primary/20"
+                    >
                         <UserPlus className="w-4 h-4 mr-2" />
                         Add Candidate
                     </Button>
@@ -205,16 +220,29 @@ export default function TalentDatabasePage() {
                 </AnimatePresence>
             </div>
 
-            {/* Pagination Placeholder */}
-            <div className="flex items-center justify-center pt-8">
-                <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg border border-border/20 backdrop-blur-xl">
-                    <Button variant="ghost" className="h-10 w-10 rounded-xl font-bold opacity-40">1</Button>
-                    <Button variant="ghost" className="h-10 w-10 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20">2</Button>
-                    <Button variant="ghost" className="h-10 w-10 rounded-xl font-bold opacity-40">3</Button>
-                    <span className="mx-2 opacity-40">...</span>
-                    <Button variant="ghost" className="h-10 w-10 rounded-xl font-bold opacity-40">12</Button>
+            {/* Empty State */}
+            {!isLoading && filteredTalents.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-24 bg-card/10 rounded-lg border border-border/10 border-dashed">
+                    <Users className="w-16 h-16 text-muted-foreground opacity-20 mb-4" />
+                    <h3 className="text-lg font-bold opacity-60">No candidates found</h3>
+                    <p className="text-xs text-muted-foreground opacity-40">Try adjusting your filters or add a new candidate.</p>
+                    <Button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        variant="ghost" 
+                        className="mt-6 text-[10px] font-black uppercase tracking-widest text-primary"
+                    >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add First Candidate
+                    </Button>
                 </div>
-            </div>
+            )}
+
+            <CandidateModal 
+                isOpen={isAddModalOpen} 
+                onClose={() => setIsAddModalOpen(false)} 
+                workspaceId={workspaceId}
+                onSuccess={() => mutate()}
+            />
         </div>
     );
 }

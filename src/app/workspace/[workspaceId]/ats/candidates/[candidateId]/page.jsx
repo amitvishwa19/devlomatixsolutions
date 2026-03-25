@@ -48,6 +48,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 
+import useSWR from 'swr';
+
+const fetcher = url => axios.get(url).then(res => res.data);
+
 export default function CandidateProfilePage() {
     const { workspaceId, candidateId } = useParams();
     const router = useRouter();
@@ -57,17 +61,20 @@ export default function CandidateProfilePage() {
     const [isParsing, setIsParsing] = useState(false);
     const [isScoring, setIsScoring] = useState(false);
 
+    const { data: candidateData, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/candidates/${candidateId}`, fetcher);
+
     const handleGenerateOffer = async () => {
+        if (!candidateData) return;
         setIsOfferGenerating(true);
         try {
             const data = {
-                candidateName: candidate.name,
-                jobTitle: candidate.role,
+                candidateName: candidateData.name,
+                jobTitle: candidateData.applications?.[0]?.job?.title || "Position",
                 salary: "₹18,00,000 - ₹24,00,000",
                 startDate: "June 1, 2026",
             };
             const doc = generateOfferLetter(data);
-            doc.save(`Offer_Letter_${candidate.name.replace(' ', '_')}.pdf`);
+            doc.save(`Offer_Letter_${candidateData.name.replace(' ', '_')}.pdf`);
             toast.success("Offer Letter generated and downloaded!");
         } catch (error) {
             toast.error("Failed to generate offer letter");
@@ -80,12 +87,12 @@ export default function CandidateProfilePage() {
     const handleAiParse = async () => {
         setIsParsing(true);
         try {
-            // Mocking a parse call since we don't have a real file right now
             const res = await axios.post(`/api/workspace/${workspaceId}/ats/ai/parsing`, {
-                resumeText: candidate.summary // Just using summary for simulation
+                candidateId: candidateId
             });
             if (res.data.success) {
                 toast.success("AI Insights updated from resume!");
+                mutate();
             }
         } catch (error) {
             toast.error("AI Parsing failed");
@@ -94,47 +101,69 @@ export default function CandidateProfilePage() {
         }
     };
 
+    if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+    if (!candidateData) return <div>Candidate not found</div>;
+
     const candidate = {
-        name: "Rahul Sharma",
-        role: "Senior Frontend Engineer",
-        status: "Interview",
-        score: 4.8,
-        appliedAt: "2 days ago",
-        email: "rahul.sharma@example.com",
-        phone: "+91 98765 43210",
-        location: "Delhi, India (Remote)",
-        summary: "Highly skilled Frontend Engineer with 6+ years of experience in React, Next.js, and complex state management. Proven track record of leading UI teams for high-scale SaaS products.",
-        skills: ["React", "Next.js", "TypeScript", "Tailwind CSS", "GraphQL", "Framer Motion"],
+        name: candidateData.name,
+        role: candidateData.applications?.[0]?.job?.title || "Candidate",
+        status: candidateData.applications?.[0]?.stage || "Applied",
+        score: candidateData.aiMatchScore ? (candidateData.aiMatchScore / 20).toFixed(1) : "N/A",
+        appliedAt: new Date(candidateData.createdAt).toLocaleDateString(),
+        email: candidateData.email,
+        phone: candidateData.phone || "N/A",
+        location: candidateData.location || "N/A",
+        summary: candidateData.aiInsights?.summary || "No summary available.",
+        skills: candidateData.skills || [],
         aiInsights: {
-            matchingScore: 92,
-            summary: "Strong technical fit for the Senior Frontend role. Deep expertise in modern React patterns and performance optimization. Candidate has previously worked at two unicorn startups, suggesting high adaptability and scale experience.",
-            pros: ["Expert in Next.js & App Router", "Strong UI/UX sensibility", "Previous leadership experience"],
-            cons: ["Limited experience with backend (Go/Node) based on resume"]
+            matchingScore: candidateData.aiMatchScore || 0,
+            summary: candidateData.aiInsights?.summary || "Deep analysis pending...",
+            pros: candidateData.aiInsights?.pros || [],
+            cons: candidateData.aiInsights?.cons || []
         },
-        experience: [
-            { company: "TechFlow Labs", role: "Senior Frontend Engineer", period: "2020 - Present", description: "Leading the development of a real-time collaboration dashboard used by 100k+ users." },
-            { company: "Innovate Digital", role: "Frontend Developer", period: "2018 - 2020", description: "Managed a component library shared across 5 products." }
-        ],
-        education: [
-            { degree: "B.Tech in Computer Science", school: "IIT Delhi", year: "2014 - 2018" }
-        ],
+        experience: candidateData.experience || [],
+        education: candidateData.education || [],
         timeline: [
-            { stage: "Hired", date: null, status: "pending" },
-            { stage: "Offer Extended", date: null, status: "pending" },
-            { stage: "Technical Interview", date: "Today, 4:00 PM", status: "active" },
-            { stage: "Screening", date: "Mar 22, 2026", status: "completed" },
-            { stage: "Applied", date: "Mar 20, 2026", status: "completed" }
+            { stage: "Applied", date: new Date(candidateData.createdAt).toLocaleDateString(), status: "completed" }
         ],
-        scorecards: [
-            { interviewer: "Amit Singh", stage: "Technical Round", score: 4.5, date: "Mar 23, 2026", feedback: "Excellent grasp of system design. Explained React rendering cycle perfectly." },
-            { interviewer: "Neha Kapur", stage: "Product Fit", score: 5.0, date: "Mar 22, 2026", feedback: "Very strong user-centric approach. Clearly thinks about business impact." }
-        ],
-        notes: [
-            { author: "Hiring Manager", text: "Rahul seems like a great culture fit. He asked insightful questions about our technical debt strategy.", date: "Today, 10:15 AM" }
-        ],
-        communications: [
-            { type: 'email', subject: 'Interview Invitation', status: 'delivered', date: 'Mar 22, 2026' }
-        ]
+        scorecards: candidateData.scorecards || [],
+        notes: candidateData.notes || [],
+        communications: []
+    };
+
+    const [noteText, setNoteText] = useState("");
+
+    const handleSubmitScorecard = async (data) => {
+        try {
+            await axios.post(`/api/workspace/${workspaceId}/ats/scorecards`, {
+                candidateId,
+                applicationId: candidateData.applications?.[0]?.id,
+                scores: data.scores,
+                feedback: data.overallFeedback,
+                overallScore: Object.values(data.scores).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0) / 5,
+                recommendation: data.finalRecommendation
+            });
+            toast.success("Scorecard submitted successfully!");
+            setIsScorecardOpen(false);
+            mutate();
+        } catch (error) {
+            toast.error("Failed to submit scorecard");
+        }
+    };
+
+    const handlePostNote = async () => {
+        if (!noteText.trim()) return;
+        try {
+            await axios.post(`/api/workspace/${workspaceId}/ats/notes`, {
+                candidateId,
+                text: noteText
+            });
+            setNoteText("");
+            toast.success("Note posted!");
+            mutate();
+        } catch (error) {
+            toast.error("Failed to post note");
+        }
     };
 
     return (
@@ -359,11 +388,7 @@ export default function CandidateProfilePage() {
                             </div>
                             <Scorecards 
                                 candidate={candidate} 
-                                onSubmit={(data) => {
-                                    console.log("Scorecard Submitted:", data);
-                                    toast.success("Scorecard submitted successfully!");
-                                    setIsScorecardOpen(false);
-                                }} 
+                                onSubmit={handleSubmitScorecard} 
                             />
                         </div>
                     ) : (
@@ -375,11 +400,11 @@ export default function CandidateProfilePage() {
                                             <CardHeader className="flex flex-row items-center justify-between p-8 pb-4">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-black">
-                                                        {card.interviewer.split(' ').map(n => n[0]).join('')}
+                                                        {(card.interviewer?.name || "TM").split(' ').map(n => n[0]).join('')}
                                                     </div>
                                                     <div>
                                                         <CardTitle className="text-lg font-black tracking-tight">{card.stage}</CardTitle>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">by {card.interviewer} • {card.date}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">by {card.interviewer?.name || "Team Member"} • {new Date(card.createdAt).toLocaleDateString()}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20">
@@ -392,27 +417,15 @@ export default function CandidateProfilePage() {
                                                     "{card.feedback}"
                                                 </div>
                                                 <div className="grid grid-cols-3 gap-8 mt-8">
-                                                    <div className="space-y-2">
-                                                        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest mb-1">
-                                                            <span>Technical</span>
-                                                            <span>90%</span>
+                                                    {Object.entries(card.attributes || {}).slice(0, 3).map(([key, val], idx) => (
+                                                        <div key={key} className="space-y-2">
+                                                            <div className="flex justify-between text-[9px] font-black uppercase tracking-widest mb-1">
+                                                                <span className="capitalize">{key}</span>
+                                                                <span>{Number(val) * 20}%</span>
+                                                            </div>
+                                                            <Progress value={Number(val) * 20} className={`h-1.5 ${idx === 1 ? 'bg-emerald-500/10' : idx === 2 ? 'bg-blue-500/10' : 'bg-primary/10'}`} />
                                                         </div>
-                                                        <Progress value={90} className="h-1.5 bg-primary/10" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest mb-1">
-                                                            <span>Culture</span>
-                                                            <span>95%</span>
-                                                        </div>
-                                                        <Progress value={95} className="h-1.5 bg-emerald-500/10" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest mb-1">
-                                                            <span>Soft Skills</span>
-                                                            <span>85%</span>
-                                                        </div>
-                                                        <Progress value={85} className="h-1.5 bg-blue-500/10" />
-                                                    </div>
+                                                    ))}
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -539,11 +552,11 @@ export default function CandidateProfilePage() {
                                             </Avatar>
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-black">{note.author}</span>
-                                                    <span className="text-[10px] font-bold opacity-30 uppercase">{note.date}</span>
+                                                    <span className="text-sm font-black">{note.user?.name || note.author || "Team Member"}</span>
+                                                    <span className="text-[10px] font-bold opacity-30 uppercase">{new Date(note.createdAt || Date.now()).toLocaleDateString()}</span>
                                                 </div>
                                                 <p className="text-sm font-medium leading-relaxed opacity-70 italic">
-                                                    "{note.text}"
+                                                    "{note.content || note.text}"
                                                 </p>
                                             </div>
                                         </div>
@@ -555,10 +568,15 @@ export default function CandidateProfilePage() {
                                 <Textarea 
                                     placeholder="Type a team note... Use @ to mention colleagues"
                                     className="min-h-[120px] rounded-lg bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary font-medium text-sm p-6"
+                                    value={noteText}
+                                    onChange={(e) => setNoteText(e.target.value)}
                                 />
                                 <div className="flex items-center justify-between">
                                     <p className="text-[10px] font-bold text-muted-foreground opacity-40 italic">Notes are only visible to the hiring team.</p>
-                                    <Button className="h-12 px-8 rounded-lg bg-primary font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
+                                    <Button 
+                                        onClick={handlePostNote}
+                                        className="h-12 px-8 rounded-lg bg-primary font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
+                                    >
                                         Post Note <Send size={12} className="ml-2" />
                                     </Button>
                                 </div>

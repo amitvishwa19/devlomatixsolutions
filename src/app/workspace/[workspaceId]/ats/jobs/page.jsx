@@ -26,24 +26,25 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 
+import useSWR from 'swr';
+import axios from 'axios';
+
+const fetcher = url => axios.get(url).then(res => res.data);
+
 export default function JobManagementPage() {
     const { workspaceId } = useParams();
     const router = useRouter();
 
-    const jobs = [
-        { id: 1, title: "Senior Frontend Engineer", dept: "Engineering", location: "Remote", applicants: 42, status: "Published", type: "Full-time" },
-        { id: 2, title: "Product Designer", dept: "Design", location: "Hybrid", applicants: 28, status: "Published", type: "Full-time" },
-        { id: 3, title: "Marketing Lead", dept: "Marketing", location: "Delhi, India", applicants: 15, status: "Urgent", type: "Contract" },
-        { id: 4, title: "Backend Developer (Go)", dept: "Engineering", location: "Remote", applicants: 0, status: "Draft", type: "Full-time" },
-        { id: 5, title: "Human Resources Manager", dept: "People", location: "Remote", applicants: 110, status: "Closed", type: "Full-time" },
-    ];
+    const { data: jobs, isLoading } = useSWR(`/api/workspace/${workspaceId}/ats/jobs`, fetcher);
+
+    const displayJobs = jobs || [];
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'Published': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-            case 'Urgent': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-            case 'Draft': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-            case 'Closed': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+            case 'OPEN': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+            case 'DRAFT': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+            case 'CLOSED': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+            case 'ARCHIVED': return 'bg-muted/40 text-muted-foreground border-border/20';
             default: return 'bg-secondary text-secondary-foreground';
         }
     };
@@ -116,13 +117,14 @@ export default function JobManagementPage() {
                         </thead>
                         <tbody>
                             <AnimatePresence mode="popLayout">
-                                {jobs.map((job, i) => (
+                                {displayJobs.map((job, i) => (
                                     <motion.tr
                                         key={job.id}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
                                         className="border-b border-border/10 hover:bg-primary/5 transition-colors group cursor-pointer"
+                                        onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs/${job.id}`)}
                                     >
                                         <td className="p-6">
                                             <div className="flex items-center gap-4">
@@ -137,18 +139,18 @@ export default function JobManagementPage() {
                                         </td>
                                         <td className="p-6">
                                             <Badge variant="outline" className="text-[10px] font-bold border-border/40 bg-muted/20 px-3 py-1 rounded-lg">
-                                                {job.dept}
+                                                {job.department || 'N/A'}
                                             </Badge>
                                         </td>
                                         <td className="p-6">
                                             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground opacity-60">
                                                 <MapPin size={14} className="text-primary" />
-                                                {job.location}
+                                                {job.location || 'Remote'}
                                             </div>
                                         </td>
                                         <td className="p-6 text-center">
                                             <div className="inline-flex flex-col items-center justify-center min-w-[60px] p-2 rounded-xl bg-muted/20 border border-border/10">
-                                                <span className="text-sm font-black">{job.applicants}</span>
+                                                <span className="text-sm font-black">{job._count?.applications || 0}</span>
                                                 <span className="text-[9px] font-bold uppercase text-muted-foreground opacity-40">Total</span>
                                             </div>
                                         </td>
@@ -199,7 +201,7 @@ export default function JobManagementPage() {
                     </table>
                 </div>
                 <div className="p-6 border-t border-border/40 bg-muted/5 flex items-center justify-between">
-                    <p className="text-xs font-bold text-muted-foreground opacity-40">Showing {jobs.length} total positions</p>
+                    <p className="text-xs font-bold text-muted-foreground opacity-40">Showing {displayJobs.length} total positions</p>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" disabled className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest border-border/40 opacity-50">Previous</Button>
                         <Button variant="outline" size="sm" disabled className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest border-border/40 opacity-50">Next</Button>

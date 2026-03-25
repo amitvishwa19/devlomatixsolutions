@@ -13,8 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export const RecentApplicants = () => {
-    const applicants = [
+export const RecentApplicants = ({ applicants = [] }) => {
+    const defaultApplicants = [
         { 
             name: "Rahul Sharma", 
             role: "Frontend Dev", 
@@ -30,24 +30,17 @@ export const RecentApplicants = () => {
             appliedAt: "5h ago", 
             avatar: null,
             status: "Applied"
-        },
-        { 
-            name: "Amit Varma", 
-            role: "Backend Lead", 
-            score: 4.9, 
-            appliedAt: "1d ago", 
-            avatar: null,
-            status: "Interview"
-        },
-        { 
-            name: "Neha Gupta", 
-            role: "UX Researcher", 
-            score: null, 
-            appliedAt: "2d ago", 
-            avatar: null,
-            status: "Applied"
         }
     ];
+
+    const displayApplicants = applicants.length > 0 ? applicants.map(app => ({
+        name: app.candidate?.name || "Anonymous",
+        role: app.job?.title || "Unknown Position",
+        score: app.candidate?.aiMatchScore ? (app.candidate.aiMatchScore / 20).toFixed(1) : null,
+        appliedAt: new Date(app.createdAt).toLocaleDateString(),
+        avatar: app.candidate?.avatarUrl,
+        status: app.stage
+    })) : defaultApplicants;
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -70,7 +63,7 @@ export const RecentApplicants = () => {
             </CardHeader>
             <CardContent className="px-2">
                 <div className="space-y-1">
-                    {applicants.map((applicant, i) => (
+                    {displayApplicants.map((applicant, i) => (
                         <motion.div
                             key={i}
                             initial={{ opacity: 0, x: 20 }}

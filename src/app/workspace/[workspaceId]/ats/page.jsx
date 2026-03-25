@@ -24,9 +24,16 @@ import { StatCards } from './_components/StatCards';
 import { RecentApplicants } from './_components/RecentApplicants';
 import { PipelineSummary } from './_components/PipelineSummary';
 
+import useSWR from 'swr';
+import axios from 'axios';
+
+const fetcher = url => axios.get(url).then(res => res.data);
+
 export default function AtsDashboard() {
     const { workspaceId } = useParams();
     const router = useRouter();
+
+    const { data: summary, isLoading } = useSWR(`/api/workspace/${workspaceId}/ats/summary`, fetcher);
 
     return (
         <div className="flex flex-col gap-4 p-4 animate-in fade-in duration-700">
@@ -54,12 +61,15 @@ export default function AtsDashboard() {
             </div>
 
             {/* Metrics Overview */}
-            <StatCards />
+            <StatCards stats={summary?.stats} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content: Pipeline Summary */}
                 <div className="lg:col-span-2 space-y-8">
-                    <PipelineSummary />
+                    <PipelineSummary 
+                        stats={summary?.pipelineStats} 
+                        nextInterview={summary?.interviews?.[0]} 
+                    />
 
                     {/* Active Jobs Card - Quick Peek */}
                     <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
@@ -71,12 +81,8 @@ export default function AtsDashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {[
-                                    { title: "Senior Frontend Engineer", dept: "Engineering", applicants: 42, status: "Active" },
-                                    { title: "Product Designer", dept: "Design", applicants: 28, status: "Active" },
-                                    { title: "Marketing Lead", dept: "Marketing", applicants: 15, status: "Urgent" },
-                                ].map((job, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/10 hover:border-primary/20 transition-all cursor-pointer group">
+                                {(summary?.focusJobs || []).map((job, i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/10 hover:border-primary/20 transition-all cursor-pointer group" onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)}>
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                 <Briefcase size={20} />
@@ -97,6 +103,9 @@ export default function AtsDashboard() {
                                         </div>
                                     </div>
                                 ))}
+                                {(!summary?.focusJobs || summary.focusJobs.length === 0) && (
+                                    <p className="text-center py-8 text-xs font-bold opacity-40 italic">No active jobs to display.</p>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -104,7 +113,7 @@ export default function AtsDashboard() {
 
                 {/* Sidebar: Recent Applicants */}
                 <div className="lg:col-span-1 space-y-8">
-                    <RecentApplicants />
+                    <RecentApplicants applicants={summary?.recentApplicants} />
 
                     {/* Interview Schedule - Quick Peek */}
                     <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg shadow-2xl shadow-black/5">
@@ -116,10 +125,7 @@ export default function AtsDashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {[
-                                    { name: "Rahul Verma", time: "10:00 AM", role: "Frontend" },
-                                    { name: "Sneha Kapur", time: "02:30 PM", role: "Design" },
-                                ].map((int, i) => (
+                                {(summary?.interviews || []).map((int, i) => (
                                     <div key={i} className="flex gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
                                         <div className="flex flex-col items-center justify-center min-w-[60px] border-r border-primary/20 pr-4">
                                             <span className="text-xs font-black text-primary">{int.time.split(' ')[0]}</span>
@@ -131,6 +137,9 @@ export default function AtsDashboard() {
                                         </div>
                                     </div>
                                 ))}
+                                {(!summary?.interviews || summary.interviews.length === 0) && (
+                                    <p className="text-center py-4 text-[10px] font-bold opacity-40 italic">No interviews scheduled today.</p>
+                                )}
                             </div>
                             <Button variant="ghost" className="w-full mt-6 text-[10px] font-black uppercase tracking-[0.2em] opacity-40 hover:opacity-100">
                                 View Full Schedule

@@ -3,16 +3,45 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
+import { prisma } from "@/lib/prisma";
+
 export async function POST(req, { params }) {
     try {
         const { workspaceId } = await params;
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        const { candidateProfile, jobDescription } = await req.json();
+        const { candidateId, jobId, candidateProfile, jobDescription } = await req.json();
 
-        if (!candidateProfile || !jobDescription) {
-            return NextResponse.json({ message: "Candidate profile and job description are required" }, { status: 400 });
+        if (!candidateId && !candidateProfile) {
+            return NextResponse.json({ message: "Candidate ID or Profile is required" }, { status: 400 });
+        }
+
+        let profileToScore = candidateProfile;
+        let jdToScore = jobDescription;
+
+        if (candidateId) {
+            const candidate = await prisma.candidate.findUnique({
+                where: { id: candidateId },
+                include: { applications: { include: { job: true } } }
+            });
+            if (!candidate) return NextResponse.json({ message: "Candidate not found" }, { status: 404 });
+            
+            profileToScore = {
+                name: candidate.name,
+                skills: candidate.skills,
+                experience: candidate.experience,
+                summary: candidate.aiInsights?.summary
+            };
+
+            if (!jdToScore) {
+                // Use the first application job if jobId not provided
+                const job = jobId 
+                    ? await prisma.job.findUnique({ where: { id: jobId } })
+                    : candidate.applications?.[0]?.job;
+                
+                jdToScore = job?.description || job?.title || "Standard Position";
+            }
         }
 
         const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMENI_API_KEY;
@@ -33,10 +62,10 @@ export async function POST(req, { params }) {
             You are an expert recruitment AI. Compare the candidate's profile with the provided job description and evaluate their fit.
             
             Candidate Profile:
-            ${JSON.stringify(candidateProfile)}
+            ${JSON.stringify(profileToScore)}
             
             Job Description:
-            ${jobDescription}
+            ${jdToScore}
             
             Provide a strictly structured JSON response with:
             - score (Number, 0-100)
@@ -51,6 +80,20 @@ export async function POST(req, { params }) {
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         const scoreData = JSON.parse(responseText);
+
+        if (candidateId) {
+            await prisma.candidate.update({
+                where: { id: candidateId },
+                data: {
+                    aiMatchScore: scoreData.score,
+                    aiInsights: {
+                        summary: scoreData.summary,
+                        pros: scoreData.strengths || [],
+                        cons: scoreData.gaps || []
+                    }
+                }
+            });
+        }
 
         return NextResponse.json({ 
             success: true,

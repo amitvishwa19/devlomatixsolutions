@@ -20,20 +20,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const INITIAL_STAGES = [
-    { id: 'applied', title: 'Applied', color: 'bg-blue-500' },
-    { id: 'screening', title: 'Screening', color: 'bg-amber-500' },
-    { id: 'interview', title: 'Interview', color: 'bg-indigo-500' },
-    { id: 'offered', title: 'Offered', color: 'bg-emerald-500' },
-    { id: 'hired', title: 'Hired', color: 'bg-violet-500' }
-];
+import useSWR from 'swr';
+import axios from 'axios';
 
-const MOCK_CANDIDATES = [
-    { id: 'c1', name: 'Rahul Sharma', role: 'Frontend Dev', stage: 'applied', score: 4.8, appliedAt: '2h ago' },
-    { id: 'c2', name: 'Priya Patel', role: 'Frontend Dev', stage: 'applied', score: 4.2, appliedAt: '5h ago' },
-    { id: 'c3', name: 'Amit Varma', role: 'Frontend Dev', stage: 'screening', score: 4.9, appliedAt: '1d ago' },
-    { id: 'c4', name: 'Sneha Kapur', role: 'Frontend Dev', stage: 'interview', score: 4.5, appliedAt: '3d ago' },
-    { id: 'c5', name: 'Vikram Singh', role: 'Frontend Dev', stage: 'offered', score: 4.7, appliedAt: '1w ago' },
+const fetcher = url => axios.get(url).then(res => res.data);
+
+const STAGE_MAP = [
+    { id: 'APPLIED', title: 'Applied', color: 'bg-blue-500' },
+    { id: 'SCREENING', title: 'Screening', color: 'bg-amber-500' },
+    { id: 'INTERVIEW', title: 'Interview', color: 'bg-indigo-500' },
+    { id: 'OFFERED', title: 'Offered', color: 'bg-emerald-500' },
+    { id: 'HIRED', title: 'Hired', color: 'bg-violet-500' }
 ];
 
 export default function CandidatePipelinePage() {
@@ -42,10 +39,30 @@ export default function CandidatePipelinePage() {
     const searchParams = useSearchParams();
     const jobId = searchParams.get('jobId');
 
-    const [candidates, setCandidates] = useState(MOCK_CANDIDATES);
+    const { data: job } = useSWR(jobId ? `/api/workspace/${workspaceId}/ats/jobs/${jobId}` : null, fetcher);
+    const { data: applications, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/applications${jobId ? `?jobId=${jobId}` : ''}`, fetcher);
+
+    const updateStage = async (applicationId, newStage) => {
+        try {
+            await axios.put(`/api/workspace/${workspaceId}/ats/applications`, { applicationId, stage: newStage });
+            mutate();
+        } catch (error) {
+            console.error("Failed to update stage:", error);
+        }
+    };
 
     const getStageCandidates = (stageId) => {
-        return candidates.filter(c => c.stage === stageId);
+        if (!applications) return [];
+        return applications
+            .filter(app => app.stage === stageId)
+            .map(app => ({
+                id: app.id,
+                candidateId: app.candidateId,
+                name: app.candidate.name,
+                role: app.job.title,
+                score: app.candidate.aiMatchScore ? (app.candidate.aiMatchScore / 20).toFixed(1) : "N/A",
+                appliedAt: new Date(app.createdAt).toLocaleDateString()
+            }));
     };
 
     return (
@@ -62,9 +79,9 @@ export default function CandidatePipelinePage() {
                             <span className="text-primary/60">Pipeline</span>
                         </div>
                         <h1 className="text-3xl font-black tracking-tight tracking-tighter flex items-center gap-3">
-                            Senior Frontend Engineer
+                            {job?.title || "Recruitment Pipeline"}
                             <Badge variant="outline" className="h-6 rounded-lg bg-primary/5 text-primary border-primary/20 font-black uppercase tracking-widest text-[9px] px-3">
-                                Active Job
+                                {job?.status || "Active"} Job
                             </Badge>
                         </h1>
                     </div>
@@ -87,7 +104,7 @@ export default function CandidatePipelinePage() {
             {/* Kanban Board */}
             <div className="flex-1 overflow-x-auto p-8 pt-0 custom-scrollbar">
                 <div className="inline-flex gap-6 h-full min-w-full">
-                    {INITIAL_STAGES.map((stage) => (
+                    {STAGE_MAP.map((stage) => (
                         <div key={stage.id} className="w-[320px] shrink-0 flex flex-col gap-4">
                             {/* Stage Header */}
                             <div className="flex items-center justify-between px-2">
@@ -115,7 +132,7 @@ export default function CandidatePipelinePage() {
                                         animate={{ opacity: 1, scale: 1 }}
                                         whileHover={{ y: -4 }}
                                         className="p-5 rounded-lg bg-card/60 backdrop-blur-xl border border-border/40 shadow-xl shadow-black/5 cursor-pointer group hover:border-primary/40 transition-all"
-                                        onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.id}`)}
+                                        onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.candidateId}`)}
                                     >
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-3">

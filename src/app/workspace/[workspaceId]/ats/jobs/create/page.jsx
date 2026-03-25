@@ -29,21 +29,45 @@ import {
     SelectValue 
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import axios from 'axios';
 import TipTap from '@/components/global/TipTap';
 
 export default function CreateJobPage() {
     const { workspaceId } = useParams();
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [title, setTitle] = useState("");
+    const [department, setDepartment] = useState("");
+    const [location, setLocation] = useState("");
+    const [type, setType] = useState("");
+    const [salaryRange, setSalaryRange] = useState("");
     const [description, setDescription] = useState('<h1>Job Description</h1><p>Describe the role, responsibilities, and impact here...</p>');
 
     const handlePublish = async () => {
+        if (!title || !description) {
+            toast.error("Please provide at least a title and description");
+            return;
+        }
+
         setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsSubmitting(false);
-        toast.success("Job position published successfully!");
-        router.push(`/workspace/${workspaceId}/ats/jobs`);
+        try {
+            await axios.post(`/api/workspace/${workspaceId}/ats/jobs`, {
+                title,
+                description,
+                department,
+                location,
+                type,
+                salaryRange,
+                status: 'OPEN' // Default to open when publishing
+            });
+            toast.success("Job position published successfully!");
+            router.push(`/workspace/${workspaceId}/ats/jobs`);
+        } catch (error) {
+            console.error("Failed to publish job:", error);
+            toast.error("Failed to publish job position");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -93,35 +117,40 @@ export default function CreateJobPage() {
                         <CardContent className="p-8 space-y-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Job Title</label>
-                                <Input placeholder="e.g. Senior Frontend Engineer" className="bg-muted/30 border-none h-14 rounded-lg text-base font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" />
+                                <Input 
+                                    placeholder="e.g. Senior Frontend Engineer" 
+                                    className="bg-muted/30 border-none h-14 rounded-lg text-base font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                />
                             </div>
 
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Department</label>
-                                    <Select>
+                                    <Select value={department} onValueChange={setDepartment}>
                                         <SelectTrigger className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner">
                                             <SelectValue placeholder="Select Department" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
-                                            <SelectItem value="eng">Engineering</SelectItem>
-                                            <SelectItem value="des">Design</SelectItem>
-                                            <SelectItem value="mkt">Marketing</SelectItem>
-                                            <SelectItem value="hr">Human Resources</SelectItem>
+                                            <SelectItem value="Engineering">Engineering</SelectItem>
+                                            <SelectItem value="Design">Design</SelectItem>
+                                            <SelectItem value="Marketing">Marketing</SelectItem>
+                                            <SelectItem value="HR">Human Resources</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Employment Type</label>
-                                    <Select>
+                                    <Select value={type} onValueChange={setType}>
                                         <SelectTrigger className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner">
                                             <SelectValue placeholder="Select Type" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
-                                            <SelectItem value="ft">Full-time</SelectItem>
-                                            <SelectItem value="pt">Part-time</SelectItem>
-                                            <SelectItem value="ct">Contract</SelectItem>
-                                            <SelectItem value="int">Internship</SelectItem>
+                                            <SelectItem value="FULL_TIME">Full-time</SelectItem>
+                                            <SelectItem value="PART_TIME">Part-time</SelectItem>
+                                            <SelectItem value="CONTRACT">Contract</SelectItem>
+                                            <SelectItem value="INTERNSHIP">Internship</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -130,11 +159,21 @@ export default function CreateJobPage() {
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Location</label>
-                                    <Input placeholder="e.g. Remote, Delhi" className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner" />
+                                    <Input 
+                                        placeholder="e.g. Remote, Delhi" 
+                                        className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner" 
+                                        value={location}
+                                        onChange={(e) => setLocation(e.target.value)}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Salary Range</label>
-                                    <Input placeholder="e.g. 15L - 25L PA" className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner" />
+                                    <Input 
+                                        placeholder="e.g. 15L - 25L PA" 
+                                        className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner" 
+                                        value={salaryRange}
+                                        onChange={(e) => setSalaryRange(e.target.value)}
+                                    />
                                 </div>
                             </div>
                         </CardContent>

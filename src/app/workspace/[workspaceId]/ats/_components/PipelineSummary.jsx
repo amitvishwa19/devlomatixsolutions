@@ -10,18 +10,23 @@ import {
     Search,
     Play
 } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 
-export const PipelineSummary = () => {
-    const stages = [
-        { label: "Applied", count: 428, color: "bg-blue-500", progress: 100 },
-        { label: "Screened", count: 156, color: "bg-amber-500", progress: 65 },
-        { label: "Interviewed", count: 48, color: "bg-primary", progress: 40 },
-        { label: "Offered", count: 12, color: "bg-emerald-500", progress: 15 },
-        { label: "Hired", count: 8, color: "bg-indigo-500", progress: 10 }
+export const PipelineSummary = ({ stats, nextInterview }) => {
+    const { workspaceId } = useParams();
+    const router = useRouter();
+    const defaultStages = [
+        { label: "Applied", count: 0, color: "bg-blue-500", progress: 100 },
+        { label: "Screening", count: 0, color: "bg-amber-500", progress: 80 },
+        { label: "Technical", count: 0, color: "bg-primary", progress: 60 },
+        { label: "Cultural", count: 0, color: "bg-emerald-500", progress: 40 },
+        { label: "Offer", count: 0, color: "bg-indigo-500", progress: 20 }
     ];
+
+    const displayStages = stats || defaultStages;
 
     return (
         <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
@@ -36,7 +41,7 @@ export const PipelineSummary = () => {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                    {stages.map((stage, i) => (
+                    {displayStages.map((stage, i) => (
                         <motion.div
                             key={i}
                             initial={{ opacity: 0, y: 20 }}
@@ -71,10 +76,15 @@ export const PipelineSummary = () => {
                         </div>
                         <div>
                             <h4 className="text-sm font-black">Upcoming Interviews</h4>
-                            <p className="text-[10px] font-bold text-muted-foreground opacity-60 uppercase tracking-widest">Next scheduled: 10:30 AM with Rohit Sharma</p>
+                            <p className="text-[10px] font-bold text-muted-foreground opacity-60 uppercase tracking-widest">
+                                {nextInterview ? `Next scheduled: ${nextInterview.time} with ${nextInterview.name}` : "No upcoming interviews scheduled"}
+                            </p>
                         </div>
                     </div>
-                    <Button className="rounded-lg h-10 px-6 font-black uppercase tracking-widest text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all">
+                    <Button 
+                        onClick={() => router.push(`/workspace/${workspaceId}/ats/interviews/${nextInterview?.id || 'demo-session'}`)}
+                        className="rounded-lg h-10 px-6 font-black uppercase tracking-widest text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
+                    >
                         Launch Interview Space <Play size={12} className="ml-2 fill-current" />
                     </Button>
                 </div>

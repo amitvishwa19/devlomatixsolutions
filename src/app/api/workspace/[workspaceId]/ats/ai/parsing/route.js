@@ -3,16 +3,31 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
+import { prisma } from "@/lib/prisma";
+
 export async function POST(req, { params }) {
     try {
         const { workspaceId } = await params;
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        const { resumeUrl, resumeText } = await req.json();
+        const { candidateId, resumeUrl, resumeText } = await req.json();
 
-        if (!resumeUrl && !resumeText) {
-            return NextResponse.json({ message: "Resume content or URL is required" }, { status: 400 });
+        if (!candidateId && !resumeText && !resumeUrl) {
+            return NextResponse.json({ message: "Candidate ID or Resume content is required" }, { status: 400 });
+        }
+
+        let resumeContent = resumeText;
+        let candidate;
+
+        if (candidateId) {
+            candidate = await prisma.candidate.findUnique({
+                where: { id: candidateId }
+            });
+            if (!candidate) return NextResponse.json({ message: "Candidate not found" }, { status: 404 });
+            
+            // In a real app, we might download the resume from resumeUrl if text is missing
+            // For now, we assume resumeText or simulation
         }
 
         const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMENI_API_KEY;
@@ -51,6 +66,26 @@ export async function POST(req, { params }) {
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         const parsedData = JSON.parse(responseText);
+
+        if (candidateId) {
+            await prisma.candidate.update({
+                where: { id: candidateId },
+                data: {
+                    name: parsedData.name || undefined,
+                    email: parsedData.email || undefined,
+                    phone: parsedData.phone || undefined,
+                    location: parsedData.location || undefined,
+                    skills: parsedData.skills || [],
+                    experience: parsedData.experience,
+                    education: parsedData.education,
+                    aiInsights: {
+                        summary: parsedData.summary,
+                        pros: parsedData.skills?.slice(0, 3) || [], // Basic mapping if pros not in prompt
+                        cons: []
+                    }
+                }
+            });
+        }
 
         return NextResponse.json({ 
             success: true,
