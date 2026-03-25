@@ -8,10 +8,12 @@ import {
     ArrowRight,
     Building2,
     DollarSign,
-    Zap
+    Zap,
+    History
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { formatDistanceToNow } from 'date-fns';
 
 export const JobCard = ({ job, onApply }) => {
     return (
@@ -35,7 +37,7 @@ export const JobCard = ({ job, onApply }) => {
                             <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-md">
                                 {job.department}
                             </Badge>
-                            {job.postedAt.includes('day') && (
+                            {((job.createdAt && (new Date() - new Date(job.createdAt)) < 7 * 24 * 60 * 60 * 1000) || (job.postedAt && job.postedAt.includes('day'))) && (
                                 <Badge variant="outline" className="text-[10px] font-bold border-amber-500/30 text-amber-500 bg-amber-500/5 px-2 py-0.5 rounded-md flex items-center gap-1">
                                     <Zap size={10} className="fill-amber-500" /> NEW
                                 </Badge>
@@ -43,7 +45,7 @@ export const JobCard = ({ job, onApply }) => {
                         </div>
                         <h3 className="text-xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-1">{job.title}</h3>
                         <p className="text-sm font-bold text-muted-foreground flex items-center gap-1.5 opacity-70">
-                            <Building2 size={14} /> {job.company}
+                            <Building2 size={14} /> {job.company || 'Devlomatix Solutions'}
                         </p>
                     </div>
                 </div>
@@ -66,13 +68,13 @@ export const JobCard = ({ job, onApply }) => {
                         <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
                             <DollarSign size={12} className="text-primary" />
                         </div>
-                        <span>{job.salary}</span>
+                        <span>{job.salaryRange || job.salary || 'Competitive'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
                         <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
                             <Clock size={12} className="text-primary" />
                         </div>
-                        <span>{job.postedAt}</span>
+                        <span>{job.createdAt ? formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }) : (job.postedAt || 'Recently')}</span>
                     </div>
                 </div>
 

@@ -9,7 +9,7 @@ import { AppContext } from '@/providers/AppProvider'
 
 
 
-export function AppLogo({ size, link, className }) {
+export function AppLogo({ size = 130, link, className }) {
 
     const { theme } = useContext(AppContext)
     const [logo, setLogo] = useState(lightLogo)
@@ -23,7 +23,7 @@ export function AppLogo({ size, link, className }) {
     return (
         <Link href={link}>
             <div className={cn(`${className}`)}>
-                <Image src={logo} alt='logo' height={size || 100} width={size || 100} style={{ width: 'auto', height: 'auto' }} priority='false'></Image>
+                <Image src={logo} alt='logo' height={size} width={size} style={{ width: 'auto', height: 'auto' }} priority='false'></Image>
             </div>
         </Link>
     )

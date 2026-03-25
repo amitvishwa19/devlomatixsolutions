@@ -14,10 +14,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MOCK_JOBS } from './_components/mockData';
 import { JobCard } from './_components/JobCard';
 import { JobFilter } from './_components/JobFilter';
 import { ApplyModal } from './_components/ApplyModal';
+import useSWR from 'swr';
+import axios from 'axios';
+
+const fetcher = url => axios.get(url).then(res => res.data);
 
 const STATS = [
     { label: 'Offices Worldwide', value: '12+', icon: Globe },
@@ -36,17 +39,20 @@ export default function CareerPage() {
     const [selectedJob, setSelectedJob] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const { data: jobs, isLoading } = useSWR('/api/public/jobs', fetcher);
+
     const filteredJobs = useMemo(() => {
-        return MOCK_JOBS.filter(job => {
+        if (!jobs) return [];
+        return jobs.filter(job => {
             const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
                 job.department.toLowerCase().includes(search.toLowerCase());
             const matchesDept = department === 'ALL' || job.department === department;
             const matchesType = type === 'ALL' || job.type === type;
-            const matchesLoc = location === 'ALL' || job.location.includes(location);
+            const matchesLoc = location === 'ALL' || job.location.toLowerCase().includes(location.toLowerCase());
 
             return matchesSearch && matchesDept && matchesType && matchesLoc;
         });
-    }, [search, department, type, location]);
+    }, [search, department, type, location, jobs]);
 
     const handleApply = (job) => {
         setSelectedJob(job);
@@ -218,7 +224,7 @@ export default function CareerPage() {
                             <div className="space-y-3">
                                 <h2 className="text-4xl font-black tracking-tight">Open Positions</h2>
                                 <p className="text-sm font-bold text-muted-foreground opacity-60">
-                                    Showing {filteredJobs.length} opportunities across the globe
+                                    Showing {isLoading ? '...' : filteredJobs.length} opportunities across the globe
                                 </p>
                             </div>
                             <div className="flex items-center gap-3 p-2 bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl">

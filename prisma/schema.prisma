@@ -742,6 +742,8 @@ model Job {
   type            String        @default("FULL_TIME")
   salaryRange     String?
   status          JobStatus     @default(DRAFT)
+  requirements    String[]      @default([])
+  benefits        String[]      @default([])
   workspaceId     String
   userId          String
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)

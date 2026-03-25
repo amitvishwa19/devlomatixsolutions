@@ -56,7 +56,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
         if (file) {
             const extension = file.name.split('.').pop().toLowerCase();
             const allowedExtensions = ['pdf', 'doc', 'docx'];
-            
+
             if (!allowedExtensions.includes(extension)) {
                 toast.error("Only PDF or Word documents are allowed");
                 return;
@@ -146,7 +146,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                                         <ListChecks size={14} /> Requirements
                                     </h4>
                                     <ul className="space-y-2">
-                                        {job.requirements.map((req, i) => (
+                                        {job?.requirements?.map((req, i) => (
                                             <li key={i} className="text-sm font-medium text-muted-foreground/80 flex gap-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                                                 {req}
@@ -160,7 +160,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                                         <Gift size={14} /> Benefits
                                     </h4>
                                     <div className="flex flex-wrap gap-2">
-                                        {job.benefits.map((benefit, i) => (
+                                        {job?.benefits?.map((benefit, i) => (
                                             <Badge key={i} variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5 text-primary px-3 py-1.5 rounded-lg">
                                                 {benefit}
                                             </Badge>
