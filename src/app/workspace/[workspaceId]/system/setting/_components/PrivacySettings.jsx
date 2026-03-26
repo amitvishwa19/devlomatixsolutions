@@ -33,15 +33,19 @@ export const PrivacySettings = () => {
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Data Governance */}
-            <Card className="rounded-xl border border-border shadow-soft bg-card/100">
-                <CardHeader>
-                    <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-2 border border-emerald-500/20">
-                        <Database className="w-5 h-5 text-emerald-500" />
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
+                            <Database className="w-6 h-6 text-emerald-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight">Data Governance</CardTitle>
+                            <CardDescription className="text-sm font-medium opacity-70">
+                                Manage how your workspace data is stored, retained, and archived.
+                            </CardDescription>
+                        </div>
                     </div>
-                    <CardTitle className="text-xl font-bold tracking-tight">Data Governance</CardTitle>
-                    <CardDescription className="text-sm font-medium opacity-70">
-                        Manage how your workspace data is stored, retained, and archived.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid gap-3">
@@ -77,15 +81,19 @@ export const PrivacySettings = () => {
             </Card>
 
             {/* Audit & Transparency */}
-            <Card className="rounded-xl border border-border shadow-soft bg-card/100">
-                <CardHeader>
-                    <div className="w-10 h-10 bg-sky-500/10 rounded-xl flex items-center justify-center mb-2 border border-sky-500/20">
-                        <Eye className="w-5 h-5 text-sky-500" />
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-sky-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/20 shadow-inner">
+                            <Eye className="w-6 h-6 text-sky-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight">Audit & Transparency</CardTitle>
+                            <CardDescription className="text-sm font-medium opacity-70">
+                                Control the visibility of administrative actions and system logs.
+                            </CardDescription>
+                        </div>
                     </div>
-                    <CardTitle className="text-xl font-bold tracking-tight">Audit & Transparency</CardTitle>
-                    <CardDescription className="text-sm font-medium opacity-70">
-                        Control the visibility of administrative actions and system logs.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-xl border border-border/40">
@@ -103,21 +111,23 @@ export const PrivacySettings = () => {
 
                    <Button 
                         variant="outline" 
-                        className="w-full rounded-xl border-dashed border-2 py-8 flex flex-col gap-1 items-center justify-center hover:bg-muted/50 transition-all opacity-80"
+                        className="w-full rounded-2xl border-dashed border-2 py-10 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/40 transition-all opacity-80 group"
                         onClick={() => toast.info("Exporting workspace data bundle...")}
                     >
-                        <div className="flex items-center gap-2 text-primary">
-                            <FileText className="w-4 h-4" />
-                            <span className="text-[10px] font-black tracking-widest uppercase">Export Workspace Data Bundle</span>
+                        <div className="flex items-center gap-3 text-primary group-hover:scale-110 transition-transform">
+                            <div className="p-2 bg-primary/10 rounded-xl">
+                                <FileText className="w-5 h-5" />
+                            </div>
+                            <span className="text-xs font-black tracking-widest uppercase">Export Workspace Data Bundle</span>
                         </div>
                         <span className="text-[10px] font-medium text-muted-foreground italic">Generate a ZIP file with all posts, comments, and settings</span>
                     </Button>
                 </CardContent>
-                <CardFooter className="border-t border-border/10 bg-muted/20 p-6 flex justify-end">
+                <CardFooter className="border-t border-border/10 bg-sky-500/5 p-6 flex justify-end">
                     <Button 
                         onClick={handleSave} 
                         disabled={saving}
-                        className="rounded-xl font-bold px-8 shadow-soft bg-primary hover:bg-primary/90"
+                        className="rounded-xl font-bold px-8 shadow-xl shadow-sky-500/20 bg-sky-600 hover:bg-sky-700 text-white transition-all transform hover:scale-[1.02]"
                     >
                         {saving ? "Deploying..." : "Update Privacy Policy"}
                     </Button>

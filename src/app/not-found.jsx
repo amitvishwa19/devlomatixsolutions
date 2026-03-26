@@ -20,10 +20,11 @@ export default function NotFound() {
         <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 relative overflow-hidden">
             <NetworkBackground />
 
+
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background pointer-events-none" />
             <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
 
-            <div className="relative z-10 text-center max-w-4xl mx-auto">
+            <div className="relative z-10 text-center max-w-6xl mx-auto">
                 <div className="flex justify-center items-center gap-6 mb-10 animate-fade-in">
                     {[Activity, Heart, Users, Shield].map((Icon, i) => (
                         <div key={i} className="icon-glow animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>

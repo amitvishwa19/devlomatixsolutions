@@ -36,15 +36,19 @@ export const NotificationSettings = () => {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            <Card className="rounded-xl border border-border shadow-soft bg-card/100">
-                <CardHeader>
-                    <div className="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center mb-2 border border-rose-500/20">
-                        <BellRing className="w-5 h-5 text-rose-500" />
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-rose-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center border border-rose-500/20 shadow-inner">
+                            <BellRing className="w-6 h-6 text-rose-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight">Notification Channels</CardTitle>
+                            <CardDescription className="text-sm font-medium opacity-70">
+                                Control how you and your team receive alerts for workspace events.
+                            </CardDescription>
+                        </div>
                     </div>
-                    <CardTitle className="text-xl font-bold tracking-tight">Notification Channels</CardTitle>
-                    <CardDescription className="text-sm font-medium opacity-70">
-                        Control how you and your team receive alerts for workspace events.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-xl border border-border/40">
@@ -106,11 +110,11 @@ export const NotificationSettings = () => {
                         />
                     </div>
                 </CardContent>
-                <CardFooter className="border-t border-border/10 bg-muted/20 p-6 flex justify-end">
+                <CardFooter className="border-t border-border/10 bg-rose-500/5 p-6 flex justify-end">
                     <Button 
                         onClick={handleSave} 
                         disabled={saving}
-                        className="rounded-xl font-bold px-8 shadow-soft bg-primary hover:bg-primary/90"
+                        className="rounded-xl font-bold px-8 shadow-xl shadow-rose-500/20 bg-rose-600 hover:bg-rose-700 text-white transition-all transform hover:scale-[1.02]"
                     >
                         {saving ? "Saving..." : "Save Preferences"}
                     </Button>

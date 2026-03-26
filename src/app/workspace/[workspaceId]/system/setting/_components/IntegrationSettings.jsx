@@ -44,25 +44,29 @@ export const IntegrationSettings = () => {
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Webhooks Section */}
-            <Card className="rounded-xl border border-border shadow-soft bg-card/100">
-                <CardHeader className="flex flex-row items-start justify-between">
-                    <div className="space-y-1">
-                        <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-2 border border-emerald-500/20">
-                            <Globe className="w-5 h-5 text-emerald-500" />
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <CardHeader className="pb-4">
+                    <div className="flex flex-row items-start justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
+                                <Globe className="w-6 h-6 text-emerald-500" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-bold tracking-tight">Outgoing Webhooks</CardTitle>
+                                <CardDescription className="text-sm font-medium opacity-70">
+                                    Receive real-time notifications when events happen in your workspace.
+                                </CardDescription>
+                            </div>
                         </div>
-                        <CardTitle className="text-xl font-bold tracking-tight">Outgoing Webhooks</CardTitle>
-                        <CardDescription className="text-sm font-medium opacity-70">
-                            Receive real-time notifications when events happen in your workspace.
-                        </CardDescription>
+                        <Button 
+                            onClick={handleAddWebhook} 
+                            disabled={saving}
+                            className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 gap-2 h-10 px-6"
+                        >
+                            <Plus className="w-4 h-4" />
+                            ADD ENDPOINT
+                        </Button>
                     </div>
-                    <Button 
-                        onClick={handleAddWebhook} 
-                        disabled={saving}
-                        className="rounded-xl font-bold bg-primary hover:bg-primary/90 shadow-soft gap-2"
-                    >
-                        <Plus className="w-4 h-4" />
-                        ADD ENDPOINT
-                    </Button>
                 </CardHeader>
                 <CardContent>
                     {webhooks.length === 0 ? (
@@ -113,15 +117,19 @@ export const IntegrationSettings = () => {
             </Card>
 
             {/* API Keys Section */}
-            <Card className="rounded-xl border border-border shadow-soft bg-card/100">
-                <CardHeader>
-                    <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-2 border border-indigo-500/20">
-                        <Key className="w-5 h-5 text-indigo-500" />
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 shadow-inner">
+                            <Key className="w-6 h-6 text-indigo-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight">API Governance</CardTitle>
+                            <CardDescription className="text-sm font-medium opacity-70">
+                                Manage secure access keys for authenticating your custom applications.
+                            </CardDescription>
+                        </div>
                     </div>
-                    <CardTitle className="text-xl font-bold tracking-tight">API Governance</CardTitle>
-                    <CardDescription className="text-sm font-medium opacity-70">
-                        Manage secure access keys for authenticating your custom applications.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid gap-4">

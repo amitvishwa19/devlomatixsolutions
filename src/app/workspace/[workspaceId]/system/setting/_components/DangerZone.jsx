@@ -18,15 +18,19 @@ export const DangerZone = () => {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            <Card className="rounded-xl border border-rose-500/20 shadow-soft bg-rose-500/[0.02]">
-                <CardHeader>
-                    <div className="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center mb-2 border border-rose-500/20">
-                        <AlertTriangle className="w-5 h-5 text-rose-500" />
+            <Card className="rounded-2xl border border-rose-500/40 shadow-xl shadow-rose-500/5 bg-rose-500/[0.02] backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center border border-rose-500/20 shadow-inner">
+                            <AlertTriangle className="w-6 h-6 text-rose-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight text-rose-500">Danger Zone</CardTitle>
+                            <CardDescription className="text-sm font-medium text-rose-500/60 font-semibold italic">
+                                Irreversible and destructive actions for your workspace.
+                            </CardDescription>
+                        </div>
                     </div>
-                    <CardTitle className="text-xl font-bold tracking-tight text-rose-500">Danger Zone</CardTitle>
-                    <CardDescription className="text-sm font-medium text-rose-500/60">
-                        Irreversible and destructive actions for your workspace. Use with extreme caution.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between gap-8 p-4 bg-background/50 rounded-xl border border-rose-500/10">
@@ -67,10 +71,10 @@ export const DangerZone = () => {
                         </Button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-8 p-4 bg-rose-500/5 rounded-xl border border-rose-500/20">
+                    <div className="flex items-center justify-between gap-8 p-4 bg-rose-500/5 rounded-2xl border border-rose-500/20 shadow-inner group">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Trash2 className="w-4 h-4 text-rose-500" />
+                                <Trash2 className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
                                 <Label className="text-sm font-bold tracking-tight uppercase text-rose-600">Delete Workspace</Label>
                             </div>
                             <p className="text-[10px] text-rose-500/60 font-medium italic">
@@ -80,7 +84,7 @@ export const DangerZone = () => {
                         <Button 
                             variant="destructive" 
                             size="sm" 
-                            className="rounded-xl text-[10px] font-bold tracking-widest h-9 px-4 bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-500/20"
+                            className="rounded-xl text-[10px] font-black tracking-[0.2em] h-10 px-6 bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/30 transition-all transform hover:scale-105"
                             onClick={handleDeleteWorkspace}
                         >
                             DELETE

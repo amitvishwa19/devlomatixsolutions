@@ -63,6 +63,10 @@ export async function GET(req, { params }) {
                 webhooks: [],
                 apiKeys: []
             },
+            developer: appSettings?.integrations || {
+                webhooks: [],
+                apiKeys: []
+            },
             advanced: appSettings?.technical || {
                 maintenanceMode: false,
                 customCss: ""
@@ -96,7 +100,10 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 });
         }
 
-        const { general, branding, security, notifications, integrations, advanced } = body;
+        const { general, branding, security, notifications, integrations, developer, advanced } = body;
+
+        // Sync developer with integrations if provided
+        const finalIntegrations = developer || integrations;
 
         const serverUpdateData = {};
         if (general?.name) serverUpdateData.name = general.name;
@@ -119,14 +126,14 @@ export async function PATCH(req, { params }) {
                 social: branding || undefined,
                 security: security || undefined,
                 notifications: notifications || undefined,
-                integrations: integrations || undefined,
+                integrations: finalIntegrations || undefined,
                 technical: advanced || undefined
             },
             update: {
                 social: branding || undefined,
                 security: security || undefined,
                 notifications: notifications || undefined,
-                integrations: integrations || undefined,
+                integrations: finalIntegrations || undefined,
                 technical: advanced || undefined
             }
         });

@@ -25,6 +25,7 @@ export default function AppSidebar() {
     const systemPath = `/workspace/${workspaceId}/system`
     const baseProductivityPath = `/workspace/${workspaceId}/productivity`
     const baseAtsPath = `/workspace/${workspaceId}/ats`
+    const baseAgentPath = `/workspace/${workspaceId}/agent`
 
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
@@ -85,6 +86,11 @@ export default function AppSidebar() {
         { type: 'child', title: "Roles", url: `${baseAccessPath}/role`, icon: "bar-chart-3", category: "access-management" },
         { type: 'child', title: "Permissions", url: `${baseAccessPath}/permission`, icon: "bar-chart-3", category: "access-management" },
         { type: 'child', title: "Access", url: `${baseAccessPath}/access`, icon: "bar-chart-3", category: "access-management" },
+
+        // System
+        { type: 'parent', title: "AI Agent", url: `${baseAgentPath}`, icon: "monitor-cog", category: "agent" },
+        { type: 'child', title: "Dashboard", url: `${baseAgentPath}/`, icon: "bar-chart-3", category: "agent" },
+        { type: 'child', title: "Credentials", url: `${baseAgentPath}/credential`, icon: "bar-chart-3", category: "agent" },
 
         // System
         { type: 'parent', title: "System", url: `${basePath}`, icon: "monitor-cog", category: "system" },

@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Cpu, Terminal, Zap, Code, ShieldAlert, FlaskConical, CalendarClock } from 'lucide-react';
+import { Cpu, Terminal, Zap, Code, ShieldAlert, FlaskConical, CalendarClock, Download, Upload, Info } from 'lucide-react';
 
 export const AdvancedSettings = () => {
     const { settings, updateSettings, saving } = useSettings();
@@ -36,15 +36,19 @@ export const AdvancedSettings = () => {
     return (
         <div className="space-y-6 animate-fade-in">
             {/* System Status Section */}
-            <Card className="rounded-xl border border-border shadow-soft bg-card/100">
-                <CardHeader>
-                    <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center mb-2 border border-amber-500/20">
-                        <Cpu className="w-5 h-5 text-amber-500" />
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-amber-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 shadow-inner">
+                            <Cpu className="w-6 h-6 text-amber-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight">System Infrastructure</CardTitle>
+                            <CardDescription className="text-sm font-medium opacity-70">
+                                Manage system-wide states and technical behavior.
+                            </CardDescription>
+                        </div>
                     </div>
-                    <CardTitle className="text-xl font-bold tracking-tight">System Infrastructure</CardTitle>
-                    <CardDescription className="text-sm font-medium opacity-70">
-                        Manage system-wide states and technical behavior.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-xl border border-border/40">
@@ -80,15 +84,19 @@ export const AdvancedSettings = () => {
             </Card>
 
             {/* Custom Technical Injection */}
-            <Card className="rounded-xl border border-border shadow-soft bg-card/100">
-                <CardHeader>
-                    <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-2 border border-indigo-500/20">
-                        <Code className="w-5 h-5 text-indigo-500" />
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 shadow-inner">
+                            <Code className="w-6 h-6 text-indigo-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight">Code Injection</CardTitle>
+                            <CardDescription className="text-sm font-medium opacity-70">
+                                Inject custom CSS or scripts into your workspace frontend.
+                            </CardDescription>
+                        </div>
                     </div>
-                    <CardTitle className="text-xl font-bold tracking-tight">Code Injection</CardTitle>
-                    <CardDescription className="text-sm font-medium opacity-70">
-                        Inject custom CSS or scripts into your workspace frontend.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-3">
@@ -104,15 +112,48 @@ export const AdvancedSettings = () => {
                         />
                     </div>
                 </CardContent>
-                <CardFooter className="border-t border-border/10 bg-muted/20 p-6 flex justify-end">
+                <CardFooter className="border-t border-border/10 bg-indigo-500/5 p-6 flex justify-end">
                     <Button 
                         onClick={handleSave} 
                         disabled={saving}
-                        className="rounded-xl font-bold px-8 shadow-soft bg-primary hover:bg-primary/90"
+                        className="rounded-xl font-bold px-8 shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 text-white transition-all transform hover:scale-[1.02]"
                     >
                         {saving ? "Deploying..." : "Update Technical Settings"}
                     </Button>
                 </CardFooter>
+            </Card>
+
+            {/* Data Portability */}
+            <Card className="rounded-2xl border border-border/40 shadow-xl shadow-primary/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-inner">
+                            <Download className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight">Data Portability</CardTitle>
+                            <CardDescription className="text-sm font-medium opacity-70">
+                                Export or import your workspace configuration settings.
+                            </CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-4 pt-2">
+                    <Button variant="outline" className="h-24 rounded-2xl flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
+                        <Download className="w-6 h-6 text-primary" />
+                        <div className="text-center">
+                            <p className="text-sm font-bold">Export Config</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">JSON Format</p>
+                        </div>
+                    </Button>
+                    <Button variant="outline" className="h-24 rounded-2xl flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
+                        <Upload className="w-6 h-6 text-primary" />
+                        <div className="text-center">
+                            <p className="text-sm font-bold">Import Config</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Upload File</p>
+                        </div>
+                    </Button>
+                </CardContent>
             </Card>
 
             {/* Lab Features */}

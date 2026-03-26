@@ -296,12 +296,34 @@
   .inner-glow-card:hover::after {
     opacity: 1;
   }
+
+  .icon-glow {
+    @apply relative flex items-center justify-center;
+  }
+
+  .icon-glow::after {
+    content: '';
+    @apply absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 transition-opacity duration-500;
+  }
+
+  .icon-glow:hover::after {
+    @apply opacity-100;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 3s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 @font-face {
