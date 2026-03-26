@@ -38,7 +38,7 @@ export default function NotFound() {
                 </h1>
 
                 <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-6 leading-tight animate-fade-in [animation-delay:0.3s] opacity-0 [animation-fill-mode:forwards]">
-                    Page Not Found. Redirecting Care.
+                    Page Not Found
                 </h2>
 
                 <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed animate-fade-in [animation-delay:0.4s] opacity-0 [animation-fill-mode:forwards]">

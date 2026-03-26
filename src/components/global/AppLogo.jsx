@@ -22,8 +22,16 @@ export function AppLogo({ size = 130, link, className }) {
 
     return (
         <Link href={link}>
-            <div className={cn(`${className}`)}>
-                <Image src={logo} alt='logo' height={size} width={size} style={{ width: 'auto', height: 'auto' }} priority='false'></Image>
+            <div className={cn(className)}>
+                <Image
+                    src={logo}
+                    alt='logo'
+                    height={size}
+                    width={size}
+                    className="h-auto"
+                    style={{ width: size ? `${size}px` : 'auto' }}
+                    priority={false}
+                />
             </div>
         </Link>
     )

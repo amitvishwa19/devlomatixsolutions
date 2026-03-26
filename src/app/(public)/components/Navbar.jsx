@@ -77,7 +77,7 @@ const Navbar = () => {
                 <div className="px-4 py-2.5 flex items-center justify-between">
                     {/* Left: Logo */}
                     <motion.div whileHover={{ scale: 1.02 }} className="shrink-0">
-                        <AppLogo link='/' size={140} />
+                        <AppLogo link='/' size={200} />
                     </motion.div>
 
                     {/* Center: Nav Links */}
