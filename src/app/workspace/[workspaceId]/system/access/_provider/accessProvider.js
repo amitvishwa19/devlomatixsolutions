@@ -41,7 +41,7 @@ export const AccessProvider = ({ children }) => {
     }, [workspaceId, fetchAccessData])
 
     return (
-        <AccessContext.Provider value={{ users, setUsers, permissions, setPermissions, roles, setRoles, departments, setDepartments }}>
+        <AccessContext.Provider value={{ users, setUsers, permissions, setPermissions, roles, setRoles, departments, setDepartments, loading }}>
             {children}
         </AccessContext.Provider>
     )
