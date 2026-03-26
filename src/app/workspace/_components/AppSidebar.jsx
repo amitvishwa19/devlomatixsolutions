@@ -84,9 +84,11 @@ export default function AppSidebar() {
         { type: 'child', title: "Users", url: `${baseAccessPath}/user`, icon: "bar-chart-3", category: "access-management" },
         { type: 'child', title: "Roles", url: `${baseAccessPath}/role`, icon: "bar-chart-3", category: "access-management" },
         { type: 'child', title: "Permissions", url: `${baseAccessPath}/permission`, icon: "bar-chart-3", category: "access-management" },
+        { type: 'child', title: "Access", url: `${baseAccessPath}/access`, icon: "bar-chart-3", category: "access-management" },
 
-        // Access Management
+        // System
         { type: 'parent', title: "System", url: `${basePath}`, icon: "monitor-cog", category: "system" },
+        { type: 'child', title: "Access Control", url: `${systemPath}/access`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Credentials", url: `${systemPath}/credential`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Settings", url: `${systemPath}/setting`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Logs", url: `${systemPath}/log`, icon: "bar-chart-3", category: "system" },
