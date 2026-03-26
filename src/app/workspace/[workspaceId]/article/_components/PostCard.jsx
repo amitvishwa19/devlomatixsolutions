@@ -138,7 +138,7 @@ export const PostCard = ({ post, onApply }) => {
     return (
         <>
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent className="rounded-2xl border-border/100 shadow-2xl overflow-hidden p-0">
+                <AlertDialogContent className="rounded-xl border border-border shadow-2xl overflow-hidden p-0 animate-fade-in">
                     <AlertDialogHeader className="p-8 pb-4">
                         <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
                             <Trash2 className="w-6 h-6 text-rose-500" />
@@ -164,7 +164,7 @@ export const PostCard = ({ post, onApply }) => {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <div className="group flex flex-col bg-card/100 rounded-lg border border-border/100 overflow-hidden backdrop-blur-md hover:shadow-2xl hover:shadow-primary/5 transition-all animate-in fade-in slide-in-from-bottom-4">
+            <div className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:shadow-medium transition-all shadow-soft animate-fade-in">
             {/* Media Preview */}
             <div className="aspect-[16/10] bg-muted/30 relative overflow-hidden flex items-center justify-center border-b border-border/10">
                 {post.mediaUrls?.[0] ? (
@@ -183,7 +183,7 @@ export const PostCard = ({ post, onApply }) => {
                             title={`Post to ${account.profileName} (${account.platform})`}
                             onClick={() => account.id && handlePublishToAccount(account.id, account.platform)}
                             disabled={postingAccountId === account.id}
-                            className="bg-background/90 p-1.5 rounded-md shadow-lg border border-border/20 hover:bg-primary/10 hover:border-primary/30 transition-all disabled:opacity-50 cursor-pointer"
+                            className="bg-background/90 p-1.5 rounded-xl shadow-soft border border-border hover:bg-primary/10 hover:border-primary/30 transition-all disabled:opacity-50 cursor-pointer"
                         >
                             {postingAccountId === account.id 
                                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -238,7 +238,7 @@ export const PostCard = ({ post, onApply }) => {
                     
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted">
+                            <Button variant="ghost" size="icon" className="w-8 rounded-xl text-muted-foreground/50 hover:text-foreground hover:bg-muted">
                                 <MoreHorizontal className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>

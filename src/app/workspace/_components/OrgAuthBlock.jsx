@@ -54,12 +54,12 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
                 <DropdownMenuTrigger asChild className=''>
                     {session ? (
-                        <div variant="ghost" className={`p-1  ${open && 'bg-card'} rounded-md flex flex-row items-center justify-between cursor-pointer text-primary`}>
+                        <div variant="ghost" className={`p-1  ${open && 'bg-card'} rounded-xl flex flex-row items-center justify-between cursor-pointer text-primary transition-all duration-300`}>
 
                             <div className='flex flex-row items-center gap-2'>
-                                <Avatar className='h-10 w-10 rounded-md'>
+                                <Avatar className='h-10 w-10 rounded-xl border border-border/50'>
                                     <AvatarImage src={session?.user?.image} alt="@shadcn" className='' />
-                                    <AvatarFallback className='rounded-md capitalize font-bold text-xl border'>{getInitials(session?.user?.displayName)}</AvatarFallback>
+                                    <AvatarFallback className='rounded-xl capitalize font-bold text-xl border'>{getInitials(session?.user?.displayName)}</AvatarFallback>
                                 </Avatar>
                                 {!collapsed && (
                                     <div className='flex flex-col'>
@@ -77,21 +77,21 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                         </div>
                     ) : (
                         <div className='flex flex-row items-center gap-1'>
-                            <Skeleton className=" h-[48px] w-[56px]  rounded-lg" />
-                            <Skeleton className=" h-[48px] w-full  rounded-lg " />
+                            <Skeleton className=" h-[48px] w-[56px]  rounded-xl" />
+                            <Skeleton className=" h-[48px] w-full  rounded-xl " />
                         </div>
                     )}
                 </DropdownMenuTrigger>
 
                 {!collapsed && (
 
-                    <DropdownMenuContent className=" w-64 ml-2 rounded-lg border p-2 mb-2" side={side} align={align} sideOffset={sideOffset}>
+                    <DropdownMenuContent className=" w-64 ml-2 rounded-xl border p-2 mb-2 shadow-soft animate-fade-in" side={side} align={align} sideOffset={sideOffset}>
 
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="h-8 w-8 rounded-lg">
+                                <Avatar className="h-8 w-8 rounded-xl border border-border/50">
                                     <AvatarImage src={session?.user?.image || session?.user?.image} alt="@shadcn" className='' />
-                                    <AvatarFallback>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
+                                    <AvatarFallback className='rounded-xl'>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-medium">{session?.user?.displayName}</span>

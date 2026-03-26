@@ -112,7 +112,7 @@ export default function CredentialPage() {
     );
 
     return (
-        <div className="flex-1 space-y-8 p-8 pt-6 animate-in fade-in duration-500">
+        <div className="flex-1 space-y-8 p-8 pt-6 animate-fade-in">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
@@ -124,7 +124,7 @@ export default function CredentialPage() {
                 </div>
                 <Button
                     onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts })}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md font-extrabold uppercase tracking-widest text-[10px] h-10 px-6 shadow-lg shadow-primary/20 transition-all active:scale-95"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-extrabold uppercase tracking-widest text-[10px] h-10 px-6 shadow-soft transition-all active:scale-95"
                 >
                     <Plus className="mr-2 h-4 w-4" /> Add New Credential
                 </Button>
@@ -132,13 +132,13 @@ export default function CredentialPage() {
 
             {/* Stats/Info Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-6 backdrop-blur-sm shadow-soft">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">Encrypted Storage</p>
                             <h3 className="text-2xl font-black">Active</h3>
                         </div>
-                        <div className="p-2 bg-emerald-500/10 rounded-lg">
+                        <div className="p-2 bg-emerald-500/10 rounded-xl">
                             <ShieldCheck className="w-5 h-5 text-emerald-500" />
                         </div>
                     </div>
@@ -147,13 +147,13 @@ export default function CredentialPage() {
                     </p>
                 </div>
 
-                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 backdrop-blur-sm shadow-soft">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Total Connections</p>
                             <h3 className="text-2xl font-black">{accounts.length}</h3>
                         </div>
-                        <div className="p-2 bg-primary/10 rounded-lg">
+                        <div className="p-2 bg-primary/10 rounded-xl">
                             <RefreshCw className="w-5 h-5 text-primary" />
                         </div>
                     </div>
@@ -162,13 +162,13 @@ export default function CredentialPage() {
                     </p>
                 </div>
 
-                <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-6 backdrop-blur-sm shadow-soft">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-1">Security Health</p>
                             <h3 className="text-2xl font-black">Robust</h3>
                         </div>
-                        <div className="p-2 bg-blue-500/10 rounded-lg">
+                        <div className="p-2 bg-blue-500/10 rounded-xl">
                             <Lock className="w-5 h-5 text-blue-500" />
                         </div>
                     </div>
@@ -179,14 +179,14 @@ export default function CredentialPage() {
             </div>
 
             {/* Filter Section */}
-            <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/40 p-3 flex items-center gap-4">
+            <div className="bg-card/40 backdrop-blur-md rounded-xl border border-border/40 p-3 flex items-center gap-4 shadow-soft">
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search platforms or profile names..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-11 h-12 bg-muted/20 border-none rounded-xl font-bold text-sm focus-visible:ring-1 focus-visible:ring-primary shadow-inner"
+                        className="pl-11 h-12 bg-background border border-border rounded-xl font-bold text-sm focus-visible:ring-1 focus-visible:ring-primary"
                     />
                 </div>
             </div>
@@ -200,8 +200,8 @@ export default function CredentialPage() {
                     </div>
                 </div>
             ) : filteredAccounts.length === 0 ? (
-                <div className="h-[200px] flex flex-col items-center justify-center bg-muted/5 rounded-3xl border border-dashed border-border/60">
-                    <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mb-4">
+                <div className="h-[200px] flex flex-col items-center justify-center bg-muted/5 rounded-xl border border-dashed border-border/60">
+                    <div className="w-16 h-16 bg-muted/20 rounded-xl flex items-center justify-center mb-4">
                         <Key className="w-8 h-8 text-muted-foreground/40" />
                     </div>
                     <h3 className="text-xl font-black tracking-tight">No credentials found</h3>
@@ -211,7 +211,7 @@ export default function CredentialPage() {
                     <Button
                         variant="outline"
                         onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts })}
-                        className="mt-6 border-dashed border-primary/20 hover:border-primary/40 text-primary font-bold text-[10px] uppercase tracking-widest rounded-md px-8"
+                        className="mt-6 border-dashed border-primary/20 hover:border-primary/40 text-primary font-bold text-[10px] uppercase tracking-widest rounded-xl px-8"
                     >
                         Click to add
                     </Button>
@@ -219,7 +219,7 @@ export default function CredentialPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredAccounts.map((account) => (
-                        <div key={account.id} className="group relative flex flex-col bg-card/60 backdrop-blur-xl border border-border/40 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
+                        <div key={account.id} className="group relative flex flex-col bg-card/60 backdrop-blur-xl border border-border/40 rounded-xl overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
                             <div className="absolute top-0 right-0 p-4">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -303,9 +303,9 @@ export default function CredentialPage() {
 
             {/* Delete Confirmation */}
             <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-                <AlertDialogContent className="rounded-3xl border-border/40 shadow-2xl overflow-hidden p-0">
+                <AlertDialogContent className="rounded-xl border-border/40 shadow-2xl overflow-hidden p-0 animate-fade-in">
                     <AlertDialogHeader className="p-8 pb-4">
-                        <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
+                        <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
                             <Trash2 className="w-6 h-6 text-rose-500" />
                         </div>
                         <AlertDialogTitle className="text-2xl font-black tracking-tight">Are you absolutely sure?</AlertDialogTitle>
@@ -314,13 +314,13 @@ export default function CredentialPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="p-8 pt-4 flex flex-row gap-4 bg-muted/20">
-                        <AlertDialogCancel className="rounded-md text-[10px] font-bold tracking-widest uppercase flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
+                        <AlertDialogCancel className="rounded-xl text-[10px] font-bold tracking-widest uppercase flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleDelete();
                             }}
-                            className="rounded-md text-[10px] font-bold tracking-widest uppercase flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
+                            className="rounded-xl text-[10px] font-bold tracking-widest uppercase flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
                             disabled={isDeleting}
                         >
                             {isDeleting ? "Deleting..." : "Delete Credential"}

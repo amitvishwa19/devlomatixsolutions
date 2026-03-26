@@ -141,7 +141,7 @@ export const PostRow = ({ post, onApply }) => {
     return (
         <>
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent className="rounded-2xl border border-border/100 shadow-2xl overflow-hidden p-0">
+                <AlertDialogContent className="rounded-xl border border-border shadow-2xl overflow-hidden p-0 animate-fade-in">
                     <AlertDialogHeader className="p-8 pb-4">
                         <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
                             <Trash2 className="w-6 h-6 text-rose-500" />
@@ -167,9 +167,9 @@ export const PostRow = ({ post, onApply }) => {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <div className="group flex items-center bg-card/100 rounded-lg border border-border/100 overflow-hidden backdrop-blur-md hover:bg-card/60 transition-all p-3 gap-4 animate-in fade-in slide-in-from-bottom-2">
+            <div className="group flex items-center bg-card rounded-xl border border-border overflow-hidden hover:shadow-medium transition-all p-3 gap-4 shadow-soft animate-fade-in">
                 {/* Media Thumbnail */}
-                <div className="w-16 h-16 bg-muted/30 rounded-md overflow-hidden flex items-center justify-center shrink-0 border border-border/10">
+                <div className="w-16 h-16 bg-muted/30 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border border-border/10">
                     {post.mediaUrls?.[0] ? (
                         <img src={post.mediaUrls[0]} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -241,7 +241,7 @@ export const PostRow = ({ post, onApply }) => {
                         {/* Actions */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="w-8 rounded-md text-muted-foreground/50 hover:text-foreground">
+                                <Button variant="ghost" size="icon" className="w-8 rounded-xl text-muted-foreground/50 hover:text-foreground">
                                     <MoreHorizontal className="w-4 h-4" />
                                 </Button>
                             </DropdownMenuTrigger>

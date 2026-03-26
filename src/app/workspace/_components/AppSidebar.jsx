@@ -90,8 +90,8 @@ export default function AppSidebar() {
         { type: 'parent', title: "System", url: `${basePath}`, icon: "monitor-cog", category: "system" },
         { type: 'child', title: "Access Control", url: `${systemPath}/access`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Credentials", url: `${systemPath}/credential`, icon: "bar-chart-3", category: "system" },
-        { type: 'child', title: "Settings", url: `${systemPath}/setting`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Logs", url: `${systemPath}/log`, icon: "bar-chart-3", category: "system" },
+        { type: 'child', title: "Settings", url: `${systemPath}/setting`, icon: "bar-chart-3", category: "system" },
 
     ]
 
@@ -185,7 +185,7 @@ export default function AppSidebar() {
                                         <SidebarMenuButton
                                             onClick={() => toggleGroup(category)}
                                             tooltip={parent.title}
-                                            className="w-full flex items-center gap-3 rounded-md text-sm font-medium text-foreground hover:bg-primary/10 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
+                                            className="w-full flex items-center gap-3 rounded-xl text-sm font-medium text-foreground hover:bg-primary/10 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
                                         >
                                             <DynamicIcon
                                                 name={parent.icon}
@@ -215,7 +215,7 @@ export default function AppSidebar() {
                                                         asChild
                                                         //isActive={isActive}
                                                         tooltip={item.title}
-                                                        className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4"
+                                                        className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl ${isActive ? "" : ""}`}
                                                     >
                                                         <Link href={item.url}>
                                                             <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>

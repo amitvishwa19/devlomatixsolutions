@@ -117,7 +117,7 @@ export default function LogPage() {
     };
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="p-8 space-y-8 animate-fade-in">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
@@ -139,7 +139,7 @@ export default function LogPage() {
             </div>
 
             {/* Filter Bar */}
-            <Card className="bg-card/50 backdrop-blur-md border-border/100 shadow-sm overflow-hidden">
+            <Card className="bg-card/50 backdrop-blur-md border-border shadow-soft overflow-hidden rounded-xl">
                 <CardContent className="p-4 flex flex-wrap items-center gap-6">
                     <div className="flex items-center gap-2">
                         <Search size={14} className="text-muted-foreground" />
@@ -149,7 +149,7 @@ export default function LogPage() {
                     <div className="flex items-center gap-3">
                         <span className="text-[10px] font-bold text-muted-foreground/60">SEVERITY</span>
                         <Select value={filters.level} onValueChange={(val) => setFilters(prev => ({ ...prev, level: val }))}>
-                            <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background">
+                            <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-xl">
                                 <SelectValue placeholder="All Levels" />
                             </SelectTrigger>
                             <SelectContent>
@@ -165,7 +165,7 @@ export default function LogPage() {
                     <div className="flex items-center gap-3">
                         <span className="text-[10px] font-bold text-muted-foreground/60">MODULE</span>
                         <Select value={filters.type} onValueChange={(val) => setFilters(prev => ({ ...prev, type: val }))}>
-                            <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background">
+                            <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-xl">
                                 <SelectValue placeholder="All Types" />
                             </SelectTrigger>
                             <SelectContent>
@@ -183,7 +183,7 @@ export default function LogPage() {
             </Card>
 
             {/* Table Area */}
-            <Card className="border-border/100 shadow-xl overflow-hidden">
+            <Card className="border-border shadow-soft overflow-hidden rounded-xl">
                 <CardContent className="p-0">
                     <Table>
                         <TableHeader className="bg-muted/30">
@@ -279,7 +279,7 @@ export default function LogPage() {
 
             {/* Log Inspector Dialog */}
             <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
-                <DialogContent className="max-w-2xl bg-card border shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                <DialogContent className="max-w-2xl bg-card border border-border shadow-2xl overflow-hidden flex flex-col max-h-[85vh] rounded-xl animate-fade-in">
                     <DialogHeader className="p-6 pb-2">
                         <div className="flex items-center justify-between mb-2">
                             {selectedLog && getLevelBadge(selectedLog.level)}

@@ -474,7 +474,7 @@ export function DataTable({
                             placeholder={searchPlaceholder}
                             value={globalFilter}
                             onChange={(e) => setGlobalFilter(e.target.value)}
-                            className="pl-9 h-9  border-filter-border"
+                            className="pl-9 h-10 border-filter-border rounded-xl bg-background"
                         />
                         {globalFilter && (
                             <button
@@ -616,11 +616,11 @@ export function DataTable({
             )}
 
             {/* Table */}
-            <div className="rounded-md border  overflow-hidden">
+            <div className="rounded-xl border border-border bg-card shadow-soft overflow-hidden animate-fade-in">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id} className="bg-card hover:bg-transparent border-border ">
+                            <TableRow key={headerGroup.id} className="bg-muted/30 hover:bg-transparent border-b border-border">
                                 {headerGroup.headers.map((header) => (
                                     <TableHead key={header.id} className="text-muted-foreground font-semibold p-4">
                                         {header.isPlaceholder

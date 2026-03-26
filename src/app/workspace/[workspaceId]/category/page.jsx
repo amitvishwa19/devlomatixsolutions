@@ -131,7 +131,7 @@ export default function CategoryManagementPage() {
                         <div className="w-6" />
                     ) : null}
                     <div
-                        className={`${isChild ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center border-2 border-background shadow-md`}
+                        className={`${isChild ? 'w-8 h-8' : 'w-10 h-10'} rounded-xl flex items-center justify-center border-2 border-background shadow-md`}
                         style={{ backgroundColor: `${category.color}20`, borderColor: category.color }}
                     >
                         <Tags size={isChild ? 14 : 18} style={{ color: category.color }} />
@@ -152,12 +152,12 @@ export default function CategoryManagementPage() {
             <td className="px-6 py-5 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                     {isChild ? (
-                        <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/20 px-2.5 py-1 rounded-md border border-border/20">
+                        <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/20 px-2.5 py-1 rounded-xl border border-border/20">
                             <FolderTree className="w-3 h-3" />
                             <span className="text-[10px] font-bold tracking-widest">Sub</span>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-1.5 text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+                        <div className="flex items-center gap-1.5 text-primary bg-primary/10 px-2.5 py-1 rounded-xl border border-primary/20">
                             <LayoutGrid className="w-3 h-3" />
                             <span className="text-[10px] font-bold tracking-widest">{category.type}</span>
                         </div>
@@ -167,11 +167,11 @@ export default function CategoryManagementPage() {
             <td className="px-6 py-5 whitespace-nowrap text-right">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 rounded-md text-muted-foreground/50 hover:text-foreground">
+                        <Button variant="ghost" size="icon" className="w-8 rounded-xl text-muted-foreground/50 hover:text-foreground">
                             <MoreHorizontal className="w-4 h-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-52 rounded-lg shadow-2xl border-border/40 p-2">
+                    <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-2xl border-border/40 p-2">
                         <DropdownMenuLabel className="text-[10px] font-bold tracking-widest text-muted-foreground px-3 py-2">Management</DropdownMenuLabel>
                         <DropdownMenuItem
                             onClick={() => onOpen('addCategory', { workspaceId, category, parentCategories, onApply: fetchData })}
@@ -206,7 +206,7 @@ export default function CategoryManagementPage() {
             <AddCategoryModal />
 
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/10 p-4 rounded-lg border  backdrop-blur-sm shadow-sm mb-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border p-4 rounded-xl shadow-soft mb-4">
                 <div className="space-y-1 text-left mb-4">
                     <h1 className="text-xl font-bold text-foreground flex items-center gap-3">
                         <Tags className="text-primary h-8 w-8" />
@@ -219,7 +219,7 @@ export default function CategoryManagementPage() {
                 <div className="flex gap-3">
                     <Button
                         onClick={() => onOpen('addCategory', { workspaceId, parentCategories, onApply: fetchData })}
-                        className='bg-primary hover:bg-primary/90 rounded-md font-bold h-11 px-6 text-[10px] tracking-widest shadow-lg shadow-primary/20'
+                        className='bg-primary hover:bg-primary/90 rounded-xl font-bold h-11 px-6 text-[10px] tracking-widest shadow-soft'
                     >
                         <Plus className="w-5 h-5 mr-2" /> New Category
                     </Button>
@@ -227,14 +227,14 @@ export default function CategoryManagementPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row items-center gap-4 bg-card/20 p-4 rounded-lg border backdrop-blur-sm shadow-xl shadow-black/5">
+            <div className="flex flex-col md:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-border shadow-soft">
                 <div className="relative flex-1 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input
                         placeholder="SEARCH CATEGORIES..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-11 h-12 bg-background/50 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[10px] tracking-widest"
+                        className="pl-11 h-12 bg-background border border-border rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[10px] tracking-widest"
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ export default function CategoryManagementPage() {
             </div>
 
             {/* Categories List */}
-            <div className="bg-card/30 rounded-lg border  shadow-xl overflow-hidden backdrop-blur-md mt-4">
+            <div className="bg-card rounded-xl border border-border shadow-soft overflow-hidden mt-4">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-32 space-y-4">
                         <Loader2 className="h-10 w-10 text-primary animate-spin" />
