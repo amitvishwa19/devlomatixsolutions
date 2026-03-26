@@ -176,7 +176,7 @@ export default function AppSidebar() {
     return (
         <Sidebar collapsible="icon" className="[&>div]:bg-transparent">
             <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 flex flex-row items-center justify-between">
-                <AppLogo link={'/'} size={100} />
+                <AppLogo link={'/'} size={150} />
             </SidebarHeader>
 
             <SidebarContent className="bg-transparent px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0 overflow-x-hidden">
@@ -191,12 +191,12 @@ export default function AppSidebar() {
                                         <SidebarMenuButton
                                             onClick={() => toggleGroup(category)}
                                             tooltip={parent.title}
-                                            className="w-full flex items-center gap-3 rounded-xl text-sm font-medium text-foreground hover:bg-primary/10 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
+                                            className="w-full flex items-center gap-3 rounded-xl text-sm font-medium text-foreground hover:bg-card/50 hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
                                         >
                                             <DynamicIcon
                                                 name={parent.icon}
                                                 size={18}
-                                                className="shrink-0 text-muted-foreground"
+                                                className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
                                             />
                                             <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
                                                 {parent.title}
@@ -221,7 +221,7 @@ export default function AppSidebar() {
                                                         asChild
                                                         //isActive={isActive}
                                                         tooltip={item.title}
-                                                        className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl ${isActive ? "" : ""}`}
+                                                        className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl hover:bg-card hover:text-primary transition-colors ${isActive ? "" : ""}`}
                                                     >
                                                         <Link href={item.url}>
                                                             <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>

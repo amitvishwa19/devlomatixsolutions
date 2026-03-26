@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Code2, Cpu, Globe, Layers, Rocket, Shield } from "lucide-react";
+import { Code2, Cpu, Globe, Layers, Rocket, Shield, Sparkles } from "lucide-react";
+import Tagline from "./Tagline";
 
 const services = [
   {
@@ -38,14 +39,14 @@ const Services = () => {
   return (
     <section id="services" className="py-32 relative overflow-hidden">
       {/* Light theme gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(230,40%,98%)] via-background to-[hsl(192,60%,97%)] dark:from-background dark:via-background dark:to-background" />
-      
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-accent/5 to-primary/5 dark:from-background dark:via-background dark:to-background" />
+
       {/* Decorative orbs */}
       <div className="absolute top-20 right-10 w-[400px] h-[400px] orb-primary rounded-full blur-[100px] opacity-60" />
       <div className="absolute bottom-20 left-10 w-[350px] h-[350px] orb-secondary rounded-full blur-[80px] opacity-50" />
-      
+
       <div className="absolute inset-0 grid-pattern opacity-20" />
-      
+
       <div className="container mx-auto px-6 relative z-10">
         {/* Section Header */}
         <motion.div
@@ -55,12 +56,14 @@ const Services = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="text-primary text-sm font-medium tracking-wider">What We Do</span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold mt-4 mb-6">
-            End-to-End <span className="gradient-text">Tech Solutions</span>
+
+          <Tagline text="Transforming Ideas into Digital Reality" icon={<Sparkles className="w-4 h-4 text-primary" />} />
+
+          <h2 className=" text-4xl md:text-5xl font-bold mt-4 mb-6 text-primary">
+            End-to-End <span className="">Tech Solutions</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            From ideation to deployment, we provide comprehensive software services 
+            From ideation to deployment, we provide comprehensive software services
             that empower businesses to thrive in the digital age.
           </p>
         </motion.div>
@@ -77,8 +80,8 @@ const Services = () => {
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
               className="group glass-card p-8 hover:border-primary/50 transition-all duration-300"
             >
-              <motion.div 
-                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-[hsl(260,100%,65%,0.2)] flex items-center justify-center mb-6 group-hover:shadow-[0_0_30px_hsl(192,100%,50%,0.3)] transition-shadow duration-300"
+              <motion.div
+                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6 group-hover:shadow-[0_0_30px_var(--glow-primary)] transition-shadow duration-300"
                 whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
                 transition={{ duration: 0.5 }}
               >
@@ -91,10 +94,11 @@ const Services = () => {
                 {service.description}
               </p>
               {/* Animated underline */}
-              <motion.div 
-                className="h-0.5 bg-gradient-to-r from-primary to-[hsl(260,100%,65%)] mt-4 origin-left"
+              <motion.div
+                className="h-0.5 bg-gradient-to-r from-primary to-accent mt-4 origin-left"
                 initial={{ scaleX: 0 }}
                 whileHover={{ scaleX: 1 }}
+
                 transition={{ duration: 0.3 }}
               />
             </motion.div>

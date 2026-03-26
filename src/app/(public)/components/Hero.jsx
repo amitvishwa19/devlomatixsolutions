@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import heroDashboard from "@/app/(public)/assets/hero-dashboard.jpg";
 import ProjectInquiryDialog from "./ProjectInquiryDialog";
+import Tagline from "./Tagline";
 
 const Hero = () => {
     const [isProjectInquiryOpen, setIsProjectInquiryOpen] = useState(false);
@@ -16,7 +17,7 @@ const Hero = () => {
 
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 w-full ">
                 {/* Background gradient for light theme */}
-                <div className="absolute inset-0 bg-gradient-to-b from-background via-[hsl(230,40%,97%)] to-background dark:from-background dark:via-background dark:to-background" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background dark:from-background dark:via-background dark:to-background" />
 
                 {/* Background Effects */}
                 <div className="absolute inset-0 grid-pattern opacity-40" />
@@ -51,25 +52,19 @@ const Hero = () => {
                         {/* Left Content */}
                         <div className="text-center lg:text-left">
                             {/* Badge */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6 }}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 mb-8"
-                            >
-                                <Sparkles className="w-4 h-4 text-primary" />
-                                <span className="text-sm text-muted-foreground">Transforming Ideas into Digital Reality</span>
-                            </motion.div>
+
+
+                            <Tagline text="Transforming Ideas into Digital Reality" icon={<Sparkles className="w-4 h-4 text-primary" />} />
 
                             {/* Main Heading */}
                             <motion.h1
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.1 }}
-                                className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
+                                className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-primary "
                             >
                                 We Build{" "}
-                                <span className="gradient-text">Software</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-500">Software</span>
                                 <br />
                                 That Drives Growth
                             </motion.h1>
@@ -126,7 +121,7 @@ const Hero = () => {
                                         whileHover={{ scale: 1.05, y: -2 }}
                                     >
                                         <motion.div
-                                            className="font-display text-2xl md:text-3xl font-bold gradient-text"
+                                            className="font-display text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ delay: 0.8 + index * 0.1 }}
@@ -148,27 +143,27 @@ const Hero = () => {
                         >
                             <div className="relative">
                                 {/* Glow effect behind image */}
-                                <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 to-[hsl(260,100%,65%,0.3)] rounded-3xl blur-2xl opacity-50" />
+                                <div className="absolute -inset-4 bg-gradient-to-r from-primary/40 to-accent/40 rounded-3xl blur-2xl opacity-60 dark:opacity-40" />
 
                                 <img
                                     src={heroDashboard.src}
                                     alt="Modern tech dashboard with data visualizations"
-                                    className="relative rounded-2xl border border-border/50 shadow-2xl w-full h-auto"
+                                    className="relative rounded-2xl border border-border/50 shadow-2xl shadow-primary/10 w-full h-auto"
                                 />
 
                                 {/* Floating card overlay */}
                                 <motion.div
-                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl"
+                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl shadow-primary/10"
                                     animate={{ y: [0, -10, 0] }}
                                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                            <span className="text-green-500 text-lg">✓</span>
+                                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                            <span className="text-emerald-600 text-lg">✓</span>
                                         </div>
                                         <div>
-                                            <div className="text-sm font-semibold text-foreground">Project Delivered</div>
-                                            <div className="text-xs text-muted-foreground">Just now</div>
+                                            <div className="text-sm font-bold text-foreground">Project Delivered</div>
+                                            <div className="text-xs font-medium text-muted-foreground">Just now</div>
                                         </div>
                                     </div>
                                 </motion.div>

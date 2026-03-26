@@ -122,7 +122,7 @@ export default function CaseStudyPage() {
                             </Badge>
                             <h1 className="text-4xl md:text-6xl font-display font-bold mb-6">
                                 Real Results for
-                                <span className="gradient-text"> Real Businesses</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"> Real Businesses</span>
                             </h1>
                             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                                 Explore how we've helped companies transform their operations,

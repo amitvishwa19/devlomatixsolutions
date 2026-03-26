@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Sparkles } from "lucide-react";
 import { useState } from "react";
+import Tagline from "./Tagline";
 
 const faqs = [
   {
@@ -35,7 +36,7 @@ const FAQ = () => {
   return (
     <section className="py-32 relative">
       <div className="absolute inset-0 grid-pattern opacity-20" />
-      
+
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -44,9 +45,11 @@ const FAQ = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="text-primary text-sm font-medium tracking-wider">FAQ</span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold mt-4 mb-6">
-            Frequently Asked <span className="gradient-text">Questions</span>
+          <Tagline text="FAQ" icon={<Sparkles className="w-4 h-4 text-primary" />} />
+
+
+          <h2 className="text-primary text-4xl md:text-5xl font-bold mt-4 mb-6">
+            Frequently Asked <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Questions</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             Get answers to common questions about our services and process.

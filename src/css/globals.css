@@ -9,7 +9,7 @@
 
   :root,
   .light {
-    --background: 210 20% 98%;
+    --background: 210 30% 98%;
     --foreground: 220 20% 10%;
 
     --card: 0 0% 100%;
@@ -18,7 +18,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 10%;
 
-    --primary: 172 50% 36%;
+    --primary: 236 85% 60%; /* Vibrant Indigo */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 215 20% 94%;
@@ -27,31 +27,38 @@
     --muted: 215 18% 93%;
     --muted-foreground: 215 12% 50%;
 
-    --accent: 172 50% 36%;
+    --accent: 290 80% 60%; /* Vibrant Purple Accent */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 172 50% 36%;
+    --border: 215 25% 90%;
+    --input: 215 25% 90%;
+    --ring: 236 85% 60%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 220 20% 10%;
     --sidebar-foreground: 215 15% 70%;
-    --sidebar-primary: 172 50% 45%;
+    --sidebar-primary: 236 85% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 18% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 172 50% 45%;
+    --sidebar-ring: 236 85% 60%;
 
     /* custom tokens */
     --success: 152 60% 40%;
     --warning: 38 92% 50%;
     --info: 205 80% 50%;
+
+    /* Light Theme Eye-Catchy Additions */
+    --gradient-primary: linear-gradient(135deg, hsl(236 85% 60%), hsl(290 80% 60%));
+    --glow-primary: 0 0 30px hsl(236 85% 60% / 0.3);
+    --shadow-lg: 0 10px 25px -5px hsl(220 20% 10% / 0.05), 0 8px 10px -6px hsl(220 20% 10% / 0.01);
+    --shadow-xl: 0 20px 35px -5px hsl(220 20% 10% / 0.08), 0 12px 15px -8px hsl(220 20% 10% / 0.03);
+    --shadow-glow: 0 10px 40px -10px hsl(236 85% 60% / 0.25);
   }
 
   .dark {

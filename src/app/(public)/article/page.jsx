@@ -34,7 +34,7 @@ export default function ArticlePage() {
                                 Blog & Insights
                             </span>
                             <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
-                                Tech <span className="gradient-text">Articles</span>
+                                Tech <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Articles</span>
                             </h1>
                             <p className="text-xl text-muted-foreground leading-relaxed">
                                 Insights, tutorials, and best practices from our team of experts. Stay updated
@@ -204,7 +204,7 @@ export default function ArticlePage() {
                             className="max-w-2xl mx-auto text-center"
                         >
                             <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
-                                Subscribe to Our <span className="gradient-text">Newsletter</span>
+                                Subscribe to Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Newsletter</span>
                             </h2>
                             <p className="text-muted-foreground text-lg mb-8">
                                 Get the latest articles, tutorials, and industry insights delivered to your inbox

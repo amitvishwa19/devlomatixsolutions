@@ -61,7 +61,7 @@ export default function ServicePage() {
                         >
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Services</span>
                             <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
-                                End-to-End <span className="gradient-text">Tech Solutions</span>
+                                End-to-End <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Tech Solutions</span>
                             </h1>
                             <p className="text-muted-foreground text-lg md:text-xl">
                                 From ideation to deployment, we provide comprehensive software services
@@ -119,7 +119,7 @@ export default function ServicePage() {
                             className="glass-card p-12 text-center"
                         >
                             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-                                Ready to Start Your <span className="gradient-text">Project</span>?
+                                Ready to Start Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Project</span>?
                             </h2>
                             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
                                 Let's discuss how we can help transform your business with our technology solutions.

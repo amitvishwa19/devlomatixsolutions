@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, Mail, Sparkles } from "lucide-react";
 import ContactDialog from "./ContactDialog";
 import ProjectInquiryDialog from "./ProjectInquiryDialog";
 
 import techPattern from "@/app/(public)/assets/tech-pattern.jpg";
+import Tagline from "./Tagline";
 
 const CTA = () => {
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -15,7 +16,7 @@ const CTA = () => {
         <>
             <section id="contact" className="py-32 relative overflow-hidden">
                 {/* Rich gradient background for light theme */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[hsl(260,45%,97%)] via-[hsl(230,40%,96%)] to-[hsl(192,50%,96%)] dark:from-background dark:via-background dark:to-background" />
+                <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-background to-primary/10 dark:from-background dark:via-background dark:to-background" />
 
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0">
@@ -40,17 +41,10 @@ const CTA = () => {
                         viewport={{ once: true }}
                         className="max-w-4xl mx-auto text-center"
                     >
-                        <motion.span
-                            className="text-primary text-sm font-medium tracking-wider inline-block"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.1 }}
-                            viewport={{ once: true }}
-                        >
-                            Ready to Start?
-                        </motion.span>
+                        <Tagline text="Ready to Start?" icon={<Sparkles className="w-4 h-4 text-primary" />} />
+
                         <motion.h2
-                            className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6"
+                            className="text-primary text-4xl md:text-6xl font-bold mt-4 mb-6"
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.2 }}
@@ -58,7 +52,7 @@ const CTA = () => {
                         >
                             Let's Build Something{" "}
                             <motion.span
-                                className="gradient-text inline-block"
+                                className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent inline-block"
                                 animate={{
                                     backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                                 }}
@@ -106,20 +100,7 @@ const CTA = () => {
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </motion.div>
-                            <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                <Button
-                                    variant="heroOutline"
-                                    size="xl"
-                                    onClick={() => setIsContactOpen(true)}
-                                    className="group"
-                                >
-                                    <Mail className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                                    Contact Us
-                                </Button>
-                            </motion.div>
+
                         </motion.div>
 
                         {/* Trust Badges */}

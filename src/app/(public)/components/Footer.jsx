@@ -45,7 +45,7 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {links.services.map((link, index) => (
                                 <li key={index}>
-                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm">
+                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
                                         {link}
                                     </a>
                                 </li>
@@ -58,7 +58,7 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {links.company.map((link, index) => (
                                 <li key={index}>
-                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm">
+                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
                                         {link}
                                     </a>
                                 </li>
@@ -71,7 +71,7 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {links.resources.map((link, index) => (
                                 <li key={index}>
-                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm">
+                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
                                         {link}
                                     </a>
                                 </li>
@@ -83,13 +83,13 @@ const Footer = () => {
                 {/* Bottom Bar */}
                 <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-muted-foreground">
-                        © 2024 AcsTechHub. All rights reserved.
+                        © 2024 {process.env.NEXT_PUBLIC_APP_NAME}. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
-                        <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Privacy Policy
                         </a>
-                        <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Terms of Service
                         </a>
                     </div>

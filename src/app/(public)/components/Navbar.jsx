@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 import logo from '@/app/(public)/assets/acs_logo_1_nobg.png'
@@ -28,8 +28,9 @@ const Navbar = () => {
     const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
     const servicesRef = useRef(null);
     const router = useRouter();
+    const pathname = usePathname();
     const { data: session } = useSession()
-    console.log(session)
+    console.log(pathname)
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -59,7 +60,7 @@ const Navbar = () => {
         { name: "Contact", href: "/contact" },
     ];
 
-    const isActive = (href) => location.pathname === href;
+    const isActive = (href) => pathname === href;
 
     return (
         <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-3">
@@ -68,10 +69,10 @@ const Navbar = () => {
                 animate={{ y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className={cn(
-                    "container mx-auto rounded-2xl transition-all duration-500 ease-out",
+                    "container mx-auto rounded-2xl transition-all duration-500 ease-out border",
                     scrolled
-                        ? "bg-background/70 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/5"
-                        : "bg-transparent border border-transparent shadow-none"
+                        ? "bg-background/80 backdrop-blur-2xl border border-border/50 shadow-xl shadow-primary/5"
+                        : "bg-transparent border border-transparent shadow-none "
                 )}
             >
                 <div className="px-4 py-2.5 flex items-center justify-between">

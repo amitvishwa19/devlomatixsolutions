@@ -158,7 +158,7 @@ export default function AboutPage() {
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">About Us</span>
                             <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
                                 Driving Digital{" "}
-                                <span className="gradient-text">Transformation</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Transformation</span>
                             </h1>
                             <p className="text-xl text-muted-foreground leading-relaxed">
                                 We're a team of passionate technologists, designers, and strategists
@@ -181,7 +181,7 @@ export default function AboutPage() {
                             >
                                 <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Story</span>
                                 <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                    From Vision to <span className="gradient-text">Reality</span>
+                                    From Vision to <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Reality</span>
                                 </h2>
                                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                                     <p>
@@ -213,7 +213,7 @@ export default function AboutPage() {
                                         key={index}
                                         className="glass-card p-6 text-center hover:border-primary/50 transition-colors duration-300"
                                     >
-                                        <div className="font-display text-3xl md:text-4xl font-bold gradient-text mb-2">
+                                        <div className="font-display text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-2">
                                             {stat.value}
                                         </div>
                                         <div className="text-sm text-muted-foreground">{stat.label}</div>
@@ -236,7 +236,7 @@ export default function AboutPage() {
                         >
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Journey</span>
                             <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                Key <span className="gradient-text">Milestones</span>
+                                Key <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Milestones</span>
                             </h2>
                         </motion.div>
 
@@ -283,7 +283,7 @@ export default function AboutPage() {
                         >
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Values</span>
                             <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                What <span className="gradient-text">Drives Us</span>
+                                What <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Drives Us</span>
                             </h2>
                             <p className="text-muted-foreground max-w-2xl mx-auto">
                                 Our core values shape every decision we make and every solution we build.
@@ -327,7 +327,7 @@ export default function AboutPage() {
                         >
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Team</span>
                             <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                Meet the <span className="gradient-text">Experts</span>
+                                Meet the <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Experts</span>
                             </h2>
                             <p className="text-muted-foreground max-w-2xl mx-auto">
                                 A diverse team of talented individuals united by a passion for technology and innovation.
@@ -375,7 +375,7 @@ export default function AboutPage() {
                         >
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Offices</span>
                             <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                Global <span className="gradient-text">Presence</span>
+                                Global <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Presence</span>
                             </h2>
                             <p className="text-muted-foreground max-w-2xl mx-auto">
                                 With offices across three continents, we're always close to our clients.
@@ -420,7 +420,7 @@ export default function AboutPage() {
                         >
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">Careers</span>
                             <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                Join Our <span className="gradient-text">Team</span>
+                                Join Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Team</span>
                             </h2>
                             <p className="text-muted-foreground max-w-2xl mx-auto">
                                 We're always looking for talented individuals who share our passion for innovation.
@@ -474,7 +474,7 @@ export default function AboutPage() {
                                 <Globe className="w-8 h-8 text-primary" />
                             </div>
                             <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
-                                Our <span className="gradient-text">Mission</span>
+                                Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Mission</span>
                             </h2>
                             <p className="text-xl text-muted-foreground leading-relaxed mb-8">
                                 "To empower businesses worldwide with innovative technology solutions

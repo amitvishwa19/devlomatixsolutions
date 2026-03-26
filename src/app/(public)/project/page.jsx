@@ -88,7 +88,7 @@ export default function ProjectPage() {
                             <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Work</span>
                             <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
                                 Featured{" "}
-                                <span className="gradient-text">Projects</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Projects</span>
                             </h1>
                             <p className="text-xl text-muted-foreground leading-relaxed">
                                 Explore our portfolio of successful projects across various industries.
@@ -170,7 +170,7 @@ export default function ProjectPage() {
                         >
                             <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
                                 Ready to Build Your{" "}
-                                <span className="gradient-text">Next Project?</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Next Project?</span>
                             </h2>
                             <p className="text-muted-foreground text-lg mb-8">
                                 Let's discuss how we can help bring your vision to life with our expertise.

@@ -93,7 +93,7 @@ export default function ContactPage() {
                                 Contact Us
                             </span>
                             <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
-                                Let's Start a <span className="gradient-text">Conversation</span>
+                                Let's Start a <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Conversation</span>
                             </h1>
                             <p className="text-muted-foreground text-lg md:text-xl">
                                 Have a project in mind? We'd love to hear from you. Send us a message
@@ -143,7 +143,7 @@ export default function ContactPage() {
                             >
                                 <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
                                     Ready to Transform Your{" "}
-                                    <span className="gradient-text">Business</span>?
+                                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Business</span>?
                                 </h2>
                                 <p className="text-muted-foreground text-lg mb-8">
                                     Whether you're looking to build a new product, automate processes,
