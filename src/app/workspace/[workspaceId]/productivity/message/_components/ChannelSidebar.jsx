@@ -83,7 +83,7 @@ export const ChannelSidebar = () => {
                 <div className="space-y-[2px] mt-4">
                     <div className="flex items-center justify-between px-2 py-2">
                         <p className="text-xs uppercase font-black text-zinc-500 dark:text-zinc-400">Channels</p>
-                        <button 
+                        <button
                             onClick={() => {
                                 setCreateChannelType('TEXT');
                                 setIsCreateModalOpen(true);
@@ -107,7 +107,7 @@ export const ChannelSidebar = () => {
                 <div className="space-y-[2px] mt-4">
                     <div className="flex items-center justify-between px-2 py-2">
                         <p className="text-xs uppercase font-black text-zinc-500 dark:text-zinc-400">Voice & Video</p>
-                        <button 
+                        <button
                             onClick={() => {
                                 setCreateChannelType('AUDIO');
                                 setIsCreateModalOpen(true);
@@ -118,7 +118,7 @@ export const ChannelSidebar = () => {
                         </button>
                     </div>
                     {isLoading ? (
-                         <div className="flex items-center justify-center p-4">
+                        <div className="flex items-center justify-center p-4">
                             <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
                         </div>
                     ) : (
@@ -131,7 +131,7 @@ export const ChannelSidebar = () => {
                 <div className="space-y-[2px] mt-4 mb-4">
                     <div className="flex items-center justify-between px-2 py-2">
                         <p className="text-xs uppercase font-black text-zinc-500 dark:text-zinc-400">Direct Messages</p>
-                        <button 
+                        <button
                             onClick={() => setIsConversationModalOpen(true)}
                             className="text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-300 transition"
                         >
@@ -139,7 +139,7 @@ export const ChannelSidebar = () => {
                         </button>
                     </div>
                     {convLoading ? (
-                         <div className="flex items-center justify-center p-4">
+                        <div className="flex items-center justify-center p-4">
                             <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
                         </div>
                     ) : (
@@ -149,10 +149,10 @@ export const ChannelSidebar = () => {
                     )}
                 </div>
             </ScrollArea>
-            <CreateChannelModal 
-                isOpen={isCreateModalOpen} 
-                onClose={() => setIsCreateModalOpen(false)} 
-                initialType={createChannelType} 
+            <CreateChannelModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                initialType={createChannelType}
             />
             <StartConversationModal
                 isOpen={isConversationModalOpen}
@@ -188,7 +188,7 @@ const ChannelSearch = ({ channels }) => {
 
     return (
         <>
-            <button 
+            <button
                 onClick={() => setOpen(true)}
                 className="group px-2 py-2 rounded-md flex items-center gap-x-2 w-full bg-zinc-700/10 dark:bg-black/20 hover:bg-zinc-700/20 dark:hover:bg-black/30 transition"
             >
@@ -262,7 +262,7 @@ const ChannelItem = ({ channel }) => {
         if (channel.name === "general") {
             return alert("Cannot delete the general channel");
         }
-        
+
         const confirm = window.confirm(`Are you sure you want to delete #${channel.name}?`);
         if (!confirm) return;
 
@@ -278,7 +278,7 @@ const ChannelItem = ({ channel }) => {
             }
 
             mutate(`/api/workspace/${workspaceId}/productivity/channels`);
-            
+
             // Redirect to general if we deleted the current channel
             const currentUrl = window.location.href;
             if (currentUrl.includes(`channelId=${channel.id}`)) {
@@ -293,7 +293,7 @@ const ChannelItem = ({ channel }) => {
     };
 
     return (
-        <div 
+        <div
             onClick={() => router.push(`?channelId=${channel.id}`)}
             className="group px-2 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition mb-0.5 cursor-pointer"
         >
@@ -304,15 +304,15 @@ const ChannelItem = ({ channel }) => {
             <div className="ml-auto flex items-center gap-x-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <div 
-                            onClick={(e) => e.stopPropagation()} 
+                        <div
+                            onClick={(e) => e.stopPropagation()}
                             className="hidden group-hover:flex items-center justify-center rounded outline-none cursor-pointer"
                         >
                             <Settings className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-300 transition" />
                         </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="center" sideOffset={15} className="w-48 bg-white dark:bg-zinc-900 border-none shadow-md">
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                             onClick={onCopy}
                             className="text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-300 cursor-pointer"
                         >
@@ -322,7 +322,7 @@ const ChannelItem = ({ channel }) => {
                         {channel.name !== "general" && (
                             <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                     onClick={onDelete}
                                     disabled={isDeleting}
                                     className="text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 cursor-pointer"
@@ -344,7 +344,7 @@ const ConversationItem = ({ conversation }) => {
     const otherMember = conversation.otherMember;
 
     return (
-        <button 
+        <button
             onClick={() => router.push(`?conversationId=${conversation.id}`)}
             className="group px-2 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition mb-0.5"
         >
