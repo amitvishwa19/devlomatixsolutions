@@ -39,60 +39,61 @@ export default function SettingPage() {
                 </div>
 
                 {/* Tabs Interface */}
-                <Tabs defaultValue="general" className="w-full space-y-8">
-                    <TabsList className="bg-muted/20 p-1 rounded-xl border border-border/40 flex h-auto flex-wrap md:flex-nowrap gap-1">
+                <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-8 items-start">
+                    <TabsList className="bg-muted/20 p-2 rounded-xl border border-border/40 flex flex-col h-auto w-full md:w-72 gap-1 sticky top-6">
                         <TabsTrigger
                             value="general"
-                            className="flex-1 rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-primary transition-all gap-2"
+                            className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-primary transition-all gap-3"
                         >
                             <Settings className="w-4 h-4" />
                             <span className="text-[10px] font-black tracking-widest uppercase">General</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="security"
-                            className="flex-1 rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-sky-500 transition-all gap-2"
+                            className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-sky-500 transition-all gap-3"
                         >
                             <Shield className="w-4 h-4" />
                             <span className="text-[10px] font-black tracking-widest uppercase">Security</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="notifications"
-                            className="flex-1 rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-rose-500 transition-all gap-2"
+                            className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-rose-500 transition-all gap-3"
                         >
                             <Bell className="w-4 h-4" />
                             <span className="text-[10px] font-black tracking-widest uppercase">Notifications</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="integrations"
-                            className="flex-1 rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-emerald-500 transition-all gap-2"
+                            className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-emerald-500 transition-all gap-3"
                         >
                             <Puzzle className="w-4 h-4" />
                             <span className="text-[10px] font-black tracking-widest uppercase">Integrations</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="advanced"
-                            className="flex-1 rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-amber-500 transition-all gap-2"
+                            className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-amber-500 transition-all gap-3"
                         >
                             <Cpu className="w-4 h-4" />
                             <span className="text-[10px] font-black tracking-widest uppercase">Advanced</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="privacy"
-                            className="flex-1 rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-indigo-500 transition-all gap-2"
+                            className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-indigo-500 transition-all gap-2"
                         >
                             <ShieldCheck className="w-4 h-4" />
                             <span className="text-[10px] font-black tracking-widest uppercase">Privacy</span>
                         </TabsTrigger>
+                        <div className="my-2 border-t border-border/10"></div>
                         <TabsTrigger
                             value="danger"
-                            className="flex-1 rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-rose-500 transition-all gap-2"
+                            className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-rose-500 data-[state=active]:text-white data-[state=active]:shadow-soft transition-all gap-3 text-rose-500"
                         >
                             <AlertTriangle className="w-4 h-4" />
-                            <span className="text-[10px] font-black tracking-widest uppercase">Danger</span>
+                            <span className="text-[10px] font-black tracking-widest uppercase">Danger Zone</span>
                         </TabsTrigger>
                     </TabsList>
 
-                    <div className="mt-8">
+                    <div className="flex-1 w-full min-w-0">
                         <TabsContent value="general">
                             <GeneralSettings />
                         </TabsContent>
@@ -111,7 +112,7 @@ export default function SettingPage() {
                         <TabsContent value="privacy">
                             <PrivacySettings />
                         </TabsContent>
-                        <TabsContent value="danger">
+                        <TabsContent value="danger" className="mt-0">
                             <DangerZone />
                         </TabsContent>
                     </div>
