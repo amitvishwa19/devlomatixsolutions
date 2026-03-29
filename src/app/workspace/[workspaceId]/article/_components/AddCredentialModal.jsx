@@ -38,7 +38,7 @@ const PLATFORM_CONFIG = {
  INSTAGRAM: ['accessToken', 'igUserId'],
  TWITTER: ['bearerToken'],
  X: ['bearerToken'],
- LINKEDIN: ['accessToken'],
+ LINKEDIN: ['accessToken', 'organizationUrn'],
  WHATSAPP: ['accessToken', 'phoneNumberId'],
  YOUTUBE: ['apiKey'],
  GMAIL: ['access_token', 'refresh_token'],
@@ -377,15 +377,17 @@ export const AddCredentialModal = () => {
  });
  if (res.data.success) {
  toast.success(res.data.message, { id: toastId });
- } else {
- const errorData = res.data.data;
- const detailedMsg = errorData?.error?.message || res.data.message;
- console.error("[TEST_FAILED_DETAILS]", errorData);
- toast.error(detailedMsg, {
- id: toastId,
- description: errorData?.error?.type ? `Type: ${errorData.error.type}` : undefined
- });
- }
+      } else {
+        const errorData = res.data.data;
+        console.error("[TEST_FAILED]", res.data);
+        const detailedMsg = res.data.message || "Connection failed";
+        const description = errorData?.message || (errorData?.error?.message) || (errorData?.serviceErrorCode ? `Code: ${errorData.serviceErrorCode}` : undefined);
+        
+        toast.error(detailedMsg, {
+          id: toastId,
+          description: description
+        });
+      }
  } catch (err) {
  toast.error(err?.response?.data?.message || 'Test failed', { id: toastId });
  } finally {

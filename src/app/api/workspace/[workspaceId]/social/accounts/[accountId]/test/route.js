@@ -51,30 +51,40 @@ export async function POST(req, { params }) {
 
         // Run the platform-specific test
         // Use either the provided accountId's platform from DB, or a platform passed in the body
-        const targetPlatform = body.platform || (await db.credentials.findUnique({ where: { id: accountId } }))?.platform;
+        const targetPlatform = body.platform || (accountId !== 'undefined' && (await db.credentials.findUnique({ where: { id: accountId } }))?.platform);
         const result = await testConnection(targetPlatform, decryptedCredentials || {});
 
-        // Update the credential status in DB based on result
+        // Update the credential status in DB based on result (only if it's an existing record)
         const newStatus = result.success ? 'connected' : 'error';
         const newExpired = !result.success && result.message?.toLowerCase().includes('expired');
 
-        await db.credentials.update({
-            where: { id: accountId },
-            data: {
-                status: newStatus,
-                expired: newExpired,
+        if (accountId && accountId !== 'undefined') {
+            try {
+                await db.credentials.update({
+                    where: { id: accountId },
+                    data: {
+                        status: newStatus,
+                        expired: newExpired,
+                    }
+                });
+            } catch (err) {
+                console.warn("[TEST_DB_UPDATE_SKIP]", err.message);
             }
-        });
+        }
 
         return NextResponse.json({
             success: result.success,
             message: result.message,
             status: newStatus,
             expired: newExpired,
-            data: result.data // Include raw error data for debugging
+            data: result.data || {} // Include raw error data for debugging
         });
     } catch (error) {
         console.error("[TEST_CONNECTION_ERROR]", error.message);
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        return NextResponse.json({ 
+            success: false, 
+            message: error.message,
+            data: { stack: error.stack }
+        }, { status: 500 });
     }
 }

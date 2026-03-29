@@ -122,19 +122,63 @@ async function testTwitter(credentials) {
  * Required keys: accessToken
  */
 async function testLinkedIn(credentials) {
-    const token = credentials.accessToken || credentials.access_token || credentials.token;
+    const token = (credentials.accessToken || credentials.access_token || credentials.token || '').trim();
+    const orgUrnOrId = (credentials.organizationUrn || credentials.organization_urn || '').trim();
+
     if (!token) return { success: false, message: 'Missing accessToken in credentials' };
 
-    const { ok, status, data } = await fetchWithTimeout(
-        'https://api.linkedin.com/v2/me',
-        { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (ok && data?.id) {
-        const name = `${data.localizedFirstName || ''} ${data.localizedLastName || ''}`.trim();
-        return { success: true, message: `Connected as ${name}`, data };
+    const headers = { 
+        'Authorization': `Bearer ${token}`,
+        'X-Restli-Protocol-Version': '2.0.0',
+        'Accept': 'application/json'
+    };
+
+    // 1. Get user profile (Try Legacy /v2/me first, then fallback to OIDC /v2/userinfo)
+    let profileRes = await fetchWithTimeout('https://api.linkedin.com/v2/me', { headers });
+    
+    if (!profileRes.ok && profileRes.status === 401) {
+        // Fallback to OpenID Connect userinfo (Modern 2024+ standard)
+        profileRes = await fetchWithTimeout('https://api.linkedin.com/v2/userinfo', { headers });
     }
-    if (status === 401) return { success: false, message: 'Invalid or expired access token', data };
-    return { success: false, message: 'Connection failed', data };
+    
+    if (!profileRes.ok) {
+        let errorMsg = 'Failed to verify LinkedIn profile';
+        if (profileRes.status === 401) errorMsg = 'Invalid or expired access token';
+        if (profileRes.status === 403) errorMsg = 'Token lacks profile permission (openid/profile or r_liteprofile)';
+        return { success: false, message: errorMsg, data: profileRes.data };
+    }
+
+    const dMe = profileRes.data;
+    const firstName = dMe.localizedFirstName || dMe.given_name || '';
+    const lastName = dMe.localizedLastName || dMe.family_name || '';
+    const name = `${firstName} ${lastName}`.trim() || dMe.name || 'LinkedIn User';
+
+    // 2. If organizationUrn is provided, verify access
+    if (orgUrnOrId) {
+        const author = String(orgUrnOrId).startsWith('urn:li:') 
+            ? orgUrnOrId 
+            : `urn:li:organization:${orgUrnOrId}`;
+        
+        const { ok: okOrg, status: sOrg, data: dOrg } = await fetchWithTimeout(
+            `https://api.linkedin.com/v2/organizationAcls?q=organization&organization=${encodeURIComponent(author)}&role=ADMINISTRATOR&state=APPROVED`,
+            { headers }
+        );
+
+        if (okOrg && dOrg?.elements?.length > 0) {
+            return { success: true, message: `Connected as ${name} (Admin for ${author})`, data: { me: dMe, org: dOrg } };
+        } else {
+            let detail = `Administrator access not found for ${author}.`;
+            if (sOrg === 403) detail = `Token lacks permission for organization data (w_organization_social or Community Management API).`;
+            if (sOrg === 401) detail = `Token became invalid while checking organization.`;
+            return { 
+                success: false, 
+                message: `Token is valid for ${name}, but ${detail}`, 
+                data: { me: dMe, org: dOrg, status: sOrg } 
+            };
+        }
+    }
+
+    return { success: true, message: `Connected as ${name}`, data: dMe };
 }
 
 /**

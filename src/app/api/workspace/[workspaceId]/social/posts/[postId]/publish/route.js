@@ -245,22 +245,29 @@ async function publishTwitter(creds, content) {
 
 async function publishLinkedIn(creds, content, mediaUrls) {
     const token = creds.accessToken || creds.access_token;
+    const orgUrnOrId = creds.organizationUrn || creds.organization_urn;
     const personUrn = creds.personUrn || creds.person_urn || creds.authorUrn;
 
     if (!token) return { success: false, message: 'Missing accessToken in LinkedIn credentials' };
 
-    // Get person URN if not stored
-    let urn = personUrn;
-    if (!urn) {
+    // Determine the author URN (Page or Person)
+    let author = personUrn;
+    if (orgUrnOrId) {
+        author = String(orgUrnOrId).startsWith('urn:li:') 
+            ? orgUrnOrId 
+            : `urn:li:organization:${orgUrnOrId}`;
+    }
+
+    if (!author) {
         const { ok, data } = await fetchJSON('https://api.linkedin.com/v2/me', {
             headers: { Authorization: `Bearer ${token}` }
         });
         if (!ok) return { success: false, message: 'Failed to get LinkedIn profile' };
-        urn = `urn:li:person:${data.id}`;
+        author = `urn:li:person:${data.id}`;
     }
 
     const body = {
-        author: urn,
+        author: author,
         lifecycleState: 'PUBLISHED',
         specificContent: {
             'com.linkedin.ugc.ShareContent': {
