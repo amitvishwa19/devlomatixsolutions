@@ -115,10 +115,10 @@ export default function CredentialPage() {
         <div className="flex-1 space-y-8 p-8 pt-6 animate-fade-in">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-black flex items-center gap-3">
+                    <h2 className="text-xl font-black flex items-center gap-3">
                         <Database className="w-8 h-8 text-primary" /> System Credentials
                     </h2>
-                    <p className="text-sm font-medium text-muted-foreground mt-1">
+                    <p className="text-xs font-medium text-muted-foreground mt-1">
                         Manage your encrypted platform access tokens and API keys securely.
                     </p>
                 </div>
