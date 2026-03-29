@@ -15,6 +15,7 @@ import { authorize } from '@/lib/authorize'
 import ProtectedRoute from '@/components/global/ProtectedRoute'
 import { useAccess } from './_provider/accessProvider'
 import { Loader2 } from 'lucide-react'
+import AccessSkeleton from './_components/AccessSkeleton'
 
 
 
@@ -59,15 +60,10 @@ export default function Dashboard() {
                 </ButtonGroup>
             </div>
 
-            <ScrollArea className='flex-grow '>
+            <ScrollArea className='grow '>
                 <div className='flex flex-col gap-4 h-full min-h-[400px]'>
                     {loading ? (
-                        <div className='flex flex-grow items-center justify-center p-20'>
-                            <div className='flex flex-col items-center gap-2'>
-                                <Loader2 className='h-8 w-8 animate-spin text-primary' />
-                                <p className='text-sm text-muted-foreground'>Loading access data...</p>
-                            </div>
-                        </div>
+                        <AccessSkeleton />
                     ) : (
                         active.component
                     )}

@@ -146,6 +146,13 @@ export const PermissionMatrix = () => {
     );
   };
 
+  const handleBulkToggle = (category, status) => {
+    setPermissions((prev) =>
+      prev.map((p) => (p.category === category ? { ...p, status } : p))
+    );
+    toast.success(`${status ? 'Enabled' : 'Disabled'} all permissions for ${formatCategoryName(category)}`);
+  };
+
   const handlePermissionCreate = (category, action) => {
     const newPermission = {
       id: `new-${category}-${action}-${Date.now()}`,
@@ -336,6 +343,7 @@ export const PermissionMatrix = () => {
                   key={module.category}
                   module={module}
                   onPermissionChange={handlePermissionChange}
+                  onBulkToggle={handleBulkToggle}
                   onCreatePermission={handlePermissionCreate}
                   onEditModule={(m) => {
                     setEditorModal({ isOpen: true, mode: "edit", category: m.category, editData: m });

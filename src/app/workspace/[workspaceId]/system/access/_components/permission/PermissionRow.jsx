@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Plus, Users, Shield } from "lucide-react";
+import { Pencil, Trash2, Plus, Users, Shield, ShieldOff, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -10,6 +10,7 @@ const actionKeys = ["view", "create", "edit", "delete", "manage", "export", "imp
 export const PermissionRow = ({
     module,
     onPermissionChange,
+    onBulkToggle,
     onCreatePermission,
     onEditModule,
     onDeleteModule,
@@ -53,15 +54,45 @@ export const PermissionRow = ({
 
 
     return (
-        <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+        <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors group/row">
             <td className="py-3 px-4">
                 <div className="flex items-center gap-3">
                     <div
                         className="w-2 h-8 rounded-full"
                         style={{ backgroundColor: getColor() }}
                     />
-                    <div>
-                        <p className="font-medium text-sm">{module.displayName}</p>
+                    <div className="flex flex-col flex-1 min-w-0">
+                        <p className="font-medium text-sm flex items-center gap-2">
+                             {module.displayName}
+                             <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                 <Tooltip>
+                                     <TooltipTrigger asChild>
+                                         <Button 
+                                             variant="ghost" 
+                                             size="icon" 
+                                             className="w-5 h-5 hov:text-primary"
+                                             onClick={() => onBulkToggle(module.category, true)}
+                                         >
+                                             <ShieldCheck className="w-3 h-3 text-primary/80" />
+                                         </Button>
+                                     </TooltipTrigger>
+                                     <TooltipContent>Enable all in {module.displayName}</TooltipContent>
+                                 </Tooltip>
+                                 <Tooltip>
+                                     <TooltipTrigger asChild>
+                                         <Button 
+                                             variant="ghost" 
+                                             size="icon" 
+                                             className="w-5 h-5 hover:text-destructive"
+                                             onClick={() => onBulkToggle(module.category, false)}
+                                         >
+                                             <ShieldOff className="w-3 h-3 text-destructive/80" />
+                                         </Button>
+                                     </TooltipTrigger>
+                                     <TooltipContent>Disable all in {module.displayName}</TooltipContent>
+                                 </Tooltip>
+                             </div>
+                        </p>
                         <p className="text-xs text-muted-foreground font-mono">{module.category}</p>
                     </div>
                     <HoverCard>
