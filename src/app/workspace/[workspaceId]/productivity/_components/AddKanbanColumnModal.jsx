@@ -81,7 +81,7 @@ export const AddKanbanColumnModal = () => {
  <div className="p-8 space-y-6">
  <div className="space-y-4">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
+ <label className="text-[10px] text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
  <Type size={12} /> Column Title
  </label>
  <Input

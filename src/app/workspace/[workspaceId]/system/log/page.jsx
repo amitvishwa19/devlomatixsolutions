@@ -143,7 +143,7 @@ export default function LogPage() {
  <CardContent className="p-4 flex flex-wrap items-center gap-6">
  <div className="flex items-center gap-2">
  <Search size={14} className="text-muted-foreground" />
- <span className="text-[10px] font-black text-muted-foreground">Filter By:</span>
+ <span className="text-[10px] text-muted-foreground">Filter By:</span>
  </div>
  
  <div className="flex items-center gap-3">
@@ -188,10 +188,10 @@ export default function LogPage() {
  <Table>
  <TableHeader className="bg-muted/30">
  <TableRow className="hover:bg-transparent">
- <TableHead className="w-[100px] text-[10px] font-black py-4">Status</TableHead>
- <TableHead className="w-[120px] text-[10px] font-black py-4">Module</TableHead>
- <TableHead className="text-[10px] font-black py-4">Message</TableHead>
- <TableHead className="w-[180px] text-right text-[10px] font-black py-4">Timestamp</TableHead>
+ <TableHead className="w-[100px] text-[10px] py-4">Status</TableHead>
+ <TableHead className="w-[120px] text-[10px] py-4">Module</TableHead>
+ <TableHead className="text-[10px] py-4">Message</TableHead>
+ <TableHead className="w-[180px] text-right text-[10px] py-4">Timestamp</TableHead>
  <TableHead className="w-[60px] text-right py-4"></TableHead>
  </TableRow>
  </TableHeader>
@@ -201,7 +201,7 @@ export default function LogPage() {
  <TableCell colSpan={5} className="h-48 text-center">
  <div className="flex flex-col items-center gap-3 opacity-40">
  <Loader2 className="h-8 w-8 animate-spin text-primary" />
- <span className="text-[10px] font-black tracking-[0.3em]">Synchronizing Diagnostics...</span>
+ <span className="text-[10px] tracking-[0.3em]">Synchronizing Diagnostics...</span>
  </div>
  </TableCell>
  </TableRow>
@@ -221,7 +221,7 @@ export default function LogPage() {
  {getLevelBadge(log.level)}
  </TableCell>
  <TableCell className="py-4">
- <div className="flex items-center font-black text-[10px] ">
+ <div className="flex items-center text-[10px] ">
  {getTypeIcon(log.type)}
  {log.type}
  </div>
@@ -261,7 +261,7 @@ export default function LogPage() {
  <ChevronLeft size={16} />
  </Button>
  <div className="flex items-center gap-1.5 px-3">
- <span className="text-[11px] font-black">{pagination.page}</span>
+ <span className="text-[11px]">{pagination.page}</span>
  <span className="text-[11px] font-bold text-muted-foreground/40">/</span>
  <span className="text-[11px] font-bold text-muted-foreground/40">{pagination.pages}</span>
  </div>
@@ -283,7 +283,7 @@ export default function LogPage() {
  <DialogHeader className="p-6 pb-2">
  <div className="flex items-center justify-between mb-2">
  {selectedLog && getLevelBadge(selectedLog.level)}
- <span className="text-[10px] font-black text-muted-foreground ">
+ <span className="text-[10px] text-muted-foreground ">
  Log ID: {selectedLog?.id?.slice(0, 8)}...
  </span>
  </div>
@@ -298,14 +298,14 @@ export default function LogPage() {
  <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-hide">
  <div className="grid grid-cols-2 gap-4">
  <div className="bg-muted/40 p-4 rounded-xl border border-border/50">
- <span className="text-[10px] font-black text-muted-foreground block mb-2 ">Target Module</span>
+ <span className="text-[10px] text-muted-foreground block mb-2 ">Target Module</span>
  <div className="flex items-center font-bold text-sm">
  {selectedLog && getTypeIcon(selectedLog.type)}
  {selectedLog?.type}
  </div>
  </div>
  <div className="bg-muted/40 p-4 rounded-xl border border-border/50">
- <span className="text-[10px] font-black text-muted-foreground block mb-2 ">Workspace ID</span>
+ <span className="text-[10px] text-muted-foreground block mb-2 ">Workspace ID</span>
  <div className="font-mono text-[11px] font-bold truncate">
  {selectedLog?.workspaceId || 'GLOBAL / SYSTEM'}
  </div>
@@ -314,7 +314,7 @@ export default function LogPage() {
 
  {selectedLog?.details && (
  <div className="space-y-2">
- <span className="text-[10px] font-black text-muted-foreground ml-1 ">Technical Metadata (JSON)</span>
+ <span className="text-[10px] text-muted-foreground ml-1 ">Technical Metadata (JSON)</span>
  <div className="bg-black/95 p-6 rounded-xl overflow-hidden shadow-inner border border-white/5 relative group">
  <pre className="text-[11px] font-mono text-blue-400 overflow-x-auto scrollbar-hide leading-relaxed">
  {JSON.stringify(selectedLog.details, null, 2)}

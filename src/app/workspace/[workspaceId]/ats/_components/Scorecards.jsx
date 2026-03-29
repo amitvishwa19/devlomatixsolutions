@@ -60,12 +60,12 @@ export default function Scorecards({ candidate, onSubmit }) {
  <CardHeader className="p-8 border-b border-border/10">
  <div className="flex items-center justify-between">
  <div className="space-y-1">
- <CardTitle className="text-2xl font-black tracking-tighter">Structured Scorecard</CardTitle>
- <CardDescription className="text-[10px] font-black opacity-40">Evaluating Candidate Fit with Precision</CardDescription>
+ <CardTitle className="text-2xl tracking-tighter">Structured Scorecard</CardTitle>
+ <CardDescription className="text-[10px] opacity-40">Evaluating Candidate Fit with Precision</CardDescription>
  </div>
  <div className="text-right">
- <p className="text-[10px] font-black opacity-40 mb-1">Overall Average</p>
- <div className="text-3xl font-black text-primary">{averageScore.toFixed(1)}</div>
+ <p className="text-[10px] opacity-40 mb-1">Overall Average</p>
+ <div className="text-3xl text-primary">{averageScore.toFixed(1)}</div>
  </div>
  </div>
  </CardHeader>
@@ -79,11 +79,11 @@ export default function Scorecards({ candidate, onSubmit }) {
  <attr.icon size={16} />
  </div>
  <div>
- <h4 className="text-sm font-black ">{attr.label}</h4>
+ <h4 className="text-sm ">{attr.label}</h4>
  <p className="text-[10px] font-medium opacity-40">{attr.description}</p>
  </div>
  </div>
- <Badge variant="outline" className={`h-8 w-12 flex items-center justify-center font-black text-xs rounded-lg ${attr.color} bg-background/40`}>
+ <Badge variant="outline" className={`h-8 w-12 flex items-center justify-center text-xs rounded-lg ${attr.color} bg-background/40`}>
  {scores[attr.id]}/5
  </Badge>
  </div>
@@ -97,7 +97,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  />
  <div className="flex justify-between px-1">
  {['Poor', 'Below Average', 'Average', 'Good', 'Exceptional'].map((label, i) => (
- <span key={i} className={`text-[8px] font-black tracking-tighter opacity-30 ${scores[attr.id] === i + 1 ? 'opacity-100 text-primary' : ''}`}>
+ <span key={i} className={`text-[8px] tracking-tighter opacity-30 ${scores[attr.id] === i + 1 ? 'opacity-100 text-primary' : ''}`}>
  {label}
  </span>
  ))}
@@ -110,7 +110,7 @@ export default function Scorecards({ candidate, onSubmit }) {
 
  <div className="space-y-6">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Evidence & Notes</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Evidence & Notes</label>
  <Textarea 
  placeholder="Describe specific examples or observations that justify the scores above..."
  className="min-h-[150px] bg-muted/20 border-border/20 rounded-lg p-6 font-medium text-sm focus-visible:ring-primary shadow-inner"
@@ -120,7 +120,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  </div>
 
  <div className="space-y-4">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Final Recommendation</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Final Recommendation</label>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
  {[
  { value: 'strong_yes', label: 'Strong Hire', icon: Zap },
@@ -139,7 +139,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  onClick={() => setFinalRecommendation(rec.value)}
  >
  <rec.icon size={16} />
- <span className="text-[10px] font-black ">{rec.label}</span>
+ <span className="text-[10px] ">{rec.label}</span>
  </Button>
  ))}
  </div>
@@ -148,7 +148,7 @@ export default function Scorecards({ candidate, onSubmit }) {
 
  <div className="pt-6">
  <Button 
- className="w-full h-14 rounded-lg bg-primary text-primary-foreground font-black tracking-[0.2em] text-xs shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all hover:shadow-primary/40"
+ className="w-full h-14 rounded-lg bg-primary text-primary-foreground tracking-[0.2em] text-xs shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all hover:shadow-primary/40"
  onClick={() => onSubmit({ scores, overallFeedback, finalRecommendation })}
  >
  Finalize Evaluation & Submit Scorecard

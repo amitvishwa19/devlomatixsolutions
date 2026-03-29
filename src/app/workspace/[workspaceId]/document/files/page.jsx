@@ -72,7 +72,7 @@ const getFileIcon = (fileType, name = "") => {
 
 const getStatusBadge = (status) => {
  const s = status?.toLowerCase() || 'approved';
- const baseClass = "px-3 py-0.5 rounded-full text-[11px] font-black border-0 flex items-center justify-center min-w-[80px]";
+ const baseClass = "px-3 py-0.5 rounded-full text-[11px] border-0 flex items-center justify-center min-w-[80px]";
 
  switch (s) {
  case 'approved':
@@ -300,7 +300,7 @@ export default function FilesPage() {
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse min-w-[800px]">
  <thead>
- <tr className="border-b bg-muted/20 text-xs text-muted-foreground/80 font-black">
+ <tr className="border-b bg-muted/20 text-xs text-muted-foreground/80">
  <th className="p-4 w-14 text-center">
  <Checkbox
  checked={selectedFiles.length === filteredFiles.length && filteredFiles.length > 0}
@@ -308,12 +308,12 @@ export default function FilesPage() {
  className="rounded-sm border-muted-foreground/30 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-none"
  />
  </th>
- <th className="p-4 font-black">Name</th>
- <th className="p-4 font-black">Owner</th>
- <th className="p-4 font-black">Department</th>
- <th className="p-4 font-black">Size</th>
- <th className="p-4 font-black">Status</th>
- <th className="p-4 font-black">Date</th>
+ <th className="p-4">Name</th>
+ <th className="p-4">Owner</th>
+ <th className="p-4">Department</th>
+ <th className="p-4">Size</th>
+ <th className="p-4">Status</th>
+ <th className="p-4">Date</th>
  <th className="p-4 w-14"></th>
  </tr>
  </thead>
@@ -323,7 +323,7 @@ export default function FilesPage() {
  <td colSpan={8} className="p-10 text-center text-muted-foreground">
  <div className="flex flex-col items-center gap-3">
  <Loader2 className="w-6 h-6 animate-spin text-primary" />
- <span className="text-xs font-black">Loading Database...</span>
+ <span className="text-xs">Loading Database...</span>
  </div>
  </td>
  </tr>
@@ -428,7 +428,7 @@ export default function FilesPage() {
 
  <div className="space-y-6">
  <div className="space-y-2">
- <label className="text-xs font-black text-muted-foreground ml-1">Select Existing Folder</label>
+ <label className="text-xs text-muted-foreground ml-1">Select Existing Folder</label>
  <Select value={targetFolderId} onValueChange={(val) => { setTargetFolderId(val); setNewFolderName(""); }}>
  <SelectTrigger className="w-full h-11 bg-muted/30 border-none rounded-xl font-bold">
  <SelectValue placeholder="-- Choose a folder --" />
@@ -452,12 +452,12 @@ export default function FilesPage() {
 
  <div className="relative flex items-center py-2">
  <div className="flex-grow border-t border-muted/50"></div>
- <span className="flex-shrink-0 mx-4 text-xs font-black text-muted-foreground/50">OR</span>
+ <span className="flex-shrink-0 mx-4 text-xs text-muted-foreground/50">OR</span>
  <div className="flex-grow border-t border-muted/50"></div>
  </div>
 
  <div className="space-y-2">
- <label className="text-xs font-black text-muted-foreground ml-1">Create New Folder</label>
+ <label className="text-xs text-muted-foreground ml-1">Create New Folder</label>
  <div className="relative">
  <FolderPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
  <Input

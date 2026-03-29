@@ -54,7 +54,7 @@ export default function JobManagementPage() {
  {/* Header */}
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div className="space-y-1">
- <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40">
+ <div className="flex items-center gap-2 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">
  <span onClick={() => router.push(`/workspace/${workspaceId}/ats`)} className="hover:text-primary cursor-pointer transition-colors">ATS</span>
  <ChevronRight size={10} />
  <span className="text-primary/60">Jobs</span>
@@ -107,12 +107,12 @@ export default function JobManagementPage() {
  <table className="w-full text-left border-collapse">
  <thead>
  <tr className="border-b border-border/40 bg-muted/10">
- <th className="p-6 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40">Position</th>
- <th className="p-6 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40">Department</th>
- <th className="p-6 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40">Location</th>
- <th className="p-6 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40 text-center">Applicants</th>
- <th className="p-6 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40">Status</th>
- <th className="p-6 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40"></th>
+ <th className="p-6 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">Position</th>
+ <th className="p-6 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">Department</th>
+ <th className="p-6 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">Location</th>
+ <th className="p-6 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40 text-center">Applicants</th>
+ <th className="p-6 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">Status</th>
+ <th className="p-6 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40"></th>
  </tr>
  </thead>
  <tbody>
@@ -132,7 +132,7 @@ export default function JobManagementPage() {
  <Briefcase size={18} />
  </div>
  <div>
- <h4 className="text-sm font-black group-hover:text-primary transition-colors">{job.title}</h4>
+ <h4 className="text-sm group-hover:text-primary transition-colors">{job.title}</h4>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60 ">{job.type}</p>
  </div>
  </div>
@@ -150,14 +150,14 @@ export default function JobManagementPage() {
  </td>
  <td className="p-6 text-center">
  <div className="inline-flex flex-col items-center justify-center min-w-[60px] p-2 rounded-xl bg-muted/20 border border-border/10">
- <span className="text-sm font-black">{job._count?.applications || 0}</span>
+ <span className="text-sm">{job._count?.applications || 0}</span>
  <span className="text-[9px] font-bold text-muted-foreground opacity-40">Total</span>
  </div>
  </td>
  <td className="p-6">
  <div className="flex items-center gap-2">
  <div className={`w-2 h-2 rounded-full ${getStatusColor(job.status).split(' ')[1].replace('text-', 'bg-')}`} />
- <span className={`text-[10px] font-black ${getStatusColor(job.status).split(' ')[1]}`}>
+ <span className={`text-[10px] ${getStatusColor(job.status).split(' ')[1]}`}>
  {job.status}
  </span>
  </div>
@@ -170,7 +170,7 @@ export default function JobManagementPage() {
  router.push(`/workspace/${workspaceId}/ats/pipeline?jobId=${job.id}`)
  }}
  size="sm"
- className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-black text-[9px] shadow-lg shadow-primary/20 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100"
+ className="h-8 px-4 rounded-lg bg-primary text-primary-foreground text-[9px] shadow-lg shadow-primary/20 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100"
  >
  View Pipeline
  </Button>
@@ -203,8 +203,8 @@ export default function JobManagementPage() {
  <div className="p-6 border-t border-border/40 bg-muted/5 flex items-center justify-between">
  <p className="text-xs font-bold text-muted-foreground opacity-40">Showing {displayJobs.length} total positions</p>
  <div className="flex items-center gap-2">
- <Button variant="outline" size="sm" disabled className="h-8 rounded-lg text-[10px] font-black border-border/40 opacity-50">Previous</Button>
- <Button variant="outline" size="sm" disabled className="h-8 rounded-lg text-[10px] font-black border-border/40 opacity-50">Next</Button>
+ <Button variant="outline" size="sm" disabled className="h-8 rounded-lg text-[10px] border-border/40 opacity-50">Previous</Button>
+ <Button variant="outline" size="sm" disabled className="h-8 rounded-lg text-[10px] border-border/40 opacity-50">Next</Button>
  </div>
  </div>
  </div>

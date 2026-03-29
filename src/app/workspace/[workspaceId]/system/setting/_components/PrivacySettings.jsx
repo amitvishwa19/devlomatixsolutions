@@ -52,7 +52,7 @@ export const PrivacySettings = () => {
  <Label className="text-[10px] font-bold opacity-70">Data Retention Period (Days)</Label>
  <div className="flex gap-4 items-center">
  <History className="w-5 h-5 text-muted-foreground/40" />
- <code className="text-[11px] font-black text-foreground flex-1">
+ <code className="text-[11px] text-foreground flex-1">
  PURGE ALL LOGS OLDER THAN {localPrivacy.dataRetention} DAYS
  </code>
  <Button variant="outline" size="sm" className="rounded-xl text-[10px] font-bold h-8 px-4" disabled>
@@ -118,7 +118,7 @@ export const PrivacySettings = () => {
  <div className="p-2 bg-primary/10 rounded-xl">
  <FileText className="w-5 h-5" />
  </div>
- <span className="text-xs font-black ">Export Workspace Data Bundle</span>
+ <span className="text-xs ">Export Workspace Data Bundle</span>
  </div>
  <span className="text-[10px] font-medium text-muted-foreground italic">Generate a ZIP file with all posts, comments, and settings</span>
  </Button>

@@ -103,7 +103,7 @@ export default function TalentDatabasePage() {
  </Button>
  <Button 
  onClick={() => setIsAddModalOpen(true)}
- className="h-10 rounded-md px-6 font-black text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-10 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  <UserPlus className="w-4 h-4 mr-2" />
  Add Candidate
@@ -184,13 +184,13 @@ export default function TalentDatabasePage() {
  <Table>
  <TableHeader className="bg-muted/50">
  <TableRow className="border-border/40 hover:bg-transparent">
- <TableHead className="text-[10px] font-black py-5 px-6">Candidate</TableHead>
- <TableHead className="text-[10px] font-black py-5">Role</TableHead>
- <TableHead className="text-[10px] font-black py-5 text-center">AI Score</TableHead>
- <TableHead className="text-[10px] font-black py-5">Stage</TableHead>
- <TableHead className="text-[10px] font-black py-5">Location</TableHead>
- <TableHead className="text-[10px] font-black py-5">Applied</TableHead>
- <TableHead className="text-[10px] font-black py-5 text-right px-6">Action</TableHead>
+ <TableHead className="text-[10px] py-5 px-6">Candidate</TableHead>
+ <TableHead className="text-[10px] py-5">Role</TableHead>
+ <TableHead className="text-[10px] py-5 text-center">AI Score</TableHead>
+ <TableHead className="text-[10px] py-5">Stage</TableHead>
+ <TableHead className="text-[10px] py-5">Location</TableHead>
+ <TableHead className="text-[10px] py-5">Applied</TableHead>
+ <TableHead className="text-[10px] py-5 text-right px-6">Action</TableHead>
  </TableRow>
  </TableHeader>
  <TableBody>
@@ -199,12 +199,12 @@ export default function TalentDatabasePage() {
  <TableCell className="py-4 px-6">
  <div className="flex items-center gap-3">
  <Avatar className="h-9 w-9 border border-primary/20">
- <AvatarFallback className="bg-primary/5 text-primary font-black text-[10px]">
+ <AvatarFallback className="bg-primary/5 text-primary text-[10px]">
  {candidate.name.split(' ').map(n => n[0]).join('')}
  </AvatarFallback>
  </Avatar>
  <div>
- <p className="text-sm font-black ">{candidate.name}</p>
+ <p className="text-sm ">{candidate.name}</p>
  <p className="text-[10px] text-muted-foreground font-bold truncate max-w-[150px] opacity-60">{candidate.email}</p>
  </div>
  </div>
@@ -213,12 +213,12 @@ export default function TalentDatabasePage() {
  <p className="text-xs font-bold opacity-80">{candidate.role}</p>
  </TableCell>
  <TableCell className="text-center">
- <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-black italic">
+ <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] italic">
  <Sparkles size={10} /> {candidate.score}
  </div>
  </TableCell>
  <TableCell>
- <Badge className={`bg-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500/10 text-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500 border-none text-[8px] font-black `}>
+ <Badge className={`bg-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500/10 text-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500 border-none text-[8px] `}>
  {candidate.status}
  </Badge>
  </TableCell>
@@ -292,20 +292,20 @@ export default function TalentDatabasePage() {
  <CardHeader className="p-6 pb-2 flex flex-row items-start justify-between space-y-0">
  <div className="flex items-center gap-4">
  <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-lg">
- <AvatarFallback className="bg-primary/5 text-primary font-black text-lg">
+ <AvatarFallback className="bg-primary/5 text-primary text-lg">
  {candidate.name.split(' ').map(n => n[0]).join('')}
  </AvatarFallback>
  </Avatar>
  <div>
- <h3 className="text-lg font-black group-hover:text-primary transition-colors">{candidate.name}</h3>
+ <h3 className="text-lg group-hover:text-primary transition-colors">{candidate.name}</h3>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60 ">{candidate.role}</p>
  </div>
  </div>
  <div className="flex flex-col items-end gap-1">
- <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-black italic">
+ <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] italic">
  <Sparkles size={10} /> {candidate.score}
  </div>
- <Badge className={`bg-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500/10 text-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500 border-none text-[8px] font-black `}>
+ <Badge className={`bg-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500/10 text-${candidate.status === 'Offer' ? 'emerald' : candidate.status === 'Rejected' ? 'rose' : 'primary'}-500 border-none text-[8px] `}>
  {candidate.status}
  </Badge>
  </div>
@@ -331,7 +331,7 @@ export default function TalentDatabasePage() {
  <div className="mt-auto pt-4 flex items-center gap-2">
  <Button
  variant="outline"
- className="flex-1 h-10 rounded-xl font-black text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
+ className="flex-1 h-10 rounded-xl text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
  onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.id}`)}
  >
  View Profile <ExternalLink size={12} className="ml-2 opacity-50" />
@@ -379,7 +379,7 @@ export default function TalentDatabasePage() {
  <Button 
  onClick={() => setIsAddModalOpen(true)}
  variant="ghost" 
- className="mt-6 text-[10px] font-black text-primary"
+ className="mt-6 text-[10px] text-primary"
  >
  <UserPlus className="w-4 h-4 mr-2" />
  Add First Candidate

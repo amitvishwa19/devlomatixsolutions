@@ -331,7 +331,7 @@ export default function KanbanPage({ params }) {
  setFilterType('all');
  setFilterPriority('all');
  }}
- className="h-10 text-[10px] font-black text-muted-foreground hover:text-foreground"
+ className="h-10 text-[10px] text-muted-foreground hover:text-foreground"
  >
  Reset
  </Button>

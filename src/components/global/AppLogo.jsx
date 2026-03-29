@@ -22,14 +22,13 @@ export function AppLogo({ size = 130, link, className }) {
 
     return (
         <Link href={link}>
-            <div className={cn(className)}>
+            <div className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center", className)}>
                 <Image
                     src={logo}
                     alt='logo'
                     height={size}
                     width={size}
-                    className="h-auto"
-                    style={{ width: size ? `${size}px` : 'auto' }}
+                    className="h-auto w-auto object-contain"
                     priority={false}
                 />
             </div>

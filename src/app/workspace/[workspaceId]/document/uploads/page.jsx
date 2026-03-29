@@ -208,7 +208,7 @@ export default function UploadsPage() {
  <Upload className="h-8 w-8 text-primary shadow-sm" />
  </div>
  <p className="font-bold text-base text-foreground/80">Drop files here or click to browse</p>
- <p className="text-muted-foreground text-xs mt-2 font-black opacity-60">PDF • DOCX • XLSX • PNG • JPG (UP TO 50 MB)</p>
+ <p className="text-muted-foreground text-xs mt-2 opacity-60">PDF • DOCX • XLSX • PNG • JPG (UP TO 50 MB)</p>
  </Card>
 
  {/* Stats */}
@@ -220,8 +220,8 @@ export default function UploadsPage() {
  ].map((s) => (
  <Card key={s.label} className="p-5 shadow-sm border-none bg-background flex flex-col justify-between h-24 relative overflow-hidden group">
  <div className={`absolute top-0 right-0 w-24 h-24 ${s.bg} rounded-full -mr-12 -mt-12 opacity-50 group-hover:scale-110 transition-transform`} />
- <p className="text-[10px] font-black text-muted-foreground relative z-10">{s.label}</p>
- <p className={`text-3xl font-black tabular-nums ${s.color} relative z-10 tracking-tighter`}>{s.value}</p>
+ <p className="text-[10px] text-muted-foreground relative z-10">{s.label}</p>
+ <p className={`text-3xl tabular-nums ${s.color} relative z-10 tracking-tighter`}>{s.value}</p>
  </Card>
  ))}
  </div>
@@ -231,7 +231,7 @@ export default function UploadsPage() {
  {loading && combinedList.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-20 space-y-4">
  <Loader2 className="h-10 w-10 text-primary animate-spin" />
- <p className="text-xs font-black text-muted-foreground animate-pulse">Initializing Queue...</p>
+ <p className="text-xs text-muted-foreground animate-pulse">Initializing Queue...</p>
  </div>
  ) : combinedList.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-20 space-y-4 opacity-40">
@@ -253,7 +253,7 @@ export default function UploadsPage() {
  <div className="flex-1 min-w-0 space-y-1.5">
  <div className="flex items-center gap-3">
  <span className="font-bold text-sm truncate text-foreground/90">{upload.name}</span>
- <Badge variant="outline" className={`${st.badgeClass} text-[9px] font-black px-2 py-0.5 border-none shadow-sm`}>
+ <Badge variant="outline" className={`${st.badgeClass} text-[9px] px-2 py-0.5 border-none shadow-sm`}>
  <StatusIcon className={`h-2.5 w-2.5 mr-1.5 ${st.class}`} />
  {st.label}
  </Badge>
@@ -261,7 +261,7 @@ export default function UploadsPage() {
  {upload.status === "uploading" && (
  <div className="flex flex-col gap-1.5">
  <Progress value={upload.progress} className="h-1.5 bg-muted overflow-hidden" />
- <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground/60 tracking-tighter">
+ <div className="flex justify-between items-center text-[10px] text-muted-foreground/60 tracking-tighter">
  <span>Uploading Payload...</span>
  <span className="tabular-nums text-primary">{upload.progress}%</span>
  </div>
@@ -281,7 +281,7 @@ export default function UploadsPage() {
  removeUpload(upload.id);
  fileInputRef.current?.click();
  }}
- className="text-[10px] h-8 font-black bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+ className="text-[10px] h-8 bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
  >
  Retry
  </Button>

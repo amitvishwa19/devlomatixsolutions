@@ -102,10 +102,10 @@ const ShareModal = ({ doc, onClose }) => {
  return (
  <div className="space-y-6">
  <div className="space-y-2">
- <Label className="text-[10px] font-black text-muted-foreground ml-1">Recipient Email</Label>
+ <Label className="text-[10px] text-muted-foreground ml-1">Recipient Email</Label>
  <Input placeholder="user@example.com" className="h-12 bg-muted/30 border-none rounded-2xl font-bold" />
  </div>
- <Button className="w-full rounded-2xl font-black shadow-lg shadow-primary/20" onClick={() => {
+ <Button className="w-full rounded-2xl shadow-lg shadow-primary/20" onClick={() => {
  toast.success("Shared successfully");
  onClose();
  }}>
@@ -286,14 +286,14 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 border border-amber-100 shadow-sm">
  <FolderPlus className="w-6 h-6 text-amber-500" />
  </div>
- <DialogTitle className="text-2xl font-black">Create New Folder</DialogTitle>
+ <DialogTitle className="text-2xl">Create New Folder</DialogTitle>
  <DialogDescription className="text-sm font-medium">
  Organize your documents by creating a new directory.
  </DialogDescription>
  </DialogHeader>
  <div className="px-8 py-4">
  <div className="space-y-2">
- <Label className="text-[10px] font-black text-muted-foreground ml-1">Folder Name</Label>
+ <Label className="text-[10px] text-muted-foreground ml-1">Folder Name</Label>
  <Input
  placeholder="Enter folder name..."
  value={newFolderName}
@@ -304,7 +304,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  </div>
  <DialogFooter className="p-8 pt-4 flex flex-row gap-4">
  <Button variant="ghost" className="rounded-2xl font-bold flex-1" onClick={() => setIsFolderOpen(false)}>Cancel</Button>
- <Button className="rounded-2xl font-black flex-1 shadow-lg shadow-primary/20" onClick={handleCreateFolder}>Create Folder</Button>
+ <Button className="rounded-2xl flex-1 shadow-lg shadow-primary/20" onClick={handleCreateFolder}>Create Folder</Button>
  </DialogFooter>
  </DialogContent>
  </Dialog>
@@ -315,7 +315,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20 shadow-sm">
  <Upload className="w-6 h-6 text-primary" />
  </div>
- <DialogTitle className="text-2xl font-black">Upload Assets</DialogTitle>
+ <DialogTitle className="text-2xl">Upload Assets</DialogTitle>
  <DialogDescription className="text-sm font-medium">
  Select files to securely store in the current directory.
  </DialogDescription>
@@ -337,7 +337,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  )}
  </div>
  <div className="space-y-1">
- <p className="text-base font-black text-foreground/80">Click or drag files here</p>
+ <p className="text-base text-foreground/80">Click or drag files here</p>
  <p className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] opacity-60">PDF • IMAGE • VIDEO • AUDIO</p>
  </div>
  </div>
@@ -354,10 +354,10 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <FileTypeIcon document={previewDoc || {}} />
  </div>
  <div className="flex flex-col">
- <DialogTitle className="text-2xl font-black truncate max-w-[40vw] ">
+ <DialogTitle className="text-2xl truncate max-w-[40vw] ">
  {previewDoc?.name}
  </DialogTitle>
- <div className="flex items-center gap-3 text-[10px] font-black text-muted-foreground tracking-[0.15em] mt-1 italic">
+ <div className="flex items-center gap-3 text-[10px] text-muted-foreground tracking-[0.15em] mt-1 italic">
  <span>Added {previewDoc && format(new Date(previewDoc.createdAt), "MMMM d, yyyy")}</span>
  {previewDoc?.fileSize && (
  <>
@@ -372,7 +372,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <Button variant="outline" size="sm" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-2xl px-6 font-bold border-border/60 hover:bg-muted transition-all bg-background/50">
  <ExternalLink className="w-4 h-4 mr-2" /> Open Externally
  </Button>
- <Button size="sm" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-2xl px-8 font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+ <Button size="sm" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-2xl px-8 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
  <Download className="w-4 h-4 mr-2" /> Download
  </Button>
  </div>
@@ -422,7 +422,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <source src={previewDoc.fileUrl} type={mType} />
  Your browser does not support the audio element.
  </audio>
- <p className="text-[10px] text-muted-foreground font-black tracking-[0.3em] italic relative z-10 opacity-40">{previewDoc.name}</p>
+ <p className="text-[10px] text-muted-foreground tracking-[0.3em] italic relative z-10 opacity-40">{previewDoc.name}</p>
  </div>
  );
  }
@@ -431,19 +431,19 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <div className="flex flex-col items-center justify-center py-20 text-center max-w-md">
  <div className="w-32 h-32 bg-muted/30 rounded-[2.5rem] flex items-center justify-center mb-10 relative group ring-1 ring-border/50 shadow-inner">
  <Globe className="w-14 h-14 text-muted-foreground/20 group-hover:text-primary/30 transition-all duration-500 group-hover:rotate-12" />
- <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-background border border-border/40 rounded-2xl flex items-center justify-center text-[11px] font-black text-primary shadow-2xl ring-4 ring-muted/20">
+ <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-background border border-border/40 rounded-2xl flex items-center justify-center text-[11px] text-primary shadow-2xl ring-4 ring-muted/20">
  {previewDoc?.extension?.replace('.', '') || '?'}
  </div>
  </div>
- <h3 className="text-3xl font-black text-foreground/80 mb-4 tracking-tighter leading-none">Can't Preview File</h3>
+ <h3 className="text-3xl text-foreground/80 mb-4 tracking-tighter leading-none">Can't Preview File</h3>
  <p className="text-sm text-muted-foreground/60 mb-12 font-medium leading-[1.6] max-w-xs mx-auto">
  This file type isn't supported for direct view. Download it or open it in a new tab to see contents.
  </p>
  <div className="flex flex-col sm:flex-row items-center justify-center gap-5 w-full">
- <Button onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-[1.2rem] shadow-2xl shadow-primary/30 px-10 font-black w-full sm:w-auto hover:translate-y-[-2px] transition-all active:translate-y-0">
+ <Button onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-[1.2rem] shadow-2xl shadow-primary/30 px-10 w-full sm:w-auto hover:translate-y-[-2px] transition-all active:translate-y-0">
  <Globe className="w-5 h-5 mr-3" /> View Externally
  </Button>
- <Button variant="ghost" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-[1.2rem] px-8 font-black text-muted-foreground hover:text-foreground transition-all w-full sm:w-auto">
+ <Button variant="ghost" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-[1.2rem] px-8 text-muted-foreground hover:text-foreground transition-all w-full sm:w-auto">
  <Download className="w-5 h-5 mr-3" /> Download
  </Button>
  </div>
@@ -460,7 +460,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20 shadow-sm">
  <Share2 className="w-6 h-6 text-primary" />
  </div>
- <DialogTitle className="text-2xl font-black">Share Asset</DialogTitle>
+ <DialogTitle className="text-2xl">Share Asset</DialogTitle>
  <DialogDescription className="text-sm font-medium leading-relaxed">
  Manage access and permissions for this document.
  </DialogDescription>

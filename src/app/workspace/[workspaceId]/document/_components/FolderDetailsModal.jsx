@@ -84,9 +84,9 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  <FolderOpen className="h-7 w-7" />
  </div>
  <div className="flex-1 min-w-0">
- <DialogTitle className="text-xl font-black text-foreground truncate">{folder.name}</DialogTitle>
+ <DialogTitle className="text-xl text-foreground truncate">{folder.name}</DialogTitle>
  <DialogDescription className="sr-only">Details and contents for {folder.name}</DialogDescription>
- <Badge variant="outline" className={`${statusStyles[folder.status?.toLowerCase()] || statusStyles.approved} border-none shadow-sm text-[10px] font-black mt-1`}>
+ <Badge variant="outline" className={`${statusStyles[folder.status?.toLowerCase()] || statusStyles.approved} border-none shadow-sm text-[10px] mt-1`}>
  {folder.status || "APPROVED"}
  </Badge>
  </div>
@@ -94,7 +94,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
 
  <div className="space-y-5">
  <div className="space-y-1">
- <p className="text-xs font-black text-muted-foreground/60">Owner</p>
+ <p className="text-xs text-muted-foreground/60">Owner</p>
  <div className="flex items-center gap-2 mt-1">
  <Avatar className="h-6 w-6 border border-border/50">
  <AvatarImage src={folder.user?.avatar} />
@@ -105,7 +105,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  </div>
 
  <div className="space-y-1">
- <p className="flex items-center gap-2 text-xs font-black text-muted-foreground/60">
+ <p className="flex items-center gap-2 text-xs text-muted-foreground/60">
  <Calendar className="w-3.5 h-3.5" /> Date Created
  </p>
  <p className="text-sm font-bold text-foreground/80">
@@ -115,13 +115,13 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
 
  <div className="flex gap-4">
  <div className="space-y-1">
- <p className="flex items-center gap-1.5 text-xs font-black text-muted-foreground/60">
+ <p className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
  <Layers className="w-3.5 h-3.5" /> Items
  </p>
  <p className="text-sm font-bold text-foreground/80">{folder.files || 0}</p>
  </div>
  <div className="space-y-1">
- <p className="flex items-center gap-1.5 text-xs font-black text-muted-foreground/60">
+ <p className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
  <HardDrive className="w-3.5 h-3.5" /> Size
  </p>
  <p className="text-sm font-bold text-foreground/80">{folder.size || '0 B'}</p>
@@ -133,7 +133,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  <div className="space-y-2 mt-6">
  <Button 
  onClick={navigateToFolder}
- className="w-full h-11 rounded-xl font-black bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+ className="w-full h-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
  >
  Open Folder
  </Button>
@@ -141,7 +141,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  variant="outline"
  onClick={confirmDelete}
  disabled={isDeleting}
- className="w-full h-11 rounded-xl font-black border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive"
+ className="w-full h-11 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive"
  >
  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
  Delete Folder
@@ -152,7 +152,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  {/* Right Side: Folder Contents & File Preview */}
  <div className="flex-1 flex flex-col bg-background relative">
  <div className="p-4 border-b border-border/40 bg-muted/5">
- <h3 className="text-sm font-black text-muted-foreground px-2">Contents Preview</h3>
+ <h3 className="text-sm text-muted-foreground px-2">Contents Preview</h3>
  </div>
 
  <div className="flex-1 overflow-y-auto p-2">

@@ -92,7 +92,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  <Sliders size={18} className="text-primary" />
  </div>
  <div>
- <h3 className="text-sm font-black text-foreground">Image Refinement</h3>
+ <h3 className="text-sm text-foreground">Image Refinement</h3>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60">Adjust & Crop Visual Assets</p>
  </div>
  </div>
@@ -132,7 +132,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  {/* Settings Sidebar */}
  <div className="w-80 border-l bg-muted/5 p-6 flex flex-col gap-8 overflow-y-auto">
  <div className="space-y-4">
- <label className="text-[10px] font-black text-muted-foreground opacity-60">Tools</label>
+ <label className="text-[10px] text-muted-foreground opacity-60">Tools</label>
  <div className="grid grid-cols-2 gap-2">
  <Button 
  variant={isCropping ? "default" : "outline"} 
@@ -155,13 +155,13 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  </div>
 
  <div className="space-y-6">
- <label className="text-[10px] font-black text-muted-foreground opacity-60">Adjustments</label>
+ <label className="text-[10px] text-muted-foreground opacity-60">Adjustments</label>
  
  <div className="space-y-4">
  <div className="space-y-3">
  <div className="flex justify-between text-[10px] font-bold">
  <span className="text-muted-foreground opacity-70">Brightness</span>
- <span className="text-primary font-black">{filters.brightness}%</span>
+ <span className="text-primary">{filters.brightness}%</span>
  </div>
  <Slider 
  value={[filters.brightness]} 
@@ -175,7 +175,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  <div className="space-y-3">
  <div className="flex justify-between text-[10px] font-bold">
  <span className="text-muted-foreground opacity-70">Contrast</span>
- <span className="text-primary font-black">{filters.contrast}%</span>
+ <span className="text-primary">{filters.contrast}%</span>
  </div>
  <Slider 
  value={[filters.contrast]} 
@@ -189,7 +189,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  <div className="space-y-3">
  <div className="flex justify-between text-[10px] font-bold">
  <span className="text-muted-foreground opacity-70">Saturation</span>
- <span className="text-primary font-black">{filters.saturate}%</span>
+ <span className="text-primary">{filters.saturate}%</span>
  </div>
  <Slider 
  value={[filters.saturate]} 
@@ -203,7 +203,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  <div className="space-y-3">
  <div className="flex justify-between text-[10px] font-bold">
  <span className="text-muted-foreground opacity-70">Grayscale</span>
- <span className="text-primary font-black">{filters.grayscale}%</span>
+ <span className="text-primary">{filters.grayscale}%</span>
  </div>
  <Slider 
  value={[filters.grayscale]} 
@@ -219,8 +219,8 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  </div>
 
  <div className="px-8 py-6 border-t bg-muted/10 flex items-center justify-end gap-3">
- <Button variant="ghost" onClick={onCancel} className="text-[10px] font-black px-8">Discard</Button>
- <Button onClick={handleSave} className="bg-primary text-primary-foreground font-black text-[10px] px-10 shadow-lg shadow-primary/20">
+ <Button variant="ghost" onClick={onCancel} className="text-[10px] px-8">Discard</Button>
+ <Button onClick={handleSave} className="bg-primary text-primary-foreground text-[10px] px-10 shadow-lg shadow-primary/20">
  <Check size={14} className="mr-2" /> Save Changes
  </Button>
  </div>

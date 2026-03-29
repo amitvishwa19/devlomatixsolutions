@@ -151,9 +151,9 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Layers className="w-6 h-6 text-white" />
  </div>
  <div>
- <h1 className="text-2xl font-black flex items-center gap-2">
+ <h1 className="text-2xl flex items-center gap-2">
  OpenClaw Control
- <Badge variant="outline" className="text-[10px] bg-indigo-500/10 text-indigo-600 border-indigo-500/20 font-black px-2">Production v2.4</Badge>
+ <Badge variant="outline" className="text-[10px] bg-indigo-500/10 text-indigo-600 border-indigo-500/20 px-2">Production v2.4</Badge>
  </h1>
  <p className="text-xs text-muted-foreground font-bold opacity-60">Full Enterprise Orchestration Hub</p>
  </div>
@@ -213,7 +213,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Card key={i} className="border-border/40 bg-card/40 backdrop-blur-md rounded-2xl overflow-hidden shadow-sm">
  <CardContent className="p-5 flex items-center justify-between">
  <div>
- <p className="text-[10px] font-black text-muted-foreground mb-1">{stat.label}</p>
+ <p className="text-[10px] text-muted-foreground mb-1">{stat.label}</p>
  <p className="text-xl font-bold">{stat.value}</p>
  </div>
  <div className={`p-3 rounded-xl ${stat.bg}`}>
@@ -240,7 +240,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <div>
  <h4 className="font-bold text-sm">{agent.name}</h4>
  <div className="flex items-center gap-2 mt-1">
- <Badge variant="secondary" className="text-[9px] font-black px-1.5 h-4 opacity-70">{agent.role}</Badge>
+ <Badge variant="secondary" className="text-[9px] px-1.5 h-4 opacity-70">{agent.role}</Badge>
  <span className="text-[10px] text-muted-foreground font-bold tracking-tighter opacity-70">ONLINE</span>
  </div>
  </div>
@@ -263,11 +263,11 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <CardContent className="space-y-4">
  {models.filter(m => m.default).map(m => (
  <div key={m.id} className="p-4 bg-fuchsia-500/5 border border-fuchsia-500/10 rounded-xl">
- <p className="text-[10px] font-black text-fuchsia-600 mb-1">{m.provider}</p>
+ <p className="text-[10px] text-fuchsia-600 mb-1">{m.provider}</p>
  <p className="text-sm font-bold">{m.name}</p>
  <div className="mt-4 flex items-center justify-between">
  <span className="text-[10px] font-bold text-muted-foreground">STATUS</span>
- <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] h-5 font-black">READY</Badge>
+ <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] h-5">READY</Badge>
  </div>
  </div>
  ))}
@@ -285,18 +285,18 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Terminal className="w-5 h-5 text-emerald-500" />
  </div>
  <div>
- <CardTitle className="text-sm font-black ">Agent Terminal</CardTitle>
+ <CardTitle className="text-sm ">Agent Terminal</CardTitle>
  <CardDescription className="text-[10px] font-medium">Direct WebSocket connection to OC-1 Mesh Node.</CardDescription>
  </div>
  </div>
- <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 animate-pulse text-[9px] font-black px-2 h-6">CONNECTED</Badge>
+ <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 animate-pulse text-[9px] px-2 h-6">CONNECTED</Badge>
  </CardHeader>
  <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 font-mono custom-scrollbar bg-black/5">
  {chatMessages.map((msg) => (
  <div key={msg.id} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
  <div className={`max-w-[80%] p-4 rounded-2xl ${msg.sender === 'User' ? 'bg-indigo-600 text-white' : 'bg-card border border-border/40 text-foreground shadow-sm'}`}>
  <div className="flex items-center gap-2 mb-1">
- <span className="text-[10px] font-black opacity-60">{msg.sender}</span>
+ <span className="text-[10px] opacity-60">{msg.sender}</span>
  <span className="text-[9px] opacity-40">{msg.time}</span>
  </div>
  <p className="text-sm leading-relaxed">{msg.text}</p>
@@ -326,12 +326,12 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-6 custom-scrollbar min-h-[600px]">
  {missionStatuses.map(status => (
  <div key={status} className="flex flex-col gap-4 min-w-[240px]">
- <h3 className="text-[11px] font-black text-muted-foreground px-1">{status}</h3>
+ <h3 className="text-[11px] text-muted-foreground px-1">{status}</h3>
  <div className="flex-1 space-y-3 bg-muted/20 p-2 rounded-2xl border border-border/10">
  {missions.filter(m => m.status === status).map(mission => (
  <Card key={mission.id} className="border-border/40 bg-card/60 backdrop-blur-md rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-indigo-500/30 transition-all cursor-pointer">
  <CardContent className="p-4 space-y-3">
- <Badge className={`text-[9px] font-black tracking-tighter px-1.5 h-4 
+ <Badge className={`text-[9px] tracking-tighter px-1.5 h-4 
  ${mission.priority === 'Critical' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
  mission.priority === 'High' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 
  'bg-blue-500/10 text-blue-600 border-blue-500/20'}`} variant="outline">
@@ -373,7 +373,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </div>
  <div>
  <h4 className="font-bold text-sm">{cron.title}</h4>
- <p className="text-[10px] font-mono text-muted-foreground mt-1 bg-muted/40 w-fit px-2 py-0.5 rounded font-black">{cron.schedule}</p>
+ <p className="text-[10px] font-mono text-muted-foreground mt-1 bg-muted/40 w-fit px-2 py-0.5 rounded">{cron.schedule}</p>
  </div>
  </div>
  <div className="flex items-center gap-8">
@@ -381,7 +381,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <p className="text-[10px] font-bold text-muted-foreground mb-1">EXECUTION</p>
  <p className="text-xs font-bold text-indigo-600">{cron.mission}</p>
  </div>
- <Badge className={`text-[9px] font-black h-5 ${cron.enabled ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+ <Badge className={`text-[9px] h-5 ${cron.enabled ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
  {cron.enabled ? 'ACTIVE' : 'PAUSED'}
  </Badge>
  <DropdownMenu>
@@ -416,10 +416,10 @@ export default function AgentDashboard({ params: paramsPromise }) {
  {config?.agents?.map(agent => (
  <div key={agent.id} className="p-4 flex items-center justify-between border-b border-border/5">
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center font-black text-[10px] text-indigo-600">{agent.id}</div>
+ <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-[10px] text-indigo-600">{agent.id}</div>
  <span className="text-xs font-bold">{agent.name}</span>
  </div>
- <Badge variant="secondary" className="text-[8px] font-black px-1 h-4">{agent.type}</Badge>
+ <Badge variant="secondary" className="text-[8px] px-1 h-4">{agent.type}</Badge>
  </div>
  ))}
  </CardContent>
@@ -443,7 +443,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <span className="text-xs font-bold">{model.name}</span>
  </div>
  <div className="flex items-center gap-2">
- <p className="text-[9px] font-black text-muted-foreground ">{model.provider}</p>
+ <p className="text-[9px] text-muted-foreground ">{model.provider}</p>
  <div className={`w-1.5 h-1.5 rounded-full ${model.status === 'ready' ? 'bg-emerald-500' : 'bg-muted'}`} />
  </div>
  </div>
@@ -458,7 +458,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Card className="border-border/40 bg-card/40 rounded-2xl h-[500px] flex items-center justify-center opacity-30">
  <div className="text-center">
  <ShieldCheck className="w-12 h-12 mx-auto mb-4" />
- <p className="text-xs font-black ">Governance Dashboard Ready</p>
+ <p className="text-xs ">Governance Dashboard Ready</p>
  </div>
  </Card>
  </TabsContent>

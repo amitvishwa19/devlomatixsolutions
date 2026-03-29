@@ -71,16 +71,16 @@ export default function CandidatePipelinePage() {
  <div className="p-8 pb-4 shrink-0 space-y-6">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div className="space-y-1">
- <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40">
+ <div className="flex items-center gap-2 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">
  <span onClick={() => router.push(`/workspace/${workspaceId}/ats`)} className="hover:text-primary cursor-pointer transition-colors">ATS</span>
  <ChevronRight size={10} />
  <span onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)} className="hover:text-primary cursor-pointer transition-colors">Jobs</span>
  <ChevronRight size={10} />
  <span className="text-primary/60">Pipeline</span>
  </div>
- <h1 className="text-3xl font-black tracking-tighter flex items-center gap-3">
+ <h1 className="text-3xl tracking-tighter flex items-center gap-3">
  {job?.title || "Recruitment Pipeline"}
- <Badge variant="outline" className="h-6 rounded-lg bg-primary/5 text-primary border-primary/20 font-black text-[9px] px-3">
+ <Badge variant="outline" className="h-6 rounded-lg bg-primary/5 text-primary border-primary/20 text-[9px] px-3">
  {job?.status || "Active"} Job
  </Badge>
  </h1>
@@ -110,10 +110,10 @@ export default function CandidatePipelinePage() {
  <div className="flex items-center justify-between px-2">
  <div className="flex items-center gap-3">
  <div className={`w-3 h-3 rounded-full ${stage.color} shadow-lg shadow-black/20`} />
- <h3 className="text-sm font-black opacity-60">
+ <h3 className="text-sm opacity-60">
  {stage.title}
  </h3>
- <Badge variant="ghost" className="h-5 px-2 bg-muted/40 text-[10px] font-black opacity-40 rounded-md">
+ <Badge variant="ghost" className="h-5 px-2 bg-muted/40 text-[10px] opacity-40 rounded-md">
  {getStageCandidates(stage.id).length}
  </Badge>
  </div>
@@ -137,13 +137,13 @@ export default function CandidatePipelinePage() {
  <div className="flex items-start justify-between mb-4">
  <div className="flex items-center gap-3">
  <Avatar className="h-10 w-10 border-2 border-primary/20 shadow-lg">
- <AvatarFallback className="bg-primary/10 text-primary font-black text-xs ">
+ <AvatarFallback className="bg-primary/10 text-primary text-xs ">
  {candidate.name.split(' ').map(n => n[0]).join('')}
  </AvatarFallback>
  </Avatar>
  <div>
  <h4 className="text-sm font-bold group-hover:text-primary transition-colors">{candidate.name}</h4>
- <p className="text-[10px] font-black text-muted-foreground opacity-40">Applied {candidate.appliedAt}</p>
+ <p className="text-[10px] text-muted-foreground opacity-40">Applied {candidate.appliedAt}</p>
  </div>
  </div>
  <Dropdown candidate={candidate} />
@@ -152,7 +152,7 @@ export default function CandidatePipelinePage() {
  <div className="flex items-center gap-4 mt-6">
  <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-500">
  <Star size={10} className="fill-current" />
- <span className="text-[10px] font-black">{candidate.score}</span>
+ <span className="text-[10px]">{candidate.score}</span>
  </div>
  <div className="flex -space-x-2">
  {[1, 2].map((_, i) => (
@@ -168,7 +168,7 @@ export default function CandidatePipelinePage() {
  <MessageSquare size={14} />
  <Calendar size={14} />
  </div>
- <Button variant="ghost" size="sm" className="h-7 text-[9px] font-black opacity-0 group-hover:opacity-100 transition-all">
+ <Button variant="ghost" size="sm" className="h-7 text-[9px] opacity-0 group-hover:opacity-100 transition-all">
  Profile <ArrowRight size={10} className="ml-1" />
  </Button>
  </div>
@@ -177,7 +177,7 @@ export default function CandidatePipelinePage() {
 
  {getStageCandidates(stage.id).length === 0 && (
  <div className="h-32 border-2 border-dashed border-border/20 rounded-lg flex items-center justify-center">
- <p className="text-[10px] font-black opacity-20 italic">No candidates</p>
+ <p className="text-[10px] opacity-20 italic">No candidates</p>
  </div>
  )}
  </div>

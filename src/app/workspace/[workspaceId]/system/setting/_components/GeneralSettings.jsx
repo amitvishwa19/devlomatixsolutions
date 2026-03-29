@@ -229,7 +229,7 @@ export const GeneralSettings = () => {
  </Button>
  </div>
  <div className="p-4 bg-muted/30 rounded-xl border border-border/40 space-y-3">
- <div className="flex justify-between items-center text-[10px] font-black opacity-50">
+ <div className="flex justify-between items-center text-[10px] opacity-50">
  <span>Type</span>
  <span>Host</span>
  <span>Value</span>
@@ -272,7 +272,7 @@ export const GeneralSettings = () => {
  </CardHeader>
  <CardContent className="pt-2">
  <div className="flex items-center gap-2 p-4 bg-background/50 rounded-2xl border border-border/40 shadow-inner group">
- <code className="text-sm font-black text-foreground/80 flex-1 truncate">
+ <code className="text-sm text-foreground/80 flex-1 truncate">
  {typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}/workspace/${settings?.general?.inviteCode || '...'}` : 'Loading...'}
  </code>
  <div className="flex gap-2">

@@ -8,9 +8,9 @@ import {
  Share2,
  Facebook,
  Linkedin,
-  Twitter,
-  Instagram,
-  MessageCircle,
+ Twitter,
+ Instagram,
+ MessageCircle,
 
  Image as ImageIcon,
  MoreHorizontal,
@@ -79,8 +79,8 @@ const getPlatformIcon = (platform) => {
  const p = platform?.toUpperCase();
  switch (p) {
  case 'FACEBOOK': return <Facebook size={14} className="text-blue-600" />;
-  case 'INSTAGRAM': return <Instagram size={14} className="text-pink-600" />;
-  case 'LINKEDIN': return <Linkedin size={14} className="text-blue-700" />;
+ case 'INSTAGRAM': return <Instagram size={14} className="text-pink-600" />;
+ case 'LINKEDIN': return <Linkedin size={14} className="text-blue-700" />;
 
  case 'TWITTER':
  case 'X': return <Twitter size={14} className="text-sky-500" />;
@@ -149,7 +149,7 @@ export const PostRow = ({ post, onApply }) => {
  <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
  <Trash2 className="w-6 h-6 text-rose-500" />
  </div>
- <AlertDialogTitle className="text-2xl font-black ">Are you absolutely sure?</AlertDialogTitle>
+ <AlertDialogTitle className="text-2xl ">Are you absolutely sure?</AlertDialogTitle>
  <AlertDialogDescription className="text-sm font-medium">
  This action cannot be undone. This post will be permanently deleted from your workspace.
  </AlertDialogDescription>
@@ -196,7 +196,7 @@ export const PostRow = ({ post, onApply }) => {
  color: post.category.color,
  borderColor: `${post.category.color}30`
  }}
- className="text-[8px] font-black tracking-tighter px-1.5 py-0 rounded-sm border"
+ className="text-[8px] tracking-tighter px-1.5 py-0 rounded-sm border"
  >
  {post.category.name}
  </Badge>
@@ -235,7 +235,7 @@ export const PostRow = ({ post, onApply }) => {
 
  {/* Date */}
  <div className="flex flex-col items-end w-32">
- <span className="text-[10px] font-black tracking-tighter text-muted-foreground opacity-50">Scheduled For</span>
+ <span className="text-[10px] tracking-tighter text-muted-foreground opacity-50">Scheduled For</span>
  <span className="text-[11px] font-bold text-foreground">
  {post.scheduledAt ? new Date(post.scheduledAt).toLocaleDateString() : 'N/A'}
  </span>

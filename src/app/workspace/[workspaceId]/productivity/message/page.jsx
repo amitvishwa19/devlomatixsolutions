@@ -173,7 +173,7 @@ function MessagePageContent() {
  ) : (
  <Hash className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
  )}
- <p className="font-black text-md text-zinc-900 dark:text-white">
+ <p className="text-md text-zinc-900 dark:text-white">
  {displayName}
  </p>
 
@@ -217,13 +217,13 @@ function MessagePageContent() {
  <div key={msg.id} className="flex items-start gap-x-4 group hover:bg-black/5 dark:hover:bg-black/10 -mx-4 px-4 py-1.5 transition relative">
  <Avatar className="h-10 w-10 border border-border/10 shadow-sm mt-0.5">
  <AvatarImage src={msg.member?.user?.avatar} />
- <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
+ <AvatarFallback className="bg-primary/10 text-primary text-xs">
  {msg.member?.user?.displayName?.[0] || "?"}
  </AvatarFallback>
  </Avatar>
  <div className="flex flex-col overflow-hidden">
  <div className="flex items-center gap-x-2">
- <p className="font-black text-primary hover:underline cursor-pointer text-sm">
+ <p className="text-primary hover:underline cursor-pointer text-sm">
  {msg.member?.user?.displayName || "Unknown User"}
  </p>
  <span className="text-[10px] text-zinc-500 font-bold opacity-60">
@@ -277,7 +277,7 @@ const WelcomeMessage = ({ title, isDirectMessage }) => {
  <Hash className="h-10 w-10 text-zinc-900 dark:text-white" />
  )}
  </div>
- <h1 className="text-3xl font-black text-zinc-900 dark:text-white mt-4">
+ <h1 className="text-3xl text-zinc-900 dark:text-white mt-4">
  {isDirectMessage ? title : `Welcome to #${title}!`}
  </h1>
  <p className="text-zinc-500 dark:text-zinc-400 font-bold text-sm max-w-md">

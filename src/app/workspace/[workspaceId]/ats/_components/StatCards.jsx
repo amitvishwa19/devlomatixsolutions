@@ -47,11 +47,11 @@ export const StatCards = ({ stats = [] }) => {
  <Icon size={24} />
  </div>
  <div className="text-right">
- <p className="text-[10px] font-black text-muted-foreground opacity-40">{stat.label}</p>
- <h3 className="text-3xl font-black mt-1">{stat.value}</h3>
+ <p className="text-[10px] text-muted-foreground opacity-40">{stat.label}</p>
+ <h3 className="text-3xl mt-1">{stat.value}</h3>
  <div className="flex items-center justify-end gap-1 mt-1">
  <TrendingUp size={12} className={stat.color} />
- <span className={`text-[10px] font-black ${stat.color}`}>{stat.change}</span>
+ <span className={`text-[10px] ${stat.color}`}>{stat.change}</span>
  </div>
  </div>
  </div>

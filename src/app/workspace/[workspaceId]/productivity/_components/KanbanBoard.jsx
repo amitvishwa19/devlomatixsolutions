@@ -110,7 +110,7 @@ export const KanbanBoard = () => {
  <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
  <Sparkles size={16} />
  </div>
- <h1 className="text-xl font-black text-foreground">
+ <h1 className="text-xl text-foreground">
  Unified Kanban Board
  </h1>
  </div>

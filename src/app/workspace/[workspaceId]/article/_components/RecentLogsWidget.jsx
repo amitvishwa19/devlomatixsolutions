@@ -61,7 +61,7 @@ export const RecentLogsWidget = ({ workspaceId }) => {
  <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-muted/20">
  <div className="flex items-center gap-2">
  <Terminal size={12} className="text-primary opacity-70" />
- <span className="text-[9px] font-black text-muted-foreground">Recent System Pulse</span>
+ <span className="text-[9px] text-muted-foreground">Recent System Pulse</span>
  </div>
  {loading && <Loader2 size={10} className="animate-spin text-muted-foreground opacity-50" />}
  </div>
@@ -79,7 +79,7 @@ export const RecentLogsWidget = ({ workspaceId }) => {
  {log.message.length > 40 ? log.message.slice(0, 40) + '...' : log.message}
  </span>
  <div className="flex items-center gap-2">
- <span className="text-[8px] font-black text-muted-foreground/50 tracking-tighter">
+ <span className="text-[8px] text-muted-foreground/50 tracking-tighter">
  {log.type}
  </span>
  <span className="text-[8px] font-bold text-primary/40">

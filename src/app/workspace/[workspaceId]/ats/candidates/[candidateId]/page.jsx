@@ -175,21 +175,21 @@ export default function CandidateProfilePage() {
  <Button 
  variant="ghost" 
  onClick={() => router.back()}
- className="p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-primary transition-colors text-[10px] font-black tracking-[0.2em] mb-2"
+ className="p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-primary transition-colors text-[10px] tracking-[0.2em] mb-2"
  >
  <ChevronLeft size={12} className="mr-1" />
  Back to Pipeline
  </Button>
  <div className="flex items-center gap-4">
  <Avatar className="h-16 w-16 border-4 border-primary/20 shadow-2xl">
- <AvatarFallback className="bg-primary/10 text-primary font-black text-xl ">RS</AvatarFallback>
+ <AvatarFallback className="bg-primary/10 text-primary text-xl ">RS</AvatarFallback>
  </Avatar>
  <div>
- <h1 className="text-4xl font-black tracking-tighter">{candidate.name}</h1>
+ <h1 className="text-4xl tracking-tighter">{candidate.name}</h1>
  <div className="flex items-center gap-2 mt-1">
  <p className="text-sm font-bold text-muted-foreground">{candidate.role}</p>
  <span className="w-1 h-1 rounded-full bg-border" />
- <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px] font-black ">
+ <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px] ">
  {candidate.status}
  </Badge>
  </div>
@@ -207,7 +207,7 @@ export default function CandidateProfilePage() {
  <Button 
  disabled={isOfferGenerating}
  onClick={handleGenerateOffer}
- className="h-10 rounded-lg px-6 font-black text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-10 rounded-lg px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  {isOfferGenerating ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <FileCheck className="w-3 h-3 mr-2" />}
  Generate Offer
@@ -219,14 +219,14 @@ export default function CandidateProfilePage() {
  <Tabs value={activeTab} className="space-y-8" onValueChange={setActiveTab}>
  <div className="flex items-center justify-between">
  <TabsList className="bg-muted/30 p-1 rounded-lg h-12 backdrop-blur-xl border border-border/20">
- <TabsTrigger value="overview" className="rounded-lg px-6 text-xs font-black data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Overview</TabsTrigger>
- <TabsTrigger value="scorecards" className="rounded-lg px-6 text-xs font-black data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Scorecards</TabsTrigger>
- <TabsTrigger value="emails" className="rounded-lg px-6 text-xs font-black data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Communication</TabsTrigger>
- <TabsTrigger value="notes" className="rounded-lg px-6 text-xs font-black data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Team Notes</TabsTrigger>
- <TabsTrigger value="timeline" className="rounded-lg px-6 text-xs font-black data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Activity</TabsTrigger>
+ <TabsTrigger value="overview" className="rounded-lg px-6 text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Overview</TabsTrigger>
+ <TabsTrigger value="scorecards" className="rounded-lg px-6 text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Scorecards</TabsTrigger>
+ <TabsTrigger value="emails" className="rounded-lg px-6 text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Communication</TabsTrigger>
+ <TabsTrigger value="notes" className="rounded-lg px-6 text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Team Notes</TabsTrigger>
+ <TabsTrigger value="timeline" className="rounded-lg px-6 text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl">Activity</TabsTrigger>
  </TabsList>
  
- <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground">
+ <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
  <History size={12} />
  LAST ACTIVE 5M AGO
  </div>
@@ -239,13 +239,13 @@ export default function CandidateProfilePage() {
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5 relative hover:border-primary/20 transition-all cursor-default group">
  <div className="absolute top-0 right-0 p-6">
  <div className="text-right">
- <p className="text-[10px] font-black text-primary mb-1">AI Match</p>
- <h3 className="text-4xl font-black text-primary">{candidate.aiInsights.matchingScore}%</h3>
+ <p className="text-[10px] text-primary mb-1">AI Match</p>
+ <h3 className="text-4xl text-primary">{candidate.aiInsights.matchingScore}%</h3>
  </div>
  </div>
  <CardHeader className="p-8 pb-4">
  <div className="flex items-center justify-between gap-4">
- <CardTitle className="text-2xl font-black flex items-center gap-2">
+ <CardTitle className="text-2xl flex items-center gap-2">
  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
  <Sparkles size={20} />
  </div>
@@ -256,7 +256,7 @@ export default function CandidateProfilePage() {
  size="sm" 
  onClick={handleAiParse}
  disabled={isParsing}
- className="h-8 rounded-lg text-[9px] font-black bg-primary/5 hover:bg-primary/10 transition-all"
+ className="h-8 rounded-lg text-[9px] bg-primary/5 hover:bg-primary/10 transition-all"
  >
  {isParsing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
  Analyze Resume
@@ -269,7 +269,7 @@ export default function CandidateProfilePage() {
  </p>
  <div className="grid grid-cols-2 gap-8">
  <div className="space-y-4">
- <h4 className="text-[10px] font-black text-emerald-500">Key Strengths</h4>
+ <h4 className="text-[10px] text-emerald-500">Key Strengths</h4>
  <div className="space-y-2">
  {candidate.aiInsights.pros.map((pro, i) => (
  <div key={i} className="flex items-center gap-2 text-sm font-bold opacity-80">
@@ -280,7 +280,7 @@ export default function CandidateProfilePage() {
  </div>
  </div>
  <div className="space-y-4">
- <h4 className="text-[10px] font-black text-amber-500">Considerations</h4>
+ <h4 className="text-[10px] text-amber-500">Considerations</h4>
  <div className="space-y-2">
  {candidate.aiInsights.cons.map((con, i) => (
  <div key={i} className="flex items-center gap-2 text-sm font-bold opacity-80">
@@ -297,13 +297,13 @@ export default function CandidateProfilePage() {
  {/* Bio & History */}
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 pb-4">
- <CardTitle className="text-xl font-black flex items-center gap-2 text-[10px] font-black opacity-40">
+ <CardTitle className="text-xl flex items-center gap-2 text-[10px] opacity-40">
  Professional Profile
  </CardTitle>
  </CardHeader>
  <CardContent className="p-8 pt-4 space-y-8">
  <div className="p-6 rounded-lg bg-muted/20 border border-border/10">
- <h4 className="text-sm font-black opacity-40 mb-3">Executive Summary</h4>
+ <h4 className="text-sm opacity-40 mb-3">Executive Summary</h4>
  <p className="text-sm font-medium leading-relaxed opacity-70 italic">
  "{candidate.summary}"
  </p>
@@ -318,7 +318,7 @@ export default function CandidateProfilePage() {
  <Briefcase size={20} />
  </div>
  <div className="space-y-1">
- <h4 className="text-base font-black group-hover:text-primary transition-colors">{exp.role}</h4>
+ <h4 className="text-base group-hover:text-primary transition-colors">{exp.role}</h4>
  <p className="text-sm font-bold text-primary">{exp.company}</p>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60 mt-1">{exp.period}</p>
  <p className="text-sm font-medium leading-relaxed opacity-60 mt-3">{exp.description}</p>
@@ -340,7 +340,7 @@ export default function CandidateProfilePage() {
  <Mail size={16} />
  </div>
  <div>
- <p className="text-[9px] font-black text-muted-foreground opacity-40">Email Address</p>
+ <p className="text-[9px] text-muted-foreground opacity-40">Email Address</p>
  <p className="text-xs font-bold">{candidate.email}</p>
  </div>
  </div>
@@ -349,7 +349,7 @@ export default function CandidateProfilePage() {
  <Phone size={16} />
  </div>
  <div>
- <p className="text-[9px] font-black text-muted-foreground opacity-40">Phone Number</p>
+ <p className="text-[9px] text-muted-foreground opacity-40">Phone Number</p>
  <p className="text-xs font-bold">{candidate.phone}</p>
  </div>
  </div>
@@ -358,7 +358,7 @@ export default function CandidateProfilePage() {
  variant="outline" 
  disabled={!candidate.resumeUrl}
  onClick={() => window.open(candidate.resumeUrl, '_blank')}
- className="w-full h-12 rounded-lg font-black text-[9px] gap-2 border-border/40 bg-muted/20 hover:bg-primary/5 hover:border-primary/20 transition-all"
+ className="w-full h-12 rounded-lg text-[9px] gap-2 border-border/40 bg-muted/20 hover:bg-primary/5 hover:border-primary/20 transition-all"
  >
  <Download size={14} /> Download Resume
  </Button>
@@ -366,7 +366,7 @@ export default function CandidateProfilePage() {
  <Button 
  variant="ghost" 
  onClick={() => window.open(candidate.resumeUrl, '_blank')}
- className="w-full h-8 text-[9px] font-black opacity-40 hover:opacity-100 mt-2"
+ className="w-full h-8 text-[9px] opacity-40 hover:opacity-100 mt-2"
  >
  <ExternalLink size={12} className="mr-2" /> View Resume In New Tab
  </Button>
@@ -377,7 +377,7 @@ export default function CandidateProfilePage() {
  {/* Skills Tag Card */}
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader>
- <CardTitle className="text-[10px] font-black opacity-40">Top Skills</CardTitle>
+ <CardTitle className="text-[10px] opacity-40">Top Skills</CardTitle>
  </CardHeader>
  <CardContent className="p-8 pt-0">
  <div className="flex flex-wrap gap-2">
@@ -397,7 +397,7 @@ export default function CandidateProfilePage() {
  {isScorecardOpen ? (
  <div className="space-y-6">
  <div className="flex items-center justify-between mb-2">
- <Button variant="ghost" onClick={() => setIsScorecardOpen(false)} className="text-[10px] font-black opacity-40 hover:opacity-100">
+ <Button variant="ghost" onClick={() => setIsScorecardOpen(false)} className="text-[10px] opacity-40 hover:opacity-100">
  <ChevronLeft className="w-4 h-4 mr-2" /> Back to History
  </Button>
  </div>
@@ -414,17 +414,17 @@ export default function CandidateProfilePage() {
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between p-8 pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-black">
+ <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
  {(card.interviewer?.name || "TM").split(' ').map(n => n[0]).join('')}
  </div>
  <div>
- <CardTitle className="text-lg font-black ">{card.stage}</CardTitle>
- <p className="text-[10px] font-black opacity-40">by {card.interviewer?.name || "Team Member"} • {new Date(card.createdAt).toLocaleDateString()}</p>
+ <CardTitle className="text-lg ">{card.stage}</CardTitle>
+ <p className="text-[10px] opacity-40">by {card.interviewer?.name || "Team Member"} • {new Date(card.createdAt).toLocaleDateString()}</p>
  </div>
  </div>
  <div className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20">
  <Star size={14} className="fill-current" />
- <span className="text-lg font-black">{card.score}</span>
+ <span className="text-lg">{card.score}</span>
  </div>
  </CardHeader>
  <CardContent className="p-8 pt-4">
@@ -434,7 +434,7 @@ export default function CandidateProfilePage() {
  <div className="grid grid-cols-3 gap-8 mt-8">
  {Object.entries(card.attributes || {}).slice(0, 3).map(([key, val], idx) => (
  <div key={key} className="space-y-2">
- <div className="flex justify-between text-[9px] font-black mb-1">
+ <div className="flex justify-between text-[9px] mb-1">
  <span className="capitalize">{key}</span>
  <span>{Number(val) * 20}%</span>
  </div>
@@ -451,14 +451,14 @@ export default function CandidateProfilePage() {
  <Card className="border-border/40 bg-primary/5 backdrop-blur-xl rounded-lg p-8 border-primary/20 text-center space-y-6 shadow-xl shadow-primary/5">
  <Award className="w-12 h-12 text-primary mx-auto opacity-40" />
  <div className="space-y-2">
- <h3 className="text-xl font-black ">Structured Feedback</h3>
+ <h3 className="text-xl ">Structured Feedback</h3>
  <p className="text-xs font-medium text-muted-foreground leading-relaxed">
  Ensure unbiased hiring by completing the structured scorecard for this candidate's latest round.
  </p>
  </div>
  <Button 
  onClick={() => setIsScorecardOpen(true)}
- className="w-full h-12 rounded-lg font-black text-[10px] bg-primary shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+ className="w-full h-12 rounded-lg text-[10px] bg-primary shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
  >
  Launch Scorecard
  </Button>
@@ -473,21 +473,21 @@ export default function CandidateProfilePage() {
  <div className="lg:col-span-2 space-y-6">
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 pb-4 border-b border-border/10">
- <CardTitle className="text-lg font-black ">New Message</CardTitle>
+ <CardTitle className="text-lg ">New Message</CardTitle>
  </CardHeader>
  <CardContent className="p-8 space-y-6">
  <div className="space-y-2">
- <p className="text-[10px] font-black opacity-40">Recipient</p>
+ <p className="text-[10px] opacity-40">Recipient</p>
  <Input value={candidate.email} readOnly className="h-12 rounded-lg bg-muted/20 border-border/20 font-bold" />
  </div>
  <div className="space-y-2">
- <p className="text-[10px] font-black opacity-40">Subject</p>
+ <p className="text-[10px] opacity-40">Subject</p>
  <Input placeholder="Enter email subject..." className="h-12 rounded-lg bg-muted/20 border-border/20 font-bold" />
  </div>
  <div className="space-y-2">
  <div className="flex items-center justify-between mb-2">
- <p className="text-[10px] font-black opacity-40">Message Body</p>
- <Button variant="ghost" className="h-6 text-[9px] font-black text-primary p-0">
+ <p className="text-[10px] opacity-40">Message Body</p>
+ <Button variant="ghost" className="h-6 text-[9px] text-primary p-0">
  Use AI Template
  </Button>
  </div>
@@ -505,7 +505,7 @@ export default function CandidateProfilePage() {
  <FileText size={16} />
  </Button>
  </div>
- <Button className="h-12 px-8 rounded-lg bg-primary font-black text-[10px] shadow-lg shadow-primary/20">
+ <Button className="h-12 px-8 rounded-lg bg-primary text-[10px] shadow-lg shadow-primary/20">
  Send Email <Send size={14} className="ml-2" />
  </Button>
  </div>
@@ -516,7 +516,7 @@ export default function CandidateProfilePage() {
  <div className="space-y-6">
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader>
- <CardTitle className="text-[10px] font-black opacity-40">Communication History</CardTitle>
+ <CardTitle className="text-[10px] opacity-40">Communication History</CardTitle>
  </CardHeader>
  <CardContent className="p-8 pt-0 space-y-4">
  {candidate.communications.map((comm, i) => (
@@ -527,7 +527,7 @@ export default function CandidateProfilePage() {
  </div>
  <div>
  <p className="text-xs font-bold">{comm.subject}</p>
- <p className="text-[9px] font-black opacity-40">{comm.date}</p>
+ <p className="text-[9px] opacity-40">{comm.date}</p>
  </div>
  </div>
  <ChevronRight size={14} className="opacity-20 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -541,12 +541,12 @@ export default function CandidateProfilePage() {
  <Card className="border-border/40 bg-emerald-500/5 backdrop-blur-xl rounded-lg p-8 border-emerald-500/20 text-center space-y-6">
  <Sparkles className="w-12 h-12 text-emerald-500 mx-auto opacity-40" />
  <div className="space-y-2">
- <h3 className="text-xl font-black ">AI Nurture</h3>
+ <h3 className="text-xl ">AI Nurture</h3>
  <p className="text-xs font-medium text-muted-foreground leading-relaxed">
  Send a personalized AI-generated update to keep the candidate engaged.
  </p>
  </div>
- <Button className="w-full h-12 rounded-lg font-black text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20">
+ <Button className="w-full h-12 rounded-lg text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20">
  Send Nurture Update
  </Button>
  </Card>
@@ -558,16 +558,16 @@ export default function CandidateProfilePage() {
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardContent className="p-8 space-y-8">
  <div className="space-y-4">
- <h3 className="text-lg font-black tracking-tighter opacity-40 text-[10px]">Collaborative Discussion</h3>
+ <h3 className="text-lg tracking-tighter opacity-40 text-[10px]">Collaborative Discussion</h3>
  <div className="space-y-4">
  {candidate.notes.map((note, i) => (
  <div key={i} className="flex gap-4 p-6 rounded-lg bg-muted/20 border border-border/10 items-start">
  <Avatar className="h-10 w-10">
- <AvatarFallback className="text-[10px] font-black bg-primary/10 text-primary">AM</AvatarFallback>
+ <AvatarFallback className="text-[10px] bg-primary/10 text-primary">AM</AvatarFallback>
  </Avatar>
  <div className="space-y-1">
  <div className="flex items-center gap-2">
- <span className="text-sm font-black">{note.user?.name || note.author || "Team Member"}</span>
+ <span className="text-sm">{note.user?.name || note.author || "Team Member"}</span>
  <span className="text-[10px] font-bold opacity-30 ">{new Date(note.createdAt || Date.now()).toLocaleDateString()}</span>
  </div>
  <p className="text-sm font-medium leading-relaxed opacity-70 italic">
@@ -590,7 +590,7 @@ export default function CandidateProfilePage() {
  <p className="text-[10px] font-bold text-muted-foreground opacity-40 italic">Notes are only visible to the hiring team.</p>
  <Button 
  onClick={handlePostNote}
- className="h-12 px-8 rounded-lg bg-primary font-black text-[10px] shadow-lg shadow-primary/20"
+ className="h-12 px-8 rounded-lg bg-primary text-[10px] shadow-lg shadow-primary/20"
  >
  Post Note <Send size={12} className="ml-2" />
  </Button>
@@ -613,7 +613,7 @@ export default function CandidateProfilePage() {
  }`} />
  <div className="space-y-1 p-6 rounded-lg bg-muted/10 border border-transparent group-hover:bg-primary/5 group-hover:border-primary/20 transition-all cursor-default">
  <div className="flex items-center justify-between">
- <h4 className={`text-xl font-black ${step.status === 'completed' ? 'opacity-40' : 'opacity-100'}`}>
+ <h4 className={`text-xl ${step.status === 'completed' ? 'opacity-40' : 'opacity-100'}`}>
  {step.stage}
  </h4>
  {step.status === 'completed' && <CheckCircle2 size={20} className="text-emerald-500" />}

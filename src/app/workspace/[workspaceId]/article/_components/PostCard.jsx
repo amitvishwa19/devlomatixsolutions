@@ -146,7 +146,7 @@ export const PostCard = ({ post, onApply }) => {
  <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
  <Trash2 className="w-6 h-6 text-rose-500" />
  </div>
- <AlertDialogTitle className="text-2xl font-black ">Are you absolutely sure?</AlertDialogTitle>
+ <AlertDialogTitle className="text-2xl ">Are you absolutely sure?</AlertDialogTitle>
  <AlertDialogDescription className="text-sm font-medium">
  This action cannot be undone. This post will be permanently deleted from your workspace.
  </AlertDialogDescription>
@@ -209,7 +209,7 @@ export const PostCard = ({ post, onApply }) => {
  color: post.category.color,
  borderColor: `${post.category.color}30`
  }}
- className="text-[9px] font-black px-2 py-0.5 rounded-md border"
+ className="text-[9px] px-2 py-0.5 rounded-md border"
  >
  {post.category.name}
  </Badge>

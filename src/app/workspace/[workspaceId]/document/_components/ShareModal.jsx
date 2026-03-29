@@ -145,7 +145,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  </div>
 
  <div className="bg-muted/20 px-6 py-4 border-t border-border/40">
- <h4 className="text-xs font-black text-muted-foreground mb-4">People with access</h4>
+ <h4 className="text-xs text-muted-foreground mb-4">People with access</h4>
  
  <div className="space-y-3">
  {/* The Owner (technically from the document.user relation) */}

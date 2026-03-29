@@ -84,7 +84,7 @@ export const DangerZone = () => {
  <Button 
  variant="destructive" 
  size="sm" 
- className="rounded-xl text-[10px] font-black tracking-[0.2em] h-10 px-6 bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/30 transition-all transform hover:scale-105"
+ className="rounded-xl text-[10px] tracking-[0.2em] h-10 px-6 bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/30 transition-all transform hover:scale-105"
  onClick={handleDeleteWorkspace}
  >
  DELETE
@@ -94,7 +94,7 @@ export const DangerZone = () => {
  </Card>
 
  <div className="p-4 bg-muted/20 rounded-xl border border-border/40 flex flex-col gap-2 items-center text-center opacity-60">
- <p className="text-[9px] font-black tracking-[0.3em] text-muted-foreground ">Critical Infrastructure</p>
+ <p className="text-[9px] tracking-[0.3em] text-muted-foreground ">Critical Infrastructure</p>
  <p className="text-[10px] text-muted-foreground font-semibold max-w-sm">
  Workspace identification: {settings?.general?.inviteCode || "..."} | CID: {typeof window !== 'undefined' ? window.crypto.randomUUID().slice(0, 8) : '...'}
  </p>

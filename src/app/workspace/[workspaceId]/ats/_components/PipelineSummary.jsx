@@ -32,10 +32,10 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between pb-6">
  <div className="space-y-1">
- <CardTitle className="text-2xl font-black tracking-tighter">Hiring Pipeline</CardTitle>
- <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground opacity-40">Candidate Flow across all jobs</p>
+ <CardTitle className="text-2xl tracking-tighter">Hiring Pipeline</CardTitle>
+ <p className="text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">Candidate Flow across all jobs</p>
  </div>
- <Button variant="outline" className="h-10 rounded-lg px-4 font-black text-[9px] border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-10 rounded-lg px-4 text-[9px] border-border/40 bg-card/40 backdrop-blur-xl">
  Detailed Pipeline <ArrowUpRight className="ml-2 w-3 h-3" />
  </Button>
  </CardHeader>
@@ -51,9 +51,9 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  >
  <div className="flex flex-col gap-1">
  <span className={`w-2 h-2 rounded-full ${stage.color} mb-2 shadow-lg shadow-black/20`} />
- <h4 className="text-xs font-black opacity-60">{stage.label}</h4>
+ <h4 className="text-xs opacity-60">{stage.label}</h4>
  <div className="flex items-baseline gap-1">
- <span className="text-2xl font-black">{stage.count}</span>
+ <span className="text-2xl">{stage.count}</span>
  <span className="text-[10px] font-bold text-muted-foreground">Candidates</span>
  </div>
  </div>
@@ -75,7 +75,7 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  <Clock size={20} />
  </div>
  <div>
- <h4 className="text-sm font-black">Upcoming Interviews</h4>
+ <h4 className="text-sm">Upcoming Interviews</h4>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60 ">
  {nextInterview ? `Next scheduled: ${nextInterview.time} with ${nextInterview.name}` : "No upcoming interviews scheduled"}
  </p>
@@ -83,7 +83,7 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  </div>
  <Button 
  onClick={() => router.push(`/workspace/${workspaceId}/ats/interviews/${nextInterview?.id || 'demo-session'}`)}
- className="rounded-lg h-10 px-6 font-black text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
+ className="rounded-lg h-10 px-6 text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
  >
  Launch Interview Space <Play size={12} className="ml-2 fill-current" />
  </Button>

@@ -93,7 +93,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  <Card className="lg:col-span-2 shadow-sm animate-fade-up min-h-[400px] flex items-center justify-center border border-border/100 bg-card/100">
  <div className="flex flex-col items-center gap-4">
  <Loader2 className="h-8 w-8 text-primary animate-spin" />
- <p className="text-xs font-black text-muted-foreground ">Fetching data...</p>
+ <p className="text-xs text-muted-foreground ">Fetching data...</p>
  </div>
  </Card>
  );
@@ -103,8 +103,8 @@ export default function RecentDocuments({ workspaceId, userId }) {
  <Card className="lg:col-span-2 shadow-sm animate-fade-up overflow-hidden border border-border/100 bg-card/100" style={{ animationDelay: "350ms" }}>
  <CardHeader className="pb-4 border-b border-border/10 bg-muted/5">
  <div className="flex items-center justify-between">
- <CardTitle className="text-sm font-black text-muted-foreground">Recent Documents</CardTitle>
- <Badge variant="outline" className="text-[10px] font-black tracking-tighter bg-background">Last 5 Assets</Badge>
+ <CardTitle className="text-sm text-muted-foreground">Recent Documents</CardTitle>
+ <Badge variant="outline" className="text-[10px] tracking-tighter bg-background">Last 5 Assets</Badge>
  </div>
  </CardHeader>
  <CardContent className="px-0">
@@ -137,7 +137,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  </div>
  <div className="min-w-0">
  <div className="flex items-center gap-2">
- <p className="text-sm font-black text-foreground/80 truncate">{doc.name}</p>
+ <p className="text-sm text-foreground/80 truncate">{doc.name}</p>
  </div>
  <p className="text-[11px] font-bold text-muted-foreground tracking-wider opacity-60 flex items-center gap-2">
  <span>{(doc.fileSize / 1024).toFixed(0)} KB</span>
@@ -150,12 +150,12 @@ export default function RecentDocuments({ workspaceId, userId }) {
  <Badge
  onClick={(e) => toggleStatus(e, doc)}
  variant="outline"
- className={`${statusStyles[doc.status?.toLowerCase()] || statusStyles.approved} text-[9px] font-black px-2.5 py-1 border-none shadow-sm cursor-pointer hover:opacity-80 transition-opacity`}
+ className={`${statusStyles[doc.status?.toLowerCase()] || statusStyles.approved} text-[9px] px-2.5 py-1 border-none shadow-sm cursor-pointer hover:opacity-80 transition-opacity`}
  title="Click to change Status"
  >
  {doc.status || "APPROVED"}
  </Badge>
- <span className="text-[10px] font-black text-muted-foreground opacity-40 hidden sm:block w-24 text-right tabular-nums italic">
+ <span className="text-[10px] text-muted-foreground opacity-40 hidden sm:block w-24 text-right tabular-nums italic">
  {new Date(doc.createdAt).toLocaleDateString()}
  </span>
  <DropdownMenu>

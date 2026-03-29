@@ -72,7 +72,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <Dialog open={isOpen} onOpenChange={onClose}>
  <DialogContent className="sm:max-w-[500px] rounded-2xl border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl p-0 overflow-hidden">
  <DialogHeader className="p-8 pb-4">
- <DialogTitle className="text-2xl font-black flex items-center gap-2">
+ <DialogTitle className="text-2xl flex items-center gap-2">
  <User className="text-primary w-6 h-6" />
  Add New Candidate
  </DialogTitle>
@@ -82,7 +82,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <div className="space-y-4">
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Full Name</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Full Name</label>
  <Input 
  placeholder="John Doe" 
  className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
@@ -91,7 +91,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  />
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Email Address</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Email Address</label>
  <Input 
  type="email"
  placeholder="john@example.com" 
@@ -104,7 +104,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
 
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Phone Number</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Phone Number</label>
  <Input 
  placeholder="+91 99999 99999" 
  className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
@@ -113,7 +113,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  />
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Location</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Location</label>
  <Input 
  placeholder="Delhi, Remote" 
  className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
@@ -124,7 +124,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  </div>
 
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Skills (Comma separated)</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Skills (Comma separated)</label>
  <Input 
  placeholder="React, Node.js, Next.js" 
  className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
@@ -134,7 +134,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  </div>
 
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground opacity-50 ml-1">Professional Summary</label>
+ <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Professional Summary</label>
  <Textarea 
  placeholder="Short overview of candidate's profile..." 
  className="bg-muted/30 border-none rounded-xl text-sm font-bold shadow-inner min-h-[100px] resize-none"
@@ -151,7 +151,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <Button 
  type="submit" 
  disabled={isSubmitting}
- className="bg-primary hover:bg-primary/90 rounded-xl font-black tracking-[0.2em] text-[10px] px-8 py-6 h-auto shadow-lg shadow-primary/20"
+ className="bg-primary hover:bg-primary/90 rounded-xl tracking-[0.2em] text-[10px] px-8 py-6 h-auto shadow-lg shadow-primary/20"
  >
  {isSubmitting ? "Adding..." : "Add Candidate"}
  </Button>

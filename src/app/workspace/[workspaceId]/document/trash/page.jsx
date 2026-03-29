@@ -75,7 +75,7 @@ export default function TrashPage() {
  <div className="space-y-4 h-full overflow-y-auto p-2">
  <div>
  <h1 className="text-2xl font-semibold ">Recycle Bin</h1>
- <p className="text-muted-foreground text-sm mt-1 font-black opacity-60">
+ <p className="text-muted-foreground text-sm mt-1 opacity-60">
  {trashItems.length} items in trash
  </p>
  </div>
@@ -83,14 +83,14 @@ export default function TrashPage() {
  {isLoading && trashItems.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-32 space-y-4">
  <Loader2 className="h-12 w-12 text-primary animate-spin" />
- <p className="text-sm font-black text-muted-foreground tracking-[0.2em] animate-pulse">Loading Trash...</p>
+ <p className="text-sm text-muted-foreground tracking-[0.2em] animate-pulse">Loading Trash...</p>
  </div>
  ) : trashItems.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-32 text-center rounded-3xl border-2 border-dashed border-border/50 bg-background/50">
  <div className="w-20 h-20 bg-muted/40 rounded-3xl flex items-center justify-center mb-6">
  <Trash2 className="w-10 h-10 text-muted-foreground/40" />
  </div>
- <h3 className="text-xl font-black text-foreground/80 mb-2">Trash is empty</h3>
+ <h3 className="text-xl text-foreground/80 mb-2">Trash is empty</h3>
  <p className="text-sm text-muted-foreground/60 max-w-[280px] mx-auto mb-8 font-medium">
  Deleted files and folders will appear here where you can restore them or permanently remove them.
  </p>

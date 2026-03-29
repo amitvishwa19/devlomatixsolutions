@@ -66,7 +66,7 @@ export const ChannelSidebar = () => {
  return (
  <div className="flex flex-col h-full text-primary w-full border-r bg-card">
  {/* Workspace Header */}
- <div className="w-full text-md font-black px-3 flex items-center h-12 border-neutral-200 dark:border-neutral-800 border-b">
+ <div className="w-full text-md px-3 flex items-center h-12 border-neutral-200 dark:border-neutral-800 border-b">
  <div className="flex items-center gap-x-2">
  <div className="bg-primary/10 p-1.5 rounded-lg">
  <MessageSquare className="w-4 h-4 text-primary" />
@@ -82,7 +82,7 @@ export const ChannelSidebar = () => {
 
  <div className="space-y-[2px] mt-4">
  <div className="flex items-center justify-between px-2 py-2">
- <p className="text-xs font-black text-zinc-500 dark:text-zinc-400">Channels</p>
+ <p className="text-xs text-zinc-500 dark:text-zinc-400">Channels</p>
  <button
  onClick={() => {
  setCreateChannelType('TEXT');
@@ -106,7 +106,7 @@ export const ChannelSidebar = () => {
 
  <div className="space-y-[2px] mt-4">
  <div className="flex items-center justify-between px-2 py-2">
- <p className="text-xs font-black text-zinc-500 dark:text-zinc-400">Voice & Video</p>
+ <p className="text-xs text-zinc-500 dark:text-zinc-400">Voice & Video</p>
  <button
  onClick={() => {
  setCreateChannelType('AUDIO');
@@ -130,7 +130,7 @@ export const ChannelSidebar = () => {
 
  <div className="space-y-[2px] mt-4 mb-4">
  <div className="flex items-center justify-between px-2 py-2">
- <p className="text-xs font-black text-zinc-500 dark:text-zinc-400">Direct Messages</p>
+ <p className="text-xs text-zinc-500 dark:text-zinc-400">Direct Messages</p>
  <button
  onClick={() => setIsConversationModalOpen(true)}
  className="text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-300 transition"

@@ -110,7 +110,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  </Button>
  </Link>
  <div>
- <h1 className="text-2xl font-black ">Agent Connectivity</h1>
+ <h1 className="text-2xl ">Agent Connectivity</h1>
  <p className="text-xs text-muted-foreground font-bold opacity-60">Secure Gateway Configuration</p>
  </div>
  </div>
@@ -130,7 +130,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <CardDescription className="text-xs">Configure the bridge between your workspace and the OpenClaw AI platform.</CardDescription>
  </div>
  <div className="flex items-center gap-3 bg-indigo-500/5 px-4 py-2 rounded-xl border border-indigo-500/10">
- <Label htmlFor="claw-toggle" className="text-[10px] font-black text-indigo-600/70">
+ <Label htmlFor="claw-toggle" className="text-[10px] text-indigo-600/70">
  {config.enabled ? 'Enabled' : 'Disabled'}
  </Label>
  <Switch 
@@ -147,7 +147,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  {/* API URL */}
  <div className="space-y-3">
  <div className="flex items-center justify-between px-1">
- <Label className="text-[10px] font-black text-muted-foreground">API Endpoint URL</Label>
+ <Label className="text-[10px] text-muted-foreground">API Endpoint URL</Label>
  <Badge variant="outline" className="text-[9px] font-bold h-4 px-1.5 opacity-60 ">REST API</Badge>
  </div>
  <div className="relative group">
@@ -164,7 +164,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  {/* API KEY */}
  <div className="space-y-3">
  <div className="flex items-center justify-between px-1">
- <Label className="text-[10px] font-black text-muted-foreground">Secret API Key</Label>
+ <Label className="text-[10px] text-muted-foreground">Secret API Key</Label>
  <div className="flex items-center gap-1.5">
  <Lock className="w-3 h-3 text-emerald-500" />
  <span className="text-[9px] font-bold text-emerald-600/70 ">Encrypted</span>
@@ -193,7 +193,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  variant="outline" 
  onClick={handleTestPing}
  disabled={isTesting || !config.apiUrl}
- className="rounded-xl font-black text-[10px] h-10 px-6 border-indigo-500/20 text-indigo-600 gap-2"
+ className="rounded-xl text-[10px] h-10 px-6 border-indigo-500/20 text-indigo-600 gap-2"
  >
  {isTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
  Test Connection
@@ -201,7 +201,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <Button 
  type="submit" 
  disabled={saving}
- className="rounded-xl font-black text-[10px] h-10 px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
+ className="rounded-xl text-[10px] h-10 px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
  >
  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <ShieldCheck className="w-3.5 h-3.5 mr-2" />}
  Save Operations

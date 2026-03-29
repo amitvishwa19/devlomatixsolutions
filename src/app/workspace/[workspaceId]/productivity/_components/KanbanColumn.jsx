@@ -13,11 +13,11 @@ export const KanbanColumn = ({ column, tasks, onCreateTask, onDeleteColumn, onDe
  <div className="p-4 flex items-center justify-between border-b border-border/10 group">
  <div className="flex items-center gap-3">
  <div className="w-6 h-6 rounded-md bg-background flex items-center justify-center border border-border/10 shadow-sm">
- <span className="text-[10px] font-black text-primary">
+ <span className="text-[10px] text-primary">
  {tasks.length}
  </span>
  </div>
- <h3 className="text-[12px] font-black text-foreground/80 group-hover:text-primary transition-colors">
+ <h3 className="text-[12px] text-foreground/80 group-hover:text-primary transition-colors">
  {column.title}
  </h3>
  </div>

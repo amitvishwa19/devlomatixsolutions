@@ -72,7 +72,7 @@ export const KanbanCard = ({ task, index, onDeleteTask, onUpdateTask }) => {
  <div className="p-1.5 rounded-md bg-muted/30">
  {getTypeIcon(task.type)}
  </div>
- <span className="text-[9px] font-black text-muted-foreground opacity-60">
+ <span className="text-[9px] text-muted-foreground opacity-60">
  {task.type}
  </span>
  </div>
@@ -136,7 +136,7 @@ export const KanbanCard = ({ task, index, onDeleteTask, onUpdateTask }) => {
  <TooltipTrigger asChild>
  <Avatar className="w-6 h-6 border-2 border-background shadow-sm hover:scale-110 transition-transform cursor-help">
  <AvatarImage src={task.assignee.avatar} />
- <AvatarFallback className="bg-primary/10 text-[8px] font-black text-primary">
+ <AvatarFallback className="bg-primary/10 text-[8px] text-primary">
  {task.assignee.displayName?.charAt(0) || "U"}
  </AvatarFallback>
  </Avatar>

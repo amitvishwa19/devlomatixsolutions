@@ -50,7 +50,7 @@ export default function InterviewSpacePage() {
  variant="ghost"
  size="sm"
  onClick={() => router.back()}
- className="p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-primary transition-colors text-[10px] font-black tracking-[0.2em]"
+ className="p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-primary transition-colors text-[10px] tracking-[0.2em]"
  >
  <ChevronLeft size={12} className="mr-1" />
  Back to Hub
@@ -60,16 +60,16 @@ export default function InterviewSpacePage() {
  <div className="space-y-4 shrink-0">
  <div className="flex items-center gap-4">
  <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-2xl">
- <AvatarFallback className="bg-primary/10 text-primary font-black text-lg italic">RS</AvatarFallback>
+ <AvatarFallback className="bg-primary/10 text-primary text-lg italic">RS</AvatarFallback>
  </Avatar>
  <div className="min-w-0">
- <h1 className="text-xl font-black tracking-tighter truncate">Rohit Sharma</h1>
- <p className="text-[10px] font-black text-primary/60 italic truncate">Frontend Developer Candidate</p>
+ <h1 className="text-xl tracking-tighter truncate">Rohit Sharma</h1>
+ <p className="text-[10px] text-primary/60 italic truncate">Frontend Developer Candidate</p>
  </div>
  </div>
  <div className="flex gap-2">
- <Badge variant="outline" className="h-6 rounded-md bg-white/5 border-white/10 text-[9px] font-black ">Technical Round</Badge>
- <Badge variant="outline" className="h-6 rounded-md bg-primary/10 border-primary/20 text-primary text-[9px] font-black ">A-Priority</Badge>
+ <Badge variant="outline" className="h-6 rounded-md bg-white/5 border-white/10 text-[9px] ">Technical Round</Badge>
+ <Badge variant="outline" className="h-6 rounded-md bg-primary/10 border-primary/20 text-primary text-[9px] ">A-Priority</Badge>
  </div>
  </div>
 
@@ -77,9 +77,9 @@ export default function InterviewSpacePage() {
 
  <Tabs defaultValue="notes" className="flex-1 flex flex-col min-h-0">
  <TabsList className="bg-white/5 p-1 rounded-lg h-9 border border-white/10 shrink-0">
- <TabsTrigger value="notes" className="rounded-md text-[8px] font-black flex-1 px-1">Notes</TabsTrigger>
- <TabsTrigger value="scorecard" className="rounded-md text-[8px] font-black flex-1 px-1">Score</TabsTrigger>
- <TabsTrigger value="resume" className="rounded-md text-[8px] font-black flex-1 px-1">Resume</TabsTrigger>
+ <TabsTrigger value="notes" className="rounded-md text-[8px] flex-1 px-1">Notes</TabsTrigger>
+ <TabsTrigger value="scorecard" className="rounded-md text-[8px] flex-1 px-1">Score</TabsTrigger>
+ <TabsTrigger value="resume" className="rounded-md text-[8px] flex-1 px-1">Resume</TabsTrigger>
  </TabsList>
 
  <TabsContent value="notes" className="flex-1 mt-4 outline-none min-h-0 flex flex-col overflow-hidden">
@@ -87,11 +87,11 @@ export default function InterviewSpacePage() {
  <p className="text-[9px] font-bold text-white/20 italic mb-4">Transcription Start...</p>
  <div className="space-y-5">
  <div className="space-y-1">
- <p className="text-[9px] font-black text-primary italic ">Interviewer (You)</p>
+ <p className="text-[9px] text-primary italic ">Interviewer (You)</p>
  <p className="text-sm font-medium opacity-60">Can you explain your experience with Next.js Server Components?</p>
  </div>
  <div className="space-y-1">
- <p className="text-[9px] font-black text-white/40 italic ">Rohit Sharma</p>
+ <p className="text-[9px] text-white/40 italic ">Rohit Sharma</p>
  <p className="text-sm font-medium opacity-90">Sure. Server Components allow us to render complex UI on the server, reducing the client-side JavaScript bundle...</p>
  </div>
  </div>
@@ -101,7 +101,7 @@ export default function InterviewSpacePage() {
  placeholder="Add a private note..."
  className="bg-white/5 border-white/10 rounded-xl min-h-[100px] p-5 text-sm font-medium focus-visible:ring-primary shadow-inner resize-none h-24"
  />
- <div className="absolute bottom-3 right-4 text-[8px] font-black text-white/20 italic group-focus-within:text-primary transition-colors">Shift + Enter to save</div>
+ <div className="absolute bottom-3 right-4 text-[8px] text-white/20 italic group-focus-within:text-primary transition-colors">Shift + Enter to save</div>
  </div>
  </TabsContent>
 
@@ -116,16 +116,16 @@ export default function InterviewSpacePage() {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
  <trait.icon size={12} className="text-primary/60" />
- <span className="text-[9px] font-black opacity-60">{trait.label}</span>
+ <span className="text-[9px] opacity-60">{trait.label}</span>
  </div>
- <span className="text-base font-black text-primary">05<span className="text-[9px] text-white/20">/05</span></span>
+ <span className="text-base text-primary">05<span className="text-[9px] text-white/20">/05</span></span>
  </div>
  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
  <div className="h-full w-[80%] bg-primary shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
  </div>
  </div>
  ))}
- <Button className="w-full bg-primary hover:bg-primary/90 rounded-xl h-10 font-black text-[9px] shadow-lg shadow-primary/20 mt-2">
+ <Button className="w-full bg-primary hover:bg-primary/90 rounded-xl h-10 text-[9px] shadow-lg shadow-primary/20 mt-2">
  Submit Preliminary Scorecard
  </Button>
  </div>
@@ -140,10 +140,10 @@ export default function InterviewSpacePage() {
  <div className="flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-xl">
  <div className="flex items-center gap-2">
  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
- <span className="text-[8px] font-black text-emerald-500/80">Live Session • 12:45</span>
+ <span className="text-[8px] text-emerald-500/80">Live Session • 12:45</span>
  </div>
  <Separator orientation="vertical" className="h-2.5 bg-white/10" />
- <span className="text-[8px] font-black text-white/40 italic">U12-99X</span>
+ <span className="text-[8px] text-white/40 italic">U12-99X</span>
  </div>
 
  <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export default function InterviewSpacePage() {
  </Avatar>
  ))}
  </div>
- <Badge variant="ghost" className="h-7 rounded-full bg-white/5 border border-white/10 text-[9px] font-black px-3">+2</Badge>
+ <Badge variant="ghost" className="h-7 rounded-full bg-white/5 border border-white/10 text-[9px] px-3">+2</Badge>
  </div>
  </div>
 
@@ -164,12 +164,12 @@ export default function InterviewSpacePage() {
  <div className="relative rounded-2xl overflow-hidden border border-white/5 bg-[#0A0A0B] shadow-2xl group flex items-center justify-center">
  <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
  <Avatar className="h-40 w-40 border-[8px] border-white/5 shadow-2xl opacity-20 filter grayscale">
- <AvatarFallback className="text-3xl font-black italic">RS</AvatarFallback>
+ <AvatarFallback className="text-3xl italic">RS</AvatarFallback>
  </Avatar>
  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent" />
  </div>
  <div className="absolute bottom-6 left-6 flex items-center gap-2">
- <Badge className="bg-white/10 backdrop-blur-xl text-white border-white/20 font-black italic text-[9px] px-2.5 py-0.5">Rohit Sharma</Badge>
+ <Badge className="bg-white/10 backdrop-blur-xl text-white border-white/20 italic text-[9px] px-2.5 py-0.5">Rohit Sharma</Badge>
  <div className="w-5 h-5 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
  <Mic size={9} />
  </div>
@@ -181,15 +181,15 @@ export default function InterviewSpacePage() {
  <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
  {isVideoOff ? (
  <Avatar className="h-24 w-24 border-4 border-white/5">
- <AvatarFallback className="text-xl font-black italic">YOU</AvatarFallback>
+ <AvatarFallback className="text-xl italic">YOU</AvatarFallback>
  </Avatar>
  ) : (
- <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center opacity-40 italic font-black text-white/5 text-2xl">Camera Active</div>
+ <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center opacity-40 italic text-white/5 text-2xl">Camera Active</div>
  )}
  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent" />
  </div>
  <div className="absolute bottom-6 left-6 flex items-center gap-2">
- <Badge className="bg-primary/20 backdrop-blur-xl text-primary border-primary/20 font-black italic text-[9px] px-2.5 py-0.5 ">YOU</Badge>
+ <Badge className="bg-primary/20 backdrop-blur-xl text-primary border-primary/20 italic text-[9px] px-2.5 py-0.5 ">YOU</Badge>
  <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${isMuted ? 'bg-rose-500/20 text-rose-500' : 'bg-emerald-500/20 text-emerald-500'}`}>
  {isMuted ? <MicOff size={9} /> : <Mic size={9} />}
  </div>
@@ -201,8 +201,8 @@ export default function InterviewSpacePage() {
  <div className="absolute inset-0 z-50 bg-black/95 rounded-2xl border border-primary/40 flex items-center justify-center">
  <div className="text-center space-y-4">
  <Monitor size={48} className="mx-auto text-primary animate-pulse" />
- <h3 className="text-xl font-black ">Presenting Screen</h3>
- <Button onClick={() => setIsScreenSharing(false)} className="bg-rose-500 hover:bg-rose-600 rounded-lg px-6 h-10 font-black text-[9px]">Stop Sharing</Button>
+ <h3 className="text-xl ">Presenting Screen</h3>
+ <Button onClick={() => setIsScreenSharing(false)} className="bg-rose-500 hover:bg-rose-600 rounded-lg px-6 h-10 text-[9px]">Stop Sharing</Button>
  </div>
  </div>
  )}
@@ -254,7 +254,7 @@ export default function InterviewSpacePage() {
 
  <Button className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 rounded-xl h-11 px-6 shadow-lg shadow-rose-500/20 flex items-center gap-2 group">
  <PhoneOff size={18} className="group-hover:rotate-12 transition-transform" />
- <span className="font-black text-[9px]">End</span>
+ <span className="text-[9px]">End</span>
  </Button>
  </div>
 
@@ -269,7 +269,7 @@ export default function InterviewSpacePage() {
  className="absolute top-24 right-6 bottom-24 w-80 bg-[#16161E]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-[60] flex flex-col overflow-hidden"
  >
  <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
- <h3 className="text-[10px] font-black tracking-[0.2em] text-primary">
+ <h3 className="text-[10px] tracking-[0.2em] text-primary">
  {activeTool === 'ai' && 'AI Assistant'}
  {activeTool === 'notes' && 'Quick Notes'}
  {activeTool === 'code' && 'Code Editor'}
@@ -290,11 +290,11 @@ export default function InterviewSpacePage() {
  {activeTool === 'ai' && (
  <div className="space-y-4">
  <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl">
- <p className="text-[10px] font-black text-primary mb-1">AI Suggestion</p>
+ <p className="text-[10px] text-primary mb-1">AI Suggestion</p>
  <p className="text-xs opacity-80 leading-relaxed italic">"Ask about their experience with Hydration errors in Next.js 14."</p>
  </div>
  <div className="space-y-2">
- <p className="text-[9px] font-black opacity-40">Relevant Topics</p>
+ <p className="text-[9px] opacity-40">Relevant Topics</p>
  <div className="flex flex-wrap gap-2">
  {['SSR', 'Hydration', 'Server Actions', 'PPR'].map(t => (
  <Badge key={t} variant="outline" className="text-[8px] bg-white/5 border-white/10">{t}</Badge>
@@ -336,11 +336,11 @@ export default function InterviewSpacePage() {
  {activeTool === 'settings' && (
  <div className="space-y-6">
  <div className="space-y-3">
- <p className="text-[9px] font-black opacity-40">Microphone</p>
+ <p className="text-[9px] opacity-40">Microphone</p>
  <div className="h-10 bg-white/5 rounded-xl border border-white/10 flex items-center px-4 text-xs">Standard Internal Mic</div>
  </div>
  <div className="space-y-3">
- <p className="text-[9px] font-black opacity-40">Camera</p>
+ <p className="text-[9px] opacity-40">Camera</p>
  <div className="h-10 bg-white/5 rounded-xl border border-white/10 flex items-center px-4 text-xs">FaceTime HD Camera</div>
  </div>
  </div>

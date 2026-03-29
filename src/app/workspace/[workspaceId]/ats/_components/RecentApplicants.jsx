@@ -54,7 +54,7 @@ export const RecentApplicants = ({ applicants = [] }) => {
  return (
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between">
- <CardTitle className="text-xl font-black ">Recent Applicants</CardTitle>
+ <CardTitle className="text-xl ">Recent Applicants</CardTitle>
  <div className="flex items-center gap-2">
  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-40 hover:opacity-100 bg-muted/40 backdrop-blur-xl">
  <Search size={14} />
@@ -74,24 +74,24 @@ export const RecentApplicants = ({ applicants = [] }) => {
  <div className="flex items-center gap-4">
  <Avatar className="h-10 w-10 border-2 border-primary/20 bg-background group-hover:scale-110 transition-transform">
  <AvatarImage src={applicant.avatar} />
- <AvatarFallback className="bg-primary/10 text-primary font-black text-xs ">
+ <AvatarFallback className="bg-primary/10 text-primary text-xs ">
  {applicant.name.split(' ').map(n => n[0]).join('')}
  </AvatarFallback>
  </Avatar>
  <div className="space-y-0.5">
  <h4 className="text-sm font-bold group-hover:text-primary transition-colors">{applicant.name}</h4>
- <p className="text-[10px] font-black text-muted-foreground opacity-40">{applicant.role}</p>
+ <p className="text-[10px] text-muted-foreground opacity-40">{applicant.role}</p>
  </div>
  </div>
  <div className="flex flex-col items-end gap-1.5">
- <Badge className={`text-[9px] font-black tracking-wider px-2 py-0.5 rounded-full ${getStatusColor(applicant.status)}`}>
+ <Badge className={`text-[9px] tracking-wider px-2 py-0.5 rounded-full ${getStatusColor(applicant.status)}`}>
  {applicant.status}
  </Badge>
  <div className="flex items-center gap-2">
  {applicant.score && (
  <div className="flex items-center gap-1">
  <Star size={10} className="fill-amber-500 text-amber-500" />
- <span className="text-[10px] font-black">{applicant.score}</span>
+ <span className="text-[10px]">{applicant.score}</span>
  </div>
  )}
  <span className="text-[9px] font-medium text-muted-foreground opacity-60">{applicant.appliedAt}</span>
@@ -100,7 +100,7 @@ export const RecentApplicants = ({ applicants = [] }) => {
  </motion.div>
  ))}
  </div>
- <Button variant="ghost" className="w-full mt-4 text-[10px] font-black tracking-[0.2em] opacity-40 hover:opacity-100 hover:bg-primary/5 rounded-lg h-12">
+ <Button variant="ghost" className="w-full mt-4 text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100 hover:bg-primary/5 rounded-lg h-12">
  View Talent Database <ArrowRight size={12} className="ml-2" />
  </Button>
  </CardContent>

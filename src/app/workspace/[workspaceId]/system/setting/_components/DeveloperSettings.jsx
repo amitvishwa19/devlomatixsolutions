@@ -168,8 +168,8 @@ export const DeveloperSettings = () => {
  </div>
  <div className="flex-1">
  <div className="flex items-center gap-2">
- <Badge variant="outline" className="bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20 text-[9px] font-black ">Dev Hub</Badge>
- <h3 className="text-lg font-black text-foreground ">Developer Operations</h3>
+ <Badge variant="outline" className="bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20 text-[9px] ">Dev Hub</Badge>
+ <h3 className="text-lg text-foreground ">Developer Operations</h3>
  </div>
  <p className="text-sm text-muted-foreground font-medium mt-1">
  Control your external integrations, API connectivity, and real-time event distribution.
@@ -225,7 +225,7 @@ export const DeveloperSettings = () => {
  <Button 
  variant="ghost" 
  size="sm" 
- className="h-6 text-[9px] font-black text-indigo-600 hover:bg-indigo-500/10 gap-1 tracking-tighter"
+ className="h-6 text-[9px] text-indigo-600 hover:bg-indigo-500/10 gap-1 tracking-tighter"
  onClick={() => setNewWebhook(prev => ({ ...prev, url: mockUrl }))}
  >
  <Plus className="w-2.5 h-2.5" />
@@ -234,7 +234,7 @@ export const DeveloperSettings = () => {
  <Button 
  variant="ghost" 
  size="sm" 
- className="h-6 text-[9px] font-black text-fuchsia-600 hover:bg-fuchsia-500/10 gap-1 tracking-tighter"
+ className="h-6 text-[9px] text-fuchsia-600 hover:bg-fuchsia-500/10 gap-1 tracking-tighter"
  disabled={!newWebhook.url || isPrechecking}
  onClick={() => handleTestPing(newWebhook.url)}
  >
@@ -316,13 +316,13 @@ export const DeveloperSettings = () => {
  </div>
  </div>
  </div>
- <Badge className="bg-emerald-500 hover:bg-emerald-500 text-white font-black text-[9px] h-5 px-2">Active</Badge>
+ <Badge className="bg-emerald-500 hover:bg-emerald-500 text-white text-[9px] h-5 px-2">Active</Badge>
  </div>
  <div className="flex justify-end gap-2">
  <Button 
  variant="ghost" 
  size="sm" 
- className="text-[10px] font-black h-7 px-3 gap-2"
+ className="text-[10px] h-7 px-3 gap-2"
  onClick={() => handleTestPing(hook.url, hook.id)}
  disabled={testingWebhookId === hook.id}
  >
@@ -340,7 +340,7 @@ export const DeveloperSettings = () => {
  size="sm" 
  onClick={() => handleDeleteWebhook(hook.id)}
  disabled={saving}
- className="text-[10px] font-black h-7 px-3 text-rose-500 hover:bg-rose-500/10"
+ className="text-[10px] h-7 px-3 text-rose-500 hover:bg-rose-500/10"
  >
  Delete
  </Button>
@@ -406,7 +406,7 @@ export const DeveloperSettings = () => {
  </div>
  <div className="text-right flex items-center gap-6">
  <div>
- <p className="text-[9px] font-black opacity-40">Created</p>
+ <p className="text-[9px] opacity-40">Created</p>
  <p className="text-xs font-bold">{key.created}</p>
  </div>
  <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10">
@@ -468,7 +468,7 @@ export const DeveloperSettings = () => {
  </div>
  </div>
  <div className="flex items-center gap-2">
- <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 opacity-60">{log.type}</Badge>
+ <Badge variant="outline" className="text-[9px] h-4 px-1.5 opacity-60">{log.type}</Badge>
  <code className="text-[9px] font-mono text-muted-foreground truncate">{JSON.stringify(log.details)}</code>
  </div>
  </div>

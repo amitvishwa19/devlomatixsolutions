@@ -34,7 +34,7 @@ export default function ActivityFeeds({ workspaceId, userId }) {
  <div>
  <Card className="shadow-sm animate-fade-up border border-border/100 bg-card/100 backdrop-blur-sm" style={{ animationDelay: "450ms" }}>
  <CardHeader className="pb-4 border-b border-border/10 bg-muted/5">
- <CardTitle className="text-sm font-black text-muted-foreground">Recent Activity</CardTitle>
+ <CardTitle className="text-sm text-muted-foreground">Recent Activity</CardTitle>
  </CardHeader>
  <CardContent className="pt-6">
  {loading && activities.length === 0 ? (
@@ -43,7 +43,7 @@ export default function ActivityFeeds({ workspaceId, userId }) {
  </div>
  ) : activities.length === 0 ? (
  <div className="py-10 text-center opacity-40">
- <p className="text-[10px] font-black text-muted-foreground">No recent activity</p>
+ <p className="text-[10px] text-muted-foreground">No recent activity</p>
  </div>
  ) : (
  <div className="space-y-6">
@@ -54,7 +54,7 @@ export default function ActivityFeeds({ workspaceId, userId }) {
  </div>
  <div className="flex-1 border-b border-border/5 pb-4 group-last:border-none">
  <p className="text-sm font-bold text-foreground/80 leading-snug group-hover:text-foreground transition-colors">{activity.text}</p>
- <p className="text-[10px] font-black text-muted-foreground/40 mt-1.5 flex items-center gap-2 italic">
+ <p className="text-[10px] text-muted-foreground/40 mt-1.5 flex items-center gap-2 italic">
  <Clock className="w-2.5 h-2.5" />
  {activity.time}
  </p>

@@ -54,7 +54,7 @@ export default function ATSAnalyticsPage() {
  <Button
  variant="ghost"
  onClick={() => router.back()}
- className="p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-primary transition-colors text-[10px] font-black tracking-[0.2em] mb-2"
+ className="p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-primary transition-colors text-[10px] tracking-[0.2em] mb-2"
  >
  <ChevronLeft size={12} className="mr-1" />
  Back to ATS
@@ -66,7 +66,7 @@ export default function ATSAnalyticsPage() {
  <Calendar className="w-4 h-4 mr-2 opacity-50" />
  Last 30 Days
  </Button>
- <Button className="h-10 rounded-md px-6 font-black text-[10px] bg-primary shadow-lg shadow-primary/20">
+ <Button className="h-10 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20">
  <Download className="w-4 h-4 mr-2" />
  Download Report
  </Button>
@@ -82,14 +82,14 @@ export default function ATSAnalyticsPage() {
  <div className={`w-12 h-12 rounded-lg bg-muted/60 flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
  <stat.icon size={22} />
  </div>
- <div className={`flex items-center gap-1 text-[10px] font-black ${stat.trendStatus === 'up' ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+ <div className={`flex items-center gap-1 text-[10px] ${stat.trendStatus === 'up' ? 'text-emerald-500' : 'text-muted-foreground'}`}>
  {stat.trendStatus === 'up' ? <ArrowUpRight size={12} /> : <div className="w-1.5 h-1.5 rounded-full bg-border" />}
  {stat.trend}
  </div>
  </div>
  <div>
- <h3 className="text-3xl font-black tracking-tighter">{stat.value}</h3>
- <p className="text-[10px] font-black text-muted-foreground opacity-40">{stat.label}</p>
+ <h3 className="text-3xl tracking-tighter">{stat.value}</h3>
+ <p className="text-[10px] text-muted-foreground opacity-40">{stat.label}</p>
  </div>
  </CardContent>
  </Card>
@@ -100,7 +100,7 @@ export default function ATSAnalyticsPage() {
  {/* Hiring Funnel */}
  <Card className="lg:col-span-2 border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 pb-4">
- <CardTitle className="text-xl font-black flex items-center gap-2">
+ <CardTitle className="text-xl flex items-center gap-2">
  <TrendingUp className="w-5 h-5 text-primary" />
  Hiring Funnel Velocity
  </CardTitle>
@@ -111,12 +111,12 @@ export default function ATSAnalyticsPage() {
  <div key={i} className="space-y-2">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
- <span className="text-xs font-black w-4 text-muted-foreground/40">{i + 1}</span>
+ <span className="text-xs w-4 text-muted-foreground/40">{i + 1}</span>
  <span className="text-sm font-bold">{stage.stage}</span>
  </div>
  <div className="flex items-center gap-4">
- <span className="text-xs font-black text-primary">{stage.count} <span className="text-muted-foreground opacity-40">Candidates</span></span>
- <Badge variant="outline" className="text-[9px] font-black border-border/40 opacity-40">{stage.percentage}%</Badge>
+ <span className="text-xs text-primary">{stage.count} <span className="text-muted-foreground opacity-40">Candidates</span></span>
+ <Badge variant="outline" className="text-[9px] border-border/40 opacity-40">{stage.percentage}%</Badge>
  </div>
  </div>
  <Progress value={stage.percentage} className="h-3 rounded-full bg-muted/30" />
@@ -126,7 +126,7 @@ export default function ATSAnalyticsPage() {
  <div className="p-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-4">
  <Sparkles className="text-primary shrink-0" />
  <p className="text-xs font-medium text-muted-foreground leading-relaxed">
- <span className="font-black text-primary mr-2 text-[10px]">AI insight</span>
+ <span className="text-primary mr-2 text-[10px]">AI insight</span>
  Your technical screening stage has a bottleneck. average time spent is <span className="font-bold text-foreground">5.2 days</span>, which is 30% higher than industry average.
  </p>
  </div>
@@ -136,7 +136,7 @@ export default function ATSAnalyticsPage() {
  {/* Source Quality */}
  <Card className="lg:col-span-1 border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 pb-4">
- <CardTitle className="text-xl font-black flex items-center gap-2">
+ <CardTitle className="text-xl flex items-center gap-2">
  <PieChart className="w-5 h-5 text-primary" />
  Sourcing Mix
  </CardTitle>
@@ -144,8 +144,8 @@ export default function ATSAnalyticsPage() {
  <CardContent className="p-8 pt-4 space-y-8">
  <div className="aspect-square rounded-full border-[20px] border-muted/20 relative flex items-center justify-center overflow-hidden group">
  <div className="text-center">
- <h4 className="text-4xl font-black tracking-tighter">68%</h4>
- <p className="text-[10px] font-black text-muted-foreground opacity-40">Inbound</p>
+ <h4 className="text-4xl tracking-tighter">68%</h4>
+ <p className="text-[10px] text-muted-foreground opacity-40">Inbound</p>
  </div>
  {/* Decorative rings for visual flair */}
  <div className="absolute inset-0 border-[20px] border-primary border-t-transparent border-l-transparent rotate-45 opacity-60 group-hover:rotate-90 transition-transform duration-1000" />
@@ -157,21 +157,21 @@ export default function ATSAnalyticsPage() {
  <div className="w-2 h-2 rounded-full bg-primary" />
  <span className="font-bold">LinkedIn</span>
  </div>
- <span className="font-black opacity-40">42%</span>
+ <span className="opacity-40">42%</span>
  </div>
  <div className="flex items-center justify-between text-xs">
  <div className="flex items-center gap-2">
  <div className="w-2 h-2 rounded-full bg-emerald-500" />
  <span className="font-bold">Referrals</span>
  </div>
- <span className="font-black opacity-40">26%</span>
+ <span className="opacity-40">26%</span>
  </div>
  <div className="flex items-center justify-between text-xs">
  <div className="flex items-center gap-2">
  <div className="w-2 h-2 rounded-full bg-blue-500" />
  <span className="font-bold">Direct Applied</span>
  </div>
- <span className="font-black opacity-40">32%</span>
+ <span className="opacity-40">32%</span>
  </div>
  </div>
  </CardContent>
@@ -182,7 +182,7 @@ export default function ATSAnalyticsPage() {
  {/* Diversity & Inclusion */}
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 pb-4">
- <CardTitle className="text-xl font-black flex items-center gap-2">
+ <CardTitle className="text-xl flex items-center gap-2">
  <ShieldCheck className="w-5 h-5 text-primary" />
  Diversity & Inclusion
  </CardTitle>
@@ -190,7 +190,7 @@ export default function ATSAnalyticsPage() {
  <CardContent className="p-8 space-y-8">
  <div className="grid grid-cols-2 gap-8">
  <div className="space-y-4">
- <p className="text-[10px] font-black text-muted-foreground opacity-40">Gender Distribution</p>
+ <p className="text-[10px] text-muted-foreground opacity-40">Gender Distribution</p>
  <div className="space-y-3">
  {[
  { label: "Male", value: 58, color: "bg-blue-500" },
@@ -208,7 +208,7 @@ export default function ATSAnalyticsPage() {
  </div>
  </div>
  <div className="space-y-4">
- <p className="text-[10px] font-black text-muted-foreground opacity-40">Ethnicity Mix</p>
+ <p className="text-[10px] text-muted-foreground opacity-40">Ethnicity Mix</p>
  <div className="space-y-3">
  {[
  { label: "Asian", value: 65, color: "bg-emerald-500" },
@@ -238,7 +238,7 @@ export default function ATSAnalyticsPage() {
  {/* Team Performance */}
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 pb-4">
- <CardTitle className="text-xl font-black flex items-center gap-2">
+ <CardTitle className="text-xl flex items-center gap-2">
  <Award className="w-5 h-5 text-primary" />
  Hiring Team Impact
  </CardTitle>
@@ -248,10 +248,10 @@ export default function ATSAnalyticsPage() {
  <table className="w-full text-left">
  <thead>
  <tr className="border-b border-border/10 bg-muted/10">
- <th className="px-8 py-4 text-[10px] font-black opacity-40">Interviewer</th>
- <th className="px-8 py-4 text-[10px] font-black opacity-40">Interviews</th>
- <th className="px-8 py-4 text-[10px] font-black opacity-40">Avg Score</th>
- <th className="px-8 py-4 text-[10px] font-black opacity-40">Accept Rate</th>
+ <th className="px-8 py-4 text-[10px] opacity-40">Interviewer</th>
+ <th className="px-8 py-4 text-[10px] opacity-40">Interviews</th>
+ <th className="px-8 py-4 text-[10px] opacity-40">Avg Score</th>
+ <th className="px-8 py-4 text-[10px] opacity-40">Accept Rate</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border/10">
@@ -262,13 +262,13 @@ export default function ATSAnalyticsPage() {
  ].map((teammate, i) => (
  <tr key={i} className="hover:bg-primary/5 transition-colors cursor-default">
  <td className="px-8 py-5 flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-[10px] font-black">
+ <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-[10px]">
  {teammate.name.split(' ').map(n => n[0]).join('')}
  </div>
  <span className="text-sm font-bold">{teammate.name}</span>
  </td>
  <td className="px-8 py-5 text-sm font-bold opacity-60">{teammate.count}</td>
- <td className="px-8 py-5 text-sm font-black text-primary">{teammate.score}</td>
+ <td className="px-8 py-5 text-sm text-primary">{teammate.score}</td>
  <td className="px-8 py-5 text-sm font-bold opacity-60">{teammate.rate}</td>
  </tr>
  ))}
@@ -283,7 +283,7 @@ export default function ATSAnalyticsPage() {
  {/* Job Openings Focus */}
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 pb-4">
- <CardTitle className="text-xl font-black flex items-center gap-2">
+ <CardTitle className="text-xl flex items-center gap-2">
  <Briefcase className="w-5 h-5 text-primary" />
  Position Health & Velocity
  </CardTitle>
@@ -297,14 +297,14 @@ export default function ATSAnalyticsPage() {
  ].map((job, i) => (
  <div key={i} className="p-6 rounded-lg bg-muted/20 border border-border/10 group cursor-default hover:border-primary/20 transition-all">
  <div className="flex items-center justify-between mb-4">
- <h4 className="text-sm font-black tracking-tighter group-hover:text-primary transition-colors">{job.role}</h4>
- <Badge variant="outline" className={`text-[9px] font-black border-border/40 ${job.velocity === 'Slow' ? 'text-amber-500 bg-amber-500/10' : ''}`}>
+ <h4 className="text-sm tracking-tighter group-hover:text-primary transition-colors">{job.role}</h4>
+ <Badge variant="outline" className={`text-[9px] border-border/40 ${job.velocity === 'Slow' ? 'text-amber-500 bg-amber-500/10' : ''}`}>
  {job.velocity}
  </Badge>
  </div>
  <div className="space-y-4">
  <div className="space-y-2">
- <div className="flex justify-between text-[9px] font-black opacity-40">
+ <div className="flex justify-between text-[9px] opacity-40">
  <span>Pipeline Health</span>
  <span>{job.health}%</span>
  </div>
@@ -312,7 +312,7 @@ export default function ATSAnalyticsPage() {
  </div>
  <div className="flex items-center justify-between">
  <p className="text-[10px] font-bold opacity-40">{job.candidates} Applicants</p>
- <Button variant="ghost" className="h-6 text-[9px] font-black p-0">View Details</Button>
+ <Button variant="ghost" className="h-6 text-[9px] p-0">View Details</Button>
  </div>
  </div>
  </div>

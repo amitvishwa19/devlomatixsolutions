@@ -52,7 +52,7 @@ export default function AtsDashboard() {
  </Button>
  <Button
  onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs/create`)}
- className="h-10 rounded-md px-6 font-black text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-10 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  <Plus className="w-4 h-4 mr-2" />
  Create Job
@@ -74,8 +74,8 @@ export default function AtsDashboard() {
  {/* Active Jobs Card - Quick Peek */}
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between pb-2">
- <CardTitle className="text-xl font-black ">Focus Positions</CardTitle>
- <Button variant="ghost" size="sm" className="text-[10px] font-black tracking-[0.2em] opacity-40 hover:opacity-100">
+ <CardTitle className="text-xl ">Focus Positions</CardTitle>
+ <Button variant="ghost" size="sm" className="text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100">
  View All Jobs <ArrowUpRight className="ml-2 w-3 h-3" />
  </Button>
  </CardHeader>
@@ -94,7 +94,7 @@ export default function AtsDashboard() {
  </div>
  <div className="flex items-center gap-6">
  <div className="text-right">
- <p className="text-xs font-black">{job.applicants}</p>
+ <p className="text-xs">{job.applicants}</p>
  <p className="text-[10px] font-medium text-muted-foreground">Applicants</p>
  </div>
  <Badge className={job.status === 'Urgent' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-primary/5 text-primary border-primary/20'}>
@@ -118,7 +118,7 @@ export default function AtsDashboard() {
  {/* Interview Schedule - Quick Peek */}
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg shadow-2xl shadow-black/5">
  <CardHeader>
- <CardTitle className="text-lg font-black flex items-center gap-2">
+ <CardTitle className="text-lg flex items-center gap-2">
  <Calendar className="w-5 h-5 text-primary" />
  Today's Interviews
  </CardTitle>
@@ -128,7 +128,7 @@ export default function AtsDashboard() {
  {(summary?.interviews || []).map((int, i) => (
  <div key={i} className="flex gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
  <div className="flex flex-col items-center justify-center min-w-[60px] border-r border-primary/20 pr-4">
- <span className="text-xs font-black text-primary">{int.time.split(' ')[0]}</span>
+ <span className="text-xs text-primary">{int.time.split(' ')[0]}</span>
  <span className="text-[10px] font-bold opacity-60">{int.time.split(' ')[1]}</span>
  </div>
  <div>
@@ -141,7 +141,7 @@ export default function AtsDashboard() {
  <p className="text-center py-4 text-[10px] font-bold opacity-40 italic">No interviews scheduled today.</p>
  )}
  </div>
- <Button variant="ghost" className="w-full mt-6 text-[10px] font-black tracking-[0.2em] opacity-40 hover:opacity-100">
+ <Button variant="ghost" className="w-full mt-6 text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100">
  View Full Schedule
  </Button>
  </CardContent>

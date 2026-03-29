@@ -143,14 +143,14 @@ export const AdvancedSettings = () => {
  <Download className="w-6 h-6 text-primary" />
  <div className="text-center">
  <p className="text-sm font-bold">Export Config</p>
- <p className="text-[10px] text-muted-foreground font-black">JSON Format</p>
+ <p className="text-[10px] text-muted-foreground">JSON Format</p>
  </div>
  </Button>
  <Button variant="outline" className="h-24 rounded-2xl flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
  <Upload className="w-6 h-6 text-primary" />
  <div className="text-center">
  <p className="text-sm font-bold">Import Config</p>
- <p className="text-[10px] text-muted-foreground font-black">Upload File</p>
+ <p className="text-[10px] text-muted-foreground">Upload File</p>
  </div>
  </Button>
  </CardContent>
@@ -162,7 +162,7 @@ export const AdvancedSettings = () => {
  <FlaskConical className="w-4 h-4 text-indigo-500" />
  </div>
  <div className="flex-1">
- <p className="text-[10px] font-black text-indigo-600 ">Experimental Labs</p>
+ <p className="text-[10px] text-indigo-600 ">Experimental Labs</p>
  <p className="text-[11px] text-indigo-500/70 font-medium">
  Enable early-access features that are currently in beta testing.
  </p>

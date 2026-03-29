@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Sevillana&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Karla:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Sevillana&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
@@ -9,56 +8,60 @@
 
   :root,
   .light {
-    --background: 210 30% 98%;
-    --foreground: 220 20% 10%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
-
-    --primary: 236 85% 60%; /* Vibrant Indigo */
+    /* Primary - Teal/Cyan healthcare color */
+    --primary: 168 80% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 20% 94%;
-    --secondary-foreground: 220 15% 25%;
+    /* Background colors */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
-    --muted: 215 18% 93%;
-    --muted-foreground: 215 12% 50%;
+    /* Card and surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --accent: 290 80% 60%; /* Vibrant Purple Accent */
-    --accent-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --destructive: 0 72% 51%;
+    /* Secondary - Slate */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted */
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent - Light teal */
+    --accent: 168 60% 94%;
+    --accent-foreground: 168 80% 30%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 25% 90%;
-    --input: 215 25% 90%;
-    --ring: 236 85% 60%;
+    /* Borders and inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 168 80% 42%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 215 15% 70%;
-    --sidebar-primary: 236 85% 60%;
+    /* Custom colors for sections */
+    --hero-gradient-start: 168 80% 42%;
+    --hero-gradient-end: 186 72% 35%;
+    --section-alt: 210 40% 98%;
+    --feature-icon: 168 60% 94%;
+    --stat-bg: 168 80% 42%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 168 80% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 18% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 236 85% 60%;
-
-    /* custom tokens */
-    --success: 152 60% 40%;
-    --warning: 38 92% 50%;
-    --info: 205 80% 50%;
-
-    /* Light Theme Eye-Catchy Additions */
-    --gradient-primary: linear-gradient(135deg, hsl(236 85% 60%), hsl(290 80% 60%));
-    --glow-primary: 0 0 30px hsl(236 85% 60% / 0.3);
-    --shadow-lg: 0 10px 25px -5px hsl(220 20% 10% / 0.05), 0 8px 10px -6px hsl(220 20% 10% / 0.01);
-    --shadow-xl: 0 20px 35px -5px hsl(220 20% 10% / 0.08), 0 12px 15px -8px hsl(220 20% 10% / 0.03);
-    --shadow-glow: 0 10px 40px -10px hsl(236 85% 60% / 0.25);
+    --sidebar-accent: 168 60% 94%;
+    --sidebar-accent-foreground: 168 80% 30%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 168 80% 42%;
   }
 
   .dark {
@@ -329,8 +332,15 @@
 }
 
 @keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 
 @font-face {

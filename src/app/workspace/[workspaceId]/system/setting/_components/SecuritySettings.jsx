@@ -74,7 +74,7 @@ export const SecuritySettings = () => {
  <Label className="text-[10px] font-bold opacity-70">Session Idle Timeout</Label>
  <div className="flex gap-4 items-center">
  <History className="w-5 h-5 text-muted-foreground/40" />
- <code className="text-[11px] font-black text-foreground flex-1">
+ <code className="text-[11px] text-foreground flex-1">
  CURRENTLY SET TO: {Math.floor(localSecurity.sessionTimeout / 60)} MINUTES
  </code>
  <Button variant="outline" size="sm" className="rounded-xl text-[10px] font-bold h-8" disabled>
@@ -87,7 +87,7 @@ export const SecuritySettings = () => {
  <Label className="text-[10px] font-bold opacity-70">Password Strength Policy</Label>
  <div className="flex gap-4 items-center">
  <Lock className="w-5 h-5 text-muted-foreground/40" />
- <code className="text-[11px] font-black text-foreground flex-1 ">
+ <code className="text-[11px] text-foreground flex-1 ">
  {localSecurity.passwordPolicy}
  </code>
  <Button variant="outline" size="sm" className="rounded-xl text-[10px] font-bold h-8" disabled>

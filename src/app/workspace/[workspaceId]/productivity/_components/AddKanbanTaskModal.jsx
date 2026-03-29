@@ -260,7 +260,7 @@ export const AddKanbanTaskModal = () => {
  </PopoverTrigger>
  <PopoverContent align="end" className="w-[340px] p-0 border-none shadow-2xl">
  <div className="p-4 bg-background rounded-xl border border-border/40">
- <h4 className="text-[10px] font-black tracking-[0.2em] mb-4 text-muted-foreground">Select a Cover Image</h4>
+ <h4 className="text-[10px] tracking-[0.2em] mb-4 text-muted-foreground">Select a Cover Image</h4>
  <UnsplashImagePicker 
  onClick={(img) => setCoverUrl(img.full)} 
  selectedImage={null}
@@ -293,7 +293,7 @@ export const AddKanbanTaskModal = () => {
  <div className="space-y-4">
  {/* Title Field */}
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
+ <label className="text-[10px] text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
  <Type size={12} /> Task Title
  </label>
  <Input
@@ -309,7 +309,7 @@ export const AddKanbanTaskModal = () => {
  {/* Type & Priority Row */}
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
+ <label className="text-[10px] text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
  <Briefcase size={12} /> Content Type
  </label>
  <Select value={taskType} onValueChange={setTaskType} disabled={isLoading}>
@@ -325,7 +325,7 @@ export const AddKanbanTaskModal = () => {
  </Select>
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
+ <label className="text-[10px] text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
  <History size={12} /> Assigned To
  </label>
  <Select value={assigneeId} onValueChange={setAssigneeId} disabled={isLoading}>
@@ -347,7 +347,7 @@ export const AddKanbanTaskModal = () => {
  {/* Priority & Due Date Row */}
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
+ <label className="text-[10px] text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
  <AlertCircle size={12} /> Priority
  </label>
  <Select value={priority} onValueChange={setPriority} disabled={isLoading}>
@@ -366,7 +366,7 @@ export const AddKanbanTaskModal = () => {
 
  {/* Due Date */}
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
+ <label className="text-[10px] text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
  <Clock size={12} /> Due Date (Optional)
  </label>
  <Input
@@ -380,7 +380,7 @@ export const AddKanbanTaskModal = () => {
 
  {/* Description Field */}
  <div className="space-y-2">
- <label className="text-[10px] font-black text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
+ <label className="text-[10px] text-muted-foreground ml-1 flex items-center gap-1.5 opacity-70">
  <AlignLeft size={12} /> Description
  </label>
  <Textarea
@@ -420,7 +420,7 @@ export const AddKanbanTaskModal = () => {
  {checklists.length === 0 ? (
  <div className="py-12 border-2 border-dashed border-border/20 rounded-2xl flex flex-col items-center justify-center text-muted-foreground opacity-40">
  <CheckSquare size={32} className="mb-2" />
- <p className="text-[10px] font-black ">No sub-tasks yet</p>
+ <p className="text-[10px] ">No sub-tasks yet</p>
  </div>
  ) : (
  checklists.map((item) => (
@@ -455,7 +455,7 @@ export const AddKanbanTaskModal = () => {
  {activities.length === 0 ? (
  <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-40">
  <History size={32} className="mb-2" />
- <p className="text-[10px] font-black ">No activity recorded</p>
+ <p className="text-[10px] ">No activity recorded</p>
  </div>
  ) : (
  <div className="relative space-y-6 pl-4 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-border/20">
@@ -464,7 +464,7 @@ export const AddKanbanTaskModal = () => {
  <div className="absolute -left-[18px] top-1 h-3 w-3 rounded-full bg-background border-2 border-primary shadow-sm z-10" />
  <div className="flex-1 space-y-1">
  <div className="flex items-center gap-2">
- <span className="text-[10px] font-black text-foreground/80 ">
+ <span className="text-[10px] text-foreground/80 ">
  {act.user?.displayName || "System"}
  </span>
  <span className="text-[8px] font-bold text-muted-foreground tracking-tighter opacity-50">

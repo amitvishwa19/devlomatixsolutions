@@ -8,6 +8,8 @@ import { ChevronRight, MessageSquare } from 'lucide-react'
 import { DynamicIcon } from 'lucide-react/dynamic'
 import OrgAuthBlock from './OrgAuthBlock'
 import { AppLogo } from '@/components/global/AppLogo'
+import logo from '@/assets/logo/logo.png'
+import Image from 'next/image'
 
 const OPEN_GROUPS_KEY = "wa-sidebar-open-groups"
 
@@ -175,8 +177,24 @@ export default function AppSidebar() {
 
     return (
         <Sidebar collapsible="icon" className="[&>div]:bg-transparent">
-            <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 flex flex-row items-center justify-between">
-                <AppLogo link={'/'} size={150} />
+            <SidebarHeader className="py-4 group-data-[collapsible=icon]:p-2 flex flex-row  transition-all duration-300 ease-in-out relative min-h-[64px]">
+                {/* Full Logo - Fades out when collapsed */}
+                <AppLogo
+                    link={'/'}
+                    size={100}
+                    className=" transition-all duration-300 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:scale-95 pointer-events-auto group-data-[collapsible=icon]:pointer-events-none"
+                />
+
+                {/* Collapsed Logo - Fades in when collapsed */}
+                <div id='collapsed-logo' className="absolute inset-0 flex items-center justify-center opacity-0 group-data-[collapsible=icon]:opacity-100 transition-all duration-300 scale-90 group-data-[collapsible=icon]:scale-100 pointer-events-none group-data-[collapsible=icon]:pointer-events-auto">
+                    <Image
+                        src={logo}
+                        alt="Logo"
+                        width={40}
+                        height={40}
+                        className="rounded-lg object-contain"
+                    />
+                </div>
             </SidebarHeader>
 
             <SidebarContent className="bg-transparent px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0 overflow-x-hidden">

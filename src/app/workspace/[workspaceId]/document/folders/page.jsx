@@ -172,7 +172,7 @@ export default function FoldersPage() {
  <div className="flex items-center justify-between">
  <div>
  <h1 className="text-2xl font-semibold ">Folders</h1>
- <p className="text-muted-foreground text-sm mt-1 font-black opacity-60">
+ <p className="text-muted-foreground text-sm mt-1 opacity-60">
  {folders.length} folders · {folders.reduce((a, f) => a + f.files, 0)} total files
  </p>
  </div>
@@ -203,7 +203,7 @@ export default function FoldersPage() {
  </DialogTrigger>
  <DialogContent className="rounded-2xl border-none shadow-2xl">
  <DialogHeader>
- <DialogTitle className="text-xl font-black ">Create New Folder</DialogTitle>
+ <DialogTitle className="text-xl ">Create New Folder</DialogTitle>
  </DialogHeader>
  <div className="py-6">
  <Input
@@ -220,7 +220,7 @@ export default function FoldersPage() {
  <Button
  onClick={handleCreateFolder}
  disabled={isCreating}
- className="rounded-xl h-12 font-black shadow-lg shadow-primary/20 px-8"
+ className="rounded-xl h-12 shadow-lg shadow-primary/20 px-8"
  >
  {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Create Folder"}
  </Button>
@@ -246,14 +246,14 @@ export default function FoldersPage() {
  {loading && folders.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-32 space-y-4">
  <Loader2 className="h-12 w-12 text-primary animate-spin" />
- <p className="text-sm font-black text-muted-foreground tracking-[0.2em] animate-pulse">Syncing Library...</p>
+ <p className="text-sm text-muted-foreground tracking-[0.2em] animate-pulse">Syncing Library...</p>
  </div>
  ) : filtered.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-32 text-center rounded-3xl border-2 border-dashed border-border/50">
  <div className="w-20 h-20 bg-muted/30 rounded-3xl flex items-center justify-center mb-6">
  <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
  </div>
- <h3 className="text-xl font-black text-foreground/80 mb-2">No folders found</h3>
+ <h3 className="text-xl text-foreground/80 mb-2">No folders found</h3>
  <p className="text-sm text-muted-foreground/60 max-w-[280px] mx-auto mb-8 font-medium">
  {search ? "No folders match your search criteria." : "Start organizing your workspace by creating your first folder."}
  </p>
@@ -323,9 +323,9 @@ export default function FoldersPage() {
  </div>
 
  <div className="mt-4">
- <h3 className="font-black text-sm mb-1 truncate text-foreground/90 group-hover:text-primary transition-colors ">{folder.name}</h3>
+ <h3 className="text-sm mb-1 truncate text-foreground/90 group-hover:text-primary transition-colors ">{folder.name}</h3>
  <div className="flex items-center gap-2">
- <p className="text-[10px] font-black text-muted-foreground/60">{folder.files} files</p>
+ <p className="text-[10px] text-muted-foreground/60">{folder.files} files</p>
  {folder.status && folder.status !== "APPROVED" && (
  <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4">{folder.status}</Badge>
  )}

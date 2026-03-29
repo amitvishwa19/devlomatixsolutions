@@ -71,7 +71,7 @@ export const IntegrationSettings = () => {
  <CardContent>
  {webhooks.length === 0 ? (
  <div className="p-8 border-2 border-dashed border-border/40 rounded-xl flex flex-col items-center justify-center gap-3 opacity-60">
- <div className="text-[10px] font-black tracking-[0.2em] text-muted-foreground ">No Webhooks Configured</div>
+ <div className="text-[10px] tracking-[0.2em] text-muted-foreground ">No Webhooks Configured</div>
  <p className="text-xs font-semibold text-muted-foreground/60 text-center">
  Connect your external services via HTTPS endpoints.
  </p>
@@ -92,7 +92,7 @@ export const IntegrationSettings = () => {
  <TableRow key={hook.id} className="hover:bg-muted/30">
  <TableCell className="font-mono text-xs">{hook.url}</TableCell>
  <TableCell>
- <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 rounded-lg text-[9px] font-black px-2 py-0.5">
+ <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 rounded-lg text-[9px] px-2 py-0.5">
  {hook.status.toUpperCase()}
  </Badge>
  </TableCell>
@@ -174,7 +174,7 @@ export const IntegrationSettings = () => {
  </CardDescription>
  </CardHeader>
  <CardContent className="py-12 flex flex-col items-center">
- <div className="text-[11px] font-black tracking-[0.3em] text-muted-foreground border-b-2 border-amber-500/20 pb-1 mb-2">Integration Engine Offline</div>
+ <div className="text-[11px] tracking-[0.3em] text-muted-foreground border-b-2 border-amber-500/20 pb-1 mb-2">Integration Engine Offline</div>
  <p className="text-xs font-bold text-muted-foreground/40">Marketplace launching in Q4 2026</p>
  </CardContent>
  </Card>
