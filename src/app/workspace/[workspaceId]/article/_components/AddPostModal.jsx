@@ -41,6 +41,7 @@ import {
     Monitor,
     Smartphone,
     Image as ImageIcon,
+    Instagram,
     Sparkles,
     Wand2,
     Send,
@@ -314,7 +315,7 @@ export const AddPostModal = () => {
             case 'FACEBOOK': return <Facebook size={18} />;
             case 'LINKEDIN': return <Linkedin size={18} />;
             case 'TWITTER': return <Twitter size={18} />;
-            case 'INSTAGRAM': return <ImageIcon size={18} />;
+            case 'INSTAGRAM': return <Instagram size={18} />;
             case 'WHATSAPP': return <MessageCircle size={18} />;
             default: return <CheckCircle2 size={18} />;
         }
@@ -542,11 +543,11 @@ export const AddPostModal = () => {
                                                 type="button"
                                                 onClick={() => handlePlatformToggle(account.id || account.platform)}
                                                 className={`
- flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 text-left w-full
- ${isSelected
+                                                        flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 text-left w-full
+                                                        ${isSelected
                                                         ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5'
                                                         : 'border-border/100 bg-card/100 text-muted-foreground hover:border-primary/30'}
- `}
+                                                        `}
                                             >
                                                 <div className={`p-2 rounded-lg shrink-0 ${isSelected ? 'bg-primary/10' : 'bg-muted/30'}`}>
                                                     {getPlatformIcon(account.platform)}
