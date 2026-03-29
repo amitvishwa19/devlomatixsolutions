@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { 
  Clock, 
  CheckCircle2, 
@@ -14,7 +15,9 @@ import {
  MoreHorizontal,
  Edit2,
  Send,
- Trash2
+ Trash2,
+ Loader2,
+ Instagram
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -75,7 +78,7 @@ const getPlatformIcon = (platform) => {
  const p = platform?.toUpperCase();
  switch (p) {
  case 'FACEBOOK': return <Facebook size={14} className="text-blue-600" />;
- case 'INSTAGRAM': return <ImageIcon size={14} className="text-pink-600" />;
+ case 'INSTAGRAM': return <Instagram size={14} className="text-pink-600" />;
  case 'LINKEDIN': return <Linkedin size={14} className="text-blue-700" />;
  case 'TWITTER': 
  case 'X': return <Twitter size={14} className="text-sky-500" />;

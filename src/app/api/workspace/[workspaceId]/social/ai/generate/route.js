@@ -102,8 +102,12 @@ export async function POST(req, { params }) {
                     systemPrompt = "You are a Twitter viral growth expert. Transform the provided article into a high-engagement Twitter thread (3-5 tweets). Each tweet should be under 280 characters. Use numbers (1/n) and threads-style formatting. Return the thread text with each tweet separated by a clear line break.";
                 } else if (prompt === 'LINKEDIN_POST') {
                     systemPrompt = "You are a LinkedIn thought leader. Repurpose the provided article into a compelling LinkedIn post. Use professional formatting, line breaks for readability, and include a 'hook' at the beginning. Return only the post content.";
+                } else if (prompt === 'INSTAGRAM') {
+                    systemPrompt = "You are a top-tier Instagram growth expert. Repurpose the provided article into an engaging, visual-friendly Instagram caption. Include a highly relatable hook, conversational spacing, relevant emojis, and 5-10 optimized hashtags at the end. Return ONLY the caption text.";
+                } else if (prompt === 'FACEBOOK') {
+                    systemPrompt = "You are a Facebook community manager. Repurpose the provided article into a conversational and engaging Facebook post that encourages comments and shares. Use a friendly tone and appropriate spacing. Return ONLY the post text.";
                 } else {
-                    systemPrompt = "Repurpose the provided article into a new format as requested by the user. Maintain the core message but optimize for the target audience.";
+                    systemPrompt = `Repurpose the provided article into a compelling post specifically optimized for ${prompt}. Maintain the core message but adjust the tone, formatting, and length for this platform's optimal performance. limit to standard social media post length. Return ONLY the optimized content.`;
                 }
                 finalPrompt = `Article Content: "${context}"`;
                 break;

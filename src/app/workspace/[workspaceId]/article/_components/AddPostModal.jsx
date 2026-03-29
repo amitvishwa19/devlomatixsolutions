@@ -57,7 +57,7 @@ import { Badge } from "@/components/ui/badge";
 import TipTap from '@/components/global/TipTap';
 import { Separator } from '@/components/ui/separator';
 import { clientLogger } from '@/utils/logger';
-import { PostPreview } from './PostPreview';
+import { PostPreview, SinglePostPreview } from './PostPreview';
 
 export const AddPostModal = () => {
     const { isOpen, onClose, onOpen, type, data, activeModals } = useModal();
@@ -81,6 +81,10 @@ export const AddPostModal = () => {
     const [categoryId, setCategoryId] = useState('');
     const [tags, setTags] = useState([]);
     const [tagInput, setTagInput] = useState('');
+
+    // Platform Specific Content Scratchpad
+    const [platformContents, setPlatformContents] = useState({});
+    const [generatingPlatform, setGeneratingPlatform] = useState(null);
 
     // AI Assistant States
     const [aiPrompt, setAiPrompt] = useState('');
@@ -123,6 +127,7 @@ export const AddPostModal = () => {
             setMediaUrls([]);
             setCategoryId('none');
             setTags([]);
+            setPlatformContents({});
         }
     }, [isModalOpen, isEdit, initialData]);
 
@@ -307,6 +312,7 @@ export const AddPostModal = () => {
         setScheduledAt('');
         setSelectedPlatforms([]);
         setMediaUrls([]);
+        setPlatformContents({});
         onClose("addPost");
     };
 
@@ -497,19 +503,81 @@ export const AddPostModal = () => {
 
 
                             {selectedPlatforms.length > 0 && (
-                                <div className='mt-4'>
-                                    <div className="pt-12 space-y-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
-                                            <h3 className="text-[10px] font-black text-muted-foreground opacity-40">Platform Live Previews</h3>
-                                            <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
-                                        </div>
-                                        <PostPreview
-                                            platforms={selectedPlatforms}
-                                            content={content}
-                                            mediaUrls={mediaUrls}
-                                            accounts={accounts}
-                                        />
+                                <div className='mt-8 pt-8 border-t border-border/10'>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+                                        <h3 className="text-[10px] font-black text-muted-foreground opacity-40">Platform Specific Content & Previews</h3>
+                                        <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+                                    </div>
+                                    <div className="space-y-8">
+                                        {selectedPlatforms.map(platform => {
+                                            const account = accounts.find(a => a.id === platform || a.platform === platform);
+                                            const pName = account?.platform || platform;
+                                            const isGenerating = generatingPlatform === platform;
+                                            const currentText = platformContents[platform] !== undefined ? platformContents[platform] : content;
+                                            
+                                            // Handle update
+                                            const updateContent = (val) => {
+                                                setPlatformContents(prev => ({ ...prev, [platform]: val }));
+                                            };
+
+                                            const handleGenerate = async () => {
+                                                let subMode = pName;
+                                                if (pName === 'TWITTER') subMode = 'TWITTER_THREAD';
+                                                else if (pName === 'LINKEDIN') subMode = 'LINKEDIN_POST';
+                                                
+                                                setGeneratingPlatform(platform);
+                                                try {
+                                                    const res = await axios.post(`/api/workspace/${workspaceId}/social/ai/generate`, {
+                                                        prompt: subMode,
+                                                        mode: 'REPURPOSE',
+                                                        context: content
+                                                    });
+                                                    updateContent(res.data.content);
+                                                    toast.success(`Optimized for ${pName}!`);
+                                                } catch(e) {
+                                                    console.error(e);
+                                                    const errStr = e.response?.data?.message || "Generation failed";
+                                                    toast.error(errStr);
+                                                } finally {
+                                                    setGeneratingPlatform(null);
+                                                }
+                                            };
+
+                                            return (
+                                                <div key={platform} className="flex flex-col xl:flex-row gap-6 bg-card/50 p-6 rounded-2xl border border-border/50 shadow-sm animate-in fade-in duration-500">
+                                                    {/* Text Editor Column */}
+                                                    <div className="w-full xl:w-[60%] flex flex-col space-y-3 relative shrink-0">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                                                                    {getPlatformIcon(pName)}
+                                                                </div>
+                                                                <span className="text-xs font-bold">{pName} Custom Version</span>
+                                                            </div>
+                                                            <Button 
+                                                                size="sm" 
+                                                                variant="outline" 
+                                                                onClick={handleGenerate}
+                                                                disabled={isGenerating || !content}
+                                                                className="h-7 text-[9px] font-bold gap-1.5 border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+                                                            >
+                                                                {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
+                                                                Auto Configure
+                                                            </Button>
+                                                        </div>
+                                                        <div className="flex-1 flex flex-col min-h-[300px] max-h-[500px] overflow-y-auto overflow-x-hidden border border-border/50 rounded-xl bg-background focus-within:border-primary/50 transition-colors">
+                                                            <TipTap data={currentText} onChange={updateContent} />
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Visual Preview Column */}
+                                                    <div className="w-full xl:w-[40%] flex items-start justify-center bg-muted/10 p-6 rounded-xl border border-border/10 min-w-0 overflow-y-auto min-h-[300px] max-h-[500px] overflow-x-hidden">
+                                                        <SinglePostPreview platformKey={platform} content={currentText} mediaUrls={mediaUrls} accounts={accounts} />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}

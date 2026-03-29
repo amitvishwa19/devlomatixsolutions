@@ -164,30 +164,30 @@ const LinkedInPreview = ({ content, mediaUrls, profileName }) => (
     </div>
 );
 
+export const SinglePostPreview = ({ platformKey, content, mediaUrls, accounts }) => {
+    // Find account details for this platform
+    const account = accounts?.find(acc => 
+        acc.platform?.toUpperCase() === platformKey.toUpperCase() || 
+        acc.id === platformKey
+    );
+    const name = account?.profileName || account?.name;
+    const platform = account?.platform?.toUpperCase() || platformKey.toUpperCase();
+
+    switch (platform) {
+        case 'FACEBOOK':
+            return <FacebookPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
+        case 'INSTAGRAM':
+            return <InstagramPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
+        case 'TWITTER':
+            return <TwitterPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
+        case 'LINKEDIN':
+            return <LinkedInPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
+        default:
+            return null;
+    }
+};
+
 export const PostPreview = ({ platforms, content, mediaUrls, accounts }) => {
-    const getPlatformPreview = (platformKey) => {
-        // Find account details for this platform
-        const account = accounts?.find(acc => 
-            acc.platform?.toUpperCase() === platformKey.toUpperCase() || 
-            acc.id === platformKey
-        );
-        const name = account?.profileName || account?.name;
-        const platform = account?.platform?.toUpperCase() || platformKey.toUpperCase();
-
-        switch (platform) {
-            case 'FACEBOOK':
-                return <FacebookPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
-            case 'INSTAGRAM':
-                return <InstagramPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
-            case 'TWITTER':
-                return <TwitterPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
-            case 'LINKEDIN':
-                return <LinkedInPreview content={content} mediaUrls={mediaUrls} profileName={name} />;
-            default:
-                return null;
-        }
-    };
-
     if (!platforms || platforms.length === 0) {
         return (
             <div className="h-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/10 rounded-2xl bg-muted/5">
@@ -201,9 +201,6 @@ export const PostPreview = ({ platforms, content, mediaUrls, accounts }) => {
     return (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-in fade-in duration-500 pb-12">
             {platforms.map((platform) => {
-                const preview = getPlatformPreview(platform);
-                if (!preview) return null;
-                
                 return (
                     <div key={platform} className="space-y-4">
                         <div className="flex items-center gap-2 ml-1">
@@ -212,7 +209,7 @@ export const PostPreview = ({ platforms, content, mediaUrls, accounts }) => {
                             </span>
                         </div>
                         <div className="flex justify-center bg-muted/10 p-6 rounded-2xl border border-border/5 group-hover:scale-[1.01] transition-transform">
-                            {preview}
+                            <SinglePostPreview platformKey={platform} content={content} mediaUrls={mediaUrls} accounts={accounts} />
                         </div>
                     </div>
                 );
