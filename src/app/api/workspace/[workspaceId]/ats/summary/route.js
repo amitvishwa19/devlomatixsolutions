@@ -16,7 +16,7 @@ export async function GET(req, { params }) {
             prisma.application.findMany({
                 where: { workspaceId },
                 include: { candidate: true, job: true },
-                orderBy: { createdAt: 'desc' },
+                orderBy: { appliedAt: 'desc' },
                 take: 5
             }),
             prisma.application.groupBy({
@@ -71,7 +71,7 @@ export async function GET(req, { params }) {
                     title: app.job.title
                 },
                 stage: app.stage,
-                createdAt: app.createdAt
+                createdAt: app.appliedAt
             })),
             pipelineStats,
             focusJobs: focusJobs.map(j => ({

@@ -68,7 +68,6 @@ export default function AppSidebar() {
         // Applicant tracking system
         { type: 'parent', title: "ATS Management", url: `${baseAtsPath}`, icon: "user", category: "ats" },
         { type: 'child', title: "Dashboard", url: `${baseAtsPath}`, icon: "bar-chart-3", category: "ats" },
-        { type: 'child', title: "Analytics", url: `${baseAtsPath}/analytics`, icon: "bar-chart-3", category: "ats" },
         { type: 'child', title: "Jobs", url: `${baseAtsPath}/jobs`, icon: "bar-chart-3", category: "ats" },
         { type: 'child', title: "Candidates", url: `${baseAtsPath}/candidates`, icon: "bar-chart-3", category: "ats" },
         { type: 'child', title: "Pipeline", url: `${baseAtsPath}/pipeline`, icon: "bar-chart-3", category: "ats" },
@@ -83,11 +82,11 @@ export default function AppSidebar() {
         // { type: 'child', title: "Trash", url: `${baseDocPath}/trash`, icon: "trash", category: "productivity" },
 
         // Access Management
-        { type: 'parent', title: "Access Management", url: `${basePath}`, icon: "file", category: "access-management" },
-        { type: 'child', title: "Users", url: `${baseAccessPath}/user`, icon: "bar-chart-3", category: "access-management" },
-        { type: 'child', title: "Roles", url: `${baseAccessPath}/role`, icon: "bar-chart-3", category: "access-management" },
-        { type: 'child', title: "Permissions", url: `${baseAccessPath}/permission`, icon: "bar-chart-3", category: "access-management" },
-        { type: 'child', title: "Access", url: `${baseAccessPath}/access`, icon: "bar-chart-3", category: "access-management" },
+        // { type: 'parent', title: "Access Management", url: `${basePath}`, icon: "file", category: "access-management" },
+        // { type: 'child', title: "Users", url: `${baseAccessPath}/user`, icon: "bar-chart-3", category: "access-management" },
+        // { type: 'child', title: "Roles", url: `${baseAccessPath}/role`, icon: "bar-chart-3", category: "access-management" },
+        // { type: 'child', title: "Permissions", url: `${baseAccessPath}/permission`, icon: "bar-chart-3", category: "access-management" },
+        // { type: 'child', title: "Access", url: `${baseAccessPath}/access`, icon: "bar-chart-3", category: "access-management" },
 
         // System
         { type: 'parent', title: "AI Agent", url: `${baseAgentPath}`, icon: "monitor-cog", category: "agent" },
@@ -183,8 +182,10 @@ export default function AppSidebar() {
                 {/* Full Logo - Fades out when collapsed */}
                 <AppLogo
                     link={'/'}
-                    size={100}
-                    className=" transition-all duration-300 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:scale-95 pointer-events-auto group-data-[collapsible=icon]:pointer-events-none"
+                    size={130}
+                    height={140}
+                    width={140}
+                    className=" transition-all duration-300  group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:scale-95 pointer-events-auto group-data-[collapsible=icon]:pointer-events-none"
                 />
 
                 {/* Collapsed Logo - Fades in when collapsed */}

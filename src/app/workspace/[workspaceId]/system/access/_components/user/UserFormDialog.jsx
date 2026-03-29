@@ -107,147 +107,159 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
 
     return (
         <Sheet open={open} onOpenChange={handleOpenClose}>
-            <SheetContent className="min-w-[620px] bg-transparent border-l-0 p-2">
-                <div className='bg-card h-full border rounded-lg p-4'>
-                    <SheetHeader>
-                        <SheetTitle className='flex flex-row gap-2 items-center'>
-                            <User className='h-5 w-5 text-sky-500' />
-                            {isEditing ? 'Edit User' : 'Add New User'}
-                        </SheetTitle>
-                        <SheetDescription>
-                            {isEditing
-                                ? 'Update user information and role assignment.'
-                                : 'Add a new user to the hospital management system.'}
-                        </SheetDescription>
+            <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
+                <div className="bg-card rounded-lg flex flex-col h-full border overflow-hidden shadow-2xl">
+                    <SheetHeader className="border-b p-6 bg-muted/5">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 shadow-inner">
+                                <User className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                                <SheetTitle className="text-xl font-bold tracking-tight">
+                                    {isEditing ? 'Edit User' : 'Add New User'}
+                                </SheetTitle>
+                                <SheetDescription className="text-sm opacity-70">
+                                    {isEditing
+                                        ? 'Update user information and role assignment.'
+                                        : 'Add a new user to the system.'}
+                                </SheetDescription>
+                            </div>
+                        </div>
                     </SheetHeader>
 
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                            <ScrollArea className="flex-1 h-[80vh] p-6">
+                                <div className="space-y-8 pb-10">
+                                    <div className="space-y-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <FormItem className="grid gap-2 p-1">
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Full Name</FormLabel>
+                                                    <FormControl>
+                                                        <Input 
+                                                            placeholder="Enter full name" 
+                                                            {...field} 
+                                                            className="bg-secondary/30 border-border/40 h-12 rounded-lg text-lg font-medium focus:ring-primary/20"
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
 
-                            <div className='flex flex-col flex-1 gap-4'>
+                                        <FormField
+                                            control={form.control}
+                                            name="email"
+                                            render={({ field }) => (
+                                                <FormItem className="grid gap-2 p-1">
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Email Address</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            type="email"
+                                                            placeholder="user@domain.com"
+                                                            {...field}
+                                                            className="bg-secondary/30 border-border/40 h-10 rounded-lg focus:ring-primary/20"
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        
+                                        <FormField
+                                            control={form.control}
+                                            name="departments"
+                                            render={({ field }) => (
+                                                <FormItem className="grid gap-2 p-1">
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Departments</FormLabel>
+                                                    <FormControl>
+                                                        <MultiSelectDropDown
+                                                            data={departments}
+                                                            columns={2}
+                                                            value={field.value}
+                                                            onChange={field.onChange}
+                                                            placeholder="Select departments..."
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
 
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Full Name</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Enter full name" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        <FormField
+                                            control={form.control}
+                                            name="roles"
+                                            render={({ field }) => (
+                                                <FormItem className="grid gap-2 p-1">
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Roles</FormLabel>
+                                                    <FormControl>
+                                                        <RoleSelect
+                                                            roles={roles}
+                                                            selected={field.value}
+                                                            onChange={field.onChange}
+                                                            placeholder="Select roles..."
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
 
-                                <FormField
-                                    control={form.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Email Address</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="email"
-                                                    placeholder="user@hospital.com"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        {/* STATUS TOGGLE */}
+                                        <FormField
+                                            control={form.control}
+                                            name="status"
+                                            render={({ field }) => (
+                                                <FormItem className="flex items-center space-x-3 space-y-0 p-4 rounded-lg bg-secondary/20 border border-border/30 mt-4 mx-1 transition-colors hover:bg-secondary/30">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                            id="status"
+                                                            className="w-5 h-5 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none flex-1 mt-0.5">
+                                                        <FormLabel
+                                                            htmlFor="status"
+                                                            className="text-sm font-bold cursor-pointer block"
+                                                        >
+                                                            Active Status
+                                                        </FormLabel>
+                                                        <FormDescription className="text-[10px] opacity-70">
+                                                            Enable to activate user account and grant full workspace access.
+                                                        </FormDescription>
+                                                        <FormMessage />
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+                            </ScrollArea>
 
-                                <FormField
-                                    control={form.control}
-                                    name="departments"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Departments</FormLabel>
-                                            <FormControl>
-                                                <MultiSelectDropDown
-                                                    data={departments}
-                                                    columns={2}
-                                                    value={field.value}              // ← RHF value
-                                                    onChange={field.onChange}        // ← RHF setter
-                                                    placeholder="Select departments..."
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-
-
-                                {/* Multi-Select Roles using the new component */}
-                                <FormField
-                                    control={form.control}
-                                    name="roles"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Roles</FormLabel>
-                                            <FormControl>
-                                                <RoleSelect
-                                                    roles={roles}
-                                                    selected={field.value}
-                                                    onChange={field.onChange}
-                                                    placeholder="Select roles..."
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-
-
-                                {/* ✅ BOOLEAN STATUS TOGGLE */}
-                                <FormField
-                                    control={form.control}
-                                    name="status"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                            <div className="space-y-1 leading-none">
-                                                <FormLabel
-                                                    htmlFor="status"
-                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                >
-                                                    Active Status
-                                                </FormLabel>
-                                                <FormDescription>
-                                                    Enable to activate user account.
-                                                </FormDescription>
-                                                <FormMessage />
-                                            </div>
-                                            <FormControl>
-                                                <Checkbox
-                                                    checked={field.value}
-                                                    onCheckedChange={field.onChange}
-                                                    id="status"
-                                                />
-                                            </FormControl>
-
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <DialogFooter className="pt-4">
+                            <SheetFooter className="p-6 border-t bg-muted/5 flex-row justify-end items-center gap-4">
                                 <Button
                                     type="button"
-                                    variant="outline"
-                                    size='sm'
-                                    disabled={loading}
+                                    variant="ghost"
                                     onClick={() => onOpenChange(false)}
+                                    disabled={loading}
+                                    className="rounded-lg font-bold text-xs uppercase tracking-widest px-8 h-10"
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" variant='save' size='sm' disabled={loading}>
-                                    {loading ? <Loader className=' animate-spin' /> : <Save />}
+                                <Button 
+                                    type="submit" 
+                                    disabled={loading}
+                                    className="rounded-lg font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
+                                >
+                                    {loading ? <Loader className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                                     {isEditing ? 'Save Changes' : 'Add User'}
                                 </Button>
-                            </DialogFooter>
+                            </SheetFooter>
                         </form>
                     </Form>
                 </div>

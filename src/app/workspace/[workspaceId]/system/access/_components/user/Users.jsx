@@ -222,7 +222,7 @@ export default function Users() {
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                    <div className="relative flex-1 max-w-sm">
+                    <div className="relative flex-1 max-w-sm ">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             placeholder="Search users..."
@@ -300,9 +300,9 @@ export default function Users() {
                     </p>
                     <div className="flex gap-4">
                         {(userSearchQuery || statusFilter !== 'all' || roleFilter !== 'all') && (
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 className="rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground hover:text-foreground transition-all px-8 border border-border/40 bg-background"
                                 onClick={() => {
                                     setUserSearchQuery('');
@@ -312,10 +312,10 @@ export default function Users() {
                             >
                                 Reset Filters
                             </Button>
-                         )}
-                        <Button 
-                            variant="primary" 
-                            size="sm" 
+                        )}
+                        <Button
+                            variant="primary"
+                            size="sm"
                             className="rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-primary dark:text-darkFocusColor hover:text-primary hover:bg-primary/5 transition-all px-8 border border-primary/10 shadow-xl shadow-primary/5"
                             onClick={handleAddNewUser}
                         >

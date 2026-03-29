@@ -173,163 +173,196 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
 
     return (
         <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-            <SheetContent className="min-w-[620px] bg-transparent border-0 p-2">
-                <div className="bg-card rounded-lg overflow-hidden h-full shadow-lg p-4">
-                    <SheetHeader>
-                        <SheetTitle className="flex items-center gap-2">
-                            <ShieldUser className="h-5 w-5 text-primary" />
-                            {role ? "Edit Role" : "Create Role"}
-                        </SheetTitle>
-                        <SheetDescription>
-                            Define role details and permissions
-                        </SheetDescription>
+            <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
+                <div className="bg-card rounded-lg flex flex-col h-full border overflow-hidden shadow-2xl">
+                    <SheetHeader className="border-b p-6 bg-muted/5">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 shadow-inner">
+                                <ShieldUser className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                                <SheetTitle className="text-xl font-bold tracking-tight">
+                                    {role ? "Edit Role" : "Create Role"}
+                                </SheetTitle>
+                                <SheetDescription className="text-sm opacity-70">
+                                    Define role details and structural permissions
+                                </SheetDescription>
+                            </div>
+                        </div>
                     </SheetHeader>
 
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(handleSubmit)}
-                            className="flex flex-col "
+                            className="flex flex-col flex-1 overflow-hidden"
                         >
-                            <div className="flex-1 space-y-6 py-4">
-                                {/* Role Name */}
-                                <FormField
-                                    control={form.control}
-                                    name="title"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Role Name</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            <ScrollArea className="flex-1 h-[80vh] p-6">
+                                <div className="space-y-8 pb-10">
+                                    <div className="space-y-4">
+                                        {/* Role Name */}
+                                        <FormField
+                                            control={form.control}
+                                            name="title"
+                                            render={({ field }) => (
+                                                <FormItem className="grid gap-2 p-1">
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Role Identity</FormLabel>
+                                                    <FormControl>
+                                                        <Input 
+                                                            {...field} 
+                                                            className="bg-secondary/30 border-border/40 h-12 rounded-lg text-lg font-medium focus:ring-primary/20"
+                                                            placeholder="e.g. System Administrator"
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
 
-                                {/* Color Picker (FIXED) */}
-                                <FormField
-                                    control={form.control}
-                                    name="color"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Color</FormLabel>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {colorPresets.map((c) => {
-                                                    const selected = field.value === c;
-                                                    return (
-                                                        <button
-                                                            key={c}
-                                                            type="button"
-                                                            onClick={() => field.onChange(c)}
-                                                            className={`relative h-8 w-8 rounded-lg border transition
-                                                                     ${selected
-                                                                    ? "ring-1 ring-primary ring-offset-2 scale-105"
-                                                                    : "hover:scale-105"
-                                                                }
-                            `}
-                                                            style={{ backgroundColor: c }}
-                                                        >
-                                                            {selected && (
-                                                                <Check className="absolute inset-0 m-auto text-white h-4 w-4" />
-                                                            )}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </FormItem>
-                                    )}
-                                />
+                                        {/* Color Picker */}
+                                        <FormField
+                                            control={form.control}
+                                            name="color"
+                                            render={({ field }) => (
+                                                <FormItem className="grid gap-3">
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Visual Signature</FormLabel>
+                                                    <div className="flex flex-wrap gap-2.5 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                                                        {colorPresets.map((c) => {
+                                                            const selected = field.value === c;
+                                                            return (
+                                                                <button
+                                                                    key={c}
+                                                                    type="button"
+                                                                    onClick={() => field.onChange(c)}
+                                                                    className={`w-6 h-6 rounded-lg transition-all duration-300 relative group ${selected
+                                                                        ? "ring-2 ring-primary ring-offset-4 ring-offset-background scale-110 shadow-lg"
+                                                                        : "hover:scale-110 opacity-60 hover:opacity-100"
+                                                                        }`}
+                                                                    style={{ backgroundColor: c }}
+                                                                    title={c}
+                                                                >
+                                                                    {selected && <div className="absolute inset-0 rounded-lg bg-white/20 animate-pulse" />}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
 
-                                {/* Description */}
-                                <FormField
-                                    control={form.control}
-                                    name="description"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Description</FormLabel>
-                                            <FormControl>
-                                                <Textarea rows={2} {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                    {/* Permissions */}
+                                    <FormItem className="space-y-4">
+                                        <div className="flex items-center justify-between mx-1">
+                                            <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50">Operation Scopes</FormLabel>
+                                            <Button type="button" variant="ghost" size="sm" onClick={toggleAll} className="h-7 text-[10px] font-bold uppercase tracking-tighter">
+                                                {form.getValues("permissions")?.every(p => p.status) ? "Clear All" : "Select Global"}
+                                            </Button>
+                                        </div>
 
-                                {/* Permissions */}
-                                <FormItem>
-
-                                    <ScrollArea className="h-[45vh] border rounded p-3 hover:border-primary/30 transition-colors animate-fade-in">
                                         <div className="grid gap-4 sm:grid-cols-1">
                                             {Object.entries(permissionCategories).map(
-                                                ([category, perms]) => (
-                                                    <div
-                                                        key={category}
-                                                        className="border rounded-lg p-2"
-                                                    >
-                                                        <div className="flex justify-between items-center border-b pb-2">
-                                                            <div>
-                                                                <h3 className="capitalize font-semibold">
-                                                                    {category}
-                                                                </h3>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {perms.filter((p) => p.status).length}/
-                                                                    {perms.length} enabled
-                                                                </p>
+                                                ([category, perms]) => {
+                                                    const allActive = perms.every((p) => p.status);
+                                                    return (
+                                                        <div
+                                                            key={category}
+                                                            className={`border rounded-lg p-4 transition-all duration-500 ${allActive ? "border-primary/50 bg-primary/5 shadow-md shadow-primary/5" : "border-border/40 bg-muted/5 hover:border-primary/30 hover:bg-muted/30"}`}
+                                                        >
+                                                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/40">
+                                                                <div>
+                                                                    <h3 className="text-sm font-bold capitalize">
+                                                                        {category.replace(/_/g, " ")}
+                                                                    </h3>
+                                                                    <p className="text-[10px] font-mono text-primary/70 mt-0.5">
+                                                                        {perms.filter((p) => p.status).length}/
+                                                                        {perms.length} enabled
+                                                                    </p>
+                                                                </div>
+
+                                                                <Switch
+                                                                    checked={allActive}
+                                                                    onCheckedChange={() =>
+                                                                        toggleCategory(perms)
+                                                                    }
+                                                                    className='data-[state=unchecked]:bg-muted-foreground/30'
+                                                                />
                                                             </div>
 
-                                                            <Switch
-                                                                checked={perms.every((p) => p.status)}
-                                                                onCheckedChange={() =>
-                                                                    toggleCategory(perms)
-                                                                }
-                                                                className='border border-muted-foreground'
-                                                            />
+                                                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                                                {perms.map((p) => (
+                                                                    <label
+                                                                        key={p.id}
+                                                                        className="flex items-start gap-3 p-2 rounded-md hover:bg-background/80 transition-colors cursor-pointer"
+                                                                    >
+                                                                        <Checkbox
+                                                                            checked={p.status}
+                                                                            onCheckedChange={() =>
+                                                                                togglePermission(p.id)
+                                                                            }
+                                                                            className="mt-0.5 transition-transform hover:scale-110"
+                                                                        />
+                                                                        <div className="flex flex-col min-w-0 flex-1">
+                                                                            <span className="text-xs font-bold leading-tight truncate">
+                                                                                {p.title.split(' ')[0]}
+                                                                            </span>
+                                                                            <span className="text-[9px] text-muted-foreground opacity-60 font-mono truncate">
+                                                                                {p.value}
+                                                                            </span>
+                                                                        </div>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
                                                         </div>
-
-                                                        <div className="grid grid-cols-2 gap-2 mt-2">
-                                                            {perms.map((p) => (
-                                                                <label
-                                                                    key={p.id}
-                                                                    className="flex items-center gap-2 text-sm"
-                                                                >
-                                                                    <Checkbox
-                                                                        checked={p.status}
-                                                                        onCheckedChange={() =>
-                                                                            togglePermission(p.id)
-                                                                        }
-                                                                    />
-                                                                    <div className="flex flex-col">
-                                                                        {p.title}
-                                                                        <span className="text-xs text-muted-foreground">
-                                                                            {p.value}
-                                                                        </span>
-                                                                    </div>
-                                                                </label>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )
+                                                    )
+                                                }
                                             )}
                                         </div>
-                                    </ScrollArea>
-                                </FormItem>
-                            </div>
+                                    </FormItem>
 
-                            <SheetFooter className=" border-t flex flex-row justify-end gap-2">
+                                    {/* Description */}
+                                    <FormField
+                                        control={form.control}
+                                        name="description"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-3">
+                                                <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Role Context</FormLabel>
+                                                <FormControl>
+                                                    <Textarea 
+                                                        rows={4} 
+                                                        {...field} 
+                                                        className="bg-secondary/30 border-border/40 rounded-lg resize-none min-h-[100px] p-4 text-sm"
+                                                        placeholder="High-level overview of the role scope..."
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </ScrollArea>
+
+                            <SheetFooter className="p-6 border-t bg-muted/5 flex-row justify-end items-center gap-4">
                                 <Button
                                     type="button"
-                                    variant="outline"
-                                    onClick={() => onOpenChange(false)}
+                                    variant="ghost"
+                                    onClick={() => handleOpenChange()}
+                                    disabled={loading}
+                                    className="rounded-lg font-bold text-xs uppercase tracking-widest px-8 h-10"
                                 >
-                                    Cancel
+                                    Discard
                                 </Button>
-                                <Button type="submit" disabled={loading}>
+                                <Button 
+                                    type="submit" 
+                                    disabled={loading}
+                                    className="rounded-lg font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
+                                >
                                     {loading ? (
-                                        <Loader className="animate-spin" />
+                                        <Loader className="w-5 h-5 animate-spin mr-2" />
                                     ) : (
-                                        <Save />
+                                        <Save className="w-4 h-4 mr-2" />
                                     )}
-                                    Save Role
+                                    {role ? "Commit Changes" : "Deploy Role"}
                                 </Button>
                             </SheetFooter>
                         </form>

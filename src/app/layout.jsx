@@ -1,6 +1,6 @@
 import "@/css/globals.css";
 import "@/css/custom.css";
-import { Inter, Unbounded, Geist, Geist_Mono } from "next/font/google";
+import { Inter, Unbounded, Geist, Geist_Mono, Outfit } from "next/font/google";
 import SessionWrapper from "@/providers/SessionWrapper";
 import { AppProvider } from "@/providers/AppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -19,6 +19,7 @@ import CookieConsent from "@/components/global/CookieConsent";
 
 
 const unbounded = Unbounded({ subsets: ["latin"] });
+const outfit = Outfit({ subsets: ["latin"] });
 const inter = Inter({ subsets: ["latin"] });
 
 const geistSans = Geist({
@@ -62,7 +63,7 @@ export default async function RootLayout({ children }) {
 
     return (
         <html lang="en">
-            <body className={`${inter.className} `} suppressHydrationWarning={true}>
+            <body className={`${outfit.className} `} suppressHydrationWarning={true}>
                 <SessionWrapper>
                     {/* <SocketProvider> */}
                     <AppProvider>

@@ -9,7 +9,7 @@ import { AppContext } from '@/providers/AppProvider'
 
 
 
-export function AppLogo({ size = 130, link, className }) {
+export function AppLogo({ size = 130, height, width, link, className }) {
 
     const { theme } = useContext(AppContext)
     const [logo, setLogo] = useState(lightLogo)
@@ -22,12 +22,12 @@ export function AppLogo({ size = 130, link, className }) {
 
     return (
         <Link href={link}>
-            <div className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center", className)}>
+            <div className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-4 ", className)}>
                 <Image
                     src={logo}
                     alt='logo'
-                    height={size}
-                    width={size}
+                    height={height || size}
+                    width={width || size}
                     className="h-auto w-auto object-contain"
                     priority={false}
                 />
