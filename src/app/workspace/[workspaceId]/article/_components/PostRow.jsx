@@ -8,8 +8,10 @@ import {
  Share2,
  Facebook,
  Linkedin,
- Twitter,
- MessageCircle,
+  Twitter,
+  Instagram,
+  MessageCircle,
+
  Image as ImageIcon,
  MoreHorizontal,
  Edit2,
@@ -77,8 +79,9 @@ const getPlatformIcon = (platform) => {
  const p = platform?.toUpperCase();
  switch (p) {
  case 'FACEBOOK': return <Facebook size={14} className="text-blue-600" />;
- case 'INSTAGRAM': return <ImageIcon size={14} className="text-pink-600" />;
- case 'LINKEDIN': return <Linkedin size={14} className="text-blue-700" />;
+  case 'INSTAGRAM': return <Instagram size={14} className="text-pink-600" />;
+  case 'LINKEDIN': return <Linkedin size={14} className="text-blue-700" />;
+
  case 'TWITTER':
  case 'X': return <Twitter size={14} className="text-sky-500" />;
  case 'WHATSAPP': return <MessageCircle size={14} className="text-emerald-500" />;
