@@ -262,7 +262,7 @@ export const MediaLibraryModal = () => {
                     <div className="w-72 border-r border-border/40 bg-muted/2 p-6 flex flex-col gap-6 shrink-0 overflow-y-auto">
                         <div className="space-y-4 mb-2">
                             <p className="text-[9px] text-muted-foreground/50 tracking-widest uppercase px-2 font-black">Upload Center</p>
-                            <div className="bg-primary/5 rounded-[1.5rem] border border-primary/20 p-5 space-y-4 animate-in zoom-in-95 backdrop-blur-sm">
+                            <div className="bg-primary/5 rounded-md border border-primary/20 p-5 space-y-4 animate-in zoom-in-95 backdrop-blur-sm">
                                 <div className="flex flex-col items-center text-center space-y-2">
                                     <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary shadow-inner">
                                         <UploadCloud size={20} />
