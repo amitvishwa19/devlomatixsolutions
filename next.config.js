@@ -40,6 +40,7 @@ const nextConfig = {
   }, headers: {
     'Access-Control-Allow-Origin': '*',
   },
+  turbopack: {},
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',

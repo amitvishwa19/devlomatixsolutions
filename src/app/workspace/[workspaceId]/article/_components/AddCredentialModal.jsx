@@ -43,6 +43,7 @@ const PLATFORM_CONFIG = {
  YOUTUBE: ['apiKey'],
  GMAIL: ['access_token', 'refresh_token'],
  GOOGLE: ['access_token', 'refresh_token'],
+ GEMINI: ['apiKey'],
 };
 
 export const AddCredentialModal = () => {

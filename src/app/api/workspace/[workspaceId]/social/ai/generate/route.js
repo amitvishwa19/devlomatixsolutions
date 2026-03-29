@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { logger } from "@/lib/logger";
+import { db } from "@/lib/db";
 
 export async function POST(req, { params }) {
     try {
@@ -22,7 +23,57 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Prompt is required" }, { status: 400 });
         }
 
-        const apiKey = process.env.GEMENI_API_KEY || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        let apiKey = null;
+
+        // Fetch user's registered Gemini credential from DB
+        if (session?.user?.userId) {
+            const credential = await db.credentials.findFirst({
+                where: {
+                    userId: session.user.userId,
+                    platform: 'GEMINI',
+                    status: 'connected'
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            if (credential && credential.credentials) {
+                let data = credential.credentials;
+                
+                // Decrypt if necessary
+                if (data.enc && typeof data.enc === 'string') {
+                    const encKey = process.env.ENCRYPTION_KEY;
+                    if (encKey) {
+                        try {
+                            const crypto = require('crypto');
+                            const parts = data.enc.split(':');
+                            const ivBuffer = Buffer.from(parts[0], 'hex');
+                            const encText = Buffer.from(parts.slice(1).join(':'), 'hex');
+                            const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(encKey, 'hex'), ivBuffer);
+                            let decrypted = decipher.update(encText);
+                            decrypted = Buffer.concat([decrypted, decipher.final()]);
+                            data = JSON.parse(decrypted.toString());
+                        } catch (e) {
+                            console.error("[DECRYPT_FAILED]", e.message);
+                        }
+                    }
+                }
+
+                apiKey = data.apiKey || data['api-key'] || data.api_key;
+                
+                // Final safety strip to handle any mistakenly pasted prefixes
+                if (apiKey) {
+                    apiKey = apiKey.replace(/['"]/g, '').trim();
+                    if (apiKey.includes('=')) {
+                        apiKey = apiKey.split('=').pop().trim();
+                    }
+                }
+            }
+        }
+
+        // Fallback to env only if DB query failed or returned nothing
+        if (!apiKey) {
+            apiKey = process.env.GEMENI_API_KEY || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        }
         
         if (!apiKey) {
             console.error("[AI_GENERATE] No API key found in environment variables");

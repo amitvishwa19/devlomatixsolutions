@@ -10,6 +10,9 @@
  * matching the platform name (uppercase).
  */
 
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { symmetricDecrypt } from "./encryption";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Platform Testers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,6 +194,43 @@ async function testGoogle(credentials) {
 }
 
 /**
+ * Google Gemini API
+ * Required keys: apiKey (or api-key, api_key)
+ */
+async function testGemini(credentials) {
+    let key = credentials.apiKey || credentials['api-key'] || credentials.api_key;
+    if (!key) return { success: false, message: 'Missing apiKey in credentials' };
+
+    key = key.replace(/['"]/g, '').trim();
+    if (key.includes('=')) {
+        key = key.split('=').pop().trim();
+    }
+    
+    // Decrypt if it's the legacy iv:hex payload structure
+    if (key.includes(':')) {
+        try {
+            key = symmetricDecrypt(key);
+        } catch (e) {
+            console.error("[GEMINI_DECRYPT_FAIL]", e);
+        }
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(key);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        await model.generateContent("hi");
+        return { success: true, message: 'Gemini API key is valid', data: { message: "Successfully connected to Gemini 2.5 Flash" } };
+    } catch (err) {
+        try {
+            const fs = require('fs');
+            fs.appendFileSync('gemini_debug.txt', JSON.stringify({ error: err.message, stack: err.stack, keyPreview: key.substring(0, 10), time: new Date().toISOString() }) + '\n');
+        } catch(e) {}
+        console.error("[TEST_GEMINI_ERROR]", err);
+        return { success: false, message: err.message || 'Invalid Gemini API key', data: err };
+    }
+}
+
+/**
  * Generic / Custom — just verifies credentials are non-empty
  */
 async function testGeneric(credentials) {
@@ -227,6 +267,7 @@ const PLATFORM_TESTERS = {
     YOUTUBE:    testYouTube,
     GOOGLE:     testGoogle,
     GMAIL:      testGoogle,
+    GEMINI:     testGemini,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
