@@ -86,14 +86,14 @@ export default function CreateJobPage() {
  <h1 className="text-4xl tracking-tighter">New Position</h1>
  </div>
  <div className="flex items-center gap-3">
- <Button variant="outline" className="h-11 rounded-xl px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-11 rounded-lg px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
  <Save className="w-4 h-4 mr-2 opacity-50" />
  Save Draft
  </Button>
  <Button 
  onClick={handlePublish}
  disabled={isSubmitting}
- className="h-11 rounded-xl px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-11 rounded-lg px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  {isSubmitting ? "Publishing..." : <>
  <Rocket className="w-4 h-4 mr-2" />
@@ -132,7 +132,7 @@ export default function CreateJobPage() {
  <SelectTrigger className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner">
  <SelectValue placeholder="Select Department" />
  </SelectTrigger>
- <SelectContent className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
+ <SelectContent className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
  <SelectItem value="Engineering">Engineering</SelectItem>
  <SelectItem value="Design">Design</SelectItem>
  <SelectItem value="Marketing">Marketing</SelectItem>
@@ -146,7 +146,7 @@ export default function CreateJobPage() {
  <SelectTrigger className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner">
  <SelectValue placeholder="Select Type" />
  </SelectTrigger>
- <SelectContent className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
+ <SelectContent className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
  <SelectItem value="FULL_TIME">Full-time</SelectItem>
  <SelectItem value="PART_TIME">Part-time</SelectItem>
  <SelectItem value="CONTRACT">Contract</SelectItem>
@@ -209,14 +209,14 @@ export default function CreateJobPage() {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Hiring Manager</label>
  <Select>
- <SelectTrigger className="bg-muted/20 border-none h-12 rounded-xl text-xs font-bold shadow-inner">
+ <SelectTrigger className="bg-muted/20 border-none h-12 rounded-lg text-xs font-bold shadow-inner">
  <SelectValue placeholder="Select Manager" />
  </SelectTrigger>
  </Select>
  </div>
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Interviewers</label>
- <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-muted/20 border border-dashed border-border/40">
+ <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/20 border border-dashed border-border/40">
  <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[9px] border border-dashed border-border/60">
  + Add Interviewer
  </Button>

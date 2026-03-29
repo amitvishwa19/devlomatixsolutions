@@ -142,7 +142,7 @@ export function PermissionFormDialog({ open, onOpenChange, permission, onSubmit 
                                                                 <button
                                                                     key={color}
                                                                     type="button"
-                                                                    className="h-6 w-6 rounded-md border border-input transition-transform hover:scale-110"
+                                                                    className="h-6 w-6 rounded-lg border border-input transition-transform hover:scale-110"
                                                                     style={{ backgroundColor: color }}
                                                                     onClick={() => field.onChange(color)}
                                                                 />

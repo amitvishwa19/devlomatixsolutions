@@ -108,7 +108,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     return (
         <Sheet open={open} onOpenChange={handleOpenClose}>
             <SheetContent className="min-w-[620px] bg-transparent border-l-0 p-2">
-                <div className='bg-card h-full border rounded-md p-4'>
+                <div className='bg-card h-full border rounded-lg p-4'>
                     <SheetHeader>
                         <SheetTitle className='flex flex-row gap-2 items-center'>
                             <User className='h-5 w-5 text-sky-500' />

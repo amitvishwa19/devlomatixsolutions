@@ -80,7 +80,7 @@ export default function RoleEditor({ isOpen, onClose, mode, role }) {
     return (
         <Sheet open={isOpen} onOpenChange={handleOpenChange}>
             <SheetContent className='md:min-w-[620px] bg-transparent border-l-0 p-2'>
-                <div className='bg-card h-full rounded-md flex flex-col'>
+                <div className='bg-card h-full rounded-lg flex flex-col'>
                     <SheetHeader>
                         <SheetTitle className='flex flex-row items-center gap-2'>
                             <ShieldUser className='w-5 h-5 text-sky-500' />
@@ -121,7 +121,7 @@ export default function RoleEditor({ isOpen, onClose, mode, role }) {
                                                     <FormControl>
                                                         <div className="flex items-center gap-2">
                                                             <div
-                                                                className="h-8 w-8 rounded-md border border-input"
+                                                                className="h-8 w-8 rounded-lg border border-input"
                                                                 style={{ backgroundColor: field.value }}
                                                             />
                                                             <div className="flex flex-wrap gap-1.5">
@@ -129,7 +129,7 @@ export default function RoleEditor({ isOpen, onClose, mode, role }) {
                                                                     <button
                                                                         key={color}
                                                                         type="button"
-                                                                        className="h-6 w-6 rounded-md border border-input transition-transform hover:scale-110"
+                                                                        className="h-6 w-6 rounded-lg border border-input transition-transform hover:scale-110"
                                                                         style={{ backgroundColor: color }}
                                                                         onClick={() => field.onChange(color)}
                                                                     />

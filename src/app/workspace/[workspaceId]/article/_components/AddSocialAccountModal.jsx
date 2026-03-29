@@ -99,7 +99,7 @@ export const AddSocialAccountModal = () => {
   </DialogHeader>
 
   <div className="p-8 pt-0 space-y-6">
-  <div className="p-4 bg-primary/5 border border-primary/10 rounded-md flex items-start gap-3">
+  <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg flex items-start gap-3">
   <Shield className="text-primary h-5 w-5 mt-0.5 shrink-0" />
   <p className="text-[10px] font-bold text-muted-foreground leading-relaxed text-left uppercase">
   This is a <span className="text-primary font-bold">manual connection</span> for development. In production, we would use OAuth flows to securely retrieve these tokens.
@@ -116,7 +116,7 @@ export const AddSocialAccountModal = () => {
   type="button"
   onClick={() => setPlatform(p.id)}
   className={`
-  flex items-center gap-3 px-4 py-3 rounded-md border-2 transition-all duration-300
+  flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all duration-300
   ${platform === p.id 
   ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/10' 
   : 'border-border/10 bg-muted/20 text-muted-foreground hover:border-border/30'}
@@ -140,7 +140,7 @@ export const AddSocialAccountModal = () => {
   placeholder="Paste your API token here..."
   value={accessToken}
   onChange={(e) => setAccessToken(e.target.value)}
-  className="pl-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 text-[10px]"
+  className="pl-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 text-[10px]"
   />
   </div>
   </div>
@@ -155,7 +155,7 @@ export const AddSocialAccountModal = () => {
                   placeholder="e.g. 1029384756..."
                   value={pageId}
                   onChange={(e) => setPageId(e.target.value)}
-                  className="pl-12 bg-muted/50 border-primary/10 border-2 rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 text-[10px] font-black"
+                  className="pl-12 bg-muted/50 border-primary/10 border-2 rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 text-[10px] font-black"
               />
           </div>
       </div>
@@ -169,7 +169,7 @@ export const AddSocialAccountModal = () => {
       placeholder="e.g. Acme Corp Official"
       value={profileName}
       onChange={(e) => setProfileName(e.target.value)}
-      className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 text-[10px]"
+      className="bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 text-[10px]"
       />
       </div>
   </div>
@@ -181,14 +181,14 @@ export const AddSocialAccountModal = () => {
   type="button"
   variant="ghost"
   onClick={handleClose}
-  className="rounded-md font-bold text-muted-foreground uppercase text-[10px]"
+  className="rounded-lg font-bold text-muted-foreground uppercase text-[10px]"
   >
   Cancel
   </Button>
   <Button
   type="submit"
   disabled={isLoading}
-  className="bg-primary hover:bg-primary/90 min-w-[140px] rounded-md font-black uppercase text-[10px] shadow-lg shadow-primary/20"
+  className="bg-primary hover:bg-primary/90 min-w-[140px] rounded-lg font-black uppercase text-[10px] shadow-lg shadow-primary/20"
   >
   {isLoading ? (
   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

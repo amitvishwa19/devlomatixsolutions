@@ -92,7 +92,7 @@ export const AddUserModal = () => {
  placeholder="John Doe"
  value={formData.displayName}
  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
- className="pl-12 bg-muted/30 border-none rounded-md h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
+ className="pl-12 bg-muted/30 border-none rounded-lg h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
  />
  </div>
  </div>
@@ -108,7 +108,7 @@ export const AddUserModal = () => {
  placeholder="john@example.com"
  value={formData.email}
  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
- className="pl-12 bg-muted/30 border-none rounded-md h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary font-mono"
+ className="pl-12 bg-muted/30 border-none rounded-lg h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary font-mono"
  />
  </div>
  </div>
@@ -124,7 +124,7 @@ export const AddUserModal = () => {
  placeholder="••••••••"
  value={formData.password}
  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
- className="pl-12 pr-12 bg-muted/30 border-none rounded-md h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
+ className="pl-12 pr-12 bg-muted/30 border-none rounded-lg h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
  />
  <button
  type="button"
@@ -141,12 +141,12 @@ export const AddUserModal = () => {
  <Label className="text-[10px] font-bold text-muted-foreground ml-1">Assign Roles</Label>
  <div className="max-h-[140px] overflow-y-auto pr-2 space-y-2">
  {(!roles || roles.length === 0) && (
- <p className="text-[9px] font-bold text-muted-foreground px-2 py-4 bg-muted/20 border border-dashed border-border/40 rounded-md text-center">No roles available. Create roles first.</p>
+ <p className="text-[9px] font-bold text-muted-foreground px-2 py-4 bg-muted/20 border border-dashed border-border/40 rounded-lg text-center">No roles available. Create roles first.</p>
  )}
  {roles?.map((role) => (
  <div 
  key={role.id} 
- className={`flex items-center justify-between p-3 rounded-md border transition-all cursor-pointer ${formData.roleIds.includes(role.id) ? 'bg-primary/5 border-primary/20 shadow-sm' : 'bg-muted/10 border-border/10 hover:bg-muted/20'}`} 
+ className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer ${formData.roleIds.includes(role.id) ? 'bg-primary/5 border-primary/20 shadow-sm' : 'bg-muted/10 border-border/10 hover:bg-muted/20'}`} 
  onClick={() => handleRoleToggle(role.id)}
  >
  <div className="flex items-center gap-2">
@@ -171,14 +171,14 @@ export const AddUserModal = () => {
  type="button"
  variant="ghost"
  onClick={onClose}
- className="rounded-md font-bold px-6 h-11 text-[10px] "
+ className="rounded-lg font-bold px-6 h-11 text-[10px] "
  >
  Cancel
  </Button>
  <Button
  type="submit"
  disabled={isLoading || !formData.email || !formData.password}
- className="rounded-md font-bold px-8 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all h-11 text-[10px] "
+ className="rounded-lg font-bold px-8 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all h-11 text-[10px] "
  >
  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
  Create User

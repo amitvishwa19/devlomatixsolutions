@@ -44,11 +44,11 @@ export const IntegrationSettings = () => {
  return (
  <div className="space-y-6 animate-fade-in">
  {/* Webhooks Section */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
  <CardHeader className="pb-4">
  <div className="flex flex-row items-start justify-between">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center border border-emerald-500/20 shadow-inner">
  <Globe className="w-6 h-6 text-emerald-500" />
  </div>
  <div>
@@ -61,7 +61,7 @@ export const IntegrationSettings = () => {
  <Button 
  onClick={handleAddWebhook} 
  disabled={saving}
- className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 gap-2 h-10 px-6"
+ className="rounded-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 gap-2 h-10 px-6"
  >
  <Plus className="w-4 h-4" />
  ADD ENDPOINT
@@ -70,14 +70,14 @@ export const IntegrationSettings = () => {
  </CardHeader>
  <CardContent>
  {webhooks.length === 0 ? (
- <div className="p-8 border-2 border-dashed border-border/40 rounded-xl flex flex-col items-center justify-center gap-3 opacity-60">
+ <div className="p-8 border-2 border-dashed border-border/40 rounded-lg flex flex-col items-center justify-center gap-3 opacity-60">
  <div className="text-[10px] tracking-[0.2em] text-muted-foreground ">No Webhooks Configured</div>
  <p className="text-xs font-semibold text-muted-foreground/60 text-center">
  Connect your external services via HTTPS endpoints.
  </p>
  </div>
  ) : (
- <div className="rounded-xl border border-border overflow-hidden">
+ <div className="rounded-lg border border-border overflow-hidden">
  <Table>
  <TableHeader className="bg-muted/50">
  <TableRow>
@@ -117,10 +117,10 @@ export const IntegrationSettings = () => {
  </Card>
 
  {/* API Keys Section */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-indigo-500/10 rounded-lg flex items-center justify-center border border-indigo-500/20 shadow-inner">
  <Key className="w-6 h-6 text-indigo-500" />
  </div>
  <div>
@@ -133,7 +133,7 @@ export const IntegrationSettings = () => {
  </CardHeader>
  <CardContent className="space-y-6">
  <div className="grid gap-4">
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-xl border border-border/40">
+ <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-lg border border-border/40">
  <div className="space-y-1">
  <Label className="text-sm font-bold ">Development Key</Label>
  <p className="text-[10px] text-muted-foreground font-medium opacity-70">
@@ -147,7 +147,7 @@ export const IntegrationSettings = () => {
  <Button size="icon" variant="outline" className="rounded-lg h-8 w-8" onClick={() => toast.success("Key copied")}>
  <Copy className="w-3 h-3 text-muted-foreground" />
  </Button>
- <Button variant="outline" size="sm" className="rounded-xl text-[10px] font-bold h-8 px-4 border-indigo-500/20 text-indigo-600">
+ <Button variant="outline" size="sm" className="rounded-lg text-[10px] font-bold h-8 px-4 border-indigo-500/20 text-indigo-600">
  ROTATE
  </Button>
  </div>
@@ -163,9 +163,9 @@ export const IntegrationSettings = () => {
  </Card>
 
  {/* External Integrations Placeholder */}
- <Card className="rounded-xl border border-border shadow-soft bg-card/100 opacity-50">
+ <Card className="rounded-lg border border-border shadow-soft bg-card/100 opacity-50">
  <CardHeader>
- <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center mb-2 border border-amber-500/20">
+ <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center mb-2 border border-amber-500/20">
  <Puzzle className="w-5 h-5 text-amber-500" />
  </div>
  <CardTitle className="text-xl font-bold ">Third-Party Marketplace</CardTitle>

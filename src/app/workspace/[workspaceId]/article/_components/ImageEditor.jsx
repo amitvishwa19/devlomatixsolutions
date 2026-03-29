@@ -85,7 +85,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  };
 
  return (
- <div className="flex flex-col h-full bg-background border rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+ <div className="flex flex-col h-full bg-background border rounded-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
  <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/10">
  <div className="flex items-center gap-3">
  <div className="p-2 bg-primary/10 rounded-lg">

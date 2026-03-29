@@ -351,7 +351,7 @@ export function DepartmentMultiSelect({ selectedDepartments, onSelectionChange, 
  toggleDepartment(dept.value);
  }}
  className={cn(
- "flex items-start gap-2 rounded-md p-2 text-left transition-colors",
+ "flex items-start gap-2 rounded-lg p-2 text-left transition-colors",
  "hover:bg-dropdown-hover",
  isSelected && "bg-dropdown-item"
  )}

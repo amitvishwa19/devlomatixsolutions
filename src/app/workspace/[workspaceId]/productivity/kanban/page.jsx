@@ -287,7 +287,7 @@ export default function KanbanPage({ params }) {
  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
  <Input
  placeholder="Search tasks, articles, or platforms..."
- className="pl-10 bg-muted/20 border-border/50 focus:ring-primary/20 transition-all text-[12px] h-10 rounded-xl"
+ className="pl-10 bg-muted/20 border-border/50 focus:ring-primary/20 transition-all text-[12px] h-10 rounded-lg"
  value={searchTerm}
  onChange={(e) => setSearchTerm(e.target.value)}
  />
@@ -296,10 +296,10 @@ export default function KanbanPage({ params }) {
  <div className="flex items-center gap-2">
  {/* Type Filter */}
  <Select value={filterType} onValueChange={setFilterType}>
- <SelectTrigger className="w-[130px] h-10 text-[11px] font-bold border-border/50 bg-muted/20 rounded-xl">
+ <SelectTrigger className="w-[130px] h-10 text-[11px] font-bold border-border/50 bg-muted/20 rounded-lg">
  <SelectValue placeholder="All Types" />
  </SelectTrigger>
- <SelectContent className="rounded-xl font-bold">
+ <SelectContent className="rounded-lg font-bold">
  <SelectItem value="all">All Types</SelectItem>
  <SelectItem value="task">Default Task</SelectItem>
  <SelectItem value="article">Article</SelectItem>
@@ -310,10 +310,10 @@ export default function KanbanPage({ params }) {
 
  {/* Priority Filter */}
  <Select value={filterPriority} onValueChange={setFilterPriority}>
- <SelectTrigger className="w-[130px] h-10 text-[11px] font-bold border-border/50 bg-muted/20 rounded-xl">
+ <SelectTrigger className="w-[130px] h-10 text-[11px] font-bold border-border/50 bg-muted/20 rounded-lg">
  <SelectValue placeholder="All Priorities" />
  </SelectTrigger>
- <SelectContent className="rounded-xl font-bold">
+ <SelectContent className="rounded-lg font-bold">
  <SelectItem value="all">All Priorities</SelectItem>
  <SelectItem value="low">Low</SelectItem>
  <SelectItem value="medium">Medium</SelectItem>
@@ -343,14 +343,14 @@ export default function KanbanPage({ params }) {
  <Button 
  variant="outline" 
  size="sm" 
- className="h-10 px-4 text-[11px] font-bold border-primary/20 text-primary hover:bg-primary/5 transition-all rounded-xl"
+ className="h-10 px-4 text-[11px] font-bold border-primary/20 text-primary hover:bg-primary/5 transition-all rounded-lg"
  onClick={addColumn}
  >
  <Plus size={16} className="mr-2" /> Add Column
  </Button>
  <Button 
  size="sm" 
- className="h-10 px-4 text-[11px] font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all rounded-xl"
+ className="h-10 px-4 text-[11px] font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all rounded-lg"
  onClick={() => createTask()}
  >
  <Plus size={16} className="mr-2" /> Create Task
@@ -359,7 +359,7 @@ export default function KanbanPage({ params }) {
  </div>
 
  {/* Kanban Board Area */}
- <ScrollArea className="flex-1 min-h-0 w-full rounded-2xl border border-border/10 bg-muted/5 shadow-inner overflow-hidden p-4">
+ <ScrollArea className="flex-1 min-h-0 w-full rounded-lg border border-border/10 bg-muted/5 shadow-inner overflow-hidden p-4">
  {loading ? (
  <div className="flex items-center justify-center h-full">
  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -396,7 +396,7 @@ export default function KanbanPage({ params }) {
 
  {/* New Column Placeholder */}
  <div 
- className="flex-shrink-0 w-80 h-full rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center group hover:border-primary/30 transition-all duration-300 bg-muted/5 hover:bg-primary/5 cursor-pointer"
+ className="flex-shrink-0 w-80 h-full rounded-lg border-2 border-dashed border-border/50 flex flex-col items-center justify-center group hover:border-primary/30 transition-all duration-300 bg-muted/5 hover:bg-primary/5 cursor-pointer"
  onClick={addColumn}
  >
  <div className="p-3 rounded-full bg-muted/50 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-300">

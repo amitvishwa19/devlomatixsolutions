@@ -132,7 +132,7 @@ export const PermissionRow = ({
                                     <div className="space-y-1.5 max-h-32 overflow-y-auto">
                                         {moduleUsers?.length > 0 ? (
                                             moduleUsers.map(user => (
-                                                <div key={user.id} className="flex items-center gap-2 p-1.5 rounded-md bg-muted/50">
+                                                <div key={user.id} className="flex items-center gap-2 p-1.5 rounded-lg bg-muted/50">
                                                     <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
                                                         {user.avatar}
                                                     </div>

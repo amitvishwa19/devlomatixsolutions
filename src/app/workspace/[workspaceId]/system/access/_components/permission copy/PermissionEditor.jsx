@@ -180,7 +180,7 @@ export default function PermissionEditor({
  <Sheet open={isOpen} onOpenChange={handleOpenClose}>
  <SheetTrigger asChild>{trigger}</SheetTrigger>
  <SheetContent className="sm:max-w-xl overflow-y-auto bg-transparent border-0 p-2">
- <div className='bg-card rounded-md h-full overflow-hidden'>
+ <div className='bg-card rounded-lg h-full overflow-hidden'>
  <SheetHeader>
  <div className="flex flex-row gap-2">
  <div className="p-2 rounded-lg bg-gradient-to-br from-dashboard-gradient-start to-dashboard-gradient-end">

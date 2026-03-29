@@ -49,7 +49,7 @@ export const KanbanCard = ({ task, index, onDeleteTask, onUpdateTask }) => {
  {...provided.draggableProps}
  {...provided.dragHandleProps}
  className={cn(
- "group p-4 mb-3 rounded-xl bg-card border border-border/100 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30",
+ "group p-4 mb-3 rounded-lg bg-card border border-border/100 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30",
  snapshot.isDragging && "shadow-2xl border-primary ring-2 ring-primary/20 rotate-1 scale-105 z-50 bg-background"
  )}
  >
@@ -69,7 +69,7 @@ export const KanbanCard = ({ task, index, onDeleteTask, onUpdateTask }) => {
  {/* Card Header */}
  <div className="flex items-start justify-between">
  <div className="flex items-center gap-2">
- <div className="p-1.5 rounded-md bg-muted/30">
+ <div className="p-1.5 rounded-lg bg-muted/30">
  {getTypeIcon(task.type)}
  </div>
  <span className="text-[9px] text-muted-foreground opacity-60">

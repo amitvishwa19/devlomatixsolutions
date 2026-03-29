@@ -204,7 +204,7 @@ export default function UploadsPage() {
  onDrop={handleDrop}
  onClick={() => fileInputRef.current?.click()}
  >
- <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
  <Upload className="h-8 w-8 text-primary shadow-sm" />
  </div>
  <p className="font-bold text-base text-foreground/80">Drop files here or click to browse</p>
@@ -235,7 +235,7 @@ export default function UploadsPage() {
  </div>
  ) : combinedList.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-20 space-y-4 opacity-40">
- <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center">
+ <div className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center">
  <Clock className="h-8 w-8 text-muted-foreground" />
  </div>
  <p className="text-sm font-bold text-muted-foreground text-center">No recent uploads<br /><span className="text-[10px] font-medium lowercase">Your upload history will appear here</span></p>
@@ -247,7 +247,7 @@ export default function UploadsPage() {
  const StatusIcon = st.icon;
  return (
  <div key={upload.id} className="flex items-center gap-5 p-5 hover:bg-muted/30 transition-all duration-200 group">
- <div className="w-12 h-12 rounded-xl bg-muted/30 flex items-center justify-center shrink-0 border border-border/20 group-hover:border-primary/20 transition-colors">
+ <div className="w-12 h-12 rounded-lg bg-muted/30 flex items-center justify-center shrink-0 border border-border/20 group-hover:border-primary/20 transition-colors">
  <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
  </div>
  <div className="flex-1 min-w-0 space-y-1.5">
@@ -290,7 +290,7 @@ export default function UploadsPage() {
  variant="ghost"
  size="icon"
  onClick={() => removeUpload(upload.id)}
- className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all"
+ className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 rounded-lg transition-all"
  >
  <X className="h-5 w-5" />
  </Button>

@@ -221,7 +221,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                             key={c}
                                                             type="button"
                                                             onClick={() => field.onChange(c)}
-                                                            className={`relative h-8 w-8 rounded-md border transition
+                                                            className={`relative h-8 w-8 rounded-lg border transition
                                                                      ${selected
                                                                     ? "ring-1 ring-primary ring-offset-2 scale-105"
                                                                     : "hover:scale-105"
@@ -264,7 +264,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                 ([category, perms]) => (
                                                     <div
                                                         key={category}
-                                                        className="border rounded-md p-2"
+                                                        className="border rounded-lg p-2"
                                                     >
                                                         <div className="flex justify-between items-center border-b pb-2">
                                                             <div>

@@ -405,7 +405,7 @@ export const AddPostModal = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="min-w-[98vw] max-w-[98vw] min-h-[98vh] h-[98vh] max-h-[98vh] bg-background border rounded-xl shadow-2xl p-0 overflow-hidden flex flex-col">
+      <DialogContent className="min-w-[98vw] max-w-[98vw] min-h-[98vh] h-[98vh] max-h-[98vh] bg-background border rounded-lg shadow-2xl p-0 overflow-hidden flex flex-col">
         <div className="flex flex-col h-full">
           {/* Header */}
           <DialogHeader className="p-4 border-b border-border flex flex-row items-center justify-between shrink-0">
@@ -434,7 +434,7 @@ export const AddPostModal = () => {
                   placeholder="e.g. Product Launch Announcement - Q1"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="bg-muted/30 border rounded-md focus-visible:ring-2 focus-visible:ring-primary h-12 text-lg font-bold shadow-inner mt-2"
+                  className="bg-muted/30 border rounded-lg focus-visible:ring-2 focus-visible:ring-primary h-12 text-lg font-bold shadow-inner mt-2"
                 />
               </div>
 
@@ -457,7 +457,7 @@ export const AddPostModal = () => {
 
                 {/* AI Assistant Prompt Bar */}
                 {showAiAssistant && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-2 animate-in slide-in-from-top-2 duration-300">
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-2 animate-in slide-in-from-top-2 duration-300">
                     <div className="flex gap-2">
                       <div className="relative flex-1">
                         <Zap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
@@ -544,13 +544,13 @@ export const AddPostModal = () => {
                 )}
 
                 <div
-                  className="flex-shrink-0 border border-border/100 rounded-xl overflow-hidden focus-within:border-primary/50 transition-colors bg-card/100 shadow-sm relative"
+                  className="flex-shrink-0 border border-border/100 rounded-lg overflow-hidden focus-within:border-primary/50 transition-colors bg-card/100 shadow-sm relative"
                   style={{ minHeight: '50vh' }}
                 >
                   <TipTap data={content} onChange={setContent} />
                   {isAiLoading && (
                     <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-50">
-                      <div className="flex flex-col items-center gap-3 bg-card p-6 rounded-2xl shadow-2xl border border-primary/20 animate-in zoom-in-95 duration-200">
+                      <div className="flex flex-col items-center gap-3 bg-card p-6 rounded-lg shadow-2xl border border-primary/20 animate-in zoom-in-95 duration-200">
                         <div className="relative">
                           <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
                           <Loader2 className="h-8 w-8 text-primary animate-spin relative z-10" />
@@ -606,12 +606,12 @@ export const AddPostModal = () => {
                       };
 
                       return (
-                        <div key={platform} className="flex flex-col xl:flex-row gap-6 bg-card/50 p-6 rounded-2xl border border-border/50 shadow-sm animate-in fade-in duration-500">
+                        <div key={platform} className="flex flex-col xl:flex-row gap-6 bg-card/50 p-6 rounded-lg border border-border/50 shadow-sm animate-in fade-in duration-500">
                           {/* Text Editor Column */}
                           <div className="w-full xl:w-[60%] flex flex-col space-y-3 relative shrink-0">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                                <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
                                   {getPlatformIcon(pName)}
                                 </div>
                                 <span className="text-xs font-bold">{pName} Custom Version</span>
@@ -627,13 +627,13 @@ export const AddPostModal = () => {
                                 Auto Configure
                               </Button>
                             </div>
-                            <div className="flex-1 flex flex-col min-h-[300px] max-h-[500px] overflow-y-auto overflow-x-hidden border border-border/50 rounded-xl bg-background focus-within:border-primary/50 transition-colors">
+                            <div className="flex-1 flex flex-col min-h-[300px] max-h-[500px] overflow-y-auto overflow-x-hidden border border-border/50 rounded-lg bg-background focus-within:border-primary/50 transition-colors">
                               <TipTap data={currentText} onChange={updateContent} />
                             </div>
                           </div>
                           
                           {/* Visual Preview Column */}
-                          <div className="w-full xl:w-[40%] flex items-start justify-center bg-muted/10 p-6 rounded-xl border border-border/10 min-w-0 overflow-y-auto min-h-[300px] max-h-[500px] overflow-x-hidden">
+                          <div className="w-full xl:w-[40%] flex items-start justify-center bg-muted/10 p-6 rounded-lg border border-border/10 min-w-0 overflow-y-auto min-h-[300px] max-h-[500px] overflow-x-hidden">
                             <SinglePostPreview platformKey={platform} content={currentText} mediaUrls={mediaUrls} accounts={accounts} />
                           </div>
                         </div>
@@ -672,7 +672,7 @@ export const AddPostModal = () => {
                         type="button"
                         onClick={() => handlePlatformToggle(account.id || account.platform)}
                         className={`
-                            flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 text-left w-full
+                            flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all duration-300 text-left w-full
                             ${isSelected
                             ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5'
                             : 'border-border/100 bg-card/100 text-muted-foreground hover:border-primary/30'}
@@ -693,7 +693,7 @@ export const AddPostModal = () => {
                   })}
                 </div>
                 {accounts.filter(a => a.status === 'connected' && ['FACEBOOK', 'INSTAGRAM', 'LINKEDIN', 'TWITTER', 'WHATSAPP'].includes(a.platform?.toUpperCase())).length === 0 && (
-                  <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                  <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                     <Info className="text-amber-500 w-5 h-5 shrink-0" />
                     <p className="text-[11px] font-bold text-amber-500 leading-tight">
                       No accounts connected. Go to System → Credentials to link accounts.
@@ -713,7 +713,7 @@ export const AddPostModal = () => {
                   {isSeoLoading && <Loader2 size={12} className="animate-spin text-primary" />}
                 </div>
 
-                <div className="bg-card/100 border border-border/100 rounded-xl p-4 space-y-4 shadow-sm">
+                <div className="bg-card/100 border border-border/100 rounded-lg p-4 space-y-4 shadow-sm">
                   <div className="space-y-2">
                     <div className="relative">
                       <Input
@@ -753,7 +753,7 @@ export const AddPostModal = () => {
                           <p className="text-[9px] text-muted-foreground/60 tracking-wider">Keywords Found</p>
                           <div className="flex flex-wrap gap-1.5">
                             {seoKeywords.slice(0, 5).map((kw, i) => (
-                              <div key={i} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/30 border border-border/50 text-[9px] font-medium">
+                              <div key={i} className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-muted/30 border border-border/50 text-[9px] font-medium">
                                 <span>{kw.word}</span>
                                 <span className="opacity-40">{kw.count}</span>
                               </div>
@@ -890,7 +890,7 @@ export const AddPostModal = () => {
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 min-h-[80px] border rounded-xl">
+                <div className="grid grid-cols-3 gap-2 min-h-[80px] border rounded-lg">
                   {mediaUrls.length > 0 ? (
                     mediaUrls.map((url, i) => (
                       <div key={i} className="group relative aspect-square rounded-lg overflow-hidden border border-border/100 bg-card/100 shadow-sm animate-in zoom-in-50 duration-300">
@@ -898,14 +898,14 @@ export const AddPostModal = () => {
                         <button
                           type="button"
                           onClick={() => removeMedia(url)}
-                          className="absolute top-1 right-1 bg-black/60 backdrop-blur-md p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 right-1 bg-black/60 backdrop-blur-md p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <X className="text-white w-3 h-3" />
                         </button>
                       </div>
                     ))
                   ) : (
-                    <div className="col-span-3 flex flex-col items-center justify-center p-6 border-2 border-dashed border-border/10 rounded-xl bg-muted/5 opacity-40">
+                    <div className="col-span-3 flex flex-col items-center justify-center p-6 border-2 border-dashed border-border/10 rounded-lg bg-muted/5 opacity-40">
                       <ImageIcon className="w-6 h-6 mb-2" />
                       <span className="text-[9px] font-bold">No Media</span>
                     </div>
@@ -916,7 +916,7 @@ export const AddPostModal = () => {
               <Separator className="bg-border/10" />
 
               {/* Scheduling Section */}
-              <div className="space-y-3 text-left bg-primary/5 p-5 rounded-xl border border-primary/20 mt-auto">
+              <div className="space-y-3 text-left bg-primary/5 p-5 rounded-lg border border-primary/20 mt-auto">
                 <label className="text-[10px] font-bold text-primary opacity-90 block mb-2">Publish Schedule</label>
                 <div className="relative">
                   <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
@@ -947,7 +947,7 @@ export const AddPostModal = () => {
                 type="button"
                 variant="ghost"
                 onClick={handleClose}
-                className="px-6 rounded-md font-bold text-muted-foreground text-[10px]"
+                className="px-6 rounded-lg font-bold text-muted-foreground text-[10px]"
               >
                 Cancel
               </Button>
@@ -957,7 +957,7 @@ export const AddPostModal = () => {
                 variant="outline"
                 disabled={isLoading}
                 onClick={() => onSubmit("DRAFT")}
-                className="px-6 border-border/60 hover:bg-background rounded-md font-bold text-[10px]"
+                className="px-6 border-border/60 hover:bg-background rounded-lg font-bold text-[10px]"
               >
                 Save Draft
               </Button>
@@ -966,7 +966,7 @@ export const AddPostModal = () => {
                 type="button"
                 disabled={isLoading}
                 onClick={() => onSubmit()}
-                className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md font-extrabold text-[10px] shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-extrabold text-[10px] shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="mr-3 h-4 w-4 animate-spin" />

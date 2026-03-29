@@ -62,11 +62,11 @@ export default function ATSAnalyticsPage() {
  <h1 className="text-xl font-bold">ATS Analytics</h1>
  </div>
  <div className="flex items-center gap-3">
- <Button variant="outline" className="h-10 rounded-md px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-10 rounded-lg px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
  <Calendar className="w-4 h-4 mr-2 opacity-50" />
  Last 30 Days
  </Button>
- <Button className="h-10 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20">
+ <Button className="h-10 rounded-lg px-6 text-[10px] bg-primary shadow-lg shadow-primary/20">
  <Download className="w-4 h-4 mr-2" />
  Download Report
  </Button>

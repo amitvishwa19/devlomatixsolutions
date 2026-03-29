@@ -69,9 +69,9 @@ export default function AccessDashboard({ user }) {
                 </div>
 
                 {roles?.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/40 rounded-2xl bg-muted/5 animate-pulse-subtle group overflow-hidden relative">
+                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/40 rounded-lg bg-muted/5 animate-pulse-subtle group overflow-hidden relative">
                         <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                        <div className="w-16 h-16 bg-muted/20 rounded-2xl flex items-center justify-center mb-6 border border-border/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                        <div className="w-16 h-16 bg-muted/20 rounded-lg flex items-center justify-center mb-6 border border-border/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
                              <ShieldOff className="w-8 h-8 text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
                         </div>
                         <h3 className="text-lg font-bold text-foreground/80 mb-2">No roles found</h3>

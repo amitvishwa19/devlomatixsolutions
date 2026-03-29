@@ -55,10 +55,10 @@ export const GeneralSettings = () => {
  return (
  <div className="space-y-6 animate-fade-in">
  {/* Workspace Identity */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-primary/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-primary/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-inner">
+ <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20 shadow-inner">
  <LayoutGrid className="w-6 h-6 text-primary" />
  </div>
  <div>
@@ -76,7 +76,7 @@ export const GeneralSettings = () => {
  value={localGeneral.name}
  onChange={(e) => setLocalGeneral(prev => ({ ...prev, name: e.target.value }))}
  placeholder="Enter workspace name"
- className="rounded-xl border border-border h-11 bg-background shadow-inner font-medium"
+ className="rounded-lg border border-border h-11 bg-background shadow-inner font-medium"
  />
  </div>
  <div className="grid gap-3">
@@ -86,7 +86,7 @@ export const GeneralSettings = () => {
  value={localGeneral.description}
  onChange={(e) => setLocalGeneral(prev => ({ ...prev, description: e.target.value }))}
  placeholder="Describe what this workspace is for..."
- className="rounded-xl border border-border bg-background shadow-inner font-medium resize-none"
+ className="rounded-lg border border-border bg-background shadow-inner font-medium resize-none"
  />
  </div>
  </CardContent>
@@ -94,7 +94,7 @@ export const GeneralSettings = () => {
  <Button 
  onClick={handleSaveGeneral} 
  disabled={saving}
- className="rounded-xl font-bold px-8 shadow-soft bg-primary hover:bg-primary/90"
+ className="rounded-lg font-bold px-8 shadow-soft bg-primary hover:bg-primary/90"
  >
  {saving ? "Saving..." : "Save Workspace Identity"}
  </Button>
@@ -102,10 +102,10 @@ export const GeneralSettings = () => {
  </Card>
 
  {/* App Identity */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-indigo-500/10 rounded-lg flex items-center justify-center border border-indigo-500/20 shadow-inner">
  <LayoutGrid className="w-6 h-6 text-indigo-500" />
  </div>
  <div>
@@ -123,7 +123,7 @@ export const GeneralSettings = () => {
  value={localBranding.appName}
  onChange={(e) => setLocalBranding(prev => ({ ...prev, appName: e.target.value }))}
  placeholder="e.g. HealthFine Platform"
- className="rounded-xl border border-border/50 h-12 bg-background/50 shadow-inner font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
+ className="rounded-lg border border-border/50 h-12 bg-background/50 shadow-inner font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
  />
  </div>
  <div className="grid gap-3">
@@ -132,7 +132,7 @@ export const GeneralSettings = () => {
  value={localBranding.appDescription}
  onChange={(e) => setLocalBranding(prev => ({ ...prev, appDescription: e.target.value }))}
  placeholder="A brief tagline for your app"
- className="rounded-xl border border-border/50 h-12 bg-background/50 shadow-inner font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
+ className="rounded-lg border border-border/50 h-12 bg-background/50 shadow-inner font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
  />
  </div>
  </CardContent>
@@ -140,7 +140,7 @@ export const GeneralSettings = () => {
  <Button 
  onClick={handleSaveBranding} 
  disabled={saving}
- className="rounded-xl font-bold px-8 shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 text-white transition-all transform hover:scale-[1.02]"
+ className="rounded-lg font-bold px-8 shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 text-white transition-all transform hover:scale-[1.02]"
  >
  {saving ? "Saving..." : "Save App Identity"}
  </Button>
@@ -148,9 +148,9 @@ export const GeneralSettings = () => {
  </Card>
 
  {/* Visual Identity */}
- <Card className="rounded-xl border border-border shadow-soft bg-card/100">
+ <Card className="rounded-lg border border-border shadow-soft bg-card/100">
  <CardHeader>
- <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-2 border border-blue-500/20">
+ <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-2 border border-blue-500/20">
  <Palette className="w-5 h-5 text-blue-500" />
  </div>
  <CardTitle className="text-xl font-bold ">Visual Identity</CardTitle>
@@ -160,7 +160,7 @@ export const GeneralSettings = () => {
  </CardHeader>
  <CardContent className="space-y-6">
  <div className="flex flex-col md:flex-row gap-8 items-start">
- <div className="w-32 h-32 bg-muted/30 rounded-2xl border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-2 group cursor-pointer hover:border-primary/40 transition-colors shrink-0 overflow-hidden">
+ <div className="w-32 h-32 bg-muted/30 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-2 group cursor-pointer hover:border-primary/40 transition-colors shrink-0 overflow-hidden">
  {localBranding.logoUrl ? (
  <img src={localBranding.logoUrl} alt="Logo" className="w-full h-full object-contain p-4" />
  ) : (
@@ -175,14 +175,14 @@ export const GeneralSettings = () => {
  <Label className="text-[10px] font-bold opacity-70">Primary Workspace Color</Label>
  <div className="flex gap-4 items-center">
  <div 
- className="w-11 h-11 rounded-xl shadow-soft border-2 border-background"
+ className="w-11 h-11 rounded-lg shadow-soft border-2 border-background"
  style={{ backgroundColor: localBranding.primaryColor }}
  />
  <Input 
  type="text"
  value={localBranding.primaryColor}
  onChange={(e) => setLocalBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
- className="rounded-xl border border-border h-11 bg-background shadow-inner font-mono font-bold text-xs flex-1"
+ className="rounded-lg border border-border h-11 bg-background shadow-inner font-mono font-bold text-xs flex-1"
  />
  </div>
  </div>
@@ -193,7 +193,7 @@ export const GeneralSettings = () => {
  <Button 
  onClick={handleSaveBranding} 
  disabled={saving}
- className="rounded-xl font-bold px-8 shadow-soft bg-blue-600 hover:bg-blue-700 text-white"
+ className="rounded-lg font-bold px-8 shadow-soft bg-blue-600 hover:bg-blue-700 text-white"
  >
  {saving ? "Saving..." : "Save Visual Identity"}
  </Button>
@@ -201,10 +201,10 @@ export const GeneralSettings = () => {
  </Card>
 
  {/* Custom Domain */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-amber-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-amber-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center border border-amber-500/20 shadow-inner">
  <Globe className="w-6 h-6 text-amber-500" />
  </div>
  <div>
@@ -221,14 +221,14 @@ export const GeneralSettings = () => {
  <Label className="text-[10px] font-bold opacity-70 ml-1">Domain Name</Label>
  <Input 
  placeholder="e.g. workspace.yourdomain.com"
- className="rounded-xl border border-border/50 h-12 bg-background/50 shadow-inner font-bold text-sm focus:ring-2 focus:ring-amber-500/20"
+ className="rounded-lg border border-border/50 h-12 bg-background/50 shadow-inner font-bold text-sm focus:ring-2 focus:ring-amber-500/20"
  />
  </div>
- <Button variant="outline" className="rounded-xl font-bold h-12 px-6 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-600 transition-all">
+ <Button variant="outline" className="rounded-lg font-bold h-12 px-6 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-600 transition-all">
  Check DNS
  </Button>
  </div>
- <div className="p-4 bg-muted/30 rounded-xl border border-border/40 space-y-3">
+ <div className="p-4 bg-muted/30 rounded-lg border border-border/40 space-y-3">
  <div className="flex justify-between items-center text-[10px] opacity-50">
  <span>Type</span>
  <span>Host</span>
@@ -248,7 +248,7 @@ export const GeneralSettings = () => {
  </p>
  <Button 
  disabled 
- className="rounded-xl font-bold px-8 shadow-xl shadow-amber-500/20 bg-amber-600 hover:bg-amber-700 text-white transition-all transform opacity-50 grayscale cursor-not-allowed"
+ className="rounded-lg font-bold px-8 shadow-xl shadow-amber-500/20 bg-amber-600 hover:bg-amber-700 text-white transition-all transform opacity-50 grayscale cursor-not-allowed"
  >
  Connect Domain
  </Button>
@@ -256,10 +256,10 @@ export const GeneralSettings = () => {
  </Card>
 
  {/* Workspace URL */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center border border-emerald-500/20 shadow-inner">
  <Link2 className="w-6 h-6 text-emerald-500" />
  </div>
  <div>
@@ -271,7 +271,7 @@ export const GeneralSettings = () => {
  </div>
  </CardHeader>
  <CardContent className="pt-2">
- <div className="flex items-center gap-2 p-4 bg-background/50 rounded-2xl border border-border/40 shadow-inner group">
+ <div className="flex items-center gap-2 p-4 bg-background/50 rounded-lg border border-border/40 shadow-inner group">
  <code className="text-sm text-foreground/80 flex-1 truncate">
  {typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}/workspace/${settings?.general?.inviteCode || '...'}` : 'Loading...'}
  </code>
@@ -300,8 +300,8 @@ export const GeneralSettings = () => {
  </CardContent>
  </Card>
 
- <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/10 flex gap-4 items-start">
- <div className="p-2 bg-blue-500/10 rounded-xl mt-0.5">
+ <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/10 flex gap-4 items-start">
+ <div className="p-2 bg-blue-500/10 rounded-lg mt-0.5">
  <Info className="w-4 h-4 text-blue-500" />
  </div>
  <div className="space-y-1">

@@ -68,8 +68,8 @@ export default function InterviewSpacePage() {
  </div>
  </div>
  <div className="flex gap-2">
- <Badge variant="outline" className="h-6 rounded-md bg-white/5 border-white/10 text-[9px] ">Technical Round</Badge>
- <Badge variant="outline" className="h-6 rounded-md bg-primary/10 border-primary/20 text-primary text-[9px] ">A-Priority</Badge>
+ <Badge variant="outline" className="h-6 rounded-lg bg-white/5 border-white/10 text-[9px] ">Technical Round</Badge>
+ <Badge variant="outline" className="h-6 rounded-lg bg-primary/10 border-primary/20 text-primary text-[9px] ">A-Priority</Badge>
  </div>
  </div>
 
@@ -77,13 +77,13 @@ export default function InterviewSpacePage() {
 
  <Tabs defaultValue="notes" className="flex-1 flex flex-col min-h-0">
  <TabsList className="bg-white/5 p-1 rounded-lg h-9 border border-white/10 shrink-0">
- <TabsTrigger value="notes" className="rounded-md text-[8px] flex-1 px-1">Notes</TabsTrigger>
- <TabsTrigger value="scorecard" className="rounded-md text-[8px] flex-1 px-1">Score</TabsTrigger>
- <TabsTrigger value="resume" className="rounded-md text-[8px] flex-1 px-1">Resume</TabsTrigger>
+ <TabsTrigger value="notes" className="rounded-lg text-[8px] flex-1 px-1">Notes</TabsTrigger>
+ <TabsTrigger value="scorecard" className="rounded-lg text-[8px] flex-1 px-1">Score</TabsTrigger>
+ <TabsTrigger value="resume" className="rounded-lg text-[8px] flex-1 px-1">Resume</TabsTrigger>
  </TabsList>
 
  <TabsContent value="notes" className="flex-1 mt-4 outline-none min-h-0 flex flex-col overflow-hidden">
- <div className="flex-1 min-h-0 bg-white/5 rounded-xl border border-white/5 p-5 overflow-y-auto scrollbar-hide">
+ <div className="flex-1 min-h-0 bg-white/5 rounded-lg border border-white/5 p-5 overflow-y-auto scrollbar-hide">
  <p className="text-[9px] font-bold text-white/20 italic mb-4">Transcription Start...</p>
  <div className="space-y-5">
  <div className="space-y-1">
@@ -99,7 +99,7 @@ export default function InterviewSpacePage() {
  <div className="mt-4 relative group shrink-0">
  <Textarea
  placeholder="Add a private note..."
- className="bg-white/5 border-white/10 rounded-xl min-h-[100px] p-5 text-sm font-medium focus-visible:ring-primary shadow-inner resize-none h-24"
+ className="bg-white/5 border-white/10 rounded-lg min-h-[100px] p-5 text-sm font-medium focus-visible:ring-primary shadow-inner resize-none h-24"
  />
  <div className="absolute bottom-3 right-4 text-[8px] text-white/20 italic group-focus-within:text-primary transition-colors">Shift + Enter to save</div>
  </div>
@@ -125,7 +125,7 @@ export default function InterviewSpacePage() {
  </div>
  </div>
  ))}
- <Button className="w-full bg-primary hover:bg-primary/90 rounded-xl h-10 text-[9px] shadow-lg shadow-primary/20 mt-2">
+ <Button className="w-full bg-primary hover:bg-primary/90 rounded-lg h-10 text-[9px] shadow-lg shadow-primary/20 mt-2">
  Submit Preliminary Scorecard
  </Button>
  </div>
@@ -161,7 +161,7 @@ export default function InterviewSpacePage() {
  {/* Primary Video Grid */}
  <div className="flex-1 grid grid-cols-2 gap-6 min-h-0 relative">
  {/* Candidate Feed */}
- <div className="relative rounded-2xl overflow-hidden border border-white/5 bg-[#0A0A0B] shadow-2xl group flex items-center justify-center">
+ <div className="relative rounded-lg overflow-hidden border border-white/5 bg-[#0A0A0B] shadow-2xl group flex items-center justify-center">
  <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
  <Avatar className="h-40 w-40 border-[8px] border-white/5 shadow-2xl opacity-20 filter grayscale">
  <AvatarFallback className="text-3xl italic">RS</AvatarFallback>
@@ -177,7 +177,7 @@ export default function InterviewSpacePage() {
  </div>
 
  {/* My Feed */}
- <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-[#0F0F11] flex items-center justify-center">
+ <div className="relative rounded-lg overflow-hidden border border-white/5 shadow-2xl bg-[#0F0F11] flex items-center justify-center">
  <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
  {isVideoOff ? (
  <Avatar className="h-24 w-24 border-4 border-white/5">
@@ -198,7 +198,7 @@ export default function InterviewSpacePage() {
 
  {/* Shared Content Layer / Overlay */}
  {isScreenSharing && (
- <div className="absolute inset-0 z-50 bg-black/95 rounded-2xl border border-primary/40 flex items-center justify-center">
+ <div className="absolute inset-0 z-50 bg-black/95 rounded-lg border border-primary/40 flex items-center justify-center">
  <div className="text-center space-y-4">
  <Monitor size={48} className="mx-auto text-primary animate-pulse" />
  <h3 className="text-xl ">Presenting Screen</h3>
@@ -210,7 +210,7 @@ export default function InterviewSpacePage() {
 
  {/* Main Interaction Bar */}
  <div className="shrink-0 flex items-center justify-center gap-5 pb-1">
- <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-xl border border-white/10 backdrop-blur-3xl shadow-2xl">
+ <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/10 backdrop-blur-3xl shadow-2xl">
  <Button
  variant="ghost"
  size="icon"
@@ -252,7 +252,7 @@ export default function InterviewSpacePage() {
  </Button>
  </div>
 
- <Button className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 rounded-xl h-11 px-6 shadow-lg shadow-rose-500/20 flex items-center gap-2 group">
+ <Button className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 rounded-lg h-11 px-6 shadow-lg shadow-rose-500/20 flex items-center gap-2 group">
  <PhoneOff size={18} className="group-hover:rotate-12 transition-transform" />
  <span className="text-[9px]">End</span>
  </Button>
@@ -266,7 +266,7 @@ export default function InterviewSpacePage() {
  animate={{ x: 0, opacity: 1 }}
  exit={{ x: 300, opacity: 0 }}
  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
- className="absolute top-24 right-6 bottom-24 w-80 bg-[#16161E]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-[60] flex flex-col overflow-hidden"
+ className="absolute top-24 right-6 bottom-24 w-80 bg-[#16161E]/95 backdrop-blur-2xl border border-white/10 rounded-lg shadow-2xl z-[60] flex flex-col overflow-hidden"
  >
  <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
  <h3 className="text-[10px] tracking-[0.2em] text-primary">
@@ -289,7 +289,7 @@ export default function InterviewSpacePage() {
  <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
  {activeTool === 'ai' && (
  <div className="space-y-4">
- <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl">
+ <div className="bg-primary/10 border border-primary/20 p-3 rounded-lg">
  <p className="text-[10px] text-primary mb-1">AI Suggestion</p>
  <p className="text-xs opacity-80 leading-relaxed italic">"Ask about their experience with Hydration errors in Next.js 14."</p>
  </div>
@@ -312,7 +312,7 @@ export default function InterviewSpacePage() {
  )}
 
  {activeTool === 'code' && (
- <div className="bg-black/40 rounded-xl p-4 font-mono text-[11px] leading-relaxed border border-white/5 h-full">
+ <div className="bg-black/40 rounded-lg p-4 font-mono text-[11px] leading-relaxed border border-white/5 h-full">
  <p className="text-emerald-400">async function <span className="text-blue-400">interviewTask</span>() &#123;</p>
  <p className="pl-4 text-white/60">// Implement the fix here</p>
  <p className="pl-4 text-emerald-400">const <span className="text-white/90">data</span> = await fetch('/api/stats');</p>
@@ -322,7 +322,7 @@ export default function InterviewSpacePage() {
  )}
 
  {activeTool === 'terminal' && (
- <div className="bg-[#0D0D0F] rounded-xl p-4 font-mono text-[10px] border border-white/5 h-full space-y-1">
+ <div className="bg-[#0D0D0F] rounded-lg p-4 font-mono text-[10px] border border-white/5 h-full space-y-1">
  <p className="text-emerald-500">$ npm run analyze</p>
  <p className="text-white/40">Analyzing heap segments...</p>
  <p className="text-white/40">Chunk [01] size: 1.2MB</p>
@@ -337,11 +337,11 @@ export default function InterviewSpacePage() {
  <div className="space-y-6">
  <div className="space-y-3">
  <p className="text-[9px] opacity-40">Microphone</p>
- <div className="h-10 bg-white/5 rounded-xl border border-white/10 flex items-center px-4 text-xs">Standard Internal Mic</div>
+ <div className="h-10 bg-white/5 rounded-lg border border-white/10 flex items-center px-4 text-xs">Standard Internal Mic</div>
  </div>
  <div className="space-y-3">
  <p className="text-[9px] opacity-40">Camera</p>
- <div className="h-10 bg-white/5 rounded-xl border border-white/10 flex items-center px-4 text-xs">FaceTime HD Camera</div>
+ <div className="h-10 bg-white/5 rounded-lg border border-white/10 flex items-center px-4 text-xs">FaceTime HD Camera</div>
  </div>
  </div>
  )}
@@ -357,7 +357,7 @@ export default function InterviewSpacePage() {
  variant="ghost"
  size="icon"
  onClick={() => setActiveTool('ai')}
- className={`h-10 w-10 rounded-xl transition-all shadow-lg ${activeTool === 'ai' ? 'bg-primary/10 text-primary shadow-primary/10 opacity-100' : 'opacity-40 hover:opacity-100 hover:text-primary'}`}
+ className={`h-10 w-10 rounded-lg transition-all shadow-lg ${activeTool === 'ai' ? 'bg-primary/10 text-primary shadow-primary/10 opacity-100' : 'opacity-40 hover:opacity-100 hover:text-primary'}`}
  >
  <Sparkles size={20} />
  </Button>

@@ -20,12 +20,12 @@ import Link from "next/link";
 
 const DashboardCard = ({ title, description, icon: Icon, href, color, stats }) => (
  <Link href={href}>
- <Card className="relative overflow-hidden group border-border bg-card hover:bg-card/90 transition-all duration-500 hover:-translate-y-1 shadow-soft hover:shadow-medium cursor-pointer h-full rounded-xl animate-fade-in">
+ <Card className="relative overflow-hidden group border-border bg-card hover:bg-card/90 transition-all duration-500 hover:-translate-y-1 shadow-soft hover:shadow-medium cursor-pointer h-full rounded-lg animate-fade-in">
  <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 bg-${color}/10 rounded-full blur-3xl group-hover:bg-${color}/20 transition-colors pointer-events-none`} />
 
  <CardHeader className="pb-2">
  <div className="flex items-center justify-between">
- <div className={`p-2.5 rounded-xl bg-${color}/10 text-${color} group-hover:scale-110 transition-transform`}>
+ <div className={`p-2.5 rounded-lg bg-${color}/10 text-${color} group-hover:scale-110 transition-transform`}>
  <Icon size={24} />
  </div>
  <ArrowRight size={16} className="text-muted-foreground opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
@@ -101,7 +101,7 @@ export default function WorkspaceDashboard({ workspaceId }) {
  return (
  <div className="space-y-6 pb-10 animate-fade-in">
  {/* Hero Section */}
- <div className="relative p-8 rounded-xl overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-soft">
+ <div className="relative p-8 rounded-lg overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-soft">
  <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 blur-3xl -z-10" />
  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div className="space-y-2">
@@ -128,7 +128,7 @@ export default function WorkspaceDashboard({ workspaceId }) {
 
  {/* Bottom Section - Status & Insights */}
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- <Card className="lg:col-span-2 border-border bg-card shadow-soft overflow-hidden rounded-xl">
+ <Card className="lg:col-span-2 border-border bg-card shadow-soft overflow-hidden rounded-lg">
  <CardHeader className="flex flex-row items-center justify-between pb-2">
  <div>
  <CardTitle className="text-xl font-bold flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function WorkspaceDashboard({ workspaceId }) {
  </Button>
  </CardHeader>
  <CardContent>
- <div className="h-[200px] w-full flex items-center justify-center border border-dashed border-border/60 rounded-xl bg-background/30">
+ <div className="h-[200px] w-full flex items-center justify-center border border-dashed border-border/60 rounded-lg bg-background/30">
  <div className="flex flex-col items-center gap-2 opacity-50">
  <Activity size={40} />
  <span className="text-xs font-bold">Analytics Hydrating...</span>
@@ -150,7 +150,7 @@ export default function WorkspaceDashboard({ workspaceId }) {
  </CardContent>
  </Card>
 
- <Card className="border-border bg-card shadow-soft rounded-xl">
+ <Card className="border-border bg-card shadow-soft rounded-lg">
  <CardHeader>
  <CardTitle className="text-xl font-bold flex items-center gap-2">
  <ShieldCheck size={20} className="text-green-500" /> System Health
@@ -164,7 +164,7 @@ export default function WorkspaceDashboard({ workspaceId }) {
  { name: "WhatsApp Business", status: "Operational", color: "bg-green-500" },
  { name: "Twitter/X OAuth", status: "Warning", color: "bg-yellow-500" },
  ].map((s) => (
- <div key={s.name} className="flex items-center justify-between p-3 rounded-xl bg-background/40 border border-border/5">
+ <div key={s.name} className="flex items-center justify-between p-3 rounded-lg bg-background/40 border border-border/5">
  <span className="text-xs font-bold text-foreground">{s.name}</span>
  <div className="flex items-center gap-2">
  <span className="text-[10px] font-bold text-muted-foreground">{s.status}</span>
@@ -176,5 +176,5 @@ export default function WorkspaceDashboard({ workspaceId }) {
  </Card>
  </div>
  </div>
- );
+);
 }

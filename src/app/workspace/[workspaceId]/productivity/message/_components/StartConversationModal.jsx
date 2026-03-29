@@ -73,7 +73,7 @@ export const StartConversationModal = ({ isOpen, onClose }) => {
                                     key={member.userId}
                                     onClick={() => startConversation(member)}
                                     disabled={isLoadingId === member.userId}
-                                    className="flex items-center gap-x-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition w-full text-left"
+                                    className="flex items-center gap-x-3 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition w-full text-left"
                                 >
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={member.user?.avatar} />

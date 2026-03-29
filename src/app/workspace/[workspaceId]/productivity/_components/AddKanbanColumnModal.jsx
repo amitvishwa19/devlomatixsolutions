@@ -62,11 +62,11 @@ export const AddKanbanColumnModal = () => {
 
  return (
  <Dialog open={isModalOpen} onOpenChange={handleClose}>
- <DialogContent className="sm:max-w-md overflow-hidden border shadow-2xl p-0 bg-background rounded-xl">
+ <DialogContent className="sm:max-w-md overflow-hidden border shadow-2xl p-0 bg-background rounded-lg">
  <form onSubmit={onSubmit} className="flex flex-col">
  <DialogHeader className="p-8 pb-0">
  <div className="flex items-center gap-3 mb-2">
- <div className="p-2 rounded-xl bg-primary/10">
+ <div className="p-2 rounded-lg bg-primary/10">
  <LayoutPanelTop className="h-5 w-5 text-primary" />
  </div>
  <DialogTitle className="text-2xl font-bold ">
@@ -86,7 +86,7 @@ export const AddKanbanColumnModal = () => {
  </label>
  <Input
  disabled={isLoading}
- className="h-12 bg-muted/30 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold"
+ className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold"
  placeholder="e.g. TO DO, REVIEW, DONE"
  value={title}
  onChange={(e) => setTitle(e.target.value)}
@@ -102,13 +102,13 @@ export const AddKanbanColumnModal = () => {
  type="button"
  variant="outline"
  onClick={handleClose}
- className="h-12 rounded-xl font-bold flex-1 border-border/40 bg-background/50"
+ className="h-12 rounded-lg font-bold flex-1 border-border/40 bg-background/50"
  >
  Cancel
  </Button>
  <Button
  disabled={isLoading || !title.trim()}
- className="h-12 rounded-xl font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+ className="h-12 rounded-lg font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
  >
  {isLoading ? (
  <Loader2 className="h-4 w-4 animate-spin" />

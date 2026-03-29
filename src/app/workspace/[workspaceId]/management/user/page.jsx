@@ -179,13 +179,13 @@ export default function UserManagementPage() {
  <Button
  onClick={() => onOpen('invite', { workspaceId })}
  variant="outline"
- className="rounded-md font-bold h-11 px-6 text-[10px] border-border/40 "
+ className="rounded-lg font-bold h-11 px-6 text-[10px] border-border/40 "
  >
  <UserPlus className="w-5 h-5 mr-2" /> Invite
  </Button>
  <Button
  onClick={() => onOpen('addUser', { workspaceId, roles, onApply: fetchData })}
- className='bg-primary hover:bg-primary/90 rounded-md font-bold h-11 px-6 text-[10px] shadow-lg shadow-primary/20'
+ className='bg-primary hover:bg-primary/90 rounded-lg font-bold h-11 px-6 text-[10px] shadow-lg shadow-primary/20'
  >
  <Plus className="w-5 h-5 mr-2" /> Add User
  </Button>
@@ -200,11 +200,11 @@ export default function UserManagementPage() {
  placeholder="SEARCH BY NAME, EMAIL OR USERNAME..."
  value={search}
  onChange={(e) => setSearch(e.target.value)}
- className="pl-11 h-12 bg-background/50 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[10px] "
+ className="pl-11 h-12 bg-background/50 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[10px] "
  />
  </div>
  <div className="flex items-center gap-2">
- <Button variant="outline" className="w-12 rounded-md border-border/40 bg-background/50">
+ <Button variant="outline" className="w-12 rounded-lg border-border/40 bg-background/50">
  <Filter className="w-4 h-4" />
  </Button>
  </div>
@@ -276,7 +276,7 @@ export default function UserManagementPage() {
  color: role.color,
  borderColor: `${role.color}30`
  }}
- className="text-[9px] font-bold tracking-tighter px-2 rounded-md"
+ className="text-[9px] font-bold tracking-tighter px-2 rounded-lg"
  >
  {role.title}
  </Badge>
@@ -285,7 +285,7 @@ export default function UserManagementPage() {
  <Button
  variant="ghost"
  size="icon"
- className="h-6 w-6 rounded-md hover:bg-primary/10 text-muted-foreground/30 hover:text-primary transition-colors ml-1"
+ className="h-6 w-6 rounded-lg hover:bg-primary/10 text-muted-foreground/30 hover:text-primary transition-colors ml-1"
  onClick={() => openEditModal(user)}
  >
  <Shield className="w-3 h-3" />
@@ -295,12 +295,12 @@ export default function UserManagementPage() {
  <td className="px-6 py-5 whitespace-nowrap">
  <div className="flex items-center gap-2">
  {user.isActive ? (
- <div className="flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+ <div className="flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
  <span className="text-[10px] font-bold ">Active</span>
  </div>
  ) : (
- <div className="flex items-center gap-1.5 text-orange-500 bg-orange-500/10 px-2.5 py-1 rounded-md border border-orange-500/20">
+ <div className="flex items-center gap-1.5 text-orange-500 bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/20">
  <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
  <span className="text-[10px] font-bold ">Idle</span>
  </div>
@@ -315,16 +315,16 @@ export default function UserManagementPage() {
  <td className="px-6 py-5 whitespace-nowrap text-right">
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="ghost" size="icon" className="w-8 rounded-md text-muted-foreground/50 hover:text-foreground">
+ <Button variant="ghost" size="icon" className="w-8 rounded-lg text-muted-foreground/50 hover:text-foreground">
  <MoreHorizontal className="w-4 h-4" />
  </Button>
  </DropdownMenuTrigger>
  <DropdownMenuContent align="end" className="w-52 rounded-lg shadow-2xl border-border/40 p-2">
  <DropdownMenuLabel className="text-[10px] font-bold text-muted-foreground px-3 py-2">Account Control</DropdownMenuLabel>
- <DropdownMenuItem onClick={() => openEditModal(user)} className="cursor-pointer font-bold text-[10px] px-3 py-2.5 rounded-md">
+ <DropdownMenuItem onClick={() => openEditModal(user)} className="cursor-pointer font-bold text-[10px] px-3 py-2.5 rounded-lg">
  <Shield className="w-4 h-4 mr-2 text-primary" /> Manage Roles
  </DropdownMenuItem>
- <DropdownMenuItem onClick={() => toggleStatus(user)} className="cursor-pointer font-bold text-[10px] px-3 py-2.5 rounded-md">
+ <DropdownMenuItem onClick={() => toggleStatus(user)} className="cursor-pointer font-bold text-[10px] px-3 py-2.5 rounded-lg">
  {user.isActive ? (
  <><XCircle className="w-4 h-4 mr-2 text-rose-500" /> Deactivate</>
  ) : (
@@ -332,7 +332,7 @@ export default function UserManagementPage() {
  )}
  </DropdownMenuItem>
  <DropdownMenuSeparator className="bg-border/10" />
- <DropdownMenuItem onClick={() => confirmDelete(user)} className="cursor-pointer font-bold text-[10px] px-3 py-2.5 rounded-md text-rose-500 hover:bg-rose-500/10 transition-colors">
+ <DropdownMenuItem onClick={() => confirmDelete(user)} className="cursor-pointer font-bold text-[10px] px-3 py-2.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors">
  <Trash2 className="w-4 h-4 mr-2" /> Remove
  </DropdownMenuItem>
  </DropdownMenuContent>
@@ -367,10 +367,10 @@ export default function UserManagementPage() {
  <Input
  value={selectedUser?.displayName || ''}
  onChange={(e) => setSelectedUser(prev => ({ ...prev, displayName: e.target.value }))}
- className="h-12 bg-muted/30 border-none rounded-md px-4 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
+ className="h-12 bg-muted/30 border-none rounded-lg px-4 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
  />
  </div>
- <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
+ <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/10">
  <div className="space-y-1">
  <p className="text-[10px] font-bold ">Directory Access</p>
  <p className="text-[9px] font-bold text-muted-foreground opacity-50">Toggle platform entry</p>
@@ -378,7 +378,7 @@ export default function UserManagementPage() {
  <Button
  onClick={() => setSelectedUser(prev => ({ ...prev, isActive: !prev.isActive }))}
  variant={selectedUser?.isActive ? "outline" : "destructive"}
- className={`h-9 rounded-md font-bold text-[9px] px-4 ${selectedUser?.isActive ? 'border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/5' : ''}`}
+ className={`h-9 rounded-lg font-bold text-[9px] px-4 ${selectedUser?.isActive ? 'border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/5' : ''}`}
  >
  {selectedUser?.isActive ? 'ACTIVE' : 'IDLE'}
  </Button>
@@ -394,7 +394,7 @@ export default function UserManagementPage() {
  roles.map((role) => (
  <div
  key={role.id}
- className={`flex items-center justify-between p-4 rounded-md border transition-all cursor-pointer ${selectedRoleIds.includes(role.id)
+ className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer ${selectedRoleIds.includes(role.id)
  ? 'bg-primary/5 border-primary/20 shadow-sm'
  : 'bg-muted/10 border-border/10 hover:bg-muted/20'
  }`}
@@ -427,13 +427,13 @@ export default function UserManagementPage() {
  </div>
 
  <DialogFooter className="p-8 bg-muted/5 border-t border-border/10 flex gap-2">
- <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="rounded-md font-bold px-6 text-[10px] flex-1 ">
+ <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="rounded-lg font-bold px-6 text-[10px] flex-1 ">
  Cancel
  </Button>
  <Button
  onClick={handleUpdateRoles}
  disabled={isUpdating}
- className="rounded-md font-bold px-8 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all flex-1 text-[10px] "
+ className="rounded-lg font-bold px-8 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all flex-1 text-[10px] "
  >
  {isUpdating ? <Loader2 className="h-4 w-4 animate-spin font-bold" /> : "Save Changes"}
  </Button>

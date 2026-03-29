@@ -26,7 +26,7 @@ export default function CampaignList({
 
 }) {
  return (
- <div className="bg-[#111315] border border-[#1F2328] rounded-xl overflow-hidden">
+ <div className="bg-[#111315] border border-[#1F2328] rounded-lg overflow-hidden">
  <div className="overflow-x-auto">
  <table className="w-full">
  <thead>

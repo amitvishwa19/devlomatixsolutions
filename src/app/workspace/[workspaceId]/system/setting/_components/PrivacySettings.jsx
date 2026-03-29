@@ -33,10 +33,10 @@ export const PrivacySettings = () => {
  return (
  <div className="space-y-6 animate-fade-in">
  {/* Data Governance */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-emerald-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center border border-emerald-500/20 shadow-inner">
  <Database className="w-6 h-6 text-emerald-500" />
  </div>
  <div>
@@ -55,13 +55,13 @@ export const PrivacySettings = () => {
  <code className="text-[11px] text-foreground flex-1">
  PURGE ALL LOGS OLDER THAN {localPrivacy.dataRetention} DAYS
  </code>
- <Button variant="outline" size="sm" className="rounded-xl text-[10px] font-bold h-8 px-4" disabled>
+ <Button variant="outline" size="sm" className="rounded-lg text-[10px] font-bold h-8 px-4" disabled>
  Adjust Policy
  </Button>
  </div>
  </div>
 
- <div className="flex items-center justify-between gap-8 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+ <div className="flex items-center justify-between gap-8 p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <ShieldCheck className="w-4 h-4 text-emerald-600" />
@@ -81,10 +81,10 @@ export const PrivacySettings = () => {
  </Card>
 
  {/* Audit & Transparency */}
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-sky-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-sky-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center border border-sky-500/20 shadow-inner">
  <Eye className="w-6 h-6 text-sky-500" />
  </div>
  <div>
@@ -96,7 +96,7 @@ export const PrivacySettings = () => {
  </div>
  </CardHeader>
  <CardContent className="space-y-4">
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-xl border border-border/40">
+ <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-lg border border-border/40">
  <div className="space-y-1">
  <Label className="text-sm font-bold ">Detailed Activity Logging</Label>
  <p className="text-[10px] text-muted-foreground font-medium opacity-70 font-semibold italic">
@@ -111,11 +111,11 @@ export const PrivacySettings = () => {
 
  <Button 
  variant="outline" 
- className="w-full rounded-2xl border-dashed border-2 py-10 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/40 transition-all opacity-80 group"
+ className="w-full rounded-lg border-dashed border-2 py-10 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/40 transition-all opacity-80 group"
  onClick={() => toast.info("Exporting workspace data bundle...")}
  >
  <div className="flex items-center gap-3 text-primary group-hover:scale-110 transition-transform">
- <div className="p-2 bg-primary/10 rounded-xl">
+ <div className="p-2 bg-primary/10 rounded-lg">
  <FileText className="w-5 h-5" />
  </div>
  <span className="text-xs ">Export Workspace Data Bundle</span>
@@ -127,7 +127,7 @@ export const PrivacySettings = () => {
  <Button 
  onClick={handleSave} 
  disabled={saving}
- className="rounded-xl font-bold px-8 shadow-xl shadow-sky-500/20 bg-sky-600 hover:bg-sky-700 text-white transition-all transform hover:scale-[1.02]"
+ className="rounded-lg font-bold px-8 shadow-xl shadow-sky-500/20 bg-sky-600 hover:bg-sky-700 text-white transition-all transform hover:scale-[1.02]"
  >
  {saving ? "Deploying..." : "Update Privacy Policy"}
  </Button>

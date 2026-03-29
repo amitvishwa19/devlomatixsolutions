@@ -365,7 +365,7 @@ export default function ButtonQuickReplyPage() {
  {/* Controls */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
  {/* Message Type Selector */}
- <div className="bg-[#1E293B] rounded-xl p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
  <label className="block text-sm font-medium text-white mb-4">
  Message Types
  </label>
@@ -387,7 +387,7 @@ export default function ButtonQuickReplyPage() {
  </div>
 
  {/* Button Type Selector */}
- <div className="bg-[#1E293B] rounded-xl p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
  <label className="block text-sm font-medium text-white mb-4">
  Button Types
  </label>
@@ -410,7 +410,7 @@ export default function ButtonQuickReplyPage() {
  </div>
 
  {/* WhatsApp Preview */}
- <div className="bg-[#111827] rounded-xl overflow-hidden border border-slate-700">
+ <div className="bg-[#111827] rounded-lg overflow-hidden border border-slate-700">
  <div className="max-w-md mx-auto">
  {/* Chat Header */}
  <div className="bg-green-600 p-4 flex items-center justify-between">
@@ -495,7 +495,7 @@ export default function ButtonQuickReplyPage() {
  </div>
 
  {/* Quick Reply Options Grid */}
- <div className="bg-[#1E293B] rounded-xl p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-4">Quick Reply Options</h3>
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
  {QUICK_REPLY_OPTIONS.map((reply) =>
@@ -512,7 +512,7 @@ export default function ButtonQuickReplyPage() {
 
  {/* Code Examples */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
- <div className="bg-[#1E293B] rounded-xl p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-3">Message Types Code</h3>
  <pre className="bg-[#0A0A0A] p-4 rounded-lg overflow-x-auto text-sm text-gray-300">
  <code>{`// Text message
@@ -561,7 +561,7 @@ const locationMessage = {
  </pre>
  </div>
 
- <div className="bg-[#1E293B] rounded-xl p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-3">Button Types Code</h3>
  <pre className="bg-[#0A0A0A] p-4 rounded-lg overflow-x-auto text-sm text-gray-300">
  <code>{`// Quick Reply Buttons

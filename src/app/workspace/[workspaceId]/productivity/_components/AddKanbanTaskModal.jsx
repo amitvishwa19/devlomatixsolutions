@@ -222,7 +222,7 @@ export const AddKanbanTaskModal = () => {
 
  return (
  <Dialog open={isModalOpen} onOpenChange={handleClose}>
- <DialogContent className="sm:max-w-xl overflow-hidden border shadow-2xl p-0 bg-background rounded-xl">
+ <DialogContent className="sm:max-w-xl overflow-hidden border shadow-2xl p-0 bg-background rounded-lg">
  {/* Cover Preview */}
  {coverUrl && (
  <div className="relative h-32 w-full overflow-hidden">
@@ -230,7 +230,7 @@ export const AddKanbanTaskModal = () => {
  <Button 
  variant="destructive" 
  size="icon" 
- className="absolute top-2 right-2 h-6 w-6 rounded-md opacity-0 hover:opacity-100 transition-opacity bg-black/50 border-none"
+ className="absolute top-2 right-2 h-6 w-6 rounded-lg opacity-0 hover:opacity-100 transition-opacity bg-black/50 border-none"
  onClick={() => setCoverUrl("")}
  >
  <Trash2 size={12} />
@@ -242,7 +242,7 @@ export const AddKanbanTaskModal = () => {
  <DialogHeader className="p-8 pb-4">
  <div className="flex items-center justify-between gap-3 mb-2">
  <div className="flex items-center gap-3">
- <div className="p-2 rounded-xl bg-primary/10">
+ <div className="p-2 rounded-lg bg-primary/10">
  <Sparkles className="h-5 w-5 text-primary" />
  </div>
  <DialogTitle className="text-2xl font-bold ">
@@ -259,7 +259,7 @@ export const AddKanbanTaskModal = () => {
  </Button>
  </PopoverTrigger>
  <PopoverContent align="end" className="w-[340px] p-0 border-none shadow-2xl">
- <div className="p-4 bg-background rounded-xl border border-border/40">
+ <div className="p-4 bg-background rounded-lg border border-border/40">
  <h4 className="text-[10px] tracking-[0.2em] mb-4 text-muted-foreground">Select a Cover Image</h4>
  <UnsplashImagePicker 
  onClick={(img) => setCoverUrl(img.full)} 
@@ -276,7 +276,7 @@ export const AddKanbanTaskModal = () => {
  </DialogHeader>
 
  <Tabs defaultValue="details" className="w-full px-8">
- <TabsList className="grid w-full grid-cols-3 h-11 bg-muted/20 p-1 rounded-xl mb-6">
+ <TabsList className="grid w-full grid-cols-3 h-11 bg-muted/20 p-1 rounded-lg mb-6">
  <TabsTrigger value="details" className="rounded-lg text-[10px] font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
  <Briefcase className="w-3.5 h-3.5 mr-2" /> Details
  </TabsTrigger>
@@ -298,7 +298,7 @@ export const AddKanbanTaskModal = () => {
  </label>
  <Input
  disabled={isLoading}
- className="h-12 bg-muted/30 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold"
+ className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold"
  placeholder="What needs to be done?"
  value={title}
  onChange={(e) => setTitle(e.target.value)}
@@ -313,10 +313,10 @@ export const AddKanbanTaskModal = () => {
  <Briefcase size={12} /> Content Type
  </label>
  <Select value={taskType} onValueChange={setTaskType} disabled={isLoading}>
- <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold">
+ <SelectTrigger className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold">
  <SelectValue />
  </SelectTrigger>
- <SelectContent className="rounded-xl border-border/40">
+ <SelectContent className="rounded-lg border-border/40">
  <SelectItem value="task" className="font-bold rounded-lg">Default Task</SelectItem>
  <SelectItem value="article" className="font-bold rounded-lg text-blue-500">Article</SelectItem>
  <SelectItem value="social" className="font-bold rounded-lg text-purple-500">Social Post</SelectItem>
@@ -329,10 +329,10 @@ export const AddKanbanTaskModal = () => {
  <History size={12} /> Assigned To
  </label>
  <Select value={assigneeId} onValueChange={setAssigneeId} disabled={isLoading}>
- <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold">
+ <SelectTrigger className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold">
  <SelectValue placeholder="Unassigned" />
  </SelectTrigger>
- <SelectContent className="rounded-xl border-border/40 font-bold">
+ <SelectContent className="rounded-lg border-border/40 font-bold">
  <SelectItem value="none" className="rounded-lg">Unassigned</SelectItem>
  {members.map((member) => (
  <SelectItem key={member.id} value={member.id} className="rounded-lg">
@@ -351,10 +351,10 @@ export const AddKanbanTaskModal = () => {
  <AlertCircle size={12} /> Priority
  </label>
  <Select value={priority} onValueChange={setPriority} disabled={isLoading}>
- <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold">
+ <SelectTrigger className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold">
  <SelectValue />
  </SelectTrigger>
- <SelectContent className="rounded-xl border-border/40 font-bold">
+ <SelectContent className="rounded-lg border-border/40 font-bold">
  <SelectItem value="low" className="text-green-500 rounded-lg">Low</SelectItem>
  <SelectItem value="medium" className="text-amber-500 rounded-lg">Medium</SelectItem>
  <SelectItem value="high" className="text-red-500 rounded-lg">High</SelectItem>
@@ -372,7 +372,7 @@ export const AddKanbanTaskModal = () => {
  <Input
  disabled={isLoading}
  type="date"
- className="h-12 bg-muted/30 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold text-muted-foreground px-4"
+ className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold text-muted-foreground px-4"
  value={dueDate}
  onChange={(e) => setDueDate(e.target.value)}
  />
@@ -386,7 +386,7 @@ export const AddKanbanTaskModal = () => {
  <Textarea
  disabled={isLoading}
  rows="4"
- className="bg-muted/30 border-none rounded-2xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm py-3 px-4 resize-none"
+ className="bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm py-3 px-4 resize-none"
  placeholder="Add more details about this task..."
  value={content}
  onChange={(e) => setContent(e.target.value)}
@@ -402,7 +402,7 @@ export const AddKanbanTaskModal = () => {
  placeholder="Add a sub-task..." 
  value={newChecklistItem}
  onChange={(e) => setNewChecklistItem(e.target.value)}
- className="h-10 bg-muted/30 border-none rounded-xl text-sm font-bold"
+ className="h-10 bg-muted/30 border-none rounded-lg text-sm font-bold"
  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
  />
  <Button 
@@ -410,7 +410,7 @@ export const AddKanbanTaskModal = () => {
  size="icon" 
  onClick={addChecklistItem}
  disabled={isChecking || !newChecklistItem.trim()}
- className="h-10 w-10 shrink-0 rounded-xl"
+ className="h-10 w-10 shrink-0 rounded-lg"
  >
  <Plus size={18} />
  </Button>
@@ -418,13 +418,13 @@ export const AddKanbanTaskModal = () => {
 
  <div className="space-y-2">
  {checklists.length === 0 ? (
- <div className="py-12 border-2 border-dashed border-border/20 rounded-2xl flex flex-col items-center justify-center text-muted-foreground opacity-40">
+ <div className="py-12 border-2 border-dashed border-border/20 rounded-lg flex flex-col items-center justify-center text-muted-foreground opacity-40">
  <CheckSquare size={32} className="mb-2" />
  <p className="text-[10px] ">No sub-tasks yet</p>
  </div>
  ) : (
  checklists.map((item) => (
- <div key={item.id} className="group flex items-center gap-3 p-3 bg-muted/20 border border-border/10 rounded-xl hover:border-primary/20 transition-all">
+ <div key={item.id} className="group flex items-center gap-3 p-3 bg-muted/20 border border-border/10 rounded-lg hover:border-primary/20 transition-all">
  <Checkbox 
  checked={item.completed} 
  onCheckedChange={(checked) => toggleChecklistItem(item.id, !!checked)}
@@ -489,13 +489,13 @@ export const AddKanbanTaskModal = () => {
  type="button"
  variant="outline"
  onClick={handleClose}
- className="h-12 rounded-xl font-bold flex-1 border-border/40 bg-background/50"
+ className="h-12 rounded-lg font-bold flex-1 border-border/40 bg-background/50"
  >
  Cancel
  </Button>
  <Button
  disabled={isLoading || !title.trim()}
- className="h-12 rounded-xl font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+ className="h-12 rounded-lg font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
  >
  {isLoading ? (
  <Loader2 className="h-4 w-4 animate-spin" />

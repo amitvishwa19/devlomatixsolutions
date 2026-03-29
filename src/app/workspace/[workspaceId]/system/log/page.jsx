@@ -139,7 +139,7 @@ export default function LogPage() {
  </div>
 
  {/* Filter Bar */}
- <Card className="bg-card/50 backdrop-blur-md border-border shadow-soft overflow-hidden rounded-xl">
+ <Card className="bg-card/50 backdrop-blur-md border-border shadow-soft overflow-hidden rounded-lg">
  <CardContent className="p-4 flex flex-wrap items-center gap-6">
  <div className="flex items-center gap-2">
  <Search size={14} className="text-muted-foreground" />
@@ -149,7 +149,7 @@ export default function LogPage() {
  <div className="flex items-center gap-3">
  <span className="text-[10px] font-bold text-muted-foreground/60">SEVERITY</span>
  <Select value={filters.level} onValueChange={(val) => setFilters(prev => ({ ...prev, level: val }))}>
- <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-xl">
+ <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-lg">
  <SelectValue placeholder="All Levels" />
  </SelectTrigger>
  <SelectContent>
@@ -165,7 +165,7 @@ export default function LogPage() {
  <div className="flex items-center gap-3">
  <span className="text-[10px] font-bold text-muted-foreground/60">MODULE</span>
  <Select value={filters.type} onValueChange={(val) => setFilters(prev => ({ ...prev, type: val }))}>
- <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-xl">
+ <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-lg">
  <SelectValue placeholder="All Types" />
  </SelectTrigger>
  <SelectContent>
@@ -183,7 +183,7 @@ export default function LogPage() {
  </Card>
 
  {/* Table Area */}
- <Card className="border-border shadow-soft overflow-hidden rounded-xl">
+ <Card className="border-border shadow-soft overflow-hidden rounded-lg">
  <CardContent className="p-0">
  <Table>
  <TableHeader className="bg-muted/30">
@@ -279,7 +279,7 @@ export default function LogPage() {
 
  {/* Log Inspector Dialog */}
  <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
- <DialogContent className="max-w-2xl bg-card border border-border shadow-2xl overflow-hidden flex flex-col max-h-[85vh] rounded-xl animate-fade-in">
+ <DialogContent className="max-w-2xl bg-card border border-border shadow-2xl overflow-hidden flex flex-col max-h-[85vh] rounded-lg animate-fade-in">
  <DialogHeader className="p-6 pb-2">
  <div className="flex items-center justify-between mb-2">
  {selectedLog && getLevelBadge(selectedLog.level)}
@@ -297,14 +297,14 @@ export default function LogPage() {
  
  <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-hide">
  <div className="grid grid-cols-2 gap-4">
- <div className="bg-muted/40 p-4 rounded-xl border border-border/50">
+ <div className="bg-muted/40 p-4 rounded-lg border border-border/50">
  <span className="text-[10px] text-muted-foreground block mb-2 ">Target Module</span>
  <div className="flex items-center font-bold text-sm">
  {selectedLog && getTypeIcon(selectedLog.type)}
  {selectedLog?.type}
  </div>
  </div>
- <div className="bg-muted/40 p-4 rounded-xl border border-border/50">
+ <div className="bg-muted/40 p-4 rounded-lg border border-border/50">
  <span className="text-[10px] text-muted-foreground block mb-2 ">Workspace ID</span>
  <div className="font-mono text-[11px] font-bold truncate">
  {selectedLog?.workspaceId || 'GLOBAL / SYSTEM'}
@@ -315,7 +315,7 @@ export default function LogPage() {
  {selectedLog?.details && (
  <div className="space-y-2">
  <span className="text-[10px] text-muted-foreground ml-1 ">Technical Metadata (JSON)</span>
- <div className="bg-black/95 p-6 rounded-xl overflow-hidden shadow-inner border border-white/5 relative group">
+ <div className="bg-black/95 p-6 rounded-lg overflow-hidden shadow-inner border border-white/5 relative group">
  <pre className="text-[11px] font-mono text-blue-400 overflow-x-auto scrollbar-hide leading-relaxed">
  {JSON.stringify(selectedLog.details, null, 2)}
  </pre>

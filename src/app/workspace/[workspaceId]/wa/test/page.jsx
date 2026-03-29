@@ -31,7 +31,7 @@ export default function AdvancedCRMPanel() {
 
 
  return (
- <div className="flex h-[calc(100vh-80px)] w-full bg-background overflow-hidden border border-border rounded-xl shadow-lg">
+ <div className="flex h-[calc(100vh-80px)] w-full bg-background overflow-hidden border border-border rounded-lg shadow-lg">
  
  {/* Minimal Channel Switcher Sidebar */}
  <div className="w-16 bg-card border-r border-border flex flex-col items-center py-6 gap-6 z-10 hidden sm:flex">
@@ -42,7 +42,7 @@ export default function AdvancedCRMPanel() {
  <button
  key={ch.id}
  onClick={() => setActiveChannel(ch.id)}
- className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+ className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
  isActive ? `${ch.bg} ${ch.color} shadow-sm ring-1 ring-${ch.color.split('-')[1]}-500/50` : 'text-muted-foreground hover:bg-secondary'}`
  }>
  
@@ -51,7 +51,7 @@ export default function AdvancedCRMPanel() {
 
  })}
  <div className="mt-auto pb-4 space-y-4">
- <button className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-secondary transition-all">
+ <button className="w-10 h-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary transition-all">
  <Users className="w-5 h-5" />
  </button>
  <div className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary font-bold text-xs">
@@ -74,7 +74,7 @@ export default function AdvancedCRMPanel() {
  <Input
  type="text"
  placeholder="Search conversations..."
- className="w-full bg-background border-border rounded-xl pl-9 pr-4 text-sm" />
+ className="w-full bg-background border-border rounded-lg pl-9 pr-4 text-sm" />
  
  </div>
  </div>
@@ -162,7 +162,7 @@ export default function AdvancedCRMPanel() {
  <div className="flex justify-start">
  <div className="flex items-end space-x-2 max-w-[75%]">
  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0 text-xs">JD</div>
- <div className="bg-card border border-border p-4 rounded-2xl rounded-bl-sm shadow-sm space-y-2 group relative">
+ <div className="bg-card border border-border p-4 rounded-lg rounded-bl-sm shadow-sm space-y-2 group relative">
  <p className="text-sm text-foreground leading-relaxed">Hi there! I'm interested in the advanced automation panel.</p>
  <span className="text-[10px] text-muted-foreground font-medium block opacity-70">10:41 AM</span>
  </div>
@@ -172,7 +172,7 @@ export default function AdvancedCRMPanel() {
  <div className="flex justify-start">
  <div className="flex items-end space-x-2 max-w-[75%]">
  <div className="w-8 h-8 rounded-full bg-transparent shrink-0"></div>
- <div className="bg-card border border-border p-4 rounded-2xl rounded-bl-sm shadow-sm space-y-2">
+ <div className="bg-card border border-border p-4 rounded-lg rounded-bl-sm shadow-sm space-y-2">
  <p className="text-sm text-foreground leading-relaxed">Can I schedule a demo?</p>
  <span className="text-[10px] text-muted-foreground font-medium block opacity-70">10:42 AM</span>
  </div>
@@ -181,14 +181,14 @@ export default function AdvancedCRMPanel() {
 
  <div className="flex justify-end">
  <div className="flex items-end space-x-2 max-w-[75%]">
- <div className="bg-primary text-primary-foreground p-4 rounded-2xl rounded-br-sm shadow-[0_4px_14px_rgba(var(--primary),0.3)] space-y-2">
+ <div className="bg-primary text-primary-foreground p-4 rounded-lg rounded-br-sm shadow-[0_4px_14px_rgba(var(--primary),0.3)] space-y-2">
  <div className="flex items-center space-x-2 bg-emerald-500/20 px-2 py-1 rounded border border-emerald-500/30 w-max mb-2">
  <Bot className="w-3 h-3 text-emerald-100" />
  <span className="text-[10px] font-medium text-emerald-50">Automated Reply</span>
  </div>
  <p className="text-sm leading-relaxed">Hello John! Thanks for reaching out. We'd love to show you the advanced features.</p>
  <p className="text-sm leading-relaxed">Please click below to pick a time that works for you.</p>
- <div className="mt-3 bg-white/10 rounded-xl overflow-hidden border border-white/20">
+ <div className="mt-3 bg-white/10 rounded-lg overflow-hidden border border-white/20">
  <button className="w-full py-2.5 text-sm font-semibold flex items-center justify-center space-x-2 hover:bg-white/20 transition-all active:scale-[0.98]">
  <Calendar className="w-4 h-4" />
  <span>Schedule Demo</span>
@@ -205,11 +205,11 @@ export default function AdvancedCRMPanel() {
 
  {/* Message Input Container */}
  <div className="p-4 border-t border-border bg-card/80 backdrop-blur-md sticky bottom-0 z-20">
- <div className="flex items-end space-x-2 bg-background border border-border rounded-2xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+ <div className="flex items-end space-x-2 bg-background border border-border rounded-lg p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
  <div className="flex space-x-1 pb-1">
- <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all"><Paperclip className="w-5 h-5" /></button>
- <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all"><Smile className="w-5 h-5" /></button>
- <button className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-all group relative">
+ <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all"><Paperclip className="w-5 h-5" /></button>
+ <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all"><Smile className="w-5 h-5" /></button>
+ <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all group relative">
  <Sparkles className="w-5 h-5 group-hover:animate-pulse" />
  <span className="absolute -top-8 -left-4 w-max bg-foreground text-background text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">AI Suggest</span>
  </button>
@@ -221,7 +221,7 @@ export default function AdvancedCRMPanel() {
  className="flex-1 bg-transparent resize-none border-0 focus-visible:ring-0 py-3 px-2 text-sm max-h-32 text-foreground"
  rows={1} />
  
- <button className={`p-3 rounded-xl flex items-center justify-center transition-all ${
+ <button className={`p-3 rounded-lg flex items-center justify-center transition-all ${
  msgInput.trim() ? 'bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-95' : 'bg-secondary text-muted-foreground pointer-events-none'}`
  }>
  <Send className="w-4 h-4 ml-0.5" />
@@ -245,15 +245,15 @@ export default function AdvancedCRMPanel() {
  <p className="text-sm text-muted-foreground">Software Engineer</p>
  
  <div className="flex items-center justify-center space-x-2 mt-4">
- <button className="flex-1 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-xl transition-all">Profile</button>
- <button className="flex-1 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-xl transition-all">Notes</button>
+ <button className="flex-1 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-lg transition-all">Profile</button>
+ <button className="flex-1 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-lg transition-all">Notes</button>
  </div>
  </div>
 
  <div className="p-6 space-y-6">
  <div className="space-y-3">
  <h4 className="text-xs font-bold text-muted-foreground tracking-wider">Contact Info</h4>
- <div className="space-y-4 bg-background p-4 rounded-xl border border-border shadow-sm">
+ <div className="space-y-4 bg-background p-4 rounded-lg border border-border shadow-sm">
  <div>
  <p className="text-xs text-muted-foreground mb-1">Phone Number</p>
  <p className="text-sm font-medium text-foreground">+1 (555) 123-4567</p>
@@ -275,9 +275,9 @@ export default function AdvancedCRMPanel() {
  <button className="text-primary hover:bg-primary/10 p-1 rounded transition-colors"><Tag className="w-3 h-3" /></button>
  </div>
  <div className="flex flex-wrap gap-2">
- <span className="text-xs px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-500 font-medium border border-amber-500/20">VIP Customer</span>
- <span className="text-xs px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-500 font-medium border border-emerald-500/20">Interested</span>
- <span className="text-xs px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer border-dashed">+ Add Tag</span>
+ <span className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-500 font-medium border border-amber-500/20">VIP Customer</span>
+ <span className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 font-medium border border-emerald-500/20">Interested</span>
+ <span className="text-xs px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-medium border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer border-dashed">+ Add Tag</span>
  </div>
  </div>
 

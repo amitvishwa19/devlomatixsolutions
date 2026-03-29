@@ -110,7 +110,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  <CardContent className="px-0">
  {recentDocs.length === 0 ? (
  <div className="py-20 flex flex-col items-center justify-center opacity-40">
- <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mb-4">
+ <div className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center mb-4">
  <Clock className="h-8 w-8 text-muted-foreground" />
  </div>
  <p className="text-sm font-bold text-muted-foreground ">No recent files</p>
@@ -125,7 +125,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  <div className="flex items-center gap-5 min-w-0">
  <div
  onClick={(e) => toggleStar(e, doc)}
- className="relative w-11 h-11 bg-muted/30 rounded-xl flex items-center justify-center hover:bg-amber-50 group-hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+ className="relative w-11 h-11 bg-muted/30 rounded-lg flex items-center justify-center hover:bg-amber-50 group-hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
  title="Click to Star/Unstar"
  >
  <FileText className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -160,11 +160,11 @@ export default function RecentDocuments({ workspaceId, userId }) {
  </span>
  <DropdownMenu>
  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
- <button className="p-1 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-muted/50 transition-colors">
+ <button className="p-1 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted/50 transition-colors">
  <MoreHorizontal className="h-4 w-4" />
  </button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-xl">
+ <DropdownMenuContent align="end" className="w-40 rounded-lg shadow-xl">
  <DropdownMenuItem onClick={(e) => openFileViewer(e, doc)} className="font-bold cursor-pointer py-2 text-primary focus:text-primary focus:bg-primary/10">
  <Eye className="w-4 h-4 mr-2" /> View
  </DropdownMenuItem>

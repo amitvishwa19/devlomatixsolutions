@@ -46,13 +46,13 @@ export default function AtsDashboard() {
  </p>
  </div>
  <div className="flex items-center gap-3">
- <Button variant="outline" className="h-10 rounded-md px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-10 rounded-lg px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
  <Filter className="w-4 h-4 mr-2 opacity-50" />
  Filters
  </Button>
  <Button
  onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs/create`)}
- className="h-10 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-10 rounded-lg px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  <Plus className="w-4 h-4 mr-2" />
  Create Job
@@ -84,7 +84,7 @@ export default function AtsDashboard() {
  {(summary?.focusJobs || []).map((job, i) => (
  <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/10 hover:border-primary/20 transition-all cursor-pointer group" onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)}>
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+ <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
  <Briefcase size={20} />
  </div>
  <div>

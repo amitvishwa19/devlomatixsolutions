@@ -51,7 +51,7 @@ export const PostStats = ({ posts }) => {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-1">
       {stats.map((stat, i) => (
         <div key={i} className={cn(
-          "p-4 rounded-xl border border-border/40 backdrop-blur-md transition-all hover:shadow-soft group relative overflow-hidden",
+          "p-4 rounded-lg border border-border/40 backdrop-blur-md transition-all hover:shadow-soft group relative overflow-hidden",
           stat.bg
         )}>
           {/* Background Highlight */}

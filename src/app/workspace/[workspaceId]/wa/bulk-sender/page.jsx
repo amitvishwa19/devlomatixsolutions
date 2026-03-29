@@ -225,7 +225,7 @@ export default function BulkSenderPage() {
                     <p className="text-muted-foreground mt-2">Broadcast messages instantly or schedule them for a later time.</p>
                 </div>
 
-                <div className="bg-card border rounded-2xl shadow-sm p-6 lg:p-8 space-y-8">
+                <div className="bg-card border rounded-lg shadow-sm p-6 lg:p-8 space-y-8">
                     {/* Setup Section */}
                     <div className="space-y-6">
                          <div className="border-b pb-4 mb-4">
@@ -373,7 +373,7 @@ export default function BulkSenderPage() {
             }
 
                         {editForm.messageType.includes('interactive') ?
-            <div className="space-y-5 animate-in fade-in duration-300 bg-muted/10 border border-border/60 rounded-xl p-5 shadow-sm">
+            <div className="space-y-5 animate-in fade-in duration-300 bg-muted/10 border border-border/60 rounded-lg p-5 shadow-sm">
                                 <p className="text-sm font-semibold text-foreground border-b border-border/50 pb-2">Interactive Setup</p>
                                 
                                 <div className="space-y-2">
@@ -459,7 +459,7 @@ export default function BulkSenderPage() {
 
              {/* Contact Selector Dialog (Reused from Campaigns) */}
              <Dialog open={contactSelectorOpen} onOpenChange={setContactSelectorOpen}>
-                <DialogContent className="max-w-xl bg-card border border-border/50 rounded-2xl p-0 overflow-hidden shadow-2xl">
+                <DialogContent className="max-w-xl bg-card border border-border/50 rounded-lg p-0 overflow-hidden shadow-2xl">
                     <DialogHeader className="p-6 border-b border-border bg-muted/10">
                         <DialogTitle className="flex items-center gap-2">
                             <Users className="w-5 h-5 text-primary" />
@@ -503,7 +503,7 @@ export default function BulkSenderPage() {
                     ).map((contact) =>
                     <div
                       key={contact.id}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${selectedContactIds.includes(contact.id) ?
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${selectedContactIds.includes(contact.id) ?
                       'border-primary bg-primary/5' :
                       'border-border/50 hover:bg-muted/50'}`
                       }
@@ -541,7 +541,7 @@ export default function BulkSenderPage() {
                     groups.map((group) =>
                     <div
                       key={group.id}
-                      className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${selectedGroupIds.includes(group.id) ?
+                      className={`flex items-center gap-3 p-4 rounded-lg border transition-all cursor-pointer ${selectedGroupIds.includes(group.id) ?
                       'border-primary bg-primary/5' :
                       'border-border/50 hover:bg-muted/50'}`
                       }

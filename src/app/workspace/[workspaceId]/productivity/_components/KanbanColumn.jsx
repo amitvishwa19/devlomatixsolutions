@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 
 export const KanbanColumn = ({ column, tasks, onCreateTask, onDeleteColumn, onDeleteTask, onUpdateTask }) => {
  return (
- <div className="flex-shrink-0 w-80 h-full flex flex-col bg-muted/20 rounded-2xl border border-border/10 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
+ <div className="flex-shrink-0 w-80 h-full flex flex-col bg-muted/20 rounded-lg border border-border/10 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
  {/* Column Header */}
  <div className="p-4 flex items-center justify-between border-b border-border/10 group">
  <div className="flex items-center gap-3">
- <div className="w-6 h-6 rounded-md bg-background flex items-center justify-center border border-border/10 shadow-sm">
+ <div className="w-6 h-6 rounded-lg bg-background flex items-center justify-center border border-border/10 shadow-sm">
  <span className="text-[10px] text-primary">
  {tasks.length}
  </span>
@@ -23,13 +23,13 @@ export const KanbanColumn = ({ column, tasks, onCreateTask, onDeleteColumn, onDe
  </div>
  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
  <button 
- className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+ className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
  onClick={onCreateTask}
  >
  <Plus size={14} />
  </button>
  <button 
- className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+ className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
  onClick={() => {
  if (confirm(`Delete column "${column.title}" and all its tasks?`)) {
  onDeleteColumn(column.id);

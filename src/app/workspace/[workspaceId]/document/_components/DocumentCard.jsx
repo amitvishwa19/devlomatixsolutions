@@ -43,7 +43,7 @@ const FileTypeIcon = ({ document }) => {
  const isFolder = document.isFolder;
 
  if (isFolder) return (
- <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+ <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center">
  <Folder className="w-7 h-7 text-amber-500 fill-amber-500/20" />
  </div>
  );
@@ -71,7 +71,7 @@ const FileTypeIcon = ({ document }) => {
  }
 
  return (
- <div className={`w-12 h-12 rounded-xl ${bgColor} flex items-center justify-center transition-transform group-hover:scale-110 duration-300`}>
+ <div className={`w-12 h-12 rounded-lg ${bgColor} flex items-center justify-center transition-transform group-hover:scale-110 duration-300`}>
  <Icon className={`w-6 h-6 ${iconColor}`} />
  </div>
  );
@@ -123,10 +123,10 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  onDragLeave={handleDragLeave}
  onDrop={handleDrop}
  onClick={handleClick}
- className="group flex items-center justify-between p-3 rounded-xl border border-border/100 bg-card/100 hover:bg-primary/5 cursor-pointer transition-all duration-300 hover:shadow-sm w-full"
+ className="group flex items-center justify-between p-3 rounded-lg border border-border/100 bg-card/100 hover:bg-primary/5 cursor-pointer transition-all duration-300 hover:shadow-sm w-full"
  >
  <div className="flex items-center gap-4 flex-1 overflow-hidden">
- <div className="p-2.5 rounded-xl bg-background border border-primary/10 shadow-sm group-hover:bg-primary/10 transition-all">
+ <div className="p-2.5 rounded-lg bg-background border border-primary/10 shadow-sm group-hover:bg-primary/10 transition-all">
  <FileTypeIcon document={document} className="w-5 h-5 text-primary drop-shadow-sm" />
  </div>
  <div className="flex flex-col flex-1 min-w-0">
@@ -196,8 +196,8 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  </AlertDialogDescription>
  </AlertDialogHeader>
  <AlertDialogFooter>
- <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
- <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
+ <AlertDialogCancel className="rounded-lg">Cancel</AlertDialogCancel>
+ <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg">
  Delete
  </AlertDialogAction>
  </AlertDialogFooter>
@@ -216,7 +216,7 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  onDragOver={handleDragOver}
  onDragLeave={handleDragLeave}
  onDrop={handleDrop}
- className={`group relative flex flex-col p-5 rounded-2xl border border-border/100 bg-card/100 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer ${viewMode === 'list' ? 'flex-row items-center gap-4' : ''}`}
+ className={`group relative flex flex-col p-5 rounded-lg border border-border/100 bg-card/100 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer ${viewMode === 'list' ? 'flex-row items-center gap-4' : ''}`}
  onClick={handleClick}
  >
  <div className={`flex items-start justify-between mb-4 ${viewMode === 'list' ? 'mb-0' : ''}`}>
@@ -228,7 +228,7 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  <MoreVertical className="w-4 h-4 text-muted-foreground" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="w-48 rounded-xl p-1.5 shadow-xl border-border/10 backdrop-blur-md bg-background/95">
+ <DropdownMenuContent align="end" className="w-48 rounded-lg p-1.5 shadow-xl border-border/10 backdrop-blur-md bg-background/95">
  {!document.isFolder && (
  <>
  <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onView(document); }}>
@@ -258,8 +258,8 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  </AlertDialogDescription>
  </AlertDialogHeader>
  <AlertDialogFooter>
- <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
- <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
+ <AlertDialogCancel className="rounded-lg">Cancel</AlertDialogCancel>
+ <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg">
  Delete
  </AlertDialogAction>
  </AlertDialogFooter>

@@ -215,7 +215,7 @@ export const PermissionMatrix = () => {
                 </div>
 
                 {/* Table */}
-                <div className="bg-card rounded-xl overflow-hidden">
+                <div className="bg-card rounded-lg overflow-hidden">
                     {/* Header */}
                     <div className="p-4 border-b border-border/30 flex justify-between gap-4">
                         <div className="relative">
@@ -224,7 +224,7 @@ export const PermissionMatrix = () => {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search modules..."
-                                className="pl-10 pr-4 py-2.5 w-64 bg-muted/30 border rounded-xl text-sm"
+                                className="pl-10 pr-4 py-2.5 w-64 bg-muted/30 border rounded-lg text-sm"
                             />
                         </div>
 

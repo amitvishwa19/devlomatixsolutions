@@ -67,8 +67,8 @@ export const MailSidebar = ({
                     <div className="space-y-4">
                         <Popover>
                             <PopoverTrigger asChild>
-                                <div className="flex items-center gap-3 cursor-pointer group hover:bg-primary/5 p-1 rounded-xl transition-all">
-                                    <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary/20 transition-all shadow-inner ring-1 ring-primary/20">
+                                <div className="flex items-center gap-3 cursor-pointer group hover:bg-primary/5 p-1 rounded-lg transition-all">
+                                    <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-all shadow-inner ring-1 ring-primary/20">
                                         <Inbox className="w-5 h-5 text-primary" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
@@ -85,7 +85,7 @@ export const MailSidebar = ({
                                     </div>
                                 </div>
                             </PopoverTrigger>
-                            <PopoverContent className="w-80 p-0 overflow-hidden bg-background/95 backdrop-blur-2xl border-border/40 shadow-2xl rounded-2xl" align="start">
+                            <PopoverContent className="w-80 p-0 overflow-hidden bg-background/95 backdrop-blur-2xl border-border/40 shadow-2xl rounded-lg" align="start">
                                 <div className="p-4 border-b border-border/20 bg-muted/30">
                                     <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase opacity-70">Active Accounts</h3>
                                 </div>
@@ -95,7 +95,7 @@ export const MailSidebar = ({
                                             <div
                                                 key={account.id}
                                                 className={cn(
-                                                    "flex items-center gap-3 p-3 rounded-xl transition-all font-bold",
+                                                    "flex items-center gap-3 p-3 rounded-lg transition-all font-bold",
                                                     selectedAccountId === account.id ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50 border border-transparent opacity-60 hover:opacity-100"
                                                 )}
                                             >
@@ -117,7 +117,7 @@ export const MailSidebar = ({
                                 <div className="p-3 bg-muted/30 border-t border-border/20">
                                     <Button
                                         variant="ghost"
-                                        className="w-full justify-start gap-2 h-9 text-[10px] font-bold tracking-wider hover:bg-primary/10 hover:text-primary rounded-xl"
+                                        className="w-full justify-start gap-2 h-9 text-[10px] font-bold tracking-wider hover:bg-primary/10 hover:text-primary rounded-lg"
                                         onClick={handleConnect}
                                     >
                                         <Plus className="w-3.5 h-3.5" /> Link New Account
@@ -138,10 +138,10 @@ export const MailSidebar = ({
                                     }
                                 }}
                             >
-                                <SelectTrigger className="w-full bg-muted/30 border border-white/5 rounded-xl h-11 font-bold text-[10px] tracking-wider focus:ring-1 focus:ring-primary/50 shadow-inner text-left hover:bg-muted/50 transition-all">
+                                <SelectTrigger className="w-full bg-muted/30 border border-white/5 rounded-lg h-11 font-bold text-[10px] tracking-wider focus:ring-1 focus:ring-primary/50 shadow-inner text-left hover:bg-muted/50 transition-all">
                                     <SelectValue placeholder="Select Account" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-border/20 shadow-2xl backdrop-blur-xl">
+                                <SelectContent className="rounded-lg border-border/20 shadow-2xl backdrop-blur-xl">
                                     {accounts.map((account) => (
                                         <SelectItem
                                             key={account.id}
@@ -171,10 +171,10 @@ export const MailSidebar = ({
                 ) : (
                     /* Offline State */
                     <div
-                        className="flex items-center gap-3 cursor-pointer group hover:bg-rose-500/5 p-1 rounded-xl transition-all"
+                        className="flex items-center gap-3 cursor-pointer group hover:bg-rose-500/5 p-1 rounded-lg transition-all"
                         onClick={handleConnect}
                     >
-                        <div className="bg-rose-500/10 p-2 rounded-xl group-hover:bg-rose-500/20 transition-all ring-1 ring-rose-500/20 shadow-inner">
+                        <div className="bg-rose-500/10 p-2 rounded-lg group-hover:bg-rose-500/20 transition-all ring-1 ring-rose-500/20 shadow-inner">
                             <Inbox className="w-5 h-5 text-rose-500" />
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -204,7 +204,7 @@ export const MailSidebar = ({
                                     variant="ghost"
                                     onClick={() => onFolderChange(folder.id)}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 rounded-xl transition-all font-bold text-[11px] ",
+                                        "w-full justify-start gap-3 h-10 px-3 rounded-lg transition-all font-bold text-[11px] ",
                                         isActive
                                             ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
                                             : "text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground"
@@ -235,7 +235,7 @@ export const MailSidebar = ({
                                     variant="ghost"
                                     onClick={() => onFolderChange(label.id)}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 rounded-xl text-[10px] font-bold transition-all",
+                                        "w-full justify-start gap-3 h-10 px-3 rounded-lg text-[10px] font-bold transition-all",
                                         activeFolder === label.id
                                             ? "bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm"
                                             : "text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground"

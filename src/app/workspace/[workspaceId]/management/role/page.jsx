@@ -194,7 +194,7 @@ export default function RoleManagementPage() {
  placeholder="Search roles..."
  value={search}
  onChange={(e) => setSearch(e.target.value)}
- className="pl-11 h-12 bg-card/40 border border-border/40 rounded-2xl focus-visible:ring-1 focus-visible:ring-blue-500 shadow-inner"
+ className="pl-11 h-12 bg-card/40 border border-border/40 rounded-lg focus-visible:ring-1 focus-visible:ring-blue-500 shadow-inner"
  />
  </div>
 
@@ -205,7 +205,7 @@ export default function RoleManagementPage() {
  <p className="text-[10px] font-bold text-muted-foreground animate-pulse">Mapping role hierarchy...</p>
  </div>
  ) : filteredRoles.length === 0 ? (
- <div className="py-24 text-center border-2 border-dashed border-border/40 rounded-3xl bg-muted/5">
+ <div className="py-24 text-center border-2 border-dashed border-border/40 rounded-lg bg-muted/5">
  <Shield className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
  <h3 className="text-lg font-bold ">No identities found</h3>
  <p className="text-sm text-muted-foreground mt-1">Create your first functional role to begin managing access.</p>
@@ -223,7 +223,7 @@ export default function RoleManagementPage() {
  <Users className="w-3 h-3 text-muted-foreground" />
  <span className="text-[10px] font-bold ">{role._count?.users || 0} Members</span>
  </div>
- <Badge variant="outline" className="rounded-md border-none bg-blue-500/10 text-blue-500 font-bold text-[9px] ">
+ <Badge variant="outline" className="rounded-lg border-none bg-blue-500/10 text-blue-500 font-bold text-[9px] ">
  ID: {role.id.slice(-4).toUpperCase()}
  </Badge>
  </div>
@@ -265,7 +265,7 @@ export default function RoleManagementPage() {
  setSelectedPermissionIds(role.permissions.map(p => p.id));
  setIsCreateModalOpen(true);
  }}
- className="w-full h-11 rounded-xl font-bold text-[10px] bg-background/40 hover:bg-blue-50 border-border/40 hover:border-blue-500/40 hover:text-blue-600 transition-all shadow-sm"
+ className="w-full h-11 rounded-lg font-bold text-[10px] bg-background/40 hover:bg-blue-50 border-border/40 hover:border-blue-500/40 hover:text-blue-600 transition-all shadow-sm"
  >
  <Settings2 className="w-3 h-3 mr-2" /> Configure Capabilities
  </Button>
@@ -301,7 +301,7 @@ export default function RoleManagementPage() {
  placeholder="e.g. Workspace Manager"
  value={roleForm.title}
  onChange={(e) => setRoleForm(prev => ({ ...prev, title: e.target.value }))}
- className="h-12 rounded-2xl bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-blue-500 font-bold"
+ className="h-12 rounded-lg bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-blue-500 font-bold"
  />
  </div>
  <div className="space-y-2">
@@ -311,12 +311,12 @@ export default function RoleManagementPage() {
  type="color"
  value={roleForm.color}
  onChange={(e) => setRoleForm(prev => ({ ...prev, color: e.target.value }))}
- className="h-12 w-12 p-1 rounded-2xl bg-muted/30 border-none cursor-pointer"
+ className="h-12 w-12 p-1 rounded-lg bg-muted/30 border-none cursor-pointer"
  />
  <Input
  value={roleForm.color}
  onChange={(e) => setRoleForm(prev => ({ ...prev, color: e.target.value }))}
- className="h-12 flex-1 rounded-2xl bg-muted/30 border-none font-mono text-xs font-bold text-center"
+ className="h-12 flex-1 rounded-lg bg-muted/30 border-none font-mono text-xs font-bold text-center"
  />
  </div>
  </div>
@@ -328,7 +328,7 @@ export default function RoleManagementPage() {
  placeholder="What can this role do?"
  value={roleForm.description}
  onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))}
- className="h-12 rounded-2xl bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-blue-500"
+ className="h-12 rounded-lg bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-blue-500"
  />
  </div>
 
@@ -337,7 +337,7 @@ export default function RoleManagementPage() {
  <label className="text-[10px] font-bold text-muted-foreground ml-1">Capability Matrix</label>
  <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-1 space-y-6">
  {Object.keys(permissions).length === 0 ? (
- <p className="text-center py-4 text-xs text-muted-foreground border border-dashed rounded-xl">Define permissions first.</p>
+ <p className="text-center py-4 text-xs text-muted-foreground border border-dashed rounded-lg">Define permissions first.</p>
  ) : (
  Object.entries(permissions).map(([category, perms]) => (
  <div key={category} className="space-y-2">
@@ -351,7 +351,7 @@ export default function RoleManagementPage() {
  prev.includes(perm.id) ? prev.filter(id => id !== perm.id) : [...prev, perm.id]
  );
  }}
- className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${selectedPermissionIds.includes(perm.id)
+ className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer ${selectedPermissionIds.includes(perm.id)
  ? 'bg-blue-500/5 border-blue-500/30'
  : 'border-border/40 hover:bg-muted/30'
  }`}
@@ -376,13 +376,13 @@ export default function RoleManagementPage() {
  </div>
 
  <DialogFooter className="flex gap-2 border-t border-border/10 pt-4">
- <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="rounded-2xl font-bold border-border/40 bg-background/50 flex-1">
+ <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="rounded-lg font-bold border-border/40 bg-background/50 flex-1">
  Dismiss
  </Button>
  <Button
  onClick={handleCreateRole}
  disabled={isSubmitting}
- className="rounded-2xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex-1"
+ className="rounded-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex-1"
  >
  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (selectedRole ? "Apply Changes" : "Deploy Role")}
  </Button>

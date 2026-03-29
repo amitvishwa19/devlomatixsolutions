@@ -10,10 +10,10 @@ export default function PermissionStatCard({ title, value, change, changeType = 
 
  return (
  <div
- className='bg-card rounded-md border transition-all duration-300 hover:shadow-lg animate-fade-in p-4'
+ className='bg-card rounded-lg border transition-all duration-300 hover:shadow-lg animate-fade-in p-4'
  style={{ animationDelay: `${delay}ms` }}
  >
- <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+ <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
  <div className="relative flex items-start justify-between">
  <div>
  <p className="text-sm text-muted-foreground mb-1">{title}</p>

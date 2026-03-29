@@ -201,7 +201,7 @@ export default function FoldersPage() {
  New Folder
  </Button>
  </DialogTrigger>
- <DialogContent className="rounded-2xl border-none shadow-2xl">
+ <DialogContent className="rounded-lg border-none shadow-2xl">
  <DialogHeader>
  <DialogTitle className="text-xl ">Create New Folder</DialogTitle>
  </DialogHeader>
@@ -210,17 +210,17 @@ export default function FoldersPage() {
  placeholder="E.g. Project Assets, Q4 Reports..."
  value={newFolderName}
  onChange={(e) => setNewFolderName(e.target.value)}
- className="h-12 bg-muted/30 border-none rounded-xl font-bold transition-all focus-visible:ring-primary/20"
+ className="h-12 bg-muted/30 border-none rounded-lg font-bold transition-all focus-visible:ring-primary/20"
  />
  </div>
  <DialogFooter className="gap-2">
  <DialogClose asChild>
- <Button variant="ghost" className="rounded-xl font-bold">Cancel</Button>
+ <Button variant="ghost" className="rounded-lg font-bold">Cancel</Button>
  </DialogClose>
  <Button
  onClick={handleCreateFolder}
  disabled={isCreating}
- className="rounded-xl h-12 shadow-lg shadow-primary/20 px-8"
+ className="rounded-lg h-12 shadow-lg shadow-primary/20 px-8"
  >
  {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Create Folder"}
  </Button>
@@ -235,7 +235,7 @@ export default function FoldersPage() {
  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
  <Input
  placeholder="Search folders..."
- className="pl-10 h-10 border-none bg-muted/50 rounded-xl font-bold"
+ className="pl-10 h-10 border-none bg-muted/50 rounded-lg font-bold"
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  />
@@ -249,8 +249,8 @@ export default function FoldersPage() {
  <p className="text-sm text-muted-foreground tracking-[0.2em] animate-pulse">Syncing Library...</p>
  </div>
  ) : filtered.length === 0 ? (
- <div className="flex flex-col items-center justify-center py-32 text-center rounded-3xl border-2 border-dashed border-border/50">
- <div className="w-20 h-20 bg-muted/30 rounded-3xl flex items-center justify-center mb-6">
+ <div className="flex flex-col items-center justify-center py-32 text-center rounded-lg border-2 border-dashed border-border/50">
+ <div className="w-20 h-20 bg-muted/30 rounded-lg flex items-center justify-center mb-6">
  <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
  </div>
  <h3 className="text-xl text-foreground/80 mb-2">No folders found</h3>
@@ -270,7 +270,7 @@ export default function FoldersPage() {
 
  <div className="flex items-start justify-between w-full">
  <div className="relative">
- <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-sm border border-border/10 ${folder.color} group-hover:scale-110 transition-transform duration-500`}>
+ <div className={`h-12 w-12 rounded-lg flex items-center justify-center shadow-sm border border-border/10 ${folder.color} group-hover:scale-110 transition-transform duration-500`}>
  <FolderOpen className="h-6 w-6 shrink-0" />
  </div>
  {folder.isStarred && (
@@ -284,12 +284,12 @@ export default function FoldersPage() {
  <Button
  variant="ghost"
  size="icon"
- className="h-8 w-8 -mr-2 -mt-2 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all rounded-xl"
+ className="h-8 w-8 -mr-2 -mt-2 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all rounded-lg"
  >
  <MoreHorizontal className="h-5 w-5" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="rounded-xl border-none shadow-2xl p-2 min-w-[160px]">
+ <DropdownMenuContent align="end" className="rounded-lg border-none shadow-2xl p-2 min-w-[160px]">
  <DropdownMenuItem className="rounded-lg font-bold gap-3 py-2.5" onClick={() => router.push(`/workspace/${workspaceId}/document?folderId=${folder.id}`)}>
  <FolderOpen className="h-4 w-4 text-primary" /> Open Folder
  </DropdownMenuItem>

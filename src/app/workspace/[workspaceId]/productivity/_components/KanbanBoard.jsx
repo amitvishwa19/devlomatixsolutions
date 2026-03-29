@@ -161,7 +161,7 @@ export const KanbanBoard = () => {
  </div>
 
  {/* Kanban Board Area */}
- <ScrollArea className="flex-1 min-h-0 w-full rounded-2xl border border-border/10 bg-muted/5 shadow-inner overflow-hidden">
+ <ScrollArea className="flex-1 min-h-0 w-full rounded-lg border border-border/10 bg-muted/5 shadow-inner overflow-hidden">
  <div className="p-4 h-full">
  <DragDropContext onDragEnd={onDragEnd}>
  <div className="flex gap-6 h-full min-w-max pb-4">
@@ -180,7 +180,7 @@ export const KanbanBoard = () => {
  })}
 
  {/* New Column Placeholder */}
- <div className="flex-shrink-0 w-80 h-full rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center group hover:border-primary/30 transition-all duration-300 bg-muted/5 hover:bg-primary/5 cursor-pointer">
+ <div className="flex-shrink-0 w-80 h-full rounded-lg border-2 border-dashed border-border/50 flex flex-col items-center justify-center group hover:border-primary/30 transition-all duration-300 bg-muted/5 hover:bg-primary/5 cursor-pointer">
  <div className="p-3 rounded-full bg-muted/50 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-300">
  <Plus size={24} />
  </div>

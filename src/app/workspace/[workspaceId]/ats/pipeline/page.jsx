@@ -90,10 +90,10 @@ export default function CandidatePipelinePage() {
  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-40" />
  <Input
  placeholder="Search candidates..."
- className="pl-11 h-11 rounded-xl bg-card/40 backdrop-blur-xl border-border/40 text-sm font-medium"
+ className="pl-11 h-11 rounded-lg bg-card/40 backdrop-blur-xl border-border/40 text-sm font-medium"
  />
  </div>
- <Button variant="outline" className="h-11 rounded-xl px-4 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-11 rounded-lg px-4 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
  <Filter className="w-4 h-4 mr-2 opacity-50" />
  Filters
  </Button>
@@ -113,7 +113,7 @@ export default function CandidatePipelinePage() {
  <h3 className="text-sm opacity-60">
  {stage.title}
  </h3>
- <Badge variant="ghost" className="h-5 px-2 bg-muted/40 text-[10px] opacity-40 rounded-md">
+ <Badge variant="ghost" className="h-5 px-2 bg-muted/40 text-[10px] opacity-40 rounded-lg">
  {getStageCandidates(stage.id).length}
  </Badge>
  </div>
@@ -191,7 +191,7 @@ export default function CandidatePipelinePage() {
 
 function Dropdown({ candidate }) {
  return (
- <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md opacity-20 hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+ <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg opacity-20 hover:opacity-100" onClick={(e) => e.stopPropagation()}>
  <MoreHorizontal size={14} />
  </Button>
  );

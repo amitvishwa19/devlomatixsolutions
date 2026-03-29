@@ -719,7 +719,7 @@ export default function ContactsPage() {
  <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6'>
 
  {/* Add Contact Form */}
- <div className="lg:col-span-5 bg-background/50 rounded-xl border border-border p-6 h-fit">
+ <div className="lg:col-span-5 bg-background/50 rounded-lg border border-border p-6 h-fit">
  <div className="flex items-center justify-between mb-4">
  <h2 className="text-xl font-semibold">Add New Contact</h2>
  </div>
@@ -783,7 +783,7 @@ export default function ContactsPage() {
  </div>
 
  {/* Contacts List */}
- <div className="lg:col-span-7 bg-background/50 rounded-xl border border-border p-6 h-full flex flex-col min-h-[600px]">
+ <div className="lg:col-span-7 bg-background/50 rounded-lg border border-border p-6 h-full flex flex-col min-h-[600px]">
  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
  <TabsList className="mb-4 w-full justify-start h-11 bg-muted/20 p-1 border border-border/50">
  <TabsTrigger value="contacts" className="gap-2 px-4 data-[state=active]:bg-background">
@@ -1002,7 +1002,7 @@ export default function ContactsPage() {
  filteredContacts.map((contact) =>
  <div
  key={contact.id}
- className={`group relative flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${selectedContacts.includes(contact.id) ? 'border-primary/50 bg-primary/5 shadow-sm' : 'border-border/50 bg-card hover:border-border'}`}>
+ className={`group relative flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 hover:shadow-md ${selectedContacts.includes(contact.id) ? 'border-primary/50 bg-primary/5 shadow-sm' : 'border-border/50 bg-card hover:border-border'}`}>
  
  <div className="flex items-center gap-3">
  <Checkbox
@@ -1140,7 +1140,7 @@ export default function ContactsPage() {
  groups.map((group) =>
  <div
  key={group.id}
- className="group p-4 rounded-xl border border-border/50 bg-card hover:border-primary/30 transition-all hover:shadow-md cursor-pointer"
+ className="group p-4 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-all hover:shadow-md cursor-pointer"
  onClick={() => {
  setSelectedGroupId(group.id);
  setActiveTab('contacts');
@@ -1404,7 +1404,7 @@ export default function ContactsPage() {
  key={msg.id}
  className={`flex flex-col ${msg.fromMe ? 'items-end' : 'items-start'}`}>
  
- <div className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${
+ <div className={`max-w-[85%] px-4 py-2 rounded-lg text-sm ${
  msg.fromMe ?
  'bg-primary text-primary-foreground rounded-tr-none' :
  'bg-secondary text-secondary-foreground rounded-tl-none'}`
@@ -1468,9 +1468,9 @@ export default function ContactsPage() {
  {groups.length === 0 ?
  <p className="text-xs text-muted-foreground italic">No groups created yet.</p> :
 
- <ScrollArea className="h-[200px] rounded-md border border-border p-2">
+ <ScrollArea className="h-[200px] rounded-lg border border-border p-2">
  {groups.map((group) =>
- <div key={group.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md group">
+ <div key={group.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-lg group">
  <div>
  <p className="text-sm font-medium">{group.name}</p>
  <p className="text-[10px] text-muted-foreground">{group._count?.contacts} contacts</p>
@@ -1562,7 +1562,7 @@ export default function ContactsPage() {
  
  </div>
 
- <ScrollArea className="h-[300px] pr-4 border rounded-md p-2">
+ <ScrollArea className="h-[300px] pr-4 border rounded-lg p-2">
  <div className="space-y-2">
  {contacts.
  filter((c) =>
@@ -1570,7 +1570,7 @@ export default function ContactsPage() {
  c.name.toLowerCase().includes(memberSearchQuery.toLowerCase()) || c.phone.includes(memberSearchQuery))
  ).
  map((contact) =>
- <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-md">
+ <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg">
  <Checkbox
  checked={selectedMemberIds.includes(contact.id)}
  onCheckedChange={() => {

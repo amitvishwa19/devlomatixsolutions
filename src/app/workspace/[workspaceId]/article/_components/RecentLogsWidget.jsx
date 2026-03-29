@@ -57,7 +57,7 @@ export const RecentLogsWidget = ({ workspaceId }) => {
  };
 
  return (
- <div className="bg-card/30 backdrop-blur-md rounded-xl border border-border/60 overflow-hidden mb-6 group transition-all hover:bg-card/50">
+ <div className="bg-card/30 backdrop-blur-md rounded-lg border border-border/60 overflow-hidden mb-6 group transition-all hover:bg-card/50">
  <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-muted/20">
  <div className="flex items-center gap-2">
  <Terminal size={12} className="text-primary opacity-70" />

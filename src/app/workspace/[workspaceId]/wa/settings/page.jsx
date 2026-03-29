@@ -127,10 +127,10 @@ export default function SettingsPage() {
  initial={{ opacity: 0, scale: 0.9 }}
  animate={{ opacity: 1, scale: 1 }}
  exit={{ opacity: 0, scale: 0.9 }}
- className="p-4 bg-white rounded-2xl shadow-2xl relative group">
+ className="p-4 bg-white rounded-lg shadow-2xl relative group">
  
  <img src={qrDataUrl} alt="WhatsApp QR Code" className="w-64 h-64 border-0" />
- <div className="absolute inset-0 bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+ <div className="absolute inset-0 bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
  <div className="bg-black/80 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2">
  <RefreshCcw className="w-3 h-3 animate-spin" />
  Refreshing automatically

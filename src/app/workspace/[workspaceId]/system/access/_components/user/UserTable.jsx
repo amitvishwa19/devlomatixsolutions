@@ -33,7 +33,7 @@ export function UserTable({ users, roles, onRoleChange, onEdit, onDelete }) {
     };
 
     return (
-        <div className="rounded-xl border border-border bg-card shadow-soft overflow-hidden">
+        <div className="rounded-lg border border-border bg-card shadow-soft overflow-hidden">
             <Table>
                 <TableHeader>
                     <TableRow className="hover:bg-transparent">

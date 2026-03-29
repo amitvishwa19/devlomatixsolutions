@@ -75,7 +75,7 @@ export default function ArticlePage() {
                     <Button
                         variant="outline"
                         onClick={() => onOpen('addCredential', { workspaceId, onApply: fetchPosts })}
-                        className="rounded-md border-border/60 hover:bg-background text-[10px] font-bold "
+                        className="rounded-lg border-border/60 hover:bg-background text-[10px] font-bold "
                     >
                         <Share2 className="w-4 h-4 mr-2 text-primary" /> Add Credentials
                     </Button>
@@ -83,7 +83,7 @@ export default function ArticlePage() {
                         variant="outline" 
                         onClick={() => setViewMode('calendar')}
                         className={cn(
-                            "rounded-md border-border/60 hover:bg-background text-[10px] font-bold transition-all",
+                            "rounded-lg border-border/60 hover:bg-background text-[10px] font-bold transition-all",
                             viewMode === 'calendar' && "bg-primary/5 border-primary/40 text-primary"
                         )}
                     >
@@ -91,7 +91,7 @@ export default function ArticlePage() {
                     </Button>
                     <Button
                         onClick={() => onOpen('addPost', { workspaceId, onApply: fetchPosts })}
-                        className="bg-primary hover:bg-primary/90 rounded-md shadow-soft transition-all font-bold px-6 text-[10px] "
+                        className="bg-primary hover:bg-primary/90 rounded-lg shadow-soft transition-all font-bold px-6 text-[10px] "
                     >
                         <Plus className="w-5 h-5 " /> New Post
                     </Button>
@@ -104,7 +104,7 @@ export default function ArticlePage() {
             <PostStats posts={posts} />
 
             {/* Filters & Search */}
-            <div className="flex flex-col md:flex-row items-center gap-4 bg-card p-2 rounded-md border border-border shadow-soft">
+            <div className="flex flex-col md:flex-row items-center gap-4 bg-card p-2 rounded-lg border border-border shadow-soft">
                 <div className="relative flex-1 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input
@@ -121,7 +121,7 @@ export default function ArticlePage() {
                             size="sm"
                             onClick={() => setViewMode('list')}
                             className={cn(
-                                "px-3 rounded-md transition-all text-[10px] font-bold mr-1",
+                                "px-3 rounded-lg transition-all text-[10px] font-bold mr-1",
                                 viewMode === 'list'
                                     ? "bg-primary text-primary-foreground shadow-soft"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -134,7 +134,7 @@ export default function ArticlePage() {
                             size="sm"
                             onClick={() => setViewMode('grid')}
                             className={cn(
-                                "px-3 rounded-md transition-all text-[10px] font-bold mr-1",
+                                "px-3 rounded-lg transition-all text-[10px] font-bold mr-1",
                                 viewMode === 'grid'
                                     ? "bg-primary text-primary-foreground shadow-soft"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -147,7 +147,7 @@ export default function ArticlePage() {
                             size="sm"
                             onClick={() => setViewMode('calendar')}
                             className={cn(
-                                "px-3 rounded-md transition-all text-[10px] font-bold ",
+                                "px-3 rounded-lg transition-all text-[10px] font-bold ",
                                 viewMode === 'calendar'
                                     ? "bg-primary text-primary-foreground shadow-soft"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -185,7 +185,7 @@ export default function ArticlePage() {
                         <p className="text-muted-foreground mb-8 text-[10px] font-bold ">Start your first multi-platform social media post.</p>
                         <Button
                             onClick={() => onOpen('addPost', { workspaceId, onApply: fetchPosts })}
-                            className="rounded-md font-bold px-8 text-[10px] "
+                            className="rounded-lg font-bold px-8 text-[10px] "
                         >
                             Create First Post
                         </Button>

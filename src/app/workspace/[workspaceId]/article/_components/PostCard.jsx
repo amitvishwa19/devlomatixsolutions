@@ -141,9 +141,9 @@ export const PostCard = ({ post, onApply }) => {
  return (
  <>
  <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
- <AlertDialogContent className="rounded-xl border border-border shadow-2xl overflow-hidden p-0 animate-fade-in">
+ <AlertDialogContent className="rounded-lg border border-border shadow-2xl overflow-hidden p-0 animate-fade-in">
  <AlertDialogHeader className="p-8 pb-4">
- <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
+ <div className="w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
  <Trash2 className="w-6 h-6 text-rose-500" />
  </div>
  <AlertDialogTitle className="text-2xl ">Are you absolutely sure?</AlertDialogTitle>
@@ -152,13 +152,13 @@ export const PostCard = ({ post, onApply }) => {
  </AlertDialogDescription>
  </AlertDialogHeader>
  <AlertDialogFooter className="p-8 pt-4 flex flex-row gap-4 bg-muted/20">
- <AlertDialogCancel className="rounded-md text-[10px] font-bold flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
+ <AlertDialogCancel className="rounded-lg text-[10px] font-bold flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
  <AlertDialogAction 
  onClick={(e) => {
  e.preventDefault();
  handleDelete();
  }}
- className="rounded-md text-[10px] font-bold flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
+ className="rounded-lg text-[10px] font-bold flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
  disabled={isDeleting}
  >
  {isDeleting ? "Deleting..." : "Delete Post"}
@@ -167,7 +167,7 @@ export const PostCard = ({ post, onApply }) => {
  </AlertDialogContent>
  </AlertDialog>
 
- <div className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:shadow-medium transition-all shadow-soft animate-fade-in">
+ <div className="group flex flex-col bg-card rounded-lg border border-border overflow-hidden hover:shadow-medium transition-all shadow-soft animate-fade-in">
  {/* Media Preview */}
  <div className="aspect-[16/10] bg-muted/30 relative overflow-hidden flex items-center justify-center border-b border-border/10">
  {post.mediaUrls?.[0] ? (
@@ -186,7 +186,7 @@ export const PostCard = ({ post, onApply }) => {
  title={`Post to ${account.profileName} (${account.platform})`}
  onClick={() => account.id && handlePublishToAccount(account.id, account.platform)}
  disabled={postingAccountId === account.id}
- className="bg-background/90 p-1.5 rounded-xl shadow-soft border border-border hover:bg-primary/10 hover:border-primary/30 transition-all disabled:opacity-50 cursor-pointer"
+ className="bg-background/90 p-1.5 rounded-lg shadow-soft border border-border hover:bg-primary/10 hover:border-primary/30 transition-all disabled:opacity-50 cursor-pointer"
  >
  {postingAccountId === account.id 
  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -209,7 +209,7 @@ export const PostCard = ({ post, onApply }) => {
  color: post.category.color,
  borderColor: `${post.category.color}30`
  }}
- className="text-[9px] px-2 py-0.5 rounded-md border"
+ className="text-[9px] px-2 py-0.5 rounded-lg border"
  >
  {post.category.name}
  </Badge>
@@ -218,7 +218,7 @@ export const PostCard = ({ post, onApply }) => {
  <Badge 
  key={i} 
  variant="outline" 
- className="text-[9px] font-bold text-muted-foreground/60 px-2 py-0.5 rounded-md border-border/100 bg-muted/5"
+ className="text-[9px] font-bold text-muted-foreground/60 px-2 py-0.5 rounded-lg border-border/100 bg-muted/5"
  >
  #{tag}
  </Badge>
@@ -241,11 +241,11 @@ export const PostCard = ({ post, onApply }) => {
  
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="ghost" size="icon" className="w-8 rounded-xl text-muted-foreground/50 hover:text-foreground hover:bg-muted">
+ <Button variant="ghost" size="icon" className="w-8 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-muted">
  <MoreHorizontal className="w-4 h-4" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-2xl border-border/100 p-2">
+ <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-2xl border-border/100 p-2">
  <DropdownMenuItem 
  onClick={() => onOpen('addPost', { workspaceId, onApply, initialData: post })}
  className="cursor-pointer font-bold px-3 py-2.5 rounded-lg"

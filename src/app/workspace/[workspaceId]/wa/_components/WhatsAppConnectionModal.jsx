@@ -272,7 +272,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  initial={{ opacity: 0, scale: 0.9 }}
  animate={{ opacity: 1, scale: 1 }}
  exit={{ opacity: 0, scale: 0.9 }}
- className="p-4 bg-white rounded-xl shadow-lg min-w-[200px] min-h-[200px] flex items-center justify-center">
+ className="p-4 bg-white rounded-lg shadow-lg min-w-[200px] min-h-[200px] flex items-center justify-center">
  
  {qrDataUrl ?
  <img src={qrDataUrl} alt="WhatsApp QR Code" className="w-48 h-48" /> :

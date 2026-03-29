@@ -105,7 +105,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  {/* Header Section */}
  <div className="flex items-center gap-4">
  <Link href={`/workspace/${workspaceId}/agent`}>
- <Button variant="ghost" size="icon" className="rounded-xl border border-border/40 hover:bg-card">
+ <Button variant="ghost" size="icon" className="rounded-lg border border-border/40 hover:bg-card">
  <ArrowLeft className="w-5 h-5 text-indigo-500" />
  </Button>
  </Link>
@@ -117,19 +117,19 @@ export default function AgentCredentials({ params: paramsPromise }) {
 
  <div className="max-w-3xl space-y-6">
  <form onSubmit={handleSave} className="space-y-6">
- <Card className="border-border/40 bg-card/60 backdrop-blur-md rounded-2xl overflow-hidden shadow-xl shadow-indigo-500/5">
+ <Card className="border-border/40 bg-card/60 backdrop-blur-md rounded-lg overflow-hidden shadow-xl shadow-indigo-500/5">
  <CardHeader className="border-b border-border/10 pb-6">
  <div className="flex items-center justify-between">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
- <div className="p-2 bg-indigo-500/10 rounded-xl">
+ <div className="p-2 bg-indigo-500/10 rounded-lg">
  <Globe className="w-4 h-4 text-indigo-500" />
  </div>
  <CardTitle className="text-lg font-bold">OpenClaw Integration</CardTitle>
  </div>
  <CardDescription className="text-xs">Configure the bridge between your workspace and the OpenClaw AI platform.</CardDescription>
  </div>
- <div className="flex items-center gap-3 bg-indigo-500/5 px-4 py-2 rounded-xl border border-indigo-500/10">
+ <div className="flex items-center gap-3 bg-indigo-500/5 px-4 py-2 rounded-lg border border-indigo-500/10">
  <Label htmlFor="claw-toggle" className="text-[10px] text-indigo-600/70">
  {config.enabled ? 'Enabled' : 'Disabled'}
  </Label>
@@ -154,7 +154,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-indigo-500 transition-colors" />
  <Input 
  placeholder="https://cloud.openclaw.ai/api/v1" 
- className="pl-11 h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
+ className="pl-11 h-12 rounded-lg border-border/50 bg-background/50 font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
  value={config.apiUrl}
  onChange={(e) => setConfig(prev => ({ ...prev, apiUrl: e.target.value }))}
  />
@@ -175,7 +175,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <Input 
  type="password"
  placeholder="Enter your security token" 
- className="pl-11 h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
+ className="pl-11 h-12 rounded-lg border-border/50 bg-background/50 font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
  value={config.apiKey}
  onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
  />
@@ -193,7 +193,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  variant="outline" 
  onClick={handleTestPing}
  disabled={isTesting || !config.apiUrl}
- className="rounded-xl text-[10px] h-10 px-6 border-indigo-500/20 text-indigo-600 gap-2"
+ className="rounded-lg text-[10px] h-10 px-6 border-indigo-500/20 text-indigo-600 gap-2"
  >
  {isTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
  Test Connection
@@ -201,7 +201,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <Button 
  type="submit" 
  disabled={saving}
- className="rounded-xl text-[10px] h-10 px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
+ className="rounded-lg text-[10px] h-10 px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
  >
  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <ShieldCheck className="w-3.5 h-3.5 mr-2" />}
  Save Operations
@@ -211,9 +211,9 @@ export default function AgentCredentials({ params: paramsPromise }) {
  </form>
 
  {/* Webhook Discovery Card */}
- <Card className="border-emerald-500/20 bg-emerald-500/5 rounded-2xl overflow-hidden shadow-xl shadow-emerald-500/5">
+ <Card className="border-emerald-500/20 bg-emerald-500/5 rounded-lg overflow-hidden shadow-xl shadow-emerald-500/5">
  <CardHeader className="pb-3 flex flex-row items-center gap-3">
- <div className="p-2 bg-emerald-500/10 rounded-xl">
+ <div className="p-2 bg-emerald-500/10 rounded-lg">
  <ShieldAlert className="w-4 h-4 text-emerald-600" />
  </div>
  <div>
@@ -224,7 +224,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <p className="text-xs font-medium text-emerald-700/70 leading-relaxed">
  Configure this URL in your OpenClaw dashboard to receive event-driven triggers back into Devlomatix.
  </p>
- <div className="flex items-center gap-2 p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-emerald-500/10">
+ <div className="flex items-center gap-2 p-3 bg-white/50 backdrop-blur-sm rounded-lg border border-emerald-500/10">
  <code className="flex-1 text-[10px] font-mono font-bold truncate text-emerald-600/70">{webhookUrl}</code>
  <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:bg-emerald-500/10" onClick={() => copyToClipboard(webhookUrl)}>
  <Copy className="w-3.5 h-3.5" />

@@ -33,7 +33,7 @@ export default function RecentActivity() {
 
 
  return (
- <div className="bg-[#111315] border border-[#1F2328] rounded-xl p-6">
+ <div className="bg-[#111315] border border-[#1F2328] rounded-lg p-6">
  <h3 className="text-lg font-semibold text-white mb-6 ">Recent Activity</h3>
  <div className="space-y-6">
  {activities.map((activity) => {

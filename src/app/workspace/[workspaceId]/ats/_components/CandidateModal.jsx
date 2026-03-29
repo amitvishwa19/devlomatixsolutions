@@ -70,7 +70,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
 
  return (
  <Dialog open={isOpen} onOpenChange={onClose}>
- <DialogContent className="sm:max-w-[500px] rounded-2xl border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl p-0 overflow-hidden">
+ <DialogContent className="sm:max-w-[500px] rounded-lg border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl p-0 overflow-hidden">
  <DialogHeader className="p-8 pb-4">
  <DialogTitle className="text-2xl flex items-center gap-2">
  <User className="text-primary w-6 h-6" />
@@ -85,7 +85,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Full Name</label>
  <Input 
  placeholder="John Doe" 
- className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
+ className="bg-muted/30 border-none h-12 rounded-lg text-sm font-bold shadow-inner"
  value={formData.name}
  onChange={(e) => setFormData({...formData, name: e.target.value})}
  />
@@ -95,7 +95,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <Input 
  type="email"
  placeholder="john@example.com" 
- className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
+ className="bg-muted/30 border-none h-12 rounded-lg text-sm font-bold shadow-inner"
  value={formData.email}
  onChange={(e) => setFormData({...formData, email: e.target.value})}
  />
@@ -107,7 +107,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Phone Number</label>
  <Input 
  placeholder="+91 99999 99999" 
- className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
+ className="bg-muted/30 border-none h-12 rounded-lg text-sm font-bold shadow-inner"
  value={formData.phone}
  onChange={(e) => setFormData({...formData, phone: e.target.value})}
  />
@@ -116,7 +116,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Location</label>
  <Input 
  placeholder="Delhi, Remote" 
- className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
+ className="bg-muted/30 border-none h-12 rounded-lg text-sm font-bold shadow-inner"
  value={formData.location}
  onChange={(e) => setFormData({...formData, location: e.target.value})}
  />
@@ -127,7 +127,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Skills (Comma separated)</label>
  <Input 
  placeholder="React, Node.js, Next.js" 
- className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold shadow-inner"
+ className="bg-muted/30 border-none h-12 rounded-lg text-sm font-bold shadow-inner"
  value={formData.skills}
  onChange={(e) => setFormData({...formData, skills: e.target.value})}
  />
@@ -137,7 +137,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Professional Summary</label>
  <Textarea 
  placeholder="Short overview of candidate's profile..." 
- className="bg-muted/30 border-none rounded-xl text-sm font-bold shadow-inner min-h-[100px] resize-none"
+ className="bg-muted/30 border-none rounded-lg text-sm font-bold shadow-inner min-h-[100px] resize-none"
  value={formData.summary}
  onChange={(e) => setFormData({...formData, summary: e.target.value})}
  />
@@ -145,13 +145,13 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  </div>
 
  <DialogFooter className="p-0 sm:justify-end gap-3">
- <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl font-bold">
+ <Button type="button" variant="ghost" onClick={onClose} className="rounded-lg font-bold">
  Cancel
  </Button>
  <Button 
  type="submit" 
  disabled={isSubmitting}
- className="bg-primary hover:bg-primary/90 rounded-xl tracking-[0.2em] text-[10px] px-8 py-6 h-auto shadow-lg shadow-primary/20"
+ className="bg-primary hover:bg-primary/90 rounded-lg tracking-[0.2em] text-[10px] px-8 py-6 h-auto shadow-lg shadow-primary/20"
  >
  {isSubmitting ? "Adding..." : "Add Candidate"}
  </Button>

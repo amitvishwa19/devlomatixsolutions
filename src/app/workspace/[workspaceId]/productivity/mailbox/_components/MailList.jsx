@@ -35,7 +35,7 @@ export const MailList = ({
                             placeholder="Find conversations..."
                             value={search}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="pl-10 h-10 bg-muted/30 border-white/5 rounded-xl focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[11px] tracking-wide"
+                            className="pl-10 h-10 bg-muted/30 border-white/5 rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[11px] tracking-wide"
                         />
                     </div>
                     <Button
@@ -43,7 +43,7 @@ export const MailList = ({
                         size="icon"
                         onClick={onRefresh}
                         disabled={loading}
-                        className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20"
+                        className="h-10 w-10 rounded-lg hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20"
                     >
                         <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
                     </Button>
@@ -95,7 +95,7 @@ export const MailList = ({
                                     }}
                                 >
                                     <div className={cn(
-                                        "w-full h-full rounded-2xl cursor-pointer transition-all duration-300 relative group overflow-hidden border px-4 py-3 flex flex-col justify-center",
+                                        "w-full h-full rounded-lg cursor-pointer transition-all duration-300 relative group overflow-hidden border px-4 py-3 flex flex-col justify-center",
                                         isSelected 
                                             ? "bg-primary/15 border-primary/30 shadow-lg shadow-primary/5 ring-1 ring-primary/20" 
                                             : "bg-white/[0.02] border-white/5 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-md"

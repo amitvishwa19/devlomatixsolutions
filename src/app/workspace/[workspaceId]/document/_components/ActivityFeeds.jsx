@@ -49,7 +49,7 @@ export default function ActivityFeeds({ workspaceId, userId }) {
  <div className="space-y-6">
  {activities.map((activity, i) => (
  <div key={i} className="flex gap-4 group cursor-default">
- <div className="shrink-0 mt-0.5 p-2 rounded-xl bg-muted/30 group-hover:bg-primary/10 transition-colors">
+ <div className="shrink-0 mt-0.5 p-2 rounded-lg bg-muted/30 group-hover:bg-primary/10 transition-colors">
  <activity.icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
  </div>
  <div className="flex-1 border-b border-border/5 pb-4 group-last:border-none">

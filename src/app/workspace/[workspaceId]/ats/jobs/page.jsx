@@ -64,7 +64,7 @@ export default function JobManagementPage() {
  <div className="flex items-center gap-3">
  <Button
  onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs/create`)}
- className="h-10 rounded-md px-6 font-bold text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-10 rounded-lg px-6 font-bold text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  <Plus className="w-4 h-4 mr-2" />
  Create Position
@@ -83,18 +83,18 @@ export default function JobManagementPage() {
  </div>
  <div className="h-8 w-[1px] bg-border/40 hidden md:block" />
  <div className="flex items-center gap-2 w-full md:w-auto px-2">
- <Button variant="ghost" className="h-10 rounded-xl px-4 text-xs font-bold gap-2">
+ <Button variant="ghost" className="h-10 rounded-lg px-4 text-xs font-bold gap-2">
  <Filter size={14} className="opacity-40" />
  Departments
  </Button>
- <Button variant="ghost" className="h-10 rounded-xl px-4 text-xs font-bold gap-2">
+ <Button variant="ghost" className="h-10 rounded-lg px-4 text-xs font-bold gap-2">
  Status
  </Button>
  <div className="flex bg-muted/40 p-1 rounded-lg ml-2">
- <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-background shadow-xs">
+ <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-background shadow-xs">
  <List size={14} />
  </Button>
- <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md opacity-40">
+ <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-40">
  <LayoutGrid size={14} />
  </Button>
  </div>
@@ -128,7 +128,7 @@ export default function JobManagementPage() {
  >
  <td className="p-6">
  <div className="flex items-center gap-4">
- <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getStatusColor(job.status)} group-hover:scale-110 transition-transform`}>
+ <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getStatusColor(job.status)} group-hover:scale-110 transition-transform`}>
  <Briefcase size={18} />
  </div>
  <div>
@@ -149,7 +149,7 @@ export default function JobManagementPage() {
  </div>
  </td>
  <td className="p-6 text-center">
- <div className="inline-flex flex-col items-center justify-center min-w-[60px] p-2 rounded-xl bg-muted/20 border border-border/10">
+ <div className="inline-flex flex-col items-center justify-center min-w-[60px] p-2 rounded-lg bg-muted/20 border border-border/10">
  <span className="text-sm">{job._count?.applications || 0}</span>
  <span className="text-[9px] font-bold text-muted-foreground opacity-40">Total</span>
  </div>
@@ -180,7 +180,7 @@ export default function JobManagementPage() {
  <MoreHorizontal size={16} />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="w-48 rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
+ <DropdownMenuContent align="end" className="w-48 rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
  <DropdownMenuItem className="text-xs font-bold gap-2">
  Edit Position
  </DropdownMenuItem>

@@ -12,8 +12,8 @@ import { titleCaseLabel } from '@/utils/functions';
 
 export function RoleCard({ role, onEdit, onDelete }) {
     return (
-        <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:shadow-medium animate-fade-in hover:border-primary/30  animate-fade-in">
-            <div className="absolute left-0 top-0 h-full w-1 rounded-l-xl" style={{ backgroundColor: role.color }} />
+        <div className="group relative overflow-hidden rounded-lg border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:shadow-medium animate-fade-in hover:border-primary/30">
+            <div className="absolute left-0 top-0 h-full w-1 rounded-l-md" style={{ backgroundColor: role.color }} />
 
             <div className="flex items-start justify-between">
                 <div className="space-y-3">

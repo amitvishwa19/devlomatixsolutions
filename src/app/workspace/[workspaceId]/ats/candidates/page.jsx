@@ -97,13 +97,13 @@ export default function TalentDatabasePage() {
  <p className="text-sm font-bold text-muted-foreground opacity-60">Manage and discover candidates across all job positions.</p>
  </div>
  <div className="flex items-center gap-3">
- <Button variant="outline" className="h-10 rounded-md px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-10 rounded-lg px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
  <Download className="w-4 h-4 mr-2 opacity-50" />
  Export Talent
  </Button>
  <Button 
  onClick={() => setIsAddModalOpen(true)}
- className="h-10 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-10 rounded-lg px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  <UserPlus className="w-4 h-4 mr-2" />
  Add Candidate
@@ -127,7 +127,7 @@ export default function TalentDatabasePage() {
  <SelectTrigger className="w-[180px] h-14 bg-muted/30 border-none rounded-lg font-bold shadow-inner">
  <SelectValue placeholder="Department" />
  </SelectTrigger>
- <SelectContent className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
+ <SelectContent className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
  <SelectItem value="all">All Departments</SelectItem>
  <SelectItem value="eng">Engineering</SelectItem>
  <SelectItem value="des">Design</SelectItem>
@@ -138,7 +138,7 @@ export default function TalentDatabasePage() {
  <SelectTrigger className="w-[180px] h-14 bg-muted/30 border-none rounded-lg font-bold shadow-inner">
  <SelectValue placeholder="Stage" />
  </SelectTrigger>
- <SelectContent className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
+ <SelectContent className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
  <SelectItem value="all">All Stages</SelectItem>
  <SelectItem value="interview">Interview</SelectItem>
  <SelectItem value="offer">Offer</SelectItem>
@@ -149,7 +149,7 @@ export default function TalentDatabasePage() {
  <SlidersHorizontal size={20} />
  </Button>
 
- <div className="flex items-center gap-1 bg-muted/30 p-1.5 rounded-xl border border-border/10 ml-2">
+ <div className="flex items-center gap-1 bg-muted/30 p-1.5 rounded-lg border border-border/10 ml-2">
  <Button
  variant="ghost"
  size="icon"
@@ -179,7 +179,7 @@ export default function TalentDatabasePage() {
  animate={{ opacity: 1, x: 0 }}
  exit={{ opacity: 0, x: 20 }}
  transition={{ duration: 0.2 }}
- className="bg-card/30 backdrop-blur-xl rounded-xl border border-border/40 overflow-hidden"
+ className="bg-card/30 backdrop-blur-xl rounded-lg border border-border/40 overflow-hidden"
  >
  <Table>
  <TableHeader className="bg-muted/50">
@@ -213,7 +213,7 @@ export default function TalentDatabasePage() {
  <p className="text-xs font-bold opacity-80">{candidate.role}</p>
  </TableCell>
  <TableCell className="text-center">
- <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] italic">
+ <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] italic">
  <Sparkles size={10} /> {candidate.score}
  </div>
  </TableCell>
@@ -259,7 +259,7 @@ export default function TalentDatabasePage() {
  <MoreHorizontal size={14} />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
+ <DropdownMenuContent align="end" className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
  <DropdownMenuItem className="font-bold text-xs">Share Profile</DropdownMenuItem>
  <DropdownMenuItem className="font-bold text-xs">Add to Project</DropdownMenuItem>
  <DropdownMenuItem className="font-bold text-xs text-rose-500">Archive</DropdownMenuItem>
@@ -322,7 +322,7 @@ export default function TalentDatabasePage() {
 
  <div className="flex flex-wrap gap-2">
  {candidate.tags.map((tag, i) => (
- <Badge key={i} variant="outline" className="h-7 rounded-md border-border/40 bg-muted/10 font-bold px-2 text-[10px] opacity-60">
+ <Badge key={i} variant="outline" className="h-7 rounded-lg border-border/40 bg-muted/10 font-bold px-2 text-[10px] opacity-60">
  {tag}
  </Badge>
  ))}
@@ -331,19 +331,19 @@ export default function TalentDatabasePage() {
  <div className="mt-auto pt-4 flex items-center gap-2">
  <Button
  variant="outline"
- className="flex-1 h-10 rounded-xl text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
+ className="flex-1 h-10 rounded-lg text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
  onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.id}`)}
  >
  View Profile <ExternalLink size={12} className="ml-2 opacity-50" />
  </Button>
- <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl opacity-40 hover:opacity-100">
+ <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg opacity-40 hover:opacity-100">
  <Mail size={16} />
  </Button>
  {candidate.resumeUrl && (
  <Button 
  variant="ghost" 
  size="icon" 
- className="h-10 w-10 rounded-xl opacity-40 hover:opacity-100 hover:text-emerald-500"
+ className="h-10 w-10 rounded-lg opacity-40 hover:opacity-100 hover:text-emerald-500"
  onClick={() => window.open(candidate.resumeUrl, '_blank')}
  >
  <FileText size={16} />
@@ -351,11 +351,11 @@ export default function TalentDatabasePage() {
  )}
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl opacity-40 hover:opacity-100">
+ <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg opacity-40 hover:opacity-100">
  <MoreHorizontal size={16} />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent className="rounded-xl border-border/40 bg-card/90 backdrop-blur-xl">
+ <DropdownMenuContent className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
  <DropdownMenuItem className="font-bold text-xs">Share Profile</DropdownMenuItem>
  <DropdownMenuItem className="font-bold text-xs">Add to Project</DropdownMenuItem>
  <DropdownMenuItem className="font-bold text-xs text-rose-500">Archive</DropdownMenuItem>

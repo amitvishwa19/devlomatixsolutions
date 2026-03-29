@@ -223,7 +223,7 @@ export default function PermissionEditor({
                 <div className="bg-card rounded-lg flex flex-col h-full border overflow-hidden shadow-2xl">
                     <SheetHeader className="border-b p-6 bg-muted/5">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 shadow-inner">
+                            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 shadow-inner">
                                 {mode === "edit" ? (
                                     <Pencil className="w-6 h-6 text-primary" />
                                 ) : (
@@ -252,7 +252,7 @@ export default function PermissionEditor({
                                         id="moduleName"
                                         value={moduleName}
                                         onChange={(e) => setModuleName(e.target.value)}
-                                        className="bg-secondary/30 border-border/40 h-12 rounded-md text-lg font-medium focus:ring-primary/20"
+                                        className="bg-secondary/30 border-border/40 h-12 rounded-lg text-lg font-medium focus:ring-primary/20"
                                         placeholder="e.g. Content Analytics"
                                     />
                                     {moduleName && (
@@ -267,20 +267,20 @@ export default function PermissionEditor({
 
                                 <div className="grid gap-3">
                                     <Label className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Visual Signature</Label>
-                                    <div className="flex flex-wrap gap-2.5 p-3 rounded-md bg-secondary/20 border border-border/30">
+                                    <div className="flex flex-wrap gap-2.5 p-3 rounded-lg bg-secondary/20 border border-border/30">
                                         {colorOptions.map((color) => (
                                             <button
                                                 key={color.id}
                                                 type="button"
                                                 onClick={() => setSelectedColor(color.id)}
-                                                className={`w-6 h-6 rounded-md transition-all duration-300 relative group ${selectedColor === color.id
+                                                className={`w-6 h-6 rounded-lg transition-all duration-300 relative group ${selectedColor === color.id
                                                     ? "ring-2 ring-primary ring-offset-4 ring-offset-background scale-110 shadow-lg"
                                                     : "hover:scale-110 opacity-60 hover:opacity-100"
                                                     }`}
                                                 style={{ backgroundColor: color.color }}
                                                 title={color.label}
                                             >
-                                                {selectedColor === color.id && <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse" />}
+                                                {selectedColor === color.id && <div className="absolute inset-0 rounded-lg bg-white/20 animate-pulse" />}
                                             </button>
                                         ))}
                                     </div>
@@ -302,7 +302,7 @@ export default function PermissionEditor({
                                                 handleActionToggle(action.id);
                                                 e.stopPropagation();
                                             }}
-                                            className={`flex items-start gap-3 p-4 rounded-md border transition-all duration-500 cursor-pointer group ${selectedActions.includes(action.id)
+                                            className={`flex items-start gap-3 p-4 rounded-lg border transition-all duration-500 cursor-pointer group ${selectedActions.includes(action.id)
                                                 ? "border-primary/50 bg-primary/5 shadow-md shadow-primary/5"
                                                 : "border-border/40 bg-muted/10 hover:border-primary/30 hover:bg-muted/30"
                                                 }`}
@@ -339,7 +339,7 @@ export default function PermissionEditor({
                                         </label>
                                     ))}
 
-                                    <div className="col-span-2 p-5 rounded-3xl border border-dashed border-primary/20 bg-primary/[0.02] mt-2 relative overflow-hidden group">
+                                    <div className="col-span-2 p-5 rounded-lg border border-dashed border-primary/20 bg-primary/[0.02] mt-2 relative overflow-hidden group">
                                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                             <Plus className="w-20 h-20 -mr-6 -mt-6 rotate-12" />
                                         </div>
@@ -354,13 +354,13 @@ export default function PermissionEditor({
                                                 value={newActionName}
                                                 onChange={(e) => setNewActionName(e.target.value)}
                                                 placeholder="Action identifier (e.g. Audit)"
-                                                className="bg-background border-border/40 h-10 rounded-xl text-xs"
+                                                className="bg-background border-border/40 h-10 rounded-lg text-xs"
                                             />
                                             <Input
                                                 value={newActionDescription}
                                                 onChange={(e) => setNewActionDescription(e.target.value)}
                                                 placeholder="Contextual description"
-                                                className="bg-background border-border/40 h-10 rounded-xl text-xs"
+                                                className="bg-background border-border/40 h-10 rounded-lg text-xs"
                                             />
                                             <Button
                                                 type="button"
@@ -368,7 +368,7 @@ export default function PermissionEditor({
                                                 variant="primary"
                                                 onClick={handleAddCustomAction}
                                                 disabled={!newActionName.trim()}
-                                                className="w-full h-10 rounded-xl shadow-lg shadow-primary/10"
+                                                className="w-full h-10 rounded-lg shadow-lg shadow-primary/10"
                                             >
                                                 Append Scoped Action
                                             </Button>
@@ -384,17 +384,17 @@ export default function PermissionEditor({
                                     rows='6'
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    className="bg-secondary/30 border-border/40 rounded-2xl resize-none min-h-[100px] p-4 text-sm"
+                                    className="bg-secondary/30 border-border/40 rounded-lg resize-none min-h-[100px] p-4 text-sm"
                                     placeholder={`High-level overview of the ${formatCategoryName(categorySlug || "module")} scope...`}
                                 />
                             </div>
 
                             {moduleName && selectedActions.length > 0 && (
-                                <div className="p-6 rounded-3xl bg-primary/[0.03] border border-primary/10 space-y-4 shadow-inner">
+                                <div className="p-6 rounded-lg bg-primary/[0.03] border border-primary/10 space-y-4 shadow-inner">
                                     <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase opacity-60">Security Manifest Preview</p>
                                     <div className="grid grid-cols-2 gap-3">
                                         {selectedActions.map((action) => (
-                                            <div key={action} className="text-[11px] p-3 rounded-xl bg-background/80 border border-border/30 shadow-sm flex flex-col gap-1">
+                                            <div key={action} className="text-[11px] p-3 rounded-lg bg-background/80 border border-border/30 shadow-sm flex flex-col gap-1">
                                                 <span className="font-bold text-foreground">
                                                     {action.charAt(0).toUpperCase() + action.slice(1)}{" "}
                                                     {formatCategoryName(categorySlug)}
@@ -415,14 +415,14 @@ export default function PermissionEditor({
                             variant="ghost"
                             onClick={handleOpenClose}
                             disabled={loading}
-                            className="rounded-md font-bold text-xs uppercase tracking-widest px-8 h-10"
+                            className="rounded-lg font-bold text-xs uppercase tracking-widest px-8 h-10"
                         >
                             Discard
                         </Button>
                         <Button
                             onClick={handleSubmit}
                             disabled={!isValid || loading}
-                            className="rounded-md font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
+                            className="rounded-lg font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
                         >
                             {loading ? (
                                 <Loader className="w-5 h-5 animate-spin mr-2" />

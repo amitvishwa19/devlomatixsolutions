@@ -162,8 +162,8 @@ export const DeveloperSettings = () => {
  return (
  <div className="space-y-6 animate-fade-in">
  {/* Developer Hub Header */}
- <div className="p-6 bg-fuchsia-500/5 rounded-2xl border border-fuchsia-500/10 flex gap-6 items-center">
- <div className="w-16 h-16 bg-fuchsia-500/10 rounded-2xl flex items-center justify-center border border-fuchsia-500/20 shadow-inner shrink-0 scale-110">
+ <div className="p-6 bg-fuchsia-500/5 rounded-lg border border-fuchsia-500/10 flex gap-6 items-center">
+ <div className="w-16 h-16 bg-fuchsia-500/10 rounded-lg flex items-center justify-center border border-fuchsia-500/20 shadow-inner shrink-0 scale-110">
  <Terminal className="w-8 h-8 text-fuchsia-500" />
  </div>
  <div className="flex-1">
@@ -178,7 +178,7 @@ export const DeveloperSettings = () => {
  </div>
 
  <Tabs defaultValue="webhooks" className="w-full">
- <TabsList className="bg-background/50 border border-border/40 p-1 rounded-xl mb-6">
+ <TabsList className="bg-background/50 border border-border/40 p-1 rounded-lg mb-6">
  <TabsTrigger value="webhooks" className="rounded-lg gap-2 text-xs font-bold px-4 transition-all data-[state=active]:bg-card data-[state=active]:text-fuchsia-500">
  <Webhook className="w-3.5 h-3.5" />
  Webhooks & Automation
@@ -194,7 +194,7 @@ export const DeveloperSettings = () => {
  </TabsList>
 
  <TabsContent value="webhooks" className="mt-0 space-y-4">
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-fuchsia-500/5 bg-card/60 backdrop-blur-md overflow-hidden">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-fuchsia-500/5 bg-card/60 backdrop-blur-md overflow-hidden">
  <CardHeader className="flex flex-row items-center justify-between pb-4">
  <div>
  <CardTitle className="text-lg font-bold">Webhook Endpoints</CardTitle>
@@ -202,12 +202,12 @@ export const DeveloperSettings = () => {
  </div>
  <Dialog open={isAddWebhookOpen} onOpenChange={setIsAddWebhookOpen}>
  <DialogTrigger asChild>
- <Button size="sm" className="rounded-xl gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-9">
+ <Button size="sm" className="rounded-lg gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-9">
  <Plus className="w-4 h-4" />
  Add Endpoint
  </Button>
  </DialogTrigger>
- <DialogContent className="sm:max-w-[425px] rounded-2xl border-fuchsia-500/20 bg-card/95 backdrop-blur-xl shadow-2xl">
+ <DialogContent className="sm:max-w-[425px] rounded-lg border-fuchsia-500/20 bg-card/95 backdrop-blur-xl shadow-2xl">
  <DialogHeader>
  <DialogTitle className="text-xl font-bold flex items-center gap-2 text-fuchsia-600">
  <Webhook className="w-5 h-5" />
@@ -247,7 +247,7 @@ export const DeveloperSettings = () => {
  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
  <Input
  placeholder="https://your-api.com/webhooks"
- className="pl-10 rounded-xl border border-border/50 h-11 bg-background shadow-inner font-bold text-xs focus:ring-2 focus:ring-fuchsia-500/20"
+ className="pl-10 rounded-lg border border-border/50 h-11 bg-background shadow-inner font-bold text-xs focus:ring-2 focus:ring-fuchsia-500/20"
  value={newWebhook.url}
  onChange={(e) => setNewWebhook(prev => ({ ...prev, url: e.target.value }))}
  />
@@ -255,7 +255,7 @@ export const DeveloperSettings = () => {
  </div>
  <div className="grid gap-3">
  <Label className="text-[10px] font-bold opacity-70 ml-1">Event Subscriptions</Label>
- <div className="grid grid-cols-1 gap-2 p-3 bg-muted/30 rounded-xl border border-border/40 max-h-[150px] overflow-y-auto custom-scrollbar">
+ <div className="grid grid-cols-1 gap-2 p-3 bg-muted/30 rounded-lg border border-border/40 max-h-[150px] overflow-y-auto custom-scrollbar">
  {availableEvents.map((event) => (
  <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-background/50 transition-colors group">
  <Checkbox 
@@ -276,11 +276,11 @@ export const DeveloperSettings = () => {
  </div>
  </div>
  <DialogFooter className="gap-2">
- <Button variant="ghost" onClick={() => setIsAddWebhookOpen(false)} className="rounded-xl font-bold text-[10px]">Cancel</Button>
+ <Button variant="ghost" onClick={() => setIsAddWebhookOpen(false)} className="rounded-lg font-bold text-[10px]">Cancel</Button>
  <Button 
  onClick={handleAddWebhook}
  disabled={saving}
- className="rounded-xl font-bold bg-fuchsia-600 hover:bg-fuchsia-700 text-white shadow-xl shadow-fuchsia-500/20 px-6 h-11"
+ className="rounded-lg font-bold bg-fuchsia-600 hover:bg-fuchsia-700 text-white shadow-xl shadow-fuchsia-500/20 px-6 h-11"
  >
  {saving ? "Saving..." : "Deploy Endpoint"}
  </Button>
@@ -357,10 +357,10 @@ export const DeveloperSettings = () => {
  </Card>
 
  {/* Automation Assist */}
- <Card className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 shadow-xl shadow-indigo-500/5 overflow-hidden">
+ <Card className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 shadow-xl shadow-indigo-500/5 overflow-hidden">
  <CardHeader className="pb-3">
  <div className="flex items-center gap-3">
- <div className="p-2 bg-indigo-500/20 rounded-xl">
+ <div className="p-2 bg-indigo-500/20 rounded-lg">
  <ShieldAlert className="w-4 h-4 text-indigo-500" />
  </div>
  <CardTitle className="text-sm font-bold ">Internal Mock Tester</CardTitle>
@@ -370,7 +370,7 @@ export const DeveloperSettings = () => {
  <p className="text-xs font-medium text-muted-foreground opacity-80 leading-relaxed">
  Use our built-in mock endpoint to test your integrations instantly without setting up your own server.
  </p>
- <div className="flex items-center gap-2 p-3 bg-background/50 rounded-xl border border-indigo-500/10">
+ <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg border border-indigo-500/10">
  <code className="flex-1 text-[10px] font-mono font-bold truncate text-indigo-600/70">{mockUrl}</code>
  <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600 hover:bg-indigo-500/10" onClick={() => copyToClipboard(mockUrl)}>
  <Copy className="w-3.5 h-3.5" />
@@ -381,13 +381,13 @@ export const DeveloperSettings = () => {
  </TabsContent>
 
  <TabsContent value="apikeys" className="mt-0 space-y-4">
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-fuchsia-500/5 bg-card/60 backdrop-blur-md overflow-hidden">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-fuchsia-500/5 bg-card/60 backdrop-blur-md overflow-hidden">
  <CardHeader className="flex flex-row items-center justify-between pb-4">
  <div>
  <CardTitle className="text-lg font-bold">Secret API Keys</CardTitle>
  <CardDescription className="text-xs">Your secret API keys are used to authenticate requests to the Devlomatix API.</CardDescription>
  </div>
- <Button size="sm" className="rounded-xl gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-9">
+ <Button size="sm" className="rounded-lg gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-9">
  <Plus className="w-4 h-4" />
  Create New Key
  </Button>
@@ -418,8 +418,8 @@ export const DeveloperSettings = () => {
  </CardContent>
  </Card>
 
- <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/10 flex gap-4 items-start">
- <div className="p-2 bg-amber-500/10 rounded-xl mt-0.5">
+ <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/10 flex gap-4 items-start">
+ <div className="p-2 bg-amber-500/10 rounded-lg mt-0.5">
  <ShieldCheck className="w-4 h-4 text-amber-600" />
  </div>
  <div className="space-y-1">
@@ -432,7 +432,7 @@ export const DeveloperSettings = () => {
  </TabsContent>
 
  <TabsContent value="activity" className="mt-0 space-y-4">
- <Card className="rounded-2xl border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden min-h-[400px]">
+ <Card className="rounded-lg border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden min-h-[400px]">
  <CardHeader className="flex flex-row items-center justify-between pb-4">
  <div>
  <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -444,7 +444,7 @@ export const DeveloperSettings = () => {
  <Button 
  variant="outline" 
  size="sm" 
- className="rounded-xl gap-2 h-9 px-4 border-indigo-500/20 text-indigo-600 font-bold text-[10px] "
+ className="rounded-lg gap-2 h-9 px-4 border-indigo-500/20 text-indigo-600 font-bold text-[10px] "
  onClick={fetchLogs}
  disabled={isLoadingLogs}
  >
