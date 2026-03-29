@@ -6,13 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum ROLE {
-  ADMIN
-  SUPERADMIN
-  SERVICE
-  GUEST
-}
-
 model User {
   id                        String              @id @default(cuid())
   uuid                      String?
@@ -39,28 +32,28 @@ model User {
   lastActive                DateTime?
   createdAt                 DateTime            @default(now())
   updatedAt                 DateTime            @updatedAt
+  atsNotes                  AtsNote[]
+  botFlows                  BotFlow[]
   campaigns                 Campaign[]
+  channels                  Channel[]
   contacts                  Contact[]
+  contactGroups             ContactGroup[]
+  credentials               Credentials[]
   credit                    Credit?
+  sharedDocuments           DocumentAccess[]    @relation("UserToDocumentAccess")
+  jobs                      Job[]
+  kanbanActivities          KanbanActivity[]
+  assignedTasks             KanbanTask[]        @relation("TaskAssignee")
+  members                   Member[]
+  messageTemplates          MessageTemplate[]
   profile                   Profile?
+  scorecards                Scorecard[]
   servers                   Server[]
   setting                   Setting?
-  roles                     Role[]              @relation("RoleToUser")
-  botFlows                  BotFlow[]
   whatsAppAuths             WhatsAppAuth[]
-  messageTemplates          MessageTemplate[]
   waMessages                WhatsAppMessage[]
-  contactGroups             ContactGroup[]
   workspaceDocuments        WorkspaceDocument[]
-  sharedDocuments           DocumentAccess[]    @relation("UserToDocumentAccess")
-  credentials               Credentials[]
-  assignedTasks             KanbanTask[]        @relation("TaskAssignee")
-  kanbanActivities          KanbanActivity[]
-  members                   Member[]
-  channels                  Channel[]
-  jobs                      Job[]
-  atsNotes                  AtsNote[]
-  scorecards                Scorecard[]
+  roles                     Role[]              @relation("RoleToUser")
 
   @@index([email])
   @@index([phone])
@@ -126,102 +119,72 @@ model Server {
   default     Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  members     Member[]
   channels    Channel[]
+  members     Member[]
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-enum ChannelType {
-  TEXT
-  AUDIO
-  VIDEO
-}
-
 model Channel {
-  id   String      @id @default(cuid())
-  name String
-  type ChannelType @default(TEXT)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  messages Message[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String      @id @default(cuid())
+  name      String
+  type      ChannelType @default(TEXT)
+  userId    String
+  serverId  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  server    Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
 
   @@index([userId])
   @@index([serverId])
 }
 
-enum MemberRole {
-  DOCTOR
-  PATIENT
-  ADMIN
-  STAFF
-}
-
 model Member {
-  id   String     @id @default(cuid())
-  role MemberRole @default(PATIENT)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  messages       Message[]
-  directMessages DirectMessage[]
-
-  conversationsInitiated Conversation[] @relation("MemberOne")
-  conversationsReceived  Conversation[] @relation("MemberTwo")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String          @id @default(cuid())
+  role                   MemberRole      @default(PATIENT)
+  userId                 String
+  serverId               String
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  conversationsInitiated Conversation[]  @relation("MemberOne")
+  conversationsReceived  Conversation[]  @relation("MemberTwo")
+  directMessages         DirectMessage[]
+  server                 Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user                   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages               Message[]
 
   @@index([userId])
   @@index([serverId])
 }
 
 model Message {
-  id      String @id @default(cuid())
-  content String @db.Text
-
-  fileUrl String? @db.Text
-
-  memberId String
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  channelId String
-  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-
-  deleted    Boolean @default(false)
-  sent       Boolean @default(false)
-  deleivered Boolean @default(false)
-  read       Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  content    String
+  fileUrl    String?
+  memberId   String
+  channelId  String
+  deleted    Boolean  @default(false)
+  sent       Boolean  @default(false)
+  deleivered Boolean  @default(false)
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([channelId])
   @@index([memberId])
 }
 
 model Conversation {
-  id String @id @default(cuid())
-
-  memberOneId String
-  memberOne   Member @relation("MemberOne", fields: [memberOneId], references: [id], onDelete: Cascade)
-
-  memberTwoId String
-  memberTwo   Member @relation("MemberTwo", fields: [memberTwoId], references: [id], onDelete: Cascade)
-
+  id             String          @id @default(cuid())
+  memberOneId    String
+  memberTwoId    String
+  memberOne      Member          @relation("MemberOne", fields: [memberOneId], references: [id], onDelete: Cascade)
+  memberTwo      Member          @relation("MemberTwo", fields: [memberTwoId], references: [id], onDelete: Cascade)
   directMessages DirectMessage[]
 
   @@unique([memberOneId, memberTwoId])
@@ -229,20 +192,16 @@ model Conversation {
 }
 
 model DirectMessage {
-  id      String  @id @default(cuid())
-  content String  @db.Text
-  fileUrl String? @db.Text
-
-  memberId String
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
+  id             String       @id @default(cuid())
+  content        String
+  fileUrl        String?
+  memberId       String
   conversationId String
+  deleted        Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  deleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  member         Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([memberId])
   @@index([conversationId])
@@ -305,11 +264,11 @@ model Campaign {
   messageType     String              @default("text")
   messageTemplate Json
   templateId      String?
-  template        MessageTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
   scheduledAt     DateTime?
   userId          String
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+  template        MessageTemplate?    @relation(fields: [templateId], references: [id])
   user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   recipients      CampaignRecipient[]
 
@@ -332,87 +291,67 @@ model CampaignRecipient {
 }
 
 model WhatsAppAuth {
-  id     String  @id @default(cuid())
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String?
-
-  // Connection Status
-  status WA_STATUS @default(DISCONNECTED)
-
-  // Session Management
-  sessionId   String // Unique per user
-  sessionName String? // User-friendly name like "My Phone"
-
-  // Device Info (populated after successful connection)
-  deviceId    String? // WhatsApp device ID
-  phoneNumber String? // Connected phone number
-  deviceName  String? // Device name (e.g., "iPhone 14 Pro")
-  platform    String? // ios/android/web
-
-  // QR Code (temporary, cleared after connection)
-  qrCode      String?
-  qrExpiresAt DateTime?
-
-  // Auth Data (critical credentials)
-  credentials Json? // Baileys credentials (creds, keys)
-
-  // Timestamps
+  id              String                  @id @default(cuid())
+  userId          String?
+  status          WA_STATUS               @default(DISCONNECTED)
+  sessionId       String                  @unique
+  sessionName     String?
+  deviceId        String?
+  phoneNumber     String?
+  deviceName      String?
+  platform        String?
+  qrCode          String?
+  qrExpiresAt     DateTime?
+  credentials     Json?
   connectedAt     DateTime?
   lastConnectedAt DateTime?
   disconnectedAt  DateTime?
-  expiresAt       DateTime? // When session expires
+  expiresAt       DateTime?
+  isActive        Boolean                 @default(true)
+  metadata        Json?
+  updatedAt       DateTime                @updatedAt
+  createdAt       DateTime                @default(now())
+  user            User?                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs            WhatsAppConnectionLog[]
+  keys            WhatsAppSessionKey[]
 
-  // Metadata
-  isActive Boolean @default(true)
-  metadata Json? // Additional info (IP, location, etc.)
-
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
-
-  // Connection logs
-  logs WhatsAppConnectionLog[]
-  keys WhatsAppSessionKey[]
-
-  @@unique([sessionId])
   @@index([userId])
   @@index([phoneNumber])
 }
 
 model MessageTemplate {
-  id       String  @id @default(cuid())
-  userId   String
-  name     String
-  category String  @default("UTILITY")
-  language String  @default("en_US")
-  type     String  @default("TEXT")
-  body     String  @db.Text
-  footer   String?
-  buttons  Json? // Array of strings
-  metadata Json? // Stores mediaUrl, locationLat, locationLong, etc.
-  status   String  @default("DRAFT") // DRAFT, PENDING, APPROVED, REJECTED
-
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  userId    String
+  name      String
+  category  String     @default("UTILITY")
+  language  String     @default("en_US")
+  type      String     @default("TEXT")
+  body      String
+  footer    String?
+  buttons   Json?
+  metadata  Json?
+  status    String     @default("DRAFT")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   campaigns Campaign[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, name])
   @@index([userId])
 }
 
 model WhatsAppMessage {
-  id        String  @id @default(cuid())
-  waId      String? @unique // The WhatsApp Message ID (msg.key.id)
+  id        String   @id @default(cuid())
+  waId      String?  @unique
   userId    String
-  jid       String // Remote phone number
-  text      String  @db.Text
+  jid       String
+  text      String
   fromMe    Boolean
   timestamp BigInt
-  status    String  @default("SENT") // SENT, DELIVERED, READ
-  metadata  Json? // For media URLs, etc.
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("SENT")
+  metadata  Json?
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([jid])
@@ -422,27 +361,17 @@ model WhatsAppMessage {
 model WhatsAppConnectionLog {
   id             String        @id @default(cuid())
   whatsappAuthId String?
-  whatsappAuth   WhatsAppAuth? @relation(fields: [whatsappAuthId], references: [id], onDelete: Cascade)
-  event          String // CONNECT, DISCONNECT, QR_SCAN, ERROR
+  event          String
   previousStatus String?
   newStatus      String?
   metadata       Json?
   ipAddress      String?
   userAgent      String?
   createdAt      DateTime      @default(now())
+  whatsappAuth   WhatsAppAuth? @relation(fields: [whatsappAuthId], references: [id], onDelete: Cascade)
 
   @@index([whatsappAuthId])
   @@index([createdAt])
-}
-
-enum WA_STATUS {
-  DISCONNECTED
-  CONNECTING
-  QR_REQUIRED
-  AUTHENTICATED
-  CONNECTED
-  LOGGED_OUT
-  ERROR
 }
 
 model Contact {
@@ -469,10 +398,10 @@ model BotFlow {
   name        String
   description String?
   userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  steps       BotFlowStep[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps       BotFlowStep[]
 
   @@index([userId])
 }
@@ -480,24 +409,24 @@ model BotFlow {
 model BotFlowStep {
   id        String   @id @default(cuid())
   botFlowId String
-  botFlow   BotFlow  @relation(fields: [botFlowId], references: [id], onDelete: Cascade)
-  type      String // e.g., 'message', 'condition', 'action'
-  config    Json // configuration for the step
-  positionX Int // for drag and drop UI
+  type      String
+  config    Json
+  positionX Int
   positionY Int
-  order     Int // order in the flow
+  order     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  botFlow   BotFlow  @relation(fields: [botFlowId], references: [id], onDelete: Cascade)
 
   @@index([botFlowId])
 }
 
 model WhatsAppSessionKey {
   id             String       @id @default(cuid())
-  whatsappAuth   WhatsAppAuth @relation(fields: [whatsappAuthId], references: [id], onDelete: Cascade)
   whatsappAuthId String
   keyId          String
   data           String
+  whatsappAuth   WhatsAppAuth @relation(fields: [whatsappAuthId], references: [id], onDelete: Cascade)
 
   @@unique([whatsappAuthId, keyId])
   @@index([whatsappAuthId])
@@ -508,10 +437,10 @@ model ContactGroup {
   userId      String
   name        String
   description String?
-  contacts    Contact[] @relation("ContactToGroup")
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts    Contact[] @relation("ContactToGroup")
 
   @@unique([userId, name])
   @@index([userId])
@@ -529,19 +458,19 @@ model WorkspaceDocument {
   category    String?             @default("GENERAL")
   isFolder    Boolean             @default(false)
   parentId    String?
-  parent      WorkspaceDocument?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    WorkspaceDocument[] @relation("FolderHierarchy")
   workspaceId String
   userId      String
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sharedWith  DocumentAccess[]
   members     String[]            @default([])
   isStarred   Boolean             @default(false)
-  status      String              @default("APPROVED") // PENDING, REVIEW, APPROVED
+  status      String              @default("APPROVED")
   tags        String[]            @default([])
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   deletedAt   DateTime?
+  sharedWith  DocumentAccess[]
+  parent      WorkspaceDocument?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    WorkspaceDocument[] @relation("FolderHierarchy")
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([userId])
@@ -552,11 +481,11 @@ model DocumentAccess {
   id         String            @id @default(cuid())
   documentId String
   userId     String
-  document   WorkspaceDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user       User              @relation("UserToDocumentAccess", fields: [userId], references: [id], onDelete: Cascade)
-  role       String            @default("VIEWER") // VIEWER, EDITOR
+  role       String            @default("VIEWER")
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
+  document   WorkspaceDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User              @relation("UserToDocumentAccess", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([documentId, userId])
   @@index([documentId])
@@ -569,13 +498,13 @@ model Category {
   slug        String
   description String?
   color       String?    @default("#3b82f6")
-  type        String     @default("GENERAL") // e.g., ARTICLE, DOCUMENT, etc.
+  type        String     @default("GENERAL")
   parentId    String?
-  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    Category[] @relation("CategoryHierarchy")
   workspaceId String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[] @relation("CategoryHierarchy")
   posts       Post[]
 
   @@unique([workspaceId, name])
@@ -585,17 +514,16 @@ model Category {
 }
 
 model Credentials {
-  id          String  @id @default(cuid())
-  platform    String // FACEBOOK, LINKEDIN, TWITTER, INSTAGRAM
+  id          String   @id @default(cuid())
+  platform    String
   profile     String?
   credentials Json?
-
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expired   Boolean  @default(false)
-  status    String   @default("disconnected")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId      String
+  expired     Boolean  @default(false)
+  status      String   @default("disconnected")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -603,29 +531,21 @@ model Credentials {
 model Post {
   id          String     @id @default(cuid())
   title       String?
-  content     String     @db.Text
+  content     String
   mediaUrls   String[]   @default([])
   scheduledAt DateTime?
   publishedAt DateTime?
   status      PostStatus @default(DRAFT)
-  errorLog    String?    @db.Text
-
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-
-  tags String[] @default([])
-
+  errorLog    String?
+  categoryId  String?
+  tags        String[]   @default([])
   workspaceId String
   userId      String
-
-  // Platform-specific IDs for analytics
   externalIds Json?
-
-  // Platforms this post is destined for
-  platforms String[] // Array of platform names
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  platforms   String[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  category    Category?  @relation(fields: [categoryId], references: [id])
 
   @@index([workspaceId])
   @@index([userId])
@@ -633,20 +553,13 @@ model Post {
   @@index([scheduledAt])
 }
 
-enum PostStatus {
-  DRAFT
-  SCHEDULED
-  PUBLISHED
-  FAILED
-}
-
 model SystemLog {
   id          String   @id @default(cuid())
   workspaceId String?
-  level       String // INFO, WARNING, ERROR, SUCCESS
-  type        String // CRON, TRIGGER, AI, SYSTEM, AUTH, WEBHOOK
-  message     String   @db.Text
-  details     Json? // For error stacks or extra data
+  level       String
+  type        String
+  message     String
+  details     Json?
   userId      String?
   createdAt   DateTime @default(now())
 
@@ -656,45 +569,37 @@ model SystemLog {
   @@index([createdAt])
 }
 
-// --- Productivity: Unified Kanban Board ---
-
 model KanbanColumn {
   id          String       @id @default(cuid())
   title       String
   order       Int          @default(0)
   workspaceId String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   tasks       KanbanTask[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
 }
 
 model KanbanTask {
-  id       String    @id @default(cuid())
-  title    String
-  type     String    @default("task") // article, social, note, etc.
-  content  String?   @db.Text
-  priority String    @default("medium") // low, medium, high, urgent
-  dueDate  DateTime?
-  order    Int       @default(0)
-
-  columnId String
-  column   KanbanColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
-
+  id          String            @id @default(cuid())
+  title       String
+  type        String            @default("task")
+  content     String?
+  priority    String            @default("medium")
+  dueDate     DateTime?
+  order       Int               @default(0)
+  columnId    String
   workspaceId String
   userId      String
-  assignee    User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
   assigneeId  String?
-
-  coverUrl String?
-
-  checklists KanbanChecklist[]
-  activities KanbanActivity[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  coverUrl    String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  activities  KanbanActivity[]
+  checklists  KanbanChecklist[]
+  assignee    User?             @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  column      KanbanColumn      @relation(fields: [columnId], references: [id], onDelete: Cascade)
 
   @@index([columnId])
   @@index([workspaceId])
@@ -703,60 +608,208 @@ model KanbanTask {
 }
 
 model KanbanChecklist {
-  id        String  @id @default(cuid())
+  id        String     @id @default(cuid())
   title     String
-  completed Boolean @default(false)
-  order     Int     @default(0)
-
-  taskId String
-  task   KanbanTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  completed Boolean    @default(false)
+  order     Int        @default(0)
+  taskId    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  task      KanbanTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
 }
 
 model KanbanActivity {
-  id          String @id @default(cuid())
-  type        String // CREATE, MOVE, UPDATE, DELETE, CHECKLIST_TOGGLE
+  id          String     @id @default(cuid())
+  type        String
   description String
-
-  taskId String
-  task   KanbanTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  taskId      String
+  userId      String
+  createdAt   DateTime   @default(now())
+  task        KanbanTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
   @@index([userId])
 }
 
-// --- ATS: Recruitment Hub ---
-
 model Job {
-  id              String        @id @default(cuid())
-  title           String
-  description     String        @db.Text
-  department      String?
-  location        String?
-  type            String        @default("FULL_TIME")
-  salaryRange     String?
-  status          JobStatus     @default(DRAFT)
-  requirements    String[]      @default([])
-  benefits        String[]      @default([])
-  workspaceId     String
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  applications    Application[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  title        String
+  description  String
+  department   String?
+  location     String?
+  type         String        @default("FULL_TIME")
+  salaryRange  String?
+  status       JobStatus     @default(DRAFT)
+  requirements String[]      @default([])
+  benefits     String[]      @default([])
+  workspaceId  String
+  userId       String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([status])
+}
+
+model Candidate {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  phone        String?
+  location     String?
+  resumeUrl    String?
+  avatarUrl    String?
+  summary      String?
+  skills       String[]      @default([])
+  aiSummary    String?
+  aiMatchScore Int?
+  parsedData   Json?
+  workspaceId  String
+  userId       String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+  notes        AtsNote[]
+  scorecards   Scorecard[]
+
+  @@index([workspaceId])
+  @@index([email])
+}
+
+model Application {
+  id           String      @id @default(cuid())
+  jobId        String
+  candidateId  String
+  stage        String      @default("APPLIED")
+  status       String      @default("ACTIVE")
+  source       String?
+  referredById String?
+  workspaceId  String
+  appliedAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  candidate    Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job          Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  notes        AtsNote[]
+  interviews   Interview[]
+  offers       Offer[]
+  scorecards   Scorecard[]
+
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([stage])
+  @@index([workspaceId])
+}
+
+model Interview {
+  id            String          @id @default(cuid())
+  applicationId String
+  title         String
+  startTime     DateTime
+  endTime       DateTime
+  location      String?
+  status        InterviewStatus @default(SCHEDULED)
+  feedback      String?
+  interviewers  String[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+model Scorecard {
+  id             String       @id @default(cuid())
+  applicationId  String?
+  candidateId    String
+  interviewerId  String
+  stage          String?
+  score          Float?       @default(0)
+  feedback       String?
+  recommendation String?
+  attributes     Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  application    Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidate      Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  interviewer    User         @relation(fields: [interviewerId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([candidateId])
+  @@index([interviewerId])
+}
+
+model AtsNote {
+  id            String       @id @default(cuid())
+  applicationId String?
+  candidateId   String
+  userId        String
+  text          String
+  isPrivate     Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidate     Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([candidateId])
+  @@index([userId])
+}
+
+model Offer {
+  id             String      @id @default(cuid())
+  applicationId  String
+  salary         String?
+  startDate      DateTime?
+  status         OfferStatus @default(DRAFT)
+  offerLetterUrl String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+enum ROLE {
+  ADMIN
+  SUPERADMIN
+  SERVICE
+  GUEST
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+
+enum MemberRole {
+  DOCTOR
+  PATIENT
+  ADMIN
+  STAFF
+}
+
+enum WA_STATUS {
+  DISCONNECTED
+  CONNECTING
+  QR_REQUIRED
+  AUTHENTICATED
+  CONNECTED
+  LOGGED_OUT
+  ERROR
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
 }
 
 enum JobStatus {
@@ -766,153 +819,11 @@ enum JobStatus {
   ARCHIVED
 }
 
-model Candidate {
-  id              String        @id @default(cuid())
-  name            String
-  email           String        @unique
-  phone           String?
-  location        String?
-  resumeUrl       String?
-  avatarUrl       String?
-  summary         String?       @db.Text
-  skills          String[]      @default([])
-  
-  // AI Parsing Results
-  aiSummary       String?       @db.Text
-  aiMatchScore    Int?
-  parsedData      Json?
-  
-  applications    Application[]
-  scorecards      Scorecard[]
-  notes           AtsNote[]
-  
-  workspaceId     String
-  userId          String
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([workspaceId])
-  @@index([email])
-}
-
-model Application {
-  id              String        @id @default(cuid())
-  jobId           String
-  job             Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  candidateId     String
-  candidate       Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  
-  stage           String        @default("APPLIED")
-  status          String        @default("ACTIVE")
-  
-  source          String?
-  referredById    String?
-  
-  scorecards      Scorecard[]
-  interviews      Interview[]
-  notes           AtsNote[]
-  offers          Offer[]
-  
-  workspaceId     String
-  
-  appliedAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([jobId])
-  @@index([candidateId])
-  @@index([stage])
-  @@index([workspaceId])
-}
-
-model Interview {
-  id              String        @id @default(cuid())
-  applicationId   String
-  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  
-  title           String
-  startTime       DateTime
-  endTime         DateTime
-  location        String?
-  
-  status          InterviewStatus @default(SCHEDULED)
-  feedback        String?       @db.Text
-  
-  interviewers    String[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([applicationId])
-}
-
 enum InterviewStatus {
   SCHEDULED
   COMPLETED
   CANCELLED
   NO_SHOW
-}
-
-model Scorecard {
-  id              String        @id @default(cuid())
-  applicationId   String?
-  application     Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  
-  candidateId     String
-  candidate       Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  interviewerId   String
-  interviewer     User          @relation(fields: [interviewerId], references: [id], onDelete: Cascade)
-  
-  stage           String?
-  score           Float?        @default(0)
-  feedback        String?       @db.Text
-  recommendation  String?
-  attributes      Json?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([applicationId])
-  @@index([candidateId])
-  @@index([interviewerId])
-}
-
-model AtsNote {
-  id              String        @id @default(cuid())
-  applicationId   String?
-  application     Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  
-  candidateId     String
-  candidate       Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  text            String        @db.Text
-  isPrivate       Boolean       @default(false)
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([applicationId])
-  @@index([candidateId])
-  @@index([userId])
-}
-
-model Offer {
-  id              String        @id @default(cuid())
-  applicationId   String
-  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  
-  salary          String?
-  startDate       DateTime?
-  status          OfferStatus   @default(DRAFT)
-  offerLetterUrl  String?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([applicationId])
 }
 
 enum OfferStatus {

@@ -124,27 +124,100 @@ async function fetchJSON(url, options = {}) {
     }
 }
 
+/**
+ * Magic Token Resolution: If a user provides a User Access Token but wants to post to a Page,
+ * Facebook requires a Page Access Token for that specific Page ID. This helper attempts
+ * to fetch it automatically using the user's token.
+ */
+async function getPageAccessToken(userToken, targetPageId) {
+    console.log(`[FB_MAGIC_RESOLUTION] Attempting to resolve Page Token for: ${targetPageId}`);
+    try {
+        const { ok, data, status } = await fetchJSON(`https://graph.facebook.com/v18.0/me/accounts?access_token=${userToken}`);
+        if (!ok || !data?.data) {
+            console.warn(`[FB_MAGIC_RESOLUTION] Failed to fetch accounts. Status: ${status}`, data?.error?.message || 'Unknown error');
+            return null;
+        }
+
+        // Find the specific page in the list of accounts
+        const page = data.data.find(p => p.id === targetPageId || p.page_id === targetPageId);
+        if (page?.access_token) {
+            console.log(`[FB_MAGIC_RESOLUTION] SUCCESS! Found Page Token for "${page.name}"`);
+            return page.access_token;
+        }
+
+        console.warn(`[FB_MAGIC_RESOLUTION] Page ID ${targetPageId} not found in user's accounts list.`);
+        return null;
+    } catch (e) {
+        console.error(`[FB_MAGIC_RESOLUTION_ERROR]`, e.message);
+        return null;
+    }
+}
+
 async function publishFacebook(creds, content, mediaUrls) {
-    const token = creds.accessToken || creds.access_token;
+    let token = creds.accessToken || creds.access_token;
     const pageId = creds.pageId || creds.page_id;
 
-    if (!token) return { success: false, message: 'Missing accessToken in Facebook credentials' };
+    console.log(`[FB_PUBLISH_DIAGNOSTIC] Token Present: ${!!token}, Page ID: ${pageId || 'NONE'}`);
 
-    // If no pageId, try posting to the user's feed
-    const endpoint = pageId
-        ? `https://graph.facebook.com/${pageId}/feed`
-        : `https://graph.facebook.com/me/feed`;
+    if (!token) {
+        return { success: false, message: 'Missing accessToken in Facebook credentials' };
+    }
 
-    const body = { message: content, access_token: token };
-    if (mediaUrls?.[0]) body.link = mediaUrls[0];
+    // Determine target (Page vs. Personal)
+    const getEndpoint = (tid) => tid
+        ? `https://graph.facebook.com/v18.0/${tid}/feed`
+        : `https://graph.facebook.com/v18.0/me/feed`;
 
-    const { ok, data } = await fetchJSON(endpoint, {
+    let endpoint = getEndpoint(pageId);
+    console.log(`[FB_PUBLISH_DIAGNOSTIC] Initial Endpoint: ${endpoint}`);
+
+    const buildBody = (t) => {
+        const b = { message: content, access_token: t };
+        if (mediaUrls?.[0]) b.link = mediaUrls[0];
+        return b;
+    };
+
+    let { ok, data, status } = await fetchJSON(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(buildBody(token)),
     });
 
-    if (ok && data?.id) return { success: true, message: `Posted to Facebook (ID: ${data.id})`, platformPostId: data.id };
+    // --- MAGIC RESOLUTION RETRY ---
+    // If we failed with permission error 200/403 and have a Page ID, let's try to resolve the token
+    if (!ok && (status === 403 || data?.error?.code === 200) && pageId) {
+        console.log(`[FB_MAGIC_RESOLUTION] Triggered due to error: ${data?.error?.message}`);
+        const resolvedToken = await getPageAccessToken(token, pageId);
+        if (resolvedToken) {
+            console.log(`[FB_MAGIC_RESOLUTION] Retrying with Page Access Token...`);
+            token = resolvedToken;
+            const retry = await fetchJSON(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(buildBody(token)),
+            });
+            ok = retry.ok;
+            data = retry.data;
+            status = retry.status;
+        }
+    }
+
+    if (ok && data?.id) {
+        console.log(`[FB_PUBLISH_SUCCESS] ID: ${data.id}`);
+        return { success: true, message: `Posted to Facebook (ID: ${data.id})`, platformPostId: data.id };
+    }
+
+    console.error(`[FB_PUBLISH_ERROR] Status: ${status}`, JSON.stringify(data, null, 2));
+    
+    // Check for common permission/token errors
+    if (data?.error?.code === 190) return { success: false, message: 'Facebook Access Token expired. Please re-link your account.' };
+    if (data?.error?.code === 200) {
+        return { 
+            success: false, 
+            message: `Facebook Permission Error: Ensure you have granted 'pages_manage_posts' and 'pages_read_engagement' permissions to your app.`
+        };
+    }
+    
     return { success: false, message: data?.error?.message || 'Facebook publish failed' };
 }
 

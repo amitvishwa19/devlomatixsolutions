@@ -222,14 +222,14 @@ export const MediaLibraryModal = () => {
     return (
         <Dialog open={isModalOpen} onOpenChange={handleClose}>
             <DialogContent className="min-w-[85vw] max-w-[85vw] min-h-[85vh] h-[85vh] max-h-[85vh] bg-background border border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col">
-                <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
                     accept="image/*"
                     onChange={handleFileUpload}
                 />
-                
+
                 {/* Modern Header */}
                 <DialogHeader className="px-8 py-5 border-b border-border/40 bg-muted/5 flex flex-row items-center justify-between shrink-0">
                     <div className="space-y-1 text-left">
@@ -253,9 +253,7 @@ export const MediaLibraryModal = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={handleClose} className="rounded-full hover:bg-muted">
-                            <X className="w-5 h-5 text-muted-foreground" />
-                        </Button>
+
                     </div>
                 </DialogHeader>
 
@@ -288,8 +286,8 @@ export const MediaLibraryModal = () => {
                                 </Button>
                                 {isUploading && (
                                     <div className="w-full bg-muted rounded-full h-1 overflow-hidden mt-2">
-                                        <div 
-                                            className="bg-primary h-full transition-all duration-300" 
+                                        <div
+                                            className="bg-primary h-full transition-all duration-300"
                                             style={{ width: `${uploadProgress}%` }}
                                         />
                                     </div>
@@ -368,7 +366,7 @@ export const MediaLibraryModal = () => {
                                             key={doc.id}
                                             onClick={() => setSelectedUrl(doc.fileUrl)}
                                             className={cn(
-                                                "group relative cursor-pointer transition-all duration-500 rounded-[1.5rem] overflow-hidden border-2",
+                                                "group relative cursor-pointer transition-all duration-500 rounded-md  overflow-hidden border-2",
                                                 selectedUrl === doc.fileUrl
                                                     ? "border-primary shadow-2xl shadow-primary/10 scale-[1.03] z-10"
                                                     : "border-border/60 hover:border-primary/40 bg-card/40 hover:shadow-xl hover:translate-y-[-4px]"
@@ -426,10 +424,10 @@ export const MediaLibraryModal = () => {
                                     <AppImage src={selectedUrl} alt="Selected" fill className="object-cover" />
                                 </div>
                                 <div className="space-y-0.5">
-                                  <p className="text-[8px] text-primary/40 tracking-[0.3em] font-black uppercase">Active Path</p>
-                                  <p className="text-[9px] text-primary bg-primary/5 px-3 py-1 rounded-full border border-primary/10 font-bold uppercase tracking-wider">
-                                    Ready to Embed
-                                  </p>
+                                    <p className="text-[8px] text-primary/40 tracking-[0.3em] font-black uppercase">Active Path</p>
+                                    <p className="text-[9px] text-primary bg-primary/5 px-3 py-1 rounded-full border border-primary/10 font-bold uppercase tracking-wider">
+                                        Ready to Embed
+                                    </p>
                                 </div>
                             </div>
                         )}

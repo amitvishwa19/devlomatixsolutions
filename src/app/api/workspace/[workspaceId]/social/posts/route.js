@@ -40,7 +40,7 @@ export async function GET(req, { params }) {
             const platformsArray = post.platforms || [];
 
             const accounts = platformsArray.map(item => {
-                // Try to find by ID (connected profile)
+                // 1. Try to find by exact ID (best case)
                 const credById = credentials.find(c => c.id === item);
                 if (credById) {
                     return {
@@ -51,14 +51,33 @@ export async function GET(req, { params }) {
                     };
                 }
                 
-                // Fallback: treat as platform name (unlinked)
-                const platformName = item.toUpperCase(); // Ensure it's uppercase for match
-                const credByPlatform = credentials.find(c => c.platform === platformName);
+                // 2. Fallback: If ID not found, it might be an orphaned ID or a platform name
+                // Try to resolve by platform name
+                const platformName = item.includes('_') ? null : item.toUpperCase(); // simple check to see if it's an ID
+                
+                // If we can't determine platform from 'item', or if it is an ID that's gone,
+                // we should check if there's ONLY ONE account for that platform and use it.
+                // For now, let's see if 'item' matches any known platform names
+                const knownPlatforms = ['FACEBOOK', 'LINKEDIN', 'TWITTER', 'X', 'WHATSAPP', 'INSTAGRAM'];
+                const targetPlatform = knownPlatforms.find(p => p === item.toUpperCase()) || 
+                                     (item.startsWith('cred_') ? null : item.toUpperCase()); // naive check
+
+                const credByPlatform = credentials.find(c => c.platform === targetPlatform);
+                
+                if (credByPlatform) {
+                    return {
+                        id: credByPlatform.id,
+                        platform: credByPlatform.platform,
+                        profileName: credByPlatform.profile || `${credByPlatform.platform} Account`,
+                        status: credByPlatform.status,
+                    };
+                }
+
                 return {
-                    id: credByPlatform?.id || null,
-                    platform: platformName,
-                    profileName: credByPlatform?.profile || `${platformName} Account`,
-                    status: credByPlatform?.status || 'disconnected',
+                    id: null,
+                    platform: targetPlatform || item,
+                    profileName: `Unlinked Account`,
+                    status: 'disconnected',
                 };
             });
 

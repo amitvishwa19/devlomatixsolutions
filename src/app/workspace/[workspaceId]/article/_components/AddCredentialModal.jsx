@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 
 const PLATFORM_CONFIG = {
- FACEBOOK: ['accessToken'],
+ FACEBOOK: ['accessToken', 'pageId'],
  INSTAGRAM: ['accessToken', 'igUserId'],
  TWITTER: ['bearerToken'],
  X: ['bearerToken'],
