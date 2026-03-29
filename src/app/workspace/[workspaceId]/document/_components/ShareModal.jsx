@@ -78,7 +78,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
 
  return (
  <Dialog open={isOpen} onOpenChange={onOpenChange}>
- <DialogContent className="sm:max-w-md rounded-lg border-none shadow-2xl overflow-hidden p-0">
+ <DialogContent className="sm:max-w-md rounded-md border-none shadow-2xl overflow-hidden p-0">
  <div className="p-6 pb-4">
  <DialogHeader className="mb-4">
  <DialogTitle className="text-xl font-bold flex items-center gap-2">
@@ -98,17 +98,17 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  placeholder="Search by name or email..." 
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="pl-9 h-11 bg-muted/40 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary/40 font-medium"
+ className="pl-9 h-11 bg-muted/40 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary/40 font-medium"
  />
  {isSearching && (
  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
  )}
  </div>
  <Select value={role} onValueChange={setRole}>
- <SelectTrigger className="w-[110px] h-11 border-none bg-muted/40 font-semibold rounded-lg">
+ <SelectTrigger className="w-[110px] h-11 border-none bg-muted/40 font-semibold rounded-md">
  <SelectValue />
  </SelectTrigger>
- <SelectContent className="rounded-lg shadow-xl border-border/40">
+ <SelectContent className="rounded-md shadow-xl border-border/40">
  <SelectItem value="VIEWER" className="font-semibold py-2">Viewer</SelectItem>
  <SelectItem value="EDITOR" className="font-semibold py-2">Editor</SelectItem>
  </SelectContent>
@@ -117,7 +117,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
 
  {/* Search Results Dropdown Simulation */}
  {searchResults.length > 0 && (
- <div className="mt-2 bg-card rounded-lg border border-border/50 shadow-sm max-h-48 overflow-y-auto">
+ <div className="mt-2 bg-card rounded-md border border-border/50 shadow-sm max-h-48 overflow-y-auto">
  {searchResults.map(user => (
  <div key={user.id} className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-0">
  <div className="flex items-center gap-3">
@@ -134,7 +134,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  size="sm" 
  onClick={() => handleShare(user.id)}
  disabled={isSubmitting}
- className="h-8 rounded-lg font-bold text-xs"
+ className="h-8 rounded-md font-bold text-xs"
  >
  Invite
  </Button>
@@ -192,7 +192,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  <Button 
  variant="ghost" 
  size="icon" 
- className="h-7 w-7 text-muted-foreground/40 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+ className="h-7 w-7 text-muted-foreground/40 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all rounded-md"
  onClick={() => handleRemove(access.userId)}
  disabled={isSubmitting}
  >

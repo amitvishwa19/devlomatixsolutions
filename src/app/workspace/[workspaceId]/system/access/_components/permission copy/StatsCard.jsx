@@ -12,7 +12,7 @@ export const StatsCard = ({
 }) => {
  return (
  <div
- className="bg-card rounded-lg p-5 animate-slide-up duration-300 hover:border-primary/30 transition-colors animate-fade-in border"
+ className="bg-card rounded-md p-5 animate-slide-up duration-300 hover:border-primary/30 transition-colors animate-fade-in border"
  style={{ animationDelay: `${delay}ms` }}
  >
  <div className="flex items-start justify-between">
@@ -25,7 +25,7 @@ export const StatsCard = ({
  </div>
  <div
  className={cn(
- "p-3 rounded-lg bg-primary/10 border border-primary/20",
+ "p-3 rounded-md bg-primary/10 border border-primary/20",
  iconColor
  )}
  >

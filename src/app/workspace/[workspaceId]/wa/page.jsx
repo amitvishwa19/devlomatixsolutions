@@ -188,11 +188,11 @@ export default function DashboardPage({ params: paramsPromise }) {
                     </div>
 
                     {loading ?
-          <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+          <div className="rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
                             Loading campaigns...
                         </div> :
           error ?
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
                             {error}
                         </div> :
 

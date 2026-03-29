@@ -4,7 +4,7 @@ import { Facebook, Instagram, Linkedin, Twitter, MessageCircle, Heart, Share2, M
 import { cn } from "@/lib/utils";
 
 const FacebookPreview = ({ content, mediaUrls, profileName }) => (
-  <div className="bg-white text-black rounded-lg shadow-sm border border-gray-200 w-full max-w-[500px] overflow-hidden font-sans">
+  <div className="bg-white text-black rounded-md shadow-sm border border-gray-200 w-full max-w-[500px] overflow-hidden font-sans">
     <div className="p-3 flex items-center gap-2">
       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
         <User className="text-gray-400" size={24} />
@@ -32,13 +32,13 @@ const FacebookPreview = ({ content, mediaUrls, profileName }) => (
       </div>
     )}
     <div className="p-2 border-t border-gray-100 flex items-center justify-around">
-      <div className="flex items-center gap-1.5 text-gray-500 font-bold text-[12px] hover:bg-gray-50 px-3 py-1.5 rounded-lg flex-1 justify-center cursor-default">
+      <div className="flex items-center gap-1.5 text-gray-500 font-bold text-[12px] hover:bg-gray-50 px-3 py-1.5 rounded-md flex-1 justify-center cursor-default">
         <Heart size={18} /> Like
       </div>
-      <div className="flex items-center gap-1.5 text-gray-500 font-bold text-[12px] hover:bg-gray-50 px-3 py-1.5 rounded-lg flex-1 justify-center cursor-default">
+      <div className="flex items-center gap-1.5 text-gray-500 font-bold text-[12px] hover:bg-gray-50 px-3 py-1.5 rounded-md flex-1 justify-center cursor-default">
         <MessageCircle size={18} /> Comment
       </div>
-      <div className="flex items-center gap-1.5 text-gray-500 font-bold text-[12px] hover:bg-gray-50 px-3 py-1.5 rounded-lg flex-1 justify-center cursor-default">
+      <div className="flex items-center gap-1.5 text-gray-500 font-bold text-[12px] hover:bg-gray-50 px-3 py-1.5 rounded-md flex-1 justify-center cursor-default">
         <Share2 size={18} /> Share
       </div>
     </div>
@@ -46,7 +46,7 @@ const FacebookPreview = ({ content, mediaUrls, profileName }) => (
 );
 
 const InstagramPreview = ({ content, mediaUrls, profileName }) => (
-  <div className="bg-white text-black rounded-lg shadow-sm border border-gray-200 w-full max-w-[400px] overflow-hidden font-sans">
+  <div className="bg-white text-black rounded-md shadow-sm border border-gray-200 w-full max-w-[400px] overflow-hidden font-sans">
     <div className="p-3 flex items-center gap-2">
       <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-[2px]">
         <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-[1px]">
@@ -87,7 +87,7 @@ const InstagramPreview = ({ content, mediaUrls, profileName }) => (
 );
 
 const TwitterPreview = ({ content, mediaUrls, profileName }) => (
-  <div className="bg-white text-black rounded-lg shadow-sm border border-gray-200 w-full max-w-[500px] p-4 font-sans">
+  <div className="bg-white text-black rounded-md shadow-sm border border-gray-200 w-full max-w-[500px] p-4 font-sans">
     <div className="flex gap-3">
       <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0 flex items-center justify-center overflow-hidden">
         <User className="text-gray-400" size={24} />
@@ -102,7 +102,7 @@ const TwitterPreview = ({ content, mediaUrls, profileName }) => (
           dangerouslySetInnerHTML={{ __html: content.replace(/<[^>]*>/g, ' ') }} 
         />
         {mediaUrls.length > 0 && (
-          <div className="rounded-lg overflow-hidden border border-gray-100 bg-gray-50 max-h-[300px]">
+          <div className="rounded-md overflow-hidden border border-gray-100 bg-gray-50 max-h-[300px]">
             <img src={mediaUrls[0]} alt="Tweet media" className="w-full h-full object-cover" />
           </div>
         )}
@@ -120,7 +120,7 @@ const TwitterPreview = ({ content, mediaUrls, profileName }) => (
 );
 
 const LinkedInPreview = ({ content, mediaUrls, profileName }) => (
-  <div className="bg-white text-black rounded-lg shadow-sm border border-gray-200 w-full max-w-[500px] overflow-hidden font-sans">
+  <div className="bg-white text-black rounded-md shadow-sm border border-gray-200 w-full max-w-[500px] overflow-hidden font-sans">
     <div className="p-3 flex items-center gap-2">
       <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center overflow-hidden">
         <User className="text-gray-400" size={32} />
@@ -190,7 +190,7 @@ export const SinglePostPreview = ({ platformKey, content, mediaUrls, accounts })
 export const PostPreview = ({ platforms, content, mediaUrls, accounts }) => {
   if (!platforms || platforms.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/10 rounded-lg bg-muted/5">
+      <div className="h-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/10 rounded-md bg-muted/5">
         <Share2 className="w-12 h-12 mb-4 text-muted-foreground opacity-20" />
         <h3 className="text-sm font-bold text-muted-foreground opacity-60">No Platforms Selected</h3>
         <p className="text-xs text-muted-foreground opacity-40 mt-2">Select at least one account in the sidebar to view previews</p>
@@ -208,7 +208,7 @@ export const PostPreview = ({ platforms, content, mediaUrls, accounts }) => {
                 {platform.split('_')[0]} Preview
               </span>
             </div>
-            <div className="flex justify-center bg-muted/10 p-6 rounded-lg border border-border/5 group-hover:scale-[1.01] transition-transform">
+            <div className="flex justify-center bg-muted/10 p-6 rounded-md border border-border/5 group-hover:scale-[1.01] transition-transform">
               <SinglePostPreview platformKey={platform} content={content} mediaUrls={mediaUrls} accounts={accounts} />
             </div>
           </div>

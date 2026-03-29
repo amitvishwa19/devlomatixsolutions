@@ -6,7 +6,7 @@ export default function MultiPlatformPage() {
  <h1 className="text-3xl font-bold text-white mb-2 ">Multi-Platform</h1>
  <p className="text-[#A0AEC0]">Manage integrations across different channels</p>
  </div>
- <div className="flex h-[60vh] items-center justify-center rounded-lg border border-border border-dashed">
+ <div className="flex h-[60vh] items-center justify-center rounded-md border border-border border-dashed">
  <p className="text-muted-foreground">Multi-platform integrations coming soon.</p>
  </div>
  </div>);

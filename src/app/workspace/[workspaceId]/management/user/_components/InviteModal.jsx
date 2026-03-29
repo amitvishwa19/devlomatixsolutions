@@ -85,7 +85,7 @@ export const InviteModal = () => {
 
  return (
  <Dialog open={isModalOpen} onOpenChange={onClose}>
- <DialogContent className="sm:max-w-md bg-background border border-border/100 shadow-2xl rounded-lg overflow-hidden p-0">
+ <DialogContent className="sm:max-w-md bg-background border border-border/100 shadow-2xl rounded-md overflow-hidden p-0">
  <div className="p-8 pb-4">
  <DialogHeader>
  <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
@@ -107,14 +107,14 @@ export const InviteModal = () => {
  readOnly
  disabled={isLoadingCode}
  value={isLoadingCode ? "GENERATING..." : inviteUrl}
- className="bg-muted/30 border-none rounded-lg h-12 text-[10px] font-bold text-foreground shadow-inner focus-visible:ring-0 truncate"
+ className="bg-muted/30 border-none rounded-md h-12 text-[10px] font-bold text-foreground shadow-inner focus-visible:ring-0 truncate"
  />
  </div>
  <Button 
  size="icon" 
  onClick={handleCopy} 
  disabled={!inviteCode || isLoadingCode}
- className="shrink-0 rounded-lg bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-12 w-12"
+ className="shrink-0 rounded-md bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-12 w-12"
  >
  {isCopied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
  </Button>
@@ -142,13 +142,13 @@ export const InviteModal = () => {
  type="email"
  value={email}
  onChange={(e) => setEmail(e.target.value)}
- className="pl-12 bg-muted/30 border-none rounded-lg h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary font-mono"
+ className="pl-12 bg-muted/30 border-none rounded-md h-12 text-xs font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary font-mono"
  />
  </div>
  <Button 
  disabled={isSending || !email || !inviteCode} 
  onClick={handleSendEmail}
- className="rounded-lg shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 h-12 px-6 font-bold text-[10px]"
+ className="rounded-md shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 h-12 px-6 font-bold text-[10px]"
  >
  {isSending ? <Loader2 className="h-4 w-4 animate-spin font-bold" /> : <Send className="h-4 w-4 mr-2" />}
  Send

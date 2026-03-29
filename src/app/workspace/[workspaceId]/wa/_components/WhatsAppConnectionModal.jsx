@@ -252,7 +252,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  <Card className="bg-[#1A1D21] border-[#2D3748] overflow-hidden">
  <CardHeader className="border-b border-[#2D3748] pb-4">
  <div className="flex items-center gap-3">
- <div className="p-2 bg-emerald-500/10 rounded-lg">
+ <div className="p-2 bg-emerald-500/10 rounded-md">
  <Smartphone className="w-5 h-5 text-emerald-500" />
  </div>
  <CardTitle className="text-white">Device Connection</CardTitle>
@@ -272,7 +272,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  initial={{ opacity: 0, scale: 0.9 }}
  animate={{ opacity: 1, scale: 1 }}
  exit={{ opacity: 0, scale: 0.9 }}
- className="p-4 bg-white rounded-lg shadow-lg min-w-[200px] min-h-[200px] flex items-center justify-center">
+ className="p-4 bg-white rounded-md shadow-lg min-w-[200px] min-h-[200px] flex items-center justify-center">
  
  {qrDataUrl ?
  <img src={qrDataUrl} alt="WhatsApp QR Code" className="w-48 h-48" /> :
@@ -381,7 +381,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  <Card className="bg-[#1A1D21] border-[#2D3748]">
  <CardHeader className="pb-3">
  <div className="flex items-center gap-3">
- <div className="p-2 bg-blue-500/10 rounded-lg">
+ <div className="p-2 bg-blue-500/10 rounded-md">
  <Shield className="w-5 h-5 text-blue-500" />
  </div>
  <CardTitle className="text-white text-base">Security & Storage</CardTitle>

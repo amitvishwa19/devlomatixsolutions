@@ -99,11 +99,11 @@ export const AddCategoryModal = () => {
 
  return (
  <Dialog open={isModalOpen} onOpenChange={handleClose}>
- <DialogContent className="sm:max-w-lg overflow-hidden border border-border/100 shadow-2xl p-0 bg-background rounded-lg">
+ <DialogContent className="sm:max-w-lg overflow-hidden border border-border/100 shadow-2xl p-0 bg-background rounded-md">
  <form onSubmit={onSubmit} className="flex flex-col">
  <DialogHeader className="p-8 pb-0">
  <div className="flex items-center gap-3 mb-2">
- <div className="p-2 rounded-lg bg-primary/10">
+ <div className="p-2 rounded-md bg-primary/10">
  <Tags className="h-5 w-5 text-primary" />
  </div>
  <DialogTitle className="text-2xl font-bold">
@@ -127,7 +127,7 @@ export const AddCategoryModal = () => {
  </label>
  <Input
  disabled={isLoading}
- className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold"
+ className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold"
  placeholder="e.g. Blog Posts"
  value={name}
  onChange={(e) => setName(e.target.value)}
@@ -142,7 +142,7 @@ export const AddCategoryModal = () => {
  <Textarea
  disabled={isLoading}
  rows='4'
- className="min-h-[80px] bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm py-3"
+ className="min-h-[80px] bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm py-3"
  placeholder="What content belongs to this category?"
  value={description}
  onChange={(e) => setDescription(e.target.value)}
@@ -154,15 +154,15 @@ export const AddCategoryModal = () => {
  <FolderTree size={12} /> Parent Category
  </label>
  <Select value={parentId} onValueChange={setParentId} disabled={isLoading}>
- <SelectTrigger className="h-12 bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-[10px] font-bold ">
+ <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-[10px] font-bold ">
  <SelectValue placeholder="None (Top-level)" />
  </SelectTrigger>
- <SelectContent className="rounded-lg border-border/40">
- <SelectItem value="none" className="font-bold text-[10px] rounded-lg">
+ <SelectContent className="rounded-md border-border/40">
+ <SelectItem value="none" className="font-bold text-[10px] rounded-md">
  NONE (TOP-LEVEL CATEGORY)
  </SelectItem>
  {availableParents.map((parent) => (
- <SelectItem key={parent.id} value={parent.id} className="font-bold text-[10px] rounded-lg">
+ <SelectItem key={parent.id} value={parent.id} className="font-bold text-[10px] rounded-md">
  <div className="flex items-center gap-2">
  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: parent.color }} />
  {parent.name}
@@ -177,7 +177,7 @@ export const AddCategoryModal = () => {
  <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1.5">
  <Palette size={12} /> Category Color
  </label>
- <div className="flex flex-wrap gap-2.5 p-4 rounded-lg bg-muted/20 border border-border/10">
+ <div className="flex flex-wrap gap-2.5 p-4 rounded-md bg-muted/20 border border-border/10">
  {colorPresets.map((p) => (
  <button
  key={p}
@@ -207,13 +207,13 @@ export const AddCategoryModal = () => {
  type="button"
  variant="outline"
  onClick={handleClose}
- className="h-12 rounded-lg font-bold flex-1 border-border/100 bg-background/50 text-[10px] "
+ className="h-12 rounded-md font-bold flex-1 border-border/100 bg-background/50 text-[10px] "
  >
  Cancel
  </Button>
  <Button
  disabled={isLoading}
- className="h-12 rounded-lg font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 text-[10px] "
+ className="h-12 rounded-md font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 text-[10px] "
  >
  {isLoading ? (
  <Loader2 className="h-4 w-4 animate-spin" />

@@ -7,7 +7,7 @@ export function StatCard({ title, value, description, icon: Icon, trend, classNa
     return (
         <div
             className={cn(
-                'group relative overflow-hidden rounded-lg border border-border bg-card px-4  py-2 shadow-soft transition-all duration-300 hover:shadow-medium hover:border-primary/30  animate-fade-in',
+                'group relative overflow-hidden rounded-md border border-border bg-card px-4  py-2 shadow-soft transition-all duration-300 hover:shadow-medium hover:border-primary/30  animate-fade-in',
                 className
             )}
         >
@@ -32,7 +32,7 @@ export function StatCard({ title, value, description, icon: Icon, trend, classNa
                         </div>
                     )}
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
+                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 transition-colors group-hover:bg-primary/15">
                     <Icon className="h-6 w-6 text-primary" />
                 </div>
             </div>

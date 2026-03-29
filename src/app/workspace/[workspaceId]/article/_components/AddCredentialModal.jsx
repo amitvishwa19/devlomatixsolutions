@@ -199,7 +199,7 @@ export const AddCredentialModal = () => {
 
  return (
  <Dialog open={isModalOpen} onOpenChange={handleClose}>
- <DialogContent className=" bg-background border border-border/100 rounded-lg shadow-2xl p-0 overflow-hidden">
+ <DialogContent className=" bg-background border border-border/100 rounded-md shadow-2xl p-0 overflow-hidden">
  <form onSubmit={onSubmit} className="flex flex-col max-h-[85vh]">
  <DialogHeader className="p-8 pb-4">
  <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -208,7 +208,7 @@ export const AddCredentialModal = () => {
  </DialogHeader>
 
  <div className="flex-1 overflow-y-auto p-8 pt-0 space-y-6 scrollbar-hide">
- <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg flex items-start gap-3">
+ <div className="p-4 bg-primary/5 border border-primary/10 rounded-md flex items-start gap-3">
  <Shield className="text-primary h-5 w-5 mt-0.5 shrink-0" />
  <p className="text-xs font-bold text-muted-foreground leading-relaxed text-left">
  Provide the <span className="text-primary font-bold">API credentials</span> for your platform. These will be stored securely and used for multi-channel publishing.
@@ -222,10 +222,10 @@ export const AddCredentialModal = () => {
  <Tag className="w-3 h-3" /> PLATFORM
  </label>
  <Select value={platform} onValueChange={handlePlatformChange} disabled={isLoading}>
- <SelectTrigger className="bg-muted/30 border-none rounded-lg focus:ring-1 focus:ring-primary h-12 font-bold text-xs ">
+ <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs ">
  <SelectValue placeholder="Select Platform" />
  </SelectTrigger>
- <SelectContent className="rounded-lg border-border/20 shadow-2xl">
+ <SelectContent className="rounded-md border-border/20 shadow-2xl">
  {Object.keys(PLATFORM_CONFIG).map(p => (
  <SelectItem key={p} value={p} className="font-bold text-[10px] py-3">{p}</SelectItem>
  ))}
@@ -243,7 +243,7 @@ export const AddCredentialModal = () => {
  placeholder="e.g. TIKTOK, REDDIT"
  value={customPlatform}
  onChange={(e) => setCustomPlatform(e.target.value)}
- className="bg-primary/5 border-primary/20 rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold text-xs"
+ className="bg-primary/5 border-primary/20 rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold text-xs"
  />
  </div>
  ) : (
@@ -256,7 +256,7 @@ export const AddCredentialModal = () => {
  placeholder="e.g. Personal Account"
  value={profileName}
  onChange={(e) => setProfileName(e.target.value)}
- className="bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
+ className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
  />
  </div>
  )}
@@ -272,7 +272,7 @@ export const AddCredentialModal = () => {
  placeholder="e.g. Personal Account"
  value={profileName}
  onChange={(e) => setProfileName(e.target.value)}
- className="bg-muted/30 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
+ className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
  />
  </div>
  )}
@@ -282,10 +282,10 @@ export const AddCredentialModal = () => {
  <Activity className="w-3 h-3" /> CONNECTION STATUS
  </label>
  <Select value={status} onValueChange={setStatus} disabled={isLoading}>
- <SelectTrigger className="bg-muted/30 border-none rounded-lg focus:ring-1 focus:ring-primary h-12 font-bold text-xs ">
+ <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs ">
  <SelectValue placeholder="Select Status" />
  </SelectTrigger>
- <SelectContent className="rounded-lg border-border/20 shadow-2xl">
+ <SelectContent className="rounded-md border-border/20 shadow-2xl">
  <SelectItem value="connected" className="font-bold text-[10px] py-3">Connected</SelectItem>
  <SelectItem value="disconnected" className="font-bold text-[10px] py-3 text-muted-foreground">Disconnected</SelectItem>
  <SelectItem value="error" className="font-bold text-[10px] py-3 text-rose-500">Error / Expired</SelectItem>
@@ -304,7 +304,7 @@ export const AddCredentialModal = () => {
  variant="outline"
  size="sm"
  onClick={addField}
- className="text-[9px] font-bold rounded-lg"
+ className="text-[9px] font-bold rounded-md"
  >
  <Plus className="w-3 h-3 mr-1" /> ADD FIELD
  </Button>
@@ -318,7 +318,7 @@ export const AddCredentialModal = () => {
  placeholder="Key (e.g. api_key)"
  value={field.key}
  onChange={(e) => updateField(index, 'key', e.target.value)}
- className="bg-muted/10 border-dashed border-border/40 rounded-lg h-10 text-[10px] font-bold"
+ className="bg-muted/10 border-dashed border-border/40 rounded-md h-10 text-[10px] font-bold"
  />
  </div>
  <div className="flex-2 space-y-1">
@@ -326,7 +326,7 @@ export const AddCredentialModal = () => {
  placeholder="Value"
  value={field.value}
  onChange={(e) => updateField(index, 'value', e.target.value)}
- className="bg-muted/30 border-none rounded-lg h-10 text-[10px]"
+ className="bg-muted/30 border-none rounded-md h-10 text-[10px]"
  />
  </div>
  {fields.length > 1 && (
@@ -351,7 +351,7 @@ export const AddCredentialModal = () => {
  type="button"
  variant="ghost"
  onClick={handleClose}
- className="px-6 rounded-lg font-bold text-muted-foreground text-[10px]"
+ className="px-6 rounded-md font-bold text-muted-foreground text-[10px]"
  >
  Cancel
  </Button>
@@ -394,7 +394,7 @@ export const AddCredentialModal = () => {
  setIsTesting(false);
  }
  }}
- className="px-6 rounded-lg font-bold text-[10px] border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 transition-all"
+ className="px-6 rounded-md font-bold text-[10px] border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 transition-all"
  >
  {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
  Test Connection
@@ -403,7 +403,7 @@ export const AddCredentialModal = () => {
  <Button
  type="submit"
  disabled={isLoading || isTesting}
- className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px] rounded-lg font-extrabold text-[10px] shadow-lg shadow-primary/20 transition-all active:scale-95"
+ className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px] rounded-md font-extrabold text-[10px] shadow-lg shadow-primary/20 transition-all active:scale-95"
  >
  {isLoading ? (
  <Loader2 className="mr-2 h-4 w-4 animate-spin" />

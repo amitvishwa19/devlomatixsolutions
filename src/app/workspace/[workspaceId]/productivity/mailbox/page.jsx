@@ -120,7 +120,7 @@ export default function MailboxPage() {
             </p>
             <Button
               onClick={handleConnect}
-              className="w-full h-16 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-black text-[10px] tracking-[0.3em] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 uppercase"
+              className="w-full h-16 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-black text-[10px] tracking-[0.3em] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 uppercase"
             >
               <Plus className="w-5 h-5 mr-3" /> Connect Gmail Account
             </Button>

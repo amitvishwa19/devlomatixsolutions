@@ -86,14 +86,14 @@ export default function CreateJobPage() {
  <h1 className="text-4xl tracking-tighter">New Position</h1>
  </div>
  <div className="flex items-center gap-3">
- <Button variant="outline" className="h-11 rounded-lg px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-11 rounded-md px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
  <Save className="w-4 h-4 mr-2 opacity-50" />
  Save Draft
  </Button>
  <Button 
  onClick={handlePublish}
  disabled={isSubmitting}
- className="h-11 rounded-lg px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
+ className="h-11 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
  >
  {isSubmitting ? "Publishing..." : <>
  <Rocket className="w-4 h-4 mr-2" />
@@ -107,7 +107,7 @@ export default function CreateJobPage() {
  {/* Left Side: Main Details */}
  <div className="lg:col-span-2 space-y-8">
  {/* Basic Info */}
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="border-b border-border/10 bg-muted/5">
  <CardTitle className="text-xl flex items-center gap-2">
  <Info className="w-5 h-5 text-primary" />
@@ -119,7 +119,7 @@ export default function CreateJobPage() {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Job Title</label>
  <Input 
  placeholder="e.g. Senior Frontend Engineer" 
- className="bg-muted/30 border-none h-14 rounded-lg text-base font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
+ className="bg-muted/30 border-none h-14 rounded-md text-base font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
  value={title}
  onChange={(e) => setTitle(e.target.value)}
  />
@@ -129,10 +129,10 @@ export default function CreateJobPage() {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Department</label>
  <Select value={department} onValueChange={setDepartment}>
- <SelectTrigger className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner">
+ <SelectTrigger className="bg-muted/30 border-none h-14 rounded-md text-sm font-bold shadow-inner">
  <SelectValue placeholder="Select Department" />
  </SelectTrigger>
- <SelectContent className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
+ <SelectContent className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">
  <SelectItem value="Engineering">Engineering</SelectItem>
  <SelectItem value="Design">Design</SelectItem>
  <SelectItem value="Marketing">Marketing</SelectItem>
@@ -143,10 +143,10 @@ export default function CreateJobPage() {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Employment Type</label>
  <Select value={type} onValueChange={setType}>
- <SelectTrigger className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner">
+ <SelectTrigger className="bg-muted/30 border-none h-14 rounded-md text-sm font-bold shadow-inner">
  <SelectValue placeholder="Select Type" />
  </SelectTrigger>
- <SelectContent className="rounded-lg border-border/40 bg-card/90 backdrop-blur-xl">
+ <SelectContent className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">
  <SelectItem value="FULL_TIME">Full-time</SelectItem>
  <SelectItem value="PART_TIME">Part-time</SelectItem>
  <SelectItem value="CONTRACT">Contract</SelectItem>
@@ -161,7 +161,7 @@ export default function CreateJobPage() {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Location</label>
  <Input 
  placeholder="e.g. Remote, Delhi" 
- className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner" 
+ className="bg-muted/30 border-none h-14 rounded-md text-sm font-bold shadow-inner" 
  value={location}
  onChange={(e) => setLocation(e.target.value)}
  />
@@ -170,7 +170,7 @@ export default function CreateJobPage() {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Salary Range</label>
  <Input 
  placeholder="e.g. 15L - 25L PA" 
- className="bg-muted/30 border-none h-14 rounded-lg text-sm font-bold shadow-inner" 
+ className="bg-muted/30 border-none h-14 rounded-md text-sm font-bold shadow-inner" 
  value={salaryRange}
  onChange={(e) => setSalaryRange(e.target.value)}
  />
@@ -180,7 +180,7 @@ export default function CreateJobPage() {
  </Card>
 
  {/* Rich Text Editor for Description */}
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="border-b border-border/10 bg-muted/5">
  <CardTitle className="text-xl flex items-center gap-2">
  <Layout className="w-5 h-5 text-primary" />
@@ -188,7 +188,7 @@ export default function CreateJobPage() {
  </CardTitle>
  </CardHeader>
  <CardContent className="p-8">
- <div className="min-h-[400px] border border-border/20 rounded-lg overflow-hidden focus-within:border-primary/40 transition-colors">
+ <div className="min-h-[400px] border border-border/20 rounded-md overflow-hidden focus-within:border-primary/40 transition-colors">
  <TipTap data={description} onChange={setDescription} />
  </div>
  </CardContent>
@@ -198,7 +198,7 @@ export default function CreateJobPage() {
  {/* Right Side: Sidebar Config */}
  <div className="lg:col-span-1 space-y-8">
  {/* Hiring Team */}
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader>
  <CardTitle className="text-lg flex items-center gap-2">
  <Users className="w-5 h-5 text-primary" />
@@ -209,15 +209,15 @@ export default function CreateJobPage() {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Hiring Manager</label>
  <Select>
- <SelectTrigger className="bg-muted/20 border-none h-12 rounded-lg text-xs font-bold shadow-inner">
+ <SelectTrigger className="bg-muted/20 border-none h-12 rounded-md text-xs font-bold shadow-inner">
  <SelectValue placeholder="Select Manager" />
  </SelectTrigger>
  </Select>
  </div>
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Interviewers</label>
- <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/20 border border-dashed border-border/40">
- <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[9px] border border-dashed border-border/60">
+ <div className="flex flex-wrap gap-2 p-3 rounded-md bg-muted/20 border border-dashed border-border/40">
+ <Button variant="ghost" size="sm" className="h-8 rounded-md text-[9px] border border-dashed border-border/60">
  + Add Interviewer
  </Button>
  </div>
@@ -226,7 +226,7 @@ export default function CreateJobPage() {
  </Card>
 
  {/* Meta Data */}
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader>
  <CardTitle className="text-lg flex items-center gap-2">
  <Target className="w-5 h-5 text-primary" />
@@ -234,7 +234,7 @@ export default function CreateJobPage() {
  </CardTitle>
  </CardHeader>
  <CardContent className="space-y-4">
- <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 space-y-3">
+ <div className="p-4 rounded-md bg-primary/5 border border-primary/10 space-y-3">
  <div className="flex items-center gap-2">
  <Sparkles size={14} className="text-primary" />
  <span className="text-[10px] ">AI Matching Enabled</span>

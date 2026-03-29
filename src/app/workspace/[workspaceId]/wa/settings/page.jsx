@@ -111,7 +111,7 @@ export default function SettingsPage() {
  <Card className="bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden flex flex-col">
  <CardHeader className="border-b border-border/10 pb-6">
  <div className="flex items-center gap-3 mb-2">
- <div className="p-2 bg-primary/10 rounded-lg">
+ <div className="p-2 bg-primary/10 rounded-md">
  <Smartphone className="w-5 h-5 text-primary" />
  </div>
  <CardTitle>Instance Connection</CardTitle>
@@ -127,10 +127,10 @@ export default function SettingsPage() {
  initial={{ opacity: 0, scale: 0.9 }}
  animate={{ opacity: 1, scale: 1 }}
  exit={{ opacity: 0, scale: 0.9 }}
- className="p-4 bg-white rounded-lg shadow-2xl relative group">
+ className="p-4 bg-white rounded-md shadow-2xl relative group">
  
  <img src={qrDataUrl} alt="WhatsApp QR Code" className="w-64 h-64 border-0" />
- <div className="absolute inset-0 bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+ <div className="absolute inset-0 bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
  <div className="bg-black/80 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2">
  <RefreshCcw className="w-3 h-3 animate-spin" />
  Refreshing automatically
@@ -200,7 +200,7 @@ export default function SettingsPage() {
  <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
  <CardHeader>
  <div className="flex items-center gap-3 mb-2">
- <div className="p-2 bg-blue-500/10 rounded-lg">
+ <div className="p-2 bg-blue-500/10 rounded-md">
  <Shield className="w-5 h-5 text-blue-500" />
  </div>
  <CardTitle>Security & Persistence</CardTitle>

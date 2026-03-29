@@ -86,8 +86,8 @@ export default function TrashPage() {
  <p className="text-sm text-muted-foreground tracking-[0.2em] animate-pulse">Loading Trash...</p>
  </div>
  ) : trashItems.length === 0 ? (
- <div className="flex flex-col items-center justify-center py-32 text-center rounded-lg border-2 border-dashed border-border/50 bg-background/50">
- <div className="w-20 h-20 bg-muted/40 rounded-lg flex items-center justify-center mb-6">
+ <div className="flex flex-col items-center justify-center py-32 text-center rounded-md border-2 border-dashed border-border/50 bg-background/50">
+ <div className="w-20 h-20 bg-muted/40 rounded-md flex items-center justify-center mb-6">
  <Trash2 className="w-10 h-10 text-muted-foreground/40" />
  </div>
  <h3 className="text-xl text-foreground/80 mb-2">Trash is empty</h3>
@@ -96,12 +96,12 @@ export default function TrashPage() {
  </p>
  </div>
  ) : (
- <div className="bg-background/50 rounded-lg border border-border/40 shadow-sm overflow-hidden animate-fade-up">
+ <div className="bg-background/50 rounded-md border border-border/40 shadow-sm overflow-hidden animate-fade-up">
  <div className="divide-y divide-border/20">
  {trashItems.map((item) => (
  <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/30 transition-colors group">
  <div className="flex items-center gap-4 min-w-0">
- <div className="w-12 h-12 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+ <div className="w-12 h-12 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
  {getIcon(item)}
  </div>
  <div className="min-w-0">
@@ -117,7 +117,7 @@ export default function TrashPage() {
  size="sm"
  disabled={isActionLoading === item.id}
  onClick={() => handleRestore(item.id)}
- className="h-9 px-4 rounded-lg font-bold bg-background text-foreground hover:bg-muted"
+ className="h-9 px-4 rounded-md font-bold bg-background text-foreground hover:bg-muted"
  >
  {isActionLoading === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
  Restore
@@ -127,7 +127,7 @@ export default function TrashPage() {
  size="sm"
  disabled={isActionLoading === item.id}
  onClick={() => handlePermanentDelete(item.id)}
- className="h-9 px-4 rounded-lg font-bold"
+ className="h-9 px-4 rounded-md font-bold"
  >
  {isActionLoading === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
  Delete

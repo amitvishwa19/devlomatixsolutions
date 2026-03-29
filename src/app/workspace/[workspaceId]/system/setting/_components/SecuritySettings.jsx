@@ -36,10 +36,10 @@ export const SecuritySettings = () => {
 
  return (
  <div className="space-y-6 animate-fade-in">
- <Card className="rounded-lg border border-border/40 shadow-xl shadow-sky-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <Card className="rounded-md border border-border/40 shadow-xl shadow-sky-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center border border-sky-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-sky-500/10 rounded-md flex items-center justify-center border border-sky-500/20 shadow-inner">
  <ShieldCheck className="w-6 h-6 text-sky-500" />
  </div>
  <div>
@@ -51,7 +51,7 @@ export const SecuritySettings = () => {
  </div>
  </CardHeader>
  <CardContent className="space-y-8">
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-lg border border-border/40">
+ <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-md border border-border/40">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <Fingerprint className="w-4 h-4 text-primary" />
@@ -77,7 +77,7 @@ export const SecuritySettings = () => {
  <code className="text-[11px] text-foreground flex-1">
  CURRENTLY SET TO: {Math.floor(localSecurity.sessionTimeout / 60)} MINUTES
  </code>
- <Button variant="outline" size="sm" className="rounded-lg text-[10px] font-bold h-8" disabled>
+ <Button variant="outline" size="sm" className="rounded-md text-[10px] font-bold h-8" disabled>
  Adjust Policy
  </Button>
  </div>
@@ -90,7 +90,7 @@ export const SecuritySettings = () => {
  <code className="text-[11px] text-foreground flex-1 ">
  {localSecurity.passwordPolicy}
  </code>
- <Button variant="outline" size="sm" className="rounded-lg text-[10px] font-bold h-8" disabled>
+ <Button variant="outline" size="sm" className="rounded-md text-[10px] font-bold h-8" disabled>
  Change Level
  </Button>
  </div>
@@ -101,15 +101,15 @@ export const SecuritySettings = () => {
  <Button 
  onClick={handleSave} 
  disabled={saving}
- className="rounded-lg font-bold px-8 shadow-xl shadow-sky-500/20 bg-sky-600 hover:bg-sky-700 text-white transition-all transform hover:scale-[1.02]"
+ className="rounded-md font-bold px-8 shadow-xl shadow-sky-500/20 bg-sky-600 hover:bg-sky-700 text-white transition-all transform hover:scale-[1.02]"
  >
  {saving ? "Saving..." : "Update Security"}
  </Button>
  </CardFooter>
  </Card>
 
- <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/10 flex gap-4 items-start shadow-inner">
- <div className="p-2 bg-amber-500/10 rounded-lg mt-0.5">
+ <div className="p-4 bg-amber-500/5 rounded-md border border-amber-500/10 flex gap-4 items-start shadow-inner">
+ <div className="p-2 bg-amber-500/10 rounded-md mt-0.5">
  <ShieldAlert className="w-4 h-4 text-amber-500" />
  </div>
  <div className="space-y-1">

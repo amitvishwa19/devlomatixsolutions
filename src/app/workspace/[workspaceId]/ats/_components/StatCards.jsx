@@ -40,10 +40,10 @@ export const StatCards = ({ stats = [] }) => {
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: i * 0.1 }}
  >
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5 group hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5 group hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1">
  <CardContent className="p-6">
  <div className="flex items-center justify-between">
- <div className={`w-14 h-14 rounded-lg ${stat.bg} ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-500`}>
+ <div className={`w-14 h-14 rounded-md ${stat.bg} ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-500`}>
  <Icon size={24} />
  </div>
  <div className="text-right">

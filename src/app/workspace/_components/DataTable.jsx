@@ -519,7 +519,7 @@ export function DataTable({
                 <div className="flex items-center gap-2">
                     {/* Bulk Actions */}
                     {enableRowSelection && selectedRowCount > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-badge-bg rounded-lg border border-primary/20">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-badge-bg rounded-md border border-primary/20">
                             <CheckSquare className="h-4 w-4 text-badge-text" />
                             <span className="text-sm font-medium text-badge-text">
                                 {selectedRowCount} selected

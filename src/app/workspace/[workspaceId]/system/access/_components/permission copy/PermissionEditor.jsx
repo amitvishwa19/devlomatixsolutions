@@ -180,10 +180,10 @@ export default function PermissionEditor({
  <Sheet open={isOpen} onOpenChange={handleOpenClose}>
  <SheetTrigger asChild>{trigger}</SheetTrigger>
  <SheetContent className="sm:max-w-xl overflow-y-auto bg-transparent border-0 p-2">
- <div className='bg-card rounded-lg h-full overflow-hidden'>
+ <div className='bg-card rounded-md h-full overflow-hidden'>
  <SheetHeader>
  <div className="flex flex-row gap-2">
- <div className="p-2 rounded-lg bg-gradient-to-br from-dashboard-gradient-start to-dashboard-gradient-end">
+ <div className="p-2 rounded-md bg-gradient-to-br from-dashboard-gradient-start to-dashboard-gradient-end">
  {mode === "edit" ? (
  <Pencil className="w-5 h-5 text-primary" />
  ) : (
@@ -263,7 +263,7 @@ export default function PermissionEditor({
  key={action.id}
  onClick={() => handleActionToggle(action.id)}
  className={`
- flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-all
+ flex items-center gap-3 p-2 rounded-md border cursor-pointer transition-all
  ${selectedActions.includes(action.id)
  ? "border-primary bg-primary/10"
  : "border-border bg-secondary/30 hover:border-primary/50"
@@ -301,7 +301,7 @@ export default function PermissionEditor({
 
  {/* Preview */}
  {moduleName && selectedActions.length > 0 && (
- <div className="p-4 rounded-lg bg-secondary/30 border space-y-3">
+ <div className="p-4 rounded-md bg-secondary/30 border space-y-3">
  <p className="text-xs font-medium tracking-wider text-muted-foreground">
  Preview ({selectedActions.length} active)
  </p>

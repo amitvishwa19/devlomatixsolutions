@@ -112,7 +112,7 @@ export default function DocumentStats({ workspaceId, userId }) {
  <span className="text-[10px] text-muted-foreground opacity-60">from last month</span>
  </div>
  </div>
- <div className={`${stat.bg} p-3 rounded-lg`}>
+ <div className={`${stat.bg} p-3 rounded-md`}>
  <stat.icon className={`h-5 w-5 ${stat.color}`} />
  </div>
  </div>

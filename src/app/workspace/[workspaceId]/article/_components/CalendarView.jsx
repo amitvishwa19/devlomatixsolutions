@@ -67,11 +67,11 @@ export const CalendarView = ({ posts, workspaceId, onOpenPost }) => {
   };
 
   return (
-    <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-lg overflow-hidden shadow-soft animate-fade-in">
+    <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-md overflow-hidden shadow-soft animate-fade-in">
       {/* Calendar Header */}
       <div className="p-6 flex items-center justify-between border-b border-border/40 bg-muted/5">
         <div className="flex items-center gap-4">
-          <div className="p-2 bg-primary/10 rounded-lg">
+          <div className="p-2 bg-primary/10 rounded-md">
             <CalendarIcon className="w-5 h-5 text-primary" />
           </div>
           <div>
@@ -85,14 +85,14 @@ export const CalendarView = ({ posts, workspaceId, onOpenPost }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={goToToday} className="h-8 rounded-lg font-bold text-[10px] px-4">
+          <Button variant="outline" size="sm" onClick={goToToday} className="h-8 rounded-md font-bold text-[10px] px-4">
             Today
           </Button>
-          <div className="flex items-center bg-background rounded-lg border border-border/60 p-0.5">
-            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 rounded-lg hover:bg-muted">
+          <div className="flex items-center bg-background rounded-md border border-border/60 p-0.5">
+            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 rounded-md hover:bg-muted">
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-7 w-7 rounded-lg hover:bg-muted">
+            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-7 w-7 rounded-md hover:bg-muted">
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -126,7 +126,7 @@ export const CalendarView = ({ posts, workspaceId, onOpenPost }) => {
             >
               <div className="flex items-center justify-between mb-2">
                 <span className={cn(
-                  "text-[10px] w-6 h-6 flex items-center justify-center rounded-lg",
+                  "text-[10px] w-6 h-6 flex items-center justify-center rounded-md",
                   isTodayDay ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110" : "text-muted-foreground"
                 )}>
                   {format(day, 'd')}
@@ -146,7 +146,7 @@ export const CalendarView = ({ posts, workspaceId, onOpenPost }) => {
                         <button 
                           onClick={() => onOpenPost(post)}
                           className={cn(
-                            "w-full text-left p-1.5 rounded-lg border text-[9px] font-bold truncate transition-all active:scale-95 group/item flex items-center gap-1.5 shadow-sm",
+                            "w-full text-left p-1.5 rounded-md border text-[9px] font-bold truncate transition-all active:scale-95 group/item flex items-center gap-1.5 shadow-sm",
                             post.status === 'PUBLISHED' ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10" :
                             post.status === 'SCHEDULED' ? "bg-blue-500/5 border-blue-500/10 text-blue-600 hover:bg-blue-500/10" :
                             post.status === 'FAILED' ? "bg-rose-500/5 border-rose-500/10 text-rose-600 hover:bg-rose-500/10" :
@@ -157,7 +157,7 @@ export const CalendarView = ({ posts, workspaceId, onOpenPost }) => {
                           <span className="truncate">{post.title || "Untitled Post"}</span>
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="bg-popover border-border animate-in zoom-in-95 p-3 rounded-lg shadow-xl w-64">
+                      <TooltipContent side="right" className="bg-popover border-border animate-in zoom-in-95 p-3 rounded-md shadow-xl w-64">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <Badge className={cn(

@@ -108,10 +108,10 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     return (
         <Sheet open={open} onOpenChange={handleOpenClose}>
             <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
-                <div className="bg-card rounded-lg flex flex-col h-full border overflow-hidden shadow-2xl">
+                <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
                     <SheetHeader className="border-b p-6 bg-muted/5">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 shadow-inner">
+                            <div className="p-3 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
                                 <User className="w-6 h-6 text-primary" />
                             </div>
                             <div>
@@ -142,7 +142,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                                         <Input 
                                                             placeholder="Enter full name" 
                                                             {...field} 
-                                                            className="bg-secondary/30 border-border/40 h-12 rounded-lg text-lg font-medium focus:ring-primary/20"
+                                                            className="bg-secondary/30 border-border/40 h-12 rounded-md text-lg font-medium focus:ring-primary/20"
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -161,7 +161,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                                             type="email"
                                                             placeholder="user@domain.com"
                                                             {...field}
-                                                            className="bg-secondary/30 border-border/40 h-10 rounded-lg focus:ring-primary/20"
+                                                            className="bg-secondary/30 border-border/40 h-10 rounded-md focus:ring-primary/20"
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -213,7 +213,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                             control={form.control}
                                             name="status"
                                             render={({ field }) => (
-                                                <FormItem className="flex items-center space-x-3 space-y-0 p-4 rounded-lg bg-secondary/20 border border-border/30 mt-4 mx-1 transition-colors hover:bg-secondary/30">
+                                                <FormItem className="flex items-center space-x-3 space-y-0 p-4 rounded-md bg-secondary/20 border border-border/30 mt-4 mx-1 transition-colors hover:bg-secondary/30">
                                                     <FormControl>
                                                         <Checkbox
                                                             checked={field.value}
@@ -247,14 +247,14 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                     variant="ghost"
                                     onClick={() => onOpenChange(false)}
                                     disabled={loading}
-                                    className="rounded-lg font-bold text-xs uppercase tracking-widest px-8 h-10"
+                                    className="rounded-md font-bold text-xs uppercase tracking-widest px-8 h-10"
                                 >
                                     Cancel
                                 </Button>
                                 <Button 
                                     type="submit" 
                                     disabled={loading}
-                                    className="rounded-lg font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
+                                    className="rounded-md font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
                                 >
                                     {loading ? <Loader className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                                     {isEditing ? 'Save Changes' : 'Add User'}

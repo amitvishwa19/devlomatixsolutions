@@ -21,7 +21,7 @@ export default function SettingPage() {
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/10 pb-8">
  <div className="space-y-1">
  <div className="flex items-center gap-3">
- <div className="p-2 bg-primary/10 rounded-lg">
+ <div className="p-2 bg-primary/10 rounded-md">
  <Settings className="w-6 h-6 text-primary" />
  </div>
  <h1 className="text-xl font-bold text-foreground">Workspace Settings</h1>
@@ -40,52 +40,52 @@ export default function SettingPage() {
  </div>
 
  <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-8 items-start min-h-[600px]">
- <TabsList className="bg-card/50 backdrop-blur-xl p-2 rounded-lg border border-border/40 flex flex-col h-auto w-full md:w-72 gap-1.5 sticky top-6 shadow-xl shadow-primary/5">
+ <TabsList className="bg-card/50 backdrop-blur-xl p-2 rounded-md border border-border/40 flex flex-col h-auto w-full md:w-72 gap-1.5 sticky top-6 shadow-xl shadow-primary/5">
  <TabsTrigger
  value="general"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-primary transition-all gap-3"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-primary transition-all gap-3"
  >
  <Settings className="w-4 h-4" />
  <span className="text-[10px] ">General</span>
  </TabsTrigger>
  <TabsTrigger
  value="security"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-sky-500 transition-all gap-3"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-sky-500 transition-all gap-3"
  >
  <Shield className="w-4 h-4" />
  <span className="text-[10px] ">Security</span>
  </TabsTrigger>
  <TabsTrigger
  value="notifications"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-rose-500 transition-all gap-3"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-rose-500 transition-all gap-3"
  >
  <Bell className="w-4 h-4" />
  <span className="text-[10px] ">Notifications</span>
  </TabsTrigger>
  <TabsTrigger
  value="integrations"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-emerald-500 transition-all gap-3"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-emerald-500 transition-all gap-3"
  >
  <Puzzle className="w-4 h-4" />
  <span className="text-[10px] ">Integrations</span>
  </TabsTrigger>
  <TabsTrigger
  value="advanced"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-amber-500 transition-all gap-3"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-amber-500 transition-all gap-3"
  >
  <Cpu className="w-4 h-4" />
  <span className="text-[10px] ">Advanced</span>
  </TabsTrigger>
  <TabsTrigger
  value="privacy"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-xl data-[state=active]:text-indigo-500 transition-all gap-3 group relative overflow-hidden"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-xl data-[state=active]:text-indigo-500 transition-all gap-3 group relative overflow-hidden"
  >
  <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
  <span className="text-[10px] ">Privacy</span>
  </TabsTrigger>
  <TabsTrigger
  value="developer"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-xl data-[state=active]:text-fuchsia-500 transition-all gap-3 group relative overflow-hidden"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-xl data-[state=active]:text-fuchsia-500 transition-all gap-3 group relative overflow-hidden"
  >
  <Terminal className="w-4 h-4 group-hover:scale-110 transition-transform" />
  <span className="text-[10px] ">Developer</span>
@@ -93,7 +93,7 @@ export default function SettingPage() {
  <div className="my-2 border-t border-border/10"></div>
  <TabsTrigger
  value="danger"
- className="w-full justify-start rounded-lg py-3 px-4 data-[state=active]:bg-rose-500 data-[state=active]:text-white data-[state=active]:shadow-soft transition-all gap-3 text-rose-500"
+ className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-rose-500 data-[state=active]:text-white data-[state=active]:shadow-soft transition-all gap-3 text-rose-500"
  >
  <AlertTriangle className="w-4 h-4" />
  <span className="text-[10px] ">Danger Zone</span>

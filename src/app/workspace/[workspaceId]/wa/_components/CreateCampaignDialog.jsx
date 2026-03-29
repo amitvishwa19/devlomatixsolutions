@@ -66,7 +66,7 @@ export default function CreateCampaignDialog({
               className="bg-[#1A1D21] border-[#2D3748] text-white min-h-[150px]" />
             
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-[#1A1D21] rounded-lg border border-[#2D3748]">
+                    <div className="flex items-center justify-between p-4 bg-[#1A1D21] rounded-md border border-[#2D3748]">
                         <div className="space-y-0.5">
                             <label className="text-sm font-medium text-white">Auto Reply</label>
                             <p className="text-xs text-[#A0AEC0]">Enable AI-powered automatic responses</p>

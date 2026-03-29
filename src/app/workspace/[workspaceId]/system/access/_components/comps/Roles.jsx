@@ -119,9 +119,9 @@ export default function Roles() {
             </div>
 
             {filteredRoles.length === 0 && (
-                <div className="flex flex-col items-center justify-center p-20 border-2 border-dashed border-border/40 rounded-lg bg-muted/5 animate-pulse-subtle group overflow-hidden relative">
+                <div className="flex flex-col items-center justify-center p-20 border-2 border-dashed border-border/40 rounded-md bg-muted/5 animate-pulse-subtle group overflow-hidden relative">
                     <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                    <div className="w-20 h-20 bg-muted/20 rounded-lg flex items-center justify-center mb-8 border border-border/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                    <div className="w-20 h-20 bg-muted/20 rounded-md flex items-center justify-center mb-8 border border-border/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
                         <ShieldOff className="w-10 h-10 text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
                     </div>
                     <h3 className="text-xl font-bold text-foreground/80 mb-3 tracking-tight">
@@ -135,7 +135,7 @@ export default function Roles() {
                     <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-primary/60 hover:text-primary hover:bg-primary/5 transition-all px-8 border border-primary/10"
+                        className="rounded-md font-black uppercase tracking-[0.2em] text-[10px] text-primary/60 hover:text-primary hover:bg-primary/5 transition-all px-8 border border-primary/10"
                         onClick={() => roleSearchQuery ? setRoleSearchQuery('') : setRoleEditor({ isOpen: true, mode: 'add', role: null })}
                     >
                         {roleSearchQuery ? "Clear Search Cache" : "Initialize First Role"}

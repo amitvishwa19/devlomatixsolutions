@@ -431,21 +431,21 @@ export default function CampaignsPage() {
 
  {/* KPI Bar */}
  <div className="grid grid-cols-4 gap-4 mt-8">
- <div className="bg-card border rounded-lg p-5 shadow-sm">
+ <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
  <Megaphone className="w-5 h-5 text-purple-500" />
  <span className="font-medium">Total Campaigns</span>
  </div>
  <p className="text-3xl font-bold text-foreground">{campaigns.length}</p>
  </div>
- <div className="bg-card border rounded-lg p-5 shadow-sm">
+ <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
  <Users className="w-5 h-5 text-blue-500" />
  <span className="font-medium">Audience Reached</span>
  </div>
  <p className="text-3xl font-bold text-foreground">{campaigns.reduce((sum, c) => sum + (c.total || 0), 0)}</p>
  </div>
- <div className="bg-card border rounded-lg p-5 shadow-sm">
+ <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
  <CheckCircle2 className="w-5 h-5 text-green-500" />
  <span className="font-medium">Avg. Success Rate</span>
@@ -458,7 +458,7 @@ export default function CampaignsPage() {
  'N/A'}
  </p>
  </div>
- <div className="bg-card border rounded-lg p-5 shadow-sm">
+ <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
  <BarChart3 className="w-5 h-5 text-orange-500" />
  <span className="font-medium">Active Now</span>
@@ -479,13 +479,13 @@ export default function CampaignsPage() {
  <Input
  type="text"
  placeholder="Search campaigns..."
- className="w-full bg-muted/50 border-border text-foreground rounded-lg pl-10 h-10" />
+ className="w-full bg-muted/50 border-border text-foreground rounded-md pl-10 h-10" />
  
  </div>
 
  <div className="flex gap-2">
  <Select defaultValue="All Statuses">
- <SelectTrigger className="bg-muted/50 border-border text-foreground rounded-lg w-[140px] h-10">
+ <SelectTrigger className="bg-muted/50 border-border text-foreground rounded-md w-[140px] h-10">
  <SelectValue placeholder="All Statuses" />
  </SelectTrigger>
  <SelectContent>
@@ -505,7 +505,7 @@ export default function CampaignsPage() {
  }
 
  {/* Campaign Data Table */}
- <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
+ <div className="bg-card border rounded-md overflow-hidden shadow-sm">
  <table className="w-full text-sm text-left">
  <thead className="text-xs text-muted-foreground bg-muted/30 border-b border-border/50">
  <tr>
@@ -548,20 +548,20 @@ export default function CampaignsPage() {
  onClick={() => handleToggleCampaign(c)}
  disabled={c.status === 'COMPLETED'}
  title={c.status === 'RUNNING' ? "Pause Campaign" : "Start Campaign"}
- className={`p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${c.status === 'RUNNING' ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
+ className={`p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${c.status === 'RUNNING' ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
  
  {c.status === 'RUNNING' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
  </button>
  <button
  onClick={() => openEditDialog(c)}
- className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+ className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
  aria-label="Edit campaign">
  
  <Edit className="w-4 h-4" />
  </button>
  <button
  onClick={() => openDeleteDialog(c)}
- className="p-2 text-muted-foreground hover:text-red-400 hover:bg-muted rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+ className="p-2 text-muted-foreground hover:text-red-400 hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
  aria-label="Delete campaign">
  
  <Trash className="w-4 h-4" />
@@ -591,7 +591,7 @@ export default function CampaignsPage() {
  <Sheet open={editDialogOpen} onOpenChange={setEditDialogOpen}>
  <SheetContent side="right" className="min-w-[620px] bg-transparent border-0 p-2 overflow-hidden">
 
- <div className="bg-card border rounded-lg h-full p-2 overflow-y-auto">
+ <div className="bg-card border rounded-md h-full p-2 overflow-y-auto">
  <SheetHeader>
  <SheetTitle>{activeCampaign ? 'Edit Campaign' : 'New Campaign'}</SheetTitle>
  </SheetHeader>
@@ -698,7 +698,7 @@ export default function CampaignsPage() {
  }
 
  {editForm.messageType === 'interactive' ?
- <div className="space-y-4 animate-in fade-in duration-300 border border-border rounded-lg p-4">
+ <div className="space-y-4 animate-in fade-in duration-300 border border-border rounded-md p-4">
  <p className="text-xs font-semibold text-muted-foreground tracking-wider">Interactive Message Builder</p>
  <div className="space-y-2">
  <label className="text-sm font-medium text-muted-foreground">Main Body Text</label>
@@ -815,7 +815,7 @@ export default function CampaignsPage() {
 
  {/* Contact Selector Dialog */}
  <Dialog open={contactSelectorOpen} onOpenChange={setContactSelectorOpen}>
- <DialogContent className="max-w-xl bg-card border border-border/50 rounded-lg p-0 overflow-hidden shadow-2xl">
+ <DialogContent className="max-w-xl bg-card border border-border/50 rounded-md p-0 overflow-hidden shadow-2xl">
  <DialogHeader className="p-6 border-b border-border bg-muted/10">
  <DialogTitle className="flex items-center gap-2">
  <Users className="w-5 h-5 text-primary" />
@@ -859,7 +859,7 @@ export default function CampaignsPage() {
  ).map((contact) =>
  <div
  key={contact.id}
- className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${selectedContactIds.includes(contact.id) ?
+ className={`flex items-center gap-3 p-3 rounded-md border transition-all cursor-pointer ${selectedContactIds.includes(contact.id) ?
  'border-primary bg-primary/5' :
  'border-border/50 hover:bg-muted/50'}`
  }
@@ -897,7 +897,7 @@ export default function CampaignsPage() {
  groups.map((group) =>
  <div
  key={group.id}
- className={`flex items-center gap-3 p-4 rounded-lg border transition-all cursor-pointer ${selectedGroupIds.includes(group.id) ?
+ className={`flex items-center gap-3 p-4 rounded-md border transition-all cursor-pointer ${selectedGroupIds.includes(group.id) ?
  'border-primary bg-primary/5' :
  'border-border/50 hover:bg-muted/50'}`
  }

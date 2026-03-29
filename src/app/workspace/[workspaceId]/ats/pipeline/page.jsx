@@ -80,7 +80,7 @@ export default function CandidatePipelinePage() {
  </div>
  <h1 className="text-3xl tracking-tighter flex items-center gap-3">
  {job?.title || "Recruitment Pipeline"}
- <Badge variant="outline" className="h-6 rounded-lg bg-primary/5 text-primary border-primary/20 text-[9px] px-3">
+ <Badge variant="outline" className="h-6 rounded-md bg-primary/5 text-primary border-primary/20 text-[9px] px-3">
  {job?.status || "Active"} Job
  </Badge>
  </h1>
@@ -90,10 +90,10 @@ export default function CandidatePipelinePage() {
  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-40" />
  <Input
  placeholder="Search candidates..."
- className="pl-11 h-11 rounded-lg bg-card/40 backdrop-blur-xl border-border/40 text-sm font-medium"
+ className="pl-11 h-11 rounded-md bg-card/40 backdrop-blur-xl border-border/40 text-sm font-medium"
  />
  </div>
- <Button variant="outline" className="h-11 rounded-lg px-4 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-11 rounded-md px-4 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
  <Filter className="w-4 h-4 mr-2 opacity-50" />
  Filters
  </Button>
@@ -113,17 +113,17 @@ export default function CandidatePipelinePage() {
  <h3 className="text-sm opacity-60">
  {stage.title}
  </h3>
- <Badge variant="ghost" className="h-5 px-2 bg-muted/40 text-[10px] opacity-40 rounded-lg">
+ <Badge variant="ghost" className="h-5 px-2 bg-muted/40 text-[10px] opacity-40 rounded-md">
  {getStageCandidates(stage.id).length}
  </Badge>
  </div>
- <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-40 hover:opacity-100">
+ <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md opacity-40 hover:opacity-100">
  <MoreHorizontal size={16} />
  </Button>
  </div>
 
  {/* Stage Content */}
- <div className="flex-1 bg-muted/20 border border-border/10 rounded-lg p-4 space-y-4 overflow-y-auto scrollbar-hide">
+ <div className="flex-1 bg-muted/20 border border-border/10 rounded-md p-4 space-y-4 overflow-y-auto scrollbar-hide">
  {getStageCandidates(stage.id).map((candidate, i) => (
  <motion.div
  key={candidate.id}
@@ -131,7 +131,7 @@ export default function CandidatePipelinePage() {
  initial={{ opacity: 0, scale: 0.95 }}
  animate={{ opacity: 1, scale: 1 }}
  whileHover={{ y: -4 }}
- className="p-5 rounded-lg bg-card/60 backdrop-blur-xl border border-border/40 shadow-xl shadow-black/5 cursor-pointer group hover:border-primary/40 transition-all"
+ className="p-5 rounded-md bg-card/60 backdrop-blur-xl border border-border/40 shadow-xl shadow-black/5 cursor-pointer group hover:border-primary/40 transition-all"
  onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.candidateId}`)}
  >
  <div className="flex items-start justify-between mb-4">
@@ -150,7 +150,7 @@ export default function CandidatePipelinePage() {
  </div>
 
  <div className="flex items-center gap-4 mt-6">
- <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-500">
+ <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 text-amber-500">
  <Star size={10} className="fill-current" />
  <span className="text-[10px]">{candidate.score}</span>
  </div>
@@ -176,7 +176,7 @@ export default function CandidatePipelinePage() {
  ))}
 
  {getStageCandidates(stage.id).length === 0 && (
- <div className="h-32 border-2 border-dashed border-border/20 rounded-lg flex items-center justify-center">
+ <div className="h-32 border-2 border-dashed border-border/20 rounded-md flex items-center justify-center">
  <p className="text-[10px] opacity-20 italic">No candidates</p>
  </div>
  )}
@@ -191,7 +191,7 @@ export default function CandidatePipelinePage() {
 
 function Dropdown({ candidate }) {
  return (
- <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg opacity-20 hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+ <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md opacity-20 hover:opacity-100" onClick={(e) => e.stopPropagation()}>
  <MoreHorizontal size={14} />
  </Button>
  );

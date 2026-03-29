@@ -8,7 +8,7 @@ export default function DashboardStats() {
             {/* Total Campaigns */}
             <Card className="bg-card  border   hover:border-emerald-500/50 transition-colors group">
                 <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <div className="w-12 h-12 bg-emerald-500 rounded-md flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <Send className="w-6 h-6 text-white" />
                     </div>
                     <div className="space-y-1">
@@ -22,7 +22,7 @@ export default function DashboardStats() {
             {/* Messages Sent */}
             <Card className="bg-card  border   hover:border-[#2D3748] transition-colors">
                 <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-[#1C2025] rounded-lg flex items-center justify-center mb-6 border border-[#2D3748]">
+                    <div className="w-12 h-12 bg-[#1C2025] rounded-md flex items-center justify-center mb-6 border border-[#2D3748]">
                         <MessageSquare className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div className="space-y-1">
@@ -36,7 +36,7 @@ export default function DashboardStats() {
             {/* Active Contacts */}
             <Card className="bg-card  border   hover:border-[#2D3748] transition-colors">
                 <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-[#1C2025] rounded-lg flex items-center justify-center mb-6 border border-[#2D3748]">
+                    <div className="w-12 h-12 bg-[#1C2025] rounded-md flex items-center justify-center mb-6 border border-[#2D3748]">
                         <Users className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div className="space-y-1">
@@ -50,7 +50,7 @@ export default function DashboardStats() {
             {/* Reply Rate */}
             <Card className="bg-card  border   hover:border-[#2D3748] transition-colors">
                 <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-[#1C2025] rounded-lg flex items-center justify-center mb-6 border border-[#2D3748]">
+                    <div className="w-12 h-12 bg-[#1C2025] rounded-md flex items-center justify-center mb-6 border border-[#2D3748]">
                         <TrendingUp className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div className="space-y-1">

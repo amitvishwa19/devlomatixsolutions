@@ -133,13 +133,13 @@ export default function CredentialPage() {
 
       {/* Stats/Info Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-6 backdrop-blur-sm shadow-soft">
+        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-md p-6 backdrop-blur-sm shadow-soft">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] text-emerald-500 mb-1">Encrypted Storage</p>
               <h3 className="text-2xl">Active</h3>
             </div>
-            <div className="p-2 bg-emerald-500/10 rounded-lg">
+            <div className="p-2 bg-emerald-500/10 rounded-md">
               <ShieldCheck className="w-5 h-5 text-emerald-500" />
             </div>
           </div>
@@ -148,13 +148,13 @@ export default function CredentialPage() {
           </p>
         </div>
 
-        <div className="bg-primary/5 border border-primary/10 rounded-lg p-6 backdrop-blur-sm shadow-soft">
+        <div className="bg-primary/5 border border-primary/10 rounded-md p-6 backdrop-blur-sm shadow-soft">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] text-primary mb-1">Total Connections</p>
               <h3 className="text-2xl">{accounts.length}</h3>
             </div>
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/10 rounded-md">
               <RefreshCw className="w-5 h-5 text-primary" />
             </div>
           </div>
@@ -163,13 +163,13 @@ export default function CredentialPage() {
           </p>
         </div>
 
-        <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-6 backdrop-blur-sm shadow-soft">
+        <div className="bg-blue-500/5 border border-blue-500/10 rounded-md p-6 backdrop-blur-sm shadow-soft">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] text-blue-500 mb-1">Security Health</p>
               <h3 className="text-2xl">Robust</h3>
             </div>
-            <div className="p-2 bg-blue-500/10 rounded-lg">
+            <div className="p-2 bg-blue-500/10 rounded-md">
               <Lock className="w-5 h-5 text-blue-500" />
             </div>
           </div>
@@ -180,14 +180,14 @@ export default function CredentialPage() {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-card/40 backdrop-blur-md rounded-lg border border-border/40 p-3 flex items-center gap-4 shadow-soft">
+      <div className="bg-card/40 backdrop-blur-md rounded-md border border-border/40 p-3 flex items-center gap-4 shadow-soft">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search platforms or profile names..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 h-12 bg-background border border-border rounded-lg font-bold text-sm focus-visible:ring-1 focus-visible:ring-primary"
+            className="pl-11 h-12 bg-background border border-border rounded-md font-bold text-sm focus-visible:ring-1 focus-visible:ring-primary"
           />
         </div>
       </div>
@@ -201,8 +201,8 @@ export default function CredentialPage() {
           </div>
         </div>
       ) : filteredAccounts.length === 0 ? (
-        <div className="h-[200px] flex flex-col items-center justify-center bg-muted/5 rounded-lg border border-dashed border-border/60">
-          <div className="w-16 h-16 bg-muted/20 rounded-lg flex items-center justify-center mb-4">
+        <div className="h-[200px] flex flex-col items-center justify-center bg-muted/5 rounded-md border border-dashed border-border/60">
+          <div className="w-16 h-16 bg-muted/20 rounded-md flex items-center justify-center mb-4">
             <Key className="w-8 h-8 text-muted-foreground/40" />
           </div>
           <h3 className="text-xl ">No credentials found</h3>
@@ -212,7 +212,7 @@ export default function CredentialPage() {
           <Button
             variant="outline"
             onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts })}
-            className="mt-6 border-dashed border-primary/20 hover:border-primary/40 text-primary font-bold text-[10px] rounded-lg px-8"
+            className="mt-6 border-dashed border-primary/20 hover:border-primary/40 text-primary font-bold text-[10px] rounded-md px-8"
           >
             Click to add
           </Button>
@@ -220,19 +220,19 @@ export default function CredentialPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAccounts.map((account) => (
-            <div key={account.id} className="group relative flex flex-col bg-card/60 backdrop-blur-xl border border-border/40 rounded-lg overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
+            <div key={account.id} className="group relative flex flex-col bg-card/60 backdrop-blur-xl border border-border/40 rounded-md overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
               <div className="absolute top-0 right-0 p-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 rounded-lg shadow-2xl border-border/20 p-2">
+                  <DropdownMenuContent align="end" className="w-52 rounded-md shadow-2xl border-border/20 p-2">
                     <DropdownMenuItem
                       onClick={() => handleTestConnection(account.id, account.platform)}
                       disabled={testingId === account.id}
-                      className="cursor-pointer font-bold px-3 py-2.5 rounded-lg gap-3 text-amber-500 hover:bg-amber-500/10"
+                      className="cursor-pointer font-bold px-3 py-2.5 rounded-md gap-3 text-amber-500 hover:bg-amber-500/10"
                     >
                       {testingId === account.id
                         ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -241,13 +241,13 @@ export default function CredentialPage() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts, initialData: account })}
-                      className="cursor-pointer font-bold px-3 py-2.5 rounded-lg gap-3"
+                      className="cursor-pointer font-bold px-3 py-2.5 rounded-md gap-3"
                     >
                       <Edit2 className="w-4 h-4 text-primary" /> Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => setDeleteId(account.id)}
-                      className="cursor-pointer font-bold px-3 py-2.5 rounded-lg text-rose-500 hover:bg-rose-500/10 gap-3"
+                      className="cursor-pointer font-bold px-3 py-2.5 rounded-md text-rose-500 hover:bg-rose-500/10 gap-3"
                     >
                       <Trash2 className="w-4 h-4" /> Delete
                     </DropdownMenuItem>
@@ -256,7 +256,7 @@ export default function CredentialPage() {
               </div>
 
               <div className="p-6 pb-2 flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/10 shadow-inner">
+                <div className="w-12 h-12 bg-primary/10 rounded-md flex items-center justify-center border border-primary/10 shadow-inner">
                   <Database className="w-6 h-6 text-primary" />
                 </div>
                 <div className="min-w-0">
@@ -270,7 +270,7 @@ export default function CredentialPage() {
                   <p className="text-[9px] text-muted-foreground opacity-40">Stored Data</p>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.keys(account.details || {}).filter(k => k !== 'profileName').map(key => (
-                      <Badge key={key} variant="secondary" className="bg-muted/30 border-none text-[9px] font-bold px-2 py-0.5 rounded-lg text-muted-foreground/60">
+                      <Badge key={key} variant="secondary" className="bg-muted/30 border-none text-[9px] font-bold px-2 py-0.5 rounded-md text-muted-foreground/60">
                         {key}
                       </Badge>
                     ))}
@@ -304,9 +304,9 @@ export default function CredentialPage() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent className="rounded-lg border-border/40 shadow-2xl overflow-hidden p-0 animate-fade-in">
+        <AlertDialogContent className="rounded-md border-border/40 shadow-2xl overflow-hidden p-0 animate-fade-in">
           <AlertDialogHeader className="p-8 pb-4">
-            <div className="w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
+            <div className="w-12 h-12 bg-rose-50 rounded-md flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
               <Trash2 className="w-6 h-6 text-rose-500" />
             </div>
             <AlertDialogTitle className="text-2xl ">Are you absolutely sure?</AlertDialogTitle>
@@ -315,13 +315,13 @@ export default function CredentialPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="p-8 pt-4 flex flex-row gap-4 bg-muted/20">
-            <AlertDialogCancel className="rounded-lg text-[10px] font-bold flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-md text-[10px] font-bold flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 handleDelete();
               }}
-              className="rounded-lg text-[10px] font-bold flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
+              className="rounded-md text-[10px] font-bold flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
               disabled={isDeleting}
             >
               {isDeleting ? "Deleting..." : "Delete Credential"}

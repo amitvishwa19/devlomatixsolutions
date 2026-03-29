@@ -191,7 +191,7 @@ function MessagePageContent() {
  <Search className="w-4 h-4 text-zinc-500 dark:text-zinc-400 absolute right-2 top-1/2 -translate-y-1/2" />
  <input
  placeholder="Search"
- className="bg-zinc-200 dark:bg-zinc-900 rounded-lg px-2 py-1 text-xs w-36 focus:w-48 transition-all outline-none border border-transparent shadow-inner"
+ className="bg-zinc-200 dark:bg-zinc-900 rounded-md px-2 py-1 text-xs w-36 focus:w-48 transition-all outline-none border border-transparent shadow-inner"
  />
  </div>
  <HelpCircle className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
@@ -253,7 +253,7 @@ function MessagePageContent() {
  onChange={(e) => setContent(e.target.value)}
  onKeyDown={handleSendMessage}
  disabled={messagesLoading || (!channelId && !urlConversationId)}
- className="w-full bg-zinc-200/50 dark:bg-[#383A40] border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 focus:ring-offset-0 focus:outline-none text-zinc-700 dark:text-zinc-200 py-3 pl-14 pr-24 rounded-lg font-bold text-sm shadow-sm"
+ className="w-full bg-zinc-200/50 dark:bg-[#383A40] border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 focus:ring-offset-0 focus:outline-none text-zinc-700 dark:text-zinc-200 py-3 pl-14 pr-24 rounded-md font-bold text-sm shadow-sm"
  />
  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-x-3">
  <Gift className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
@@ -270,7 +270,7 @@ function MessagePageContent() {
 const WelcomeMessage = ({ title, isDirectMessage }) => {
  return (
  <div className="flex flex-col items-start gap-y-2 mb-8 px-4">
- <div className="h-16 w-16 rounded-lg bg-zinc-200 dark:bg-[#404249] flex items-center justify-center shadow-md transform rotate-3 hover:rotate-0 transition">
+ <div className="h-16 w-16 rounded-md bg-zinc-200 dark:bg-[#404249] flex items-center justify-center shadow-md transform rotate-3 hover:rotate-0 transition">
  {isDirectMessage ? (
  <User className="h-10 w-10 text-zinc-900 dark:text-white" />
  ) : (

@@ -56,7 +56,7 @@ export default function Scorecards({ candidate, onSubmit }) {
 
  return (
  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="p-8 border-b border-border/10">
  <div className="flex items-center justify-between">
  <div className="space-y-1">
@@ -75,7 +75,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  <div key={attr.id} className="space-y-4">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
- <div className={`p-2 rounded-lg bg-card border border-border/40 ${attr.color}`}>
+ <div className={`p-2 rounded-md bg-card border border-border/40 ${attr.color}`}>
  <attr.icon size={16} />
  </div>
  <div>
@@ -83,7 +83,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  <p className="text-[10px] font-medium opacity-40">{attr.description}</p>
  </div>
  </div>
- <Badge variant="outline" className={`h-8 w-12 flex items-center justify-center text-xs rounded-lg ${attr.color} bg-background/40`}>
+ <Badge variant="outline" className={`h-8 w-12 flex items-center justify-center text-xs rounded-md ${attr.color} bg-background/40`}>
  {scores[attr.id]}/5
  </Badge>
  </div>
@@ -113,7 +113,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Evidence & Notes</label>
  <Textarea 
  placeholder="Describe specific examples or observations that justify the scores above..."
- className="min-h-[150px] bg-muted/20 border-border/20 rounded-lg p-6 font-medium text-sm focus-visible:ring-primary shadow-inner"
+ className="min-h-[150px] bg-muted/20 border-border/20 rounded-md p-6 font-medium text-sm focus-visible:ring-primary shadow-inner"
  value={overallFeedback}
  onChange={(e) => setOverallFeedback(e.target.value)}
  />
@@ -131,7 +131,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  <Button
  key={rec.value}
  variant="outline"
- className={`h-14 rounded-lg flex flex-col items-center justify-center gap-1 border-border/40 transition-all ${
+ className={`h-14 rounded-md flex flex-col items-center justify-center gap-1 border-border/40 transition-all ${
  finalRecommendation === rec.value 
  ? `${getRecommendationColor(rec.value)} border-current scale-[1.02] shadow-xl` 
  : 'bg-card/40 opacity-40 hover:opacity-100 hover:scale-[1.02]'
@@ -148,7 +148,7 @@ export default function Scorecards({ candidate, onSubmit }) {
 
  <div className="pt-6">
  <Button 
- className="w-full h-14 rounded-lg bg-primary text-primary-foreground tracking-[0.2em] text-xs shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all hover:shadow-primary/40"
+ className="w-full h-14 rounded-md bg-primary text-primary-foreground tracking-[0.2em] text-xs shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all hover:shadow-primary/40"
  onClick={() => onSubmit({ scores, overallFeedback, finalRecommendation })}
  >
  Finalize Evaluation & Submit Scorecard

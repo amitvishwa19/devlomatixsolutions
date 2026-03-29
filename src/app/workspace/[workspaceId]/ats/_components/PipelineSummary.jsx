@@ -29,13 +29,13 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  const displayStages = stats || defaultStages;
 
  return (
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between pb-6">
  <div className="space-y-1">
  <CardTitle className="text-2xl tracking-tighter">Hiring Pipeline</CardTitle>
  <p className="text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">Candidate Flow across all jobs</p>
  </div>
- <Button variant="outline" className="h-10 rounded-lg px-4 text-[9px] border-border/40 bg-card/40 backdrop-blur-xl">
+ <Button variant="outline" className="h-10 rounded-md px-4 text-[9px] border-border/40 bg-card/40 backdrop-blur-xl">
  Detailed Pipeline <ArrowUpRight className="ml-2 w-3 h-3" />
  </Button>
  </CardHeader>
@@ -69,9 +69,9 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  ))}
  </div>
 
- <div className="mt-12 p-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-between">
+ <div className="mt-12 p-6 rounded-md bg-primary/5 border border-primary/10 flex items-center justify-between">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
+ <div className="w-12 h-12 bg-primary rounded-md flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
  <Clock size={20} />
  </div>
  <div>
@@ -83,7 +83,7 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  </div>
  <Button 
  onClick={() => router.push(`/workspace/${workspaceId}/ats/interviews/${nextInterview?.id || 'demo-session'}`)}
- className="rounded-lg h-10 px-6 text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
+ className="rounded-md h-10 px-6 text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
  >
  Launch Interview Space <Play size={12} className="ml-2 fill-current" />
  </Button>

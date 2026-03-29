@@ -314,7 +314,7 @@ export default function TemplatePage() {
  {/* Main Content Area */}
  <div className="flex-1 space-y-6 max-w-[1200px] overflow-y-auto transition-all duration-300">
  {/* Header */}
- <div className="flex border border-border items-center justify-between bg-card p-6 rounded-lg shadow-sm">
+ <div className="flex border border-border items-center justify-between bg-card p-6 rounded-md shadow-sm">
  <div>
  <h2 className="text-2xl font-bold text-foreground">Message Templates</h2>
  <p className="text-sm text-muted-foreground mt-1">Create and manage reusable WhatsApp messages.</p>
@@ -326,7 +326,7 @@ export default function TemplatePage() {
  </div>
 
  {/* Toolbar */}
- <div className="bg-card p-4 rounded-lg shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center border border-border">
+ <div className="bg-card p-4 rounded-md shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center border border-border">
  <div className="relative w-full sm:w-96">
  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
  <Input
@@ -339,7 +339,7 @@ export default function TemplatePage() {
  </div>
 
  {/* Templates Table */}
- <div className="w-full bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+ <div className="w-full bg-card rounded-md shadow-sm border border-border overflow-hidden">
  <Table>
  <TableHeader className="bg-muted/50">
  <TableRow>
@@ -592,7 +592,7 @@ export default function TemplatePage() {
 
  {/* List Configuration (Interactive Group) */}
  {formData.type === 'interactive-group' &&
- <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-4">
+ <div className="bg-muted/30 p-4 rounded-md border border-border space-y-4">
  <div className="space-y-2">
  <label className="text-sm font-semibold text-foreground">List Button Label</label>
  <Input
@@ -628,7 +628,7 @@ export default function TemplatePage() {
  </div>
 
  {(formData.metadata?.listSections || []).map((section, sIdx) =>
- <div key={sIdx} className="bg-background/50 p-3 rounded-lg border border-border space-y-3 relative group/section">
+ <div key={sIdx} className="bg-background/50 p-3 rounded-md border border-border space-y-3 relative group/section">
  <div className="flex items-center gap-2">
  <Input
  placeholder="Section Title (e.g. Beverages)"
@@ -658,7 +658,7 @@ export default function TemplatePage() {
 
  <div className="space-y-2 pl-2 border-l-2 border-primary/20">
  {(section.rows || []).map((row, rIdx) =>
- <div key={rIdx} className="space-y-2 p-3 bg-background border border-border rounded-lg relative group/row">
+ <div key={rIdx} className="space-y-2 p-3 bg-background border border-border rounded-md relative group/row">
  <Input
  placeholder={`Option Title (e.g. Option ${rIdx + 1})`}
  className="h-8 text-sm"
@@ -722,7 +722,7 @@ export default function TemplatePage() {
 
  {/* Interactive Buttons Config */}
  {formData.type === 'interactive-button' &&
- <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
+ <div className="bg-muted/30 p-4 rounded-md border border-border space-y-3">
  <label className="text-sm font-semibold text-foreground flex items-center justify-between">
  Quick Reply Buttons
  {formData.buttons.length < 3 &&
@@ -754,13 +754,13 @@ export default function TemplatePage() {
 
  {/* Live Preview UI */}
  <div className="mt-8 pt-6 border-t border-border">
- <div className="bg-muted/30 p-4 border border-border rounded-lg shadow-inner min-h-[250px] flex flex-col max-w-[320px] mx-auto relative overflow-hidden">
+ <div className="bg-muted/30 p-4 border border-border rounded-md shadow-inner min-h-[250px] flex flex-col max-w-[320px] mx-auto relative overflow-hidden">
  <h3 className="text-xs font-semibold text-muted-foreground tracking-wider mb-4 flex items-center gap-2">
  <Smartphone className="w-4 h-4" /> Preview
  </h3>
 
  {/* Message Bubble */}
- <div className="relative z-10 bg-background border border-border rounded-lg rounded-tl-none p-0 overflow-hidden shadow-sm max-w-[95%] text-[14.5px] text-foreground break-words whitespace-pre-wrap leading-relaxed mt-2 self-start w-full">
+ <div className="relative z-10 bg-background border border-border rounded-md rounded-tl-none p-0 overflow-hidden shadow-sm max-w-[95%] text-[14.5px] text-foreground break-words whitespace-pre-wrap leading-relaxed mt-2 self-start w-full">
 
  {/* Media Rendering */}
  {formData.type === 'image' &&
@@ -787,7 +787,7 @@ export default function TemplatePage() {
  }
  {formData.type === 'document' &&
  <div className="p-3 bg-muted/20 border-b border-border flex items-center gap-3">
- <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500">
+ <div className="w-10 h-10 bg-blue-500/10 rounded-md flex items-center justify-center text-blue-500">
  <File className="w-6 h-6" />
  </div>
  <div className="flex-1 overflow-hidden">
@@ -832,7 +832,7 @@ export default function TemplatePage() {
  {/* Display List Button */}
  {formData.type === 'interactive-group' &&
  <div className="mx-0 mb-0 border-t border-border bg-muted/10 p-3">
- <div className="flex items-center justify-center gap-2 py-2 w-full bg-background border border-border rounded-lg text-primary text-sm font-medium shadow-sm">
+ <div className="flex items-center justify-center gap-2 py-2 w-full bg-background border border-border rounded-md text-primary text-sm font-medium shadow-sm">
  <MessageSquare className="w-4 h-4" />
  {formData.metadata?.listButton || 'Select Option'}
  </div>
@@ -906,7 +906,7 @@ export default function TemplatePage() {
  
  </div>
 
- <ScrollArea className="h-[200px] border rounded-lg p-1 bg-muted/10">
+ <ScrollArea className="h-[200px] border rounded-md p-1 bg-muted/10">
  {isFetchingContacts ?
  <div className="flex items-center justify-center h-full">
  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -916,7 +916,7 @@ export default function TemplatePage() {
  {filteredContacts.map((contact) =>
  <div
  key={contact.id}
- className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded-lg transition-colors cursor-pointer"
+ className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer"
  onClick={() => toggleContact(contact.id)}>
  
  <Checkbox checked={selectedContactIds.includes(contact.id)} />

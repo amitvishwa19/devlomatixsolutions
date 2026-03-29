@@ -43,7 +43,7 @@ const FileTypeIcon = ({ document }) => {
  const isFolder = document.isFolder;
 
  if (isFolder) return (
- <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center">
+ <div className="w-12 h-12 rounded-md bg-amber-50 flex items-center justify-center">
  <Folder className="w-7 h-7 text-amber-500 fill-amber-500/20" />
  </div>
  );
@@ -71,7 +71,7 @@ const FileTypeIcon = ({ document }) => {
  }
 
  return (
- <div className={`w-12 h-12 rounded-lg ${bgColor} flex items-center justify-center transition-transform group-hover:scale-110 duration-300`}>
+ <div className={`w-12 h-12 rounded-md ${bgColor} flex items-center justify-center transition-transform group-hover:scale-110 duration-300`}>
  <Icon className={`w-6 h-6 ${iconColor}`} />
  </div>
  );
@@ -123,10 +123,10 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  onDragLeave={handleDragLeave}
  onDrop={handleDrop}
  onClick={handleClick}
- className="group flex items-center justify-between p-3 rounded-lg border border-border/100 bg-card/100 hover:bg-primary/5 cursor-pointer transition-all duration-300 hover:shadow-sm w-full"
+ className="group flex items-center justify-between p-3 rounded-md border border-border/100 bg-card/100 hover:bg-primary/5 cursor-pointer transition-all duration-300 hover:shadow-sm w-full"
  >
  <div className="flex items-center gap-4 flex-1 overflow-hidden">
- <div className="p-2.5 rounded-lg bg-background border border-primary/10 shadow-sm group-hover:bg-primary/10 transition-all">
+ <div className="p-2.5 rounded-md bg-background border border-primary/10 shadow-sm group-hover:bg-primary/10 transition-all">
  <FileTypeIcon document={document} className="w-5 h-5 text-primary drop-shadow-sm" />
  </div>
  <div className="flex flex-col flex-1 min-w-0">
@@ -171,20 +171,20 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
  {!document.isFolder && (
  <>
- <Button title="Preview" variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg" onClick={(e) => { e.stopPropagation(); onView(document); }}>
+ <Button title="Preview" variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md" onClick={(e) => { e.stopPropagation(); onView(document); }}>
  <Eye className="w-4 h-4" />
  </Button>
- <Button title="Download" variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg" onClick={() => onDownload(document)}>
+ <Button title="Download" variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md" onClick={() => onDownload(document)}>
  <Download className="w-4 h-4" />
  </Button>
  </>
  )}
- <Button title="Share" variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg" onClick={() => onShare(document)}>
+ <Button title="Share" variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md" onClick={() => onShare(document)}>
  <Share2 className="w-4 h-4" />
  </Button>
  <AlertDialog>
  <AlertDialogTrigger asChild>
- <Button variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg">
+ <Button variant="ghost" size="icon" className="w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md">
  <Trash className="w-4 h-4" />
  </Button>
  </AlertDialogTrigger>
@@ -196,8 +196,8 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  </AlertDialogDescription>
  </AlertDialogHeader>
  <AlertDialogFooter>
- <AlertDialogCancel className="rounded-lg">Cancel</AlertDialogCancel>
- <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg">
+ <AlertDialogCancel className="rounded-md">Cancel</AlertDialogCancel>
+ <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md">
  Delete
  </AlertDialogAction>
  </AlertDialogFooter>
@@ -216,7 +216,7 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  onDragOver={handleDragOver}
  onDragLeave={handleDragLeave}
  onDrop={handleDrop}
- className={`group relative flex flex-col p-5 rounded-lg border border-border/100 bg-card/100 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer ${viewMode === 'list' ? 'flex-row items-center gap-4' : ''}`}
+ className={`group relative flex flex-col p-5 rounded-md border border-border/100 bg-card/100 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer ${viewMode === 'list' ? 'flex-row items-center gap-4' : ''}`}
  onClick={handleClick}
  >
  <div className={`flex items-start justify-between mb-4 ${viewMode === 'list' ? 'mb-0' : ''}`}>
@@ -228,25 +228,25 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  <MoreVertical className="w-4 h-4 text-muted-foreground" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="w-48 rounded-lg p-1.5 shadow-xl border-border/10 backdrop-blur-md bg-background/95">
+ <DropdownMenuContent align="end" className="w-48 rounded-md p-1.5 shadow-xl border-border/10 backdrop-blur-md bg-background/95">
  {!document.isFolder && (
  <>
- <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onView(document); }}>
+ <DropdownMenuItem className="rounded-md gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onView(document); }}>
  <Eye className="w-4 h-4 text-primary" /> Preview
  </DropdownMenuItem>
- <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onDownload(document); }}>
+ <DropdownMenuItem className="rounded-md gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onDownload(document); }}>
  <Download className="w-4 h-4 text-primary" /> Download
  </DropdownMenuItem>
  <DropdownMenuSeparator className="opacity-50" />
  </>
  )}
- <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onShare(document); }}>
+ <DropdownMenuItem className="rounded-md gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onShare(document); }}>
  <Share2 className="w-4 h-4 text-primary" /> Share
  </DropdownMenuItem>
  
  <AlertDialog>
  <AlertDialogTrigger asChild>
- <div className="flex w-full items-center gap-2 px-2 py-1.5 text-sm rounded-lg cursor-pointer text-destructive hover:bg-destructive/10 transition-colors" onClick={(e) => e.stopPropagation()}>
+ <div className="flex w-full items-center gap-2 px-2 py-1.5 text-sm rounded-md cursor-pointer text-destructive hover:bg-destructive/10 transition-colors" onClick={(e) => e.stopPropagation()}>
  <Trash className="w-4 h-4" /> Delete
  </div>
  </AlertDialogTrigger>
@@ -258,8 +258,8 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  </AlertDialogDescription>
  </AlertDialogHeader>
  <AlertDialogFooter>
- <AlertDialogCancel className="rounded-lg">Cancel</AlertDialogCancel>
- <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg">
+ <AlertDialogCancel className="rounded-md">Cancel</AlertDialogCancel>
+ <AlertDialogAction onClick={() => onDelete(document.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md">
  Delete
  </AlertDialogAction>
  </AlertDialogFooter>

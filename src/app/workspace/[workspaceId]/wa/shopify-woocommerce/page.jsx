@@ -6,7 +6,7 @@ export default function ShopifyWooCommercePage() {
  <h1 className="text-3xl font-bold text-white mb-2 ">Shopify & WooCommerce</h1>
  <p className="text-[#A0AEC0]">Connect your e-commerce stores</p>
  </div>
- <div className="flex h-[60vh] items-center justify-center rounded-lg border border-border border-dashed">
+ <div className="flex h-[60vh] items-center justify-center rounded-md border border-border border-dashed">
  <p className="text-muted-foreground">E-commerce integrations coming soon.</p>
  </div>
  </div>);

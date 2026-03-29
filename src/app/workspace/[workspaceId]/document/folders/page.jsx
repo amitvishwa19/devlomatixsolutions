@@ -201,7 +201,7 @@ export default function FoldersPage() {
  New Folder
  </Button>
  </DialogTrigger>
- <DialogContent className="rounded-lg border-none shadow-2xl">
+ <DialogContent className="rounded-md border-none shadow-2xl">
  <DialogHeader>
  <DialogTitle className="text-xl ">Create New Folder</DialogTitle>
  </DialogHeader>
@@ -210,17 +210,17 @@ export default function FoldersPage() {
  placeholder="E.g. Project Assets, Q4 Reports..."
  value={newFolderName}
  onChange={(e) => setNewFolderName(e.target.value)}
- className="h-12 bg-muted/30 border-none rounded-lg font-bold transition-all focus-visible:ring-primary/20"
+ className="h-12 bg-muted/30 border-none rounded-md font-bold transition-all focus-visible:ring-primary/20"
  />
  </div>
  <DialogFooter className="gap-2">
  <DialogClose asChild>
- <Button variant="ghost" className="rounded-lg font-bold">Cancel</Button>
+ <Button variant="ghost" className="rounded-md font-bold">Cancel</Button>
  </DialogClose>
  <Button
  onClick={handleCreateFolder}
  disabled={isCreating}
- className="rounded-lg h-12 shadow-lg shadow-primary/20 px-8"
+ className="rounded-md h-12 shadow-lg shadow-primary/20 px-8"
  >
  {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Create Folder"}
  </Button>
@@ -235,7 +235,7 @@ export default function FoldersPage() {
  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
  <Input
  placeholder="Search folders..."
- className="pl-10 h-10 border-none bg-muted/50 rounded-lg font-bold"
+ className="pl-10 h-10 border-none bg-muted/50 rounded-md font-bold"
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  />
@@ -249,8 +249,8 @@ export default function FoldersPage() {
  <p className="text-sm text-muted-foreground tracking-[0.2em] animate-pulse">Syncing Library...</p>
  </div>
  ) : filtered.length === 0 ? (
- <div className="flex flex-col items-center justify-center py-32 text-center rounded-lg border-2 border-dashed border-border/50">
- <div className="w-20 h-20 bg-muted/30 rounded-lg flex items-center justify-center mb-6">
+ <div className="flex flex-col items-center justify-center py-32 text-center rounded-md border-2 border-dashed border-border/50">
+ <div className="w-20 h-20 bg-muted/30 rounded-md flex items-center justify-center mb-6">
  <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
  </div>
  <h3 className="text-xl text-foreground/80 mb-2">No folders found</h3>
@@ -270,7 +270,7 @@ export default function FoldersPage() {
 
  <div className="flex items-start justify-between w-full">
  <div className="relative">
- <div className={`h-12 w-12 rounded-lg flex items-center justify-center shadow-sm border border-border/10 ${folder.color} group-hover:scale-110 transition-transform duration-500`}>
+ <div className={`h-12 w-12 rounded-md flex items-center justify-center shadow-sm border border-border/10 ${folder.color} group-hover:scale-110 transition-transform duration-500`}>
  <FolderOpen className="h-6 w-6 shrink-0" />
  </div>
  {folder.isStarred && (
@@ -284,26 +284,26 @@ export default function FoldersPage() {
  <Button
  variant="ghost"
  size="icon"
- className="h-8 w-8 -mr-2 -mt-2 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+ className="h-8 w-8 -mr-2 -mt-2 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all rounded-md"
  >
  <MoreHorizontal className="h-5 w-5" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="rounded-lg border-none shadow-2xl p-2 min-w-[160px]">
- <DropdownMenuItem className="rounded-lg font-bold gap-3 py-2.5" onClick={() => router.push(`/workspace/${workspaceId}/document?folderId=${folder.id}`)}>
+ <DropdownMenuContent align="end" className="rounded-md border-none shadow-2xl p-2 min-w-[160px]">
+ <DropdownMenuItem className="rounded-md font-bold gap-3 py-2.5" onClick={() => router.push(`/workspace/${workspaceId}/document?folderId=${folder.id}`)}>
  <FolderOpen className="h-4 w-4 text-primary" /> Open Folder
  </DropdownMenuItem>
- <DropdownMenuItem className="rounded-lg font-bold gap-3 py-2.5" onClick={(e) => { e.stopPropagation(); toggleStar(folder); }}>
+ <DropdownMenuItem className="rounded-md font-bold gap-3 py-2.5" onClick={(e) => { e.stopPropagation(); toggleStar(folder); }}>
  <svg className="w-4 h-4 text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={folder.isStarred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
  {folder.isStarred ? 'Unstar Folder' : 'Star Folder'}
  </DropdownMenuItem>
- <DropdownMenuItem className="rounded-lg font-bold gap-3 py-2.5" onClick={(e) => { e.stopPropagation(); toggleStatus(folder); }}>
+ <DropdownMenuItem className="rounded-md font-bold gap-3 py-2.5" onClick={(e) => { e.stopPropagation(); toggleStatus(folder); }}>
  <Loader2 className="h-4 w-4 text-blue-500" /> Toggle Status
  </DropdownMenuItem>
- <DropdownMenuItem className="rounded-lg font-bold gap-3 py-2.5">
+ <DropdownMenuItem className="rounded-md font-bold gap-3 py-2.5">
  <Pencil className="h-4 w-4 text-amber-500" /> Rename
  </DropdownMenuItem>
- <DropdownMenuItem className="rounded-lg font-bold gap-3 py-2.5" onClick={(e) => {
+ <DropdownMenuItem className="rounded-md font-bold gap-3 py-2.5" onClick={(e) => {
  e.stopPropagation();
  openShareModal(folder);
  }}>
@@ -314,7 +314,7 @@ export default function FoldersPage() {
  e.stopPropagation();
  handleDeleteFolder(folder.id);
  }}
- className="rounded-lg font-bold gap-3 py-2.5 text-destructive focus:bg-destructive/5 focus:text-destructive"
+ className="rounded-md font-bold gap-3 py-2.5 text-destructive focus:bg-destructive/5 focus:text-destructive"
  >
  <Trash2 className="h-4 w-4" /> Delete Folder
  </DropdownMenuItem>

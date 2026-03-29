@@ -73,14 +73,14 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
 
  return (
  <Dialog open={isOpen} onOpenChange={onOpenChange}>
- <DialogContent className="sm:max-w-2xl rounded-lg border-none shadow-2xl overflow-hidden p-0 bg-card">
+ <DialogContent className="sm:max-w-2xl rounded-md border-none shadow-2xl overflow-hidden p-0 bg-card">
  <div className="flex flex-col md:flex-row h-[500px]">
  
  {/* Left Sidebar: Folder Information */}
  <div className="w-full md:w-[280px] bg-muted/10 border-r border-border/40 p-6 flex flex-col justify-between shrink-0">
  <div>
  <div className="flex items-center gap-4 mb-6">
- <div className={`h-14 w-14 rounded-lg flex items-center justify-center shadow-sm border border-border/10 ${folder.color || 'bg-blue-50 text-blue-500'}`}>
+ <div className={`h-14 w-14 rounded-md flex items-center justify-center shadow-sm border border-border/10 ${folder.color || 'bg-blue-50 text-blue-500'}`}>
  <FolderOpen className="h-7 w-7" />
  </div>
  <div className="flex-1 min-w-0">
@@ -133,7 +133,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  <div className="space-y-2 mt-6">
  <Button 
  onClick={navigateToFolder}
- className="w-full h-11 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+ className="w-full h-11 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
  >
  Open Folder
  </Button>
@@ -141,7 +141,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  variant="outline"
  onClick={confirmDelete}
  disabled={isDeleting}
- className="w-full h-11 rounded-lg border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive"
+ className="w-full h-11 rounded-md border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive"
  >
  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
  Delete Folder
@@ -163,7 +163,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  </div>
  ) : files.length === 0 ? (
  <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 gap-4">
- <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
+ <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center">
  <Database className="w-8 h-8" />
  </div>
  <p className="text-xs font-bold ">This folder is empty</p>
@@ -171,9 +171,9 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  ) : (
  <div className="space-y-1">
  {files.map(file => (
- <div key={file.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/40 transition-colors group cursor-default">
+ <div key={file.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted/40 transition-colors group cursor-default">
  <div className="flex items-center gap-3 overflow-hidden">
- <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+ <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
  <FileText className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
  </div>
  <div className="min-w-0 flex-1">

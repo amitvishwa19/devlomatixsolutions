@@ -129,7 +129,7 @@ const MessageCard = ({ type, isBot = true }) => {
  case MessageTypes.IMAGE:
  return (
  <div className="space-y-2">
- <div className="relative rounded-lg overflow-hidden">
+ <div className="relative rounded-md overflow-hidden">
  <img
  src={message.url}
  alt="Message image"
@@ -145,7 +145,7 @@ const MessageCard = ({ type, isBot = true }) => {
  case MessageTypes.VIDEO:
  return (
  <div className="space-y-2">
- <div className="relative rounded-lg overflow-hidden">
+ <div className="relative rounded-md overflow-hidden">
  <img
  src={message.thumbnail}
  alt="Video thumbnail"
@@ -167,7 +167,7 @@ const MessageCard = ({ type, isBot = true }) => {
  case MessageTypes.AUDIO:
  return (
  <div className="space-y-2">
- <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+ <div className="bg-gray-100 rounded-md p-4 flex items-center justify-between">
  <div className="flex items-center gap-3">
  <Music className="w-6 h-6 text-gray-600" />
  <div>
@@ -186,7 +186,7 @@ const MessageCard = ({ type, isBot = true }) => {
  case MessageTypes.DOCUMENT:
  return (
  <div className="space-y-2">
- <div className="bg-gray-100 rounded-lg p-4 flex items-center gap-4">
+ <div className="bg-gray-100 rounded-md p-4 flex items-center gap-4">
  <FileText className="w-12 h-12 text-gray-600" />
  <div className="flex-1">
  <p className="text-sm font-medium text-gray-800">
@@ -203,7 +203,7 @@ const MessageCard = ({ type, isBot = true }) => {
  case MessageTypes.LOCATION:
  return (
  <div className="space-y-2">
- <div className="bg-gray-100 rounded-lg overflow-hidden">
+ <div className="bg-gray-100 rounded-md overflow-hidden">
  <div className="relative w-full h-32 bg-blue-100">
  <MapPin className="w-8 h-8 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
  </div>
@@ -222,7 +222,7 @@ const MessageCard = ({ type, isBot = true }) => {
 
  return (
  <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
- <div className={`max-w-xs rounded-lg p-3 ${isBot ?
+ <div className={`max-w-xs rounded-md p-3 ${isBot ?
  'bg-white text-gray-800' :
  'bg-green-500 text-white'}`
  }>
@@ -257,7 +257,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
 
  const renderCallButton = () => {
  return (
- <div className="flex items-center gap-3 mt-4 bg-white p-3 rounded-lg border">
+ <div className="flex items-center gap-3 mt-4 bg-white p-3 rounded-md border">
  <Phone className="w-5 h-5 text-green-600" />
  <div className="flex-1">
  <p className="text-sm font-medium text-gray-800">
@@ -269,7 +269,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
  </div>
  <button
  onClick={() => alert('Calling...')}
- className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+ className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition-colors">
  
  Call Now
  </button>
@@ -279,7 +279,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
 
  const renderURLButton = () => {
  return (
- <div className="flex items-center gap-3 mt-4 bg-white p-3 rounded-lg border">
+ <div className="flex items-center gap-3 mt-4 bg-white p-3 rounded-md border">
  <ExternalLink className="w-5 h-5 text-blue-600" />
  <div className="flex-1">
  <p className="text-sm font-medium text-gray-800">
@@ -291,7 +291,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
  </div>
  <button
  onClick={() => alert('Opening website...')}
- className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+ className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition-colors">
  
  Visit Site
  </button>
@@ -365,7 +365,7 @@ export default function ButtonQuickReplyPage() {
  {/* Controls */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
  {/* Message Type Selector */}
- <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
  <label className="block text-sm font-medium text-white mb-4">
  Message Types
  </label>
@@ -374,7 +374,7 @@ export default function ButtonQuickReplyPage() {
  <button
  key={type}
  onClick={() => setActiveMessageType(type)}
- className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${activeMessageType === type ?
+ className={`flex items-center justify-center gap-2 p-3 rounded-md border transition-all ${activeMessageType === type ?
  'bg-green-500 border-green-500 text-white' :
  'bg-slate-800 border-slate-600 text-gray-300 hover:border-green-400 hover:bg-slate-700'}`
  }>
@@ -387,7 +387,7 @@ export default function ButtonQuickReplyPage() {
  </div>
 
  {/* Button Type Selector */}
- <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
  <label className="block text-sm font-medium text-white mb-4">
  Button Types
  </label>
@@ -396,7 +396,7 @@ export default function ButtonQuickReplyPage() {
  <button
  key={type}
  onClick={() => setActiveButtonType(type)}
- className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${activeButtonType === type ?
+ className={`flex items-center justify-center gap-2 p-3 rounded-md border transition-all ${activeButtonType === type ?
  'bg-green-500 border-green-500 text-white' :
  'bg-slate-800 border-slate-600 text-gray-300 hover:border-green-400 hover:bg-slate-700'}`
  }>
@@ -410,7 +410,7 @@ export default function ButtonQuickReplyPage() {
  </div>
 
  {/* WhatsApp Preview */}
- <div className="bg-[#111827] rounded-lg overflow-hidden border border-slate-700">
+ <div className="bg-[#111827] rounded-md overflow-hidden border border-slate-700">
  <div className="max-w-md mx-auto">
  {/* Chat Header */}
  <div className="bg-green-600 p-4 flex items-center justify-between">
@@ -453,7 +453,7 @@ export default function ButtonQuickReplyPage() {
 
  {/* User Message (Simulated) */}
  <div className="mt-4 flex justify-end">
- <div className="bg-green-500 text-white px-4 py-2 rounded-lg max-w-xs">
+ <div className="bg-green-500 text-white px-4 py-2 rounded-md max-w-xs">
  <p className="text-sm">Thanks for the information!</p>
  <div className="text-[10px] text-green-100 flex items-center justify-end gap-1 mt-1">
  <span>10:32</span>
@@ -495,14 +495,14 @@ export default function ButtonQuickReplyPage() {
  </div>
 
  {/* Quick Reply Options Grid */}
- <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-4">Quick Reply Options</h3>
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
  {QUICK_REPLY_OPTIONS.map((reply) =>
  <button
  key={reply.id}
  onClick={() => handleQuickReplyClick(reply)}
- className="p-3 bg-slate-800 border border-slate-600 rounded-lg text-sm text-gray-300 hover:bg-slate-700 hover:border-green-400 transition-all text-center">
+ className="p-3 bg-slate-800 border border-slate-600 rounded-md text-sm text-gray-300 hover:bg-slate-700 hover:border-green-400 transition-all text-center">
  
  {reply.text}
  </button>
@@ -512,9 +512,9 @@ export default function ButtonQuickReplyPage() {
 
  {/* Code Examples */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
- <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-3">Message Types Code</h3>
- <pre className="bg-[#0A0A0A] p-4 rounded-lg overflow-x-auto text-sm text-gray-300">
+ <pre className="bg-[#0A0A0A] p-4 rounded-md overflow-x-auto text-sm text-gray-300">
  <code>{`// Text message
 const textMessage = {
  type: 'text',
@@ -561,9 +561,9 @@ const locationMessage = {
  </pre>
  </div>
 
- <div className="bg-[#1E293B] rounded-lg p-5 border border-slate-700">
+ <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-3">Button Types Code</h3>
- <pre className="bg-[#0A0A0A] p-4 rounded-lg overflow-x-auto text-sm text-gray-300">
+ <pre className="bg-[#0A0A0A] p-4 rounded-md overflow-x-auto text-sm text-gray-300">
  <code>{`// Quick Reply Buttons
 const quickReplies = [
  { 

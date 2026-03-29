@@ -144,9 +144,9 @@ export const PostRow = ({ post, onApply }) => {
  return (
  <>
  <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
- <AlertDialogContent className="rounded-lg border border-border shadow-2xl overflow-hidden p-0 animate-fade-in">
+ <AlertDialogContent className="rounded-md border border-border shadow-2xl overflow-hidden p-0 animate-fade-in">
  <AlertDialogHeader className="p-8 pb-4">
- <div className="w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
+ <div className="w-12 h-12 bg-rose-50 rounded-md flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
  <Trash2 className="w-6 h-6 text-rose-500" />
  </div>
  <AlertDialogTitle className="text-2xl ">Are you absolutely sure?</AlertDialogTitle>
@@ -155,13 +155,13 @@ export const PostRow = ({ post, onApply }) => {
  </AlertDialogDescription>
  </AlertDialogHeader>
  <AlertDialogFooter className="p-8 pt-4 flex flex-row gap-4 bg-muted/20">
- <AlertDialogCancel className="rounded-lg text-[10px] font-bold flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
+ <AlertDialogCancel className="rounded-md text-[10px] font-bold flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
  <AlertDialogAction
  onClick={(e) => {
  e.preventDefault();
  handleDelete();
  }}
- className="rounded-lg text-[10px] font-bold flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
+ className="rounded-md text-[10px] font-bold flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
  disabled={isDeleting}
  >
  {isDeleting ? "Deleting..." : "Delete Post"}
@@ -170,9 +170,9 @@ export const PostRow = ({ post, onApply }) => {
  </AlertDialogContent>
  </AlertDialog>
 
- <div className="group flex items-center bg-card rounded-lg border border-border overflow-hidden hover:shadow-medium transition-all p-3 gap-4 shadow-soft animate-fade-in">
+ <div className="group flex items-center bg-card rounded-md border border-border overflow-hidden hover:shadow-medium transition-all p-3 gap-4 shadow-soft animate-fade-in">
  {/* Media Thumbnail */}
- <div className="w-16 h-16 bg-muted/30 rounded-lg overflow-hidden flex items-center justify-center shrink-0 border border-border/10">
+ <div className="w-16 h-16 bg-muted/30 rounded-md overflow-hidden flex items-center justify-center shrink-0 border border-border/10">
  {post.mediaUrls?.[0] ? (
  <img src={post.mediaUrls[0]} alt="" className="w-full h-full object-cover" />
  ) : (
@@ -244,28 +244,28 @@ export const PostRow = ({ post, onApply }) => {
  {/* Actions */}
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="ghost" size="icon" className="w-8 rounded-lg text-muted-foreground/50 hover:text-foreground">
+ <Button variant="ghost" size="icon" className="w-8 rounded-md text-muted-foreground/50 hover:text-foreground">
  <MoreHorizontal className="w-4 h-4" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-2xl border-border/20 p-2">
+ <DropdownMenuContent align="end" className="w-48 rounded-md shadow-2xl border-border/20 p-2">
  <DropdownMenuItem
  onClick={() => onOpen('addPost', { workspaceId, onApply, initialData: post })}
- className="cursor-pointer font-bold px-3 py-2.5 rounded-lg"
+ className="cursor-pointer font-bold px-3 py-2.5 rounded-md"
  >
  <Edit2 className="w-4 h-4 mr-2 text-primary" /> Edit Post
  </DropdownMenuItem>
  <DropdownMenuItem
  onClick={handlePublishNow}
  disabled={isPublishing || post.status === 'PUBLISHED'}
- className="cursor-pointer font-bold px-3 py-2.5 rounded-lg"
+ className="cursor-pointer font-bold px-3 py-2.5 rounded-md"
  >
  <Send className="w-4 h-4 mr-2 text-emerald-500" /> {isPublishing ? 'Publishing...' : 'Publish Now'}
  </DropdownMenuItem>
  <DropdownMenuSeparator className="bg-border/10" />
  <DropdownMenuItem
  onClick={() => setIsDeleteDialogOpen(true)}
- className="cursor-pointer font-bold px-3 py-2.5 rounded-lg text-rose-500 hover:bg-rose-500/10"
+ className="cursor-pointer font-bold px-3 py-2.5 rounded-md text-rose-500 hover:bg-rose-500/10"
  >
  <Trash2 className="w-4 h-4 mr-2" /> Delete
  </DropdownMenuItem>

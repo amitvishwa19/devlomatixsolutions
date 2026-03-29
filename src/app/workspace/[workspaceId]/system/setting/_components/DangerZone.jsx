@@ -18,10 +18,10 @@ export const DangerZone = () => {
 
  return (
  <div className="space-y-6 animate-fade-in">
- <Card className="rounded-lg border border-rose-500/40 shadow-xl shadow-rose-500/5 bg-rose-500/[0.02] backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <Card className="rounded-md border border-rose-500/40 shadow-xl shadow-rose-500/5 bg-rose-500/[0.02] backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-rose-500/10 rounded-lg flex items-center justify-center border border-rose-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-rose-500/10 rounded-md flex items-center justify-center border border-rose-500/20 shadow-inner">
  <AlertTriangle className="w-6 h-6 text-rose-500" />
  </div>
  <div>
@@ -33,7 +33,7 @@ export const DangerZone = () => {
  </div>
  </CardHeader>
  <CardContent className="space-y-4">
- <div className="flex items-center justify-between gap-8 p-4 bg-background/50 rounded-lg border border-rose-500/10">
+ <div className="flex items-center justify-between gap-8 p-4 bg-background/50 rounded-md border border-rose-500/10">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <Power className="w-4 h-4 text-amber-500" />
@@ -46,7 +46,7 @@ export const DangerZone = () => {
  <Button 
  variant="outline" 
  size="sm" 
- className={`rounded-lg text-[10px] font-bold h-9 px-4 transition-all ${isMaintenanceMode ? 'bg-amber-500 text-white border-none' : 'text-amber-500 border-amber-500/20'}`}
+ className={`rounded-md text-[10px] font-bold h-9 px-4 transition-all ${isMaintenanceMode ? 'bg-amber-500 text-white border-none' : 'text-amber-500 border-amber-500/20'}`}
  onClick={() => {
  setIsMaintenanceMode(!isMaintenanceMode);
  toast.info(isMaintenanceMode ? "Maintenance mode disabled" : "Maintenance mode enabled");
@@ -56,7 +56,7 @@ export const DangerZone = () => {
  </Button>
  </div>
 
- <div className="flex items-center justify-between gap-8 p-4 bg-background/50 rounded-lg border border-rose-500/10">
+ <div className="flex items-center justify-between gap-8 p-4 bg-background/50 rounded-md border border-rose-500/10">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <RotateCcw className="w-4 h-4 text-blue-500" />
@@ -66,12 +66,12 @@ export const DangerZone = () => {
  Restore all branding and security settings to workspace defaults.
  </p>
  </div>
- <Button variant="outline" size="sm" className="rounded-lg text-[10px] font-bold h-9 px-4 text-blue-500 border-blue-500/20">
+ <Button variant="outline" size="sm" className="rounded-md text-[10px] font-bold h-9 px-4 text-blue-500 border-blue-500/20">
  RESET ALL
  </Button>
  </div>
 
- <div className="flex items-center justify-between gap-8 p-4 bg-rose-500/5 rounded-lg border border-rose-500/20 shadow-inner group">
+ <div className="flex items-center justify-between gap-8 p-4 bg-rose-500/5 rounded-md border border-rose-500/20 shadow-inner group">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <Trash2 className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
@@ -84,7 +84,7 @@ export const DangerZone = () => {
  <Button 
  variant="destructive" 
  size="sm" 
- className="rounded-lg text-[10px] tracking-[0.2em] h-10 px-6 bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/30 transition-all transform hover:scale-105"
+ className="rounded-md text-[10px] tracking-[0.2em] h-10 px-6 bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/30 transition-all transform hover:scale-105"
  onClick={handleDeleteWorkspace}
  >
  DELETE
@@ -93,7 +93,7 @@ export const DangerZone = () => {
  </CardContent>
  </Card>
 
- <div className="p-4 bg-muted/20 rounded-lg border border-border/40 flex flex-col gap-2 items-center text-center opacity-60">
+ <div className="p-4 bg-muted/20 rounded-md border border-border/40 flex flex-col gap-2 items-center text-center opacity-60">
  <p className="text-[9px] tracking-[0.3em] text-muted-foreground ">Critical Infrastructure</p>
  <p className="text-[10px] text-muted-foreground font-semibold max-w-sm">
  Workspace identification: {settings?.general?.inviteCode || "..."} | CID: {typeof window !== 'undefined' ? window.crypto.randomUUID().slice(0, 8) : '...'}

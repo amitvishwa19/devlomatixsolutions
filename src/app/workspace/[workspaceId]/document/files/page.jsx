@@ -264,7 +264,7 @@ export default function FilesPage() {
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="flex items-center gap-4 bg-card rounded-lg border p-2 shadow-sm">
+            <div className="flex items-center gap-4 bg-card rounded-md border p-2 shadow-sm">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -277,11 +277,11 @@ export default function FilesPage() {
                 <div className="w-[1px] h-6 bg-border mx-2" />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="text-muted-foreground font-semibold px-4 border-0 hover:bg-muted/50 rounded-lg shrink-0">
+                        <Button variant="ghost" className="text-muted-foreground font-semibold px-4 border-0 hover:bg-muted/50 rounded-md shrink-0">
                             <Filter className="w-4 h-4 mr-2" /> {filterStatus}
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 rounded-lg">
+                    <DropdownMenuContent align="end" className="w-48 rounded-md">
                         {['All Status', 'Approved', 'Pending', 'Review'].map(st => (
                             <DropdownMenuItem
                                 key={st}
@@ -296,7 +296,7 @@ export default function FilesPage() {
             </div>
 
             {/* Main Table */}
-            <div className="bg-card rounded-lg border shadow-sm flex-1 overflow-hidden flex flex-col">
+            <div className="bg-card rounded-md border shadow-sm flex-1 overflow-hidden flex flex-col">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse min-w-[800px]">
                         <thead>
@@ -371,7 +371,7 @@ export default function FilesPage() {
                                                         <MoreHorizontal className="w-4 h-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-40 rounded-lg shadow-xl">
+                                                <DropdownMenuContent align="end" className="w-40 rounded-md shadow-xl">
                                                     <DropdownMenuItem onClick={() => openFileViewer(f)} className="font-bold cursor-pointer py-2 text-primary focus:text-primary focus:bg-primary/10">
                                                         <Eye className="w-4 h-4 mr-2" /> View
                                                     </DropdownMenuItem>
@@ -415,7 +415,7 @@ export default function FilesPage() {
             />
 
             <Dialog open={isMoveModalOpen} onOpenChange={setIsMoveModalOpen}>
-                <DialogContent className="sm:max-w-md rounded-lg border-none shadow-2xl">
+                <DialogContent className="sm:max-w-md rounded-md border-none shadow-2xl">
                     <DialogHeader className="mb-4">
                         <DialogTitle className="text-xl font-bold flex items-center gap-2">
                             <FolderOutput className="w-5 h-5 text-primary" />
@@ -430,10 +430,10 @@ export default function FilesPage() {
                         <div className="space-y-2">
                             <label className="text-xs text-muted-foreground ml-1">Select Existing Folder</label>
                             <Select value={targetFolderId} onValueChange={(val) => { setTargetFolderId(val); setNewFolderName(""); }}>
-                                <SelectTrigger className="w-full h-11 bg-muted/30 border-none rounded-lg font-bold">
+                                <SelectTrigger className="w-full h-11 bg-muted/30 border-none rounded-md font-bold">
                                     <SelectValue placeholder="-- Choose a folder --" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-lg shadow-xl">
+                                <SelectContent className="rounded-md shadow-xl">
                                     <SelectItem value="root" className="font-bold py-2.5">
                                         <div className="flex items-center gap-2">
                                             <FolderOpen className="w-4 h-4 text-emerald-500" /> [Root Directory]
@@ -464,7 +464,7 @@ export default function FilesPage() {
                                     placeholder="e.g. Invoices Q3"
                                     value={newFolderName}
                                     onChange={(e) => { setNewFolderName(e.target.value); setTargetFolderId(""); }}
-                                    className="pl-10 h-11 bg-muted/30 border-none rounded-lg font-bold shadow-none focus-visible:ring-1 focus-visible:ring-primary/30"
+                                    className="pl-10 h-11 bg-muted/30 border-none rounded-md font-bold shadow-none focus-visible:ring-1 focus-visible:ring-primary/30"
                                 />
                             </div>
                         </div>
@@ -472,7 +472,7 @@ export default function FilesPage() {
                         <Button
                             onClick={handleConfirmMove}
                             disabled={(!targetFolderId && !newFolderName) || isCreatingFolder}
-                            className="w-full h-12 rounded-lg font-bold text-sm shadow-xl shadow-primary/20"
+                            className="w-full h-12 rounded-md font-bold text-sm shadow-xl shadow-primary/20"
                         >
                             {isCreatingFolder ? (
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

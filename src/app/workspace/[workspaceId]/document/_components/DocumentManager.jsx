@@ -64,7 +64,7 @@ const FileTypeIcon = ({ document }) => {
     const isFolder = document.isFolder;
 
     if (isFolder) return (
-        <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center border border-amber-100 shadow-sm">
+        <div className="w-12 h-12 rounded-md bg-amber-50 flex items-center justify-center border border-amber-100 shadow-sm">
             <Folder className="w-7 h-7 text-amber-500 fill-amber-500/20" />
         </div>
     );
@@ -92,7 +92,7 @@ const FileTypeIcon = ({ document }) => {
     }
 
     return (
-        <div className={`w-12 h-12 rounded-lg ${bgColor} flex items-center justify-center border border-border/50 shadow-sm`}>
+        <div className={`w-12 h-12 rounded-md ${bgColor} flex items-center justify-center border border-border/50 shadow-sm`}>
             <Icon className={`w-6 h-6 ${iconColor}`} />
         </div>
     );
@@ -103,9 +103,9 @@ const ShareModal = ({ doc, onClose }) => {
         <div className="space-y-6">
             <div className="space-y-2">
                 <Label className="text-[10px] text-muted-foreground ml-1">Recipient Email</Label>
-                <Input placeholder="user@example.com" className="h-12 bg-muted/30 border-none rounded-lg font-bold" />
+                <Input placeholder="user@example.com" className="h-12 bg-muted/30 border-none rounded-md font-bold" />
             </div>
-            <Button className="w-full rounded-lg shadow-lg shadow-primary/20" onClick={() => {
+            <Button className="w-full rounded-md shadow-lg shadow-primary/20" onClick={() => {
                 toast.success("Shared successfully");
                 onClose();
             }}>
@@ -281,9 +281,9 @@ export const DocumentManager = ({ workspaceId, userId }) => {
 
             {/* Modals & Dialogs */}
             <Dialog open={isFolderOpen} onOpenChange={setIsFolderOpen}>
-                <DialogContent className="sm:max-w-[425px] rounded-lg overflow-hidden border-border/40 shadow-2xl p-0">
+                <DialogContent className="sm:max-w-[425px] rounded-md overflow-hidden border-border/40 shadow-2xl p-0">
                     <DialogHeader className="p-8 pb-4">
-                        <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center mb-4 border border-amber-100 shadow-sm">
+                        <div className="w-12 h-12 bg-amber-50 rounded-md flex items-center justify-center mb-4 border border-amber-100 shadow-sm">
                             <FolderPlus className="w-6 h-6 text-amber-500" />
                         </div>
                         <DialogTitle className="text-2xl">Create New Folder</DialogTitle>
@@ -298,21 +298,21 @@ export const DocumentManager = ({ workspaceId, userId }) => {
                                 placeholder="Enter folder name..."
                                 value={newFolderName}
                                 onChange={(e) => setNewFolderName(e.target.value)}
-                                className="h-12 bg-muted/30 border-none shadow-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded-lg font-bold"
+                                className="h-12 bg-muted/30 border-none shadow-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded-md font-bold"
                             />
                         </div>
                     </div>
                     <DialogFooter className="p-8 pt-4 flex flex-row gap-4">
-                        <Button variant="ghost" className="rounded-lg font-bold flex-1" onClick={() => setIsFolderOpen(false)}>Cancel</Button>
-                        <Button className="rounded-lg flex-1 shadow-lg shadow-primary/20" onClick={handleCreateFolder}>Create Folder</Button>
+                        <Button variant="ghost" className="rounded-md font-bold flex-1" onClick={() => setIsFolderOpen(false)}>Cancel</Button>
+                        <Button className="rounded-md flex-1 shadow-lg shadow-primary/20" onClick={handleCreateFolder}>Create Folder</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-                <DialogContent className="sm:max-w-[500px] rounded-lg overflow-hidden border-border/40 shadow-2xl p-0">
+                <DialogContent className="sm:max-w-[500px] rounded-md overflow-hidden border-border/40 shadow-2xl p-0">
                     <DialogHeader className="p-8 pb-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 border border-primary/20 shadow-sm">
+                        <div className="w-12 h-12 bg-primary/10 rounded-md flex items-center justify-center mb-4 border border-primary/20 shadow-sm">
                             <Upload className="w-6 h-6 text-primary" />
                         </div>
                         <DialogTitle className="text-2xl">Upload Assets</DialogTitle>
@@ -369,10 +369,10 @@ export const DocumentManager = ({ workspaceId, userId }) => {
                             </div>
                         </div>
                         <div className="flex items-center gap-3 mr-8">
-                            <Button variant="outline" size="sm" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-lg px-6 font-bold border-border/60 hover:bg-muted transition-all bg-background/50">
+                            <Button variant="outline" size="sm" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-md px-6 font-bold border-border/60 hover:bg-muted transition-all bg-background/50">
                                 <ExternalLink className="w-4 h-4 mr-2" /> Open Externally
                             </Button>
-                            <Button size="sm" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-lg px-8 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                            <Button size="sm" onClick={() => window.open(previewDoc?.fileUrl, "_blank")} className="rounded-md px-8 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                                 <Download className="w-4 h-4 mr-2" /> Download
                             </Button>
                         </div>
@@ -431,7 +431,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
                                 <div className="flex flex-col items-center justify-center py-20 text-center max-w-md">
                                     <div className="w-32 h-32 bg-muted/30 rounded-[2.5rem] flex items-center justify-center mb-10 relative group ring-1 ring-border/50 shadow-inner">
                                         <Globe className="w-14 h-14 text-muted-foreground/20 group-hover:text-primary/30 transition-all duration-500 group-hover:rotate-12" />
-                                        <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-background border border-border/40 rounded-lg flex items-center justify-center text-[11px] text-primary shadow-2xl ring-4 ring-muted/20">
+                                        <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-background border border-border/40 rounded-md flex items-center justify-center text-[11px] text-primary shadow-2xl ring-4 ring-muted/20">
                                             {previewDoc?.extension?.replace('.', '') || '?'}
                                         </div>
                                     </div>
@@ -455,9 +455,9 @@ export const DocumentManager = ({ workspaceId, userId }) => {
             </Dialog>
 
             <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
-                <DialogContent className="sm:max-w-[425px] rounded-lg overflow-hidden border-border/40 shadow-2xl p-0">
+                <DialogContent className="sm:max-w-[425px] rounded-md overflow-hidden border-border/40 shadow-2xl p-0">
                     <DialogHeader className="p-8 pb-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 border border-primary/20 shadow-sm">
+                        <div className="w-12 h-12 bg-primary/10 rounded-md flex items-center justify-center mb-4 border border-primary/20 shadow-sm">
                             <Share2 className="w-6 h-6 text-primary" />
                         </div>
                         <DialogTitle className="text-2xl">Share Asset</DialogTitle>

@@ -157,14 +157,14 @@ export default function QuickMessage({ params: paramsPromise }) {
     <div className='flex flex-col xl:flex-row h-full gap-6'>
             {/* Left: Configuration Panel */}
             <div className="flex-1 space-y-6 animate-in fade-in duration-500 max-w-3xl overflow-y-auto">
-                <div className="flex border border-border items-center justify-between bg-card p-6 rounded-lg shadow-sm">
+                <div className="flex border border-border items-center justify-between bg-card p-6 rounded-md shadow-sm">
                     <div>
                         <h2 className="text-2xl font-bold text-foreground">Quick Message</h2>
                         <p className="text-sm text-muted-foreground mt-1">Send standard or interactive messages instantly.</p>
                     </div>
                 </div>
 
-                <div className="w-full bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+                <div className="w-full bg-card rounded-md shadow-sm border border-border overflow-hidden">
                     <div className="p-6 md:p-8">
                         {status === 'loading' || status === 'connecting' ?
             <div className="text-center py-16 animate-in fade-in duration-300">
@@ -192,7 +192,7 @@ export default function QuickMessage({ params: paramsPromise }) {
                             </div> :
 
             <form onSubmit={handleSendMessage} className="space-y-6 animate-in fade-in">
-                                <div className="flex items-center space-x-2 bg-green-500/10 text-green-600 px-4 py-3 rounded-lg text-sm mb-4 font-medium border border-green-500/20">
+                                <div className="flex items-center space-x-2 bg-green-500/10 text-green-600 px-4 py-3 rounded-md text-sm mb-4 font-medium border border-green-500/20">
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                                     <span>Connected and ready to send.</span>
                                 </div>
@@ -266,16 +266,16 @@ export default function QuickMessage({ params: paramsPromise }) {
                                             </div>
                                         </div>
 
-                                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-6">
+                                        <div className="bg-muted/30 p-4 rounded-md border border-border space-y-6">
                                             <div className="flex justify-between items-center">
                                                 <h4 className="font-semibold text-sm">List Sections & Options</h4>
-                                                <button type="button" onClick={addSection} className="text-xs bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-lg font-medium flex items-center">
+                                                <button type="button" onClick={addSection} className="text-xs bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-md font-medium flex items-center">
                                                     <Plus className="w-3 h-3 mr-1" /> Add Section
                                                 </button>
                                             </div>
 
                                             {intSections.map((sec, sIdx) =>
-                  <div key={`section-${sIdx}`} className="bg-background border border-border p-4 rounded-lg space-y-4">
+                  <div key={`section-${sIdx}`} className="bg-background border border-border p-4 rounded-md space-y-4">
                                                     <div className="flex justify-between items-center space-x-3">
                                                         <Input
                         value={sec.title}
@@ -285,7 +285,7 @@ export default function QuickMessage({ params: paramsPromise }) {
                         required />
                       
                                                         {intSections.length > 1 &&
-                      <button type="button" onClick={() => removeSection(sIdx)} className="text-destructive p-2 hover:bg-destructive/10 rounded-lg">
+                      <button type="button" onClick={() => removeSection(sIdx)} className="text-destructive p-2 hover:bg-destructive/10 rounded-md">
                                                                 <Trash2 className="w-4 h-4" />
                                                             </button>
                       }
@@ -316,7 +316,7 @@ export default function QuickMessage({ params: paramsPromise }) {
               }
 
                                 {feedback &&
-              <div className={`p-3.5 rounded-lg text-sm font-medium border ${feedback.type === 'success' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}`}>
+              <div className={`p-3.5 rounded-md text-sm font-medium border ${feedback.type === 'success' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}`}>
                                         {feedback.msg}
                                     </div>
               }
@@ -324,7 +324,7 @@ export default function QuickMessage({ params: paramsPromise }) {
                                 <button
                 type="submit"
                 disabled={sendLoading}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-4 rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-4 rounded-md shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
                 
                                     {sendLoading ?
                 <>
@@ -349,13 +349,13 @@ export default function QuickMessage({ params: paramsPromise }) {
 
                 {/* Live Preview Panel (Only for Interactive, purely visual) */}
                 {status === 'open' && msgType === 'interactive' &&
-        <div className="bg-card border border-border rounded-lg flex flex-col overflow-hidden shadow-sm h-auto shrink-0 animate-in fade-in">
+        <div className="bg-card border border-border rounded-md flex flex-col overflow-hidden shadow-sm h-auto shrink-0 animate-in fade-in">
                         <div className="px-4 py-3 bg-muted/30 border-b border-border text-sm font-semibold flex items-center text-muted-foreground">
                             <Smartphone className="w-4 h-4 mr-2" /> Live Preview
                         </div>
                         <div className="bg-[#EFEAE2] p-4 flex-1">
                             {/* Dummy WhatsApp Message Bubble */}
-                            <div className="bg-white rounded-lg rounded-tl-none p-3 shadow-sm max-w-[90%] text-sm text-gray-800 break-words whitespace-pre-wrap">
+                            <div className="bg-white rounded-md rounded-tl-none p-3 shadow-sm max-w-[90%] text-sm text-gray-800 break-words whitespace-pre-wrap">
                                 {intBody || 'Type a message...'}
                                 {intFooter && <div className="text-xs text-gray-400 mt-2">{intFooter}</div>}
 
@@ -369,7 +369,7 @@ export default function QuickMessage({ params: paramsPromise }) {
         }
 
                 {/* History Panel */}
-                <div id='message-history' className='flex-1 border border-border rounded-lg p-4 bg-card shadow-sm flex flex-col min-h-[400px]'>
+                <div id='message-history' className='flex-1 border border-border rounded-md p-4 bg-card shadow-sm flex flex-col min-h-[400px]'>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-bold text-foreground">Activity History</h3>
                         <span className="text-xs font-semibold px-2 py-1 bg-secondary text-secondary-foreground rounded-full">{messages.length}</span>
@@ -383,7 +383,7 @@ export default function QuickMessage({ params: paramsPromise }) {
 
             messages.map((msg, index) =>
             <div key={`${msg.id}-${index}`} className={`flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] p-3 rounded-lg text-sm shadow-sm ${msg.fromMe ? 'bg-[#005c4b] text-[#e9edef] rounded-tr-sm' : 'bg-[#202c33] text-[#e9edef] rounded-tl-sm'}`}>
+                                    <div className={`max-w-[85%] p-3 rounded-md text-sm shadow-sm ${msg.fromMe ? 'bg-[#005c4b] text-[#e9edef] rounded-tr-sm' : 'bg-[#202c33] text-[#e9edef] rounded-tl-sm'}`}>
                                         <p className="whitespace-pre-wrap leading-relaxed break-words">{msg.text}</p>
                                         <div className={`text-[10px] mt-1.5 opacity-70 flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`}>
                                             {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {msg.jid.split('@')[0]}

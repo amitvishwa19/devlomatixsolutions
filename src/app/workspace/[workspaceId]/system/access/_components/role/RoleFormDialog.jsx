@@ -174,10 +174,10 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
     return (
         <Sheet open={isOpen} onOpenChange={handleOpenChange}>
             <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
-                <div className="bg-card rounded-lg flex flex-col h-full border overflow-hidden shadow-2xl">
+                <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
                     <SheetHeader className="border-b p-6 bg-muted/5">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 shadow-inner">
+                            <div className="p-3 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
                                 <ShieldUser className="w-6 h-6 text-primary" />
                             </div>
                             <div>
@@ -209,7 +209,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                     <FormControl>
                                                         <Input 
                                                             {...field} 
-                                                            className="bg-secondary/30 border-border/40 h-12 rounded-lg text-lg font-medium focus:ring-primary/20"
+                                                            className="bg-secondary/30 border-border/40 h-12 rounded-md text-lg font-medium focus:ring-primary/20"
                                                             placeholder="e.g. System Administrator"
                                                         />
                                                     </FormControl>
@@ -225,7 +225,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                             render={({ field }) => (
                                                 <FormItem className="grid gap-3">
                                                     <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Visual Signature</FormLabel>
-                                                    <div className="flex flex-wrap gap-2.5 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                                                    <div className="flex flex-wrap gap-2.5 p-3 rounded-md bg-secondary/20 border border-border/30">
                                                         {colorPresets.map((c) => {
                                                             const selected = field.value === c;
                                                             return (
@@ -233,14 +233,14 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                                     key={c}
                                                                     type="button"
                                                                     onClick={() => field.onChange(c)}
-                                                                    className={`w-6 h-6 rounded-lg transition-all duration-300 relative group ${selected
+                                                                    className={`w-6 h-6 rounded-md transition-all duration-300 relative group ${selected
                                                                         ? "ring-2 ring-primary ring-offset-4 ring-offset-background scale-110 shadow-lg"
                                                                         : "hover:scale-110 opacity-60 hover:opacity-100"
                                                                         }`}
                                                                     style={{ backgroundColor: c }}
                                                                     title={c}
                                                                 >
-                                                                    {selected && <div className="absolute inset-0 rounded-lg bg-white/20 animate-pulse" />}
+                                                                    {selected && <div className="absolute inset-0 rounded-md bg-white/20 animate-pulse" />}
                                                                 </button>
                                                             );
                                                         })}
@@ -267,7 +267,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                     return (
                                                         <div
                                                             key={category}
-                                                            className={`border rounded-lg p-4 transition-all duration-500 ${allActive ? "border-primary/50 bg-primary/5 shadow-md shadow-primary/5" : "border-border/40 bg-muted/5 hover:border-primary/30 hover:bg-muted/30"}`}
+                                                            className={`border rounded-md p-4 transition-all duration-500 ${allActive ? "border-primary/50 bg-primary/5 shadow-md shadow-primary/5" : "border-border/40 bg-muted/5 hover:border-primary/30 hover:bg-muted/30"}`}
                                                         >
                                                             <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/40">
                                                                 <div>
@@ -331,7 +331,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                     <Textarea 
                                                         rows={4} 
                                                         {...field} 
-                                                        className="bg-secondary/30 border-border/40 rounded-lg resize-none min-h-[100px] p-4 text-sm"
+                                                        className="bg-secondary/30 border-border/40 rounded-md resize-none min-h-[100px] p-4 text-sm"
                                                         placeholder="High-level overview of the role scope..."
                                                     />
                                                 </FormControl>
@@ -348,14 +348,14 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                     variant="ghost"
                                     onClick={() => handleOpenChange()}
                                     disabled={loading}
-                                    className="rounded-lg font-bold text-xs uppercase tracking-widest px-8 h-10"
+                                    className="rounded-md font-bold text-xs uppercase tracking-widest px-8 h-10"
                                 >
                                     Discard
                                 </Button>
                                 <Button 
                                     type="submit" 
                                     disabled={loading}
-                                    className="rounded-lg font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
+                                    className="rounded-md font-black text-xs uppercase tracking-widest px-8 h-10 shadow-xl shadow-primary/20"
                                 >
                                     {loading ? (
                                         <Loader className="w-5 h-5 animate-spin mr-2" />

@@ -51,7 +51,7 @@ export const PostStats = ({ posts }) => {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-1">
       {stats.map((stat, i) => (
         <div key={i} className={cn(
-          "p-4 rounded-lg border border-border/40 backdrop-blur-md transition-all hover:shadow-soft group relative overflow-hidden",
+          "p-4 rounded-md border border-border/40 backdrop-blur-md transition-all hover:shadow-soft group relative overflow-hidden",
           stat.bg
         )}>
           {/* Background Highlight */}
@@ -61,7 +61,7 @@ export const PostStats = ({ posts }) => {
           )} />
 
           <div className="flex items-center justify-between mb-3 relative z-10">
-            <div className={cn("p-2 rounded-lg bg-background border border-border/40 shadow-sm", stat.color)}>
+            <div className={cn("p-2 rounded-md bg-background border border-border/40 shadow-sm", stat.color)}>
               <stat.icon size={16} />
             </div>
             {stat.isEngagement ? (

@@ -52,7 +52,7 @@ export const RecentApplicants = ({ applicants = [] }) => {
  };
 
  return (
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-lg overflow-hidden shadow-2xl shadow-black/5">
+ <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between">
  <CardTitle className="text-xl ">Recent Applicants</CardTitle>
  <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export const RecentApplicants = ({ applicants = [] }) => {
  initial={{ opacity: 0, x: 20 }}
  animate={{ opacity: 1, x: 0 }}
  transition={{ delay: i * 0.1 }}
- className="flex items-center justify-between p-4 rounded-lg hover:bg-primary/5 transition-all cursor-pointer group"
+ className="flex items-center justify-between p-4 rounded-md hover:bg-primary/5 transition-all cursor-pointer group"
  >
  <div className="flex items-center gap-4">
  <Avatar className="h-10 w-10 border-2 border-primary/20 bg-background group-hover:scale-110 transition-transform">
@@ -100,7 +100,7 @@ export const RecentApplicants = ({ applicants = [] }) => {
  </motion.div>
  ))}
  </div>
- <Button variant="ghost" className="w-full mt-4 text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100 hover:bg-primary/5 rounded-lg h-12">
+ <Button variant="ghost" className="w-full mt-4 text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100 hover:bg-primary/5 rounded-md h-12">
  View Talent Database <ArrowRight size={12} className="ml-2" />
  </Button>
  </CardContent>

@@ -221,7 +221,7 @@ export const MediaLibraryModal = () => {
 
     return (
         <Dialog open={isModalOpen} onOpenChange={handleClose}>
-            <DialogContent className="min-w-[85vw] max-w-[85vw] min-h-[85vh] h-[85vh] max-h-[85vh] bg-background border border-border rounded-lg shadow-2xl p-0 overflow-hidden flex flex-col">
+            <DialogContent className="min-w-[85vw] max-w-[85vw] min-h-[85vh] h-[85vh] max-h-[85vh] bg-background border border-border rounded-md shadow-2xl p-0 overflow-hidden flex flex-col">
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -248,7 +248,7 @@ export const MediaLibraryModal = () => {
                                 placeholder="Search by name or smart tags..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="pl-11 bg-background border-border/60 h-11 text-xs font-bold rounded-lg shadow-inner focus-visible:ring-primary"
+                                className="pl-11 bg-background border-border/60 h-11 text-xs font-bold rounded-md shadow-inner focus-visible:ring-primary"
                             />
                         </div>
                     </div>
@@ -262,9 +262,9 @@ export const MediaLibraryModal = () => {
                     <div className="w-72 border-r border-border/40 bg-muted/2 p-6 flex flex-col gap-6 shrink-0 overflow-y-auto">
                         <div className="space-y-4 mb-2">
                             <p className="text-[9px] text-muted-foreground/50 tracking-widest uppercase px-2 font-black">Upload Center</p>
-                            <div className="bg-primary/5 rounded-lg border border-primary/20 p-5 space-y-4 animate-in zoom-in-95 backdrop-blur-sm">
+                            <div className="bg-primary/5 rounded-md border border-primary/20 p-5 space-y-4 animate-in zoom-in-95 backdrop-blur-sm">
                                 <div className="flex flex-col items-center text-center space-y-2">
-                                    <div className="h-10 w-10 bg-primary/20 rounded-lg flex items-center justify-center text-primary shadow-inner">
+                                    <div className="h-10 w-10 bg-primary/20 rounded-md flex items-center justify-center text-primary shadow-inner">
                                         <UploadCloud size={20} />
                                     </div>
                                     <p className="text-[10px] font-bold text-foreground">Cloud Storage</p>
@@ -273,7 +273,7 @@ export const MediaLibraryModal = () => {
                                 <Button
                                     disabled={isUploading}
                                     onClick={handleUploadClick}
-                                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-[9px] h-9 font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95"
+                                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-[9px] h-9 font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95"
                                 >
                                     {isUploading ? (
                                         <div className="flex items-center gap-2">
@@ -302,21 +302,21 @@ export const MediaLibraryModal = () => {
                             <Button
                                 variant={activeFilter === 'all' ? 'secondary' : 'ghost'}
                                 onClick={() => setActiveFilter('all')}
-                                className={cn("w-full justify-start gap-3 h-10 font-bold text-xs rounded-lg transition-all", activeFilter === 'all' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground")}
+                                className={cn("w-full justify-start gap-3 h-10 font-bold text-xs rounded-md transition-all", activeFilter === 'all' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground")}
                             >
                                 <LayoutGrid size={16} /> All Assets
                             </Button>
                             <Button
                                 variant={activeFilter === 'recent' ? 'secondary' : 'ghost'}
                                 onClick={() => setActiveFilter('recent')}
-                                className={cn("w-full justify-start gap-3 h-10 font-bold text-xs rounded-lg transition-all", activeFilter === 'recent' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground")}
+                                className={cn("w-full justify-start gap-3 h-10 font-bold text-xs rounded-md transition-all", activeFilter === 'recent' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground")}
                             >
                                 <History size={16} /> Recently Added
                             </Button>
                             <Button
                                 variant={activeFilter === 'starred' ? 'secondary' : 'ghost'}
                                 onClick={() => setActiveFilter('starred')}
-                                className={cn("w-full justify-start gap-3 h-10 font-bold text-xs rounded-lg transition-all", activeFilter === 'starred' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground")}
+                                className={cn("w-full justify-start gap-3 h-10 font-bold text-xs rounded-md transition-all", activeFilter === 'starred' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground")}
                             >
                                 <Star size={16} /> Starred Items
                             </Button>
@@ -326,12 +326,12 @@ export const MediaLibraryModal = () => {
 
                         <div className="space-y-4">
                             <p className="text-[9px] text-muted-foreground/50 tracking-widest uppercase px-2 font-black">Quick Actions</p>
-                            <div className="bg-indigo-500/5 rounded-lg border border-indigo-500/20 p-5 space-y-4 backdrop-blur-sm">
+                            <div className="bg-indigo-500/5 rounded-md border border-indigo-500/20 p-5 space-y-4 backdrop-blur-sm">
                                 <div className="space-y-2">
                                     <p className="text-[10px] font-bold text-indigo-400">AI Enhancement</p>
                                     <p className="text-[8px] text-muted-foreground opacity-60">Process and upscale assets using Gemini 2.0.</p>
                                 </div>
-                                <Button size="sm" className="w-full h-8 text-[9px] bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow-lg shadow-indigo-500/20 font-black uppercase tracking-widest">
+                                <Button size="sm" className="w-full h-8 text-[9px] bg-indigo-500 hover:bg-indigo-600 text-white rounded-md shadow-lg shadow-indigo-500/20 font-black uppercase tracking-widest">
                                     <Sparkles size={12} className="mr-2" /> AI Image Gen
                                 </Button>
                             </div>
@@ -366,7 +366,7 @@ export const MediaLibraryModal = () => {
                                             key={doc.id}
                                             onClick={() => setSelectedUrl(doc.fileUrl)}
                                             className={cn(
-                                                "group relative cursor-pointer transition-all duration-500 rounded-lg  overflow-hidden border-2",
+                                                "group relative cursor-pointer transition-all duration-500 rounded-md  overflow-hidden border-2",
                                                 selectedUrl === doc.fileUrl
                                                     ? "border-primary shadow-2xl shadow-primary/10 scale-[1.03] z-10"
                                                     : "border-border/60 hover:border-primary/40 bg-card/40 hover:shadow-xl hover:translate-y-[-4px]"
@@ -380,8 +380,8 @@ export const MediaLibraryModal = () => {
                                                     className="transition-transform group-hover:scale-110 duration-700 object-cover"
                                                 />
                                                 <div className="absolute top-2 right-2 flex gap-1 transform translate-y-[-200%] group-hover:translate-y-0 transition-transform duration-500">
-                                                    {doc.isStarred && <div className="bg-amber-500 text-white p-1 rounded-lg shadow-lg"><Star size={10} fill="currentColor" /></div>}
-                                                    <div className="bg-background/80 backdrop-blur-md text-[8px] p-1 px-1.5 rounded-lg border border-border/10 font-black uppercase shadow-sm">
+                                                    {doc.isStarred && <div className="bg-amber-500 text-white p-1 rounded-md shadow-lg"><Star size={10} fill="currentColor" /></div>}
+                                                    <div className="bg-background/80 backdrop-blur-md text-[8px] p-1 px-1.5 rounded-md border border-border/10 font-black uppercase shadow-sm">
                                                         {doc.extension?.replace('.', '') || 'IMG'}
                                                     </div>
                                                 </div>
@@ -401,7 +401,7 @@ export const MediaLibraryModal = () => {
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-[8px] font-bold text-muted-foreground/60">{(doc.fileSize / 1024 / 1024).toFixed(2)} MB</span>
                                                     {doc.tags?.length > 0 && (
-                                                        <Badge className="h-4 text-[7px] bg-primary/10 text-primary border-none rounded-lg font-black">
+                                                        <Badge className="h-4 text-[7px] bg-primary/10 text-primary border-none rounded-md font-black">
                                                             {doc.tags[0].toUpperCase()}
                                                         </Badge>
                                                     )}
@@ -420,7 +420,7 @@ export const MediaLibraryModal = () => {
                     <div className="flex items-center gap-4">
                         {selectedUrl && (
                             <div className="flex items-center gap-3 animate-in slide-in-from-left-4">
-                                <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/20 shadow-xl relative ring-2 ring-primary/5">
+                                <div className="w-10 h-10 rounded-md overflow-hidden border border-primary/20 shadow-xl relative ring-2 ring-primary/5">
                                     <AppImage src={selectedUrl} alt="Selected" fill className="object-cover" />
                                 </div>
                                 <div className="space-y-0.5">

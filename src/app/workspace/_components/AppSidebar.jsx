@@ -195,7 +195,7 @@ export default function AppSidebar() {
                         alt="Logo"
                         width={40}
                         height={40}
-                        className="rounded-lg object-contain"
+                        className="rounded-md object-contain"
                     />
                 </div>
             </SidebarHeader>

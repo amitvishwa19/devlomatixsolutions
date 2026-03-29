@@ -36,10 +36,10 @@ export const NotificationSettings = () => {
 
  return (
  <div className="space-y-6 animate-fade-in">
- <Card className="rounded-lg border border-border/40 shadow-xl shadow-rose-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <Card className="rounded-md border border-border/40 shadow-xl shadow-rose-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-rose-500/10 rounded-lg flex items-center justify-center border border-rose-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-rose-500/10 rounded-md flex items-center justify-center border border-rose-500/20 shadow-inner">
  <BellRing className="w-6 h-6 text-rose-500" />
  </div>
  <div>
@@ -51,9 +51,9 @@ export const NotificationSettings = () => {
  </div>
  </CardHeader>
  <CardContent className="space-y-4">
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-lg border border-border/40">
+ <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-md border border-border/40">
  <div className="flex items-center gap-4">
- <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center border border-emerald-500/20">
+ <div className="w-8 h-8 bg-emerald-500/10 rounded-md flex items-center justify-center border border-emerald-500/20">
  <MessageSquare className="w-4 h-4 text-emerald-500" />
  </div>
  <div className="space-y-0.5">
@@ -71,9 +71,9 @@ export const NotificationSettings = () => {
  />
  </div>
 
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-lg border border-border/40">
+ <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-md border border-border/40">
  <div className="flex items-center gap-4">
- <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center border border-blue-500/20">
+ <div className="w-8 h-8 bg-blue-500/10 rounded-md flex items-center justify-center border border-blue-500/20">
  <Mail className="w-4 h-4 text-blue-500" />
  </div>
  <div className="space-y-0.5">
@@ -91,9 +91,9 @@ export const NotificationSettings = () => {
  />
  </div>
 
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-lg border border-border/40">
+ <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-md border border-border/40">
  <div className="flex items-center gap-4">
- <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center border border-border/20">
+ <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center border border-border/20">
  <Monitor className="w-4 h-4 text-muted-foreground" />
  </div>
  <div className="space-y-0.5">
@@ -114,7 +114,7 @@ export const NotificationSettings = () => {
  <Button 
  onClick={handleSave} 
  disabled={saving}
- className="rounded-lg font-bold px-8 shadow-xl shadow-rose-500/20 bg-rose-600 hover:bg-rose-700 text-white transition-all transform hover:scale-[1.02]"
+ className="rounded-md font-bold px-8 shadow-xl shadow-rose-500/20 bg-rose-600 hover:bg-rose-700 text-white transition-all transform hover:scale-[1.02]"
  >
  {saving ? "Saving..." : "Save Preferences"}
  </Button>

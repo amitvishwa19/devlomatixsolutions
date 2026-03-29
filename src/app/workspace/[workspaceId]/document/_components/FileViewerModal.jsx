@@ -15,7 +15,7 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
  if (!url) {
  return (
  <Dialog open={isOpen} onOpenChange={onOpenChange}>
- <DialogContent className="sm:max-w-2xl bg-card rounded-lg border-none shadow-2xl p-6 text-center">
+ <DialogContent className="sm:max-w-2xl bg-card rounded-md border-none shadow-2xl p-6 text-center">
  <DialogHeader>
  <DialogTitle>{file.name}</DialogTitle>
  </DialogHeader>
@@ -31,7 +31,7 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
  const renderPreview = () => {
  if (type.startsWith('image/')) {
  return (
- <div className="relative w-full h-full flex items-center justify-center bg-black/5 rounded-lg overflow-hidden p-4">
+ <div className="relative w-full h-full flex items-center justify-center bg-black/5 rounded-md overflow-hidden p-4">
  {/* eslint-disable-next-line @next/next/no-img-element */}
  <img
  src={url}
@@ -45,7 +45,7 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
 
  if (type === 'application/pdf') {
  return (
- <div className="w-full h-full rounded-lg overflow-hidden shadow-inner border border-border/50">
+ <div className="w-full h-full rounded-md overflow-hidden shadow-inner border border-border/50">
  <iframe
  src={url}
  className="w-full h-full border-none"
@@ -58,7 +58,7 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
 
  if (type.startsWith('video/')) {
  return (
- <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden bg-black object-cover shadow-2xl">
+ <div className="w-full h-full flex items-center justify-center rounded-md overflow-hidden bg-black object-cover shadow-2xl">
  <video controls className="max-w-full max-h-full outline-none" onLoadedData={() => setIsLoading(false)}>
  <source src={url} type={type} />
  Your browser does not support the video tag.
@@ -69,7 +69,7 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
 
  if (type.startsWith('audio/')) {
  return (
- <div className="w-full flex flex-col items-center justify-center py-24 space-y-8 rounded-lg bg-muted/30 border border-border/50 shadow-inner">
+ <div className="w-full flex flex-col items-center justify-center py-24 space-y-8 rounded-md bg-muted/30 border border-border/50 shadow-inner">
  <div className="w-24 h-24 rounded-full bg-pink-100 flex items-center justify-center border border-pink-200 shadow-md">
  <Music className="w-12 h-12 text-pink-500 animate-pulse" />
  </div>
@@ -83,17 +83,17 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
 
  // Fallback for unsupported types
  return (
- <div className="w-full flex flex-col items-center justify-center py-20 bg-muted/30 rounded-lg border-2 border-dashed border-border/50">
+ <div className="w-full flex flex-col items-center justify-center py-20 bg-muted/30 rounded-md border-2 border-dashed border-border/50">
  <FileIcon className="w-16 h-16 text-muted-foreground/40 mb-4" />
  <h3 className="text-lg text-foreground/80 mb-2">No Preview Available</h3>
  <p className="text-sm text-muted-foreground/60 max-w-[280px] text-center mb-6 font-medium">
  This file type ({type}) cannot be previewed natively. Please download it to view.
  </p>
  <div className="flex gap-4">
- <Button variant="outline" className="font-bold rounded-lg px-6 bg-background shadow-sm" onClick={() => window.open(url, '_blank')}>
+ <Button variant="outline" className="font-bold rounded-md px-6 bg-background shadow-sm" onClick={() => window.open(url, '_blank')}>
  <ExternalLink className="w-4 h-4 mr-2" /> Open Externally
  </Button>
- <Button className="font-bold rounded-lg px-6 shadow-md shadow-primary/20" asChild>
+ <Button className="font-bold rounded-md px-6 shadow-md shadow-primary/20" asChild>
  <a href={url} download>
  <Download className="w-4 h-4 mr-2" /> Download File
  </a>
@@ -105,11 +105,11 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
 
  return (
  <Dialog open={isOpen} onOpenChange={onOpenChange}>
- <DialogContent className="sm:max-w-5xl h-[85vh] p-0 rounded-lg border-none shadow-2xl flex flex-col overflow-hidden bg-card/95 backdrop-blur-xl">
+ <DialogContent className="sm:max-w-5xl h-[85vh] p-0 rounded-md border-none shadow-2xl flex flex-col overflow-hidden bg-card/95 backdrop-blur-xl">
  {/* Header Area */}
  <div className="px-6 py-4 flex items-center justify-between border-b border-border/40 shrink-0 bg-background/50">
  <div className="flex items-center gap-3 min-w-0 pr-4">
- <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+ <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
  {type?.startsWith('image/') ? <ImageIcon className="w-5 h-5 text-emerald-500" /> :
  type === 'application/pdf' ? <FileText className="w-5 h-5 text-rose-500" /> :
  type?.startsWith('video/') ? <Video className="w-5 h-5 text-purple-500" /> :
@@ -125,10 +125,10 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
  </div>
  
  <div className="flex items-center gap-2 shrink-0">
- <Button variant="outline" size="icon" className="w-9 rounded-lg border-border/50" onClick={() => window.open(url, '_blank')}>
+ <Button variant="outline" size="icon" className="w-9 rounded-md border-border/50" onClick={() => window.open(url, '_blank')}>
  <ExternalLink className="w-4 h-4 text-muted-foreground" />
  </Button>
- <Button variant="outline" size="icon" className="w-9 rounded-lg border-border/50" asChild>
+ <Button variant="outline" size="icon" className="w-9 rounded-md border-border/50" asChild>
  <a href={url} download>
  <Download className="w-4 h-4 text-muted-foreground" />
  </a>

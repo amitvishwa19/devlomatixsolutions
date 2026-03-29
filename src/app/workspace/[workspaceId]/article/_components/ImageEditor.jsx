@@ -85,10 +85,10 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  };
 
  return (
- <div className="flex flex-col h-full bg-background border rounded-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+ <div className="flex flex-col h-full bg-background border rounded-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
  <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/10">
  <div className="flex items-center gap-3">
- <div className="p-2 bg-primary/10 rounded-lg">
+ <div className="p-2 bg-primary/10 rounded-md">
  <Sliders size={18} className="text-primary" />
  </div>
  <div>
@@ -104,7 +104,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  <div className="flex-1 flex overflow-hidden">
  {/* Preview Area */}
  <div className="flex-1 bg-black/5 flex items-center justify-center p-8 relative overflow-hidden group">
- <div className="relative max-w-full max-h-full shadow-2xl rounded-lg overflow-hidden border border-border/50">
+ <div className="relative max-w-full max-h-full shadow-2xl rounded-md overflow-hidden border border-border/50">
  <canvas 
  ref={canvasRef} 
  className="max-w-full max-h-[60vh] object-contain"

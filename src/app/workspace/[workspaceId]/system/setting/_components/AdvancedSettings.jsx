@@ -36,10 +36,10 @@ export const AdvancedSettings = () => {
  return (
  <div className="space-y-6 animate-fade-in">
  {/* System Status Section */}
- <Card className="rounded-lg border border-border/40 shadow-xl shadow-amber-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <Card className="rounded-md border border-border/40 shadow-xl shadow-amber-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center border border-amber-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-amber-500/10 rounded-md flex items-center justify-center border border-amber-500/20 shadow-inner">
  <Cpu className="w-6 h-6 text-amber-500" />
  </div>
  <div>
@@ -51,7 +51,7 @@ export const AdvancedSettings = () => {
  </div>
  </CardHeader>
  <CardContent className="space-y-6">
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-lg border border-border/40">
+ <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-md border border-border/40">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <Zap className="w-4 h-4 text-primary" />
@@ -64,7 +64,7 @@ export const AdvancedSettings = () => {
  <Switch defaultChecked className="data-[state=checked]:bg-primary" />
  </div>
 
- <div className="flex items-center justify-between gap-8 p-4 bg-amber-500/5 rounded-lg border border-amber-500/10 opacity-80">
+ <div className="flex items-center justify-between gap-8 p-4 bg-amber-500/5 rounded-md border border-amber-500/10 opacity-80">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <ShieldAlert className="w-4 h-4 text-amber-600" />
@@ -84,10 +84,10 @@ export const AdvancedSettings = () => {
  </Card>
 
  {/* Custom Technical Injection */}
- <Card className="rounded-lg border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <Card className="rounded-md border border-border/40 shadow-xl shadow-indigo-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-indigo-500/10 rounded-lg flex items-center justify-center border border-indigo-500/20 shadow-inner">
+ <div className="w-12 h-12 bg-indigo-500/10 rounded-md flex items-center justify-center border border-indigo-500/20 shadow-inner">
  <Code className="w-6 h-6 text-indigo-500" />
  </div>
  <div>
@@ -108,7 +108,7 @@ export const AdvancedSettings = () => {
  value={localAdvanced.customCss}
  onChange={(e) => setLocalAdvanced(prev => ({ ...prev, customCss: e.target.value }))}
  placeholder="/* Add your custom CSS here */"
- className="rounded-lg border border-border min-h-[150px] bg-background shadow-inner font-mono text-[11px] font-bold text-foreground resize-none p-4"
+ className="rounded-md border border-border min-h-[150px] bg-background shadow-inner font-mono text-[11px] font-bold text-foreground resize-none p-4"
  />
  </div>
  </CardContent>
@@ -116,7 +116,7 @@ export const AdvancedSettings = () => {
  <Button 
  onClick={handleSave} 
  disabled={saving}
- className="rounded-lg font-bold px-8 shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 text-white transition-all transform hover:scale-[1.02]"
+ className="rounded-md font-bold px-8 shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 text-white transition-all transform hover:scale-[1.02]"
  >
  {saving ? "Deploying..." : "Update Technical Settings"}
  </Button>
@@ -124,10 +124,10 @@ export const AdvancedSettings = () => {
  </Card>
 
  {/* Data Portability */}
- <Card className="rounded-lg border border-border/40 shadow-xl shadow-primary/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <Card className="rounded-md border border-border/40 shadow-xl shadow-primary/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
  <CardHeader className="pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20 shadow-inner">
+ <div className="w-12 h-12 bg-primary/10 rounded-md flex items-center justify-center border border-primary/20 shadow-inner">
  <Download className="w-6 h-6 text-primary" />
  </div>
  <div>
@@ -139,14 +139,14 @@ export const AdvancedSettings = () => {
  </div>
  </CardHeader>
  <CardContent className="grid md:grid-cols-2 gap-4 pt-2">
- <Button variant="outline" className="h-24 rounded-lg flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
+ <Button variant="outline" className="h-24 rounded-md flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
  <Download className="w-6 h-6 text-primary" />
  <div className="text-center">
  <p className="text-sm font-bold">Export Config</p>
  <p className="text-[10px] text-muted-foreground">JSON Format</p>
  </div>
  </Button>
- <Button variant="outline" className="h-24 rounded-lg flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
+ <Button variant="outline" className="h-24 rounded-md flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
  <Upload className="w-6 h-6 text-primary" />
  <div className="text-center">
  <p className="text-sm font-bold">Import Config</p>
@@ -157,8 +157,8 @@ export const AdvancedSettings = () => {
  </Card>
 
  {/* Lab Features */}
- <div className="p-4 bg-indigo-500/5 rounded-lg border border-indigo-500/10 flex gap-4 items-center">
- <div className="p-2 bg-indigo-500/10 rounded-lg">
+ <div className="p-4 bg-indigo-500/5 rounded-md border border-indigo-500/10 flex gap-4 items-center">
+ <div className="p-2 bg-indigo-500/10 rounded-md">
  <FlaskConical className="w-4 h-4 text-indigo-500" />
  </div>
  <div className="flex-1">
@@ -167,7 +167,7 @@ export const AdvancedSettings = () => {
  Enable early-access features that are currently in beta testing.
  </p>
  </div>
- <Button variant="ghost" size="sm" className="rounded-lg text-[10px] font-bold text-indigo-500 hover:bg-indigo-500/10 bg-transparent">
+ <Button variant="ghost" size="sm" className="rounded-md text-[10px] font-bold text-indigo-500 hover:bg-indigo-500/10 bg-transparent">
  LEARN MORE
  </Button>
  </div>

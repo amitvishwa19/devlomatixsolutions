@@ -107,7 +107,7 @@ export const KanbanBoard = () => {
  <div className="flex items-center justify-between">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
- <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+ <div className="p-1.5 rounded-md bg-primary/10 text-primary">
  <Sparkles size={16} />
  </div>
  <h1 className="text-xl text-foreground">
@@ -143,7 +143,7 @@ export const KanbanBoard = () => {
  </div>
 
  <div className="flex items-center gap-3">
- <div className="hidden lg:flex items-center bg-muted/30 p-1 rounded-lg border border-border/50">
+ <div className="hidden lg:flex items-center bg-muted/30 p-1 rounded-md border border-border/50">
  <Button variant="ghost" size="icon" className="h-7 w-7 bg-background shadow-sm text-primary">
  <LayoutGrid size={14} />
  </Button>
@@ -161,7 +161,7 @@ export const KanbanBoard = () => {
  </div>
 
  {/* Kanban Board Area */}
- <ScrollArea className="flex-1 min-h-0 w-full rounded-lg border border-border/10 bg-muted/5 shadow-inner overflow-hidden">
+ <ScrollArea className="flex-1 min-h-0 w-full rounded-md border border-border/10 bg-muted/5 shadow-inner overflow-hidden">
  <div className="p-4 h-full">
  <DragDropContext onDragEnd={onDragEnd}>
  <div className="flex gap-6 h-full min-w-max pb-4">
@@ -180,7 +180,7 @@ export const KanbanBoard = () => {
  })}
 
  {/* New Column Placeholder */}
- <div className="flex-shrink-0 w-80 h-full rounded-lg border-2 border-dashed border-border/50 flex flex-col items-center justify-center group hover:border-primary/30 transition-all duration-300 bg-muted/5 hover:bg-primary/5 cursor-pointer">
+ <div className="flex-shrink-0 w-80 h-full rounded-md border-2 border-dashed border-border/50 flex flex-col items-center justify-center group hover:border-primary/30 transition-all duration-300 bg-muted/5 hover:bg-primary/5 cursor-pointer">
  <div className="p-3 rounded-full bg-muted/50 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-300">
  <Plus size={24} />
  </div>
