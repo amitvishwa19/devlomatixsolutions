@@ -25,36 +25,42 @@ const handler = async (data) => {
 
     try {
 
-        const ops = formData.map((item) =>
-            db.permission.upsert({
-                where: { id: item.id || '000' },
-                update: {
-                    title: item?.title,
-                    value: item?.value,
-                    description: item?.description,
-                    category: item?.category,
-                    status: item.status,
-                    color: item.color
-                },
-                create: {
-                    title: item?.title,
-                    value: item?.value,
-                    description: item?.description,
-                    category: item?.category,
-                    status: item.status,
-                    color: item.color
-                },
-                include: {
-                    roles: {
-                        include: {
-                            users: true
+        // 🚀 THE FIX: Use an Interactive Transaction to properly honor the timeout
+        permissions = await db.$transaction(async (tx) => {
+            return await Promise.all(formData.map(async (item) => {
+                const isNew = String(item.id).startsWith("new-");
+                
+                return tx.permission.upsert({
+                    where: { id: isNew ? '000' : item.id },
+                    update: {
+                        title: item?.title,
+                        value: item?.value,
+                        description: item?.description,
+                        category: item?.category,
+                        status: item.status,
+                        color: item.color
+                    },
+                    create: {
+                        // Let Prisma generate a proper CUID for new items
+                        title: item?.title,
+                        value: item?.value,
+                        description: item?.description,
+                        category: item?.category,
+                        status: item.status,
+                        color: item.color
+                    },
+                    include: {
+                        roles: {
+                            include: {
+                                users: true
+                            }
                         }
-                    }
-                },
-            })
-        );
-
-        permissions = await db.$transaction(ops);
+                    },
+                });
+            }));
+        }, {
+            timeout: 30000 // Increase timeout to 30 seconds for bulk operations
+        });
 
         console.log(formData)
 

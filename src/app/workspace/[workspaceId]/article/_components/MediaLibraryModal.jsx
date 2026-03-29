@@ -326,7 +326,7 @@ export const MediaLibraryModal = () => {
 
                         <div className="space-y-4">
                             <p className="text-[9px] text-muted-foreground/50 tracking-widest uppercase px-2 font-black">Quick Actions</p>
-                            <div className="bg-indigo-500/5 rounded-[1.5rem] border border-indigo-500/20 p-5 space-y-4 backdrop-blur-sm">
+                            <div className="bg-indigo-500/5 rounded-3xl border border-indigo-500/20 p-5 space-y-4 backdrop-blur-sm">
                                 <div className="space-y-2">
                                     <p className="text-[10px] font-bold text-indigo-400">AI Enhancement</p>
                                     <p className="text-[8px] text-muted-foreground opacity-60">Process and upscale assets using Gemini 2.0.</p>

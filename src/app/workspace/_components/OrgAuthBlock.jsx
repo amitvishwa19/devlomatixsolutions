@@ -57,7 +57,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                         <div variant="ghost" className={`p-1  ${open && 'bg-card'} rounded-md flex flex-row items-center justify-between cursor-pointer text-primary transition-all duration-300`}>
 
                             <div className='flex flex-row items-center gap-2'>
-                                <Avatar className='h-10 w-10 rounded-xl border border-border/50'>
+                                <Avatar className='h-10 w-10 rounded-lg border border-border/50'>
                                     <AvatarImage src={session?.user?.image} alt="@shadcn" className='' />
                                     <AvatarFallback className='rounded-xl capitalize font-bold text-xl border'>{getInitials(session?.user?.displayName)}</AvatarFallback>
                                 </Avatar>
@@ -89,7 +89,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="h-8 w-8 rounded-xl border border-border/50">
+                                <Avatar className="h-8 w-8 rounded-lg border border-border/50">
                                     <AvatarImage src={session?.user?.image || session?.user?.image} alt="@shadcn" className='' />
                                     <AvatarFallback className='rounded-xl'>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
                                 </Avatar>
