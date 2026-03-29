@@ -18,9 +18,7 @@ export default function AppTopNav() {
                         <Bell className="w-5 h-5" />
                         <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full border-2 border-card"></span>
                     </Button>
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 hover:bg-primary/20 transition-colors shadow-sm">
-                        <User className="w-5 h-5 text-primary" />
-                    </div>
+
                 </div>
             </header>
         </div>

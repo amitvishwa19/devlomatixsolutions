@@ -177,6 +177,8 @@ export default function AppSidebar() {
 
     return (
         <Sidebar collapsible="icon" className="[&>div]:bg-transparent">
+
+
             <SidebarHeader className="py-4 group-data-[collapsible=icon]:p-2 flex flex-row  transition-all duration-300 ease-in-out relative min-h-[64px]">
                 {/* Full Logo - Fades out when collapsed */}
                 <AppLogo
