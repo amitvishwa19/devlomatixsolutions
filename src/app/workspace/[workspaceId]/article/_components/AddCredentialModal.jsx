@@ -321,7 +321,7 @@ export const AddCredentialModal = () => {
  className="bg-muted/10 border-dashed border-border/40 rounded-md h-10 text-[10px] font-bold"
  />
  </div>
- <div className="flex-[2] space-y-1">
+ <div className="flex-2 space-y-1">
  <Input
  placeholder="Value"
  value={field.value}

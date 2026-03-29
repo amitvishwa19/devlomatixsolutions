@@ -75,13 +75,21 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: result.message }, { status: 400 });
         }
 
-        // Update post status to PUBLISHED
+        // Store external IDs for analytics
+        const existingIds = (post.externalIds && typeof post.externalIds === 'object') ? post.externalIds : {};
+        const updatedIds = { ...existingIds, [platform]: result.platformPostId };
+
+        // Update post status and IDs
         await db.post.update({
             where: { id: postId },
-            data: { status: 'PUBLISHED' }
+            data: { 
+                status: 'PUBLISHED',
+                publishedAt: new Date(),
+                externalIds: updatedIds
+            }
         });
 
-        return NextResponse.json({ success: true, message: result.message });
+        return NextResponse.json({ success: true, message: result.message, platformPostId: result.platformPostId });
     } catch (error) {
         console.error("[POST_PUBLISH_ERROR]", error.message);
         return NextResponse.json({ message: error.message }, { status: 500 });
@@ -136,7 +144,7 @@ async function publishFacebook(creds, content, mediaUrls) {
         body: JSON.stringify(body),
     });
 
-    if (ok && data?.id) return { success: true, message: `Posted to Facebook (ID: ${data.id})` };
+    if (ok && data?.id) return { success: true, message: `Posted to Facebook (ID: ${data.id})`, platformPostId: data.id };
     return { success: false, message: data?.error?.message || 'Facebook publish failed' };
 }
 
@@ -185,7 +193,7 @@ async function publishInstagram(creds, content, mediaUrls) {
 
     if (ok2 && d2?.id) {
         console.log("[INSTAGRAM_SUCCESS] Post ID:", d2.id);
-        return { success: true, message: `Posted to Instagram (ID: ${d2.id})` };
+        return { success: true, message: `Posted to Instagram (ID: ${d2.id})`, platformPostId: d2.id };
     }
     console.error("[INSTAGRAM_API_ERROR_STEP2]", s2, JSON.stringify(d2));
     return { success: false, message: d2?.error?.message || 'Instagram publish failed' };
@@ -239,7 +247,7 @@ async function publishTwitter(creds, content) {
         body: JSON.stringify({ text: content.slice(0, 280) }),
     });
 
-    if (ok && data?.data?.id) return { success: true, message: `Tweeted (ID: ${data.data.id})` };
+    if (ok && data?.data?.id) return { success: true, message: `Tweeted (ID: ${data.data.id})`, platformPostId: data.data.id };
     return { success: false, message: data?.detail || data?.title || 'Twitter publish failed' };
 }
 
@@ -284,6 +292,6 @@ async function publishLinkedIn(creds, content, mediaUrls) {
         body: JSON.stringify(body),
     });
 
-    if (ok && data?.id) return { success: true, message: `Posted to LinkedIn (ID: ${data.id})` };
+    if (ok && data?.id) return { success: true, message: `Posted to LinkedIn (ID: ${data.id})`, platformPostId: data.id };
     return { success: false, message: data?.message || 'LinkedIn publish failed' };
 }

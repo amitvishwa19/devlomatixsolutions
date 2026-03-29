@@ -618,6 +618,9 @@ model Post {
   workspaceId String
   userId      String
 
+  // Platform-specific IDs for analytics
+  externalIds Json?
+
   // Platforms this post is destined for
   platforms String[] // Array of platform names
 

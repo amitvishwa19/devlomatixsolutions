@@ -86,10 +86,10 @@ export const AddPostModal = () => {
     const [platformContents, setPlatformContents] = useState({});
     const [generatingPlatform, setGeneratingPlatform] = useState(null);
 
-    // AI Assistant States
     const [aiPrompt, setAiPrompt] = useState('');
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [showAiAssistant, setShowAiAssistant] = useState(true);
+    const [isBulkGenerating, setIsBulkGenerating] = useState(false);
 
     // SEO States
     const [targetKeyword, setTargetKeyword] = useState('');
@@ -306,6 +306,55 @@ export const AddPostModal = () => {
         setIsAiLoading(false);
     };
 
+    const handleRepurposeAll = async () => {
+        if (!content || selectedPlatforms.length === 0) {
+            toast.error("Please select at least one platform and provide content");
+            return;
+        }
+
+        setIsBulkGenerating(true);
+        const promises = selectedPlatforms.map(async (platform) => {
+            const account = accounts.find(a => a.id === platform || a.platform === platform);
+            const pName = account?.platform || platform;
+            
+            let subMode = pName;
+            if (pName === 'TWITTER') subMode = 'TWITTER_THREAD';
+            else if (pName === 'LINKEDIN') subMode = 'LINKEDIN_POST';
+
+            try {
+                const res = await axios.post(`/api/workspace/${workspaceId}/social/ai/generate`, {
+                    prompt: subMode,
+                    mode: 'REPURPOSE',
+                    context: content
+                });
+                return { platform, content: res.data.content };
+            } catch (e) {
+                console.error(`[BULK_REPURPOSE_ERROR] ${pName}:`, e);
+                return { platform, error: true };
+            }
+        });
+
+        const results = await Promise.all(promises);
+        const newContents = { ...platformContents };
+        let successCount = 0;
+
+        results.forEach(res => {
+            if (!res.error) {
+                newContents[res.platform] = res.content;
+                successCount++;
+            }
+        });
+
+        setPlatformContents(newContents);
+        setIsBulkGenerating(false);
+        
+        if (successCount === selectedPlatforms.length) {
+            toast.success(`Successfully optimized for all ${successCount} platforms!`);
+        } else {
+            toast.warning(`Optimized ${successCount} out of ${selectedPlatforms.length} platforms.`);
+        }
+    };
+
     const handleClose = () => {
         setTitle('');
         setContent('');
@@ -478,6 +527,18 @@ export const AddPostModal = () => {
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
+
+                                            <Separator orientation="vertical" className="h-4 bg-border/20 mx-1" />
+
+                                            <Button
+                                                variant="outline"
+                                                onClick={handleRepurposeAll}
+                                                disabled={isAiLoading || isBulkGenerating || !content || selectedPlatforms.length === 0}
+                                                className="h-8 rounded-full border-primary/30 bg-primary/5 hover:bg-primary/10 text-[9px] font-black px-4 text-primary animate-pulse-slow"
+                                            >
+                                                {isBulkGenerating ? <Loader2 size={12} className="mr-1.5 animate-spin" /> : <TrendingUp size={12} className="mr-1.5" />}
+                                                Optimize for All Active Channels
+                                            </Button>
                                         </div>
                                     </div>
                                 )}

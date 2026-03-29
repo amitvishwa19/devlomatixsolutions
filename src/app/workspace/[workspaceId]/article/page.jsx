@@ -20,6 +20,7 @@ import { useModal } from '@/hooks/useModal';
 import { PostCard } from './_components/PostCard';
 import { PostRow } from './_components/PostRow';
 import { PostStats } from './_components/PostStats';
+import { CalendarView } from './_components/CalendarView';
 import { AddPostModal } from './_components/AddPostModal';
 import { AddCredentialModal } from './_components/AddCredentialModal';
 import { MediaLibraryModal } from './_components/MediaLibraryModal';
@@ -78,7 +79,14 @@ export default function ArticlePage() {
                     >
                         <Share2 className="w-4 h-4 mr-2 text-primary" /> Add Credentials
                     </Button>
-                    <Button variant="outline" className="rounded-md border-border/60 hover:bg-background text-[10px] font-bold ">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setViewMode('calendar')}
+                        className={cn(
+                            "rounded-md border-border/60 hover:bg-background text-[10px] font-bold transition-all",
+                            viewMode === 'calendar' && "bg-primary/5 border-primary/40 text-primary"
+                        )}
+                    >
                         <Calendar className="w-4 h-4 mr-2 text-primary" /> Calendar
                     </Button>
                     <Button
@@ -126,7 +134,7 @@ export default function ArticlePage() {
                             size="sm"
                             onClick={() => setViewMode('grid')}
                             className={cn(
-                                "px-3 rounded-md transition-all text-[10px] font-bold ",
+                                "px-3 rounded-md transition-all text-[10px] font-bold mr-1",
                                 viewMode === 'grid'
                                     ? "bg-primary text-primary-foreground shadow-soft"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -134,18 +142,40 @@ export default function ArticlePage() {
                         >
                             <LayoutGrid className="w-3.5 h-3.5 mr-2" /> Grid
                         </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewMode('calendar')}
+                            className={cn(
+                                "px-3 rounded-md transition-all text-[10px] font-bold ",
+                                viewMode === 'calendar'
+                                    ? "bg-primary text-primary-foreground shadow-soft"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            )}
+                        >
+                            <Calendar className="w-3.5 h-3.5 mr-2" /> Calendar
+                        </Button>
                     </div>
 
                 </div>
             </div>
 
             {/* Content List */}
-            <div className={cn(
-                "animate-in fade-in duration-500",
-                viewMode === 'grid'
-                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                    : "flex flex-col gap-3"
-            )}>
+            {viewMode === 'calendar' ? (
+                <div className="animate-in fade-in duration-500">
+                    <CalendarView 
+                        posts={posts} 
+                        workspaceId={workspaceId} 
+                        onOpenPost={(post) => onOpen('addPost', { workspaceId, initialData: post, onApply: fetchPosts })}
+                    />
+                </div>
+            ) : (
+                <div className={cn(
+                    "animate-in fade-in duration-500",
+                    viewMode === 'grid'
+                        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                        : "flex flex-col gap-3"
+                )}>
                 {posts.length === 0 && !loading ? (
                     <div className="col-span-full py-32 text-center bg-card/10 rounded-lg border border-dashed border-border/60">
                         <div className="bg-muted/30 w-20 h-20 rounded-lg flex items-center justify-center mx-auto mb-6 border border-border/20">
@@ -172,6 +202,7 @@ export default function ArticlePage() {
                         ))
                 )}
             </div>
-        </div>
-    );
+        )}
+    </div>
+);
 }
