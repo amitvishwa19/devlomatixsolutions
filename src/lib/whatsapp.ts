@@ -258,7 +258,7 @@ class WhatsAppManager {
                     }))
                 }));
 
-                finalBody = `DEBUG: [List Message] ${bodyText}`;
+                finalBody = bodyText;
                 try {
                     result = await this.sock.sendMessage(jid, {
                         text: bodyText,
@@ -300,12 +300,12 @@ class WhatsAppManager {
                 const footerText = getCleanText(data.interactive.footer);
                 if (footerText) simulatedText += `_${footerText}_`;
                 
-                finalBody = `DEBUG: ${simulatedText.trim()}`;
+                finalBody = simulatedText.trim();
                 result = await this.sock.sendMessage(jid, { text: finalBody });
             }
         }
  else {
-            finalBody = `DEBUG: ${getCleanText(data.text)}`;
+            finalBody = getCleanText(data.text);
             result = await this.sock.sendMessage(jid, { text: finalBody });
         }
 
