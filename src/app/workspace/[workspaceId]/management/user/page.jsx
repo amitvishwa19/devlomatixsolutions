@@ -167,7 +167,7 @@ export default function UserManagementPage() {
  {/* Header Section */}
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/10 p-8 rounded-md border border-border/40 backdrop-blur-sm shadow-sm">
  <div className="space-y-1 text-left">
- <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+ <h1 className="text-xl font-bold text-foreground flex items-center gap-3">
  <Users className="text-primary h-8 w-8"/>
  User Management
  </h1>
@@ -253,7 +253,7 @@ export default function UserManagementPage() {
  </AvatarFallback>
  </Avatar>
  <div className="min-w-0">
- <p className="text-sm font-bold text-foreground/90 truncate">
+ <p className="text-xs font-bold text-foreground/90 truncate">
  {user.displayName || user.username}
  </p>
  <p className="text-[10px] font-bold text-muted-foreground truncate opacity-70">

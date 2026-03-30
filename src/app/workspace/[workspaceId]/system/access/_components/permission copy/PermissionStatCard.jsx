@@ -16,7 +16,7 @@ export default function PermissionStatCard({ title, value, change, changeType ="
  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
  <div className="relative flex items-start justify-between">
  <div>
- <p className="text-sm text-muted-foreground mb-1">{title}</p>
+ <p className="text-xs text-muted-foreground mb-1">{title}</p>
  <p className="text-3xl font-bold text-foreground">
  {value}
  </p>

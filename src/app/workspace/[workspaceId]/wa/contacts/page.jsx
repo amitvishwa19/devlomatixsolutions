@@ -726,7 +726,7 @@ export default function ContactsPage() {
  <form onSubmit={handleSubmit} className="space-y-4">
  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
  <div>
- <label className="block text-sm font-medium mb-1">Name</label>
+ <label className="block text-xs font-medium mb-1">Name</label>
  <Input
  type="text"
  name="name"
@@ -1246,7 +1246,7 @@ export default function ContactsPage() {
  <form onSubmit={handleUpdate} className="space-y-4 py-4">
  <div className="grid grid-cols-1 gap-4">
  <div>
- <label className="block text-sm font-medium mb-1">Name</label>
+ <label className="block text-xs font-medium mb-1">Name</label>
  <Input
  type="text"
  name="name"
@@ -1404,7 +1404,7 @@ export default function ContactsPage() {
  key={msg.id}
  className={`flex flex-col ${msg.fromMe ?'items-end':'items-start'}`}>
  
- <div className={`max-w-[85%] px-4 py-2 rounded-md text-sm ${
+ <div className={`max-w-[85%] px-4 py-2 rounded-md text-xs ${
  msg.fromMe ?
 'bg-primary text-primary-foreground rounded-tr-none':
 'bg-secondary text-secondary-foreground rounded-tl-none'}`
@@ -1472,7 +1472,7 @@ export default function ContactsPage() {
  {groups.map((group) =>
  <div key={group.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md group">
  <div>
- <p className="text-sm font-medium">{group.name}</p>
+ <p className="text-xs font-medium">{group.name}</p>
  <p className="text-[10px] text-muted-foreground">{group._count?.contacts} contacts</p>
  </div>
  <Button
@@ -1505,7 +1505,7 @@ export default function ContactsPage() {
  <div className="py-4">
  {groups.length === 0 ?
  <div className="text-center py-4">
- <p className="text-sm text-muted-foreground mb-4">You haven't created any groups yet.</p>
+ <p className="text-xs text-muted-foreground mb-4">You haven't created any groups yet.</p>
  <Button variant="outline"onClick={() => {
  setIsAddingToGroupModalOpen(false);
  setIsGroupModalOpen(true);
@@ -1580,7 +1580,7 @@ export default function ContactsPage() {
  }} />
  
  <div className="flex-1">
- <p className="text-sm font-medium">{contact.name}</p>
+ <p className="text-xs font-medium">{contact.name}</p>
  <p className="text-xs text-muted-foreground">{contact.phone}</p>
  </div>
  </div>

@@ -62,7 +62,7 @@ export const PermissionRow = ({
  style={{ backgroundColor: getColor() }}
  />
  <div className="flex flex-col flex-1 min-w-0">
- <p className="font-medium text-sm flex items-center gap-2">
+ <p className="font-medium text-xs flex items-center gap-2">
  {module.displayName}
  <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
  <Tooltip>
@@ -99,7 +99,7 @@ export const PermissionRow = ({
  <HoverCardTrigger asChild>
  <Button variant="ghost"size="sm"className="h-7 px-2 gap-1.5">
  <Users className="w-3.5 h-3.5 text-muted-foreground"/>
- <span className="text-sm font-medium">{moduleUsers?.length || 0}</span>
+ <span className="text-xs font-medium">{moduleUsers?.length || 0}</span>
  </Button>
  </HoverCardTrigger>
  <HoverCardContent className="w-72"align="center">
@@ -137,7 +137,7 @@ export const PermissionRow = ({
  {user.avatar}
  </div>
  <div className="min-w-0 flex-1">
- <p className="text-sm font-medium truncate">{user.name}</p>
+ <p className="text-xs font-medium truncate">{user.name}</p>
  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
  </div>
  </div>

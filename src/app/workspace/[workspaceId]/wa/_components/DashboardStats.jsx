@@ -13,7 +13,7 @@ export default function DashboardStats() {
  </div>
  <div className="space-y-1">
  <h3 className="text-3xl font-bold text-white">24</h3>
- <p className="text-[#A0AEC0] text-sm">Total Campaigns</p>
+ <p className="text-[#A0AEC0] text-xs">Total Campaigns</p>
  <p className="text-emerald-400 text-xs font-medium pt-1">+3 this week</p>
  </div>
  </CardContent>
@@ -27,7 +27,7 @@ export default function DashboardStats() {
  </div>
  <div className="space-y-1">
  <h3 className="text-3xl font-bold text-white">12,847</h3>
- <p className="text-[#A0AEC0] text-sm">Messages Sent</p>
+ <p className="text-[#A0AEC0] text-xs">Messages Sent</p>
  <p className="text-emerald-400 text-xs font-medium pt-1">+1,234 today</p>
  </div>
  </CardContent>
@@ -41,7 +41,7 @@ export default function DashboardStats() {
  </div>
  <div className="space-y-1">
  <h3 className="text-3xl font-bold text-white">3,291</h3>
- <p className="text-[#A0AEC0] text-sm">Active Contacts</p>
+ <p className="text-[#A0AEC0] text-xs">Active Contacts</p>
  <p className="text-emerald-400 text-xs font-medium pt-1">+89 new</p>
  </div>
  </CardContent>
@@ -55,7 +55,7 @@ export default function DashboardStats() {
  </div>
  <div className="space-y-1">
  <h3 className="text-3xl font-bold text-white">68%</h3>
- <p className="text-[#A0AEC0] text-sm">Reply Rate</p>
+ <p className="text-[#A0AEC0] text-xs">Reply Rate</p>
  <p className="text-emerald-400 text-xs font-medium pt-1">+5% vs last week</p>
  </div>
  </CardContent>

@@ -315,7 +315,7 @@ export default function PermissionEditor({
  />
 
  <div className="flex-1 min-w-0">
- <span className="text-sm font-bold block mb-0.5">
+ <span className="text-xs font-bold block mb-0.5">
  {action.label}
  {action.isCustom && (
  <span className="ml-1.5 text-[8px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full uppercase tracking-tighter leading-none align-middle">custom</span>
@@ -384,7 +384,7 @@ export default function PermissionEditor({
  rows='6'
  value={description}
  onChange={(e) => setDescription(e.target.value)}
- className="bg-secondary/30 border-border/40 rounded-md resize-none min-h-[100px] p-4 text-sm"
+ className="bg-secondary/30 border-border/40 rounded-md resize-none min-h-[100px] p-4 text-xs"
  placeholder={`High-level overview of the ${formatCategoryName(categorySlug ||"module")} scope...`}
  />
  </div>

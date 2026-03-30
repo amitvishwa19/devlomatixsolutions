@@ -44,7 +44,7 @@ export default function RecentActivity() {
  <Icon className={`w-4 h-4 ${activity.color}`} />
  </div>
  <div className="space-y-1 relative before:absolute before:left-[-1.5rem] before:top-8 before:bottom-[-1.5rem] before:w-px before:bg-[#1F2328] last:before:hidden">
- <p className="text-sm font-medium text-white">{activity.title}</p>
+ <p className="text-xs font-medium text-white">{activity.title}</p>
  <p className="text-xs text-[#A0AEC0]">{activity.time}</p>
  </div>
  </div>);

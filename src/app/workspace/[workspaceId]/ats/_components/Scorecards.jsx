@@ -79,7 +79,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  <attr.icon size={16} />
  </div>
  <div>
- <h4 className="text-sm">{attr.label}</h4>
+ <h4 className="text-xs">{attr.label}</h4>
  <p className="text-[10px] font-medium opacity-40">{attr.description}</p>
  </div>
  </div>
@@ -113,7 +113,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Evidence & Notes</label>
  <Textarea 
  placeholder="Describe specific examples or observations that justify the scores above..."
- className="min-h-[150px] bg-muted/20 border-border/20 rounded-md p-6 font-medium text-sm focus-visible:ring-primary shadow-inner"
+ className="min-h-[150px] bg-muted/20 border-border/20 rounded-md p-6 font-medium text-xs focus-visible:ring-primary shadow-inner"
  value={overallFeedback}
  onChange={(e) => setOverallFeedback(e.target.value)}
  />

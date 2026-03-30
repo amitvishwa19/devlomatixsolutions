@@ -100,7 +100,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  <AvatarImage src={folder.user?.avatar} />
  <AvatarFallback className="text-[10px] font-bold text-primary">{folder.user?.displayName?.charAt(0) || folder.user?.name?.charAt(0) ||'?'}</AvatarFallback>
  </Avatar>
- <span className="text-sm font-bold truncate text-foreground/80">{folder.user?.displayName || folder.user?.name || folder.owner ||'System'}</span>
+ <span className="text-xs font-bold truncate text-foreground/80">{folder.user?.displayName || folder.user?.name || folder.owner ||'System'}</span>
  </div>
  </div>
 
@@ -108,7 +108,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  <p className="flex items-center gap-2 text-xs text-muted-foreground/60">
  <Calendar className="w-3.5 h-3.5"/> Date Created
  </p>
- <p className="text-sm font-bold text-foreground/80">
+ <p className="text-xs font-bold text-foreground/80">
  {folder.createdAt ? format(new Date(folder.createdAt),'MMM d, yyyy') :'N/A'}
  </p>
  </div>
@@ -118,13 +118,13 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  <p className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
  <Layers className="w-3.5 h-3.5"/> Items
  </p>
- <p className="text-sm font-bold text-foreground/80">{folder.files || 0}</p>
+ <p className="text-xs font-bold text-foreground/80">{folder.files || 0}</p>
  </div>
  <div className="space-y-1">
  <p className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
  <HardDrive className="w-3.5 h-3.5"/> Size
  </p>
- <p className="text-sm font-bold text-foreground/80">{folder.size ||'0 B'}</p>
+ <p className="text-xs font-bold text-foreground/80">{folder.size ||'0 B'}</p>
  </div>
  </div>
  </div>
@@ -177,7 +177,7 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  <FileText className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors"/>
  </div>
  <div className="min-w-0 flex-1">
- <p className="text-sm font-bold text-foreground/90 truncate">{file.name}</p>
+ <p className="text-xs font-bold text-foreground/90 truncate">{file.name}</p>
  <p className="text-[11px] font-semibold text-muted-foreground opacity-80 mt-0.5">
  {(file.fileSize / 1024).toFixed(1)} KB • {file.createdAt ? format(new Date(file.createdAt),'MMM d, yyyy') :'N/A'}
  </p>

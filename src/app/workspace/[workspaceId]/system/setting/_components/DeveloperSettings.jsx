@@ -171,7 +171,7 @@ export const DeveloperSettings = () => {
  <Badge variant="outline"className="bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20 text-[9px]">Dev Hub</Badge>
  <h3 className="text-lg text-foreground">Developer Operations</h3>
  </div>
- <p className="text-sm text-muted-foreground font-medium mt-1">
+ <p className="text-xs text-muted-foreground font-medium mt-1">
  Control your external integrations, API connectivity, and real-time event distribution.
  </p>
  </div>
@@ -299,7 +299,7 @@ export const DeveloperSettings = () => {
  </div>
  <div className="min-w-0">
  <div className="flex items-center gap-2">
- <p className="text-sm font-bold truncate max-w-[150px] md:max-w-xs">{hook.url}</p>
+ <p className="text-xs font-bold truncate max-w-[150px] md:max-w-xs">{hook.url}</p>
  <Button 
  variant="ghost"
  size="icon"
@@ -350,7 +350,7 @@ export const DeveloperSettings = () => {
  ) : (
  <div className="p-12 text-center">
  <Webhook className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4"/>
- <p className="text-sm font-bold text-muted-foreground">No webhook endpoints configured</p>
+ <p className="text-xs font-bold text-muted-foreground">No webhook endpoints configured</p>
  </div>
  )}
  </CardContent>
@@ -396,7 +396,7 @@ export const DeveloperSettings = () => {
  {apiKeys.map((key) => (
  <div key={key.id} className="flex items-center justify-between p-4 border-t border-border/10 hover:bg-fuchsia-500/5 transition-colors group">
  <div className="space-y-1">
- <p className="text-sm font-bold">{key.name}</p>
+ <p className="text-xs font-bold">{key.name}</p>
  <div className="flex items-center gap-2">
  <code className="text-[10px] bg-background/80 px-2 py-1 rounded border border-border/40 font-mono text-muted-foreground">{key.key}</code>
  <Button variant="ghost"size="icon"className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"onClick={() => copyToClipboard(key.key)}>

@@ -137,7 +137,7 @@ export default function CategoryManagementPage() {
  <Tags size={isChild ? 14 : 18} style={{ color: category.color }} />
  </div>
  <div className="min-w-0">
- <p className={`${isChild ?'text-[10px]':'text-sm'} font-bold text-foreground/90 truncate`}>{category.name}</p>
+ <p className={`${isChild ?'text-[10px]':'text-xs'} font-bold text-foreground/90 truncate`}>{category.name}</p>
  <p className={`${isChild ?'text-[8px]':'text-[10px]'} font-bold text-muted-foreground truncate opacity-70 `}>
  {category.description ||'No description'}
  </p>

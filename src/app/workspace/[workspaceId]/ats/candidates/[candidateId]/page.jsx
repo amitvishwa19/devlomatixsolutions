@@ -187,7 +187,7 @@ export default function CandidateProfilePage() {
  <div>
  <h1 className="text-4xl tracking-tighter">{candidate.name}</h1>
  <div className="flex items-center gap-2 mt-1">
- <p className="text-sm font-bold text-muted-foreground">{candidate.role}</p>
+ <p className="text-xs font-bold text-muted-foreground">{candidate.role}</p>
  <span className="w-1 h-1 rounded-full bg-border"/>
  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px]">
  {candidate.status}
@@ -272,7 +272,7 @@ export default function CandidateProfilePage() {
  <h4 className="text-[10px] text-emerald-500">Key Strengths</h4>
  <div className="space-y-2">
  {candidate.aiInsights.pros.map((pro, i) => (
- <div key={i} className="flex items-center gap-2 text-sm font-bold opacity-80">
+ <div key={i} className="flex items-center gap-2 text-xs font-bold opacity-80">
  <CheckCircle2 size={16} className="text-emerald-500 shrink-0"/>
  {pro}
  </div>
@@ -304,7 +304,7 @@ export default function CandidateProfilePage() {
  <CardContent className="p-8 pt-4 space-y-8">
  <div className="p-6 rounded-md bg-muted/20 border border-border/10">
  <h4 className="text-sm opacity-40 mb-3">Executive Summary</h4>
- <p className="text-sm font-medium leading-relaxed opacity-70 italic">
+ <p className="text-xs font-medium leading-relaxed opacity-70 italic">
 "{candidate.summary}"
  </p>
  </div>
@@ -319,9 +319,9 @@ export default function CandidateProfilePage() {
  </div>
  <div className="space-y-1">
  <h4 className="text-base group-hover:text-primary transition-colors">{exp.role}</h4>
- <p className="text-sm font-bold text-primary">{exp.company}</p>
+ <p className="text-xs font-bold text-primary">{exp.company}</p>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60 mt-1">{exp.period}</p>
- <p className="text-sm font-medium leading-relaxed opacity-60 mt-3">{exp.description}</p>
+ <p className="text-xs font-medium leading-relaxed opacity-60 mt-3">{exp.description}</p>
  </div>
  </div>
  ))}
@@ -428,7 +428,7 @@ export default function CandidateProfilePage() {
  </div>
  </CardHeader>
  <CardContent className="p-8 pt-4">
- <div className="p-6 rounded-md bg-muted/20 border border-border/10 italic text-sm font-medium leading-relaxed opacity-70">
+ <div className="p-6 rounded-md bg-muted/20 border border-border/10 italic text-xs font-medium leading-relaxed opacity-70">
 "{card.feedback}"
  </div>
  <div className="grid grid-cols-3 gap-8 mt-8">
@@ -493,7 +493,7 @@ export default function CandidateProfilePage() {
  </div>
  <Textarea 
  placeholder="Write your message here..."
- className="min-h-[250px] rounded-md bg-muted/20 border-border/20 font-medium text-sm p-6"
+ className="min-h-[250px] rounded-md bg-muted/20 border-border/20 font-medium text-xs p-6"
  />
  </div>
  <div className="flex items-center justify-between pt-4">
@@ -567,10 +567,10 @@ export default function CandidateProfilePage() {
  </Avatar>
  <div className="space-y-1">
  <div className="flex items-center gap-2">
- <span className="text-sm">{note.user?.name || note.author ||"Team Member"}</span>
+ <span className="text-xs">{note.user?.name || note.author ||"Team Member"}</span>
  <span className="text-[10px] font-bold opacity-30">{new Date(note.createdAt || Date.now()).toLocaleDateString()}</span>
  </div>
- <p className="text-sm font-medium leading-relaxed opacity-70 italic">
+ <p className="text-xs font-medium leading-relaxed opacity-70 italic">
 "{note.content || note.text}"
  </p>
  </div>
@@ -620,7 +620,7 @@ export default function CandidateProfilePage() {
  {step.status ==='active'&& <Play size={16} className="text-primary fill-current"/>}
  </div>
  {step.date && <p className="text-xs font-bold text-muted-foreground italic">{step.date}</p>}
- <p className="text-sm font-medium opacity-40 mt-3 leading-relaxed">
+ <p className="text-xs font-medium opacity-40 mt-3 leading-relaxed">
  System logged activity for {step.stage.toLowerCase()} stage. {step.status ==='completed'?'Successfully transitioned.':'Currently in progress.'}
  </p>
  </div>

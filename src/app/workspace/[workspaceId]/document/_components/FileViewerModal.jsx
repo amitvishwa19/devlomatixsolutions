@@ -86,7 +86,7 @@ export default function FileViewerModal({ isOpen, onOpenChange, file }) {
  <div className="w-full flex flex-col items-center justify-center py-20 bg-muted/30 rounded-md border-2 border-dashed border-border/50">
  <FileIcon className="w-16 h-16 text-muted-foreground/40 mb-4"/>
  <h3 className="text-lg text-foreground/80 mb-2">No Preview Available</h3>
- <p className="text-sm text-muted-foreground/60 max-w-[280px] text-center mb-6 font-medium">
+ <p className="text-xs text-muted-foreground/60 max-w-[280px] text-center mb-6 font-medium">
  This file type ({type}) cannot be previewed natively. Please download it to view.
  </p>
  <div className="flex gap-4">

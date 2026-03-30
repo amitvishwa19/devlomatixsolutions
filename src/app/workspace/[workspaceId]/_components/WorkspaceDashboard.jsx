@@ -108,10 +108,10 @@ export default function WorkspaceDashboard({ workspaceId }) {
  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary w-fit text-[10px] font-extrabold tracking-[0.2em]">
  <Zap size={12} className="fill-primary"/> Multi-Channel Engine
  </div>
- <h1 className="text-4xl md:text-3xl tracking-tighter text-foreground">
+ <h1 className="text-4xl md:text-xl tracking-tighter text-foreground">
  Welcome to your <span className="text-primary tracking-normal italic">Workspace.</span>
  </h1>
- <p className="text-sm text-muted-foreground max-w-xl leading-relaxed font-medium">
+ <p className="text-xs text-muted-foreground max-w-xl leading-relaxed font-medium">
  Control your entire digital presence from one centralized command center. Manage content, automate messaging, and secure your credentials with ease.
  </p>
  </div>

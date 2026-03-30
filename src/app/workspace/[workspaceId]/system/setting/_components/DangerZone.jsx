@@ -60,7 +60,7 @@ export const DangerZone = () => {
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <RotateCcw className="w-4 h-4 text-blue-500"/>
- <Label className="text-sm font-bold text-foreground">Reset Configuration</Label>
+ <Label className="text-xs font-bold text-foreground">Reset Configuration</Label>
  </div>
  <p className="text-[10px] text-muted-foreground font-medium opacity-70">
  Restore all branding and security settings to workspace defaults.
@@ -75,7 +75,7 @@ export const DangerZone = () => {
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <Trash2 className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform"/>
- <Label className="text-sm font-bold text-rose-600">Delete Workspace</Label>
+ <Label className="text-xs font-bold text-rose-600">Delete Workspace</Label>
  </div>
  <p className="text-[10px] text-rose-500/60 font-medium italic">
  Once you delete a workspace, there is no going back. All data will be lost.

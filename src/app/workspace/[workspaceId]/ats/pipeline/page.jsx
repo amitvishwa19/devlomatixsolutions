@@ -78,7 +78,7 @@ export default function CandidatePipelinePage() {
  <ChevronRight size={10} />
  <span className="text-primary/60">Pipeline</span>
  </div>
- <h1 className="text-3xl tracking-tighter flex items-center gap-3">
+ <h1 className="text-xl tracking-tighter flex items-center gap-3">
  {job?.title ||"Recruitment Pipeline"}
  <Badge variant="outline"className="h-6 rounded-md bg-primary/5 text-primary border-primary/20 text-[9px] px-3">
  {job?.status ||"Active"} Job

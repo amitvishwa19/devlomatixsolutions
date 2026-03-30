@@ -193,7 +193,7 @@ const ChannelSearch = ({ channels }) => {
  className="group px-2 py-2 rounded-md flex items-center gap-x-2 w-full bg-zinc-700/10 dark:bg-black/20 hover:bg-zinc-700/20 dark:hover:bg-black/30 transition"
  >
  <Search className="w-4 h-4 text-zinc-500 dark:text-zinc-400"/>
- <p className="font-bold text-sm text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition">
+ <p className="font-bold text-xs text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition">
  Search
  </p>
  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border/10 bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground ml-auto">
@@ -298,7 +298,7 @@ const ChannelItem = ({ channel }) => {
  className="group px-2 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition mb-0.5 cursor-pointer"
  >
  <Icon className="flex-shrink-0 w-4 h-4 text-zinc-500 dark:text-zinc-400"/>
- <p className="line-clamp-1 font-bold text-sm text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition">
+ <p className="line-clamp-1 font-bold text-xs text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition">
  {channel.name}
  </p>
  <div className="ml-auto flex items-center gap-x-2">
@@ -354,7 +354,7 @@ const ConversationItem = ({ conversation }) => {
  {otherMember?.user?.displayName?.[0] || <User className="h-3 w-3"/>}
  </AvatarFallback>
  </Avatar>
- <p className="line-clamp-1 font-bold text-sm text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition">
+ <p className="line-clamp-1 font-bold text-xs text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition">
  {otherMember?.user?.displayName ||"Unknown"}
  </p>
  </button>

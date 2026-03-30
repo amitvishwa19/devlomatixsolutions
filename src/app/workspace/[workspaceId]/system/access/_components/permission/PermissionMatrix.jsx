@@ -368,7 +368,7 @@ export const PermissionMatrix = () => {
  <h3 className="text-xl font-bold text-foreground/80 mb-3 tracking-tight">
  {searchQuery ?"No permissions match":"No modules defined"}
  </h3>
- <p className="text-sm font-medium text-muted-foreground/60 max-w-[320px] text-center leading-relaxed mb-8">
+ <p className="text-xs font-medium text-muted-foreground/60 max-w-[320px] text-center leading-relaxed mb-8">
  {searchQuery 
  ? `We couldn't find any permission modules matching"${searchQuery}". Review your spelling or broaden your search boundaries.`
  :"Establish your first permission module to define granular access control across the user interface and system operations."}

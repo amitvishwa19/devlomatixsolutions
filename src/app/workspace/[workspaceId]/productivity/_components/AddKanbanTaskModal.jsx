@@ -431,7 +431,7 @@ export const AddKanbanTaskModal = () => {
  className="h-5 w-5 rounded-md border-2 border-primary/20 bg-background data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
  />
  <span className={cn(
-"flex-1 text-sm font-bold transition-all",
+"flex-1 text-xs font-bold transition-all",
  item.completed &&"line-through text-muted-foreground opacity-50"
  )}>
  {item.title}

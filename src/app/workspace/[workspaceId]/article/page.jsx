@@ -63,7 +63,7 @@ export default function ArticlePage() {
  {/* Header Section */}
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border p-4 rounded-md shadow-soft">
  <div className="space-y-1">
- <h1 className="text-xl font-extrabold text-foreground flex items-center gap-3">
+ <h1 className="text-xl font-bold text-foreground flex items-center gap-3">
  <Share2 className="text-primary h-6 w-6"/>
  Post Management
  </h1>

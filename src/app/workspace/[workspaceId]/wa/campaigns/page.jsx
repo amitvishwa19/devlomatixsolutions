@@ -412,7 +412,7 @@ export default function CampaignsPage() {
  </h1>
  <p className="text-muted-foreground text-xs mt-2">Create, schedule, and track bulk WhatsApp broadcasts.</p>
  {error &&
- <p className="text-sm text-destructive mt-2">Error loading campaigns: {error}</p>
+ <p className="text-xs text-destructive mt-2">Error loading campaigns: {error}</p>
  }
  </div>
  <Button
@@ -436,7 +436,7 @@ export default function CampaignsPage() {
  <Megaphone className="w-5 h-5 text-purple-500"/>
  <span className="font-medium">Total Campaigns</span>
  </div>
- <p className="text-3xl font-bold text-foreground">{campaigns.length}</p>
+ <p className="text-xl font-bold text-foreground">{campaigns.length}</p>
  </div>
  <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
@@ -506,7 +506,7 @@ export default function CampaignsPage() {
 
  {/* Campaign Data Table */}
  <div className="bg-card border rounded-md overflow-hidden shadow-sm">
- <table className="w-full text-sm text-left">
+ <table className="w-full text-xs text-left">
  <thead className="text-xs text-muted-foreground bg-muted/30 border-b border-border/50">
  <tr>
  <th scope="col"className="px-6 py-4 font-semibold">Campaign Name</th>
@@ -580,7 +580,7 @@ export default function CampaignsPage() {
  <Megaphone className="w-8 h-8 text-muted-foreground"/>
  </div>
  <h3 className="text-lg font-medium text-foreground mb-1">No Campaigns Yet</h3>
- <p className="text-sm text-muted-foreground max-w-sm">
+ <p className="text-xs text-muted-foreground max-w-sm">
  You haven't created any broadcast campaigns. Create your first campaign to start reaching your audience.
  </p>
  </div>
@@ -668,7 +668,7 @@ export default function CampaignsPage() {
  <p className="text-[10px] text-muted-foreground italic">Use {"{{v1}}"}, {"{{v2}}"} in template to inject variables.</p>
  </div>
  <div className="space-y-2">
- <label className="text-sm font-medium text-muted-foreground">Message Type</label>
+ <label className="text-xs font-medium text-muted-foreground">Message Type</label>
  <Select
  value={editForm.messageType}
  onValueChange={(val) => setEditForm((prev) => ({ ...prev, messageType: val }))}>
@@ -701,7 +701,7 @@ export default function CampaignsPage() {
  <div className="space-y-4 animate-in fade-in duration-300 border border-border rounded-md p-4">
  <p className="text-xs font-semibold text-muted-foreground tracking-wider">Interactive Message Builder</p>
  <div className="space-y-2">
- <label className="text-sm font-medium text-muted-foreground">Main Body Text</label>
+ <label className="text-xs font-medium text-muted-foreground">Main Body Text</label>
  <Textarea
  value={editForm.intBody}
  onChange={(e) => setEditForm((prev) => ({ ...prev, intBody: e.target.value }))}
@@ -873,7 +873,7 @@ export default function CampaignsPage() {
  
  <Checkbox checked={selectedContactIds.includes(contact.id)} />
  <div className="flex-1 min-w-0">
- <p className="font-medium text-sm truncate">{contact.name}</p>
+ <p className="font-medium text-xs truncate">{contact.name}</p>
  <p className="text-xs text-muted-foreground">{contact.phone}</p>
  </div>
  </div>
@@ -912,7 +912,7 @@ export default function CampaignsPage() {
  <Checkbox checked={selectedGroupIds.includes(group.id)} />
  <div className="flex-1 min-w-0">
  <div className="flex items-center justify-between">
- <p className="font-semibold text-sm truncate">{group.name}</p>
+ <p className="font-semibold text-xs truncate">{group.name}</p>
  <Badge variant="secondary"className="text-[10px]">
  {group._count?.contacts || 0} contacts
  </Badge>

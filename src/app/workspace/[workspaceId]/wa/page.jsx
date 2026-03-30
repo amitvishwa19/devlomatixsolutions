@@ -140,7 +140,7 @@ export default function DashboardPage({ params: paramsPromise }) {
  <div className="flex items-center justify-between">
  <div>
  <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
- <p className="text-sm text-muted-foreground mt-1">Overview of your WhatsApp campaigns</p>
+ <p className="text-xs text-muted-foreground mt-1">Overview of your WhatsApp campaigns</p>
  </div>
  <div className="flex items-center gap-3">
  <Button

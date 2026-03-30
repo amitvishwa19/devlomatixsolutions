@@ -249,7 +249,7 @@ export default function PermissionManagementPage() {
  <CardHeader className="pb-3 px-5 pt-5">
  <div className="flex items-center gap-3 mb-1">
  <div className="w-2 h-2 rounded-full animate-pulse"style={{ backgroundColor: perm.color ||'#6366f1'}} />
- <CardTitle className="text-sm font-bold truncate">{perm.title}</CardTitle>
+ <CardTitle className="text-xs font-bold truncate">{perm.title}</CardTitle>
  </div>
  <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground font-bold bg-muted/30 w-fit px-2 py-0.5 rounded-md border border-border/10">
  <Hash className="w-3 h-3 text-indigo-400"/> {perm.value}

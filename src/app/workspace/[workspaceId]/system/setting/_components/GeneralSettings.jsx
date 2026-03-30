@@ -264,7 +264,7 @@ export const GeneralSettings = () => {
  </div>
  <div>
  <CardTitle className="text-xl font-bold">Access URL</CardTitle>
- <CardDescription className="text-sm font-medium opacity-70">
+ <CardDescription className="text-xs font-medium opacity-70">
  Your workspace is accessible at the following permanent address.
  </CardDescription>
  </div>

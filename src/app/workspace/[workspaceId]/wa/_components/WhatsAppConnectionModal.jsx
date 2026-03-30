@@ -239,7 +239,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  <Smartphone className="w-6 h-6 text-emerald-500"/>
  WhatsApp Connection
  </h1>
- <p className="text-muted-foreground text-sm">Connect your WhatsApp to start sending messages</p>
+ <p className="text-muted-foreground text-xs">Connect your WhatsApp to start sending messages</p>
  </div>
  <Badge variant="outline"className={`py-1 px-3 flex items-center gap-2 border-0 ${currentStatus.color}/20 text-white shrink-0`}>
  <currentStatus.icon className="w-3.5 h-3.5"/>
@@ -297,7 +297,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  </div>
  <div>
  <h3 className="text-xl font-semibold text-white">Connected!</h3>
- <p className="text-sm text-muted-foreground mt-1">Your WhatsApp is ready to use</p>
+ <p className="text-xs text-muted-foreground mt-1">Your WhatsApp is ready to use</p>
  {deviceInfo &&
  <div className="mt-2 text-xs text-muted-foreground">
  {deviceInfo.phoneNumber &&
@@ -320,7 +320,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  <div className="w-16 h-16 bg-[#2D3748] rounded-full flex items-center justify-center">
  <MessageSquare className="w-8 h-8 text-zinc-500"/>
  </div>
- <p className="text-sm text-muted-foreground">Click connect to get started</p>
+ <p className="text-xs text-muted-foreground">Click connect to get started</p>
  </motion.div>
  }
  </AnimatePresence>
@@ -442,7 +442,7 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  <div className="flex items-start gap-3">
  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"/>
  <div>
- <h4 className="font-semibold text-white text-sm">All Set!</h4>
+ <h4 className="font-semibold text-white text-xs">All Set!</h4>
  <p className="text-xs text-[#A0AEC0] mt-1">
  You can now send messages, create campaigns, and manage your WhatsApp marketing.
  </p>

@@ -317,7 +317,7 @@ export default function TemplatePage() {
  <div className="flex border border-border items-center justify-between bg-card p-6 rounded-md shadow-sm">
  <div>
  <h2 className="text-2xl font-bold text-foreground">Message Templates</h2>
- <p className="text-sm text-muted-foreground mt-1">Create and manage reusable WhatsApp messages.</p>
+ <p className="text-xs text-muted-foreground mt-1">Create and manage reusable WhatsApp messages.</p>
  </div>
  <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
  <Plus className="w-4 h-4 mr-2"/>
@@ -369,7 +369,7 @@ export default function TemplatePage() {
  {template.category}
  </span>
  </TableCell>
- <TableCell className="text-muted-foreground text-sm">{template.type}</TableCell>
+ <TableCell className="text-muted-foreground text-xs">{template.type}</TableCell>
  <TableCell>
  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${template.status ==='APPROVED'?'bg-green-500/10 text-green-600':
  template.status ==='PENDING'?'bg-amber-500/10 text-amber-600':'bg-muted text-muted-foreground'}`
@@ -443,7 +443,7 @@ export default function TemplatePage() {
 
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="text-sm font-semibold text-foreground mb-1.5 block">Category</label>
+ <label className="text-xs font-semibold text-foreground mb-1.5 block">Category</label>
  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
  <SelectTrigger className="bg-background border-border">
  <SelectValue />
@@ -529,7 +529,7 @@ export default function TemplatePage() {
  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="text-sm font-semibold text-foreground mb-1 block">Latitude</label>
+ <label className="text-xs font-semibold text-foreground mb-1 block">Latitude</label>
  <Input
  placeholder="e.g. 18.5204"
  value={formData.metadata?.latitude ||''}
@@ -887,7 +887,7 @@ export default function TemplatePage() {
 
  {/* Contacts Selection */}
  <div className="space-y-3 pt-2 border-t border-border">
- <label className="text-sm font-semibold flex items-center justify-between gap-2">
+ <label className="text-xs font-semibold flex items-center justify-between gap-2">
  <span className="flex items-center gap-2"><Users className="w-4 h-4"/> Select Contacts</span>
  {selectedContactIds.length > 0 &&
  <Badge variant="secondary"className="font-normal">
@@ -921,7 +921,7 @@ export default function TemplatePage() {
  
  <Checkbox checked={selectedContactIds.includes(contact.id)} />
  <div className="flex-1 min-w-0">
- <p className="text-sm font-medium truncate">{contact.name}</p>
+ <p className="text-xs font-medium truncate">{contact.name}</p>
  <p className="text-[11px] text-muted-foreground">{contact.phone}</p>
  </div>
  </div>

@@ -105,7 +105,7 @@ export default function DocumentStats({ workspaceId, userId }) {
  <CardContent className="">
  <div className="flex items-start justify-between">
  <div>
- <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+ <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
  <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
  <div className="flex items-center gap-2 mt-1">
  <span className={`text-xs font-medium ${stat.color}`}>{stat.change}</span>

@@ -26,7 +26,7 @@ export default function SettingPage() {
  </div>
  <h1 className="text-xl font-bold text-foreground">Workspace Settings</h1>
  </div>
- <p className="text-sm font-medium text-muted-foreground opacity-70">
+ <p className="text-xs font-medium text-muted-foreground opacity-70">
  Manage your workspace identity, security policies, and team notification preferences.
  </p>
  </div>

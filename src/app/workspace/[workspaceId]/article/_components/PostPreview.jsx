@@ -192,7 +192,7 @@ export const PostPreview = ({ platforms, content, mediaUrls, accounts }) => {
  return (
  <div className="h-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/10 rounded-md bg-muted/5">
  <Share2 className="w-12 h-12 mb-4 text-muted-foreground opacity-20"/>
- <h3 className="text-sm font-bold text-muted-foreground opacity-60">No Platforms Selected</h3>
+ <h3 className="text-xs font-bold text-muted-foreground opacity-60">No Platforms Selected</h3>
  <p className="text-xs text-muted-foreground opacity-40 mt-2">Select at least one account in the sidebar to view previews</p>
  </div>
  );

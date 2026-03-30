@@ -62,7 +62,7 @@ export function UserTable({ users, roles, onRoleChange, onEdit, onDelete }) {
  </Avatar>
  <div>
  <p className="font-medium text-card-foreground">{user.displayName}</p>
- <p className="text-sm text-muted-foreground">{user.email}</p>
+ <p className="text-xs text-muted-foreground">{user.email}</p>
  </div>
  </div>
  </TableCell>

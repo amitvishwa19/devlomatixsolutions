@@ -150,7 +150,7 @@ export default function JobManagementPage() {
  </td>
  <td className="p-6 text-center">
  <div className="inline-flex flex-col items-center justify-center min-w-[60px] p-2 rounded-md bg-muted/20 border border-border/10">
- <span className="text-sm">{job._count?.applications || 0}</span>
+ <span className="text-xs">{job._count?.applications || 0}</span>
  <span className="text-[9px] font-bold text-muted-foreground opacity-40">Total</span>
  </div>
  </td>

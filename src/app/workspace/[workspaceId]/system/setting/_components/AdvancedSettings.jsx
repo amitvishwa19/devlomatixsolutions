@@ -68,7 +68,7 @@ export const AdvancedSettings = () => {
  <div className="space-y-1">
  <div className="flex items-center gap-2">
  <ShieldAlert className="w-4 h-4 text-amber-600"/>
- <Label className="text-sm font-bold text-amber-700">Maintenance Window</Label>
+ <Label className="text-xs font-bold text-amber-700">Maintenance Window</Label>
  </div>
  <p className="text-[10px] text-amber-600/60 font-medium italic">
  Prevent all user actions during scheduled system maintenance.
@@ -92,7 +92,7 @@ export const AdvancedSettings = () => {
  </div>
  <div>
  <CardTitle className="text-xl font-bold">Code Injection</CardTitle>
- <CardDescription className="text-sm font-medium opacity-70">
+ <CardDescription className="text-xs font-medium opacity-70">
  Inject custom CSS or scripts into your workspace frontend.
  </CardDescription>
  </div>
@@ -142,14 +142,14 @@ export const AdvancedSettings = () => {
  <Button variant="outline"className="h-24 rounded-md flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
  <Download className="w-6 h-6 text-primary"/>
  <div className="text-center">
- <p className="text-sm font-bold">Export Config</p>
+ <p className="text-xs font-bold">Export Config</p>
  <p className="text-[10px] text-muted-foreground">JSON Format</p>
  </div>
  </Button>
  <Button variant="outline"className="h-24 rounded-md flex flex-col gap-2 bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all border-dashed">
  <Upload className="w-6 h-6 text-primary"/>
  <div className="text-center">
- <p className="text-sm font-bold">Import Config</p>
+ <p className="text-xs font-bold">Import Config</p>
  <p className="text-[10px] text-muted-foreground">Upload File</p>
  </div>
  </Button>

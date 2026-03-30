@@ -75,7 +75,7 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  <Clock size={20} />
  </div>
  <div>
- <h4 className="text-sm">Upcoming Interviews</h4>
+ <h4 className="text-xs">Upcoming Interviews</h4>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60">
  {nextInterview ? `Next scheduled: ${nextInterview.time} with ${nextInterview.name}` :"No upcoming interviews scheduled"}
  </p>

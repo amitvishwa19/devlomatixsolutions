@@ -42,7 +42,7 @@ export function RoleCard({ role, onEdit, onDelete }) {
  )
  })}
  </div>
- <div className="flex items-center gap-2 text-sm text-muted-foreground">
+ <div className="flex items-center gap-2 text-xs text-muted-foreground">
  <Users className="h-4 w-4"/>
  <span>{role?.users?.length} users assigned</span>
  </div>

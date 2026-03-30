@@ -89,7 +89,7 @@ export const PrivacySettings = () => {
  </div>
  <div>
  <CardTitle className="text-xl font-bold">Audit & Transparency</CardTitle>
- <CardDescription className="text-sm font-medium opacity-70">
+ <CardDescription className="text-xs font-medium opacity-70">
  Control the visibility of administrative actions and system logs.
  </CardDescription>
  </div>

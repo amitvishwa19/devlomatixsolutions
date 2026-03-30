@@ -187,7 +187,7 @@ export default function CredentialPage() {
  placeholder="Search platforms or profile names..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="pl-11 h-12 bg-background border border-border rounded-md font-bold text-sm focus-visible:ring-1 focus-visible:ring-primary"
+ className="pl-11 h-12 bg-background border border-border rounded-md font-bold text-xs focus-visible:ring-1 focus-visible:ring-primary"
  />
  </div>
  </div>
@@ -206,7 +206,7 @@ export default function CredentialPage() {
  <Key className="w-8 h-8 text-muted-foreground/40"/>
  </div>
  <h3 className="text-xl">No credentials found</h3>
- <p className="text-sm font-medium text-muted-foreground mt-1 max-w-sm text-center px-4">
+ <p className="text-xs font-medium text-muted-foreground mt-1 max-w-sm text-center px-4">
  Add your first API key or access token to start cross-platform publishing.
  </p>
  <Button
@@ -310,7 +310,7 @@ export default function CredentialPage() {
  <Trash2 className="w-6 h-6 text-rose-500"/>
  </div>
  <AlertDialogTitle className="text-2xl">Are you absolutely sure?</AlertDialogTitle>
- <AlertDialogDescription className="text-sm font-medium">
+ <AlertDialogDescription className="text-xs font-medium">
  This will permanently delete this credential from your workspace. This action cannot be undone.
  </AlertDialogDescription>
  </AlertDialogHeader>

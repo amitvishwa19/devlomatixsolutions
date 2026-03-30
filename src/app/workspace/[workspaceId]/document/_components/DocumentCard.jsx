@@ -246,7 +246,7 @@ export const DocumentCard = ({ document, onDelete, onDownload, onView, onShare, 
  
  <AlertDialog>
  <AlertDialogTrigger asChild>
- <div className="flex w-full items-center gap-2 px-2 py-1.5 text-sm rounded-md cursor-pointer text-destructive hover:bg-destructive/10 transition-colors"onClick={(e) => e.stopPropagation()}>
+ <div className="flex w-full items-center gap-2 px-2 py-1.5 text-xs rounded-md cursor-pointer text-destructive hover:bg-destructive/10 transition-colors"onClick={(e) => e.stopPropagation()}>
  <Trash className="w-4 h-4"/> Delete
  </div>
  </AlertDialogTrigger>

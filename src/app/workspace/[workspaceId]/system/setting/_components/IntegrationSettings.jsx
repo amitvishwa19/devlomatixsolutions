@@ -125,7 +125,7 @@ export const IntegrationSettings = () => {
  </div>
  <div>
  <CardTitle className="text-xl font-bold">API Governance</CardTitle>
- <CardDescription className="text-sm font-medium opacity-70">
+ <CardDescription className="text-xs font-medium opacity-70">
  Manage secure access keys for authenticating your custom applications.
  </CardDescription>
  </div>
@@ -169,7 +169,7 @@ export const IntegrationSettings = () => {
  <Puzzle className="w-5 h-5 text-amber-500"/>
  </div>
  <CardTitle className="text-xl font-bold">Third-Party Marketplace</CardTitle>
- <CardDescription className="text-sm font-medium opacity-70 font-italic">
+ <CardDescription className="text-xs font-medium opacity-70 font-italic">
  Native integrations for Slack, Discord, and Google Calendar.
  </CardDescription>
  </CardHeader>

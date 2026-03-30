@@ -428,7 +428,7 @@ export const AddPostModal = () => {
  <div className="flex-1 flex flex-col p-8 space-y-6 overflow-y-auto scrollbar-hide border-r border-border/10">
 
  <div className="space-y-4 text-left">
- <label className="text-sm font-bold text-muted-foreground opacity-70 ml-1">Article Title</label>
+ <label className="text-xs font-bold text-muted-foreground opacity-70 ml-1">Article Title</label>
  <Input
  disabled={isLoading}
  placeholder="e.g. Product Launch Announcement - Q1"

@@ -223,14 +223,14 @@ function MessagePageContent() {
  </Avatar>
  <div className="flex flex-col overflow-hidden">
  <div className="flex items-center gap-x-2">
- <p className="text-primary hover:underline cursor-pointer text-sm">
+ <p className="text-primary hover:underline cursor-pointer text-xs">
  {msg.member?.user?.displayName ||"Unknown User"}
  </p>
  <span className="text-[10px] text-zinc-500 font-bold opacity-60">
  {format(new Date(msg.createdAt),"MMM d, yyyy'at'h:mm a")}
  </span>
  </div>
- <p className="text-sm text-zinc-800 dark:text-zinc-300 font-medium leading-relaxed">
+ <p className="text-xs text-zinc-800 dark:text-zinc-300 font-medium leading-relaxed">
  {msg.content}
  </p>
  </div>
@@ -277,10 +277,10 @@ const WelcomeMessage = ({ title, isDirectMessage }) => {
  <Hash className="w-10 text-zinc-900 dark:text-white"/>
  )}
  </div>
- <h1 className="text-3xl text-zinc-900 dark:text-white mt-4">
+ <h1 className="text-xl text-zinc-900 dark:text-white mt-4">
  {isDirectMessage ? title : `Welcome to #${title}!`}
  </h1>
- <p className="text-zinc-500 dark:text-zinc-400 font-bold text-sm max-w-md">
+ <p className="text-zinc-500 dark:text-zinc-400 font-bold text-xs max-w-md">
  {isDirectMessage
  ? `This is the beginning of your direct message history with @${title}.`
  : `This is the start of the #${title} channel. Use this space for team-wide announcements and general discussion.`}

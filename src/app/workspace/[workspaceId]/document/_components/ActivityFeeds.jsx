@@ -53,7 +53,7 @@ export default function ActivityFeeds({ workspaceId, userId }) {
  <activity.icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors"/>
  </div>
  <div className="flex-1 border-b border-border/5 pb-4 group-last:border-none">
- <p className="text-sm font-bold text-foreground/80 leading-snug group-hover:text-foreground transition-colors">{activity.text}</p>
+ <p className="text-xs font-bold text-foreground/80 leading-snug group-hover:text-foreground transition-colors">{activity.text}</p>
  <p className="text-[10px] text-muted-foreground/40 mt-1.5 flex items-center gap-2 italic">
  <Clock className="w-2.5 h-2.5"/>
  {activity.time}

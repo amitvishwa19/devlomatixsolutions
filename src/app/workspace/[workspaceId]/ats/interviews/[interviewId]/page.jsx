@@ -88,11 +88,11 @@ export default function InterviewSpacePage() {
  <div className="space-y-5">
  <div className="space-y-1">
  <p className="text-[9px] text-primary italic">Interviewer (You)</p>
- <p className="text-sm font-medium opacity-60">Can you explain your experience with Next.js Server Components?</p>
+ <p className="text-xs font-medium opacity-60">Can you explain your experience with Next.js Server Components?</p>
  </div>
  <div className="space-y-1">
  <p className="text-[9px] text-white/40 italic">Rohit Sharma</p>
- <p className="text-sm font-medium opacity-90">Sure. Server Components allow us to render complex UI on the server, reducing the client-side JavaScript bundle...</p>
+ <p className="text-xs font-medium opacity-90">Sure. Server Components allow us to render complex UI on the server, reducing the client-side JavaScript bundle...</p>
  </div>
  </div>
  </div>
@@ -164,7 +164,7 @@ export default function InterviewSpacePage() {
  <div className="relative rounded-md overflow-hidden border border-white/5 bg-[#0A0A0B] shadow-2xl group flex items-center justify-center">
  <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
  <Avatar className="h-40 w-40 border-[8px] border-white/5 shadow-2xl opacity-20 filter grayscale">
- <AvatarFallback className="text-3xl italic">RS</AvatarFallback>
+ <AvatarFallback className="text-xl italic">RS</AvatarFallback>
  </Avatar>
  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent"/>
  </div>
@@ -307,7 +307,7 @@ export default function InterviewSpacePage() {
  {activeTool ==='notes'&& (
  <Textarea
  placeholder="Type quick thoughts here..."
- className="h-full bg-transparent border-none resize-none focus-visible:ring-0 text-sm opacity-80"
+ className="h-full bg-transparent border-none resize-none focus-visible:ring-0 text-xs opacity-80"
  />
  )}
 

@@ -154,7 +154,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-indigo-500 transition-colors"/>
  <Input 
  placeholder="https://cloud.openclaw.ai/api/v1"
- className="pl-11 h-12 rounded-md border-border/50 bg-background/50 font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
+ className="pl-11 h-12 rounded-md border-border/50 bg-background/50 font-bold text-xs focus:ring-2 focus:ring-indigo-500/20"
  value={config.apiUrl}
  onChange={(e) => setConfig(prev => ({ ...prev, apiUrl: e.target.value }))}
  />
@@ -217,7 +217,7 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <ShieldAlert className="w-4 h-4 text-emerald-600"/>
  </div>
  <div>
- <CardTitle className="text-sm font-bold">Inbound Listening Endpoint</CardTitle>
+ <CardTitle className="text-xs font-bold">Inbound Listening Endpoint</CardTitle>
  </div>
  </CardHeader>
  <CardContent className="space-y-4">

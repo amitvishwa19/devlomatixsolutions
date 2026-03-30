@@ -103,7 +103,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  <Card className="lg:col-span-2 shadow-sm animate-fade-up overflow-hidden border border-border/100 bg-card/100"style={{ animationDelay:"350ms"}}>
  <CardHeader className="pb-4 border-b border-border/10 bg-muted/5">
  <div className="flex items-center justify-between">
- <CardTitle className="text-sm text-muted-foreground">Recent Documents</CardTitle>
+ <CardTitle className="text-xs text-muted-foreground">Recent Documents</CardTitle>
  <Badge variant="outline"className="text-[10px] tracking-tighter bg-background">Last 5 Assets</Badge>
  </div>
  </CardHeader>
@@ -113,7 +113,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  <div className="w-16 h-16 bg-muted/50 rounded-md flex items-center justify-center mb-4">
  <Clock className="h-8 w-8 text-muted-foreground"/>
  </div>
- <p className="text-sm font-bold text-muted-foreground">No recent files</p>
+ <p className="text-xs font-bold text-muted-foreground">No recent files</p>
  </div>
  ) : (
  <div className="divide-y divide-border/10">
@@ -137,7 +137,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  </div>
  <div className="min-w-0">
  <div className="flex items-center gap-2">
- <p className="text-sm text-foreground/80 truncate">{doc.name}</p>
+ <p className="text-xs text-foreground/80 truncate">{doc.name}</p>
  </div>
  <p className="text-[11px] font-bold text-muted-foreground tracking-wider opacity-60 flex items-center gap-2">
  <span>{(doc.fileSize / 1024).toFixed(0)} KB</span>

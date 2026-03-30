@@ -218,7 +218,7 @@ export default function BulkSenderPage() {
  
  {/* Header */}
  <div className="mb-8">
- <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent flex items-center gap-3">
+ <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent flex items-center gap-3">
  <Send className="w-8 h-8 text-primary"/>
  Bulk Sender
  </h1>
@@ -237,7 +237,7 @@ export default function BulkSenderPage() {
  
  <div className="grid lg:grid-cols-2 gap-6">
  <div className="space-y-2">
- <label className="text-sm font-medium text-foreground">Broadcast Name *</label>
+ <label className="text-xs font-medium text-foreground">Broadcast Name *</label>
  <Input
  placeholder="e.g., Year End Sale Announcment"
  value={editForm.name}
@@ -248,7 +248,7 @@ export default function BulkSenderPage() {
  </div>
 
  <div className="space-y-2">
- <label className="text-sm font-medium text-foreground">Schedule (Optional)</label>
+ <label className="text-xs font-medium text-foreground">Schedule (Optional)</label>
  <Input
  type="datetime-local"
  value={editForm.scheduledAt}
@@ -261,7 +261,7 @@ export default function BulkSenderPage() {
 
  <div className="space-y-3">
  <div className="flex justify-between items-center">
- <label className="text-sm font-medium text-foreground">Phone Numbers</label>
+ <label className="text-xs font-medium text-foreground">Phone Numbers</label>
  <Button
  variant="outline"
  size="sm"
@@ -374,7 +374,7 @@ export default function BulkSenderPage() {
 
  {editForm.messageType.includes('interactive') ?
  <div className="space-y-5 animate-in fade-in duration-300 bg-muted/10 border border-border/60 rounded-md p-5 shadow-sm">
- <p className="text-sm font-semibold text-foreground border-b border-border/50 pb-2">Interactive Setup</p>
+ <p className="text-xs font-semibold text-foreground border-b border-border/50 pb-2">Interactive Setup</p>
  
  <div className="space-y-2">
  <label className="text-sm font-medium text-foreground">Main Body</label>
@@ -517,7 +517,7 @@ export default function BulkSenderPage() {
  
  <Checkbox checked={selectedContactIds.includes(contact.id)} />
  <div className="flex-1 min-w-0">
- <p className="font-medium text-sm truncate">{contact.name}</p>
+ <p className="font-medium text-xs truncate">{contact.name}</p>
  <p className="text-xs text-muted-foreground">{contact.phone}</p>
  </div>
  </div>
@@ -556,7 +556,7 @@ export default function BulkSenderPage() {
  <Checkbox checked={selectedGroupIds.includes(group.id)} />
  <div className="flex-1 min-w-0">
  <div className="flex items-center justify-between">
- <p className="font-semibold text-sm truncate">{group.name}</p>
+ <p className="font-semibold text-xs truncate">{group.name}</p>
  <Badge variant="secondary"className="text-[10px]">
  {group._count?.contacts || 0} contacts
  </Badge>

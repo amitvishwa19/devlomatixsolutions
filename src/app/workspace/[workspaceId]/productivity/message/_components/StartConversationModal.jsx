@@ -65,7 +65,7 @@ export const StartConversationModal = ({ isOpen, onClose }) => {
  <Loader2 className="h-6 w-6 animate-spin text-zinc-500"/>
  </div>
  ) : members?.length === 0 ? (
- <p className="text-center text-zinc-500 text-sm py-4">No other users found.</p>
+ <p className="text-center text-zinc-500 text-xs py-4">No other users found.</p>
  ) : (
  <div className="flex flex-col gap-2 pr-4">
  {members?.map(member => (

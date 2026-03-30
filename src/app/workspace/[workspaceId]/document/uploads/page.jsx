@@ -175,7 +175,7 @@ export default function UploadsPage() {
  <div className="flex items-center justify-between">
  <div>
  <h1 className="text-2xl font-semibold">Uploads</h1>
- <p className="text-muted-foreground text-sm mt-1">
+ <p className="text-muted-foreground text-xs mt-1">
  {combinedList.length} total uploads · {activeCount} in progress
  </p>
  </div>
@@ -221,7 +221,7 @@ export default function UploadsPage() {
  <Card key={s.label} className="p-5 shadow-sm border-none bg-background flex flex-col justify-between h-24 relative overflow-hidden group">
  <div className={`absolute top-0 right-0 w-24 h-24 ${s.bg} rounded-full -mr-12 -mt-12 opacity-50 group-hover:scale-110 transition-transform`} />
  <p className="text-[10px] text-muted-foreground relative z-10">{s.label}</p>
- <p className={`text-3xl tabular-nums ${s.color} relative z-10 tracking-tighter`}>{s.value}</p>
+ <p className={`text-xl tabular-nums ${s.color} relative z-10 tracking-tighter`}>{s.value}</p>
  </Card>
  ))}
  </div>
@@ -238,7 +238,7 @@ export default function UploadsPage() {
  <div className="w-16 h-16 bg-muted/50 rounded-md flex items-center justify-center">
  <Clock className="h-8 w-8 text-muted-foreground"/>
  </div>
- <p className="text-sm font-bold text-muted-foreground text-center">No recent uploads<br /><span className="text-[10px] font-medium lowercase">Your upload history will appear here</span></p>
+ <p className="text-xs font-bold text-muted-foreground text-center">No recent uploads<br /><span className="text-[10px] font-medium lowercase">Your upload history will appear here</span></p>
  </div>
  ) : (
  combinedList.map((upload) => {

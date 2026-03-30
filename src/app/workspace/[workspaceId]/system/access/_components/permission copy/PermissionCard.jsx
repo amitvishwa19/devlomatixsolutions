@@ -15,7 +15,7 @@ export default function PermissionCard({ permission, onEdit, onDelete, rolesWith
  <h4 className="font-medium text-card-foreground">
  {permission.title}
  </h4>
- <p className="text-sm text-muted-foreground mt-1">
+ <p className="text-xs text-muted-foreground mt-1">
  {permission.description}
  </p>
  <div className="flex flex-wrap gap-1.5 mt-3">

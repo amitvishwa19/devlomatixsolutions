@@ -136,7 +136,7 @@ const MessageCard = ({ type, isBot = true }) => {
  className="w-full max-w-xs h-auto"/>
  
  </div>
- <p className="text-sm text-gray-800">
+ <p className="text-xs text-gray-800">
  {message.caption}
  </p>
  </div>);
@@ -158,7 +158,7 @@ const MessageCard = ({ type, isBot = true }) => {
  {message.duration}
  </div>
  </div>
- <p className="text-sm text-gray-800">
+ <p className="text-xs text-gray-800">
  {message.caption}
  </p>
  </div>);
@@ -171,7 +171,7 @@ const MessageCard = ({ type, isBot = true }) => {
  <div className="flex items-center gap-3">
  <Music className="w-6 h-6 text-gray-600"/>
  <div>
- <p className="text-sm font-medium text-gray-800">
+ <p className="text-xs font-medium text-gray-800">
  Audio Message
  </p>
  <p className="text-xs text-gray-600">
@@ -189,7 +189,7 @@ const MessageCard = ({ type, isBot = true }) => {
  <div className="bg-gray-100 rounded-md p-4 flex items-center gap-4">
  <FileText className="w-12 h-12 text-gray-600"/>
  <div className="flex-1">
- <p className="text-sm font-medium text-gray-800">
+ <p className="text-xs font-medium text-gray-800">
  {message.filename}
  </p>
  <p className="text-xs text-gray-600">
@@ -208,7 +208,7 @@ const MessageCard = ({ type, isBot = true }) => {
  <MapPin className="w-8 h-8 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"/>
  </div>
  </div>
- <div className="flex items-center gap-2 text-sm text-gray-800">
+ <div className="flex items-center gap-2 text-xs text-gray-800">
  <MapPin className="w-4 h-4"/>
  <p>{message.address}</p>
  </div>
@@ -246,7 +246,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
  <button
  key={reply.id}
  onClick={() => alert(`Selected: ${reply.text}`)}
- className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors border border-gray-200">
+ className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors border border-gray-200">
  
  {reply.text}
  </button>
@@ -260,7 +260,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
  <div className="flex items-center gap-3 mt-4 bg-white p-3 rounded-md border">
  <Phone className="w-5 h-5 text-green-600"/>
  <div className="flex-1">
- <p className="text-sm font-medium text-gray-800">
+ <p className="text-xs font-medium text-gray-800">
  Call Support
  </p>
  <p className="text-xs text-gray-600">
@@ -269,7 +269,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
  </div>
  <button
  onClick={() => alert('Calling...')}
- className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition-colors">
+ className="bg-green-500 text-white px-4 py-2 rounded-md text-xs font-medium hover:bg-green-600 transition-colors">
  
  Call Now
  </button>
@@ -282,7 +282,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
  <div className="flex items-center gap-3 mt-4 bg-white p-3 rounded-md border">
  <ExternalLink className="w-5 h-5 text-blue-600"/>
  <div className="flex-1">
- <p className="text-sm font-medium text-gray-800">
+ <p className="text-xs font-medium text-gray-800">
  Visit Website
  </p>
  <p className="text-xs text-gray-600">
@@ -291,7 +291,7 @@ const ButtonQuickReply = ({ type, quickReplies = [] }) => {
  </div>
  <button
  onClick={() => alert('Opening website...')}
- className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition-colors">
+ className="bg-blue-500 text-white px-4 py-2 rounded-md text-xs font-medium hover:bg-blue-600 transition-colors">
  
  Visit Site
  </button>
@@ -358,7 +358,7 @@ export default function ButtonQuickReplyPage() {
  <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
  {/* Header */}
  <div>
- <h1 className="text-3xl font-bold text-white mb-2">Button & Quick Reply</h1>
+ <h1 className="text-xl font-bold text-white mb-2">Button & Quick Reply</h1>
  <p className="text-[#A0AEC0]">Create interactive rich message templates with all message and button types</p>
  </div>
 
@@ -366,7 +366,7 @@ export default function ButtonQuickReplyPage() {
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
  {/* Message Type Selector */}
  <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
- <label className="block text-sm font-medium text-white mb-4">
+ <label className="block text-xs font-medium text-white mb-4">
  Message Types
  </label>
  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -454,7 +454,7 @@ export default function ButtonQuickReplyPage() {
  {/* User Message (Simulated) */}
  <div className="mt-4 flex justify-end">
  <div className="bg-green-500 text-white px-4 py-2 rounded-md max-w-xs">
- <p className="text-sm">Thanks for the information!</p>
+ <p className="text-xs">Thanks for the information!</p>
  <div className="text-[10px] text-green-100 flex items-center justify-end gap-1 mt-1">
  <span>10:32</span>
  <CheckCheck className="w-3 h-3"/>
@@ -514,7 +514,7 @@ export default function ButtonQuickReplyPage() {
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
  <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-3">Message Types Code</h3>
- <pre className="bg-[#0A0A0A] p-4 rounded-md overflow-x-auto text-sm text-gray-300">
+ <pre className="bg-[#0A0A0A] p-4 rounded-md overflow-x-auto text-xs text-gray-300">
  <code>{`// Text message
 const textMessage = {
  type:'text',
@@ -563,7 +563,7 @@ const locationMessage = {
 
  <div className="bg-[#1E293B] rounded-md p-5 border border-slate-700">
  <h3 className="text-lg font-semibold text-white mb-3">Button Types Code</h3>
- <pre className="bg-[#0A0A0A] p-4 rounded-md overflow-x-auto text-sm text-gray-300">
+ <pre className="bg-[#0A0A0A] p-4 rounded-md overflow-x-auto text-xs text-gray-300">
  <code>{`// Quick Reply Buttons
 const quickReplies = [
  { 

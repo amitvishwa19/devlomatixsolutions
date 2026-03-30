@@ -233,7 +233,7 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
  </span>
  ))}
  </div>
- <h1 className="text-4xl font-extrabold leading-[1.05] text-foreground/95 tracking-tightest">
+ <h1 className="text-4xl font-bold leading-[1.05] text-foreground/95 tracking-tightest">
  {message.subject}
  </h1>
  </div>

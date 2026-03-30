@@ -160,7 +160,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  <div className="flex border border-border items-center justify-between bg-card p-6 rounded-md shadow-sm">
  <div>
  <h2 className="text-2xl font-bold text-foreground">Quick Message</h2>
- <p className="text-sm text-muted-foreground mt-1">Send standard or interactive messages instantly.</p>
+ <p className="text-xs text-muted-foreground mt-1">Send standard or interactive messages instantly.</p>
  </div>
  </div>
 
@@ -192,7 +192,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  </div> :
 
  <form onSubmit={handleSendMessage} className="space-y-6 animate-in fade-in">
- <div className="flex items-center space-x-2 bg-green-500/10 text-green-600 px-4 py-3 rounded-md text-sm mb-4 font-medium border border-green-500/20">
+ <div className="flex items-center space-x-2 bg-green-500/10 text-green-600 px-4 py-3 rounded-md text-xs mb-4 font-medium border border-green-500/20">
  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
  <span>Connected and ready to send.</span>
  </div>
@@ -378,7 +378,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  {messages.length === 0 ?
  <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
  <Send className="w-8 h-8 mb-2 opacity-20"/>
- <span className="text-sm">No recent messages.</span>
+ <span className="text-xs">No recent messages.</span>
  </div> :
 
  messages.map((msg, index) =>

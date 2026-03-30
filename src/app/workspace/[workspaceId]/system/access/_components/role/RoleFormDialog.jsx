@@ -331,7 +331,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
  <Textarea 
  rows={4} 
  {...field} 
- className="bg-secondary/30 border-border/40 rounded-md resize-none min-h-[100px] p-4 text-sm"
+ className="bg-secondary/30 border-border/40 rounded-md resize-none min-h-[100px] p-4 text-xs"
  placeholder="High-level overview of the role scope..."
  />
  </FormControl>

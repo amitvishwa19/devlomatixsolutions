@@ -238,7 +238,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Bot className="w-6 h-6 text-indigo-600"/>
  </div>
  <div>
- <h4 className="font-bold text-sm">{agent.name}</h4>
+ <h4 className="font-bold text-xs">{agent.name}</h4>
  <div className="flex items-center gap-2 mt-1">
  <Badge variant="secondary"className="text-[9px] px-1.5 h-4 opacity-70">{agent.role}</Badge>
  <span className="text-[10px] text-muted-foreground font-bold tracking-tighter opacity-70">ONLINE</span>
@@ -264,7 +264,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  {models.filter(m => m.default).map(m => (
  <div key={m.id} className="p-4 bg-fuchsia-500/5 border border-fuchsia-500/10 rounded-md">
  <p className="text-[10px] text-fuchsia-600 mb-1">{m.provider}</p>
- <p className="text-sm font-bold">{m.name}</p>
+ <p className="text-xs font-bold">{m.name}</p>
  <div className="mt-4 flex items-center justify-between">
  <span className="text-[10px] font-bold text-muted-foreground">STATUS</span>
  <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] h-5">READY</Badge>
@@ -299,7 +299,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <span className="text-[10px] opacity-60">{msg.sender}</span>
  <span className="text-[9px] opacity-40">{msg.time}</span>
  </div>
- <p className="text-sm leading-relaxed">{msg.text}</p>
+ <p className="text-xs leading-relaxed">{msg.text}</p>
  </div>
  </div>
  ))}
@@ -407,7 +407,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  {/* Agent Registry */}
  <Card className="border-border/40 bg-card/40 backdrop-blur-md rounded-md overflow-hidden shadow-xl">
  <CardHeader className="border-b border-border/10 flex flex-row items-center justify-between">
- <CardTitle className="text-sm font-bold flex items-center gap-2">
+ <CardTitle className="text-xs font-bold flex items-center gap-2">
  <Bot className="w-4 h-4 text-indigo-600"/> Agent Workforce
  </CardTitle>
  <Button variant="outline"size="sm"className="h-8 text-[10px] font-bold rounded-md border-indigo-500/20 text-indigo-600">Create Agent</Button>

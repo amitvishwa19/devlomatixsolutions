@@ -129,7 +129,7 @@ export default function CreateJobPage() {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Department</label>
  <Select value={department} onValueChange={setDepartment}>
- <SelectTrigger className="bg-muted/30 border-none h-14 rounded-md text-sm font-bold shadow-inner">
+ <SelectTrigger className="bg-muted/30 border-none h-14 rounded-md text-xs font-bold shadow-inner">
  <SelectValue placeholder="Select Department"/>
  </SelectTrigger>
  <SelectContent className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">

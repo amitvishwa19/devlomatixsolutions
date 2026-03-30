@@ -91,7 +91,7 @@ export async function POST(req, { params }) {
     }
 }
 
-// DELETE logs (Single or Housekeeping)
+// DELETE logs (Single, Bulk, or Housekeeping)
 export async function DELETE(req, { params }) {
     try {
         const session = await getServerSession(authOptions);
@@ -100,6 +100,7 @@ export async function DELETE(req, { params }) {
         const { workspaceId } = await params;
         const { searchParams } = new URL(req.url);
         const logId = searchParams.get('id');
+        const logIdsParam = searchParams.get('ids');
 
         if (logId) {
             // Delete specific log entry
@@ -111,6 +112,16 @@ export async function DELETE(req, { params }) {
                 }
             });
             return NextResponse.json({ message: "Log entry deleted successfully" });
+        } else if (logIdsParam) {
+            // Bulk delete
+            const idArray = logIdsParam.split(',').filter(Boolean);
+            const result = await db.systemLog.deleteMany({
+                where: {
+                    id: { in: idArray },
+                    workspaceId: workspaceId
+                }
+            });
+            return NextResponse.json({ message: `Deleted ${result.count} log entries` });
         } else {
             // Original logic: Delete logs older than 30 days
             const thirtyDaysAgo = new Date();

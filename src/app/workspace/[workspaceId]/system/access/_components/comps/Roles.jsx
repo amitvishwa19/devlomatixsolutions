@@ -127,7 +127,7 @@ export default function Roles() {
  <h3 className="text-xl font-bold text-foreground/80 mb-3 tracking-tight">
  {roleSearchQuery ?"No results found":"No roles established"}
  </h3>
- <p className="text-sm font-medium text-muted-foreground/60 max-w-[280px] text-center leading-relaxed mb-8">
+ <p className="text-xs font-medium text-muted-foreground/60 max-w-[280px] text-center leading-relaxed mb-8">
  {roleSearchQuery 
  ? `We couldn't find any roles matching"${roleSearchQuery}". Try a different term or clear the search.`
  :"Start by creating a custom role to define access boundaries and operational permissions for your workspace team."}

@@ -98,7 +98,7 @@ export default function SettingsPage() {
  <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
  <div>
- <h1 className="text-3xl font-bold text-white mb-2">WhatsApp Settings</h1>
+ <h1 className="text-xl font-bold text-white mb-2">WhatsApp Settings</h1>
  <p className="text-muted-foreground">Manage your WhatsApp instance connection and credentials</p>
  </div>
  <Badge variant="outline"className={`py-1 px-3 flex items-center gap-2 border-0 text-green-800 ${currentStatus.color}/20 text-white shrink-0`}>
@@ -149,7 +149,7 @@ export default function SettingsPage() {
  </div>
  <div>
  <h3 className="text-xl font-semibold text-white">Instance Active</h3>
- <p className="text-sm text-muted-foreground mt-1">Your account is successfully paired and ready to send messages.</p>
+ <p className="text-xs text-muted-foreground mt-1">Your account is successfully paired and ready to send messages.</p>
  </div>
  </motion.div> :
  status ==='connecting'?
@@ -163,7 +163,7 @@ export default function SettingsPage() {
  <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
  <Smartphone className="w-6 h-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
  </div>
- <p className="text-sm text-muted-foreground">Initializing connection...</p>
+ <p className="text-xs text-muted-foreground">Initializing connection...</p>
  </motion.div> :
 
  <motion.div
@@ -175,7 +175,7 @@ export default function SettingsPage() {
  <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center">
  <MessageSquare className="w-8 h-8 text-zinc-500"/>
  </div>
- <p className="text-sm text-muted-foreground">No active connection. Click connect to get started.</p>
+ <p className="text-xs text-muted-foreground">No active connection. Click connect to get started.</p>
  </motion.div>
  }
  </AnimatePresence>

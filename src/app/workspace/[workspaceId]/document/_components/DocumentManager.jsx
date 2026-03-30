@@ -287,7 +287,7 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  <FolderPlus className="w-6 h-6 text-amber-500"/>
  </div>
  <DialogTitle className="text-2xl">Create New Folder</DialogTitle>
- <DialogDescription className="text-sm font-medium">
+ <DialogDescription className="text-xs font-medium">
  Organize your documents by creating a new directory.
  </DialogDescription>
  </DialogHeader>
@@ -435,8 +435,8 @@ export const DocumentManager = ({ workspaceId, userId }) => {
  {previewDoc?.extension?.replace('.','') ||'?'}
  </div>
  </div>
- <h3 className="text-3xl text-foreground/80 mb-4 tracking-tighter leading-none">Can't Preview File</h3>
- <p className="text-sm text-muted-foreground/60 mb-12 font-medium leading-[1.6] max-w-xs mx-auto">
+ <h3 className="text-xl text-foreground/80 mb-4 tracking-tighter leading-none">Can't Preview File</h3>
+ <p className="text-xs text-muted-foreground/60 mb-12 font-medium leading-[1.6] max-w-xs mx-auto">
  This file type isn't supported for direct view. Download it or open it in a new tab to see contents.
  </p>
  <div className="flex flex-col sm:flex-row items-center justify-center gap-5 w-full">

@@ -101,7 +101,7 @@ export default function AdvancedCRMPanel() {
  <span className="font-semibold text-foreground truncate max-w-[120px]">{chat.name}</span>
  <span className={`text-xs whitespace-nowrap ${chat.unread ?'text-primary font-bold':'text-muted-foreground font-medium'}`}>{chat.time}</span>
  </div>
- <p className={`text-sm truncate mt-0.5 w-[90%] ${chat.unread ?'text-foreground font-medium':'text-muted-foreground'}`}>
+ <p className={`text-xs truncate mt-0.5 w-[90%] ${chat.unread ?'text-foreground font-medium':'text-muted-foreground'}`}>
  {chat.lastMsg}
  </p>
  </div>
@@ -163,7 +163,7 @@ export default function AdvancedCRMPanel() {
  <div className="flex items-end space-x-2 max-w-[75%]">
  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0 text-xs">JD</div>
  <div className="bg-card border border-border p-4 rounded-md rounded-bl-sm shadow-sm space-y-2 group relative">
- <p className="text-sm text-foreground leading-relaxed">Hi there! I'm interested in the advanced automation panel.</p>
+ <p className="text-xs text-foreground leading-relaxed">Hi there! I'm interested in the advanced automation panel.</p>
  <span className="text-[10px] text-muted-foreground font-medium block opacity-70">10:41 AM</span>
  </div>
  </div>
@@ -173,7 +173,7 @@ export default function AdvancedCRMPanel() {
  <div className="flex items-end space-x-2 max-w-[75%]">
  <div className="w-8 h-8 rounded-full bg-transparent shrink-0"></div>
  <div className="bg-card border border-border p-4 rounded-md rounded-bl-sm shadow-sm space-y-2">
- <p className="text-sm text-foreground leading-relaxed">Can I schedule a demo?</p>
+ <p className="text-xs text-foreground leading-relaxed">Can I schedule a demo?</p>
  <span className="text-[10px] text-muted-foreground font-medium block opacity-70">10:42 AM</span>
  </div>
  </div>
@@ -186,8 +186,8 @@ export default function AdvancedCRMPanel() {
  <Bot className="w-3 h-3 text-emerald-100"/>
  <span className="text-[10px] font-medium text-emerald-50">Automated Reply</span>
  </div>
- <p className="text-sm leading-relaxed">Hello John! Thanks for reaching out. We'd love to show you the advanced features.</p>
- <p className="text-sm leading-relaxed">Please click below to pick a time that works for you.</p>
+ <p className="text-xs leading-relaxed">Hello John! Thanks for reaching out. We'd love to show you the advanced features.</p>
+ <p className="text-xs leading-relaxed">Please click below to pick a time that works for you.</p>
  <div className="mt-3 bg-white/10 rounded-md overflow-hidden border border-white/20">
  <button className="w-full py-2.5 text-sm font-semibold flex items-center justify-center space-x-2 hover:bg-white/20 transition-all active:scale-[0.98]">
  <Calendar className="w-4 h-4"/>
@@ -242,7 +242,7 @@ export default function AdvancedCRMPanel() {
  <div className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 border-4 border-card rounded-full shadow-sm"></div>
  </div>
  <h2 className="text-xl font-bold text-foreground">John Doe</h2>
- <p className="text-sm text-muted-foreground">Software Engineer</p>
+ <p className="text-xs text-muted-foreground">Software Engineer</p>
  
  <div className="flex items-center justify-center space-x-2 mt-4">
  <button className="flex-1 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-md transition-all">Profile</button>
@@ -256,15 +256,15 @@ export default function AdvancedCRMPanel() {
  <div className="space-y-4 bg-background p-4 rounded-md border border-border shadow-sm">
  <div>
  <p className="text-xs text-muted-foreground mb-1">Phone Number</p>
- <p className="text-sm font-medium text-foreground">+1 (555) 123-4567</p>
+ <p className="text-xs font-medium text-foreground">+1 (555) 123-4567</p>
  </div>
  <div>
  <p className="text-xs text-muted-foreground mb-1">Email</p>
- <p className="text-sm font-medium text-foreground">john.doe@example.com</p>
+ <p className="text-xs font-medium text-foreground">john.doe@example.com</p>
  </div>
  <div>
  <p className="text-xs text-muted-foreground mb-1">Location</p>
- <p className="text-sm font-medium text-foreground">New York, USA</p>
+ <p className="text-xs font-medium text-foreground">New York, USA</p>
  </div>
  </div>
  </div>
@@ -288,7 +288,7 @@ export default function AdvancedCRMPanel() {
  <div className="absolute top-6 left-1.5 w-0.5 bg-border"></div>
  <div className="w-3 h-3 rounded-full bg-emerald-500 mt-1 shrink-0 shadow-sm ring-4 ring-emerald-500/20"></div>
  <div>
- <p className="text-sm font-medium text-foreground">Clicked Facebook Ad</p>
+ <p className="text-xs font-medium text-foreground">Clicked Facebook Ad</p>
  <p className="text-xs text-muted-foreground mt-0.5">Campaign:"Summer Promo"</p>
  <p className="text-[10px] text-muted-foreground mt-1 font-medium flex items-center"><Clock className="w-3 h-3 mr-1"/> 10:35 AM</p>
  </div>
@@ -297,7 +297,7 @@ export default function AdvancedCRMPanel() {
  <div className="absolute top-6 left-1.5 w-0.5 bg-border"></div>
  <div className="w-3 h-3 rounded-full bg-primary mt-1 shrink-0 shadow-sm ring-4 ring-primary/20"></div>
  <div>
- <p className="text-sm font-medium text-foreground">Opted into Automation</p>
+ <p className="text-xs font-medium text-foreground">Opted into Automation</p>
  <p className="text-xs text-muted-foreground mt-0.5">Flow:"Lead Qualification"</p>
  <p className="text-[10px] text-muted-foreground mt-1 font-medium flex items-center"><Clock className="w-3 h-3 mr-1"/> 10:40 AM</p>
  </div>
@@ -305,7 +305,7 @@ export default function AdvancedCRMPanel() {
  <div className="flex items-start space-x-3 relative">
  <div className="w-3 h-3 rounded-full bg-muted border border-border mt-1 shrink-0"></div>
  <div>
- <p className="text-sm font-medium text-muted-foreground">Human Handover</p>
+ <p className="text-xs font-medium text-muted-foreground">Human Handover</p>
  <p className="text-[10px] text-muted-foreground mt-1 font-medium flex items-center"><Clock className="w-3 h-3 mr-1"/> Pending</p>
  </div>
  </div>

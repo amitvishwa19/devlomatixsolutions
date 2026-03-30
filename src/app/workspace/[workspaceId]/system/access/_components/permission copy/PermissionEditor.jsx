@@ -276,7 +276,7 @@ export default function PermissionEditor({
  onCheckedChange={() => handleActionToggle(action.id)}
  />
  <div className="flex-1 min-w-0">
- <label htmlFor={action.id} className="text-sm font-medium cursor-pointer">
+ <label htmlFor={action.id} className="text-xs font-medium cursor-pointer">
  {action.label}
  </label>
  <p className="text-xs text-muted-foreground truncate">{action.description}</p>
@@ -307,7 +307,7 @@ export default function PermissionEditor({
  </p>
  <div className="grid grid-cols-3 gap-2">
  {selectedActions.map((action) => (
- <div key={action} className="text-sm py-1.5 px-2 rounded bg-background/50">
+ <div key={action} className="text-xs py-1.5 px-2 rounded bg-background/50">
  <span className="font-medium">
  {action.slice(0, 1).toUpperCase() + action.slice(1)} {formatCategoryName(categorySlug)}
  </span>

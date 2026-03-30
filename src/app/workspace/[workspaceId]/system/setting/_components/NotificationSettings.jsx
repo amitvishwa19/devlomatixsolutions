@@ -77,7 +77,7 @@ export const NotificationSettings = () => {
  <Mail className="w-4 h-4 text-blue-500"/>
  </div>
  <div className="space-y-0.5">
- <Label className="text-sm font-bold">Email Digest</Label>
+ <Label className="text-xs font-bold">Email Digest</Label>
  <p className="text-[10px] text-muted-foreground font-medium opacity-70">
  Weekly and daily activity summaries via email.
  </p>
@@ -97,7 +97,7 @@ export const NotificationSettings = () => {
  <Monitor className="w-4 h-4 text-muted-foreground"/>
  </div>
  <div className="space-y-0.5">
- <Label className="text-sm font-bold">Desktop Push</Label>
+ <Label className="text-xs font-bold">Desktop Push</Label>
  <p className="text-[10px] text-muted-foreground font-medium opacity-70">
  Real-time browser notifications.
  </p>

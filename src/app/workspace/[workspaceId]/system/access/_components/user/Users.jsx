@@ -293,7 +293,7 @@ export default function Users() {
  <h3 className="text-xl font-bold text-foreground/80 mb-3 tracking-tight">
  {userSearchQuery || statusFilter !=='all'|| roleFilter !=='all'?"No users match filters":"No users found"}
  </h3>
- <p className="text-sm font-medium text-muted-foreground/60 max-w-[280px] text-center leading-relaxed mb-8">
+ <p className="text-xs font-medium text-muted-foreground/60 max-w-[280px] text-center leading-relaxed mb-8">
  {userSearchQuery || statusFilter !=='all'|| roleFilter !=='all'
  ?"We couldn't find any team members matching your current filters. Try adjusting your search or resetting filters."
  :"It looks like your workspace hasn't added any users yet. Start by inviting your team members to manage their access."}

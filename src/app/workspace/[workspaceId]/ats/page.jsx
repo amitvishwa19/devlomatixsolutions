@@ -84,7 +84,7 @@ export default function AtsDashboard() {
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div className="space-y-1">
  <h1 className="text-xl font-bold">Recruitment Hub</h1>
- <p className="text-sm font-medium text-muted-foreground opacity-60">
+ <p className="text-xs font-medium text-muted-foreground opacity-60">
  Manage your talent pipeline and job openings from one central dashboard.
  </p>
  </div>
@@ -186,7 +186,7 @@ export default function AtsDashboard() {
  <span className="text-[10px] font-bold opacity-60">{int.time.split('')[1]}</span>
  </div>
  <div>
- <h4 className="text-sm font-bold">{int.name}</h4>
+ <h4 className="text-xs font-bold">{int.name}</h4>
  <p className="text-xs font-medium text-muted-foreground">{int.role} Interview</p>
  </div>
  </div>
@@ -237,7 +237,7 @@ export default function AtsDashboard() {
  </div>
  </div>
  <div>
- <h3 className="text-3xl tracking-tighter">{stat.value}</h3>
+ <h3 className="text-xl tracking-tighter">{stat.value}</h3>
  <p className="text-[10px] text-muted-foreground opacity-40">{stat.label}</p>
  </div>
  </CardContent>
@@ -261,7 +261,7 @@ export default function AtsDashboard() {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
  <span className="text-xs w-4 text-muted-foreground/40">{i + 1}</span>
- <span className="text-sm font-bold">{stage.stage}</span>
+ <span className="text-xs font-bold">{stage.stage}</span>
  </div>
  <div className="flex items-center gap-4">
  <span className="text-xs text-primary">{stage.count} <span className="text-muted-foreground opacity-40">Candidates</span></span>
@@ -401,7 +401,7 @@ export default function AtsDashboard() {
  <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">
  {teammate.name.split('').map(n => n[0]).join('')}
  </div>
- <span className="text-sm font-bold">{teammate.name}</span>
+ <span className="text-xs font-bold">{teammate.name}</span>
  </td>
  <td className="px-8 py-5 text-sm font-bold opacity-60">{teammate.count}</td>
  <td className="px-8 py-5 text-sm text-primary font-bold">{teammate.score}</td>

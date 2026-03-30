@@ -238,7 +238,7 @@ export default function FilesPage() {
  <div className="flex items-start justify-between">
  <div>
  <h1 className="text-2xl font-bold text-foreground/90">Documents</h1>
- <p className="text-sm font-medium text-muted-foreground mt-1">
+ <p className="text-xs font-medium text-muted-foreground mt-1">
  {filteredFiles.length} documents · {selectedFiles.length} selected
  </p>
  </div>
@@ -472,7 +472,7 @@ export default function FilesPage() {
  <Button
  onClick={handleConfirmMove}
  disabled={(!targetFolderId && !newFolderName) || isCreatingFolder}
- className="w-full h-12 rounded-md font-bold text-sm shadow-xl shadow-primary/20"
+ className="w-full h-12 rounded-md font-bold text-xs shadow-xl shadow-primary/20"
  >
  {isCreatingFolder ? (
  <Loader2 className="w-4 h-4 mr-2 animate-spin"/>

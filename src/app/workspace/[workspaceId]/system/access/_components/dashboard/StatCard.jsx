@@ -13,10 +13,10 @@ export function StatCard({ title, value, description, icon: Icon, trend, classNa
  >
  <div className="flex items-start justify-between">
  <div className="space-y-2">
- <p className="text-sm font-medium text-muted-foreground">{title}</p>
+ <p className="text-xs font-medium text-muted-foreground">{title}</p>
  <p className="text-3xl font-bold text-card-foreground">{value}</p>
  {description && (
- <p className="text-sm text-muted-foreground">{description}</p>
+ <p className="text-xs text-muted-foreground">{description}</p>
  )}
  {trend && (
  <div className="flex items-center gap-1">

@@ -94,7 +94,7 @@ export default function TalentDatabasePage() {
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div className="space-y-1">
  <h1 className="text-xl font-bold">Talent Database</h1>
- <p className="text-sm font-bold text-muted-foreground opacity-60">Manage and discover candidates across all job positions.</p>
+ <p className="text-xs font-bold text-muted-foreground opacity-60">Manage and discover candidates across all job positions.</p>
  </div>
  <div className="flex items-center gap-3">
  <Button variant="outline"className="rounded-md px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
@@ -204,7 +204,7 @@ export default function TalentDatabasePage() {
  </AvatarFallback>
  </Avatar>
  <div>
- <p className="text-sm">{candidate.name}</p>
+ <p className="text-xs">{candidate.name}</p>
  <p className="text-[10px] text-muted-foreground font-bold truncate max-w-[150px] opacity-60">{candidate.email}</p>
  </div>
  </div>
