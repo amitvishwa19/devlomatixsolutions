@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import axios from '@/utils/axios';
-import { AlertModal } from '@/components/global/AlertModal';
+import { useState, useEffect, useCallback } from'react';
+import { useParams } from'next/navigation';
+import axios from'@/utils/axios';
+import { AlertModal } from'@/components/global/AlertModal';
 import {
  Loader2,
  Plus,
@@ -20,12 +20,12 @@ import {
  Filter,
  ArrowUpDown,
  Check
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { toast } from 'sonner';
+} from'lucide-react';
+import { Button } from'@/components/ui/button';
+import { Input } from'@/components/ui/input';
+import { Badge } from'@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from'@/components/ui/card';
+import { toast } from'sonner';
 import {
  Dialog,
  DialogContent,
@@ -33,8 +33,8 @@ import {
  DialogHeader,
  DialogTitle,
  DialogFooter,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+} from"@/components/ui/dialog";
+import { Checkbox } from"@/components/ui/checkbox";
 
 export default function RoleManagementPage() {
  const params = useParams();
@@ -55,9 +55,9 @@ export default function RoleManagementPage() {
 
  const [selectedRole, setSelectedRole] = useState(null);
  const [roleForm, setRoleForm] = useState({
- title: '',
- description: '',
- color: '#3b82f6'
+ title:'',
+ description:'',
+ color:'#3b82f6'
  });
  const [selectedPermissionIds, setSelectedPermissionIds] = useState([]);
 
@@ -161,7 +161,7 @@ export default function RoleManagementPage() {
 
  const resetForm = () => {
  setSelectedRole(null);
- setRoleForm({ title: '', description: '', color: '#3b82f6' });
+ setRoleForm({ title:'', description:'', color:'#3b82f6'});
  setSelectedPermissionIds([]);
  };
 
@@ -183,13 +183,13 @@ export default function RoleManagementPage() {
  size={'sm'}
  className='bg-primary'
  >
- <Plus className="w-4 h-4 mr-2" /> New Role
+ <Plus className="w-4 h-4 mr-2"/> New Role
  </Button>
  </div>
 
  {/* Role Navigation/Filter */}
  <div className="relative group max-w-md">
- <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
+ <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-blue-500 transition-colors"/>
  <Input
  placeholder="Search roles..."
  value={search}
@@ -201,13 +201,13 @@ export default function RoleManagementPage() {
  {/* Role Grid */}
  {loading ? (
  <div className="flex flex-col items-center justify-center py-40 space-y-4">
- <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
+ <Loader2 className="w-10 text-blue-500 animate-spin"/>
  <p className="text-[10px] font-bold text-muted-foreground animate-pulse">Mapping role hierarchy...</p>
  </div>
  ) : filteredRoles.length === 0 ? (
  <div className="py-24 text-center border-2 border-dashed border-border/40 rounded-md bg-muted/5">
- <Shield className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
- <h3 className="text-lg font-bold ">No identities found</h3>
+ <Shield className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4"/>
+ <h3 className="text-lg font-bold">No identities found</h3>
  <p className="text-sm text-muted-foreground mt-1">Create your first functional role to begin managing access.</p>
  </div>
  ) : (
@@ -215,21 +215,21 @@ export default function RoleManagementPage() {
  {filteredRoles.map((role) => (
  <Card key={role.id} className="group relative border-border overflow-hidden rounded-md bg-card/30 backdrop-blur-md hover:shadow-2xl hover:shadow-blue-500/5 hover:border-blue-500/40 transition-all duration-500 shadow-sm">
  {/* Accent Bar */}
- <div className="absolute top-0 left-0 w-full h-1.5" style={{ backgroundColor: role.color || '#3b82f6' }} />
+ <div className="absolute top-0 left-0 w-full h-1.5"style={{ backgroundColor: role.color ||'#3b82f6'}} />
 
  <CardHeader className="pt-8 px-8">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-background/50 border border-border/20">
- <Users className="w-3 h-3 text-muted-foreground" />
- <span className="text-[10px] font-bold ">{role._count?.users || 0} Members</span>
+ <Users className="w-3 h-3 text-muted-foreground"/>
+ <span className="text-[10px] font-bold">{role._count?.users || 0} Members</span>
  </div>
- <Badge variant="outline" className="rounded-md border-none bg-blue-500/10 text-blue-500 font-bold text-[9px] ">
+ <Badge variant="outline"className="rounded-md border-none bg-blue-500/10 text-blue-500 font-bold text-[9px]">
  ID: {role.id.slice(-4).toUpperCase()}
  </Badge>
  </div>
- <CardTitle className="text-2xl font-bold ">{role.title}</CardTitle>
+ <CardTitle className="text-2xl font-bold">{role.title}</CardTitle>
  <CardDescription className="text-[11px] font-medium leading-relaxed line-clamp-2 min-h-[32px]">
- {role.description || "Assign this role to grant specific access levels to workspace members."}
+ {role.description ||"Assign this role to grant specific access levels to workspace members."}
  </CardDescription>
  </CardHeader>
 
@@ -241,7 +241,7 @@ export default function RoleManagementPage() {
  </div>
  <div className="flex flex-wrap gap-2 min-h-[40px]">
  {role.permissions.slice(0, 4).map(p => (
- <Badge key={p.id} variant="secondary" className="bg-muted/40 text-[9px] font-bold rounded-md border-none hover:bg-muted/60">
+ <Badge key={p.id} variant="secondary"className="bg-muted/40 text-[9px] font-bold rounded-md border-none hover:bg-muted/60">
  {p.title}
  </Badge>
  ))}
@@ -261,13 +261,13 @@ export default function RoleManagementPage() {
  size="sm"
  onClick={() => {
  setSelectedRole(role);
- setRoleForm({ title: role.title, description: role.description || '', color: role.color || '#3b82f6' });
+ setRoleForm({ title: role.title, description: role.description ||'', color: role.color ||'#3b82f6'});
  setSelectedPermissionIds(role.permissions.map(p => p.id));
  setIsCreateModalOpen(true);
  }}
  className="w-full h-11 rounded-md font-bold text-[10px] bg-background/40 hover:bg-blue-50 border-border/40 hover:border-blue-500/40 hover:text-blue-600 transition-all shadow-sm"
  >
- <Settings2 className="w-3 h-3 mr-2" /> Configure Capabilities
+ <Settings2 className="w-3 h-3 mr-2"/> Configure Capabilities
  </Button>
  <Button
  variant="destructive"
@@ -275,7 +275,7 @@ export default function RoleManagementPage() {
  onClick={() => confirmDelete(role.id)}
  className="absolute top-3 right-3 rounded-full h-8 w-8 shadow-xl shadow-rose-500/20 border border-rose-500/20 hover:scale-110 active:scale-95 transition-all opacity-40 group-hover:opacity-100"
  >
- <Trash2 className="w-3.5 h-3.5" />
+ <Trash2 className="w-3.5 h-3.5"/>
  </Button>
  </CardFooter>
  </Card>
@@ -287,7 +287,7 @@ export default function RoleManagementPage() {
  <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
  <DialogContent className="sm:max-w-md rounded-[2.5rem] border-none shadow-2xl p-8 bg-card">
  <DialogHeader>
- <DialogTitle className="text-2xl font-bold ">{selectedRole ? "Configure" : "Initialize"} Identity</DialogTitle>
+ <DialogTitle className="text-2xl font-bold">{selectedRole ?"Configure":"Initialize"} Identity</DialogTitle>
  <DialogDescription className="font-medium text-sm">
  Define the metadata for this functional role. Permissions are mapped separately.
  </DialogDescription>
@@ -352,8 +352,8 @@ export default function RoleManagementPage() {
  );
  }}
  className={`flex items-center justify-between p-3 rounded-md border transition-all cursor-pointer ${selectedPermissionIds.includes(perm.id)
- ? 'bg-blue-500/5 border-blue-500/30'
- : 'border-border/40 hover:bg-muted/30'
+ ?'bg-blue-500/5 border-blue-500/30'
+ :'border-border/40 hover:bg-muted/30'
  }`}
  >
  <div className="min-w-0">
@@ -376,7 +376,7 @@ export default function RoleManagementPage() {
  </div>
 
  <DialogFooter className="flex gap-2 border-t border-border/10 pt-4">
- <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="rounded-md font-bold border-border/40 bg-background/50 flex-1">
+ <Button variant="outline"onClick={() => setIsCreateModalOpen(false)} className="rounded-md font-bold border-border/40 bg-background/50 flex-1">
  Dismiss
  </Button>
  <Button
@@ -384,7 +384,7 @@ export default function RoleManagementPage() {
  disabled={isSubmitting}
  className="rounded-md font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex-1"
  >
- {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (selectedRole ? "Apply Changes" : "Deploy Role")}
+ {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin"/> : (selectedRole ?"Apply Changes":"Deploy Role")}
  </Button>
  </DialogFooter>
  </DialogContent>

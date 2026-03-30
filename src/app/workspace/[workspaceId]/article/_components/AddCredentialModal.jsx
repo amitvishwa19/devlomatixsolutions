@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from'react';
 import {
  Dialog,
  DialogContent,
  DialogHeader,
  DialogTitle,
  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from"@/components/ui/dialog";
+import { Button } from"@/components/ui/button";
+import { Input } from"@/components/ui/input";
 import {
  Select,
  SelectContent,
  SelectItem,
  SelectTrigger,
  SelectValue,
-} from "@/components/ui/select";
-import { useModal } from "@/hooks/useModal";
-import axios from "@/utils/axios";
-import { toast } from "sonner";
+} from"@/components/ui/select";
+import { useModal } from"@/hooks/useModal";
+import axios from"@/utils/axios";
+import { toast } from"sonner";
 import {
  Loader2,
  Shield,
@@ -31,18 +31,18 @@ import {
  User,
  Activity,
  Zap
-} from "lucide-react";
+} from"lucide-react";
 
 const PLATFORM_CONFIG = {
- FACEBOOK: ['accessToken', 'pageId'],
- INSTAGRAM: ['accessToken', 'igUserId'],
+ FACEBOOK: ['accessToken','pageId'],
+ INSTAGRAM: ['accessToken','igUserId'],
  TWITTER: ['bearerToken'],
  X: ['bearerToken'],
- LINKEDIN: ['accessToken', 'organizationUrn'],
- WHATSAPP: ['accessToken', 'phoneNumberId'],
+ LINKEDIN: ['accessToken','organizationUrn'],
+ WHATSAPP: ['accessToken','phoneNumberId'],
  YOUTUBE: ['apiKey'],
- GMAIL: ['access_token', 'refresh_token'],
- GOOGLE: ['access_token', 'refresh_token'],
+ GMAIL: ['access_token','refresh_token'],
+ GOOGLE: ['access_token','refresh_token'],
  GEMINI: ['apiKey'],
 };
 
@@ -60,7 +60,7 @@ export const AddCredentialModal = () => {
  const [customPlatform, setCustomPlatform] = useState('');
  const [profileName, setProfileName] = useState('');
  const [status, setStatus] = useState('disconnected');
- const [fields, setFields] = useState([{ key: '', value: '' }]);
+ const [fields, setFields] = useState([{ key:'', value:''}]);
 
  const isEdit = !!initialData?.id;
 
@@ -70,26 +70,26 @@ export const AddCredentialModal = () => {
  const platformKey = initialData.platform?.toUpperCase();
  const isPreset = !!PLATFORM_CONFIG[platformKey];
 
- setPlatform(isPreset ? platformKey : 'CUSTOM');
- if (!isPreset) setCustomPlatform(initialData.platform || '');
+ setPlatform(isPreset ? platformKey :'CUSTOM');
+ if (!isPreset) setCustomPlatform(initialData.platform ||'');
 
- setProfileName(initialData.profileName || '');
- setStatus(initialData.status || 'disconnected');
+ setProfileName(initialData.profileName ||'');
+ setStatus(initialData.status ||'disconnected');
 
  // Map details to fields, excluding profileName
  if (initialData.details) {
  const dynamicFields = Object.entries(initialData.details)
- .filter(([key]) => key !== 'profileName')
+ .filter(([key]) => key !=='profileName')
  .map(([key, value]) => ({ key, value }));
 
- setFields(dynamicFields.length > 0 ? dynamicFields : [{ key: '', value: '' }]);
+ setFields(dynamicFields.length > 0 ? dynamicFields : [{ key:'', value:''}]);
  }
  } else {
  setPlatform('');
  setCustomPlatform('');
  setProfileName('');
  setStatus('disconnected');
- setFields([{ key: '', value: '' }]);
+ setFields([{ key:'', value:''}]);
  }
  }, [isEdit, initialData, isModalOpen]);
 
@@ -97,22 +97,22 @@ export const AddCredentialModal = () => {
  const handlePlatformChange = (val) => {
  setPlatform(val);
  if (!isEdit) {
- if (val === 'CUSTOM') {
- setFields([{ key: '', value: '' }]);
+ if (val ==='CUSTOM') {
+ setFields([{ key:'', value:''}]);
  setCustomPlatform('');
  } else {
  const config = PLATFORM_CONFIG[val.toUpperCase()];
  if (config) {
- setFields(config.map(key => ({ key, value: '' })));
+ setFields(config.map(key => ({ key, value:''})));
  } else {
- setFields([{ key: '', value: '' }]);
+ setFields([{ key:'', value:''}]);
  }
  }
  }
  };
 
  const addField = () => {
- setFields([...fields, { key: '', value: '' }]);
+ setFields([...fields, { key:'', value:''}]);
  };
 
  const removeField = (index) => {
@@ -130,14 +130,14 @@ export const AddCredentialModal = () => {
  const onSubmit = async (e) => {
  e.preventDefault();
 
- const finalPlatform = platform === 'CUSTOM' ? customPlatform : platform;
+ const finalPlatform = platform ==='CUSTOM'? customPlatform : platform;
 
  if (!finalPlatform) {
  toast.error("Please provide a platform name");
  return;
  }
 
- const validFields = fields.filter(f => f.key.trim() !== '');
+ const validFields = fields.filter(f => f.key.trim() !=='');
  if (validFields.length === 0) {
  toast.error("Please provide at least one credential key and value");
  return;
@@ -153,7 +153,7 @@ export const AddCredentialModal = () => {
  try {
  const credentialsObject = {};
  // We still store profileName in JSON for backward compatibility, 
- // but the API also saves it to the 'profile' column.
+ // but the API also saves it to the'profile'column.
  if (profileName) credentialsObject.profileName = profileName;
 
  validFields.forEach(f => {
@@ -179,7 +179,7 @@ export const AddCredentialModal = () => {
  handleClose();
  } catch (error) {
  console.error(error);
- toast.error(isEdit ? "Failed to update credentials" : "Failed to save credentials");
+ toast.error(isEdit ?"Failed to update credentials":"Failed to save credentials");
  } finally {
  setIsLoading(false);
  setIsTesting(false);
@@ -192,24 +192,24 @@ export const AddCredentialModal = () => {
  setCustomPlatform('');
  setProfileName('');
  setStatus('connected');
- setFields([{ key: '', value: '' }]);
+ setFields([{ key:'', value:''}]);
  }
  onClose("addCredential");
  };
 
  return (
  <Dialog open={isModalOpen} onOpenChange={handleClose}>
- <DialogContent className=" bg-background border border-border/100 rounded-md shadow-2xl p-0 overflow-hidden">
+ <DialogContent className="bg-background border border-border/100 rounded-md shadow-2xl p-0 overflow-hidden">
  <form onSubmit={onSubmit} className="flex flex-col max-h-[85vh]">
  <DialogHeader className="p-8 pb-4">
  <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
- <Database className="text-primary h-6 w-6" /> {isEdit ? "Edit Credentials" : "Add Credentials"}
+ <Database className="text-primary h-6 w-6"/> {isEdit ?"Edit Credentials":"Add Credentials"}
  </DialogTitle>
  </DialogHeader>
 
  <div className="flex-1 overflow-y-auto p-8 pt-0 space-y-6 scrollbar-hide">
  <div className="p-4 bg-primary/5 border border-primary/10 rounded-md flex items-start gap-3">
- <Shield className="text-primary h-5 w-5 mt-0.5 shrink-0" />
+ <Shield className="text-primary h-5 w-5 mt-0.5 shrink-0"/>
  <p className="text-xs font-bold text-muted-foreground leading-relaxed text-left">
  Provide the <span className="text-primary font-bold">API credentials</span> for your platform. These will be stored securely and used for multi-channel publishing.
  </p>
@@ -219,24 +219,24 @@ export const AddCredentialModal = () => {
  <div className="grid grid-cols-2 gap-4 text-left">
  <div className="space-y-2">
  <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
- <Tag className="w-3 h-3" /> PLATFORM
+ <Tag className="w-3 h-3"/> PLATFORM
  </label>
  <Select value={platform} onValueChange={handlePlatformChange} disabled={isLoading}>
- <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs ">
- <SelectValue placeholder="Select Platform" />
+ <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs">
+ <SelectValue placeholder="Select Platform"/>
  </SelectTrigger>
  <SelectContent className="rounded-md border-border/20 shadow-2xl">
  {Object.keys(PLATFORM_CONFIG).map(p => (
  <SelectItem key={p} value={p} className="font-bold text-[10px] py-3">{p}</SelectItem>
  ))}
- <SelectItem value="CUSTOM" className="font-bold text-[10px] py-3 text-muted-foreground italic">Custom / Other</SelectItem>
+ <SelectItem value="CUSTOM"className="font-bold text-[10px] py-3 text-muted-foreground italic">Custom / Other</SelectItem>
  </SelectContent>
  </Select>
  </div>
- {platform === 'CUSTOM' ? (
+ {platform ==='CUSTOM'? (
  <div className="space-y-2 animate-in fade-in slide-in-from-left-2 transition-all">
  <label className="text-[10px] font-bold text-primary ml-1 flex items-center gap-2">
- <Zap className="w-3 h-3" /> CUSTOM PLATFORM NAME
+ <Zap className="w-3 h-3"/> CUSTOM PLATFORM NAME
  </label>
  <Input
  disabled={isLoading}
@@ -249,7 +249,7 @@ export const AddCredentialModal = () => {
  ) : (
  <div className="space-y-2">
  <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
- <User className="w-3 h-3" /> PROFILE NAME
+ <User className="w-3 h-3"/> PROFILE NAME
  </label>
  <Input
  disabled={isLoading}
@@ -262,10 +262,10 @@ export const AddCredentialModal = () => {
  )}
  </div>
 
- {platform === 'CUSTOM' && (
+ {platform ==='CUSTOM'&& (
  <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
  <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
- <User className="w-3 h-3" /> PROFILE NAME
+ <User className="w-3 h-3"/> PROFILE NAME
  </label>
  <Input
  disabled={isLoading}
@@ -279,16 +279,16 @@ export const AddCredentialModal = () => {
 
  <div className="space-y-2 text-left">
  <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
- <Activity className="w-3 h-3" /> CONNECTION STATUS
+ <Activity className="w-3 h-3"/> CONNECTION STATUS
  </label>
  <Select value={status} onValueChange={setStatus} disabled={isLoading}>
- <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs ">
- <SelectValue placeholder="Select Status" />
+ <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs">
+ <SelectValue placeholder="Select Status"/>
  </SelectTrigger>
  <SelectContent className="rounded-md border-border/20 shadow-2xl">
- <SelectItem value="connected" className="font-bold text-[10px] py-3">Connected</SelectItem>
- <SelectItem value="disconnected" className="font-bold text-[10px] py-3 text-muted-foreground">Disconnected</SelectItem>
- <SelectItem value="error" className="font-bold text-[10px] py-3 text-rose-500">Error / Expired</SelectItem>
+ <SelectItem value="connected"className="font-bold text-[10px] py-3">Connected</SelectItem>
+ <SelectItem value="disconnected"className="font-bold text-[10px] py-3 text-muted-foreground">Disconnected</SelectItem>
+ <SelectItem value="error"className="font-bold text-[10px] py-3 text-rose-500">Error / Expired</SelectItem>
  </SelectContent>
  </Select>
  </div>
@@ -297,7 +297,7 @@ export const AddCredentialModal = () => {
  <div className="space-y-4 text-left">
  <div className="flex items-center justify-between">
  <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
- <Key className="w-3 h-3" /> CREDENTIAL FIELDS
+ <Key className="w-3 h-3"/> CREDENTIAL FIELDS
  </label>
  <Button
  type="button"
@@ -306,7 +306,7 @@ export const AddCredentialModal = () => {
  onClick={addField}
  className="text-[9px] font-bold rounded-md"
  >
- <Plus className="w-3 h-3 mr-1" /> ADD FIELD
+ <Plus className="w-3 h-3 mr-1"/> ADD FIELD
  </Button>
  </div>
 
@@ -317,16 +317,16 @@ export const AddCredentialModal = () => {
  <Input
  placeholder="Key (e.g. api_key)"
  value={field.key}
- onChange={(e) => updateField(index, 'key', e.target.value)}
- className="bg-muted/10 border-dashed border-border/40 rounded-md h-10 text-[10px] font-bold"
+ onChange={(e) => updateField(index,'key', e.target.value)}
+ className="bg-muted/10 border-dashed border-border/40 rounded-md text-[10px] font-bold"
  />
  </div>
  <div className="flex-2 space-y-1">
  <Input
  placeholder="Value"
  value={field.value}
- onChange={(e) => updateField(index, 'value', e.target.value)}
- className="bg-muted/30 border-none rounded-md h-10 text-[10px]"
+ onChange={(e) => updateField(index,'value', e.target.value)}
+ className="bg-muted/30 border-none rounded-md text-[10px]"
  />
  </div>
  {fields.length > 1 && (
@@ -335,9 +335,9 @@ export const AddCredentialModal = () => {
  variant="ghost"
  size="icon"
  onClick={() => removeField(index)}
- className="h-10 w-10 text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+ className="w-10 text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
  >
- <Trash2 className="w-4 h-4" />
+ <Trash2 className="w-4 h-4"/>
  </Button>
  )}
  </div>
@@ -369,7 +369,7 @@ export const AddCredentialModal = () => {
  if (profileName) credentialsObject.profileName = profileName;
  });
 
- const finalPlatform = platform === 'CUSTOM' ? customPlatform : platform;
+ const finalPlatform = platform ==='CUSTOM'? customPlatform : platform;
 
  const res = await axios.post(`/api/workspace/${workspaceId}/social/accounts/${initialData.id}/test`, {
  credentials: credentialsObject,
@@ -377,26 +377,26 @@ export const AddCredentialModal = () => {
  });
  if (res.data.success) {
  toast.success(res.data.message, { id: toastId });
-      } else {
-        const errorData = res.data.data;
-        console.error("[TEST_FAILED]", res.data);
-        const detailedMsg = res.data.message || "Connection failed";
-        const description = errorData?.message || (errorData?.error?.message) || (errorData?.serviceErrorCode ? `Code: ${errorData.serviceErrorCode}` : undefined);
-        
-        toast.error(detailedMsg, {
-          id: toastId,
-          description: description
-        });
-      }
+ } else {
+ const errorData = res.data.data;
+ console.error("[TEST_FAILED]", res.data);
+ const detailedMsg = res.data.message ||"Connection failed";
+ const description = errorData?.message || (errorData?.error?.message) || (errorData?.serviceErrorCode ? `Code: ${errorData.serviceErrorCode}` : undefined);
+ 
+ toast.error(detailedMsg, {
+ id: toastId,
+ description: description
+ });
+ }
  } catch (err) {
- toast.error(err?.response?.data?.message || 'Test failed', { id: toastId });
+ toast.error(err?.response?.data?.message ||'Test failed', { id: toastId });
  } finally {
  setIsTesting(false);
  }
  }}
  className="px-6 rounded-md font-bold text-[10px] border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 transition-all"
  >
- {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+ {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Zap className="mr-2 h-4 w-4"/>}
  Test Connection
  </Button>
  )}
@@ -406,8 +406,8 @@ export const AddCredentialModal = () => {
  className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px] rounded-md font-extrabold text-[10px] shadow-lg shadow-primary/20 transition-all active:scale-95"
  >
  {isLoading ? (
- <Loader2 className="mr-2 h-4 w-4 animate-spin" />
- ) : isEdit ? "Update Credentials" : "Save Credentials"}
+ <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+ ) : isEdit ?"Update Credentials":"Save Credentials"}
  </Button>
  </DialogFooter>
  </form>

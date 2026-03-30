@@ -1,5 +1,5 @@
-import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { LucideIcon } from"lucide-react";
+import { cn } from"@/lib/utils";
 
 
 export const StatsCard = ({
@@ -7,7 +7,7 @@ export const StatsCard = ({
  value,
  subtitle,
  icon: Icon,
- iconColor = "text-primary",
+ iconColor ="text-primary",
  delay = 0,
 }) => {
  return (
@@ -18,18 +18,18 @@ export const StatsCard = ({
  <div className="flex items-start justify-between">
  <div className="space-y-2">
  <p className="text-sm text-muted-foreground font-medium">{title}</p>
- <p className="text-3xl font-bold ">{value}</p>
+ <p className="text-3xl font-bold">{value}</p>
  {subtitle && (
  <p className="text-xs text-muted-foreground">{subtitle}</p>
  )}
  </div>
  <div
  className={cn(
- "p-3 rounded-md bg-primary/10 border border-primary/20",
+"p-3 rounded-md bg-primary/10 border border-primary/20",
  iconColor
  )}
  >
- <Icon className="w-5 h-5" />
+ <Icon className="w-5 h-5"/>
  </div>
  </div>
  </div>

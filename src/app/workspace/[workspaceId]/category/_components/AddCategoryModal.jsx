@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { useModal } from "@/hooks/useModal";
+import { useState, useEffect } from"react";
+import { useModal } from"@/hooks/useModal";
 import {
  Dialog,
  DialogContent,
@@ -9,24 +9,24 @@ import {
  DialogFooter,
  DialogHeader,
  DialogTitle,
-} from "@/components/ui/dialog";
+} from"@/components/ui/dialog";
 import {
  Select,
  SelectContent,
  SelectItem,
  SelectTrigger,
  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Tags, Palette, Type, AlignLeft, FolderTree } from "lucide-react";
-import axios from "@/utils/axios";
-import { toast } from "sonner";
+} from"@/components/ui/select";
+import { Button } from"@/components/ui/button";
+import { Input } from"@/components/ui/input";
+import { Textarea } from"@/components/ui/textarea";
+import { Loader2, Tags, Palette, Type, AlignLeft, FolderTree } from"lucide-react";
+import axios from"@/utils/axios";
+import { toast } from"sonner";
 
 export const AddCategoryModal = () => {
  const { isOpen, onClose, type, data } = useModal();
- const isModalOpen = isOpen && type === "addCategory";
+ const isModalOpen = isOpen && type ==="addCategory";
  const { workspaceId, category, parentCategories, parentId: defaultParentId, onApply } = data || {};
 
  const [isLoading, setIsLoading] = useState(false);
@@ -41,17 +41,17 @@ export const AddCategoryModal = () => {
  useEffect(() => {
  if (isModalOpen) {
  if (category) {
- setName(category.name || "");
- setDescription(category.description || "");
- setColor(category.color || "#3b82f6");
- setCategoryType(category.type || "GENERAL");
- setParentId(category.parentId || "none");
+ setName(category.name ||"");
+ setDescription(category.description ||"");
+ setColor(category.color ||"#3b82f6");
+ setCategoryType(category.type ||"GENERAL");
+ setParentId(category.parentId ||"none");
  } else {
  setName("");
  setDescription("");
  setColor("#3b82f6");
  setCategoryType("GENERAL");
- setParentId(defaultParentId || "none");
+ setParentId(defaultParentId ||"none");
  }
  }
  }, [isModalOpen, category, defaultParentId]);
@@ -65,7 +65,7 @@ export const AddCategoryModal = () => {
  description,
  color,
  type: categoryType,
- parentId: parentId === "none" ? null : parentId
+ parentId: parentId ==="none"? null : parentId
  };
 
  if (isEdit) {
@@ -80,7 +80,7 @@ export const AddCategoryModal = () => {
  if (onApply) onApply();
  } catch (error) {
  console.error(error);
- toast.error(error.response?.data?.message || "Something went wrong");
+ toast.error(error.response?.data?.message ||"Something went wrong");
  } finally {
  setIsLoading(false);
  }
@@ -91,8 +91,8 @@ export const AddCategoryModal = () => {
  };
 
  const colorPresets = [
- "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6",
- "#ec4899", "#06b6d4", "#f97316", "#64748b", "#000000"
+"#3b82f6","#ef4444","#10b981","#f59e0b","#8b5cf6",
+"#ec4899","#06b6d4","#f97316","#64748b","#000000"
  ];
 
  const availableParents = (parentCategories || []).filter(c => c.id !== category?.id);
@@ -104,18 +104,18 @@ export const AddCategoryModal = () => {
  <DialogHeader className="p-8 pb-0">
  <div className="flex items-center gap-3 mb-2">
  <div className="p-2 rounded-md bg-primary/10">
- <Tags className="h-5 w-5 text-primary" />
+ <Tags className="h-5 w-5 text-primary"/>
  </div>
  <DialogTitle className="text-2xl font-bold">
- {isEdit ? "Edit Category" : defaultParentId ? "Add Subcategory" : "Create New Category"}
+ {isEdit ?"Edit Category": defaultParentId ?"Add Subcategory":"Create New Category"}
  </DialogTitle>
  </div>
  <DialogDescription className="text-[10px] font-bold text-muted-foreground opacity-70">
  {isEdit
- ? "Update the details for this category."
+ ?"Update the details for this category."
  : defaultParentId
- ? "Add a subcategory under the selected parent."
- : "Add a new category to organize your platform content."}
+ ?"Add a subcategory under the selected parent."
+ :"Add a new category to organize your platform content."}
  </DialogDescription>
  </DialogHeader>
 
@@ -154,17 +154,17 @@ export const AddCategoryModal = () => {
  <FolderTree size={12} /> Parent Category
  </label>
  <Select value={parentId} onValueChange={setParentId} disabled={isLoading}>
- <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-[10px] font-bold ">
- <SelectValue placeholder="None (Top-level)" />
+ <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-[10px] font-bold">
+ <SelectValue placeholder="None (Top-level)"/>
  </SelectTrigger>
  <SelectContent className="rounded-md border-border/40">
- <SelectItem value="none" className="font-bold text-[10px] rounded-md">
+ <SelectItem value="none"className="font-bold text-[10px] rounded-md">
  NONE (TOP-LEVEL CATEGORY)
  </SelectItem>
  {availableParents.map((parent) => (
  <SelectItem key={parent.id} value={parent.id} className="font-bold text-[10px] rounded-md">
  <div className="flex items-center gap-2">
- <div className="w-3 h-3 rounded-full" style={{ backgroundColor: parent.color }} />
+ <div className="w-3 h-3 rounded-full"style={{ backgroundColor: parent.color }} />
  {parent.name}
  </div>
  </SelectItem>
@@ -182,13 +182,13 @@ export const AddCategoryModal = () => {
  <button
  key={p}
  type="button"
- className={`h-8 w-8 rounded-full border-4 transition-all transform hover:scale-110 shadow-sm ${color === p ? "border-white scale-110 shadow-md" : "border-transparent opacity-70 hover:opacity-100"
+ className={`h-8 w-8 rounded-full border-4 transition-all transform hover:scale-110 shadow-sm ${color === p ?"border-white scale-110 shadow-md":"border-transparent opacity-70 hover:opacity-100"
  }`}
  style={{ backgroundColor: p }}
  onClick={() => setColor(p)}
  />
  ))}
- <div className="h-8 w-px bg-border/20 mx-1" />
+ <div className="h-8 w-px bg-border/20 mx-1"/>
  <div className="relative group">
  <Input
  type="color"
@@ -207,18 +207,18 @@ export const AddCategoryModal = () => {
  type="button"
  variant="outline"
  onClick={handleClose}
- className="h-12 rounded-md font-bold flex-1 border-border/100 bg-background/50 text-[10px] "
+ className="h-12 rounded-md font-bold flex-1 border-border/100 bg-background/50 text-[10px]"
  >
  Cancel
  </Button>
  <Button
  disabled={isLoading}
- className="h-12 rounded-md font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 text-[10px] "
+ className="h-12 rounded-md font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 text-[10px]"
  >
  {isLoading ? (
- <Loader2 className="h-4 w-4 animate-spin" />
+ <Loader2 className="h-4 w-4 animate-spin"/>
  ) : (
- isEdit ? "Update Category" : "Create Category"
+ isEdit ?"Update Category":"Create Category"
  )}
  </Button>
  </DialogFooter>

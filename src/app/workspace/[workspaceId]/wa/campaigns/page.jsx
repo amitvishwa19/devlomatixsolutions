@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState } from'react';
 import {
  Megaphone,
  Plus,
@@ -25,7 +25,7 @@ import {
  SheetFooter } from
 
 "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { Button } from"@/components/ui/button";
 import {
  AlertDialog,
  AlertDialogAction,
@@ -36,9 +36,9 @@ import {
  AlertDialogHeader,
  AlertDialogTitle } from
 "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { Input } from"@/components/ui/input";
+import { Textarea } from"@/components/ui/textarea";
+import { toast } from"sonner";
 import {
  Select,
  SelectContent,
@@ -46,12 +46,12 @@ import {
  SelectTrigger,
  SelectValue } from
 "@/components/ui/select";
-import { useSession } from "next-auth/react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useSession } from"next-auth/react";
+import { ScrollArea } from"@/components/ui/scroll-area";
+import { Checkbox } from"@/components/ui/checkbox";
+import { Badge } from"@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from"@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from"@/components/ui/dialog";
 
 export default function CampaignsPage() {
  const { data: session } = useSession();
@@ -63,7 +63,7 @@ export default function CampaignsPage() {
  const [contacts, setContacts] = useState([]);
  const [groups, setGroups] = useState([]);
  const [selectedGroupIds, setSelectedGroupIds] = useState([]);
- const [recipientType, setRecipientType] = useState('contacts'); // 'contacts' or 'groups'
+ const [recipientType, setRecipientType] = useState('contacts'); //'contacts'or'groups'
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState(null);
 
@@ -71,12 +71,12 @@ export default function CampaignsPage() {
  setLoading(true);
  setError(null);
  try {
- const res = await fetch('/api/wa/campaigns', { cache: 'no-store' });
+ const res = await fetch('/api/wa/campaigns', { cache:'no-store'});
  const data = await res.json();
- if (!res.ok) throw new Error(data.error || 'Failed to load campaigns');
+ if (!res.ok) throw new Error(data.error ||'Failed to load campaigns');
  setCampaigns(data.campaigns || []);
  } catch (err) {
- if (err.name !== 'AbortError') {
+ if (err.name !=='AbortError') {
  setError(err instanceof Error ? err.message : String(err));
  }
  } finally {
@@ -130,18 +130,18 @@ export default function CampaignsPage() {
  const [isDeleting, setIsDeleting] = useState(false);
  const [activeCampaign, setActiveCampaign] = useState(null);
  const [editForm, setEditForm] = useState({
- name: '',
- status: 'DRAFT',
- templateId: '',
- template: '',
- phone: '',
- messageType: 'text',
- scheduledAt: '',
- mediaUrl: '',
- intBody: '',
- intFooter: '',
- intButton: 'Choose Option',
- intSections: JSON.stringify([{ title: 'Options', rows: [{ title: 'Option 1', id: 'opt1' }, { title: 'Option 2', id: 'opt2' }] }], null, 2)
+ name:'',
+ status:'DRAFT',
+ templateId:'',
+ template:'',
+ phone:'',
+ messageType:'text',
+ scheduledAt:'',
+ mediaUrl:'',
+ intBody:'',
+ intFooter:'',
+ intButton:'Choose Option',
+ intSections: JSON.stringify([{ title:'Options', rows: [{ title:'Option 1', id:'opt1'}, { title:'Option 2', id:'opt2'}] }], null, 2)
  });
  const [isStarting, setIsStarting] = useState(false);
  const [contactSelectorOpen, setContactSelectorOpen] = useState(false);
@@ -156,27 +156,27 @@ export default function CampaignsPage() {
  setEditForm({
  name: campaign.name,
  status: campaign.status,
- templateId: campaign.templateId || '',
- template: mt?.text || mt?.interactive?.body || (typeof mt === 'string' ? mt : ''),
- phone: '',
- messageType: campaign.messageType || 'text',
- scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) : '',
- mediaUrl: mt?.image?.url || mt?.document?.url || '',
- intBody: mt?.interactive?.body || mt?.text || '',
- intFooter: mt?.interactive?.footer || '',
- intButton: mt?.interactive?.buttonText || 'Choose Option',
- intSections: JSON.stringify(mt?.interactive?.sections || [{ title: 'Options', rows: [{ title: 'Option 1', id: 'opt1' }] }], null, 2)
+ templateId: campaign.templateId ||'',
+ template: mt?.text || mt?.interactive?.body || (typeof mt ==='string'? mt :''),
+ phone:'',
+ messageType: campaign.messageType ||'text',
+ scheduledAt: campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString().slice(0, 16) :'',
+ mediaUrl: mt?.image?.url || mt?.document?.url ||'',
+ intBody: mt?.interactive?.body || mt?.text ||'',
+ intFooter: mt?.interactive?.footer ||'',
+ intButton: mt?.interactive?.buttonText ||'Choose Option',
+ intSections: JSON.stringify(mt?.interactive?.sections || [{ title:'Options', rows: [{ title:'Option 1', id:'opt1'}] }], null, 2)
  });
 
  try {
- const res = await fetch(`/api/wa/campaigns/${campaign.id}`, { cache: 'no-store' });
+ const res = await fetch(`/api/wa/campaigns/${campaign.id}`, { cache:'no-store'});
  const data = await res.json();
- if (!res.ok) throw new Error(data.error || 'Failed to load campaign details');
+ if (!res.ok) throw new Error(data.error ||'Failed to load campaign details');
 
  const phonesData = (data.campaign.recipients || []).
  map((r) => {
  if (r.variables && Object.keys(r.variables).length > 0) {
- return `${r.phone}, ${Object.values(r.variables).join(', ')}`;
+ return `${r.phone}, ${Object.values(r.variables).join(',')}`;
  }
  return r.phone;
  }).
@@ -199,19 +199,19 @@ export default function CampaignsPage() {
  // Validate template based on message type (only for new campaigns, edit may have existing template)
  const isEditing = !!activeCampaign;
  if (!isEditing) {
- if (editForm.messageType === 'interactive') {
+ if (editForm.messageType ==='interactive') {
  if (!editForm.intBody.trim()) {
  toast.error('Message body is required');
  return;
  }
- } else if (editForm.messageType === 'text') {
+ } else if (editForm.messageType ==='text') {
  if (!editForm.template.trim()) {
  toast.error('Message template is required');
  return;
  }
- } else if (editForm.messageType === 'image' || editForm.messageType === 'document') {
+ } else if (editForm.messageType ==='image'|| editForm.messageType ==='document') {
  if (!editForm.mediaUrl.trim()) {
- toast.error(`${editForm.messageType === 'image' ? 'Image' : 'Document'} URL is required`);
+ toast.error(`${editForm.messageType ==='image'?'Image':'Document'} URL is required`);
  return;
  }
  }
@@ -226,7 +226,7 @@ export default function CampaignsPage() {
  }
  }
 
- const toastId = toast.loading(isEditing ? 'Updating campaign...' : 'Creating campaign...');
+ const toastId = toast.loading(isEditing ?'Updating campaign...':'Creating campaign...');
 
  // Parse phone numbers and variables from text area (one per line, comma separated)
  const recipients = editForm.phone ?
@@ -248,7 +248,7 @@ export default function CampaignsPage() {
 
  try {
  const buildTemplate = () => {
- if (editForm.messageType === 'interactive') {
+ if (editForm.messageType ==='interactive') {
  let sections;
  try {sections = JSON.parse(editForm.intSections);} catch {sections = [];}
  return {
@@ -257,8 +257,8 @@ export default function CampaignsPage() {
  };
  }
  const t = { text: editForm.template };
- if (editForm.messageType === 'image') t.image = { url: editForm.mediaUrl };
- if (editForm.messageType === 'document') t.document = { url: editForm.mediaUrl };
+ if (editForm.messageType ==='image') t.image = { url: editForm.mediaUrl };
+ if (editForm.messageType ==='document') t.document = { url: editForm.mediaUrl };
  return t;
  };
 
@@ -268,7 +268,7 @@ export default function CampaignsPage() {
  name: editForm.name,
  status: editForm.status,
  messageTemplate: buildTemplate(),
- templateId: editForm.templateId === 'custom' ? null : editForm.templateId || null,
+ templateId: editForm.templateId ==='custom'? null : editForm.templateId || null,
  messageType: editForm.messageType,
  scheduledAt: editForm.scheduledAt || null,
  recipients,
@@ -276,14 +276,14 @@ export default function CampaignsPage() {
  };
 
  const res = await fetch(`/api/wa/campaigns/${activeCampaign.id}`, {
- method: 'PATCH',
- cache: 'no-store',
- headers: { 'Content-Type': 'application/json' },
+ method:'PATCH',
+ cache:'no-store',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify(payload)
  });
  if (!res.ok) {
  const data = await res.json().catch(() => ({}));
- throw new Error(data.error || 'Failed to update campaign');
+ throw new Error(data.error ||'Failed to update campaign');
  }
  } else {
  // Create new campaign
@@ -291,7 +291,7 @@ export default function CampaignsPage() {
  name: editForm.name,
  status: editForm.status,
  messageTemplate: buildTemplate(),
- templateId: editForm.templateId === 'custom' ? null : editForm.templateId || null,
+ templateId: editForm.templateId ==='custom'? null : editForm.templateId || null,
  messageType: editForm.messageType,
  scheduledAt: editForm.scheduledAt || null,
  recipients,
@@ -299,14 +299,14 @@ export default function CampaignsPage() {
  };
 
  const res = await fetch('/api/wa/campaigns', {
- method: 'POST',
- cache: 'no-store',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ cache:'no-store',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify(payload)
  });
  if (!res.ok) {
  const data = await res.json().catch(() => ({}));
- throw new Error(data.error || 'Failed to create campaign');
+ throw new Error(data.error ||'Failed to create campaign');
  }
  }
 
@@ -314,10 +314,10 @@ export default function CampaignsPage() {
  setEditDialogOpen(false);
  setActiveCampaign(null);
  setSelectedGroupIds([]);
- toast.success(isEditing ? 'Campaign updated successfully' : 'Campaign created successfully', { id: toastId });
+ toast.success(isEditing ?'Campaign updated successfully':'Campaign created successfully', { id: toastId });
  } catch (err) {
  console.error('Failed to save campaign', err);
- toast.error(err instanceof Error ? err.message : 'Failed to save campaign', { id: toastId });
+ toast.error(err instanceof Error ? err.message :'Failed to save campaign', { id: toastId });
  }
  };
 
@@ -327,16 +327,16 @@ export default function CampaignsPage() {
  return;
  }
 
- const isRunning = campaign.status === 'RUNNING';
- const action = isRunning ? 'stop' : 'start';
- const toastId = toast.loading(`${isRunning ? 'Pausing' : 'Starting'} campaign "${campaign.name}"...`);
+ const isRunning = campaign.status ==='RUNNING';
+ const action = isRunning ?'stop':'start';
+ const toastId = toast.loading(`${isRunning ?'Pausing':'Starting'} campaign"${campaign.name}"...`);
 
  try {
- const res = await fetch(`/api/wa/campaigns/${campaign.id}/${action}`, { method: 'POST' });
+ const res = await fetch(`/api/wa/campaigns/${campaign.id}/${action}`, { method:'POST'});
  const data = await res.json();
  if (!res.ok) throw new Error(data.error || `Failed to ${action} campaign`);
 
- toast.success(data.message || `Campaign ${isRunning ? 'paused' : 'started'}!`, { id: toastId });
+ toast.success(data.message || `Campaign ${isRunning ?'paused':'started'}!`, { id: toastId });
  await fetchCampaigns();
  } catch (err) {
  toast.error(err.message, { id: toastId });
@@ -353,13 +353,13 @@ export default function CampaignsPage() {
 
  try {
  const res = await fetch(`/api/wa/campaigns/${activeCampaign.id}`, {
- method: 'DELETE',
- cache: 'no-store'
+ method:'DELETE',
+ cache:'no-store'
  });
 
  if (!res.ok) {
  const data = await res.json().catch(() => ({}));
- throw new Error(data.error || 'Failed to delete campaign');
+ throw new Error(data.error ||'Failed to delete campaign');
  }
 
  // Refresh the list to stay in sync with the server
@@ -375,21 +375,21 @@ export default function CampaignsPage() {
 
  const getStatusBadge = (status) => {
  const styles = {
- RUNNING: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
- DRAFT: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20',
- COMPLETED: 'bg-green-500/10 text-green-500 border-green-500/20',
- SCHEDULED: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
- PAUSED: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
- ERROR: 'bg-red-500/10 text-red-500 border-red-500/20'
+ RUNNING:'bg-blue-500/10 text-blue-500 border-blue-500/20',
+ DRAFT:'bg-zinc-500/10 text-zinc-500 border-zinc-500/20',
+ COMPLETED:'bg-green-500/10 text-green-500 border-green-500/20',
+ SCHEDULED:'bg-purple-500/10 text-purple-500 border-purple-500/20',
+ PAUSED:'bg-amber-500/10 text-amber-500 border-amber-500/20',
+ ERROR:'bg-red-500/10 text-red-500 border-red-500/20'
  };
 
  const icons = {
- RUNNING: <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse mr-2" />,
- DRAFT: <Clock className="w-3 h-3 mr-1" />,
- COMPLETED: <CheckCircle2 className="w-3 h-3 mr-1" />,
- SCHEDULED: <Calendar className="w-3 h-3 mr-1" />,
- PAUSED: <Pause className="w-3 h-3 mr-1" />,
- ERROR: <Clock className="w-3 h-3 mr-1" />
+ RUNNING: <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse mr-2"/>,
+ DRAFT: <Clock className="w-3 h-3 mr-1"/>,
+ COMPLETED: <CheckCircle2 className="w-3 h-3 mr-1"/>,
+ SCHEDULED: <Calendar className="w-3 h-3 mr-1"/>,
+ PAUSED: <Pause className="w-3 h-3 mr-1"/>,
+ ERROR: <Clock className="w-3 h-3 mr-1"/>
  };
 
  return (
@@ -407,7 +407,7 @@ export default function CampaignsPage() {
  <div className="flex items-center justify-between">
  <div>
  <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent flex items-center gap-3">
- <Megaphone className="w-8 h-8 text-primary" />
+ <Megaphone className="w-8 h-8 text-primary"/>
  Campaign Manager
  </h1>
  <p className="text-muted-foreground text-xs mt-2">Create, schedule, and track bulk WhatsApp broadcasts.</p>
@@ -419,12 +419,12 @@ export default function CampaignsPage() {
  variant={'outline'}
  onClick={() => {
  setActiveCampaign(null);
- setEditForm({ name: '', status: 'DRAFT', template: '', phone: '', messageType: 'text', scheduledAt: '', mediaUrl: '', intBody: '', intFooter: '', intButton: 'Choose Option', intSections: JSON.stringify([{ title: 'Options', rows: [{ title: 'Option 1', id: 'opt1' }] }], null, 2) });
+ setEditForm({ name:'', status:'DRAFT', template:'', phone:'', messageType:'text', scheduledAt:'', mediaUrl:'', intBody:'', intFooter:'', intButton:'Choose Option', intSections: JSON.stringify([{ title:'Options', rows: [{ title:'Option 1', id:'opt1'}] }], null, 2) });
  setEditDialogOpen(true);
  }}>
 
  
- <Plus className="w-5 h-5" />
+ <Plus className="w-5 h-5"/>
  New Campaign
  </Button>
  </div>
@@ -433,21 +433,21 @@ export default function CampaignsPage() {
  <div className="grid grid-cols-4 gap-4 mt-8">
  <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
- <Megaphone className="w-5 h-5 text-purple-500" />
+ <Megaphone className="w-5 h-5 text-purple-500"/>
  <span className="font-medium">Total Campaigns</span>
  </div>
  <p className="text-3xl font-bold text-foreground">{campaigns.length}</p>
  </div>
  <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
- <Users className="w-5 h-5 text-blue-500" />
+ <Users className="w-5 h-5 text-blue-500"/>
  <span className="font-medium">Audience Reached</span>
  </div>
  <p className="text-3xl font-bold text-foreground">{campaigns.reduce((sum, c) => sum + (c.total || 0), 0)}</p>
  </div>
  <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
- <CheckCircle2 className="w-5 h-5 text-green-500" />
+ <CheckCircle2 className="w-5 h-5 text-green-500"/>
  <span className="font-medium">Avg. Success Rate</span>
  </div>
  <p className="text-3xl font-bold text-foreground">
@@ -455,16 +455,16 @@ export default function CampaignsPage() {
  `${Math.round(
  campaigns.reduce((sum, c) => sum + (c.successRate || 0), 0) / campaigns.length
  )}%` :
- 'N/A'}
+'N/A'}
  </p>
  </div>
  <div className="bg-card border rounded-md p-5 shadow-sm">
  <div className="flex items-center gap-3 text-muted-foreground mb-3">
- <BarChart3 className="w-5 h-5 text-orange-500" />
+ <BarChart3 className="w-5 h-5 text-orange-500"/>
  <span className="font-medium">Active Now</span>
  </div>
  <p className="text-3xl font-bold text-foreground">
- {campaigns.filter((c) => c.status === 'RUNNING').length}
+ {campaigns.filter((c) => c.status ==='RUNNING').length}
  </p>
  </div>
  </div>
@@ -475,18 +475,18 @@ export default function CampaignsPage() {
  {/* Tools Bar */}
  <div className="flex justify-between items-center mb-6">
  <div className="relative w-96">
- <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+ <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10"/>
  <Input
  type="text"
  placeholder="Search campaigns..."
- className="w-full bg-muted/50 border-border text-foreground rounded-md pl-10 h-10" />
+ className="w-full bg-muted/50 border-border text-foreground rounded-md pl-10"/>
  
  </div>
 
  <div className="flex gap-2">
  <Select defaultValue="All Statuses">
- <SelectTrigger className="bg-muted/50 border-border text-foreground rounded-md w-[140px] h-10">
- <SelectValue placeholder="All Statuses" />
+ <SelectTrigger className="bg-muted/50 border-border text-foreground rounded-md w-[140px]">
+ <SelectValue placeholder="All Statuses"/>
  </SelectTrigger>
  <SelectContent>
  <SelectItem value="All Statuses">All Statuses</SelectItem>
@@ -509,11 +509,11 @@ export default function CampaignsPage() {
  <table className="w-full text-sm text-left">
  <thead className="text-xs text-muted-foreground bg-muted/30 border-b border-border/50">
  <tr>
- <th scope="col" className="px-6 py-4 font-semibold">Campaign Name</th>
- <th scope="col" className="px-6 py-4 font-semibold">Status</th>
- <th scope="col" className="px-6 py-4 font-semibold">Progress</th>
- <th scope="col" className="px-6 py-4 font-semibold">Scheduled</th>
- <th scope="col" className="px-6 py-4 font-semibold text-right">Actions</th>
+ <th scope="col"className="px-6 py-4 font-semibold">Campaign Name</th>
+ <th scope="col"className="px-6 py-4 font-semibold">Status</th>
+ <th scope="col"className="px-6 py-4 font-semibold">Progress</th>
+ <th scope="col"className="px-6 py-4 font-semibold">Scheduled</th>
+ <th scope="col"className="px-6 py-4 font-semibold text-right">Actions</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border/50">
@@ -533,38 +533,38 @@ export default function CampaignsPage() {
  </div>
  <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
  <div
- className={`h-full transition-all duration-500 ${c.status === 'RUNNING' ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`}
+ className={`h-full transition-all duration-500 ${c.status ==='RUNNING'?'bg-blue-500 animate-pulse':'bg-green-500'}`}
  style={{ width: `${c.sent / c.total * 100 || 0}%` }} />
  
  </div>
  </div>
  </td>
  <td className="px-6 py-4 text-muted-foreground text-xs whitespace-nowrap">
- {c.scheduledAt ? new Date(c.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Not Scheduled'}
+ {c.scheduledAt ? new Date(c.scheduledAt).toLocaleString([], { dateStyle:'medium', timeStyle:'short'}) :'Not Scheduled'}
  </td>
  <td className="px-6 py-4">
  <div className="flex justify-end gap-2">
  <button
  onClick={() => handleToggleCampaign(c)}
- disabled={c.status === 'COMPLETED'}
- title={c.status === 'RUNNING' ? "Pause Campaign" : "Start Campaign"}
- className={`p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${c.status === 'RUNNING' ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
+ disabled={c.status ==='COMPLETED'}
+ title={c.status ==='RUNNING'?"Pause Campaign":"Start Campaign"}
+ className={`p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${c.status ==='RUNNING'?'text-amber-500 hover:bg-amber-500/10':'text-emerald-500 hover:bg-emerald-500/10'}`}>
  
- {c.status === 'RUNNING' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+ {c.status ==='RUNNING'? <Pause className="w-4 h-4"/> : <Play className="w-4 h-4"/>}
  </button>
  <button
  onClick={() => openEditDialog(c)}
  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
  aria-label="Edit campaign">
  
- <Edit className="w-4 h-4" />
+ <Edit className="w-4 h-4"/>
  </button>
  <button
  onClick={() => openDeleteDialog(c)}
  className="p-2 text-muted-foreground hover:text-red-400 hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
  aria-label="Delete campaign">
  
- <Trash className="w-4 h-4" />
+ <Trash className="w-4 h-4"/>
  </button>
  </div>
  </td>
@@ -577,7 +577,7 @@ export default function CampaignsPage() {
  {campaigns.length === 0 &&
  <div className="p-12 text-center flex flex-col items-center justify-center">
  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
- <Megaphone className="w-8 h-8 text-muted-foreground" />
+ <Megaphone className="w-8 h-8 text-muted-foreground"/>
  </div>
  <h3 className="text-lg font-medium text-foreground mb-1">No Campaigns Yet</h3>
  <p className="text-sm text-muted-foreground max-w-sm">
@@ -589,11 +589,11 @@ export default function CampaignsPage() {
 
  {/* Edit / Create Campaign Sheet */}
  <Sheet open={editDialogOpen} onOpenChange={setEditDialogOpen}>
- <SheetContent side="right" className="min-w-[620px] bg-transparent border-0 p-2 overflow-hidden">
+ <SheetContent side="right"className="min-w-[620px] bg-transparent border-0 p-2 overflow-hidden">
 
  <div className="bg-card border rounded-md h-full p-2 overflow-y-auto">
  <SheetHeader>
- <SheetTitle>{activeCampaign ? 'Edit Campaign' : 'New Campaign'}</SheetTitle>
+ <SheetTitle>{activeCampaign ?'Edit Campaign':'New Campaign'}</SheetTitle>
  </SheetHeader>
  <ScrollArea className='h-[80vh]'>
  <div className="space-y-4 py-4">
@@ -604,7 +604,7 @@ export default function CampaignsPage() {
  placeholder="e.g., Summer Sale Blast"
  value={editForm.name}
  onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
- className="bg-background" />
+ className="bg-background"/>
  
  </div>
  <div className="space-y-2">
@@ -617,21 +617,21 @@ export default function CampaignsPage() {
  setEditForm((prev) => ({
  ...prev,
  templateId: selected.id,
- messageType: (() => {if (selected.type === 'INTERACTIVE') return 'interactive-button';if (selected.type === 'LIST') return 'interactive-group';return selected.type.toLowerCase();})(),
+ messageType: (() => {if (selected.type ==='INTERACTIVE') return'interactive-button';if (selected.type ==='LIST') return'interactive-group';return selected.type.toLowerCase();})(),
  template: selected.body,
  intBody: selected.body,
- intFooter: selected.footer || '',
- intButton: selected.type === 'LIST' ? selected.metadata?.listButton || 'Select' : selected.buttons?.[0] || 'Options',
- intSections: selected.type === 'LIST' ?
+ intFooter: selected.footer ||'',
+ intButton: selected.type ==='LIST'? selected.metadata?.listButton ||'Select': selected.buttons?.[0] ||'Options',
+ intSections: selected.type ==='LIST'?
  JSON.stringify(selected.metadata?.listSections || [], null, 2) :
- JSON.stringify([{ title: 'Options', rows: (selected.buttons || []).map((b) => ({ title: b, id: b })) }], null, 2),
- mediaUrl: selected.metadata?.mediaUrl || ''
+ JSON.stringify([{ title:'Options', rows: (selected.buttons || []).map((b) => ({ title: b, id: b })) }], null, 2),
+ mediaUrl: selected.metadata?.mediaUrl ||''
  }));
  }
  }}>
  
  <SelectTrigger className="bg-background">
- <SelectValue placeholder="Custom Message" />
+ <SelectValue placeholder="Custom Message"/>
  </SelectTrigger>
  <SelectContent>
  <SelectItem value="custom">Custom (No Template)</SelectItem>
@@ -652,7 +652,7 @@ export default function CampaignsPage() {
  className="h-6 text-[10px] px-2"
  onClick={() => setContactSelectorOpen(true)}>
  
- <Users className="w-3 h-3 mr-1" />
+ <Users className="w-3 h-3 mr-1"/>
  Select from Contacts
  </Button>
  <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">One per line. Format: Phone, Var1, Var2</span>
@@ -663,7 +663,7 @@ export default function CampaignsPage() {
  rows={4}
  onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
  placeholder="+1234567890, John, New York&#10;+19876543210, Sarah, London"
- className="bg-background min-h-[100px] font-mono text-xs" />
+ className="bg-background min-h-[100px] font-mono text-xs"/>
  
  <p className="text-[10px] text-muted-foreground italic">Use {"{{v1}}"}, {"{{v2}}"} in template to inject variables.</p>
  </div>
@@ -674,7 +674,7 @@ export default function CampaignsPage() {
  onValueChange={(val) => setEditForm((prev) => ({ ...prev, messageType: val }))}>
  
  <SelectTrigger className="w-full bg-background">
- <SelectValue placeholder="Select type" />
+ <SelectValue placeholder="Select type"/>
  </SelectTrigger>
  <SelectContent>
  <SelectItem value="text">Text</SelectItem>
@@ -685,19 +685,19 @@ export default function CampaignsPage() {
  </Select>
  </div>
 
- {(editForm.messageType === 'image' || editForm.messageType === 'document') &&
+ {(editForm.messageType ==='image'|| editForm.messageType ==='document') &&
  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
- <label className="text-sm font-medium text-muted-foreground">{editForm.messageType === 'image' ? 'Image URL' : 'Document URL'}</label>
+ <label className="text-sm font-medium text-muted-foreground">{editForm.messageType ==='image'?'Image URL':'Document URL'}</label>
  <Input
  value={editForm.mediaUrl}
  onChange={(e) => setEditForm((prev) => ({ ...prev, mediaUrl: e.target.value }))}
  placeholder="https://example.com/file.jpg"
- className="bg-background" />
+ className="bg-background"/>
  
  </div>
  }
 
- {editForm.messageType === 'interactive' ?
+ {editForm.messageType ==='interactive'?
  <div className="space-y-4 animate-in fade-in duration-300 border border-border rounded-md p-4">
  <p className="text-xs font-semibold text-muted-foreground tracking-wider">Interactive Message Builder</p>
  <div className="space-y-2">
@@ -706,7 +706,7 @@ export default function CampaignsPage() {
  value={editForm.intBody}
  onChange={(e) => setEditForm((prev) => ({ ...prev, intBody: e.target.value }))}
  placeholder="Hello {{v1}}! Welcome to our service..."
- className="bg-background min-h-[100px] resize-none text-sm leading-relaxed" />
+ className="bg-background min-h-[100px] resize-none text-sm leading-relaxed"/>
  
  </div>
  <div className="grid grid-cols-2 gap-3">
@@ -716,7 +716,7 @@ export default function CampaignsPage() {
  value={editForm.intFooter}
  onChange={(e) => setEditForm((prev) => ({ ...prev, intFooter: e.target.value }))}
  placeholder="Powered by your brand"
- className="bg-background" />
+ className="bg-background"/>
  
  </div>
  <div className="space-y-2">
@@ -725,7 +725,7 @@ export default function CampaignsPage() {
  value={editForm.intButton}
  onChange={(e) => setEditForm((prev) => ({ ...prev, intButton: e.target.value }))}
  placeholder="Choose Option"
- className="bg-background" />
+ className="bg-background"/>
  
  </div>
  </div>
@@ -736,7 +736,7 @@ export default function CampaignsPage() {
  rows={4}
  onChange={(e) => setEditForm((prev) => ({ ...prev, intSections: e.target.value }))}
  className="bg-background min-h-[120px] font-mono text-xs resize-none"
- placeholder='[{"title": "Options", "rows": [{"title": "Option 1", "id": "opt1"}]}]' />
+ placeholder='[{"title":"Options","rows": [{"title":"Option 1","id":"opt1"}]}]'/>
  
  </div>
  </div> :
@@ -748,7 +748,7 @@ export default function CampaignsPage() {
  rows={10}
  onChange={(e) => setEditForm((prev) => ({ ...prev, template: e.target.value }))}
  placeholder="Hello {{v1}}, your message here..."
- className="bg-background min-h-[100px]" />
+ className="bg-background min-h-[100px]"/>
  
  </div>
  }
@@ -760,7 +760,7 @@ export default function CampaignsPage() {
  onValueChange={(val) => setEditForm((prev) => ({ ...prev, status: val }))}>
  
  <SelectTrigger className="w-full bg-background">
- <SelectValue placeholder="Select status" />
+ <SelectValue placeholder="Select status"/>
  </SelectTrigger>
  <SelectContent>
  <SelectItem value="RUNNING">RUNNING</SelectItem>
@@ -776,14 +776,14 @@ export default function CampaignsPage() {
  type="datetime-local"
  value={editForm.scheduledAt}
  onChange={(e) => setEditForm((prev) => ({ ...prev, scheduledAt: e.target.value }))}
- className="bg-background" />
+ className="bg-background"/>
  
  </div>
  </div>
  </div>
  </ScrollArea>
  <SheetFooter>
- <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+ <Button variant="outline"onClick={() => setEditDialogOpen(false)}>
  Cancel
  </Button>
  <Button onClick={saveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -806,7 +806,7 @@ export default function CampaignsPage() {
  <AlertDialogFooter>
  <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>Cancel</AlertDialogCancel>
  <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/80 min-w-[80px]">
- {isDeleting ? <Trash2 className="w-4 h-4 animate-spin" /> : "Delete"}
+ {isDeleting ? <Trash2 className="w-4 h-4 animate-spin"/> :"Delete"}
  </AlertDialogAction>
  </AlertDialogFooter>
  </AlertDialogContent>
@@ -818,7 +818,7 @@ export default function CampaignsPage() {
  <DialogContent className="max-w-xl bg-card border border-border/50 rounded-md p-0 overflow-hidden shadow-2xl">
  <DialogHeader className="p-6 border-b border-border bg-muted/10">
  <DialogTitle className="flex items-center gap-2">
- <Users className="w-5 h-5 text-primary" />
+ <Users className="w-5 h-5 text-primary"/>
  Select Campaign Recipients
  </DialogTitle>
  </DialogHeader>
@@ -834,7 +834,7 @@ export default function CampaignsPage() {
  <TabsContent value="contacts">
  <div className="px-6 py-2">
  <div className="relative mb-4">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
  <Input
  placeholder="Search contacts..."
  className="pl-9 bg-background"
@@ -849,7 +849,7 @@ export default function CampaignsPage() {
  c.phone.includes(searchTerm)
  ).length === 0 ?
  <div className="p-12 text-center text-muted-foreground">
- <Users className="w-12 h-12 mx-auto opacity-20 mb-4" />
+ <Users className="w-12 h-12 mx-auto opacity-20 mb-4"/>
  <p>No contacts found.</p>
  </div> :
 
@@ -860,8 +860,8 @@ export default function CampaignsPage() {
  <div
  key={contact.id}
  className={`flex items-center gap-3 p-3 rounded-md border transition-all cursor-pointer ${selectedContactIds.includes(contact.id) ?
- 'border-primary bg-primary/5' :
- 'border-border/50 hover:bg-muted/50'}`
+'border-primary bg-primary/5':
+'border-border/50 hover:bg-muted/50'}`
  }
  onClick={() => {
  setSelectedContactIds((prev) =>
@@ -890,7 +890,7 @@ export default function CampaignsPage() {
  <div className="space-y-2">
  {groups.length === 0 ?
  <div className="p-12 text-center text-muted-foreground">
- <Users className="w-12 h-12 mx-auto opacity-20 mb-4" />
+ <Users className="w-12 h-12 mx-auto opacity-20 mb-4"/>
  <p>No groups found. Create groups in the Contacts page.</p>
  </div> :
 
@@ -898,8 +898,8 @@ export default function CampaignsPage() {
  <div
  key={group.id}
  className={`flex items-center gap-3 p-4 rounded-md border transition-all cursor-pointer ${selectedGroupIds.includes(group.id) ?
- 'border-primary bg-primary/5' :
- 'border-border/50 hover:bg-muted/50'}`
+'border-primary bg-primary/5':
+'border-border/50 hover:bg-muted/50'}`
  }
  onClick={() => {
  setSelectedGroupIds((prev) =>
@@ -913,7 +913,7 @@ export default function CampaignsPage() {
  <div className="flex-1 min-w-0">
  <div className="flex items-center justify-between">
  <p className="font-semibold text-sm truncate">{group.name}</p>
- <Badge variant="secondary" className="text-[10px]">
+ <Badge variant="secondary"className="text-[10px]">
  {group._count?.contacts || 0} contacts
  </Badge>
  </div>
@@ -931,7 +931,7 @@ export default function CampaignsPage() {
  </Tabs>
 
  <DialogFooter className="p-6 border-t border-border bg-muted/10">
- <Button variant="outline" onClick={() => {
+ <Button variant="outline"onClick={() => {
  setContactSelectorOpen(false);
  setSelectedContactIds([]);
  setSelectedGroupIds([]);
@@ -940,7 +940,7 @@ export default function CampaignsPage() {
  </Button>
  <Button
  onClick={() => {
- if (recipientType === 'contacts') {
+ if (recipientType ==='contacts') {
  const selected = contacts.filter((c) => selectedContactIds.includes(c.id));
  const phoneString = selected.map((c) => c.phone).join('\n');
  setEditForm((prev) => ({
@@ -954,7 +954,7 @@ export default function CampaignsPage() {
  }}
  className="bg-primary hover:bg-primary/90 min-w-[120px]">
  
- {recipientType === 'contacts' ?
+ {recipientType ==='contacts'?
  `Add ${selectedContactIds.length} Contacts` :
  `Target ${selectedGroupIds.length} Groups`
  }

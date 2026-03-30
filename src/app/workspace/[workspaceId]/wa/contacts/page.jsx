@@ -1,11 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useSession } from 'next-auth/react';
-import { Trash2, UserPlus, Users, Phone, Mail, Pencil, X, Search, ArrowUpDown, Download, Upload, RefreshCw, Tag, FileText, Send, History } from 'lucide-react';
+import { useState, useEffect } from'react';
+import { useToast } from'@/hooks/use-toast';
+import { Button } from'@/components/ui/button';
+import { Input } from'@/components/ui/input';
+import { Textarea } from'@/components/ui/textarea';
+import { useSession } from'next-auth/react';
+import { Trash2, UserPlus, Users, Phone, Mail, Pencil, X, Search, ArrowUpDown, Download, Upload, RefreshCw, Tag, FileText, Send, History } from'lucide-react';
 import {
  DropdownMenu,
  DropdownMenuContent,
@@ -14,8 +14,8 @@ import {
  DropdownMenuSeparator,
  DropdownMenuTrigger } from
 "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from"@/components/ui/checkbox";
+import { Badge } from"@/components/ui/badge";
 import {
  AlertDialog,
  AlertDialogAction,
@@ -41,7 +41,7 @@ import {
  SheetHeader,
  SheetTitle } from
 "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from"@/components/ui/scroll-area";
 import {
  Tabs,
  TabsContent,
@@ -54,24 +54,24 @@ import {
 export default function ContactsPage() {
  const [contacts, setContacts] = useState([]);
  const [newContact, setNewContact] = useState({
- name: '',
- phone: '',
- email: '',
- info: ''
+ name:'',
+ phone:'',
+ email:'',
+ info:''
  });
  const { data: session } = useSession();
  const [loading, setLoading] = useState(false);
  const { toast } = useToast();
- const userId = session?.user?.userId || '';
+ const userId = session?.user?.userId ||'';
 
  // Editing State
  const [editModalOpen, setEditModalOpen] = useState(false);
  const [editingContact, setEditingContact] = useState({
- id: '',
- name: '',
- phone: '',
- email: '',
- info: ''
+ id:'',
+ name:'',
+ phone:'',
+ email:'',
+ info:''
  });
 
  // Send Message State
@@ -109,7 +109,7 @@ export default function ContactsPage() {
  const [groups, setGroups] = useState([]);
  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
  const [isAddingToGroupModalOpen, setIsAddingToGroupModalOpen] = useState(false);
- const [newGroup, setNewGroup] = useState({ name: '', description: '' });
+ const [newGroup, setNewGroup] = useState({ name:'', description:''});
  const [selectedGroupId, setSelectedGroupId] = useState('all');
  const [activeTab, setActiveTab] = useState('contacts');
 
@@ -127,17 +127,17 @@ export default function ContactsPage() {
  contact.phone.includes(searchQuery) ||
  contact.email && contact.email.toLowerCase().includes(searchQuery.toLowerCase());
 
- const matchesTag = filterTag === 'all' || contact.tags && contact.tags.includes(filterTag);
+ const matchesTag = filterTag ==='all'|| contact.tags && contact.tags.includes(filterTag);
 
- const matchesGroup = selectedGroupId === 'all' || contact.groups && contact.groups.some((g) => g.id === selectedGroupId);
+ const matchesGroup = selectedGroupId ==='all'|| contact.groups && contact.groups.some((g) => g.id === selectedGroupId);
 
  return matchesSearch && matchesTag && matchesGroup;
  }).
  sort((a, b) => {
- if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
- if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
- if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
- if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+ if (sortBy ==='newest') return new Date(b.createdAt) - new Date(a.createdAt);
+ if (sortBy ==='oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+ if (sortBy ==='name-asc') return a.name.localeCompare(b.name);
+ if (sortBy ==='name-desc') return b.name.localeCompare(a.name);
  return 0;
  });
 
@@ -215,7 +215,7 @@ export default function ContactsPage() {
  const openHistory = (contact) => {
  setSelectedContactForHistory(contact);
  setHistoryDrawerOpen(true);
- fetchHistory(contact.phone.includes('@') ? contact.phone : `${contact.phone.replace(/\D/g, '')}@s.whatsapp.net`);
+ fetchHistory(contact.phone.includes('@') ? contact.phone : `${contact.phone.replace(/\D/g,'')}@s.whatsapp.net`);
  };
 
  const fetchContacts = async () => {
@@ -233,9 +233,9 @@ export default function ContactsPage() {
  } catch (error) {
  console.error('Error fetching contacts:', error);
  toast({
- title: "Error",
- description: "Failed to fetch contacts",
- variant: "destructive"
+ title:"Error",
+ description:"Failed to fetch contacts",
+ variant:"destructive"
  });
  } finally {
  setLoading(false);
@@ -254,9 +254,9 @@ export default function ContactsPage() {
  e.preventDefault();
  if (!userId) {
  toast({
- title: "Error",
- description: "User not authenticated",
- variant: "destructive"
+ title:"Error",
+ description:"User not authenticated",
+ variant:"destructive"
  });
  return;
  }
@@ -264,9 +264,9 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const response = await fetch('/api/wa/contacts', {
- method: 'POST',
+ method:'POST',
  headers: {
- 'Content-Type': 'application/json'
+'Content-Type':'application/json'
  },
  body: JSON.stringify({
  ...newContact,
@@ -276,24 +276,24 @@ export default function ContactsPage() {
 
  if (!response.ok) {
  const errorData = await response.json();
- throw new Error(errorData.error || 'Failed to create contact');
+ throw new Error(errorData.error ||'Failed to create contact');
  }
 
  const savedContact = await response.json();
  setContacts((prev) => [savedContact, ...prev]);
- setNewContact({ name: '', phone: '', email: '', info: '' });
+ setNewContact({ name:'', phone:'', email:'', info:''});
 
  toast({
- title: "Success",
- description: 'Contact added successfully'
+ title:"Success",
+ description:'Contact added successfully'
  });
  } catch (error) {
  console.error('Error creating contact:', error);
- const message = error instanceof Error ? error.message : "Failed to create contact";
+ const message = error instanceof Error ? error.message :"Failed to create contact";
  toast({
- title: "Error",
+ title:"Error",
  description: message,
- variant: "destructive"
+ variant:"destructive"
  });
  } finally {
  setLoading(false);
@@ -305,8 +305,8 @@ export default function ContactsPage() {
  id: contact.id,
  name: contact.name,
  phone: contact.phone,
- email: contact.email || '',
- info: contact.info?.notes || contact.info || ''
+ email: contact.email ||'',
+ info: contact.info?.notes || contact.info ||''
  });
  setEditModalOpen(true);
  };
@@ -317,8 +317,8 @@ export default function ContactsPage() {
  setSendingMessage(true);
  try {
  const response = await fetch('/api/wa/send', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({
  to: selectedContactForMessage.phone,
  text: testMessageText
@@ -327,11 +327,11 @@ export default function ContactsPage() {
 
  if (!response.ok) {
  const error = await response.json();
- throw new Error(error.error || 'Failed to send message');
+ throw new Error(error.error ||'Failed to send message');
  }
 
  toast({
- title: "Message Sent",
+ title:"Message Sent",
  description: `Successfully sent test message to ${selectedContactForMessage.name}`
  });
  setSendMessageModalOpen(false);
@@ -339,9 +339,9 @@ export default function ContactsPage() {
  } catch (error) {
  console.error('Send error:', error);
  toast({
- title: "Send Error",
- description: error instanceof Error ? error.message : "Failed to send message",
- variant: "destructive"
+ title:"Send Error",
+ description: error instanceof Error ? error.message :"Failed to send message",
+ variant:"destructive"
  });
  } finally {
  setSendingMessage(false);
@@ -361,9 +361,9 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const response = await fetch(`/api/wa/contacts/${editingContact.id}`, {
- method: 'PATCH',
+ method:'PATCH',
  headers: {
- 'Content-Type': 'application/json'
+'Content-Type':'application/json'
  },
  body: JSON.stringify({
  name: editingContact.name,
@@ -375,7 +375,7 @@ export default function ContactsPage() {
 
  if (!response.ok) {
  const errorData = await response.json();
- throw new Error(errorData.error || 'Failed to update contact');
+ throw new Error(errorData.error ||'Failed to update contact');
  }
 
  const updated = await response.json();
@@ -383,15 +383,15 @@ export default function ContactsPage() {
  setEditModalOpen(false);
 
  toast({
- title: "Updated",
- description: "Contact updated successfully"
+ title:"Updated",
+ description:"Contact updated successfully"
  });
  } catch (error) {
  console.error('Error updating contact:', error);
  toast({
- title: "Error",
- description: "Failed to update contact",
- variant: "destructive"
+ title:"Error",
+ description:"Failed to update contact",
+ variant:"destructive"
  });
  } finally {
  setLoading(false);
@@ -404,7 +404,7 @@ export default function ContactsPage() {
 
  try {
  const response = await fetch(`/api/wa/contacts/${id}`, {
- method: 'DELETE'
+ method:'DELETE'
  });
 
  if (!response.ok) throw new Error('Failed to delete contact');
@@ -412,15 +412,15 @@ export default function ContactsPage() {
  setContacts((prev) => prev.filter((c) => c.id !== id));
  setSelectedContacts((prev) => prev.filter((i) => i !== id));
  toast({
- title: "Deleted",
- description: "Contact removed successfully"
+ title:"Deleted",
+ description:"Contact removed successfully"
  });
  } catch (error) {
  console.error('Error deleting contact:', error);
  toast({
- title: "Error",
- description: "Failed to delete contact",
- variant: "destructive"
+ title:"Error",
+ description:"Failed to delete contact",
+ variant:"destructive"
  });
  } finally {
  setDeleteModalOpen(false);
@@ -434,8 +434,8 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const response = await fetch('/api/wa/contacts/bulk-delete', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ ids: selectedContacts })
  });
 
@@ -446,15 +446,15 @@ export default function ContactsPage() {
  setSelectedContacts([]);
 
  toast({
- title: "Bulk Delete",
+ title:"Bulk Delete",
  description: `Successfully deleted ${count} contacts`
  });
  } catch (error) {
  console.error('Bulk delete error:', error);
  toast({
- title: "Error",
- description: "Failed to perform bulk delete",
- variant: "destructive"
+ title:"Error",
+ description:"Failed to perform bulk delete",
+ variant:"destructive"
  });
  } finally {
  setLoading(false);
@@ -462,11 +462,11 @@ export default function ContactsPage() {
  };
 
  const handleSync = async () => {
- if (waStatus !== 'open') {
+ if (waStatus !=='open') {
  toast({
- title: "Not Connected",
- description: "Please connect your WhatsApp before syncing contacts.",
- variant: "destructive"
+ title:"Not Connected",
+ description:"Please connect your WhatsApp before syncing contacts.",
+ variant:"destructive"
  });
  return;
  }
@@ -474,14 +474,14 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const response = await fetch('/api/wa/contacts/sync', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ userId })
  });
 
  if (!response.ok) {
  const error = await response.json();
- throw new Error(error.error || 'Failed to sync with WhatsApp');
+ throw new Error(error.error ||'Failed to sync with WhatsApp');
  }
 
  const { count, message } = await response.json();
@@ -492,15 +492,15 @@ export default function ContactsPage() {
  setContacts(updatedContacts);
 
  toast({
- title: "WhatsApp Sync",
+ title:"WhatsApp Sync",
  description: message
  });
  } catch (error) {
  console.error('Sync error:', error);
  toast({
- title: "Sync Error",
- description: error instanceof Error ? error.message : "Failed to sync with WhatsApp. Make sure your WhatsApp is connected.",
- variant: "destructive"
+ title:"Sync Error",
+ description: error instanceof Error ? error.message :"Failed to sync with WhatsApp. Make sure your WhatsApp is connected.",
+ variant:"destructive"
  });
  } finally {
  setLoading(false);
@@ -529,15 +529,15 @@ export default function ContactsPage() {
  }
 
  if (data.length === 0) {
- toast({ title: "Import Error", description: "No valid contact data found in CSV", variant: "destructive" });
+ toast({ title:"Import Error", description:"No valid contact data found in CSV", variant:"destructive"});
  return;
  }
 
  setLoading(true);
  try {
  const response = await fetch('/api/wa/contacts/bulk', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ userId, contacts: data })
  });
 
@@ -551,12 +551,12 @@ export default function ContactsPage() {
  setContacts(updatedContacts);
 
  toast({
- title: "Import Success",
+ title:"Import Success",
  description: `Successfully imported ${count} contacts`
  });
  } catch (error) {
  console.error('Import error:', error);
- toast({ title: "Error", description: "Failed to import contacts", variant: "destructive" });
+ toast({ title:"Error", description:"Failed to import contacts", variant:"destructive"});
  } finally {
  setLoading(false);
  }
@@ -570,8 +570,8 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const response = await fetch('/api/wa/contacts/bulk-tag', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ ids: selectedContacts, tag: tagInput })
  });
 
@@ -589,12 +589,12 @@ export default function ContactsPage() {
  setSelectedContacts([]);
 
  toast({
- title: "Bulk Tag",
- description: `Successfully added tag "${tagInput}" to ${count} contacts`
+ title:"Bulk Tag",
+ description: `Successfully added tag"${tagInput}"to ${count} contacts`
  });
  } catch (error) {
  console.error('Bulk tag error:', error);
- toast({ title: "Error", description: "Failed to perform bulk tagging", variant: "destructive" });
+ toast({ title:"Error", description:"Failed to perform bulk tagging", variant:"destructive"});
  } finally {
  setLoading(false);
  }
@@ -605,16 +605,16 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const res = await fetch('/api/wa/groups', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ ...newGroup, userId })
  });
  if (res.ok) {
  const data = await res.json();
  setGroups((prev) => [...prev, data]);
- setNewGroup({ name: '', description: '' });
+ setNewGroup({ name:'', description:''});
  setIsGroupModalOpen(false);
- toast({ title: "Group Created", description: `Group "${data.name}" has been created.` });
+ toast({ title:"Group Created", description: `Group"${data.name}"has been created.` });
  }
  } catch (error) {
  console.error('Error creating group:', error);
@@ -627,8 +627,8 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const res = await fetch(`/api/wa/groups/${groupId}/contacts`, {
- method: 'DELETE',
- headers: { 'Content-Type': 'application/json' },
+ method:'DELETE',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ contactIds: [contactId] })
  });
  if (res.ok) {
@@ -652,7 +652,7 @@ export default function ContactsPage() {
  }
  return g;
  }));
- toast({ title: "Removed from Group", description: "Contact was successfully removed from the group." });
+ toast({ title:"Removed from Group", description:"Contact was successfully removed from the group."});
  }
  } catch (error) {
  console.error('Error removing from group:', error);
@@ -666,8 +666,8 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const res = await fetch(`/api/wa/groups/${groupId}/contacts`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ contactIds: selectedContacts })
  });
  if (res.ok) {
@@ -676,7 +676,7 @@ export default function ContactsPage() {
  await fetchGroups();
  setIsAddingToGroupModalOpen(false);
  setSelectedContacts([]);
- toast({ title: "Contacts Added", description: `Successfully added ${selectedContacts.length} contacts to the group.` });
+ toast({ title:"Contacts Added", description: `Successfully added ${selectedContacts.length} contacts to the group.` });
  }
  } catch (error) {
  console.error('Error adding to group:', error);
@@ -687,11 +687,11 @@ export default function ContactsPage() {
 
  const handleDeleteGroup = async (groupId) => {
  try {
- const res = await fetch(`/api/wa/groups/${groupId}`, { method: 'DELETE' });
+ const res = await fetch(`/api/wa/groups/${groupId}`, { method:'DELETE'});
  if (res.ok) {
  setGroups((prev) => prev.filter((g) => g.id !== groupId));
  if (selectedGroupId === groupId) setSelectedGroupId('all');
- toast({ title: "Group Deleted" });
+ toast({ title:"Group Deleted"});
  }
  } catch (error) {
  console.error('Error deleting group:', error);
@@ -699,20 +699,20 @@ export default function ContactsPage() {
  };
 
  const downloadTemplate = () => {
- const csv = "Name,Phone,Email\nJohn Doe,+1234567890,john@example.com\nJane Smith,+9876543210,jane@example.com";
- const blob = new Blob([csv], { type: 'text/csv' });
+ const csv ="Name,Phone,Email\nJohn Doe,+1234567890,john@example.com\nJane Smith,+9876543210,jane@example.com";
+ const blob = new Blob([csv], { type:'text/csv'});
  const url = window.URL.createObjectURL(blob);
  const a = document.createElement('a');
  a.setAttribute('href', url);
- a.setAttribute('download', 'whatsapp_contacts_template.csv');
+ a.setAttribute('download','whatsapp_contacts_template.csv');
  a.click();
  };
 
  return (
  <>
- <div className=" animate-in fade-in duration-500">
+ <div className="animate-in fade-in duration-500">
  <div>
- <h1 className="text-xl font-bold text-white mb-2 ">Contacts</h1>
+ <h1 className="text-xl font-bold text-white mb-2">Contacts</h1>
  <p className="text-muted-foreground text-xs">Manage your WhatsApp audience and contact lists</p>
  </div>
 
@@ -733,7 +733,7 @@ export default function ContactsPage() {
  value={newContact.name}
  onChange={handleInputChange}
  required
- placeholder="Enter contact name" />
+ placeholder="Enter contact name"/>
  
  </div>
  <div>
@@ -744,7 +744,7 @@ export default function ContactsPage() {
  value={newContact.phone}
  onChange={handleInputChange}
  required
- placeholder="Enter phone number" />
+ placeholder="Enter phone number"/>
  
  </div>
  </div>
@@ -757,7 +757,7 @@ export default function ContactsPage() {
  name="email"
  value={newContact.email}
  onChange={handleInputChange}
- placeholder="Enter email address" />
+ placeholder="Enter email address"/>
  
  </div>
  <div>
@@ -767,7 +767,7 @@ export default function ContactsPage() {
  name="info"
  value={newContact.info}
  onChange={handleInputChange}
- placeholder="Enter notes or additional info" />
+ placeholder="Enter notes or additional info"/>
  
  </div>
  </div>
@@ -777,7 +777,7 @@ export default function ContactsPage() {
  disabled={loading}
  className="w-full mt-2">
  
- {loading ? 'Adding...' : 'Add Contact'}
+ {loading ?'Adding...':'Add Contact'}
  </Button>
  </form>
  </div>
@@ -786,54 +786,54 @@ export default function ContactsPage() {
  <div className="lg:col-span-7 bg-background/50 rounded-md border border-border p-6 h-full flex flex-col min-h-[600px]">
  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
  <TabsList className="mb-4 w-full justify-start h-11 bg-muted/20 p-1 border border-border/50">
- <TabsTrigger value="contacts" className="gap-2 px-4 data-[state=active]:bg-background">
- <Users className="w-4 h-4" />
+ <TabsTrigger value="contacts"className="gap-2 px-4 data-[state=active]:bg-background">
+ <Users className="w-4 h-4"/>
  Contacts
  </TabsTrigger>
- <TabsTrigger value="groups" className="gap-2 px-4 data-[state=active]:bg-background">
- <Users className="w-4 h-4" />
+ <TabsTrigger value="groups"className="gap-2 px-4 data-[state=active]:bg-background">
+ <Users className="w-4 h-4"/>
  Groups
  </TabsTrigger>
  </TabsList>
 
- <TabsContent value="contacts" className="flex-1 flex flex-col m-0 p-0 border-0 outline-none">
+ <TabsContent value="contacts"className="flex-1 flex flex-col m-0 p-0 border-0 outline-none">
  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
  <div className="flex flex-col gap-1">
  <h2 className="text-xl font-semibold">Your Audience ({filteredContacts.length})</h2>
  <div className="flex items-center gap-2">
- <div className={`w-2 h-2 rounded-full ${waStatus === 'open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'}`} />
+ <div className={`w-2 h-2 rounded-full ${waStatus ==='open'?'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]':'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'}`} />
  <span className="text-[10px] font-bold tracking-wider text-muted-foreground">
- WA Status: {waStatus === 'open' ? 'Connected' : 'Disconnected'}
+ WA Status: {waStatus ==='open'?'Connected':'Disconnected'}
  </span>
  </div>
  </div>
  
  <div className="flex items-center gap-2">
  <Button
- variant={waStatus === 'open' ? "outline" : "default"}
+ variant={waStatus ==='open'?"outline":"default"}
  size="sm"
- className={`gap-2 h-9 ${waStatus !== 'open' ? 'bg-primary/20 hover:bg-primary/30 text-primary border-primary/50' : ''}`}
+ className={`gap-2 h-9 ${waStatus !=='open'?'bg-primary/20 hover:bg-primary/30 text-primary border-primary/50':''}`}
  onClick={handleSync}
  disabled={loading}>
  
- <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
- <span className="hidden md:inline">{waStatus === 'open' ? 'Sync WA' : 'Connect to Sync'}</span>
+ <RefreshCw className={`w-4 h-4 ${loading ?'animate-spin':''}`} />
+ <span className="hidden md:inline">{waStatus ==='open'?'Sync WA':'Connect to Sync'}</span>
  </Button>
 
  <div className="flex items-center">
  <label className="cursor-pointer">
- <Button variant="outline" size="sm" className="gap-2 rounded-r-none border-r-0" asChild disabled={loading}>
+ <Button variant="outline"size="sm"className="gap-2 rounded-r-none border-r-0"asChild disabled={loading}>
  <a href={contact.vCardUrl} download>
- <Download className="w-4 h-4" /> vCard
+ <Download className="w-4 h-4"/> vCard
  </a>
  </Button>
- <Button variant="outline" size="sm" className="gap-2 rounded-r-none border-r-0" asChild disabled={loading}>
+ <Button variant="outline"size="sm"className="gap-2 rounded-r-none border-r-0"asChild disabled={loading}>
  <span>
- <Upload className="w-4 h-4" />
+ <Upload className="w-4 h-4"/>
  <span className="hidden md:inline">Import</span>
  </span>
  </Button>
- <input type="file" accept=".csv" className="hidden" onChange={handleImport} />
+ <input type="file"accept=".csv"className="hidden"onChange={handleImport} />
  </label>
  <Button
  variant="outline"
@@ -842,7 +842,7 @@ export default function ContactsPage() {
  onClick={downloadTemplate}
  title="Download CSV Template">
  
- <FileText className="w-4 h-4" />
+ <FileText className="w-4 h-4"/>
  </Button>
  </div>
  </div>
@@ -851,10 +851,10 @@ export default function ContactsPage() {
  {/* Search, Sort and Group Filter Bar */}
  <div className="flex flex-col md:flex-row gap-3 mb-6">
  <div className="relative flex-1">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
  <Input
  placeholder="Search contacts..."
- className="pl-9 h-10"
+ className="pl-9"
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)} />
  
@@ -863,9 +863,9 @@ export default function ContactsPage() {
  <div className="flex gap-2">
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="outline" className="gap-2">
- <Users className="w-4 h-4" />
- <span className="hidden sm:inline">Group: {selectedGroupId === 'all' ? 'All' : groups.find((g) => g.id === selectedGroupId)?.name}</span>
+ <Button variant="outline"className="gap-2">
+ <Users className="w-4 h-4"/>
+ <span className="hidden sm:inline">Group: {selectedGroupId ==='all'?'All': groups.find((g) => g.id === selectedGroupId)?.name}</span>
  </Button>
  </DropdownMenuTrigger>
  <DropdownMenuContent align="end">
@@ -881,8 +881,8 @@ export default function ContactsPage() {
 
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="outline" className="gap-2">
- <ArrowUpDown className="w-4 h-4" />
+ <Button variant="outline"className="gap-2">
+ <ArrowUpDown className="w-4 h-4"/>
  <span className="hidden sm:inline">Sort: {sortBy}</span>
  </Button>
  </DropdownMenuTrigger>
@@ -897,8 +897,8 @@ export default function ContactsPage() {
  {allTags.length > 0 &&
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="outline" className="gap-2">
- <Tag className="w-4 h-4" />
+ <Button variant="outline"className="gap-2">
+ <Tag className="w-4 h-4"/>
  <span className="hidden sm:inline">Tag: {filterTag}</span>
  </Button>
  </DropdownMenuTrigger>
@@ -924,7 +924,7 @@ export default function ContactsPage() {
  onCheckedChange={toggleSelectAll} />
  
  <span className="text-sm font-medium">
- {selectedContacts.length > 0 ? `${selectedContacts.length} selected` : 'Select All'}
+ {selectedContacts.length > 0 ? `${selectedContacts.length} selected` :'Select All'}
  </span>
  </div>
 
@@ -937,7 +937,7 @@ export default function ContactsPage() {
  onClick={handleBulkDelete}
  disabled={loading}>
  
- <Trash2 className="w-3.5 h-3.5" />
+ <Trash2 className="w-3.5 h-3.5"/>
  Delete
  </Button>
  <Button
@@ -947,7 +947,7 @@ export default function ContactsPage() {
  onClick={() => setTagModalOpen(true)}
  disabled={loading}>
  
- <Tag className="w-3.5 h-3.5" />
+ <Tag className="w-3.5 h-3.5"/>
  Tag
  </Button>
  <Button
@@ -957,7 +957,7 @@ export default function ContactsPage() {
  onClick={() => setIsAddingToGroupModalOpen(true)}
  disabled={loading}>
  
- <Users className="w-3.5 h-3.5" />
+ <Users className="w-3.5 h-3.5"/>
  Add to Group
  </Button>
  <Button
@@ -965,11 +965,11 @@ export default function ContactsPage() {
  size="sm"
  className="h-8 gap-1"
  onClick={() => {
- const csv = "Name,Phone,Email\n" + contacts.
+ const csv ="Name,Phone,Email\n"+ contacts.
  filter((c) => selectedContacts.includes(c.id)).
- map((c) => `${c.name},${c.phone},${c.email || ''}`).
+ map((c) => `${c.name},${c.phone},${c.email ||''}`).
  join('\n');
- const blob = new Blob([csv], { type: 'text/csv' });
+ const blob = new Blob([csv], { type:'text/csv'});
  const url = window.URL.createObjectURL(blob);
  const a = document.createElement('a');
  a.setAttribute('href', url);
@@ -977,7 +977,7 @@ export default function ContactsPage() {
  a.click();
  }}>
  
- <Download className="w-3.5 h-3.5" />
+ <Download className="w-3.5 h-3.5"/>
  Export
  </Button>
  </div>
@@ -987,29 +987,29 @@ export default function ContactsPage() {
  <div className="flex-1 overflow-y-auto pr-2 space-y-3">
  {loading && contacts.length === 0 ?
  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
- <RefreshCw className="w-8 h-8 animate-spin" />
+ <RefreshCw className="w-8 h-8 animate-spin"/>
  <p>Loading contacts...</p>
  </div> :
  filteredContacts.length === 0 ?
  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
- <Users className="w-12 h-12 opacity-20" />
- <p>{searchQuery ? 'No contacts match your search' : 'No contacts found'}</p>
+ <Users className="w-12 h-12 opacity-20"/>
+ <p>{searchQuery ?'No contacts match your search':'No contacts found'}</p>
  {searchQuery &&
- <Button variant="link" onClick={() => setSearchQuery('')}>Clear Search</Button>
+ <Button variant="link"onClick={() => setSearchQuery('')}>Clear Search</Button>
  }
  </div> :
 
  filteredContacts.map((contact) =>
  <div
  key={contact.id}
- className={`group relative flex items-center gap-4 p-4 rounded-md border transition-all duration-200 hover:shadow-md ${selectedContacts.includes(contact.id) ? 'border-primary/50 bg-primary/5 shadow-sm' : 'border-border/50 bg-card hover:border-border'}`}>
+ className={`group relative flex items-center gap-4 p-4 rounded-md border transition-all duration-200 hover:shadow-md ${selectedContacts.includes(contact.id) ?'border-primary/50 bg-primary/5 shadow-sm':'border-border/50 bg-card hover:border-border'}`}>
  
  <div className="flex items-center gap-3">
  <Checkbox
  checked={selectedContacts.includes(contact.id)}
  onCheckedChange={() => toggleSelectContact(contact.id)} />
  
- <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+ <div className="w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
  {contact.name[0].toUpperCase()}
  </div>
  </div>
@@ -1020,12 +1020,12 @@ export default function ContactsPage() {
  </div>
  <div className="flex flex-wrap gap-1 mt-2">
  {contact.tags && contact.tags.map((tag) =>
- <Badge key={tag} variant="secondary" className="text-[10px] py-0 px-1.5 h-4 bg-primary/10 text-primary border-primary/20">
+ <Badge key={tag} variant="secondary"className="text-[10px] py-0 px-1.5 h-4 bg-primary/10 text-primary border-primary/20">
  {tag}
  </Badge>
  )}
  {contact.groups && contact.groups.map((group) =>
- <Badge key={group.id} variant="outline" className="text-[10px] py-0 px-1.5 h-4 bg-blue-500/10 text-blue-400 border-blue-500/20">
+ <Badge key={group.id} variant="outline"className="text-[10px] py-0 px-1.5 h-4 bg-blue-500/10 text-blue-400 border-blue-500/20">
  {group.name}
  </Badge>
  )}
@@ -1033,12 +1033,12 @@ export default function ContactsPage() {
 
  <div className="flex flex-col gap-1">
  <div className="flex items-center gap-2 text-xs text-muted-foreground">
- <Phone className="w-3 h-3" />
+ <Phone className="w-3 h-3"/>
  <span>{contact.phone}</span>
  </div>
  {contact.email &&
  <div className="flex items-center gap-2 text-xs text-muted-foreground">
- <Mail className="w-3 h-3" />
+ <Mail className="w-3 h-3"/>
  <span className="truncate">{contact.email}</span>
  </div>
  }
@@ -1056,10 +1056,10 @@ export default function ContactsPage() {
  setSelectedContactForMessage(contact);
  setSendMessageModalOpen(true);
  }}
- disabled={waStatus !== 'open'}
- title={waStatus === 'open' ? "Send Test Message" : "WhatsApp Disconnected"}>
+ disabled={waStatus !=='open'}
+ title={waStatus ==='open'?"Send Test Message":"WhatsApp Disconnected"}>
  
- <Send className="w-3.5 h-3.5" />
+ <Send className="w-3.5 h-3.5"/>
  </Button>
  <Button
  variant="ghost"
@@ -1071,7 +1071,7 @@ export default function ContactsPage() {
  }}
  title="View Message History">
  
- <History className="w-3.5 h-3.5" />
+ <History className="w-3.5 h-3.5"/>
  </Button>
  <Button
  variant="ghost"
@@ -1082,7 +1082,7 @@ export default function ContactsPage() {
  startEditing(contact);
  }}>
  
- <Pencil className="w-3.5 h-3.5" />
+ <Pencil className="w-3.5 h-3.5"/>
  </Button>
  <Button
  variant="ghost"
@@ -1094,9 +1094,9 @@ export default function ContactsPage() {
  setDeleteModalOpen(true);
  }}>
  
- <Trash2 className="w-3.5 h-3.5" />
+ <Trash2 className="w-3.5 h-3.5"/>
  </Button>
- {selectedGroupId !== 'all' &&
+ {selectedGroupId !=='all'&&
  <Button
  variant="ghost"
  size="icon"
@@ -1107,7 +1107,7 @@ export default function ContactsPage() {
  }}
  title="Remove from this Group">
  
- <X className="w-3.5 h-3.5" />
+ <X className="w-3.5 h-3.5"/>
  </Button>
  }
  </div>
@@ -1121,11 +1121,11 @@ export default function ContactsPage() {
  </div>
  </TabsContent>
 
- <TabsContent value="groups" className="flex-1 flex flex-col m-0 p-0 border-0 outline-none">
+ <TabsContent value="groups"className="flex-1 flex flex-col m-0 p-0 border-0 outline-none">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold">Contact Groups ({groups.length})</h2>
- <Button size="sm" onClick={() => setIsGroupModalOpen(true)} className="gap-2">
- <Users className="w-4 h-4" />
+ <Button size="sm"onClick={() => setIsGroupModalOpen(true)} className="gap-2">
+ <Users className="w-4 h-4"/>
  <span>Manage Groups</span>
  </Button>
  </div>
@@ -1133,7 +1133,7 @@ export default function ContactsPage() {
  <div className="grid grid-cols-1 gap-4 overflow-y-auto pr-2">
  {groups.length === 0 ?
  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
- <Users className="w-12 h-12 opacity-20" />
+ <Users className="w-12 h-12 opacity-20"/>
  <p>No groups found. Create one to organize your contacts.</p>
  </div> :
 
@@ -1149,14 +1149,14 @@ export default function ContactsPage() {
  <div className="flex items-center justify-between mb-3">
  <div className="flex items-center gap-3">
  <div className="p-2 bg-blue-500/10 rounded-md">
- <Users className="w-5 h-5 text-blue-400" />
+ <Users className="w-5 h-5 text-blue-400"/>
  </div>
  <div>
  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{group.name}</h3>
- <p className="text-xs text-muted-foreground truncate max-w-[200px]">{group.description || 'No description'}</p>
+ <p className="text-xs text-muted-foreground truncate max-w-[200px]">{group.description ||'No description'}</p>
  </div>
  </div>
- <Badge variant="outline" className="bg-blue-500/5 text-blue-400 border-blue-500/20">
+ <Badge variant="outline"className="bg-blue-500/5 text-blue-400 border-blue-500/20">
  {group._count?.contacts || 0} contacts
  </Badge>
  </div>
@@ -1172,7 +1172,7 @@ export default function ContactsPage() {
  setActiveTab('contacts');
  }}>
  
- <Search className="w-3.5 h-3.5" />
+ <Search className="w-3.5 h-3.5"/>
  View Contacts
  </Button>
  <Button
@@ -1185,7 +1185,7 @@ export default function ContactsPage() {
  setIsMemberSelectorOpen(true);
  }}>
  
- <UserPlus className="w-3.5 h-3.5" />
+ <UserPlus className="w-3.5 h-3.5"/>
  Add Members
  </Button>
  <Button
@@ -1197,7 +1197,7 @@ export default function ContactsPage() {
  handleDeleteGroup(group.id);
  }}>
  
- <Trash2 className="w-3.5 h-3.5" />
+ <Trash2 className="w-3.5 h-3.5"/>
  Delete
  </Button>
  </div>
@@ -1253,7 +1253,7 @@ export default function ContactsPage() {
  value={editingContact.name}
  onChange={handleEditChange}
  required
- placeholder="Enter contact name" />
+ placeholder="Enter contact name"/>
  
  </div>
  <div>
@@ -1264,7 +1264,7 @@ export default function ContactsPage() {
  value={editingContact.phone}
  onChange={handleEditChange}
  required
- placeholder="Enter phone number" />
+ placeholder="Enter phone number"/>
  
  </div>
  <div>
@@ -1274,7 +1274,7 @@ export default function ContactsPage() {
  name="email"
  value={editingContact.email}
  onChange={handleEditChange}
- placeholder="Enter email address" />
+ placeholder="Enter email address"/>
  
  </div>
  <div>
@@ -1284,16 +1284,16 @@ export default function ContactsPage() {
  name="info"
  value={editingContact.info}
  onChange={handleEditChange}
- placeholder="Enter notes or additional info" />
+ placeholder="Enter notes or additional info"/>
  
  </div>
  </div>
  <DialogFooter className="mt-6">
- <Button variant="outline" type="button" onClick={() => setEditModalOpen(false)}>
+ <Button variant="outline"type="button"onClick={() => setEditModalOpen(false)}>
  Cancel
  </Button>
- <Button type="submit" disabled={loading}>
- {loading ? 'Updating...' : 'Update Contact'}
+ <Button type="submit"disabled={loading}>
+ {loading ?'Updating...':'Update Contact'}
  </Button>
  </DialogFooter>
  </form>
@@ -1314,11 +1314,11 @@ export default function ContactsPage() {
  placeholder="Customer, Lead, VIP..."
  value={tagInput}
  onChange={(e) => setTagInput(e.target.value)}
- onKeyDown={(e) => e.key === 'Enter' && handleBulkTag()} />
+ onKeyDown={(e) => e.key ==='Enter'&& handleBulkTag()} />
  
  </div>
  <DialogFooter>
- <Button variant="outline" onClick={() => setTagModalOpen(false)}>Cancel</Button>
+ <Button variant="outline"onClick={() => setTagModalOpen(false)}>Cancel</Button>
  <Button onClick={handleBulkTag} disabled={loading || !tagInput}>
  Add Tag
  </Button>
@@ -1331,7 +1331,7 @@ export default function ContactsPage() {
  <DialogContent className="max-w-md">
  <DialogHeader>
  <DialogTitle className="flex items-center gap-2">
- <Send className="w-5 h-5 text-emerald-500" />
+ <Send className="w-5 h-5 text-emerald-500"/>
  Send Test Message
  </DialogTitle>
  <DialogDescription>
@@ -1345,7 +1345,7 @@ export default function ContactsPage() {
  value={testMessageText}
  onChange={(e) => setTestMessageText(e.target.value)}
  placeholder="Type your message here..."
- className="min-h-[120px] bg-background" />
+ className="min-h-[120px] bg-background"/>
  
  <p className="text-[10px] text-muted-foreground">
  This message will be sent immediately via your connected WhatsApp account.
@@ -1353,7 +1353,7 @@ export default function ContactsPage() {
  </div>
  </div>
  <DialogFooter>
- <Button variant="outline" onClick={() => setSendMessageModalOpen(false)}>
+ <Button variant="outline"onClick={() => setSendMessageModalOpen(false)}>
  Cancel
  </Button>
  <Button
@@ -1362,11 +1362,11 @@ export default function ContactsPage() {
  className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
  
  {sendingMessage ?
- <RefreshCw className="w-4 h-4 animate-spin" /> :
+ <RefreshCw className="w-4 h-4 animate-spin"/> :
 
- <Send className="w-4 h-4" />
+ <Send className="w-4 h-4"/>
  }
- {sendingMessage ? 'Sending...' : 'Send Message'}
+ {sendingMessage ?'Sending...':'Send Message'}
  </Button>
  </DialogFooter>
  </DialogContent>
@@ -1374,14 +1374,14 @@ export default function ContactsPage() {
 
  {/* History Drawer */}
  <Sheet open={historyDrawerOpen} onOpenChange={setHistoryDrawerOpen}>
- <SheetContent side="right" className="w-full sm:max-w-md bg-background border-l border-border p-0 flex flex-col">
+ <SheetContent side="right"className="w-full sm:max-w-md bg-background border-l border-border p-0 flex flex-col">
  <SheetHeader className="p-6 border-b border-border bg-card/50">
  <SheetTitle className="flex items-center gap-2">
- <History className="w-5 h-5 text-primary" />
+ <History className="w-5 h-5 text-primary"/>
  Message History
  </SheetTitle>
  <SheetDescription>
- Recent WhatsApp interactions with {selectedContactForHistory?.name || 'Contact'}
+ Recent WhatsApp interactions with {selectedContactForHistory?.name ||'Contact'}
  </SheetDescription>
  </SheetHeader>
 
@@ -1389,12 +1389,12 @@ export default function ContactsPage() {
  <div className="p-6 h-full">
  {historyLoading ?
  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
- <RefreshCw className="w-8 h-8 animate-spin" />
+ <RefreshCw className="w-8 h-8 animate-spin"/>
  <p>Loading history...</p>
  </div> :
  historyMessages.length === 0 ?
  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
- <History className="w-12 h-12 opacity-20" />
+ <History className="w-12 h-12 opacity-20"/>
  <p>No messages found in history</p>
  </div> :
 
@@ -1402,12 +1402,12 @@ export default function ContactsPage() {
  {historyMessages.map((msg) =>
  <div
  key={msg.id}
- className={`flex flex-col ${msg.fromMe ? 'items-end' : 'items-start'}`}>
+ className={`flex flex-col ${msg.fromMe ?'items-end':'items-start'}`}>
  
  <div className={`max-w-[85%] px-4 py-2 rounded-md text-sm ${
  msg.fromMe ?
- 'bg-primary text-primary-foreground rounded-tr-none' :
- 'bg-secondary text-secondary-foreground rounded-tl-none'}`
+'bg-primary text-primary-foreground rounded-tr-none':
+'bg-secondary text-secondary-foreground rounded-tl-none'}`
  }>
  {msg.text}
  </div>
@@ -1429,9 +1429,9 @@ export default function ContactsPage() {
  setSelectedContactForMessage(selectedContactForHistory);
  setSendMessageModalOpen(true);
  }}
- disabled={waStatus !== 'open'}>
+ disabled={waStatus !=='open'}>
  
- <Send className="w-4 h-4" />
+ <Send className="w-4 h-4"/>
  Send Message
  </Button>
  </div>
@@ -1481,7 +1481,7 @@ export default function ContactsPage() {
  className="h-8 w-8 p-0 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
  onClick={() => handleDeleteGroup(group.id)}>
  
- <X className="w-4 h-4" />
+ <X className="w-4 h-4"/>
  </Button>
  </div>
  )}
@@ -1506,7 +1506,7 @@ export default function ContactsPage() {
  {groups.length === 0 ?
  <div className="text-center py-4">
  <p className="text-sm text-muted-foreground mb-4">You haven't created any groups yet.</p>
- <Button variant="outline" onClick={() => {
+ <Button variant="outline"onClick={() => {
  setIsAddingToGroupModalOpen(false);
  setIsGroupModalOpen(true);
  }}>
@@ -1526,7 +1526,7 @@ export default function ContactsPage() {
  
  <div className="flex items-center gap-3 w-full">
  <div className="bg-blue-500/10 p-2 rounded">
- <Users className="w-4 h-4 text-blue-400" />
+ <Users className="w-4 h-4 text-blue-400"/>
  </div>
  <div className="flex-1">
  <div className="text-sm font-medium">{group.name}</div>
@@ -1553,10 +1553,10 @@ export default function ContactsPage() {
  
  <div className="py-4 space-y-4">
  <div className="relative">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
  <Input
  placeholder="Search contacts..."
- className="pl-9 h-10"
+ className="pl-9"
  value={memberSearchQuery}
  onChange={(e) => setMemberSearchQuery(e.target.value)} />
  
@@ -1590,7 +1590,7 @@ export default function ContactsPage() {
  </div>
 
  <DialogFooter>
- <Button variant="outline" onClick={() => {
+ <Button variant="outline"onClick={() => {
  setIsMemberSelectorOpen(false);
  setSelectedMemberIds([]);
  }}>
@@ -1602,8 +1602,8 @@ export default function ContactsPage() {
  setLoading(true);
  try {
  const res = await fetch(`/api/wa/groups/${activeGroupId}/contacts`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ contactIds: selectedMemberIds })
  });
  if (res.ok) {
@@ -1611,7 +1611,7 @@ export default function ContactsPage() {
  await fetchGroups();
  setIsMemberSelectorOpen(false);
  setSelectedMemberIds([]);
- toast({ title: "Members Added", description: `Successfully added ${selectedMemberIds.length} contacts to the group.` });
+ toast({ title:"Members Added", description: `Successfully added ${selectedMemberIds.length} contacts to the group.` });
  }
  } catch (error) {
  console.error('Error adding members:', error);
@@ -1621,7 +1621,7 @@ export default function ContactsPage() {
  }}
  disabled={loading || selectedMemberIds.length === 0}>
  
- {loading ? 'Adding...' : `Add ${selectedMemberIds.length} Contacts`}
+ {loading ?'Adding...': `Add ${selectedMemberIds.length} Contacts`}
  </Button>
  </DialogFooter>
  </DialogContent>

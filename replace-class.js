@@ -10,10 +10,17 @@ const TARGET_DIR = path.join(__dirname, 'src', 'app', 'workspace');
 
 const [, , from, to] = process.argv;
 
-if (!from || !to) {
-  console.log('\x1b[33mUsage: node replace-class.js "string_a" "string_b"\x1b[0m');
-  console.log('Example: node replace-class.js "text-[10px]" "-"');
-  process.exit(1);
+const REPLACEMENTS = [];
+
+if (from && to) {
+  REPLACEMENTS.push({ from, to });
+} else {
+  // Default cleanup tasks if no arguments provided
+  REPLACEMENTS.push(
+    { from: 'rounded-lg', to: 'rounded-md' },
+    { from: 'text-[10px]', to: '' },
+    { from: 'h-10', to: '' }
+  );
 }
 
 function walk(dir) {
@@ -31,25 +38,51 @@ function walk(dir) {
     } else if (/\.(jsx|js|tsx|ts|css)$/.test(file)) {
       try {
         let content = fs.readFileSync(fullPath, 'utf8');
-        if (content.includes(from)) {
-          const newContent = content.split(from).join(to);
-          fs.writeFileSync(fullPath, newContent, 'utf8');
+        let originalContent = content;
+
+        REPLACEMENTS.forEach(({ from, to }) => {
+          if (content.includes(from)) {
+            if (to === '') {
+              // Handle removal: remove the class and extra spaces
+              // Match word boundary to avoid partial matches
+              const regex = new RegExp(`\\b${from.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}\\b`, 'g');
+              content = content.replace(regex, '');
+            } else {
+              content = content.split(from).join(to);
+            }
+          }
+        });
+
+        // Cleanup: remove multiple spaces and spaces next to quotes
+        content = content
+          .replace(/ {2,}/g, ' ')
+          .replace(/" /g, '"')
+          .replace(/ "/g, '"')
+          .replace(/' /g, "'")
+          .replace(/ '/g, "'")
+          .trim();
+
+        if (content !== originalContent) {
+          fs.writeFileSync(fullPath, content, 'utf8');
           console.log(`\x1b[32m✓ Updated:\x1b[0m ${path.relative(__dirname, fullPath)}`);
         }
       } catch (err) {
-        console.error(`\x1b[31m✗ Error reading ${fullPath}:\x1b[0m`, err.message);
+        console.error(`\x1b[31m✗ Error processing ${fullPath}:\x1b[0m`, err.message);
       }
     }
   });
 }
 
-console.log(`\n\x1b[36m🚀 Starting Global Replace\x1b[0m`);
+console.log(`\n\x1b[36m🚀 Starting Global UI Cleanup\x1b[0m`);
 console.log(`\x1b[90mTarget Folder:\x1b[0m ${TARGET_DIR}`);
-console.log(`\x1b[90mAction:\x1b[0m Replacing "${from}" with "${to}"\n`);
+REPLACEMENTS.forEach(({ from, to }) => {
+  console.log(`\x1b[90mAction:\x1b[0m ${to === '' ? 'Removing' : 'Replacing'} "${from}" ${to === '' ? '' : `with "${to}"`}`);
+});
+console.log('');
 
 if (fs.existsSync(TARGET_DIR)) {
   walk(TARGET_DIR);
-  console.log(`\n\x1b[36m✨ Replacement complete.\x1b[0m\n`);
+  console.log(`\n\x1b[36m✨ Cleanup complete.\x1b[0m\n`);
 } else {
   console.error(`\x1b[31mError:\x1b[0m Directory not found: ${TARGET_DIR}`);
 }

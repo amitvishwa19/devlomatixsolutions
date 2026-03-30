@@ -97,13 +97,13 @@ export default function TalentDatabasePage() {
                     <p className="text-sm font-bold text-muted-foreground opacity-60">Manage and discover candidates across all job positions.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-10 rounded-md px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
+                    <Button variant="outline" className="rounded-md px-6 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
                         <Download className="w-4 h-4 mr-2 opacity-50" />
                         Export Talent
                     </Button>
                     <Button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="h-10 rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
+                        className="rounded-md px-6  bg-primary shadow-lg shadow-primary/20"
                     >
                         <UserPlus className="w-4 h-4" />
                         Add Candidate
@@ -200,11 +200,11 @@ export default function TalentDatabasePage() {
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-9 w-9 border border-primary/20">
                                                     <AvatarFallback className="bg-primary/5 text-primary text-[10px]">
-                                                        {candidate.name.split(' ').map(n => n[0]).join('')}
+                                                        {candidate.name.split('').map(n => n[0]).join('')}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="text-sm ">{candidate.name}</p>
+                                                    <p className="text-sm">{candidate.name}</p>
                                                     <p className="text-[10px] text-muted-foreground font-bold truncate max-w-[150px] opacity-60">{candidate.email}</p>
                                                 </div>
                                             </div>
@@ -293,12 +293,12 @@ export default function TalentDatabasePage() {
                                         <div className="flex items-center gap-4">
                                             <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-lg">
                                                 <AvatarFallback className="bg-primary/5 text-primary text-lg">
-                                                    {candidate.name.split(' ').map(n => n[0]).join('')}
+                                                    {candidate.name.split('').map(n => n[0]).join('')}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <div>
                                                 <h3 className="text-lg group-hover:text-primary transition-colors">{candidate.name}</h3>
-                                                <p className="text-[10px] font-bold text-muted-foreground opacity-60 ">{candidate.role}</p>
+                                                <p className="text-[10px] font-bold text-muted-foreground opacity-60">{candidate.role}</p>
                                             </div>
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
@@ -331,19 +331,19 @@ export default function TalentDatabasePage() {
                                         <div className="mt-auto pt-4 flex items-center gap-2">
                                             <Button
                                                 variant="outline"
-                                                className="flex-1 h-10 rounded-md text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
+                                                className="flex-1 rounded-md text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
                                                 onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.id}`)}
                                             >
                                                 View Profile <ExternalLink size={12} className="ml-2 opacity-50" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-md opacity-40 hover:opacity-100">
+                                            <Button variant="ghost" size="icon" className="w-10 rounded-md opacity-40 hover:opacity-100">
                                                 <Mail size={16} />
                                             </Button>
                                             {candidate.resumeUrl && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 rounded-md opacity-40 hover:opacity-100 hover:text-emerald-500"
+                                                    className="w-10 rounded-md opacity-40 hover:opacity-100 hover:text-emerald-500"
                                                     onClick={() => window.open(candidate.resumeUrl, '_blank')}
                                                 >
                                                     <FileText size={16} />
@@ -351,7 +351,7 @@ export default function TalentDatabasePage() {
                                             )}
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-md opacity-40 hover:opacity-100">
+                                                    <Button variant="ghost" size="icon" className="w-10 rounded-md opacity-40 hover:opacity-100">
                                                         <MoreHorizontal size={16} />
                                                     </Button>
                                                 </DropdownMenuTrigger>

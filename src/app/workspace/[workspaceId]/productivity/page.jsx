@@ -1,7 +1,7 @@
-import React from 'react'
+import React from'react'
 
 export default function ProductivityPage() {
-    return (
-        <div>ProductivityPage</div>
-    )
+ return (
+ <div>ProductivityPage</div>
+ )
 }

@@ -1,11 +1,11 @@
-import React from 'react'
-import { useState, useEffect } from "react";
-import { Plus, Pencil, Loader, ShieldUser } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import React from'react'
+import { useState, useEffect } from"react";
+import { Plus, Pencil, Loader, ShieldUser } from"lucide-react";
+import { Button } from"@/components/ui/button";
+import { Input } from"@/components/ui/input";
+import { Label } from"@/components/ui/label";
+import { Textarea } from"@/components/ui/textarea";
+import { Checkbox } from"@/components/ui/checkbox";
 import {
  Sheet,
  SheetContent,
@@ -14,45 +14,45 @@ import {
  SheetHeader,
  SheetTitle,
  SheetTrigger,
-} from "@/components/ui/sheet";
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAction } from '@/hooks/use-action';
-import { upsertPermission } from '../../_action/upsert-permission';
-import { useSession } from 'next-auth/react';
-import { toast } from 'sonner';
+} from"@/components/ui/sheet";
+import { ScrollArea } from'@/components/ui/scroll-area';
+import { useAction } from'@/hooks/use-action';
+import { upsertPermission } from'../../_action/upsert-permission';
+import { useSession } from'next-auth/react';
+import { toast } from'sonner';
 
 const actionOptions = [
- { id: "view", label: "View", description: "Read-only access" },
- { id: "create", label: "Create", description: "Add new items" },
- { id: "edit", label: "Edit", description: "Modify existing items" },
- { id: "delete", label: "Delete", description: "Remove items" },
- { id: "manage", label: "Manage", description: "Full control" },
- { id: "export", label: "Export", description: "Export data" },
- { id: "import", label: "Import", description: "Import data" },
+ { id:"view", label:"View", description:"Read-only access"},
+ { id:"create", label:"Create", description:"Add new items"},
+ { id:"edit", label:"Edit", description:"Modify existing items"},
+ { id:"delete", label:"Delete", description:"Remove items"},
+ { id:"manage", label:"Manage", description:"Full control"},
+ { id:"export", label:"Export", description:"Export data"},
+ { id:"import", label:"Import", description:"Import data"},
 ];
 
 const colorOptions = [
- { id: "emerald", label: "Emerald", color: "#15803D" },
- { id: "blue", label: "Blue", color: "#2563EB" },
- { id: "purple", label: "Purple", color: "#9333EA" },
- { id: "amber", label: "Amber", color: "#F59E0B" },
- { id: "rose", label: "Rose", color: "#F43F5E" },
- { id: "cyan", label: "Cyan", color: "#06B6D4" },
- { id: "orange", label: "Orange", color: "#F97316" },
- { id: "teal", label: "Teal", color: "#14B8A6" },
+ { id:"emerald", label:"Emerald", color:"#15803D"},
+ { id:"blue", label:"Blue", color:"#2563EB"},
+ { id:"purple", label:"Purple", color:"#9333EA"},
+ { id:"amber", label:"Amber", color:"#F59E0B"},
+ { id:"rose", label:"Rose", color:"#F43F5E"},
+ { id:"cyan", label:"Cyan", color:"#06B6D4"},
+ { id:"orange", label:"Orange", color:"#F97316"},
+ { id:"teal", label:"Teal", color:"#14B8A6"},
 ];
 
 const formatCategoryName = (category) => {
  return category
  .split("_")
  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
- .join(" ");
+ .join("");
 };
 
 export default function PermissionEditor({
  isOpen,
  onClose,
- mode = "add", // "add" or "edit"
+ mode ="add", //"add"or"edit"
  category, // Pre-fill module name (required for both modes)
  editData, // Only pass for edit mode
  onSubmit,
@@ -84,7 +84,7 @@ export default function PermissionEditor({
  // Always pre-fill category/moduleName from prop
  setModuleName(category);
 
- if (mode === "edit" && editData?.permissions) {
+ if (mode ==="edit"&& editData?.permissions) {
  // EDIT: Populate from existing permissions
  const activeActions = [];
  Object.entries(editData.permissions).forEach(([actionId, perm]) => {
@@ -94,10 +94,10 @@ export default function PermissionEditor({
  });
  setSelectedActions(activeActions);
 
- setDescription(editData.displayName || "");
+ setDescription(editData.displayName ||"");
 
  // Extract color from permission
- const colorId = colorOptions.find(c => c.color === editData.permissions?.view?.color)?.id || "emerald";
+ const colorId = colorOptions.find(c => c.color === editData.permissions?.view?.color)?.id ||"emerald";
  setSelectedColor(colorId);
  } else {
  // ADD: Reset form (except category)
@@ -128,11 +128,11 @@ export default function PermissionEditor({
  onSuccess: (data) => {
  onSubmit?.(data.permissions);
  handleOpenClose();
- toast.success(mode === "edit" ? "Permission updated" : "Permission created", { id: 'permission-form' });
+ toast.success(mode ==="edit"?"Permission updated":"Permission created", { id:'permission-form'});
  },
  onError: (error) => {
  console.error(error);
- toast.error("Something went wrong", { id: 'permission-form' });
+ toast.error("Something went wrong", { id:'permission-form'});
  setLoading(false);
  }
  });
@@ -147,8 +147,8 @@ export default function PermissionEditor({
  return;
  }
 
- const categorySlug = moduleName.toLowerCase().replace(/\s+/g, "_");
- const colorValue = colorOptions.find(c => c.id === selectedColor)?.color || "#15803D";
+ const categorySlug = moduleName.toLowerCase().replace(/\s+/g,"_");
+ const colorValue = colorOptions.find(c => c.id === selectedColor)?.color ||"#15803D";
 
  const permissions = actionOptions.map((action) => ({
  title: `${action.label} ${formatCategoryName(categorySlug)}`,
@@ -160,7 +160,7 @@ export default function PermissionEditor({
  }));
 
  setLoading(true);
- toast.loading(mode === "edit" ? "Updating..." : "Creating...", { id: 'permission-form' });
+ toast.loading(mode ==="edit"?"Updating...":"Creating...", { id:'permission-form'});
  await execute({ userId: session?.user?.userId, formData: permissions });
  };
 
@@ -174,7 +174,7 @@ export default function PermissionEditor({
  };
 
  const isValid = moduleName.trim() && selectedActions.length > 0;
- const categorySlug = moduleName.toLowerCase().replace(/\s+/g, "_");
+ const categorySlug = moduleName.toLowerCase().replace(/\s+/g,"_");
 
  return (
  <Sheet open={isOpen} onOpenChange={handleOpenClose}>
@@ -184,18 +184,18 @@ export default function PermissionEditor({
  <SheetHeader>
  <div className="flex flex-row gap-2">
  <div className="p-2 rounded-md bg-gradient-to-br from-dashboard-gradient-start to-dashboard-gradient-end">
- {mode === "edit" ? (
- <Pencil className="w-5 h-5 text-primary" />
+ {mode ==="edit"? (
+ <Pencil className="w-5 h-5 text-primary"/>
  ) : (
- <Plus className="w-5 h-5 text-primary" />
+ <Plus className="w-5 h-5 text-primary"/>
  )}
  </div>
  <div>
- <SheetTitle>{mode === "edit" ? "Edit Permissions" : "Add Permissions"}</SheetTitle>
+ <SheetTitle>{mode ==="edit"?"Edit Permissions":"Add Permissions"}</SheetTitle>
  <SheetDescription className='text-xs'>
- {mode === "edit"
- ? `Configure actions for "${category}" module`
- : `Create permissions for "${category}" module`}
+ {mode ==="edit"
+ ? `Configure actions for"${category}"module`
+ : `Create permissions for"${category}"module`}
  </SheetDescription>
  </div>
  </div>
@@ -231,7 +231,7 @@ export default function PermissionEditor({
  onClick={() => setSelectedColor(color.id)}
  className={`
  w-8 h-8 rounded-sm transition-all duration-200
- ${selectedColor === color.id ? "ring-2 ring-primary scale-110" : "hover:scale-105"}
+ ${selectedColor === color.id ?"ring-2 ring-primary scale-110":"hover:scale-105"}
  `}
  style={{ backgroundColor: color.color }}
  title={color.label}
@@ -254,7 +254,7 @@ export default function PermissionEditor({
  onClick={handleSelectAll}
  className="text-xs h-7 px-2 hover:text-foreground"
  >
- {selectedActions.length === 7 ? "Deselect All" : "Select All"}
+ {selectedActions.length === 7 ?"Deselect All":"Select All"}
  </Button>
  </div>
  <div className="grid grid-cols-3 gap-2">
@@ -265,8 +265,8 @@ export default function PermissionEditor({
  className={`
  flex items-center gap-3 p-2 rounded-md border cursor-pointer transition-all
  ${selectedActions.includes(action.id)
- ? "border-primary bg-primary/10"
- : "border-border bg-secondary/30 hover:border-primary/50"
+ ?"border-primary bg-primary/10"
+ :"border-border bg-secondary/30 hover:border-primary/50"
  }`}
  >
  <Checkbox
@@ -295,7 +295,7 @@ export default function PermissionEditor({
  onChange={(e) => setDescription(e.target.value)}
  className="bg-secondary/50 resize-none"
  rows={3}
- placeholder={`Permissions for ${formatCategoryName(categorySlug || category || '')}`}
+ placeholder={`Permissions for ${formatCategoryName(categorySlug || category ||'')}`}
  />
  </div>
 
@@ -322,20 +322,20 @@ export default function PermissionEditor({
  </ScrollArea>
 
  <SheetFooter className="flex flex-row justify-end">
- <Button variant="outline" onClick={handleOpenClose} disabled={loading} >
+ <Button variant="outline"onClick={handleOpenClose} disabled={loading} >
  Cancel
  </Button>
  <Button onClick={handleSubmit} disabled={!isValid || loading} >
  {loading ? (
- <Loader className="w-4 h-4 mr-2 animate-spin" />
- ) : mode === "edit" ? (
+ <Loader className="w-4 h-4 mr-2 animate-spin"/>
+ ) : mode ==="edit"? (
  <>
- <Pencil className="w-4 h-4 mr-2" />
+ <Pencil className="w-4 h-4 mr-2"/>
  Update
  </>
  ) : (
  <>
- <Plus className="w-4 h-4 mr-2" />
+ <Plus className="w-4 h-4 mr-2"/>
  Create ({selectedActions.length})
  </>
  )}

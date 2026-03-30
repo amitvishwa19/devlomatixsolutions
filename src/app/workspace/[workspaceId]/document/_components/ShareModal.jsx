@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Loader2, Users, X, UserPlus, Globe } from 'lucide-react';
-import axios from '@/utils/axios';
-import { toast } from 'sonner';
+import { useState, useEffect } from'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from'@/components/ui/dialog';
+import { Button } from'@/components/ui/button';
+import { Input } from'@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from'@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from'@/components/ui/select';
+import { Search, Loader2, Users, X, UserPlus, Globe } from'lucide-react';
+import axios from'@/utils/axios';
+import { toast } from'sonner';
 
 export default function ShareModal({ isOpen, onOpenChange, document, workspaceId, onShareComplete }) {
  const [searchQuery, setSearchQuery] = useState('');
@@ -82,8 +82,8 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  <div className="p-6 pb-4">
  <DialogHeader className="mb-4">
  <DialogTitle className="text-xl font-bold flex items-center gap-2">
- <Users className="w-5 h-5 text-primary" />
- Share {document.isFolder ? 'Folder' : 'Document'}
+ <Users className="w-5 h-5 text-primary"/>
+ Share {document.isFolder ?'Folder':'Document'}
  </DialogTitle>
  <DialogDescription className="font-medium">
  Invite workspace members to collaborate on <span className="text-foreground font-bold">{document.name}</span>
@@ -93,15 +93,15 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  {/* Invite Section */}
  <div className="flex items-center gap-2 mt-2">
  <div className="relative flex-1">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
  <Input 
- placeholder="Search by name or email..." 
+ placeholder="Search by name or email..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  className="pl-9 h-11 bg-muted/40 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary/40 font-medium"
  />
  {isSearching && (
- <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+ <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground"/>
  )}
  </div>
  <Select value={role} onValueChange={setRole}>
@@ -109,8 +109,8 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  <SelectValue />
  </SelectTrigger>
  <SelectContent className="rounded-md shadow-xl border-border/40">
- <SelectItem value="VIEWER" className="font-semibold py-2">Viewer</SelectItem>
- <SelectItem value="EDITOR" className="font-semibold py-2">Editor</SelectItem>
+ <SelectItem value="VIEWER"className="font-semibold py-2">Viewer</SelectItem>
+ <SelectItem value="EDITOR"className="font-semibold py-2">Editor</SelectItem>
  </SelectContent>
  </Select>
  </div>
@@ -123,15 +123,15 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  <div className="flex items-center gap-3">
  <Avatar className="h-8 w-8">
  <AvatarImage src={user.avatar} />
- <AvatarFallback className="text-xs">{user.displayName?.charAt(0) || user.email?.charAt(0) || '?'}</AvatarFallback>
+ <AvatarFallback className="text-xs">{user.displayName?.charAt(0) || user.email?.charAt(0) ||'?'}</AvatarFallback>
  </Avatar>
  <div className="flex flex-col">
- <span className="text-sm font-bold leading-none">{user.displayName || 'Unknown User'}</span>
+ <span className="text-sm font-bold leading-none">{user.displayName ||'Unknown User'}</span>
  <span className="text-xs text-muted-foreground mt-1">{user.email}</span>
  </div>
  </div>
  <Button 
- size="sm" 
+ size="sm"
  onClick={() => handleShare(user.id)}
  disabled={isSubmitting}
  className="h-8 rounded-md font-bold text-xs"
@@ -154,10 +154,10 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  <div className="flex items-center gap-3">
  <Avatar className="h-9 w-9 border border-border/50">
  <AvatarImage src={document.user.avatar} />
- <AvatarFallback className="text-xs font-bold text-primary">{document.user.displayName?.charAt(0) || document.user.name?.charAt(0) || '?'}</AvatarFallback>
+ <AvatarFallback className="text-xs font-bold text-primary">{document.user.displayName?.charAt(0) || document.user.name?.charAt(0) ||'?'}</AvatarFallback>
  </Avatar>
  <div className="flex flex-col">
- <span className="text-sm font-bold leading-none">{document.user.displayName || document.user.name || 'Owner'} <span className="text-xs text-muted-foreground font-medium ml-1">(Owner)</span></span>
+ <span className="text-sm font-bold leading-none">{document.user.displayName || document.user.name ||'Owner'} <span className="text-xs text-muted-foreground font-medium ml-1">(Owner)</span></span>
  <span className="text-xs text-muted-foreground mt-1">{document.user.email}</span>
  </div>
  </div>
@@ -168,7 +168,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  {/* Shared Users */}
  {document.sharedWith?.length === 0 && !document.user && (
  <div className="text-sm text-muted-foreground py-2 flex items-center gap-2">
- <Globe className="w-4 h-4 text-muted-foreground/50" />
+ <Globe className="w-4 h-4 text-muted-foreground/50"/>
  No one else has access
  </div>
  )}
@@ -180,23 +180,23 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
  <div className="flex items-center gap-3">
  <Avatar className="h-9 w-9 border border-border/50">
  <AvatarImage src={access.user.avatar} />
- <AvatarFallback className="text-xs font-bold">{access.user.displayName?.charAt(0) || access.user.email?.charAt(0) || '?'}</AvatarFallback>
+ <AvatarFallback className="text-xs font-bold">{access.user.displayName?.charAt(0) || access.user.email?.charAt(0) ||'?'}</AvatarFallback>
  </Avatar>
  <div className="flex flex-col">
- <span className="text-sm font-bold leading-none">{access.user.displayName || 'User'}</span>
+ <span className="text-sm font-bold leading-none">{access.user.displayName ||'User'}</span>
  <span className="text-xs text-muted-foreground mt-1">{access.user.email}</span>
  </div>
  </div>
  <div className="flex items-center gap-2">
- <span className="text-xs font-bold text-foreground/70 ">{access.role}</span>
+ <span className="text-xs font-bold text-foreground/70">{access.role}</span>
  <Button 
- variant="ghost" 
- size="icon" 
+ variant="ghost"
+ size="icon"
  className="h-7 w-7 text-muted-foreground/40 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all rounded-md"
  onClick={() => handleRemove(access.userId)}
  disabled={isSubmitting}
  >
- <X className="w-4 h-4" />
+ <X className="w-4 h-4"/>
  </Button>
  </div>
  </div>

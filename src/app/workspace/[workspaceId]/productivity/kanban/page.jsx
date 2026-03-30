@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { DragDropContext } from '@hello-pangea/dnd';
+import React, { useState, useEffect } from'react';
+import { DragDropContext } from'@hello-pangea/dnd';
 
 import {
  Search,
@@ -10,23 +10,23 @@ import {
  LayoutGrid,
  ListFilter,
  Sparkles
-} from 'lucide-react';
+} from'lucide-react';
 import {
  Select,
  SelectContent,
  SelectItem,
  SelectTrigger,
  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { KanbanColumn } from '../_components/KanbanColumn';
-import { AddKanbanColumnModal } from '../_components/AddKanbanColumnModal';
-import { AddKanbanTaskModal } from '../_components/AddKanbanTaskModal';
-import { useModal } from "@/hooks/useModal";
-import { toast } from "sonner";
-import axios from "@/utils/axios";
+} from"@/components/ui/select";
+import { Input } from"@/components/ui/input";
+import { Button } from"@/components/ui/button";
+import { ScrollArea, ScrollBar } from"@/components/ui/scroll-area";
+import { KanbanColumn } from'../_components/KanbanColumn';
+import { AddKanbanColumnModal } from'../_components/AddKanbanColumnModal';
+import { AddKanbanTaskModal } from'../_components/AddKanbanTaskModal';
+import { useModal } from"@/hooks/useModal";
+import { toast } from"sonner";
+import axios from"@/utils/axios";
 
 
 export default function KanbanPage({ params }) {
@@ -126,13 +126,13 @@ export default function KanbanPage({ params }) {
  // Persist order change
  try {
  await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${draggableId}`, {
- method: 'PATCH',
+ method:'PATCH',
  body: JSON.stringify({
  order: destination.index,
  columnId: start.id
  })
  });
- // In a real app, you might need to update neighboring tasks' orders too
+ // In a real app, you might need to update neighboring tasks'orders too
  } catch (error) {
  console.error("Failed to update task order", error);
  setData(oldData);
@@ -169,7 +169,7 @@ export default function KanbanPage({ params }) {
  // Persist column and order change
  try {
  await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${draggableId}`, {
- method: 'PATCH',
+ method:'PATCH',
  body: JSON.stringify({
  columnId: finish.id,
  order: destination.index
@@ -206,7 +206,7 @@ export default function KanbanPage({ params }) {
  const onDeleteColumn = async (columnId) => {
  try {
  await fetch(`/api/workspace/${workspaceId}/productivity/kanban/columns/${columnId}`, {
- method: 'DELETE'
+ method:'DELETE'
  });
  setData(prev => {
  const newColumns = { ...prev.columns };
@@ -225,7 +225,7 @@ export default function KanbanPage({ params }) {
  const onDeleteTask = async (taskId) => {
  try {
  await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${taskId}`, {
- method: 'DELETE'
+ method:'DELETE'
  });
  setData(prev => {
  const newTasks = { ...prev.tasks };
@@ -284,10 +284,10 @@ export default function KanbanPage({ params }) {
  <div className="flex flex-wrap items-center justify-between gap-4 p-4">
  <div className="flex flex-wrap items-center gap-4 flex-1">
  <div className="relative w-full md:w-80">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"size={16} />
  <Input
  placeholder="Search tasks, articles, or platforms..."
- className="pl-10 bg-muted/20 border-border/50 focus:ring-primary/20 transition-all text-[12px] h-10 rounded-md"
+ className="pl-10 bg-muted/20 border-border/50 focus:ring-primary/20 transition-all text-[12px] rounded-md"
  value={searchTerm}
  onChange={(e) => setSearchTerm(e.target.value)}
  />
@@ -296,8 +296,8 @@ export default function KanbanPage({ params }) {
  <div className="flex items-center gap-2">
  {/* Type Filter */}
  <Select value={filterType} onValueChange={setFilterType}>
- <SelectTrigger className="w-[130px] h-10 text-[11px] font-bold border-border/50 bg-muted/20 rounded-md">
- <SelectValue placeholder="All Types" />
+ <SelectTrigger className="w-[130px] text-[11px] font-bold border-border/50 bg-muted/20 rounded-md">
+ <SelectValue placeholder="All Types"/>
  </SelectTrigger>
  <SelectContent className="rounded-md font-bold">
  <SelectItem value="all">All Types</SelectItem>
@@ -310,8 +310,8 @@ export default function KanbanPage({ params }) {
 
  {/* Priority Filter */}
  <Select value={filterPriority} onValueChange={setFilterPriority}>
- <SelectTrigger className="w-[130px] h-10 text-[11px] font-bold border-border/50 bg-muted/20 rounded-md">
- <SelectValue placeholder="All Priorities" />
+ <SelectTrigger className="w-[130px] text-[11px] font-bold border-border/50 bg-muted/20 rounded-md">
+ <SelectValue placeholder="All Priorities"/>
  </SelectTrigger>
  <SelectContent className="rounded-md font-bold">
  <SelectItem value="all">All Priorities</SelectItem>
@@ -322,16 +322,16 @@ export default function KanbanPage({ params }) {
  </SelectContent>
  </Select>
 
- {(searchTerm || filterType !== 'all' || filterPriority !== 'all') && (
+ {(searchTerm || filterType !=='all'|| filterPriority !=='all') && (
  <Button 
- variant="ghost" 
- size="sm" 
+ variant="ghost"
+ size="sm"
  onClick={() => {
  setSearchTerm('');
  setFilterType('all');
  setFilterPriority('all');
  }}
- className="h-10 text-[10px] text-muted-foreground hover:text-foreground"
+ className="text-[10px] text-muted-foreground hover:text-foreground"
  >
  Reset
  </Button>
@@ -341,19 +341,19 @@ export default function KanbanPage({ params }) {
 
  <div className="flex items-center gap-3">
  <Button 
- variant="outline" 
- size="sm" 
- className="h-10 px-4 text-[11px] font-bold border-primary/20 text-primary hover:bg-primary/5 transition-all rounded-md"
+ variant="outline"
+ size="sm"
+ className="px-4 text-[11px] font-bold border-primary/20 text-primary hover:bg-primary/5 transition-all rounded-md"
  onClick={addColumn}
  >
- <Plus size={16} className="mr-2" /> Add Column
+ <Plus size={16} className="mr-2"/> Add Column
  </Button>
  <Button 
- size="sm" 
- className="h-10 px-4 text-[11px] font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all rounded-md"
+ size="sm"
+ className="px-4 text-[11px] font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all rounded-md"
  onClick={() => createTask()}
  >
- <Plus size={16} className="mr-2" /> Create Task
+ <Plus size={16} className="mr-2"/> Create Task
  </Button>
  </div>
  </div>
@@ -365,7 +365,7 @@ export default function KanbanPage({ params }) {
  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
  </div>
  ) : (
- <div className=" h-full">
+ <div className="h-full">
  <DragDropContext onDragEnd={onDragEnd}>
  <div className="flex gap-6 h-full min-w-max pb-4">
  {data.columnOrder.map((columnId) => {
@@ -375,8 +375,8 @@ export default function KanbanPage({ params }) {
  .filter(task => {
  const matchesSearch = task?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
  task?.type?.toLowerCase().includes(searchTerm.toLowerCase());
- const matchesType = filterType === 'all' || task?.type === filterType;
- const matchesPriority = filterPriority === 'all' || task?.priority === filterPriority;
+ const matchesType = filterType ==='all'|| task?.type === filterType;
+ const matchesPriority = filterPriority ==='all'|| task?.priority === filterPriority;
  
  return matchesSearch && matchesType && matchesPriority;
  });
@@ -410,7 +410,7 @@ export default function KanbanPage({ params }) {
  </DragDropContext>
  </div>
  )}
- <ScrollBar orientation="horizontal" className="bg-muted/50" />
+ <ScrollBar orientation="horizontal"className="bg-muted/50"/>
  </ScrollArea>
  </div>
  );

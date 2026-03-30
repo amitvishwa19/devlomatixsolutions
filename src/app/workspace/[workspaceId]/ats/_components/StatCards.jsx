@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from'framer-motion';
 import { 
  Users, 
  Briefcase, 
@@ -8,15 +8,15 @@ import {
  TrendingUp,
  Clock,
  UserPlus
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+} from'lucide-react';
+import { Card, CardContent } from'@/components/ui/card';
 
 export const StatCards = ({ stats = [] }) => {
  const defaultStats = [
- { label: "Total Applicants", value: "0", change: "...", icon: UserPlus, color: "text-blue-500", bg: "bg-blue-500/10" },
- { label: "Active Openings", value: "0", change: "...", icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
- { label: "Interviews This Week", value: "0", change: "...", icon: Calendar, color: "text-amber-500", bg: "bg-amber-500/10" },
- { label: "Avg. Time to Hire", value: "0", change: "...", icon: Clock, color: "text-emerald-500", bg: "bg-emerald-500/10" }
+ { label:"Total Applicants", value:"0", change:"...", icon: UserPlus, color:"text-blue-500", bg:"bg-blue-500/10"},
+ { label:"Active Openings", value:"0", change:"...", icon: Briefcase, color:"text-primary", bg:"bg-primary/10"},
+ { label:"Interviews This Week", value:"0", change:"...", icon: Calendar, color:"text-amber-500", bg:"bg-amber-500/10"},
+ { label:"Avg. Time to Hire", value:"0", change:"...", icon: Clock, color:"text-emerald-500", bg:"bg-emerald-500/10"}
  ];
 
  const displayStats = stats.length > 0 ? stats : defaultStats;
@@ -32,7 +32,7 @@ export const StatCards = ({ stats = [] }) => {
  return (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
  {displayStats.map((stat, i) => {
- const Icon = typeof stat.icon === 'string' ? iconMap[stat.icon] : stat.icon;
+ const Icon = typeof stat.icon ==='string'? iconMap[stat.icon] : stat.icon;
  return (
  <motion.div
  key={i}

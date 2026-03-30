@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Droppable } from '@hello-pangea/dnd';
-import { Plus, MoreVertical } from 'lucide-react';
-import { KanbanCard } from './KanbanCard';
-import { cn } from "@/lib/utils";
+import React from'react';
+import { Droppable } from'@hello-pangea/dnd';
+import { Plus, MoreVertical } from'lucide-react';
+import { KanbanCard } from'./KanbanCard';
+import { cn } from"@/lib/utils";
 
 export const KanbanColumn = ({ column, tasks, onCreateTask, onDeleteColumn, onDeleteTask, onUpdateTask }) => {
  return (
@@ -31,7 +31,7 @@ export const KanbanColumn = ({ column, tasks, onCreateTask, onDeleteColumn, onDe
  <button 
  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
  onClick={() => {
- if (confirm(`Delete column "${column.title}" and all its tasks?`)) {
+ if (confirm(`Delete column"${column.title}"and all its tasks?`)) {
  onDeleteColumn(column.id);
  }
  }}
@@ -48,8 +48,8 @@ export const KanbanColumn = ({ column, tasks, onCreateTask, onDeleteColumn, onDe
  ref={provided.innerRef}
  {...provided.droppableProps}
  className={cn(
- "flex-1 p-3 overflow-y-auto min-h-[150px] transition-colors duration-200 scrollbar-thin scrollbar-thumb-muted-foreground/10 scrollbar-track-transparent",
- snapshot.isDraggingOver && "bg-primary/5"
+"flex-1 p-3 overflow-y-auto min-h-[150px] transition-colors duration-200 scrollbar-thin scrollbar-thumb-muted-foreground/10 scrollbar-track-transparent",
+ snapshot.isDraggingOver &&"bg-primary/5"
  )}
  >
  {tasks.map((task, index) => (
@@ -72,7 +72,7 @@ export const KanbanColumn = ({ column, tasks, onCreateTask, onDeleteColumn, onDe
  className="w-full py-2 flex items-center justify-center gap-2 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors group"
  onClick={onCreateTask}
  >
- <Plus size={12} className="group-hover:scale-110 transition-transform" /> 
+ <Plus size={12} className="group-hover:scale-110 transition-transform"/> 
  <span>Add New Item</span>
  </button>
  </div>

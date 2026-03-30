@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from'react';
 import { 
  X, 
  User, 
@@ -10,29 +10,29 @@ import {
  Type,
  Sparkles,
  Briefcase
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from'lucide-react';
+import { Button } from'@/components/ui/button';
+import { Input } from'@/components/ui/input';
+import { Textarea } from'@/components/ui/textarea';
 import {
  Dialog,
  DialogContent,
  DialogHeader,
  DialogTitle,
  DialogFooter,
-} from '@/components/ui/dialog';
-import { toast } from 'sonner';
-import axios from 'axios';
+} from'@/components/ui/dialog';
+import { toast } from'sonner';
+import axios from'axios';
 
 export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [formData, setFormData] = useState({
- name: '',
- email: '',
- phone: '',
- location: '',
- summary: '',
- skills: ''
+ name:'',
+ email:'',
+ phone:'',
+ location:'',
+ summary:'',
+ skills:''
  });
 
  const handleSubmit = async (e) => {
@@ -53,12 +53,12 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  onSuccess?.();
  onClose();
  setFormData({
- name: '',
- email: '',
- phone: '',
- location: '',
- summary: '',
- skills: ''
+ name:'',
+ email:'',
+ phone:'',
+ location:'',
+ summary:'',
+ skills:''
  });
  } catch (error) {
  console.error("Failed to add candidate:", error);
@@ -73,7 +73,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <DialogContent className="sm:max-w-[500px] rounded-md border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl p-0 overflow-hidden">
  <DialogHeader className="p-8 pb-4">
  <DialogTitle className="text-2xl flex items-center gap-2">
- <User className="text-primary w-6 h-6" />
+ <User className="text-primary w-6 h-6"/>
  Add New Candidate
  </DialogTitle>
  </DialogHeader>
@@ -84,7 +84,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Full Name</label>
  <Input 
- placeholder="John Doe" 
+ placeholder="John Doe"
  className="bg-muted/30 border-none h-12 rounded-md text-sm font-bold shadow-inner"
  value={formData.name}
  onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -94,7 +94,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Email Address</label>
  <Input 
  type="email"
- placeholder="john@example.com" 
+ placeholder="john@example.com"
  className="bg-muted/30 border-none h-12 rounded-md text-sm font-bold shadow-inner"
  value={formData.email}
  onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -106,7 +106,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Phone Number</label>
  <Input 
- placeholder="+91 99999 99999" 
+ placeholder="+91 99999 99999"
  className="bg-muted/30 border-none h-12 rounded-md text-sm font-bold shadow-inner"
  value={formData.phone}
  onChange={(e) => setFormData({...formData, phone: e.target.value})}
@@ -115,7 +115,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Location</label>
  <Input 
- placeholder="Delhi, Remote" 
+ placeholder="Delhi, Remote"
  className="bg-muted/30 border-none h-12 rounded-md text-sm font-bold shadow-inner"
  value={formData.location}
  onChange={(e) => setFormData({...formData, location: e.target.value})}
@@ -126,7 +126,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Skills (Comma separated)</label>
  <Input 
- placeholder="React, Node.js, Next.js" 
+ placeholder="React, Node.js, Next.js"
  className="bg-muted/30 border-none h-12 rounded-md text-sm font-bold shadow-inner"
  value={formData.skills}
  onChange={(e) => setFormData({...formData, skills: e.target.value})}
@@ -136,7 +136,7 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  <div className="space-y-2">
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Professional Summary</label>
  <Textarea 
- placeholder="Short overview of candidate's profile..." 
+ placeholder="Short overview of candidate's profile..."
  className="bg-muted/30 border-none rounded-md text-sm font-bold shadow-inner min-h-[100px] resize-none"
  value={formData.summary}
  onChange={(e) => setFormData({...formData, summary: e.target.value})}
@@ -145,15 +145,15 @@ export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
  </div>
 
  <DialogFooter className="p-0 sm:justify-end gap-3">
- <Button type="button" variant="ghost" onClick={onClose} className="rounded-md font-bold">
+ <Button type="button"variant="ghost"onClick={onClose} className="rounded-md font-bold">
  Cancel
  </Button>
  <Button 
- type="submit" 
+ type="submit"
  disabled={isSubmitting}
  className="bg-primary hover:bg-primary/90 rounded-md tracking-[0.2em] text-[10px] px-8 py-6 h-auto shadow-lg shadow-primary/20"
  >
- {isSubmitting ? "Adding..." : "Add Candidate"}
+ {isSubmitting ?"Adding...":"Add Candidate"}
  </Button>
  </DialogFooter>
  </form>

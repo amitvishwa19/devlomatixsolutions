@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axios from "@/utils/axios";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useModal } from "@/hooks/useModal";
-import { Copy, Check, Link as LinkIcon, Mail, RefreshCw, Send, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from"react";
+import axios from"@/utils/axios";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from"@/components/ui/dialog";
+import { Button } from"@/components/ui/button";
+import { Input } from"@/components/ui/input";
+import { Label } from"@/components/ui/label";
+import { useModal } from"@/hooks/useModal";
+import { Copy, Check, Link as LinkIcon, Mail, RefreshCw, Send, Loader2 } from"lucide-react";
+import { toast } from"sonner";
 
 export const InviteModal = () => {
  const { isOpen, onClose, type, data } = useModal();
- const isModalOpen = isOpen && type === "invite";
+ const isModalOpen = isOpen && type ==="invite";
  const workspaceId = data?.workspaceId;
 
  const [inviteCode, setInviteCode] = useState("");
@@ -81,7 +81,7 @@ export const InviteModal = () => {
  }
  };
 
- const inviteUrl = inviteCode ? `${window.location.origin}/invite/${inviteCode}` : "";
+ const inviteUrl = inviteCode ? `${window.location.origin}/invite/${inviteCode}` :"";
 
  return (
  <Dialog open={isModalOpen} onOpenChange={onClose}>
@@ -89,7 +89,7 @@ export const InviteModal = () => {
  <div className="p-8 pb-4">
  <DialogHeader>
  <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
- <LinkIcon className="h-6 w-6 text-primary" />
+ <LinkIcon className="h-6 w-6 text-primary"/>
  Invite Members
  </DialogTitle>
  <DialogDescription className="text-[10px] font-bold text-muted-foreground opacity-70">
@@ -106,27 +106,27 @@ export const InviteModal = () => {
  <Input
  readOnly
  disabled={isLoadingCode}
- value={isLoadingCode ? "GENERATING..." : inviteUrl}
+ value={isLoadingCode ?"GENERATING...": inviteUrl}
  className="bg-muted/30 border-none rounded-md h-12 text-[10px] font-bold text-foreground shadow-inner focus-visible:ring-0 truncate"
  />
  </div>
  <Button 
- size="icon" 
+ size="icon"
  onClick={handleCopy} 
  disabled={!inviteCode || isLoadingCode}
  className="shrink-0 rounded-md bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-12 w-12"
  >
- {isCopied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+ {isCopied ? <Check className="h-5 w-5"/> : <Copy className="h-5 w-5"/>}
  </Button>
  </div>
  <Button 
- variant="link" 
- size="sm" 
- className="text-[9px] text-muted-foreground hover:text-primary px-0 h-auto font-bold "
+ variant="link"
+ size="sm"
+ className="text-[9px] text-muted-foreground hover:text-primary px-0 h-auto font-bold"
  onClick={handleGenerateNewLink}
  disabled={isLoadingCode}
  >
- {isLoadingCode ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+ {isLoadingCode ? <Loader2 className="w-3 h-3 mr-1 animate-spin"/> : <RefreshCw className="w-3 h-3 mr-1"/>}
  Generate new link
  </Button>
  </div>
@@ -136,7 +136,7 @@ export const InviteModal = () => {
  <Label className="text-[10px] font-bold text-muted-foreground ml-1">Send Email Invitation</Label>
  <div className="flex space-x-2">
  <div className="relative flex-1">
- <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+ <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
  <Input
  placeholder="colleague@company.com"
  type="email"
@@ -150,7 +150,7 @@ export const InviteModal = () => {
  onClick={handleSendEmail}
  className="rounded-md shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 h-12 px-6 font-bold text-[10px]"
  >
- {isSending ? <Loader2 className="h-4 w-4 animate-spin font-bold" /> : <Send className="h-4 w-4 mr-2" />}
+ {isSending ? <Loader2 className="h-4 w-4 animate-spin font-bold"/> : <Send className="h-4 w-4 mr-2"/>}
  Send
  </Button>
  </div>

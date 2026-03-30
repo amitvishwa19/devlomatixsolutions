@@ -1,43 +1,43 @@
 'use server'
-import { z } from "zod";
-import { createSafeAction } from "@/utils/CreateSafeAction";
-import { db } from "@/lib/db";
-import { v4 as uuidv4 } from 'uuid'
-import { ROLE } from "@prisma/client";
-import { slug } from "@/utils/functions";
+import { z } from"zod";
+import { createSafeAction } from"@/utils/CreateSafeAction";
+import { db } from"@/lib/db";
+import { v4 as uuidv4 } from'uuid'
+import { ROLE } from"@prisma/client";
+import { slug } from"@/utils/functions";
 
 const DeleteInventory = z.object({
-    inventoryId: z.string()
+ inventoryId: z.string()
 });
 
 const handler = async (data) => {
 
 
 
-    const { inventoryId } = data
-    let inventory = {}
+ const { inventoryId } = data
+ let inventory = {}
 
 
 
 
-    try {
+ try {
 
-        inventory = await db.inventory.delete({
-            where: {
-                id: inventoryId
-            }
-        })
+ inventory = await db.inventory.delete({
+ where: {
+ id: inventoryId
+ }
+ })
 
 
-    } catch (error) {
-        console.log(error)
-        return {
-            message: "Oops!, something went wrong", error
-        }
-    }
+ } catch (error) {
+ console.log(error)
+ return {
+ message:"Oops!, something went wrong", error
+ }
+ }
 
-    //revalidatePath(`/org/${orgId}`)
-    return { data: { inventory } };
+ //revalidatePath(`/org/${orgId}`)
+ return { data: { inventory } };
 
 }
 

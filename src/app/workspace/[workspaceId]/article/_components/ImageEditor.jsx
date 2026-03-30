@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import { useState, useRef, useEffect } from'react';
+import { Button } from"@/components/ui/button";
 import { 
  X, 
  Check, 
@@ -10,8 +10,8 @@ import {
  Image as ImageIcon,
  Sliders,
  Maximize
-} from "lucide-react";
-import { Slider } from "@/components/ui/slider";
+} from"lucide-react";
+import { Slider } from"@/components/ui/slider";
 
 export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  const canvasRef = useRef(null);
@@ -27,7 +27,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
 
  useEffect(() => {
  const img = new Image();
- img.crossOrigin = "anonymous";
+ img.crossOrigin ="anonymous";
  img.src = imageUrl;
  img.onload = () => {
  setImage(img);
@@ -81,7 +81,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
 
  finalCanvas.toBlob((blob) => {
  onSave(blob);
- }, 'image/webp', 0.9);
+ },'image/webp', 0.9);
  };
 
  return (
@@ -89,14 +89,14 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/10">
  <div className="flex items-center gap-3">
  <div className="p-2 bg-primary/10 rounded-md">
- <Sliders size={18} className="text-primary" />
+ <Sliders size={18} className="text-primary"/>
  </div>
  <div>
  <h3 className="text-sm text-foreground">Image Refinement</h3>
  <p className="text-[10px] font-bold text-muted-foreground opacity-60">Adjust & Crop Visual Assets</p>
  </div>
  </div>
- <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full">
+ <Button variant="ghost"size="icon"onClick={onCancel} className="rounded-full">
  <X size={18} />
  </Button>
  </div>
@@ -120,10 +120,10 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  height: `${crop.height}%`
  }}
  >
- <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary rounded-full" />
- <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full" />
- <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary rounded-full" />
- <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full" />
+ <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary rounded-full"/>
+ <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full"/>
+ <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary rounded-full"/>
+ <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full"/>
  </div>
  )}
  </div>
@@ -135,19 +135,19 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  <label className="text-[10px] text-muted-foreground opacity-60">Tools</label>
  <div className="grid grid-cols-2 gap-2">
  <Button 
- variant={isCropping ? "default" : "outline"} 
+ variant={isCropping ?"default":"outline"} 
  onClick={() => setIsCropping(!isCropping)}
- className="h-10 text-[10px] font-bold gap-2"
+ className="text-[10px] font-bold gap-2"
  >
- <CropIcon size={14} /> {isCropping ? "Cancel Crop" : "Crop"}
+ <CropIcon size={14} /> {isCropping ?"Cancel Crop":"Crop"}
  </Button>
  <Button 
- variant="outline" 
+ variant="outline"
  onClick={() => {
  setFilters({ brightness: 100, contrast: 100, saturate: 100, grayscale: 0 });
  drawCanvas(image, { brightness: 100, contrast: 100, saturate: 100, grayscale: 0 });
  }}
- className="h-10 text-[10px] font-bold gap-2"
+ className="text-[10px] font-bold gap-2"
  >
  <RotateCcw size={14} /> Reset
  </Button>
@@ -219,9 +219,9 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  </div>
 
  <div className="px-8 py-6 border-t bg-muted/10 flex items-center justify-end gap-3">
- <Button variant="ghost" onClick={onCancel} className="text-[10px] px-8">Discard</Button>
+ <Button variant="ghost"onClick={onCancel} className="text-[10px] px-8">Discard</Button>
  <Button onClick={handleSave} className="bg-primary text-primary-foreground text-[10px] px-10 shadow-lg shadow-primary/20">
- <Check size={14} className="mr-2" /> Save Changes
+ <Check size={14} className="mr-2"/> Save Changes
  </Button>
  </div>
  </div>

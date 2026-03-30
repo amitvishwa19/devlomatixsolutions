@@ -1,9 +1,9 @@
 'use client'
-import React, { useState, useEffect, useMemo } from 'react'
-import { FileText, Users, HardDrive, TrendingUp, Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import axios from "@/utils/axios";
-import { format } from "date-fns";
+import React, { useState, useEffect, useMemo } from'react'
+import { FileText, Users, HardDrive, TrendingUp, Loader2 } from"lucide-react";
+import { Card, CardContent } from"@/components/ui/card";
+import axios from"@/utils/axios";
+import { format } from"date-fns";
 
 export default function DocumentStats({ workspaceId, userId }) {
  const [documents, setDocuments] = useState([]);
@@ -27,10 +27,10 @@ export default function DocumentStats({ workspaceId, userId }) {
 
  const stats = useMemo(() => {
  if (documents.length === 0) return [
- { label: "Total Documents", value: "0", change: "+0%", icon: FileText, color: "text-primary", bg: "bg-blue-50" },
- { label: "Active Users", value: "1", change: "+0%", icon: Users, color: "text-blue-600", bg: "bg-indigo-50" },
- { label: "Storage Used", value: "0 MB", change: "0%", icon: HardDrive, color: "text-amber-600", bg: "bg-amber-50" },
- { label: "This Month", value: "0", change: "+0%", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
+ { label:"Total Documents", value:"0", change:"+0%", icon: FileText, color:"text-primary", bg:"bg-blue-50"},
+ { label:"Active Users", value:"1", change:"+0%", icon: Users, color:"text-blue-600", bg:"bg-indigo-50"},
+ { label:"Storage Used", value:"0 MB", change:"0%", icon: HardDrive, color:"text-amber-600", bg:"bg-amber-50"},
+ { label:"This Month", value:"0", change:"+0%", icon: TrendingUp, color:"text-emerald-600", bg:"bg-emerald-50"},
  ];
 
  const totalDocs = documents.length;
@@ -48,36 +48,36 @@ export default function DocumentStats({ workspaceId, userId }) {
 
  return [
  {
- label: "Total Documents",
+ label:"Total Documents",
  value: totalDocs.toLocaleString(),
  change: `+${((thisMonthDocs / totalDocs) * 100).toFixed(0)}%`,
  icon: FileText,
- color: "text-primary",
- bg: "bg-blue-50"
+ color:"text-primary",
+ bg:"bg-blue-50"
  },
  {
- label: "Active Users",
+ label:"Active Users",
  value: uniqueUsers.toLocaleString(),
- change: "+12%", // Mocked growth
+ change:"+12%", // Mocked growth
  icon: Users,
- color: "text-blue-600",
- bg: "bg-indigo-50"
+ color:"text-blue-600",
+ bg:"bg-indigo-50"
  },
  {
- label: "Storage Used",
- value: sizeInMb > 1024 ? (sizeInMb / 1024).toFixed(1) + " GB" : sizeInMb + " MB",
+ label:"Storage Used",
+ value: sizeInMb > 1024 ? (sizeInMb / 1024).toFixed(1) +"GB": sizeInMb +"MB",
  change: `${storagePercent}%`,
  icon: HardDrive,
- color: "text-amber-600",
- bg: "bg-amber-50"
+ color:"text-amber-600",
+ bg:"bg-amber-50"
  },
  {
- label: "This Month",
+ label:"This Month",
  value: thisMonthDocs.toLocaleString(),
- change: "+8.1%",
+ change:"+8.1%",
  icon: TrendingUp,
- color: "text-emerald-600",
- bg: "bg-emerald-50"
+ color:"text-emerald-600",
+ bg:"bg-emerald-50"
  },
  ];
  }, [documents]);
@@ -87,7 +87,7 @@ export default function DocumentStats({ workspaceId, userId }) {
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
  {[1, 2, 3, 4].map((i) => (
  <Card key={i} className="h-28 border-none bg-background shadow-sm flex items-center justify-center">
- <Loader2 className="h-6 w-6 text-primary/20 animate-spin" />
+ <Loader2 className="h-6 w-6 text-primary/20 animate-spin"/>
  </Card>
  ))}
  </div>
@@ -106,7 +106,7 @@ export default function DocumentStats({ workspaceId, userId }) {
  <div className="flex items-start justify-between">
  <div>
  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
- <h3 className="text-2xl font-bold mt-1 ">{stat.value}</h3>
+ <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
  <div className="flex items-center gap-2 mt-1">
  <span className={`text-xs font-medium ${stat.color}`}>{stat.change}</span>
  <span className="text-[10px] text-muted-foreground opacity-60">from last month</span>

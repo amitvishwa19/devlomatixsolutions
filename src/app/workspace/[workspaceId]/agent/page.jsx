@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, use, useCallback, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect, use, useCallback, useRef } from'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from'@/components/ui/card';
+import { Button } from'@/components/ui/button';
+import { Badge } from'@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from'@/components/ui/tabs';
+import { Progress } from'@/components/ui/progress';
+import { Input } from'@/components/ui/input';
 import { 
  Cpu, 
  Zap, 
@@ -43,16 +43,16 @@ import {
  PlusCircle,
  Database,
  Cpu as CpuIcon
-} from 'lucide-react';
-import { toast } from 'sonner';
-import axios from '@/utils/axios';
-import Link from 'next/link';
+} from'lucide-react';
+import { toast } from'sonner';
+import axios from'@/utils/axios';
+import Link from'next/link';
 import { 
  DropdownMenu,
  DropdownMenuContent,
  DropdownMenuItem,
  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from"@/components/ui/dropdown-menu";
 
 export default function AgentDashboard({ params: paramsPromise }) {
  const params = use(paramsPromise);
@@ -68,9 +68,9 @@ export default function AgentDashboard({ params: paramsPromise }) {
  
  // Chat state
  const [chatMessages, setChatMessages] = useState([
- { id: 1, sender: 'OC-1', text: 'Operational. Awaiting command parameters.', time: '14:20' },
- { id: 2, sender: 'User', text: 'Status check on current missions.', time: '14:21' },
- { id: 3, sender: 'OC-1', text: 'Analysis complete. 3 missions active. Heatmaps optimal.', time: '14:21' }
+ { id: 1, sender:'OC-1', text:'Operational. Awaiting command parameters.', time:'14:20'},
+ { id: 2, sender:'User', text:'Status check on current missions.', time:'14:21'},
+ { id: 3, sender:'OC-1', text:'Analysis complete. 3 missions active. Heatmaps optimal.', time:'14:21'}
  ]);
  const [inputMessage, setInputMessage] = useState('');
  const chatEndRef = useRef(null);
@@ -83,8 +83,8 @@ export default function AgentDashboard({ params: paramsPromise }) {
  });
 
  const [approvals, setApprovals] = useState([
- { id: 'APP-1', type: 'Database Access', agent: 'OC-2', description: 'Agent OC-2 requesting permission to modify metadata schema.', critical: true },
- { id: 'APP-2', type: 'Email Dispatch', agent: 'OC-1', description: 'Agent OC-1 requesting to send 45 scheduled campaign emails.', critical: false }
+ { id:'APP-1', type:'Database Access', agent:'OC-2', description:'Agent OC-2 requesting permission to modify metadata schema.', critical: true },
+ { id:'APP-2', type:'Email Dispatch', agent:'OC-1', description:'Agent OC-1 requesting to send 45 scheduled campaign emails.', critical: false }
  ]);
 
  const fetchAll = useCallback(async () => {
@@ -123,13 +123,13 @@ export default function AgentDashboard({ params: paramsPromise }) {
 
  const handleSendMessage = () => {
  if (!inputMessage.trim()) return;
- const newMsg = { id: Date.now(), sender: 'User', text: inputMessage, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+ const newMsg = { id: Date.now(), sender:'User', text: inputMessage, time: new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit'}) };
  setChatMessages([...chatMessages, newMsg]);
  setInputMessage('');
  
  // Simulate agent response
  setTimeout(() => {
- const botMsg = { id: Date.now() + 1, sender: 'OC-1', text: 'Processing request... I have initiated a background scan based on your input.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+ const botMsg = { id: Date.now() + 1, sender:'OC-1', text:'Processing request... I have initiated a background scan based on your input.', time: new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit'}) };
  setChatMessages(prev => [...prev, botMsg]);
  }, 1000);
  };
@@ -139,7 +139,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  toast.success(`Request ${id} approved`);
  };
 
- const missionStatuses = ['Backlog', 'Planning', 'In Progress', 'Review', 'Done'];
+ const missionStatuses = ['Backlog','Planning','In Progress','Review','Done'];
 
  return (
  <div className="p-6 space-y-6 animate-fade-in bg-background/50 min-h-screen">
@@ -148,12 +148,12 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <div className="space-y-1">
  <div className="flex items-center gap-3">
  <div className="p-2.5 bg-indigo-600 rounded-md shadow-lg shadow-indigo-600/20">
- <Layers className="w-6 h-6 text-white" />
+ <Layers className="w-6 h-6 text-white"/>
  </div>
  <div>
  <h1 className="text-2xl flex items-center gap-2">
  OpenClaw Control
- <Badge variant="outline" className="text-[10px] bg-indigo-500/10 text-indigo-600 border-indigo-500/20 px-2">Production v2.4</Badge>
+ <Badge variant="outline"className="text-[10px] bg-indigo-500/10 text-indigo-600 border-indigo-500/20 px-2">Production v2.4</Badge>
  </h1>
  <p className="text-xs text-muted-foreground font-bold opacity-60">Full Enterprise Orchestration Hub</p>
  </div>
@@ -161,54 +161,54 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </div>
  <div className="flex items-center gap-3">
  <Button 
- variant="ghost" 
- size="sm" 
- className="rounded-md text-muted-foreground hover:text-indigo-600 font-bold text-xs gap-2 h-10 px-4 transition-colors"
+ variant="ghost"
+ size="sm"
+ className="rounded-md text-muted-foreground hover:text-indigo-600 font-bold text-xs gap-2 px-4 transition-colors"
  onClick={fetchAll}
  disabled={loading}
  >
- <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+ <RefreshCw className={`w-4 h-4 ${loading ?'animate-spin':''}`} />
  Sync Registry
  </Button>
  <Link href={`/workspace/${workspaceId}/agent/credential`}>
- <Button variant="outline" className="rounded-md border-border/40 hover:bg-card text-foreground font-bold text-xs gap-2 h-10 px-4 shadow-sm">
- <Settings2 className="w-4 h-4" />
+ <Button variant="outline"className="rounded-md border-border/40 hover:bg-card text-foreground font-bold text-xs gap-2 px-4 shadow-sm">
+ <Settings2 className="w-4 h-4"/>
  Configuration
  </Button>
  </Link>
  </div>
  </div>
 
- <Tabs defaultValue="overview" className="w-full">
+ <Tabs defaultValue="overview"className="w-full">
  <TabsList className="bg-background/50 border border-border/40 p-1 rounded-md mb-6 flex-wrap h-auto gap-1">
- <TabsTrigger value="overview" className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
- <LayoutGrid className="w-3.5 h-3.5" /> OVERVIEW
+ <TabsTrigger value="overview"className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
+ <LayoutGrid className="w-3.5 h-3.5"/> OVERVIEW
  </TabsTrigger>
- <TabsTrigger value="terminal" className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
- <Terminal className="w-3.5 h-3.5" /> TERMINAL
+ <TabsTrigger value="terminal"className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
+ <Terminal className="w-3.5 h-3.5"/> TERMINAL
  </TabsTrigger>
- <TabsTrigger value="missions" className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
- <Kanban className="w-3.5 h-3.5" /> MISSIONS
+ <TabsTrigger value="missions"className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
+ <Kanban className="w-3.5 h-3.5"/> MISSIONS
  </TabsTrigger>
- <TabsTrigger value="scheduler" className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
- <Calendar className="w-3.5 h-3.5" /> SCHEDULER
+ <TabsTrigger value="scheduler"className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
+ <Calendar className="w-3.5 h-3.5"/> SCHEDULER
  </TabsTrigger>
- <TabsTrigger value="registry" className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
- <Database className="w-3.5 h-3.5" /> REGISTRY
+ <TabsTrigger value="registry"className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
+ <Database className="w-3.5 h-3.5"/> REGISTRY
  </TabsTrigger>
- <TabsTrigger value="approvals" className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
- <ShieldCheck className="w-3.5 h-3.5" /> APPROVALS
+ <TabsTrigger value="approvals"className="rounded-md gap-2 text-[11px] font-bold px-4 transition-all">
+ <ShieldCheck className="w-3.5 h-3.5"/> APPROVALS
  </TabsTrigger>
  </TabsList>
 
  {/* Overview Tab Content (Same as before but with minor tweaks) */}
- <TabsContent value="overview" className="space-y-6 mt-0">
+ <TabsContent value="overview"className="space-y-6 mt-0">
  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
  {[
- { label: 'Active Missions', value: missions.filter(m => m.status !== 'Done').length, icon: Activity, color: 'text-blue-500', bg: 'bg-blue-500/10' },
- { label: 'Agent Health', value: `${stats.successRate}%`, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
- { label: 'Pending Approvals', value: approvals.length, icon: ShieldAlert, color: 'text-rose-500', bg: 'bg-rose-500/10' },
- { label: 'Total Compute', value: stats.tokens.toLocaleString(), icon: Cpu, color: 'text-fuchsia-500', bg: 'bg-fuchsia-500/10' }
+ { label:'Active Missions', value: missions.filter(m => m.status !=='Done').length, icon: Activity, color:'text-blue-500', bg:'bg-blue-500/10'},
+ { label:'Agent Health', value: `${stats.successRate}%`, icon: ShieldCheck, color:'text-emerald-500', bg:'bg-emerald-500/10'},
+ { label:'Pending Approvals', value: approvals.length, icon: ShieldAlert, color:'text-rose-500', bg:'bg-rose-500/10'},
+ { label:'Total Compute', value: stats.tokens.toLocaleString(), icon: Cpu, color:'text-fuchsia-500', bg:'bg-fuchsia-500/10'}
  ].map((stat, i) => (
  <Card key={i} className="border-border/40 bg-card/40 backdrop-blur-md rounded-md overflow-hidden shadow-sm">
  <CardContent className="p-5 flex items-center justify-between">
@@ -235,19 +235,19 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <div key={agent.id} className="p-6 flex items-center justify-between hover:bg-indigo-500/5 transition-colors group border-b border-border/5">
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 rounded-md bg-indigo-500/10 border border-indigo-500/10 flex items-center justify-center">
- <Bot className="w-6 h-6 text-indigo-600" />
+ <Bot className="w-6 h-6 text-indigo-600"/>
  </div>
  <div>
  <h4 className="font-bold text-sm">{agent.name}</h4>
  <div className="flex items-center gap-2 mt-1">
- <Badge variant="secondary" className="text-[9px] px-1.5 h-4 opacity-70">{agent.role}</Badge>
+ <Badge variant="secondary"className="text-[9px] px-1.5 h-4 opacity-70">{agent.role}</Badge>
  <span className="text-[10px] text-muted-foreground font-bold tracking-tighter opacity-70">ONLINE</span>
  </div>
  </div>
  </div>
  <div className="flex items-center gap-2">
- <Button size="sm" variant="ghost" className="text-[10px] font-bold text-indigo-600">TALK</Button>
- <Button size="icon" variant="ghost" className="h-8 w-8"><MoreVertical className="w-4 h-4 opacity-30" /></Button>
+ <Button size="sm"variant="ghost"className="text-[10px] font-bold text-indigo-600">TALK</Button>
+ <Button size="icon"variant="ghost"className="h-8 w-8"><MoreVertical className="w-4 h-4 opacity-30"/></Button>
  </div>
  </div>
  ))}
@@ -256,7 +256,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Card className="border-border/40 bg-card/40 backdrop-blur-md rounded-md overflow-hidden shadow-lg">
  <CardHeader>
  <CardTitle className="text-sm font-bold flex items-center gap-2">
- <CpuIcon className="w-4 h-4 text-fuchsia-500" />
+ <CpuIcon className="w-4 h-4 text-fuchsia-500"/>
  Default Runtime
  </CardTitle>
  </CardHeader>
@@ -277,15 +277,15 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </TabsContent>
 
  {/* Terminal (Chat) Tab */}
- <TabsContent value="terminal" className="mt-0">
+ <TabsContent value="terminal"className="mt-0">
  <Card className="border-border/40 bg-card/40 backdrop-blur-md rounded-md overflow-hidden shadow-2xl h-[650px] flex flex-col">
  <CardHeader className="border-b border-border/10 py-4 flex flex-row items-center justify-between shrink-0">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-md bg-black border border-white/10 flex items-center justify-center">
- <Terminal className="w-5 h-5 text-emerald-500" />
+ <div className="w-10 rounded-md bg-black border border-white/10 flex items-center justify-center">
+ <Terminal className="w-5 h-5 text-emerald-500"/>
  </div>
  <div>
- <CardTitle className="text-sm ">Agent Terminal</CardTitle>
+ <CardTitle className="text-sm">Agent Terminal</CardTitle>
  <CardDescription className="text-[10px] font-medium">Direct WebSocket connection to OC-1 Mesh Node.</CardDescription>
  </div>
  </div>
@@ -293,8 +293,8 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </CardHeader>
  <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 font-mono custom-scrollbar bg-black/5">
  {chatMessages.map((msg) => (
- <div key={msg.id} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
- <div className={`max-w-[80%] p-4 rounded-md ${msg.sender === 'User' ? 'bg-indigo-600 text-white' : 'bg-card border border-border/40 text-foreground shadow-sm'}`}>
+ <div key={msg.id} className={`flex ${msg.sender ==='User'?'justify-end':'justify-start'}`}>
+ <div className={`max-w-[80%] p-4 rounded-md ${msg.sender ==='User'?'bg-indigo-600 text-white':'bg-card border border-border/40 text-foreground shadow-sm'}`}>
  <div className="flex items-center gap-2 mb-1">
  <span className="text-[10px] opacity-60">{msg.sender}</span>
  <span className="text-[9px] opacity-40">{msg.time}</span>
@@ -307,14 +307,14 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <CardFooter className="p-4 border-t border-border/10 shrink-0">
  <div className="flex w-full gap-2 bg-background/50 rounded-md p-1 border border-border/40 focus-within:border-indigo-500 transition-colors">
  <Input 
- className="border-0 bg-transparent focus-visible:ring-0 text-sm h-10" 
+ className="border-0 bg-transparent focus-visible:ring-0 text-sm"
  placeholder="Execute command or talk to agent..."
  value={inputMessage}
  onChange={(e) => setInputMessage(e.target.value)}
- onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+ onKeyDown={(e) => e.key ==='Enter'&& handleSendMessage()}
  />
- <Button size="icon" className="h-10 w-10 rounded-md bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20" onClick={handleSendMessage}>
- <Send className="w-4 h-4" />
+ <Button size="icon"className="w-10 rounded-md bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"onClick={handleSendMessage}>
+ <Send className="w-4 h-4"/>
  </Button>
  </div>
  </CardFooter>
@@ -322,7 +322,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </TabsContent>
 
  {/* Missions Tab (Kanban - Same as before) */}
- <TabsContent value="missions" className="space-y-6 mt-0">
+ <TabsContent value="missions"className="space-y-6 mt-0">
  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-6 custom-scrollbar min-h-[600px]">
  {missionStatuses.map(status => (
  <div key={status} className="flex flex-col gap-4 min-w-[240px]">
@@ -332,17 +332,17 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Card key={mission.id} className="border-border/40 bg-card/60 backdrop-blur-md rounded-md overflow-hidden shadow-sm hover:shadow-md hover:border-indigo-500/30 transition-all cursor-pointer">
  <CardContent className="p-4 space-y-3">
  <Badge className={`text-[9px] tracking-tighter px-1.5 h-4 
- ${mission.priority === 'Critical' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
- mission.priority === 'High' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 
- 'bg-blue-500/10 text-blue-600 border-blue-500/20'}`} variant="outline">
+ ${mission.priority ==='Critical'?'bg-rose-500/10 text-rose-600 border-rose-500/20': 
+ mission.priority ==='High'?'bg-amber-500/10 text-amber-600 border-amber-500/20': 
+'bg-blue-500/10 text-blue-600 border-blue-500/20'}`} variant="outline">
  {mission.priority}
  </Badge>
  <h4 className="text-sm font-bold leading-tight">{mission.title}</h4>
  <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-4 font-bold">
- <span className="flex items-center gap-1"><Bot className="w-3 h-3" /> {mission.agentId}</span>
+ <span className="flex items-center gap-1"><Bot className="w-3 h-3"/> {mission.agentId}</span>
  <span>{mission.progress}%</span>
  </div>
- <Progress value={mission.progress} className="h-1 bg-muted rounded-full" />
+ <Progress value={mission.progress} className="h-1 bg-muted rounded-full"/>
  </CardContent>
  </Card>
  ))}
@@ -353,7 +353,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </TabsContent>
 
  {/* Scheduler Tab */}
- <TabsContent value="scheduler" className="mt-0 space-y-6">
+ <TabsContent value="scheduler"className="mt-0 space-y-6">
  <Card className="border-border/40 bg-card/40 backdrop-blur-md rounded-md overflow-hidden shadow-xl min-h-[500px]">
  <CardHeader className="border-b border-border/10 flex flex-row items-center justify-between">
  <div>
@@ -361,7 +361,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <CardDescription className="text-xs font-medium">Define recurring missions for your agent workforce.</CardDescription>
  </div>
  <Button className="rounded-md bg-indigo-600 hover:bg-indigo-700 font-bold text-[10px] h-9 gap-2 shadow-lg shadow-indigo-600/20">
- <PlusCircle className="w-4 h-4" /> Add Schedule
+ <PlusCircle className="w-4 h-4"/> Add Schedule
  </Button>
  </CardHeader>
  <CardContent className="p-0">
@@ -369,7 +369,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <div key={cron.id} className="p-6 flex items-center justify-between hover:bg-background/40 transition-colors border-b border-border/5">
  <div className="flex items-center gap-4">
  <div className="p-3 bg-amber-500/10 rounded-md">
- <Calendar className="w-6 h-6 text-amber-600" />
+ <Calendar className="w-6 h-6 text-amber-600"/>
  </div>
  <div>
  <h4 className="font-bold text-sm">{cron.title}</h4>
@@ -381,12 +381,12 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <p className="text-[10px] font-bold text-muted-foreground mb-1">EXECUTION</p>
  <p className="text-xs font-bold text-indigo-600">{cron.mission}</p>
  </div>
- <Badge className={`text-[9px] h-5 ${cron.enabled ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
- {cron.enabled ? 'ACTIVE' : 'PAUSED'}
+ <Badge className={`text-[9px] h-5 ${cron.enabled ?'bg-emerald-500/10 text-emerald-600':'bg-muted text-muted-foreground'}`}>
+ {cron.enabled ?'ACTIVE':'PAUSED'}
  </Badge>
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4 opacity-30" /></Button>
+ <Button variant="ghost"size="icon"className="h-8 w-8"><MoreVertical className="w-4 h-4 opacity-30"/></Button>
  </DropdownMenuTrigger>
  <DropdownMenuContent align="end">
  <DropdownMenuItem>Toggle Status</DropdownMenuItem>
@@ -402,15 +402,15 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </TabsContent>
 
  {/* Registry Tab */}
- <TabsContent value="registry" className="mt-0 space-y-6">
+ <TabsContent value="registry"className="mt-0 space-y-6">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  {/* Agent Registry */}
  <Card className="border-border/40 bg-card/40 backdrop-blur-md rounded-md overflow-hidden shadow-xl">
  <CardHeader className="border-b border-border/10 flex flex-row items-center justify-between">
  <CardTitle className="text-sm font-bold flex items-center gap-2">
- <Bot className="w-4 h-4 text-indigo-600" /> Agent Workforce
+ <Bot className="w-4 h-4 text-indigo-600"/> Agent Workforce
  </CardTitle>
- <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold rounded-md border-indigo-500/20 text-indigo-600">Create Agent</Button>
+ <Button variant="outline"size="sm"className="h-8 text-[10px] font-bold rounded-md border-indigo-500/20 text-indigo-600">Create Agent</Button>
  </CardHeader>
  <CardContent className="p-0">
  {config?.agents?.map(agent => (
@@ -419,7 +419,7 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <div className="w-8 h-8 rounded-md bg-indigo-500/10 flex items-center justify-center text-[10px] text-indigo-600">{agent.id}</div>
  <span className="text-xs font-bold">{agent.name}</span>
  </div>
- <Badge variant="secondary" className="text-[8px] px-1 h-4">{agent.type}</Badge>
+ <Badge variant="secondary"className="text-[8px] px-1 h-4">{agent.type}</Badge>
  </div>
  ))}
  </CardContent>
@@ -429,22 +429,22 @@ export default function AgentDashboard({ params: paramsPromise }) {
  <Card className="border-border/40 bg-card/40 backdrop-blur-md rounded-md overflow-hidden shadow-xl">
  <CardHeader className="border-b border-border/10 flex flex-row items-center justify-between">
  <CardTitle className="text-sm font-bold flex items-center gap-2">
- <CpuIcon className="w-4 h-4 text-fuchsia-500" /> Model Intelligence
+ <CpuIcon className="w-4 h-4 text-fuchsia-500"/> Model Intelligence
  </CardTitle>
- <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold rounded-md border-fuchsia-500/20 text-fuchsia-600">Add Model</Button>
+ <Button variant="outline"size="sm"className="h-8 text-[10px] font-bold rounded-md border-fuchsia-500/20 text-fuchsia-600">Add Model</Button>
  </CardHeader>
  <CardContent className="p-0">
  {models.map(model => (
  <div key={model.id} className="p-4 flex items-center justify-between border-b border-border/5">
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-md bg-fuchsia-500/10 flex items-center justify-center">
- <Globe className="w-4 h-4 text-fuchsia-600" />
+ <Globe className="w-4 h-4 text-fuchsia-600"/>
  </div>
  <span className="text-xs font-bold">{model.name}</span>
  </div>
  <div className="flex items-center gap-2">
- <p className="text-[9px] text-muted-foreground ">{model.provider}</p>
- <div className={`w-1.5 h-1.5 rounded-full ${model.status === 'ready' ? 'bg-emerald-500' : 'bg-muted'}`} />
+ <p className="text-[9px] text-muted-foreground">{model.provider}</p>
+ <div className={`w-1.5 h-1.5 rounded-full ${model.status ==='ready'?'bg-emerald-500':'bg-muted'}`} />
  </div>
  </div>
  ))}
@@ -454,11 +454,11 @@ export default function AgentDashboard({ params: paramsPromise }) {
  </TabsContent>
 
  {/* Approvals and Feed Tabs (Simplified for brevity as they are already high quality) */}
- <TabsContent value="approvals" className="mt-0">
+ <TabsContent value="approvals"className="mt-0">
  <Card className="border-border/40 bg-card/40 rounded-md h-[500px] flex items-center justify-center opacity-30">
  <div className="text-center">
- <ShieldCheck className="w-12 h-12 mx-auto mb-4" />
- <p className="text-xs ">Governance Dashboard Ready</p>
+ <ShieldCheck className="w-12 h-12 mx-auto mb-4"/>
+ <p className="text-xs">Governance Dashboard Ready</p>
  </div>
  </Card>
  </TabsContent>

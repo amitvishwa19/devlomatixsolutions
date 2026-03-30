@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from'react';
+import { motion } from'framer-motion';
 import { 
  Star, 
  CheckCircle2, 
@@ -11,21 +11,21 @@ import {
  Zap,
  Scale,
  ShieldCheck
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+} from'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from"@/components/ui/card";
+import { Button } from"@/components/ui/button";
+import { Input } from"@/components/ui/input";
+import { Textarea } from"@/components/ui/textarea";
+import { Slider } from"@/components/ui/slider";
+import { Badge } from"@/components/ui/badge";
+import { Separator } from"@/components/ui/separator";
 
 const ATTRIBUTES = [
- { id: 'technical', label: 'Technical Proficiency', icon: Zap, color: 'text-blue-500', description: 'Domain knowledge and technical skills required for the role.' },
- { id: 'culture', label: 'Culture Fit', icon: ShieldCheck, color: 'text-emerald-500', description: 'Alignment with company values and team dynamics.' },
- { id: 'potential', label: 'Growth Potential', icon: TrendingUp, color: 'text-purple-500', description: 'Ability to learn, adapt, and scale with the organization.' },
- { id: 'communication', label: 'Communication', icon: MessageSquare, color: 'text-amber-500', description: 'Clarity, empathy, and effectiveness in verbal/written communication.' },
- { id: 'logic', label: 'Problem Solving', icon: Scale, color: 'text-rose-500', description: 'Logical reasoning and approach to complex challenges.' }
+ { id:'technical', label:'Technical Proficiency', icon: Zap, color:'text-blue-500', description:'Domain knowledge and technical skills required for the role.'},
+ { id:'culture', label:'Culture Fit', icon: ShieldCheck, color:'text-emerald-500', description:'Alignment with company values and team dynamics.'},
+ { id:'potential', label:'Growth Potential', icon: TrendingUp, color:'text-purple-500', description:'Ability to learn, adapt, and scale with the organization.'},
+ { id:'communication', label:'Communication', icon: MessageSquare, color:'text-amber-500', description:'Clarity, empathy, and effectiveness in verbal/written communication.'},
+ { id:'logic', label:'Problem Solving', icon: Scale, color:'text-rose-500', description:'Logical reasoning and approach to complex challenges.'}
 ];
 
 export default function Scorecards({ candidate, onSubmit }) {
@@ -47,10 +47,10 @@ export default function Scorecards({ candidate, onSubmit }) {
 
  const getRecommendationColor = (rec) => {
  switch(rec) {
- case 'yes': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
- case 'strong_yes': return 'bg-primary/20 text-primary border-primary/40';
- case 'no': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
- default: return 'bg-muted/40 text-muted-foreground border-border/20';
+ case'yes': return'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+ case'strong_yes': return'bg-primary/20 text-primary border-primary/40';
+ case'no': return'bg-rose-500/10 text-rose-500 border-rose-500/20';
+ default: return'bg-muted/40 text-muted-foreground border-border/20';
  }
  };
 
@@ -79,11 +79,11 @@ export default function Scorecards({ candidate, onSubmit }) {
  <attr.icon size={16} />
  </div>
  <div>
- <h4 className="text-sm ">{attr.label}</h4>
+ <h4 className="text-sm">{attr.label}</h4>
  <p className="text-[10px] font-medium opacity-40">{attr.description}</p>
  </div>
  </div>
- <Badge variant="outline" className={`h-8 w-12 flex items-center justify-center text-xs rounded-md ${attr.color} bg-background/40`}>
+ <Badge variant="outline"className={`h-8 w-12 flex items-center justify-center text-xs rounded-md ${attr.color} bg-background/40`}>
  {scores[attr.id]}/5
  </Badge>
  </div>
@@ -96,8 +96,8 @@ export default function Scorecards({ candidate, onSubmit }) {
  className="cursor-pointer"
  />
  <div className="flex justify-between px-1">
- {['Poor', 'Below Average', 'Average', 'Good', 'Exceptional'].map((label, i) => (
- <span key={i} className={`text-[8px] tracking-tighter opacity-30 ${scores[attr.id] === i + 1 ? 'opacity-100 text-primary' : ''}`}>
+ {['Poor','Below Average','Average','Good','Exceptional'].map((label, i) => (
+ <span key={i} className={`text-[8px] tracking-tighter opacity-30 ${scores[attr.id] === i + 1 ?'opacity-100 text-primary':''}`}>
  {label}
  </span>
  ))}
@@ -106,7 +106,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  ))}
  </div>
 
- <Separator className="bg-border/10" />
+ <Separator className="bg-border/10"/>
 
  <div className="space-y-6">
  <div className="space-y-2">
@@ -123,10 +123,10 @@ export default function Scorecards({ candidate, onSubmit }) {
  <label className="text-[10px] text-muted-foreground opacity-50 ml-1">Final Recommendation</label>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
  {[
- { value: 'strong_yes', label: 'Strong Hire', icon: Zap },
- { value: 'yes', label: 'Hire', icon: CheckCircle2 },
- { value: 'maybe', label: 'Maybe / Note', icon: AlertCircle },
- { value: 'no', label: 'Do Not Hire', icon: ShieldCheck }
+ { value:'strong_yes', label:'Strong Hire', icon: Zap },
+ { value:'yes', label:'Hire', icon: CheckCircle2 },
+ { value:'maybe', label:'Maybe / Note', icon: AlertCircle },
+ { value:'no', label:'Do Not Hire', icon: ShieldCheck }
  ].map((rec) => (
  <Button
  key={rec.value}
@@ -134,12 +134,12 @@ export default function Scorecards({ candidate, onSubmit }) {
  className={`h-14 rounded-md flex flex-col items-center justify-center gap-1 border-border/40 transition-all ${
  finalRecommendation === rec.value 
  ? `${getRecommendationColor(rec.value)} border-current scale-[1.02] shadow-xl` 
- : 'bg-card/40 opacity-40 hover:opacity-100 hover:scale-[1.02]'
+ :'bg-card/40 opacity-40 hover:opacity-100 hover:scale-[1.02]'
  }`}
  onClick={() => setFinalRecommendation(rec.value)}
  >
  <rec.icon size={16} />
- <span className="text-[10px] ">{rec.label}</span>
+ <span className="text-[10px]">{rec.label}</span>
  </Button>
  ))}
  </div>
@@ -153,7 +153,7 @@ export default function Scorecards({ candidate, onSubmit }) {
  >
  Finalize Evaluation & Submit Scorecard
  </Button>
- <p className="text-center mt-4 text-[9px] font-bold text-muted-foreground opacity-40 ">
+ <p className="text-center mt-4 text-[9px] font-bold text-muted-foreground opacity-40">
  Submitted scorecards are permanent and will be visible to the hiring team.
  </p>
  </div>

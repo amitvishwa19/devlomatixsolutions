@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { useModal } from "@/hooks/useModal";
+import { useState, useEffect } from"react";
+import { useModal } from"@/hooks/useModal";
 import { 
  Dialog,
  DialogContent,
@@ -9,24 +9,24 @@ import {
  DialogFooter,
  DialogHeader,
  DialogTitle,
-} from "@/components/ui/dialog";
+} from"@/components/ui/dialog";
 import {
  Select,
  SelectContent,
  SelectItem,
  SelectTrigger,
  SelectValue,
-} from "@/components/ui/select";
+} from"@/components/ui/select";
 import {
  Tabs,
  TabsContent,
  TabsList,
  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+} from"@/components/ui/tabs";
+import { Button } from"@/components/ui/button";
+import { Input } from"@/components/ui/input";
+import { Textarea } from"@/components/ui/textarea";
+import { Checkbox } from"@/components/ui/checkbox";
 import { 
  Loader2, 
  Sparkles, 
@@ -40,19 +40,19 @@ import {
  Plus,
  Trash2,
  Image as ImageIcon
-} from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { UnsplashImagePicker } from "@/components/global/UnsplashImagePicker";
+} from"lucide-react";
+import { toast } from"sonner";
+import { cn } from"@/lib/utils";
+import { UnsplashImagePicker } from"@/components/global/UnsplashImagePicker";
 import { 
  Popover,
  PopoverContent,
  PopoverTrigger,
-} from "@/components/ui/popover";
+} from"@/components/ui/popover";
 
 export const AddKanbanTaskModal = () => {
  const { isOpen, onClose, type, data } = useModal();
- const isModalOpen = isOpen && type === "addKanbanTask";
+ const isModalOpen = isOpen && type ==="addKanbanTask";
  const { workspaceId, columnId, onApply, task } = data || {};
 
  const [isLoading, setIsLoading] = useState(false);
@@ -90,13 +90,13 @@ export const AddKanbanTaskModal = () => {
  if (isModalOpen) {
  fetchMembers();
  if (task) {
- setTitle(task.title || "");
- setContent(task.content || "");
- setTaskType(task.type || "task");
- setPriority(task.priority || "medium");
- setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "");
- setCoverUrl(task.coverUrl || "");
- setAssigneeId(task.assigneeId || "");
+ setTitle(task.title ||"");
+ setContent(task.content ||"");
+ setTaskType(task.type ||"task");
+ setPriority(task.priority ||"medium");
+ setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] :"");
+ setCoverUrl(task.coverUrl ||"");
+ setAssigneeId(task.assigneeId ||"");
  setChecklists(task.checklists || []);
  setActivities(task.activities || []);
  } else {
@@ -133,7 +133,7 @@ export const AddKanbanTaskModal = () => {
  ? `/api/workspace/${workspaceId}/productivity/kanban/tasks/${task.id}`
  : `/api/workspace/${workspaceId}/productivity/kanban/tasks`;
  
- const method = isEdit ? 'PATCH' : 'POST';
+ const method = isEdit ?'PATCH':'POST';
 
  const response = await fetch(url, {
  method,
@@ -143,7 +143,7 @@ export const AddKanbanTaskModal = () => {
  if (!response.ok) throw new Error("Failed to save task");
  
  const savedTask = await response.json();
- toast.success(isEdit ? "Task updated" : "Task created");
+ toast.success(isEdit ?"Task updated":"Task created");
  
  if (onApply) onApply(savedTask);
  onClose();
@@ -174,7 +174,7 @@ export const AddKanbanTaskModal = () => {
  try {
  setIsChecking(true);
  const response = await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${task.id}/checklists`, {
- method: 'POST',
+ method:'POST',
  body: JSON.stringify({ title: newChecklistItem })
  });
  const newItem = await response.json();
@@ -194,7 +194,7 @@ export const AddKanbanTaskModal = () => {
 
  try {
  await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${task.id}/checklists/${itemId}`, {
- method: 'PATCH',
+ method:'PATCH',
  body: JSON.stringify({ completed })
  });
  } catch (error) {
@@ -209,7 +209,7 @@ export const AddKanbanTaskModal = () => {
 
  try {
  await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${task.id}/checklists/${itemId}`, {
- method: 'DELETE'
+ method:'DELETE'
  });
  } catch (error) {
  toast.error("Failed to delete item");
@@ -226,10 +226,10 @@ export const AddKanbanTaskModal = () => {
  {/* Cover Preview */}
  {coverUrl && (
  <div className="relative h-32 w-full overflow-hidden">
- <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+ <img src={coverUrl} alt="Cover"className="w-full h-full object-cover"/>
  <Button 
- variant="destructive" 
- size="icon" 
+ variant="destructive"
+ size="icon"
  className="absolute top-2 right-2 h-6 w-6 rounded-md opacity-0 hover:opacity-100 transition-opacity bg-black/50 border-none"
  onClick={() => setCoverUrl("")}
  >
@@ -243,22 +243,22 @@ export const AddKanbanTaskModal = () => {
  <div className="flex items-center justify-between gap-3 mb-2">
  <div className="flex items-center gap-3">
  <div className="p-2 rounded-md bg-primary/10">
- <Sparkles className="h-5 w-5 text-primary" />
+ <Sparkles className="h-5 w-5 text-primary"/>
  </div>
- <DialogTitle className="text-2xl font-bold ">
- {isEdit ? "Edit Task" : "Create New Task"}
+ <DialogTitle className="text-2xl font-bold">
+ {isEdit ?"Edit Task":"Create New Task"}
  </DialogTitle>
  </div>
  
  {/* Cover Picker Popover */}
  <Popover>
  <PopoverTrigger asChild>
- <Button variant="outline" size="sm" className="h-8 rounded-md text-[10px] font-bold gap-2">
+ <Button variant="outline"size="sm"className="h-8 rounded-md text-[10px] font-bold gap-2">
  <ImageIcon size={14} /> 
- {coverUrl ? "Change Cover" : "Add Cover"}
+ {coverUrl ?"Change Cover":"Add Cover"}
  </Button>
  </PopoverTrigger>
- <PopoverContent align="end" className="w-[340px] p-0 border-none shadow-2xl">
+ <PopoverContent align="end"className="w-[340px] p-0 border-none shadow-2xl">
  <div className="p-4 bg-background rounded-md border border-border/40">
  <h4 className="text-[10px] tracking-[0.2em] mb-4 text-muted-foreground">Select a Cover Image</h4>
  <UnsplashImagePicker 
@@ -271,25 +271,25 @@ export const AddKanbanTaskModal = () => {
  </Popover>
  </div>
  <DialogDescription className="text-sm font-medium text-muted-foreground">
- {isEdit ? "Update your task details and track history." : "Add a new task or content item to your pipeline."}
+ {isEdit ?"Update your task details and track history.":"Add a new task or content item to your pipeline."}
  </DialogDescription>
  </DialogHeader>
 
- <Tabs defaultValue="details" className="w-full px-8">
+ <Tabs defaultValue="details"className="w-full px-8">
  <TabsList className="grid w-full grid-cols-3 h-11 bg-muted/20 p-1 rounded-md mb-6">
- <TabsTrigger value="details" className="rounded-md text-[10px] font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
- <Briefcase className="w-3.5 h-3.5 mr-2" /> Details
+ <TabsTrigger value="details"className="rounded-md text-[10px] font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
+ <Briefcase className="w-3.5 h-3.5 mr-2"/> Details
  </TabsTrigger>
- <TabsTrigger value="checklist" className="rounded-md text-[10px] font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
- <CheckSquare className="w-3.5 h-3.5 mr-2" /> Checklist
+ <TabsTrigger value="checklist"className="rounded-md text-[10px] font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
+ <CheckSquare className="w-3.5 h-3.5 mr-2"/> Checklist
  </TabsTrigger>
- <TabsTrigger value="activity" className="rounded-md text-[10px] font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
- <History className="w-3.5 h-3.5 mr-2" /> Activity
+ <TabsTrigger value="activity"className="rounded-md text-[10px] font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
+ <History className="w-3.5 h-3.5 mr-2"/> Activity
  </TabsTrigger>
  </TabsList>
 
  <div className="min-h-[350px] max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 mb-6">
- <TabsContent value="details" className="space-y-6 mt-0">
+ <TabsContent value="details"className="space-y-6 mt-0">
  <div className="space-y-4">
  {/* Title Field */}
  <div className="space-y-2">
@@ -317,10 +317,10 @@ export const AddKanbanTaskModal = () => {
  <SelectValue />
  </SelectTrigger>
  <SelectContent className="rounded-md border-border/40">
- <SelectItem value="task" className="font-bold rounded-md">Default Task</SelectItem>
- <SelectItem value="article" className="font-bold rounded-md text-blue-500">Article</SelectItem>
- <SelectItem value="social" className="font-bold rounded-md text-purple-500">Social Post</SelectItem>
- <SelectItem value="note" className="font-bold rounded-md text-amber-500">Note/Draft</SelectItem>
+ <SelectItem value="task"className="font-bold rounded-md">Default Task</SelectItem>
+ <SelectItem value="article"className="font-bold rounded-md text-blue-500">Article</SelectItem>
+ <SelectItem value="social"className="font-bold rounded-md text-purple-500">Social Post</SelectItem>
+ <SelectItem value="note"className="font-bold rounded-md text-amber-500">Note/Draft</SelectItem>
  </SelectContent>
  </Select>
  </div>
@@ -330,10 +330,10 @@ export const AddKanbanTaskModal = () => {
  </label>
  <Select value={assigneeId} onValueChange={setAssigneeId} disabled={isLoading}>
  <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold">
- <SelectValue placeholder="Unassigned" />
+ <SelectValue placeholder="Unassigned"/>
  </SelectTrigger>
  <SelectContent className="rounded-md border-border/40 font-bold">
- <SelectItem value="none" className="rounded-md">Unassigned</SelectItem>
+ <SelectItem value="none"className="rounded-md">Unassigned</SelectItem>
  {members.map((member) => (
  <SelectItem key={member.id} value={member.id} className="rounded-md">
  {member.displayName}
@@ -355,10 +355,10 @@ export const AddKanbanTaskModal = () => {
  <SelectValue />
  </SelectTrigger>
  <SelectContent className="rounded-md border-border/40 font-bold">
- <SelectItem value="low" className="text-green-500 rounded-md">Low</SelectItem>
- <SelectItem value="medium" className="text-amber-500 rounded-md">Medium</SelectItem>
- <SelectItem value="high" className="text-red-500 rounded-md">High</SelectItem>
- <SelectItem value="urgent" className="text-rose-600 rounded-md">Urgent</SelectItem>
+ <SelectItem value="low"className="text-green-500 rounded-md">Low</SelectItem>
+ <SelectItem value="medium"className="text-amber-500 rounded-md">Medium</SelectItem>
+ <SelectItem value="high"className="text-red-500 rounded-md">High</SelectItem>
+ <SelectItem value="urgent"className="text-rose-600 rounded-md">Urgent</SelectItem>
  </SelectContent>
  </Select>
  </div>
@@ -395,22 +395,22 @@ export const AddKanbanTaskModal = () => {
  </div>
  </TabsContent>
 
- <TabsContent value="checklist" className="space-y-6 mt-0">
+ <TabsContent value="checklist"className="space-y-6 mt-0">
  <div className="space-y-4">
  <div className="flex gap-2">
  <Input 
- placeholder="Add a sub-task..." 
+ placeholder="Add a sub-task..."
  value={newChecklistItem}
  onChange={(e) => setNewChecklistItem(e.target.value)}
- className="h-10 bg-muted/30 border-none rounded-md text-sm font-bold"
- onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
+ className="bg-muted/30 border-none rounded-md text-sm font-bold"
+ onKeyDown={(e) => e.key ==='Enter'&& (e.preventDefault(), addChecklistItem())}
  />
  <Button 
- type="button" 
- size="icon" 
+ type="button"
+ size="icon"
  onClick={addChecklistItem}
  disabled={isChecking || !newChecklistItem.trim()}
- className="h-10 w-10 shrink-0 rounded-md"
+ className="w-10 shrink-0 rounded-md"
  >
  <Plus size={18} />
  </Button>
@@ -419,8 +419,8 @@ export const AddKanbanTaskModal = () => {
  <div className="space-y-2">
  {checklists.length === 0 ? (
  <div className="py-12 border-2 border-dashed border-border/20 rounded-md flex flex-col items-center justify-center text-muted-foreground opacity-40">
- <CheckSquare size={32} className="mb-2" />
- <p className="text-[10px] ">No sub-tasks yet</p>
+ <CheckSquare size={32} className="mb-2"/>
+ <p className="text-[10px]">No sub-tasks yet</p>
  </div>
  ) : (
  checklists.map((item) => (
@@ -431,8 +431,8 @@ export const AddKanbanTaskModal = () => {
  className="h-5 w-5 rounded-md border-2 border-primary/20 bg-background data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
  />
  <span className={cn(
- "flex-1 text-sm font-bold transition-all",
- item.completed && "line-through text-muted-foreground opacity-50"
+"flex-1 text-sm font-bold transition-all",
+ item.completed &&"line-through text-muted-foreground opacity-50"
  )}>
  {item.title}
  </span>
@@ -450,22 +450,22 @@ export const AddKanbanTaskModal = () => {
  </div>
  </TabsContent>
 
- <TabsContent value="activity" className="space-y-6 mt-0">
+ <TabsContent value="activity"className="space-y-6 mt-0">
  <div className="space-y-6">
  {activities.length === 0 ? (
  <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-40">
- <History size={32} className="mb-2" />
- <p className="text-[10px] ">No activity recorded</p>
+ <History size={32} className="mb-2"/>
+ <p className="text-[10px]">No activity recorded</p>
  </div>
  ) : (
  <div className="relative space-y-6 pl-4 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-border/20">
  {activities.map((act) => (
  <div key={act.id} className="relative flex items-start gap-3">
- <div className="absolute -left-[18px] top-1 h-3 w-3 rounded-full bg-background border-2 border-primary shadow-sm z-10" />
+ <div className="absolute -left-[18px] top-1 h-3 w-3 rounded-full bg-background border-2 border-primary shadow-sm z-10"/>
  <div className="flex-1 space-y-1">
  <div className="flex items-center gap-2">
- <span className="text-[10px] text-foreground/80 ">
- {act.user?.displayName || "System"}
+ <span className="text-[10px] text-foreground/80">
+ {act.user?.displayName ||"System"}
  </span>
  <span className="text-[8px] font-bold text-muted-foreground tracking-tighter opacity-50">
  {new Date(act.createdAt).toLocaleString()}
@@ -498,9 +498,9 @@ export const AddKanbanTaskModal = () => {
  className="h-12 rounded-md font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
  >
  {isLoading ? (
- <Loader2 className="h-4 w-4 animate-spin" />
+ <Loader2 className="h-4 w-4 animate-spin"/>
  ) : (
- isEdit ? "Save Changes" : "Create Task"
+ isEdit ?"Save Changes":"Create Task"
  )}
  </Button>
  </DialogFooter>

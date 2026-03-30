@@ -17,18 +17,18 @@ import {
  Menu,
  Loader2,
  User
-} from 'lucide-react';
-import { ChannelSidebar } from './_components/ChannelSidebar';
-import { StartConversationModal } from './_components/StartConversationModal';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Button } from '@/components/ui/button';
-import { useParams, useSearchParams } from 'next/navigation';
-import useSWR from 'swr';
-import { useState, useRef, useEffect, Suspense } from 'react';
-import { format } from "date-fns";
-import { supabase } from '@/lib/supabase';
+} from'lucide-react';
+import { ChannelSidebar } from'./_components/ChannelSidebar';
+import { StartConversationModal } from'./_components/StartConversationModal';
+import { ScrollArea } from"@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from"@/components/ui/avatar";
+import { Input } from"@/components/ui/input";
+import { Button } from'@/components/ui/button';
+import { useParams, useSearchParams } from'next/navigation';
+import useSWR from'swr';
+import { useState, useRef, useEffect, Suspense } from'react';
+import { format } from"date-fns";
+import { supabase } from'@/lib/supabase';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
@@ -50,7 +50,7 @@ function MessagePageContent() {
 
  const activeChannel = urlChannelId
  ? channels?.find(c => c.id === urlChannelId)
- : (!urlConversationId ? channels?.find(c => c.type === 'TEXT') : null);
+ : (!urlConversationId ? channels?.find(c => c.type ==='TEXT') : null);
  const channelId = activeChannel?.id;
 
  // Fetch conversations to find the active one
@@ -79,9 +79,9 @@ function MessagePageContent() {
 
  // ---- Supabase Realtime Database Subscription ----
  useEffect(() => {
- const table = isDirectMessage ? 'DirectMessage' : 'Message';
+ const table = isDirectMessage ?'DirectMessage':'Message';
  const filterId = isDirectMessage ? urlConversationId : channelId;
- const filterColumn = isDirectMessage ? 'conversationId' : 'channelId';
+ const filterColumn = isDirectMessage ?'conversationId':'channelId';
 
  if (!filterId) return;
 
@@ -90,10 +90,10 @@ function MessagePageContent() {
  const channel = supabase
  .channel(`realtime-${table}-${filterId}`)
  .on(
- 'postgres_changes',
+'postgres_changes',
  {
- event: '*',
- schema: 'public',
+ event:'*',
+ schema:'public',
  table: table,
  filter: `${filterColumn}=eq.${filterId}`
  },
@@ -116,12 +116,12 @@ function MessagePageContent() {
  // Auto-scroll to bottom
  useEffect(() => {
  if (scrollRef.current) {
- scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+ scrollRef.current.scrollIntoView({ behavior:'smooth'});
  }
  }, [messages]);
 
  const handleSendMessage = async (e) => {
- if (e.key === 'Enter' && !e.shiftKey) {
+ if (e.key ==='Enter'&& !e.shiftKey) {
  e.preventDefault();
  if (!content.trim() || (!channelId && !urlConversationId)) return;
 
@@ -133,8 +133,8 @@ function MessagePageContent() {
  : `/api/workspace/${workspaceId}/productivity/channels/${channelId}/messages`;
 
  await fetch(url, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ method:'POST',
+ headers: {'Content-Type':'application/json'},
  body: JSON.stringify({ content: newContent })
  });
 
@@ -147,39 +147,39 @@ function MessagePageContent() {
 
 
  const displayName = isDirectMessage
- ? activeConversation?.otherMember?.user?.displayName || "Loading..."
- : (channelsLoading ? "..." : (activeChannel?.name || "general"));
+ ? activeConversation?.otherMember?.user?.displayName ||"Loading..."
+ : (channelsLoading ?"...": (activeChannel?.name ||"general"));
 
  return (
- <div className="flex flex-1 h-full ">
+ <div className="flex flex-1 h-full">
  {/* Navigation Sidebar (Channels Only) reached via page directly now */}
  <div className="hidden md:flex flex-col h-full w-64 z-20">
  <ChannelSidebar />
  </div>
 
  {/* Main Chat Area */}
- <div className="flex flex-col flex-1 h-full ">
+ <div className="flex flex-col flex-1 h-full">
 
 
  {/* Chat Header */}
  <header className="h-12 border-b bg-card border-neutral-200 dark:border-neutral-800 flex items-center px-4 gap-x-2 shadow-sm">
  <div className="md:hidden">
- <Button variant="ghost" size="icon" className="h-8 w-8">
- <Menu className="w-5 h-5 text-zinc-500" />
+ <Button variant="ghost"size="icon"className="h-8 w-8">
+ <Menu className="w-5 h-5 text-zinc-500"/>
  </Button>
  </div>
  {isDirectMessage ? (
- <User className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
+ <User className="w-5 h-5 text-zinc-500 dark:text-zinc-400"/>
  ) : (
- <Hash className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
+ <Hash className="w-5 h-5 text-zinc-500 dark:text-zinc-400"/>
  )}
  <p className="text-md text-zinc-900 dark:text-white">
  {displayName}
  </p>
 
  <div className="ml-auto flex items-center gap-x-4">
- <Bell className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
- <Pin className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
+ <Bell className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300"/>
+ <Pin className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300"/>
 
  <Users
  onClick={() => setIsDmModalOpen(true)}
@@ -188,13 +188,13 @@ function MessagePageContent() {
  />
 
  <div className="relative hidden sm:block">
- <Search className="w-4 h-4 text-zinc-500 dark:text-zinc-400 absolute right-2 top-1/2 -translate-y-1/2" />
+ <Search className="w-4 h-4 text-zinc-500 dark:text-zinc-400 absolute right-2 top-1/2 -translate-y-1/2"/>
  <input
  placeholder="Search"
  className="bg-zinc-200 dark:bg-zinc-900 rounded-md px-2 py-1 text-xs w-36 focus:w-48 transition-all outline-none border border-transparent shadow-inner"
  />
  </div>
- <HelpCircle className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
+ <HelpCircle className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300"/>
  </div>
  </header>
 
@@ -210,24 +210,24 @@ function MessagePageContent() {
 
  {messagesLoading ? (
  <div className="flex justify-center p-4">
- <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+ <Loader2 className="h-6 w-6 animate-spin text-zinc-500"/>
  </div>
  ) : (
  messages?.map((msg) => (
  <div key={msg.id} className="flex items-start gap-x-4 group hover:bg-black/5 dark:hover:bg-black/10 -mx-4 px-4 py-1.5 transition relative">
- <Avatar className="h-10 w-10 border border-border/10 shadow-sm mt-0.5">
+ <Avatar className="w-10 border border-border/10 shadow-sm mt-0.5">
  <AvatarImage src={msg.member?.user?.avatar} />
  <AvatarFallback className="bg-primary/10 text-primary text-xs">
- {msg.member?.user?.displayName?.[0] || "?"}
+ {msg.member?.user?.displayName?.[0] ||"?"}
  </AvatarFallback>
  </Avatar>
  <div className="flex flex-col overflow-hidden">
  <div className="flex items-center gap-x-2">
  <p className="text-primary hover:underline cursor-pointer text-sm">
- {msg.member?.user?.displayName || "Unknown User"}
+ {msg.member?.user?.displayName ||"Unknown User"}
  </p>
  <span className="text-[10px] text-zinc-500 font-bold opacity-60">
- {format(new Date(msg.createdAt), "MMM d, yyyy 'at' h:mm a")}
+ {format(new Date(msg.createdAt),"MMM d, yyyy'at'h:mm a")}
  </span>
  </div>
  <p className="text-sm text-zinc-800 dark:text-zinc-300 font-medium leading-relaxed">
@@ -245,10 +245,10 @@ function MessagePageContent() {
  <div className="px-4 pb-2 mt-auto">
  <div className="relative w-full">
  <button className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 transition rounded-full flex items-center justify-center shadow-md">
- <PlusCircle className="text-white dark:text-[#313338] h-4 w-4" />
+ <PlusCircle className="text-white dark:text-[#313338] h-4 w-4"/>
  </button>
  <input
- placeholder={`Message ${isDirectMessage ? '@' : '#'}${displayName}`}
+ placeholder={`Message ${isDirectMessage ?'@':'#'}${displayName}`}
  value={content}
  onChange={(e) => setContent(e.target.value)}
  onKeyDown={handleSendMessage}
@@ -256,9 +256,9 @@ function MessagePageContent() {
  className="w-full bg-zinc-200/50 dark:bg-[#383A40] border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 focus:ring-offset-0 focus:outline-none text-zinc-700 dark:text-zinc-200 py-3 pl-14 pr-24 rounded-md font-bold text-sm shadow-sm"
  />
  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-x-3">
- <Gift className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
- <Sticker className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
- <Smile className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300" />
+ <Gift className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300"/>
+ <Sticker className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300"/>
+ <Smile className="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300"/>
  </div>
  </div>
  </div>
@@ -272,9 +272,9 @@ const WelcomeMessage = ({ title, isDirectMessage }) => {
  <div className="flex flex-col items-start gap-y-2 mb-8 px-4">
  <div className="h-16 w-16 rounded-md bg-zinc-200 dark:bg-[#404249] flex items-center justify-center shadow-md transform rotate-3 hover:rotate-0 transition">
  {isDirectMessage ? (
- <User className="h-10 w-10 text-zinc-900 dark:text-white" />
+ <User className="w-10 text-zinc-900 dark:text-white"/>
  ) : (
- <Hash className="h-10 w-10 text-zinc-900 dark:text-white" />
+ <Hash className="w-10 text-zinc-900 dark:text-white"/>
  )}
  </div>
  <h1 className="text-3xl text-zinc-900 dark:text-white mt-4">
@@ -293,7 +293,7 @@ export default function MessagePage() {
  return (
  <Suspense fallback={
  <div className="flex flex-1 h-full items-center justify-center">
- <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+ <Loader2 className="h-8 w-8 animate-spin text-zinc-500"/>
  </div>
  }>
  <MessagePageContent />

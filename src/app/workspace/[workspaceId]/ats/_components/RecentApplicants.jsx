@@ -1,41 +1,41 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from'framer-motion';
 import { 
  User, 
  MoreVertical, 
  Star, 
  ArrowRight,
  Search
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from'lucide-react';
+import { Button } from'@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from'@/components/ui/card';
+import { Badge } from'@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from'@/components/ui/avatar';
 
 export const RecentApplicants = ({ applicants = [] }) => {
  const defaultApplicants = [
  { 
- name: "Rahul Sharma", 
- role: "Frontend Dev", 
+ name:"Rahul Sharma", 
+ role:"Frontend Dev", 
  score: 4.8, 
- appliedAt: "2h ago", 
+ appliedAt:"2h ago", 
  avatar: null,
- status: "Screening"
+ status:"Screening"
  },
  { 
- name: "Priya Patel", 
- role: "Product Designer", 
+ name:"Priya Patel", 
+ role:"Product Designer", 
  score: 4.5, 
- appliedAt: "5h ago", 
+ appliedAt:"5h ago", 
  avatar: null,
- status: "Applied"
+ status:"Applied"
  }
  ];
 
  const displayApplicants = applicants.length > 0 ? applicants.map(app => ({
- name: app.candidate?.name || "Anonymous",
- role: app.job?.title || "Unknown Position",
+ name: app.candidate?.name ||"Anonymous",
+ role: app.job?.title ||"Unknown Position",
  score: app.candidate?.aiMatchScore ? (app.candidate.aiMatchScore / 20).toFixed(1) : null,
  appliedAt: new Date(app.createdAt).toLocaleDateString(),
  avatar: app.candidate?.avatarUrl,
@@ -44,19 +44,19 @@ export const RecentApplicants = ({ applicants = [] }) => {
 
  const getStatusColor = (status) => {
  switch (status) {
- case 'Applied': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
- case 'Screening': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
- case 'Interview': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
- default: return 'bg-secondary text-secondary-foreground';
+ case'Applied': return'bg-blue-500/10 text-blue-500 border-blue-500/20';
+ case'Screening': return'bg-amber-500/10 text-amber-500 border-amber-500/20';
+ case'Interview': return'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+ default: return'bg-secondary text-secondary-foreground';
  }
  };
 
  return (
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between">
- <CardTitle className="text-xl ">Recent Applicants</CardTitle>
+ <CardTitle className="text-xl">Recent Applicants</CardTitle>
  <div className="flex items-center gap-2">
- <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-40 hover:opacity-100 bg-muted/40 backdrop-blur-xl">
+ <Button variant="ghost"size="icon"className="h-8 w-8 rounded-full opacity-40 hover:opacity-100 bg-muted/40 backdrop-blur-xl">
  <Search size={14} />
  </Button>
  </div>
@@ -72,10 +72,10 @@ export const RecentApplicants = ({ applicants = [] }) => {
  className="flex items-center justify-between p-4 rounded-md hover:bg-primary/5 transition-all cursor-pointer group"
  >
  <div className="flex items-center gap-4">
- <Avatar className="h-10 w-10 border-2 border-primary/20 bg-background group-hover:scale-110 transition-transform">
+ <Avatar className="w-10 border-2 border-primary/20 bg-background group-hover:scale-110 transition-transform">
  <AvatarImage src={applicant.avatar} />
- <AvatarFallback className="bg-primary/10 text-primary text-xs ">
- {applicant.name.split(' ').map(n => n[0]).join('')}
+ <AvatarFallback className="bg-primary/10 text-primary text-xs">
+ {applicant.name.split('').map(n => n[0]).join('')}
  </AvatarFallback>
  </Avatar>
  <div className="space-y-0.5">
@@ -90,7 +90,7 @@ export const RecentApplicants = ({ applicants = [] }) => {
  <div className="flex items-center gap-2">
  {applicant.score && (
  <div className="flex items-center gap-1">
- <Star size={10} className="fill-amber-500 text-amber-500" />
+ <Star size={10} className="fill-amber-500 text-amber-500"/>
  <span className="text-[10px]">{applicant.score}</span>
  </div>
  )}
@@ -100,8 +100,8 @@ export const RecentApplicants = ({ applicants = [] }) => {
  </motion.div>
  ))}
  </div>
- <Button variant="ghost" className="w-full mt-4 text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100 hover:bg-primary/5 rounded-md h-12">
- View Talent Database <ArrowRight size={12} className="ml-2" />
+ <Button variant="ghost"className="w-full mt-4 text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100 hover:bg-primary/5 rounded-md h-12">
+ View Talent Database <ArrowRight size={12} className="ml-2"/>
  </Button>
  </CardContent>
  </Card>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { useModal } from "@/hooks/useModal";
+import { useState, useEffect } from"react";
+import { useModal } from"@/hooks/useModal";
 import {
  Dialog,
  DialogContent,
@@ -9,15 +9,15 @@ import {
  DialogFooter,
  DialogHeader,
  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, LayoutPanelTop, Type } from "lucide-react";
-import { toast } from "sonner";
+} from"@/components/ui/dialog";
+import { Button } from"@/components/ui/button";
+import { Input } from"@/components/ui/input";
+import { Loader2, LayoutPanelTop, Type } from"lucide-react";
+import { toast } from"sonner";
 
 export const AddKanbanColumnModal = () => {
  const { isOpen, onClose, type, data } = useModal();
- const isModalOpen = isOpen && type === "addKanbanColumn";
+ const isModalOpen = isOpen && type ==="addKanbanColumn";
  const { workspaceId, onApply, order } = data || {};
 
  const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +34,7 @@ export const AddKanbanColumnModal = () => {
  try {
  setIsLoading(true);
  const response = await fetch(`/api/workspace/${workspaceId}/productivity/kanban/columns`, {
- method: 'POST',
+ method:'POST',
  body: JSON.stringify({
  title,
  order: order || 0
@@ -67,9 +67,9 @@ export const AddKanbanColumnModal = () => {
  <DialogHeader className="p-8 pb-0">
  <div className="flex items-center gap-3 mb-2">
  <div className="p-2 rounded-md bg-primary/10">
- <LayoutPanelTop className="h-5 w-5 text-primary" />
+ <LayoutPanelTop className="h-5 w-5 text-primary"/>
  </div>
- <DialogTitle className="text-2xl font-bold ">
+ <DialogTitle className="text-2xl font-bold">
  Create New Column
  </DialogTitle>
  </div>
@@ -111,9 +111,9 @@ export const AddKanbanColumnModal = () => {
  className="h-12 rounded-md font-bold flex-1 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
  >
  {isLoading ? (
- <Loader2 className="h-4 w-4 animate-spin" />
+ <Loader2 className="h-4 w-4 animate-spin"/>
  ) : (
- "Create Column"
+"Create Column"
  )}
  </Button>
  </DialogFooter>

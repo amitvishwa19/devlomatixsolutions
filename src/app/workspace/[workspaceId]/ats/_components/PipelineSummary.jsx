@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from'framer-motion';
 import { 
  Users, 
  CheckCircle2, 
@@ -9,21 +9,21 @@ import {
  ArrowUpRight,
  Search,
  Play
-} from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+} from'lucide-react';
+import { useParams, useRouter } from'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from'@/components/ui/card';
+import { Button } from'@/components/ui/button';
+import { Progress } from'@/components/ui/progress';
 
 export const PipelineSummary = ({ stats, nextInterview }) => {
  const { workspaceId } = useParams();
  const router = useRouter();
  const defaultStages = [
- { label: "Applied", count: 0, color: "bg-blue-500", progress: 100 },
- { label: "Screening", count: 0, color: "bg-amber-500", progress: 80 },
- { label: "Technical", count: 0, color: "bg-primary", progress: 60 },
- { label: "Cultural", count: 0, color: "bg-emerald-500", progress: 40 },
- { label: "Offer", count: 0, color: "bg-indigo-500", progress: 20 }
+ { label:"Applied", count: 0, color:"bg-blue-500", progress: 100 },
+ { label:"Screening", count: 0, color:"bg-amber-500", progress: 80 },
+ { label:"Technical", count: 0, color:"bg-primary", progress: 60 },
+ { label:"Cultural", count: 0, color:"bg-emerald-500", progress: 40 },
+ { label:"Offer", count: 0, color:"bg-indigo-500", progress: 20 }
  ];
 
  const displayStages = stats || defaultStages;
@@ -35,8 +35,8 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  <CardTitle className="text-2xl tracking-tighter">Hiring Pipeline</CardTitle>
  <p className="text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">Candidate Flow across all jobs</p>
  </div>
- <Button variant="outline" className="h-10 rounded-md px-4 text-[9px] border-border/40 bg-card/40 backdrop-blur-xl">
- Detailed Pipeline <ArrowUpRight className="ml-2 w-3 h-3" />
+ <Button variant="outline"className="rounded-md px-4 text-[9px] border-border/40 bg-card/40 backdrop-blur-xl">
+ Detailed Pipeline <ArrowUpRight className="ml-2 w-3 h-3"/>
  </Button>
  </CardHeader>
  <CardContent>
@@ -61,7 +61,7 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  <motion.div
  initial={{ width: 0 }}
  animate={{ width: `${stage.progress}%` }}
- transition={{ duration: 1, ease: "easeOut", delay: i * 0.1 }}
+ transition={{ duration: 1, ease:"easeOut", delay: i * 0.1 }}
  className={`h-full ${stage.color} shadow-lg shadow-black/20`}
  />
  </div>
@@ -76,16 +76,16 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
  </div>
  <div>
  <h4 className="text-sm">Upcoming Interviews</h4>
- <p className="text-[10px] font-bold text-muted-foreground opacity-60 ">
- {nextInterview ? `Next scheduled: ${nextInterview.time} with ${nextInterview.name}` : "No upcoming interviews scheduled"}
+ <p className="text-[10px] font-bold text-muted-foreground opacity-60">
+ {nextInterview ? `Next scheduled: ${nextInterview.time} with ${nextInterview.name}` :"No upcoming interviews scheduled"}
  </p>
  </div>
  </div>
  <Button 
- onClick={() => router.push(`/workspace/${workspaceId}/ats/interviews/${nextInterview?.id || 'demo-session'}`)}
- className="rounded-md h-10 px-6 text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
+ onClick={() => router.push(`/workspace/${workspaceId}/ats/interviews/${nextInterview?.id ||'demo-session'}`)}
+ className="rounded-md px-6 text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
  >
- Launch Interview Space <Play size={12} className="ml-2 fill-current" />
+ Launch Interview Space <Play size={12} className="ml-2 fill-current"/>
  </Button>
  </div>
  </CardContent>

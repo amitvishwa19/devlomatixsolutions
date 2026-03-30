@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React from"react";
 import {
  LayoutDashboard,
  Share2,
@@ -13,10 +13,10 @@ import {
  Users,
  ShieldCheck,
  Activity
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+} from"lucide-react";
+import { Button } from"@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from"@/components/ui/card";
+import Link from"next/link";
 
 const DashboardCard = ({ title, description, icon: Icon, href, color, stats }) => (
  <Link href={href}>
@@ -28,7 +28,7 @@ const DashboardCard = ({ title, description, icon: Icon, href, color, stats }) =
  <div className={`p-2.5 rounded-md bg-${color}/10 text-${color} group-hover:scale-110 transition-transform`}>
  <Icon size={24} />
  </div>
- <ArrowRight size={16} className="text-muted-foreground opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+ <ArrowRight size={16} className="text-muted-foreground opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"/>
  </div>
  <CardTitle className="text-xl font-extrabold mt-4">{title}</CardTitle>
  <CardDescription className="text-xs font-medium opacity-70 leading-relaxed">
@@ -53,47 +53,47 @@ const DashboardCard = ({ title, description, icon: Icon, href, color, stats }) =
 export default function WorkspaceDashboard({ workspaceId }) {
  const modules = [
  {
- title: "Social Media Hub",
- description: "Design, schedule and publish content across Meta, X, and LinkedIn.",
+ title:"Social Media Hub",
+ description:"Design, schedule and publish content across Meta, X, and LinkedIn.",
  icon: Share2,
  href: `/workspace/${workspaceId}/article`,
- color: "primary",
+ color:"primary",
  stats: [
- { label: "Active", value: "8 Posts" },
- { label: "Scheduled", value: "3" }
+ { label:"Active", value:"8 Posts"},
+ { label:"Scheduled", value:"3"}
  ]
  },
  {
- title: "WhatsApp Manager",
- description: "Direct customer engagement, bulk campaigns and automated bot flows.",
+ title:"WhatsApp Manager",
+ description:"Direct customer engagement, bulk campaigns and automated bot flows.",
  icon: MessageCircle,
  href: `/workspace/${workspaceId}/wa`,
- color: "green-500",
+ color:"green-500",
  stats: [
- { label: "Status", value: "Connected" },
- { label: "Campaigns", value: "24" }
+ { label:"Status", value:"Connected"},
+ { label:"Campaigns", value:"24"}
  ]
  },
  {
- title: "Digital Assets",
- description: "Securely store and organize your documents, images and rich media.",
+ title:"Digital Assets",
+ description:"Securely store and organize your documents, images and rich media.",
  icon: FileText,
  href: `/workspace/${workspaceId}/document`,
- color: "blue-500",
+ color:"blue-500",
  stats: [
- { label: "Storage", value: "4.2 GB" },
- { label: "Files", value: "156" }
+ { label:"Storage", value:"4.2 GB"},
+ { label:"Files", value:"156"}
  ]
  },
  {
- title: "System & Access",
- description: "Manage credentials, team permissions and platform configurations.",
+ title:"System & Access",
+ description:"Manage credentials, team permissions and platform configurations.",
  icon: Settings,
  href: `/workspace/${workspaceId}/system/setting`,
- color: "orange-500",
+ color:"orange-500",
  stats: [
- { label: "Team", value: "12 Members" },
- { label: "Security", value: "Shield On" }
+ { label:"Team", value:"12 Members"},
+ { label:"Security", value:"Shield On"}
  ]
  }
  ];
@@ -102,11 +102,11 @@ export default function WorkspaceDashboard({ workspaceId }) {
  <div className="space-y-6 pb-10 animate-fade-in">
  {/* Hero Section */}
  <div className="relative p-8 rounded-md overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-soft">
- <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 blur-3xl -z-10" />
+ <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 blur-3xl -z-10"/>
  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div className="space-y-2">
  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary w-fit text-[10px] font-extrabold tracking-[0.2em]">
- <Zap size={12} className="fill-primary" /> Multi-Channel Engine
+ <Zap size={12} className="fill-primary"/> Multi-Channel Engine
  </div>
  <h1 className="text-4xl md:text-3xl tracking-tighter text-foreground">
  Welcome to your <span className="text-primary tracking-normal italic">Workspace.</span>
@@ -132,11 +132,11 @@ export default function WorkspaceDashboard({ workspaceId }) {
  <CardHeader className="flex flex-row items-center justify-between pb-2">
  <div>
  <CardTitle className="text-xl font-bold flex items-center gap-2">
- <Activity size={20} className="text-primary" /> Activity Overview
+ <Activity size={20} className="text-primary"/> Activity Overview
  </CardTitle>
  <CardDescription className="text-xs">Real-time performance across all channels</CardDescription>
  </div>
- <Button variant="outline" size="sm" className="text-[10px] font-bold">
+ <Button variant="outline"size="sm"className="text-[10px] font-bold">
  View Full Logs
  </Button>
  </CardHeader>
@@ -153,16 +153,16 @@ export default function WorkspaceDashboard({ workspaceId }) {
  <Card className="border-border bg-card shadow-soft rounded-md">
  <CardHeader>
  <CardTitle className="text-xl font-bold flex items-center gap-2">
- <ShieldCheck size={20} className="text-green-500" /> System Health
+ <ShieldCheck size={20} className="text-green-500"/> System Health
  </CardTitle>
  <CardDescription className="text-xs">Token & security status</CardDescription>
  </CardHeader>
  <CardContent className="space-y-4">
  {[
- { name: "Facebook API", status: "Operational", color: "bg-green-500" },
- { name: "Instagram Graph", status: "Operational", color: "bg-green-500" },
- { name: "WhatsApp Business", status: "Operational", color: "bg-green-500" },
- { name: "Twitter/X OAuth", status: "Warning", color: "bg-yellow-500" },
+ { name:"Facebook API", status:"Operational", color:"bg-green-500"},
+ { name:"Instagram Graph", status:"Operational", color:"bg-green-500"},
+ { name:"WhatsApp Business", status:"Operational", color:"bg-green-500"},
+ { name:"Twitter/X OAuth", status:"Warning", color:"bg-yellow-500"},
  ].map((s) => (
  <div key={s.name} className="flex items-center justify-between p-3 rounded-md bg-background/40 border border-border/5">
  <span className="text-xs font-bold text-foreground">{s.name}</span>

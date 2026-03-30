@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import axios from "@/utils/axios";
+import { useState, useEffect, useCallback } from'react';
+import { useParams } from'next/navigation';
+import axios from"@/utils/axios";
 import { 
  Card, 
  CardContent, 
  CardHeader, 
  CardTitle, 
  CardDescription 
-} from "@/components/ui/card";
+} from"@/components/ui/card";
 import { 
  Table, 
  TableBody, 
@@ -17,16 +17,16 @@ import {
  TableHead, 
  TableHeader, 
  TableRow 
-} from "@/components/ui/table";
+} from"@/components/ui/table";
 import { 
  Select, 
  SelectContent, 
  SelectItem, 
  SelectTrigger, 
  SelectValue 
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from"@/components/ui/select";
+import { Button } from"@/components/ui/button";
+import { Badge } from"@/components/ui/badge";
 import { 
  Loader2, 
  RefreshCcw, 
@@ -40,16 +40,16 @@ import {
  ChevronLeft,
  ChevronRight,
  Search
-} from "lucide-react";
+} from"lucide-react";
 import { 
  Dialog, 
  DialogContent, 
  DialogHeader, 
  DialogTitle, 
  DialogDescription 
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { format } from "date-fns";
+} from"@/components/ui/dialog";
+import { toast } from"sonner";
+import { format } from"date-fns";
 
 export default function LogPage() {
  const params = useParams();
@@ -58,7 +58,7 @@ export default function LogPage() {
  const [logs, setLogs] = useState([]);
  const [isLoading, setIsLoading] = useState(true);
  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
- const [filters, setFilters] = useState({ level: 'ALL', type: 'ALL' });
+ const [filters, setFilters] = useState({ level:'ALL', type:'ALL'});
  const [selectedLog, setSelectedLog] = useState(null);
 
  const fetchLogs = useCallback(async () => {
@@ -99,20 +99,20 @@ export default function LogPage() {
 
  const getLevelBadge = (level) => {
  switch (level) {
- case 'ERROR': return <Badge variant="destructive" className="font-bold flex items-center gap-1.5"><AlertCircle size={12} /> ERROR</Badge>;
- case 'WARNING': return <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-50 font-bold flex items-center gap-1.5"><AlertTriangle size={12} /> WARNING</Badge>;
- case 'SUCCESS': return <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50 font-bold flex items-center gap-1.5"><CheckCircle2 size={12} /> SUCCESS</Badge>;
- case 'INFO': return <Badge variant="outline" className="border-blue-500 text-blue-600 bg-blue-50 font-bold flex items-center gap-1.5"><Info size={12} /> INFO</Badge>;
+ case'ERROR': return <Badge variant="destructive"className="font-bold flex items-center gap-1.5"><AlertCircle size={12} /> ERROR</Badge>;
+ case'WARNING': return <Badge variant="outline"className="border-amber-500 text-amber-600 bg-amber-50 font-bold flex items-center gap-1.5"><AlertTriangle size={12} /> WARNING</Badge>;
+ case'SUCCESS': return <Badge variant="outline"className="border-green-500 text-green-600 bg-green-50 font-bold flex items-center gap-1.5"><CheckCircle2 size={12} /> SUCCESS</Badge>;
+ case'INFO': return <Badge variant="outline"className="border-blue-500 text-blue-600 bg-blue-50 font-bold flex items-center gap-1.5"><Info size={12} /> INFO</Badge>;
  default: return <Badge variant="secondary">{level}</Badge>;
  }
  };
 
  const getTypeIcon = (type) => {
  switch (type) {
- case 'CRON': return <RefreshCcw size={14} className="text-muted-foreground mr-2" />;
- case 'TRIGGER': return <Terminal size={14} className="text-muted-foreground mr-2" />;
- case 'AI': return <RefreshCcw size={14} className="text-primary mr-2" />;
- default: return <Info size={14} className="text-muted-foreground mr-2" />;
+ case'CRON': return <RefreshCcw size={14} className="text-muted-foreground mr-2"/>;
+ case'TRIGGER': return <Terminal size={14} className="text-muted-foreground mr-2"/>;
+ case'AI': return <RefreshCcw size={14} className="text-primary mr-2"/>;
+ default: return <Info size={14} className="text-muted-foreground mr-2"/>;
  }
  };
 
@@ -122,18 +122,18 @@ export default function LogPage() {
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div className="space-y-1">
  <h1 className="text-3xl font-extrabold flex items-center gap-3">
- <Terminal className="text-primary h-8 w-8" /> System Observation
+ <Terminal className="text-primary h-8 w-8"/> System Observation
  </h1>
  <p className="text-muted-foreground text-sm font-medium">
  Monitor system triggers, cron jobs, and error reports in real-time.
  </p>
  </div>
  <div className="flex items-center gap-2">
- <Button variant="outline" onClick={fetchLogs} disabled={isLoading} size="sm" className="font-bold tracking-wider text-[10px]">
- <RefreshCcw className={`mr-2 h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+ <Button variant="outline"onClick={fetchLogs} disabled={isLoading} size="sm"className="font-bold tracking-wider text-[10px]">
+ <RefreshCcw className={`mr-2 h-3.5 w-3.5 ${isLoading ?'animate-spin':''}`} /> Refresh
  </Button>
- <Button variant="destructive" onClick={handleClearLogs} size="sm" className="font-bold tracking-wider text-[10px]">
- <Trash2 className="mr-2 h-3.5 w-3.5" /> Clear Old Logs
+ <Button variant="destructive"onClick={handleClearLogs} size="sm"className="font-bold tracking-wider text-[10px]">
+ <Trash2 className="mr-2 h-3.5 w-3.5"/> Clear Old Logs
  </Button>
  </div>
  </div>
@@ -142,7 +142,7 @@ export default function LogPage() {
  <Card className="bg-card/50 backdrop-blur-md border-border shadow-soft overflow-hidden rounded-md">
  <CardContent className="p-4 flex flex-wrap items-center gap-6">
  <div className="flex items-center gap-2">
- <Search size={14} className="text-muted-foreground" />
+ <Search size={14} className="text-muted-foreground"/>
  <span className="text-[10px] text-muted-foreground">Filter By:</span>
  </div>
  
@@ -150,7 +150,7 @@ export default function LogPage() {
  <span className="text-[10px] font-bold text-muted-foreground/60">SEVERITY</span>
  <Select value={filters.level} onValueChange={(val) => setFilters(prev => ({ ...prev, level: val }))}>
  <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-md">
- <SelectValue placeholder="All Levels" />
+ <SelectValue placeholder="All Levels"/>
  </SelectTrigger>
  <SelectContent>
  <SelectItem value="ALL">All Levels</SelectItem>
@@ -166,7 +166,7 @@ export default function LogPage() {
  <span className="text-[10px] font-bold text-muted-foreground/60">MODULE</span>
  <Select value={filters.type} onValueChange={(val) => setFilters(prev => ({ ...prev, type: val }))}>
  <SelectTrigger className="h-8 w-[140px] text-[11px] font-bold bg-background rounded-md">
- <SelectValue placeholder="All Types" />
+ <SelectValue placeholder="All Types"/>
  </SelectTrigger>
  <SelectContent>
  <SelectItem value="ALL">All Modules</SelectItem>
@@ -200,7 +200,7 @@ export default function LogPage() {
  <TableRow>
  <TableCell colSpan={5} className="h-48 text-center">
  <div className="flex flex-col items-center gap-3 opacity-40">
- <Loader2 className="h-8 w-8 animate-spin text-primary" />
+ <Loader2 className="h-8 w-8 animate-spin text-primary"/>
  <span className="text-[10px] tracking-[0.3em]">Synchronizing Diagnostics...</span>
  </div>
  </TableCell>
@@ -209,19 +209,19 @@ export default function LogPage() {
  <TableRow>
  <TableCell colSpan={5} className="h-48 text-center">
  <div className="flex flex-col items-center gap-3 opacity-30">
- <Terminal className="h-10 w-10" />
+ <Terminal className="w-10"/>
  <span className="text-sm font-bold">No system logs discovered with these filters</span>
  </div>
  </TableCell>
  </TableRow>
  ) : (
  logs.map((log) => (
- <TableRow key={log.id} className="group cursor-pointer hover:bg-muted/20 border-b border-border/30 transition-colors" onClick={() => setSelectedLog(log)}>
+ <TableRow key={log.id} className="group cursor-pointer hover:bg-muted/20 border-b border-border/30 transition-colors"onClick={() => setSelectedLog(log)}>
  <TableCell className="py-4 font-medium text-[10px]">
  {getLevelBadge(log.level)}
  </TableCell>
  <TableCell className="py-4">
- <div className="flex items-center text-[10px] ">
+ <div className="flex items-center text-[10px]">
  {getTypeIcon(log.type)}
  {log.type}
  </div>
@@ -230,10 +230,10 @@ export default function LogPage() {
  {log.message}
  </TableCell>
  <TableCell className="py-4 text-right text-[11px] font-bold text-muted-foreground/80 font-mono">
- {format(new Date(log.createdAt), 'MMM dd, HH:mm:ss')}
+ {format(new Date(log.createdAt),'MMM dd, HH:mm:ss')}
  </TableCell>
  <TableCell className="py-4 text-right pr-4">
- <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+ <Button variant="ghost"size="sm"className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
  <Eye size={14} />
  </Button>
  </TableCell>
@@ -247,13 +247,13 @@ export default function LogPage() {
 
  {/* Pagination */}
  <div className="flex items-center justify-between px-2">
- <p className="text-[10px] font-bold text-muted-foreground ">
+ <p className="text-[10px] font-bold text-muted-foreground">
  Showing {logs.length} of {pagination.total} records
  </p>
  <div className="flex items-center gap-2">
  <Button 
- variant="ghost" 
- size="sm" 
+ variant="ghost"
+ size="sm"
  disabled={pagination.page <= 1 || isLoading}
  onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
  className="h-8 w-8 p-0 rounded-full border bg-background"
@@ -266,8 +266,8 @@ export default function LogPage() {
  <span className="text-[11px] font-bold text-muted-foreground/40">{pagination.pages}</span>
  </div>
  <Button 
- variant="ghost" 
- size="sm" 
+ variant="ghost"
+ size="sm"
  disabled={pagination.page >= pagination.pages || isLoading}
  onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
  className="h-8 w-8 p-0 rounded-full border bg-background"
@@ -283,38 +283,38 @@ export default function LogPage() {
  <DialogHeader className="p-6 pb-2">
  <div className="flex items-center justify-between mb-2">
  {selectedLog && getLevelBadge(selectedLog.level)}
- <span className="text-[10px] text-muted-foreground ">
+ <span className="text-[10px] text-muted-foreground">
  Log ID: {selectedLog?.id?.slice(0, 8)}...
  </span>
  </div>
- <DialogTitle className="text-xl font-bold ">
+ <DialogTitle className="text-xl font-bold">
  {selectedLog?.message}
  </DialogTitle>
  <DialogDescription className="text-xs font-medium">
- {selectedLog && format(new Date(selectedLog.createdAt), 'EEEE, MMMM do yyyy | HH:mm:ss.SSS')}
+ {selectedLog && format(new Date(selectedLog.createdAt),'EEEE, MMMM do yyyy | HH:mm:ss.SSS')}
  </DialogDescription>
  </DialogHeader>
  
  <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-hide">
  <div className="grid grid-cols-2 gap-4">
  <div className="bg-muted/40 p-4 rounded-md border border-border/50">
- <span className="text-[10px] text-muted-foreground block mb-2 ">Target Module</span>
+ <span className="text-[10px] text-muted-foreground block mb-2">Target Module</span>
  <div className="flex items-center font-bold text-sm">
  {selectedLog && getTypeIcon(selectedLog.type)}
  {selectedLog?.type}
  </div>
  </div>
  <div className="bg-muted/40 p-4 rounded-md border border-border/50">
- <span className="text-[10px] text-muted-foreground block mb-2 ">Workspace ID</span>
+ <span className="text-[10px] text-muted-foreground block mb-2">Workspace ID</span>
  <div className="font-mono text-[11px] font-bold truncate">
- {selectedLog?.workspaceId || 'GLOBAL / SYSTEM'}
+ {selectedLog?.workspaceId ||'GLOBAL / SYSTEM'}
  </div>
  </div>
  </div>
 
  {selectedLog?.details && (
  <div className="space-y-2">
- <span className="text-[10px] text-muted-foreground ml-1 ">Technical Metadata (JSON)</span>
+ <span className="text-[10px] text-muted-foreground ml-1">Technical Metadata (JSON)</span>
  <div className="bg-black/95 p-6 rounded-md overflow-hidden shadow-inner border border-white/5 relative group">
  <pre className="text-[11px] font-mono text-blue-400 overflow-x-auto scrollbar-hide leading-relaxed">
  {JSON.stringify(selectedLog.details, null, 2)}
