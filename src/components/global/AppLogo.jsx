@@ -22,14 +22,15 @@ export function AppLogo({ size = 130, height, width, link, className }) {
 
     return (
         <Link href={link}>
-            <div className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-4 ", className)}>
+            <div className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center  ", className)}>
                 <Image
                     src={logo}
                     alt='logo'
-                    height={height || size}
-                    width={width || size}
-                    className="h-auto w-auto object-contain"
+                    height={height}
+                    width={width}
+                    className="object-contain"
                     priority={false}
+
                 />
             </div>
         </Link>
