@@ -556,9 +556,9 @@ model Post {
 model SystemLog {
   id          String   @id @default(cuid())
   workspaceId String?
-  level       String
-  type        String
-  message     String
+  level       String?
+  type        String?
+  message     String?
   details     Json?
   userId      String?
   createdAt   DateTime @default(now())
