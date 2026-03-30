@@ -123,6 +123,8 @@ export default function ContactsPage() {
     const [activeGroupId, setActiveGroupId] = useState(null);
     const [memberSearchQuery, setMemberSearchQuery] = useState('');
     const [selectedMemberIds, setSelectedMemberIds] = useState([]);
+    const [editingGroupId, setEditingGroupId] = useState(null);
+    const [groupEditName, setGroupEditName] = useState('');
 
     // Filtered and Sorted Contacts
     const filteredContacts = contacts.
@@ -628,6 +630,31 @@ export default function ContactsPage() {
         }
     };
 
+    const handleUpdateGroup = async (groupId) => {
+        if (!groupEditName.trim()) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/wa/groups/${groupId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: groupEditName, userId })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, name: data.name } : g));
+                setEditingGroupId(null);
+                setGroupEditName('');
+                toast({ title: "Group Updated", description: "The group name has been successfully updated." });
+                fetchContacts(); // Refresh to see updated group name in contacts
+            }
+        } catch (error) {
+            console.error('Error updating group:', error);
+            toast({ title: "Update Error", description: "Failed to update group name.", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleRemoveFromGroup = async (contactId, groupId) => {
         setLoading(true);
         try {
@@ -997,9 +1024,9 @@ export default function ContactsPage() {
                                                 }
                                             </div> :
 
-                                            filteredContacts.map((contact) =>
+                                            filteredContacts.map((contact, index) =>
                                                 <div
-                                                    key={contact.id}
+                                                    key={`${contact.id}-${index}`}
                                                     className={`group relative flex items-center gap-4 p-4 rounded-md border transition-all duration-200 hover:shadow-md ${selectedContacts.includes(contact.id) ? 'border-primary/50 bg-primary/5 shadow-sm' : 'border-border/50 bg-card hover:border-border'}`}>
 
                                                     <div className="flex items-center gap-3">
@@ -1468,18 +1495,65 @@ export default function ContactsPage() {
                                 <ScrollArea className="h-[200px] rounded-md border border-border p-2">
                                     {groups.map((group) =>
                                         <div key={group.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md group">
-                                            <div>
-                                                <p className="text-xs font-medium">{group.name}</p>
-                                                <p className="text-[10px] text-muted-foreground">{group._count?.contacts} contacts</p>
+                                            <div className="flex-1">
+                                                {editingGroupId === group.id ? (
+                                                    <div className="flex items-center gap-2 pr-2">
+                                                        <Input
+                                                            value={groupEditName}
+                                                            onChange={(e) => setGroupEditName(e.target.value)}
+                                                            className="h-7 text-xs py-0"
+                                                            autoFocus
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleUpdateGroup(group.id)}
+                                                        />
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 text-green-500 hover:text-green-600 hover:bg-green-50"
+                                                            onClick={() => handleUpdateGroup(group.id)}
+                                                            disabled={loading}
+                                                        >
+                                                            <Check className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 text-muted-foreground"
+                                                            onClick={() => {
+                                                                setEditingGroupId(null);
+                                                                setGroupEditName('');
+                                                            }}
+                                                        >
+                                                            <X className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <p className="text-xs font-medium">{group.name}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{group._count?.contacts} contacts</p>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 w-8 p-0 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                                onClick={() => handleDeleteGroup(group.id)}>
-
-                                                <X className="w-4 h-4" />
-                                            </Button>
+                                            <div className="flex items-center gap-0.5">
+                                                {editingGroupId !== group.id && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={() => {
+                                                            setEditingGroupId(group.id);
+                                                            setGroupEditName(group.name);
+                                                        }}>
+                                                        <Pencil className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={() => handleDeleteGroup(group.id)}>
+                                                    <X className="w-4 h-4" />
+                                                </Button>
+                                            </div>
                                         </div>
                                     )}
                                 </ScrollArea>
@@ -1563,7 +1637,7 @@ export default function ContactsPage() {
                             <div className="space-y-2">
                                 {contacts.
                                     filter((c) =>
-                                        !c.groups.some((g) => g.id === activeGroupId) && (
+                                        !(c.groups || []).some((g) => g.id === activeGroupId) && (
                                             c.name.toLowerCase().includes(memberSearchQuery.toLowerCase()) || c.phone.includes(memberSearchQuery))
                                     ).
                                     map((contact) =>

@@ -1,4 +1,4 @@
-import { makeWASocket, DisconnectReason, Browsers, fetchLatestBaileysVersion, generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
+import { makeWASocket, DisconnectReason, Browsers, fetchLatestBaileysVersion, generateWAMessageFromContent, prepareWAMessageMedia, proto } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import { Boom } from '@hapi/boom';
 import * as fs from 'fs';
@@ -207,7 +207,7 @@ class WhatsAppManager {
         const getCleanText = (input: any) => {
             if (!input) return '';
             if (typeof input === 'string') return input;
-            if (input.text) return input.text;
+            if (input.text !== undefined && input.text !== null) return String(input.text);
             return String(input);
         };
 
@@ -240,8 +240,41 @@ class WhatsAppManager {
                 finalBody = `Location: ${loc.name || 'Shared Location'}`;
                 result = await this.sock.sendMessage(jid, { location: loc });
             }
-            // 3. Interactive Types
-            
+            // 3. Interactive / Carousel Types
+            else if (data.interactive || type === 'interactive' || data.carousel || type === 'carousel') {
+                const interactiveData = data.interactive || data;
+                finalBody = getCleanText(interactiveData.body || interactiveData.text || 'Interactive Message');
+                
+                // If it's a raw interactive message payload from the frontend
+                const msgContent = interactiveData.interactiveMessage || interactiveData;
+
+                if (msgContent.carouselMessage?.cards) {
+                    try {
+                        for (const card of msgContent.carouselMessage.cards) {
+                            if (card.header?.imageMessage?.url && !card.header.imageMessage.mimetype) {
+                                // Prepare media if it's a raw URL
+                                const media = await prepareWAMessageMedia(
+                                    { image: { url: card.header.imageMessage.url } },
+                                    { upload: (this.sock as any).waUploadToServer }
+                                );
+                                card.header.imageMessage = media.imageMessage;
+                            }
+                        }
+                    } catch (mediaErr) {
+                        console.error('[WA] Carousel Media Prep Failed:', mediaErr);
+                    }
+                }
+
+                if (interactiveData.type === 'carousel' || data.carousel || msgContent.carouselMessage) {
+                    result = await this.sock.sendMessage(jid, { 
+                        interactiveMessage: msgContent 
+                    } as any);
+                } else {
+                    result = await this.sock.sendMessage(jid, { 
+                        interactiveMessage: msgContent 
+                    } as any);
+                }
+            }
             // 4. Default Text
             else {
                 finalBody = getCleanText(data.text || data.body || '');

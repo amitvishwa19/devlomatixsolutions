@@ -12,7 +12,12 @@ export async function GET(req) {
 
         const userId = session.user.userId || session.user.id;
         const templates = await db.messageTemplate.findMany({
-            where: { userId },
+            where: {
+                OR: [
+                    { isDefault: true },
+                    { userId }
+                ]
+            },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -47,10 +52,18 @@ export async function POST(req) {
 
         let template;
         if (id) {
-            // Check if template belongs to user
+            // Check if template belongs to user or is default
             const existing = await db.messageTemplate.findUnique({ where: { id } });
-            if (!existing || existing.userId !== userId) {
-                return NextResponse.json({ error: "Template not found or unauthorized" }, { status: 403 });
+            if (!existing) {
+                return NextResponse.json({ error: "Template not found" }, { status: 404 });
+            }
+            
+            if (existing.isDefault) {
+                return NextResponse.json({ error: "Default templates cannot be modified. Please copy them to create a custom template." }, { status: 403 });
+            }
+
+            if (existing.userId !== userId) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
             }
 
             template = await db.messageTemplate.update({
@@ -116,8 +129,16 @@ export async function DELETE(req) {
         }
 
         const existing = await db.messageTemplate.findUnique({ where: { id } });
-        if (!existing || existing.userId !== userId) {
-            return NextResponse.json({ error: "Template not found or unauthorized" }, { status: 403 });
+        if (!existing) {
+            return NextResponse.json({ error: "Template not found" }, { status: 404 });
+        }
+
+        if (existing.isDefault) {
+            return NextResponse.json({ error: "Default templates cannot be deleted." }, { status: 403 });
+        }
+
+        if (existing.userId !== userId) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
         await db.messageTemplate.delete({

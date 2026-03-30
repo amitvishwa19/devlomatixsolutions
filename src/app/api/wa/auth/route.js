@@ -26,11 +26,18 @@ export async function GET() {
 
         const qr = waManager.getQrCodeString();
         const currentStatus = waManager.getState();
-        console.log(`[Auth API] Returning status: ${currentStatus}, hasQR: ${!!qr}`);
+        
+        let authRecord = null;
+        if (session?.user?.userId) {
+            authRecord = await db.whatsAppAuth.findUnique({
+                where: { sessionId: session.user.userId }
+            });
+        }
 
         return NextResponse.json({ 
             status: currentStatus,
             qr,
+            metadata: authRecord?.metadata || {},
             messages: waManager.getMessages() 
         });
     } catch (error) {
@@ -114,6 +121,38 @@ export async function PUT(req) {
         return NextResponse.json({ success: true, data: updatedAuth });
     } catch (error) {
         console.error("PUT Error", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function PATCH(req) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { testNumbers } = await req.json();
+        const sessionId = session.user.userId;
+
+        const auth = await db.whatsAppAuth.findUnique({ where: { sessionId } });
+        if (!auth) {
+            return NextResponse.json({ error: "No WhatsApp instance found. Connect first." }, { status: 404 });
+        }
+
+        const updatedMetadata = {
+            ...(typeof auth.metadata === 'object' ? auth.metadata : {}),
+            testNumbers: Array.isArray(testNumbers) ? testNumbers.slice(0, 5) : []
+        };
+
+        const updated = await db.whatsAppAuth.update({
+            where: { sessionId },
+            data: { metadata: updatedMetadata }
+        });
+
+        return NextResponse.json({ success: true, metadata: updated.metadata });
+    } catch (error) {
+        console.error("[Auth API] PATCH Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -23,7 +23,7 @@ async function createTemplates() {
 
     const templates = [
       {
-        name: "standard_text_template",
+        name: "Standard Text",
         category: "UTILITY",
         type: "text",
         body: "Hello! This is a standard WhatsApp text template. How are you doing today?",
@@ -31,7 +31,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "image_message_template",
+        name: "Image Message",
         category: "MARKETING",
         type: "image",
         body: "Check out this beautiful image from HealthyFine!",
@@ -42,7 +42,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "video_message_template",
+        name: "Video Message",
         category: "MARKETING",
         type: "video",
         body: "Watch our latest wellness guide video.",
@@ -53,7 +53,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "audio_voice_note_template",
+        name: "Audio Voice Note",
         category: "UTILITY",
         type: "audio",
         body: "Voice message from your health counselor.",
@@ -63,7 +63,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "document_message_template",
+        name: "Document Message",
         category: "UTILITY",
         type: "document",
         body: "Your health report is attached here as a PDF.",
@@ -74,7 +74,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "contact_vcard_template",
+        name: "Contact Card",
         category: "UTILITY",
         type: "text",
         body: "Save our official contact details.",
@@ -89,7 +89,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "buttons_interactive_template",
+        name: "Interactive Buttons",
         category: "MARKETING",
         type: "interactive-button",
         body: "Would you like to book a consultation?",
@@ -98,7 +98,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "list_message_template",
+        name: "Interactive List",
         category: "UTILITY",
         type: "interactive-group",
         body: "Please choose your preferred department.",
@@ -118,7 +118,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "carousel_advanced_template",
+        name: "Carousel Display",
         category: "MARKETING",
         type: "text",
         body: "Our Top Wellness Packages:\n\n1. Gold Plan - All features included\n2. Silver Plan - Essential features\n3. Bronze Plan - Basic features",
@@ -130,7 +130,7 @@ async function createTemplates() {
         status: "APPROVED"
       },
       {
-        name: "disappearing_view_once_template",
+        name: "Disappearing View Once",
         category: "UTILITY",
         type: "text",
         body: "Your one-time access code is: 9988. This message will disappear.",
@@ -140,6 +140,12 @@ async function createTemplates() {
         status: "APPROVED"
       }
     ];
+
+    // Clean up old default templates to prevent duplicates with old names
+    console.log("Cleaning up old default templates...");
+    await prisma.messageTemplate.deleteMany({
+      where: { isDefault: true }
+    });
 
     console.log(`Starting creation of ${templates.length} templates...`);
 
@@ -151,10 +157,14 @@ async function createTemplates() {
             name: template.name
           }
         },
-        update: { ...template },
+        update: { 
+          ...template,
+          isDefault: true 
+        },
         create: {
           ...template,
-          userId: userId
+          userId: userId,
+          isDefault: true
         }
       });
       console.log(`- Created/Updated: ${template.name}`);
