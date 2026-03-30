@@ -226,13 +226,15 @@ export async function sendCarouselMessage(recipient, cards, sessionId) {
     console.log(`[ATS] Target: ${recipient}`);
 
     let sock = null;
+
     try {
         const targetJid = formatToJid(recipient);
         sock = await getStandaloneSocket(sessionId);
 
-        // Wait for connection to be open
+        // ✅ Wait for connection
         await new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Connection timeout')), 20000);
+
             sock.ev.on('connection.update', (update) => {
                 if (update.connection === 'open') {
                     clearTimeout(timeout);
@@ -241,49 +243,55 @@ export async function sendCarouselMessage(recipient, cards, sessionId) {
             });
         });
 
-        console.log(`[ATS] Socket OPEN. Constructing Carousel protobuf...`);
+        console.log(`[ATS] Socket OPEN. Preparing media...`);
 
-        // Fetch buffers for all card images
-        const cardsWithBuffers = await Promise.all(cards.map(async (card) => {
-            const response = await fetch(card.imageUrl);
-            const buffer = Buffer.from(await response.arrayBuffer());
-            return { ...card, buffer };
-        }));
+        // ✅ FIX: Prepare media properly
+        const preparedCards = await Promise.all(
+            cards.map(async (card, idx) => {
+                const response = await fetch(card.imageUrl);
+                const buffer = Buffer.from(await response.arrayBuffer());
+
+                const media = await prepareWAMessageMedia(
+                    { image: buffer },
+                    { upload: sock.waUploadToServer }
+                );
+
+                return {
+                    header: {
+                        imageMessage: media.imageMessage,
+                        hasMediaAttachment: true
+                    },
+                    body: {
+                        text: card.title || `Item ${idx + 1}`
+                    },
+                    footer: {
+                        text: card.description || 'Exclusive offer'
+                    },
+                    nativeFlowMessage: {
+                        buttons: [
+                            {
+                                name: "quick_reply",
+                                buttonParamsJson: JSON.stringify({
+                                    display_text: card.buttonText || "Select Item",
+                                    id: `card_select_${idx}`
+                                })
+                            }
+                        ]
+                    }
+                };
+            })
+        );
+
+        console.log(`[ATS] Building message...`);
 
         const messageContent = {
             viewOnceMessage: {
                 message: {
                     interactiveMessage: {
-                        header: {
-                            hasMediaAttachment: true // Set to true since cards have images
-                        },
                         body: { text: 'Check out our featured items! 🚀' },
                         footer: { text: 'Devlomatix Solutions' },
                         carouselMessage: {
-                            cards: cardsWithBuffers.map((card, idx) => ({
-                                header: {
-                                    imageMessage: {
-                                        // When using buffers, Baileys handles the upload automatically 
-                                        // but we need to pass the buffer as the image property
-                                        url: card.imageUrl, // Keep URL as fallback
-                                        image: card.buffer
-                                    },
-                                    hasMediaAttachment: true
-                                },
-                                body: { text: card.title || `Item ${idx + 1}` },
-                                footer: { text: card.description || 'Exclusive offer' },
-                                nativeFlowMessage: {
-                                    buttons: [
-                                        {
-                                            name: "quick_reply",
-                                            buttonParamsJson: JSON.stringify({
-                                                display_text: card.buttonText || "Select Item",
-                                                id: `card_select_${idx}`
-                                            })
-                                        }
-                                    ]
-                                }
-                            }))
+                            cards: preparedCards
                         }
                     }
                 }
@@ -292,17 +300,23 @@ export async function sendCarouselMessage(recipient, cards, sessionId) {
 
         const msg = generateWAMessageFromContent(targetJid, messageContent, {
             userJid: sock.user.id,
-            upload: sock.waUploadToServer // Important for media in interactive messages
+            upload: sock.waUploadToServer
         });
 
-        console.log(`[ATS] Sending Carousel via relayMessage...`);
-        await sock.relayMessage(targetJid, msg.message, { messageId: msg.key.id });
-        console.log(`[ATS] Carousel SENT successfully. ID: ${msg.key.id}`);
+        console.log(`[ATS] Sending Carousel...`);
+
+        await sock.relayMessage(targetJid, msg.message, {
+            messageId: msg.key.id
+        });
+
+        console.log(`✅ Carousel SENT successfully. ID: ${msg.key.id}`);
 
         return msg;
+
     } catch (error) {
-        console.error(`[ATS] Error in sendCarouselMessage:`, error.message);
+        console.error(`[ATS] Error in sendCarouselMessage:`, error);
         throw error;
+
     } finally {
         if (sock) {
             console.log(`[ATS] Closing standalone socket.`);
