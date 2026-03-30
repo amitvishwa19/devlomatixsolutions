@@ -196,7 +196,18 @@ export default function DashboardPage({ params: paramsPromise }) {
  {error}
  </div> :
 
- <CampaignList
+                                            campaigns.length === 0 ?
+                                            <div className="flex flex-col items-center justify-center py-12 px-4 text-center border rounded-lg border-dashed border-border bg-card/50">
+                                                <MessageCircleDashed className="w-12 h-12 text-muted-foreground/50 mb-4" />
+                                                <h3 className="text-lg font-medium text-foreground">No campaigns found</h3>
+                                                <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                                                    You haven't created any WhatsApp campaigns yet. Head to the Bulk Sender to start your first broadcast.
+                                                </p>
+                                                <Button variant="outline" className="mt-6" asChild>
+                                                    <a href={`/workspace/${workspaceId}/wa/bulk-sender`}>Go to Bulk Sender</a>
+                                                </Button>
+                                            </div> :
+                                            <CampaignList
  campaigns={campaigns}
  onToggleStatus={(id) => {
  const c = campaigns.find((c) => c.id === id);

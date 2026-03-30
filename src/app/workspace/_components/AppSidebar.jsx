@@ -52,8 +52,6 @@ export default function AppSidebar() {
         { type: 'child', title: "Button & Quick Reply", url: `${basePath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
         { type: 'child', title: "Auto Responder", url: `${basePath}/auto-responder`, icon: "zap", category: "WhatsApp Manager" },
         { type: 'child', title: "Media Support", url: `${basePath}/media-support`, icon: "image", category: "WhatsApp Manager" },
-        { type: 'child', title: "Orders & Payments", url: `${basePath}/orders-payments`, icon: "shopping-cart", category: "WhatsApp Manager" },
-        { type: 'child', title: "Multi-Platform", url: `${basePath}/multi-platform`, icon: "link-2", category: "WhatsApp Manager" },
         { type: 'child', title: "AI Smart Reply", url: `${basePath}/ai-smart-reply`, icon: "brain", category: "WhatsApp Manager" },
         { type: 'child', title: "Settings", url: `${basePath}/settings`, icon: "settings", category: "WhatsApp Manager" },
 
