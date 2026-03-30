@@ -48,6 +48,16 @@ import {
  DialogTitle, 
  DialogDescription 
 } from"@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from"sonner";
 import { format } from"date-fns";
 
@@ -58,8 +68,9 @@ export default function LogPage() {
  const [logs, setLogs] = useState([]);
  const [isLoading, setIsLoading] = useState(true);
  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
- const [filters, setFilters] = useState({ level:'ALL', type:'ALL'});
- const [selectedLog, setSelectedLog] = useState(null);
+  const [filters, setFilters] = useState({ level:'ALL', type:'ALL'});
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [logToDelete, setLogToDelete] = useState(null);
 
  const fetchLogs = useCallback(async () => {
  if (!workspaceId) return;
@@ -86,16 +97,35 @@ export default function LogPage() {
  fetchLogs();
  }, [fetchLogs]);
 
- const handleClearLogs = async () => {
- if (!confirm("Are you sure you want to clear logs older than 30 days?")) return;
- try {
- await axios.delete(`/api/workspace/${workspaceId}/system/logs`);
- toast.success("Old logs cleared");
- fetchLogs();
- } catch (error) {
- toast.error("Failed to clear logs");
- }
- };
+  const handleClearLogs = async () => {
+    if (!confirm("Are you sure you want to clear logs older than 30 days?")) return;
+    try {
+      await axios.delete(`/api/workspace/${workspaceId}/system/logs`);
+      toast.success("Old logs cleared");
+      fetchLogs();
+    } catch (error) {
+      toast.error("Failed to clear logs");
+    }
+  };
+
+  const triggerDeleteSingleLog = (e, logId) => {
+    e.stopPropagation(); // Prevent opening the dialog
+    setLogToDelete(logId);
+  };
+
+  const confirmDeleteLog = async () => {
+    if (!logToDelete) return;
+    try {
+      await axios.delete(`/api/workspace/${workspaceId}/system/logs?id=${logToDelete}`);
+      toast.success("Log entry deleted");
+      fetchLogs();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete log entry");
+    } finally {
+      setLogToDelete(null);
+    }
+  };
 
  const getLevelBadge = (level) => {
  switch (level) {
@@ -232,11 +262,29 @@ export default function LogPage() {
  <TableCell className="py-4 text-right text-[11px] font-bold text-muted-foreground/80 font-mono">
  {format(new Date(log.createdAt),'MMM dd, HH:mm:ss')}
  </TableCell>
- <TableCell className="py-4 text-right pr-4">
- <Button variant="ghost"size="sm"className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
- <Eye size={14} />
- </Button>
- </TableCell>
+                    <TableCell className="py-4 text-right pr-4">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLog(log);
+                          }}
+                        >
+                          <Eye size={14} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => triggerDeleteSingleLog(e, log.id)}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
  </TableRow>
  ))
  )}
@@ -323,8 +371,26 @@ export default function LogPage() {
  </div>
  )}
  </div>
- </DialogContent>
- </Dialog>
- </div>
- );
+      </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={!!logToDelete} onOpenChange={(open) => !open && setLogToDelete(null)}>
+        <AlertDialogContent className="rounded-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this log entry from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-[11px] font-bold tracking-wider rounded-md">CANCEL</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-[11px] font-bold tracking-wider rounded-md">
+              DELETE LOG
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 }

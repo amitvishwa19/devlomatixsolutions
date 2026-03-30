@@ -91,30 +91,45 @@ export async function POST(req, { params }) {
     }
 }
 
-// Optional: DELETE old logs (Housekeeping)
+// DELETE logs (Single or Housekeeping)
 export async function DELETE(req, { params }) {
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const { workspaceId } = await params;
-        
-        // Delete logs older than 30 days
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const { searchParams } = new URL(req.url);
+        const logId = searchParams.get('id');
 
-        const result = await db.systemLog.deleteMany({
-            where: {
-                workspaceId,
-                createdAt: {
-                    lt: thirtyDaysAgo
+        if (logId) {
+            // Delete specific log entry
+            // We check workspaceId to ensure security, though logId is globally unique
+            await db.systemLog.delete({
+                where: {
+                    id: logId,
+                    workspaceId: workspaceId
                 }
-            }
-        });
+            });
+            return NextResponse.json({ message: "Log entry deleted successfully" });
+        } else {
+            // Original logic: Delete logs older than 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        return NextResponse.json({ message: `Cleared ${result.count} old logs` });
+            const result = await db.systemLog.deleteMany({
+                where: {
+                    workspaceId,
+                    createdAt: {
+                        lt: thirtyDaysAgo
+                    }
+                }
+            });
+
+            return NextResponse.json({ message: `Cleared ${result.count} old logs` });
+        }
 
     } catch (error) {
-        return NextResponse.json({ message: "Failed to clear logs" }, { status: 500 });
+        console.error("[SYSTEM_LOGS_DELETE_ERROR]", error);
+        return NextResponse.json({ message: "Failed to process deletion" }, { status: 500 });
     }
 }
