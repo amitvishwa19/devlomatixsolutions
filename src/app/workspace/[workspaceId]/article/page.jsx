@@ -61,7 +61,7 @@ export default function ArticlePage() {
             <MediaLibraryModal />
 
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border p-4 rounded-md shadow-soft">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-card border border-border p-4 rounded-md shadow-soft">
                 <div className="space-y-1">
                     <h1 className="text-xl font-bold text-foreground flex items-center gap-3">
                         <Share2 className="text-primary h-6 w-6" />
@@ -71,7 +71,7 @@ export default function ArticlePage() {
                         Create, schedule, and publish content across all your social channels.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <Button
                         variant="outline"
                         onClick={() => onOpen('addCredential', { workspaceId, onApply: fetchPosts })}
@@ -104,18 +104,18 @@ export default function ArticlePage() {
             <PostStats posts={posts} />
 
             {/* Filters & Search */}
-            <div className="flex flex-col md:flex-row items-center gap-4 bg-card p-2 rounded-md border border-border shadow-soft">
-                <div className="relative flex-1 group">
+            <div className="flex flex-col md:flex-row items-center gap-4 bg-card p-2 rounded-md border border-border shadow-soft w-full">
+                <div className="relative flex-1 group w-full">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input
                         placeholder="SEARCH POSTS OR TOPICS..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-11 h-12 bg-background border border-border rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[10px]"
+                        className="pl-11 h-12 w-full bg-background border border-border rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner font-bold text-[10px]"
                     />
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-background rounded-md p-1 border border-border">
+                <div className="flex items-center gap-3 overflow-x-auto w-full md:w-auto">
+                    <div className="flex items-center bg-background rounded-md p-1 border border-border min-w-max">
                         <Button
                             variant="ghost"
                             size="sm"
