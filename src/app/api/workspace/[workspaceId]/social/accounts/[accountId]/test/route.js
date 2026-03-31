@@ -60,12 +60,40 @@ export async function POST(req, { params }) {
 
         if (accountId && accountId !== 'undefined') {
             try {
+                // Prepare update data
+                const updateData = {
+                    status: newStatus,
+                    expired: newExpired,
+                };
+
+                if (result.success && result.data?.profileName) {
+                    updateData.profile = result.data.profileName;
+                    
+                    // Also update credentials JSON with profileImage if available
+                    if (result.data.profileImage) {
+                        const updatedDecrypted = {
+                            ...decryptedCredentials,
+                            profileImage: result.data.profileImage
+                        };
+
+                        // Re-encrypt
+                        const key = process.env.ENCRYPTION_KEY;
+                        if (key) {
+                            const crypto = require('crypto');
+                            const iv = crypto.randomBytes(16);
+                            const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex'), iv);
+                            let encrypted = cipher.update(JSON.stringify(updatedDecrypted));
+                            encrypted = Buffer.concat([encrypted, cipher.final()]);
+                            updateData.credentials = { enc: iv.toString('hex') + ':' + encrypted.toString('hex') };
+                        } else {
+                            updateData.credentials = updatedDecrypted;
+                        }
+                    }
+                }
+
                 await db.credentials.update({
                     where: { id: accountId },
-                    data: {
-                        status: newStatus,
-                        expired: newExpired,
-                    }
+                    data: updateData
                 });
             } catch (err) {
                 console.warn("[TEST_DB_UPDATE_SKIP]", err.message);

@@ -52,11 +52,13 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { AddCredentialModal } from '../../article/_components/AddCredentialModal';
 
-const getPlatformIcon = (platform) => {
+
+const getPlatformIcon = (platform, customClass) => {
     const p = platform?.toUpperCase();
-    const props = { className: "w-4 h-4 text-primary" };
+    const props = { className: customClass || "w-4 h-4 text-primary" };
 
     switch (p) {
         case 'FACEBOOK': return <Facebook {...props} />;
@@ -252,6 +254,7 @@ export default function CredentialPage() {
                 <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 h-40">
                     {filteredAccounts.map((account) => (
                         <div key={account.id} id='credential-card' className="group h-50 relative flex flex-col bg-card backdrop-blur-xl border hover:border-primary/20  rounded-md overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
+
                             <div className="absolute top-0 right-0 p-4">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -286,13 +289,23 @@ export default function CredentialPage() {
                                 </DropdownMenu>
                             </div>
 
-                            <div className="p-6 pb-2 flex items-center gap-4">
-                                <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center border border-primary/20 shadow-inner">
-                                    {getPlatformIcon(account.platform)}
+                            <div className="p-2 flex items-center gap-2 ">
+                                <div className="relative">
+                                    <Avatar className="w-10 h-10 rounded-md border border-primary/20 shadow-inner flex items-center justify-center">
+                                        <AvatarImage src={account.profileImage} alt={account.profileName} className="object-cover" />
+                                        <AvatarFallback className="bg-primary/5 rounded-md text-primary/40 flex items-center justify-center">
+                                            {getPlatformIcon(account.platform, "w-6 h-6")}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    {account.profileImage && (
+                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-background rounded-full border border-border flex items-center justify-center shadow-soft">
+                                            {getPlatformIcon(account.platform, "w-3 h-3")}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="text-sm font-bold truncate">{account.platform}</h4>
-                                    <p className="text-xs font-semibold text-muted-foreground truncate opacity-70">{account.profileName}</p>
+                                    <h4 className="text-sm font-bold truncate">{account.profileName}</h4>
+                                    <p className="text-[10px] font-semibold text-muted-foreground truncate opacity-70 uppercase tracking-wider">{account.platform}</p>
                                 </div>
                             </div>
 

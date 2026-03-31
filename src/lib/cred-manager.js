@@ -164,7 +164,15 @@ async function testTwitter(credentials) {
 
         if (ok && data?.screen_name) {
             console.log(`[TWITTER_TEST_SUCCESS] Connected as @${data.screen_name}`);
-            return { success: true, message: `Connected as @${data.screen_name}`, data };
+            return { 
+                success: true, 
+                message: `Connected as @${data.screen_name}`, 
+                data: {
+                    ...data,
+                    profileName: data.name || data.screen_name,
+                    profileImage: data.profile_image_url_https?.replace('_normal', '') // Get high-res version
+                } 
+            };
         }
 
         console.error(`[TWITTER_TEST_FAIL] status=${status}`, data);
