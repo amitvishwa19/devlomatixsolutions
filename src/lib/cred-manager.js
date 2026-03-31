@@ -103,18 +103,78 @@ async function testInstagram(credentials) {
  * Required keys: bearerToken (or bearer_token)
  */
 async function testTwitter(credentials) {
-    const token = credentials.bearerToken || credentials.bearer_token || credentials.token;
-    if (!token) return { success: false, message: 'Missing bearerToken in credentials' };
+    const apiKey = (credentials.apiKey || credentials['api-key'] || '').trim();
+    const apiSecret = (credentials.apiSecret || credentials['api-secret'] || '').trim();
+    const accessToken = (credentials.accessToken || credentials['access-token'] || '').trim();
+    const accessSecret = (credentials.accessSecret || credentials['access-secret'] || '').trim();
 
-    const { ok, status, data } = await fetchWithTimeout(
-        'https://api.twitter.com/2/users/me',
-        { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (ok && data?.data?.id) {
-        return { success: true, message: `Connected as @${data.data.username}`, data };
+    console.log(`[TWITTER_TEST] Fields present: apiKey=${!!apiKey}, apiSecret=${!!apiSecret}, accessToken=${!!accessToken}, accessSecret=${!!accessSecret}`);
+
+    if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
+        // Fallback for just Bearer Token if provided
+        const bearerToken = (credentials.bearerToken || credentials.bearer_token || credentials.token || '').trim();
+        if (bearerToken) {
+            console.log(`[TWITTER_TEST] Attempting legacy Bearer token test...`);
+            const { ok, status, data } = await fetchWithTimeout(
+                'https://api.twitter.com/2/tweets/search/recent?query=twitter',
+                { headers: { Authorization: `Bearer ${bearerToken}` } }
+            );
+            if (ok) return { success: true, message: 'Bearer Token Valid (Read-only access confirmed)', data };
+            return { success: false, message: 'Invalid Bearer Token', data };
+        }
+        return { success: false, message: 'Twitter requires apiKey, apiSecret, accessToken, and accessSecret for full connection' };
     }
-    if (status === 401) return { success: false, message: 'Invalid or expired bearer token', data };
-    return { success: false, message: data?.detail || 'Connection failed', data };
+
+    // 1. OAuth 1.0a Verification (required for posting)
+    try {
+        const crypto = require('crypto');
+        const url = 'https://api.twitter.com/1.1/account/verify_credentials.json';
+        const method = 'GET';
+
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const nonce = crypto.randomBytes(16).toString('hex');
+
+        const oauthParams = {
+            oauth_consumer_key: apiKey,
+            oauth_nonce: nonce,
+            oauth_signature_method: 'HMAC-SHA1',
+            oauth_timestamp: timestamp,
+            oauth_token: accessToken,
+            oauth_version: '1.0',
+        };
+
+        const paramString = Object.entries(oauthParams)
+            .sort()
+            .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+            .join('&');
+
+        const baseString = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(paramString)}`;
+        const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessSecret)}`;
+        const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+
+        const authHeader = 'OAuth ' + Object.entries({ ...oauthParams, oauth_signature: signature })
+            .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+            .join(', ');
+
+        console.log(`[TWITTER_TEST] Calling verify_credentials...`);
+        const { ok, status, data } = await fetchWithTimeout(
+            url,
+            { headers: { Authorization: authHeader } }
+        );
+
+        if (ok && data?.screen_name) {
+            console.log(`[TWITTER_TEST_SUCCESS] Connected as @${data.screen_name}`);
+            return { success: true, message: `Connected as @${data.screen_name}`, data };
+        }
+
+        console.error(`[TWITTER_TEST_FAIL] status=${status}`, data);
+        const errorMsg = data?.errors?.[0]?.message || 'Verification failed';
+        return { success: false, message: `Twitter connection failed: ${errorMsg}`, data };
+
+    } catch (err) {
+        console.error(`[TWITTER_TEST_EXCEPTION]`, err);
+        return { success: false, message: `Twitter verification exception: ${err.message}` };
+    }
 }
 
 /**
