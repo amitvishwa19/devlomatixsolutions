@@ -289,11 +289,17 @@ export default function CredentialPage() {
                                 </DropdownMenu>
                             </div>
 
-                            <div className="p-2 flex items-center gap-2 ">
+                            <div className="p-2 flex items-center gap-4">
                                 <div className="relative">
-                                    <Avatar className="w-10 h-10 rounded-md border border-primary/20 shadow-inner flex items-center justify-center">
-                                        <AvatarImage src={account.profileImage} alt={account.profileName} className="object-cover" />
-                                        <AvatarFallback className="bg-primary/5 rounded-md text-primary/40 flex items-center justify-center">
+                                    <Avatar className="w-10 h-10 rounded-md border border-primary/20 shadow-inner flex items-center justify-center bg-muted/30">
+                                        {account.profileImage && (
+                                            <AvatarImage
+                                                src={account.profileImage}
+                                                alt={account.profileName}
+                                                className="object-cover"
+                                            />
+                                        )}
+                                        <AvatarFallback className="bg-primary/5 rounded-md text-primary/40 flex items-center justify-center w-full h-full">
                                             {getPlatformIcon(account.platform, "w-6 h-6")}
                                         </AvatarFallback>
                                     </Avatar>
@@ -303,9 +309,9 @@ export default function CredentialPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="min-w-0">
-                                    <h4 className="text-sm font-bold truncate">{account.profileName}</h4>
-                                    <p className="text-[10px] font-semibold text-muted-foreground truncate opacity-70 uppercase tracking-wider">{account.platform}</p>
+                                <div className="min-w-0 flex-1">
+                                    <h4 className="text-sm font-bold truncate leading-none mb-1">{account.profileName}</h4>
+                                    <p className="text-[10px] font-semibold text-muted-foreground truncate opacity-60 uppercase tracking-widest">{account.platform}</p>
                                 </div>
                             </div>
 

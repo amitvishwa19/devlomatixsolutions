@@ -90,8 +90,7 @@ export async function GET(req, { params }) {
 
         const accounts = credentials.map(c => {
             const decryptedData = safeDecrypt(c.credentials);
-
-            return {
+            const account = {
                 id: c.id,
                 platform: c.platform,
                 profileName: c.profile || decryptedData?.profileName || decryptedData?.username || `${c.platform} Account`,
@@ -100,6 +99,8 @@ export async function GET(req, { params }) {
                 expired: c.expired,
                 details: decryptedData
             };
+            console.log(`[ACCOUNTS_LIST_DEBUG] Account: ${account.platform} | Profile: ${account.profileName} | HasImage: ${!!account.profileImage}`);
+            return account;
         });
 
         return NextResponse.json(accounts);

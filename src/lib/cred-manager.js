@@ -43,10 +43,18 @@ async function testFacebook(credentials) {
     if (!token) return { success: false, message: 'Missing accessToken in credentials' };
 
     const { ok, data } = await fetchWithTimeout(
-        `https://graph.facebook.com/me?access_token=${token}&fields=id,name`
+        `https://graph.facebook.com/me?access_token=${token}&fields=id,name,picture.type(large)`
     );
     if (ok && data?.id) {
-        return { success: true, message: `Connected as ${data.name} (${data.id})`, data };
+        return { 
+            success: true, 
+            message: `Connected as ${data.name} (${data.id})`, 
+            data: {
+                ...data,
+                profileName: data.name,
+                profileImage: data.picture?.data?.url
+            } 
+        };
     }
     return { success: false, message: data?.error?.message || 'Connection failed', data };
 }
@@ -66,12 +74,20 @@ async function testInstagram(credentials) {
 
     // If igUserId is provided, test the Business/Graph API (preferred for publishing)
     if (igUserId) {
-        const testUrlValue = `https://graph.facebook.com/v18.0/${igUserId}?fields=id,username,name&access_token=${encodeURIComponent(token)}`;
+        const testUrlValue = `https://graph.facebook.com/v18.0/${igUserId}?fields=id,username,name,profile_picture_url&access_token=${encodeURIComponent(token)}`;
         console.log(`[INSTAGRAM_TEST_DEBUG] URL: ${testUrlValue.replace(token, 'REDACTED')}`);
         
         const { ok, status, data } = await fetchWithTimeout(testUrlValue);
         if (ok && data?.id) {
-            return { success: true, message: `Connected as ${data.name} (@${data.username})`, data };
+            return { 
+                success: true, 
+                message: `Connected as ${data.name} (@${data.username})`, 
+                data: {
+                    ...data,
+                    profileName: data.name || data.username,
+                    profileImage: data.profile_picture_url
+                } 
+            };
         }
         console.error("[INSTAGRAM_TEST_ERROR_BUSINESS]", status, JSON.stringify(data));
         return { success: false, message: data?.error?.message || 'Instagram Business API connection failed', data };
@@ -220,6 +236,7 @@ async function testLinkedIn(credentials) {
     const firstName = dMe.localizedFirstName || dMe.given_name || '';
     const lastName = dMe.localizedLastName || dMe.family_name || '';
     const name = `${firstName} ${lastName}`.trim() || dMe.name || 'LinkedIn User';
+    const profileImage = dMe.picture || dMe.profile_picture || null;
 
     // 2. If organizationUrn is provided, verify access
     if (orgUrnOrId) {
@@ -233,7 +250,16 @@ async function testLinkedIn(credentials) {
         );
 
         if (okOrg && dOrg?.elements?.length > 0) {
-            return { success: true, message: `Connected as ${name} (Admin for ${author})`, data: { me: dMe, org: dOrg } };
+            return { 
+                success: true, 
+                message: `Connected as ${name} (Admin for ${author})`, 
+                data: { 
+                    me: dMe, 
+                    org: dOrg,
+                    profileName: name,
+                    profileImage: profileImage
+                } 
+            };
         } else {
             let detail = `Administrator access not found for ${author}.`;
             if (sOrg === 403) detail = `Token lacks permission for organization data (w_organization_social or Community Management API).`;
@@ -246,7 +272,15 @@ async function testLinkedIn(credentials) {
         }
     }
 
-    return { success: true, message: `Connected as ${name}`, data: dMe };
+    return { 
+        success: true, 
+        message: `Connected as ${name}`, 
+        data: {
+            ...dMe,
+            profileName: name,
+            profileImage: profileImage
+        } 
+    };
 }
 
 /**
@@ -279,10 +313,19 @@ async function testYouTube(credentials) {
     if (!key) return { success: false, message: 'Missing apiKey in credentials' };
 
     const { ok, data } = await fetchWithTimeout(
-        `https://www.googleapis.com/youtube/v3/channels?part=id&mine=true&key=${key}`
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true&key=${key}`
     );
-    if (ok) {
-        return { success: true, message: 'API key is valid', data };
+    if (ok && data?.items?.[0]) {
+        const item = data.items[0];
+        return { 
+            success: true, 
+            message: `Connected to YouTube channel: ${item.snippet?.title}`, 
+            data: {
+                ...item,
+                profileName: item.snippet?.title,
+                profileImage: item.snippet?.thumbnails?.default?.url
+            } 
+        };
     }
     return { success: false, message: data?.error?.message || 'Invalid API key', data };
 }
@@ -300,7 +343,15 @@ async function testGoogle(credentials) {
         { headers: { Authorization: `Bearer ${token}` } }
     );
     if (ok && data?.email) {
-        return { success: true, message: `Connected as ${data.email}`, data };
+        return { 
+            success: true, 
+            message: `Connected as ${data.email}`, 
+            data: {
+                ...data,
+                profileName: data.name || data.email,
+                profileImage: data.picture
+            } 
+        };
     }
     return { success: false, message: data?.error?.message || 'Connection failed', data };
 }
