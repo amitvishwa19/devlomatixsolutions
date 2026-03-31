@@ -224,9 +224,9 @@ export const PostCard = ({ post, onApply }) => {
  </Badge>
  ))}
  </div>
- <h4 className="text-sm font-bold text-foreground mb-1 line-clamp-1 truncate">{post.title ||"Untitled Post"}</h4>
+ <h4 className="text-sm font-bold text-foreground mb-1 line-clamp-1 break-words">{post.title || "Untitled Post"}</h4>
  <div 
- className="text-xs font-medium text-muted-foreground line-clamp-3 leading-relaxed opacity-80 prose prose-invert prose-sm max-w-none"
+ className="text-xs font-medium text-muted-foreground line-clamp-3 leading-relaxed opacity-80 prose prose-invert prose-sm max-w-none break-words overflow-hidden"
  dangerouslySetInnerHTML={{ __html: truncateWords(post.content, 200) }}
  />
  </div>

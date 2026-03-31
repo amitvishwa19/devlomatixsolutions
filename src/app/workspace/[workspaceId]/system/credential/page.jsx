@@ -94,7 +94,7 @@ export default function CredentialPage() {
     const workspaceId = params.workspaceId;
     const { onOpen } = useModal();
 
-    const [viewType, setViewType] = useState('grid');
+    const [viewType, setViewType] = useState('list');
     const [isLoading, setIsLoading] = useState(true);
 
     const [accounts, setAccounts] = useState([]);
@@ -293,9 +293,9 @@ export default function CredentialPage() {
             ) : viewType === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4">
                     {filteredAccounts.map((account) => (
-                        <div key={account.id} id='credential-card' className="group h-50 relative flex flex-col bg-card backdrop-blur-xl border hover:border-primary/20  rounded-md overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
+                        <div key={account.id} id='credential-card' className="group h-60 relative flex flex-col gap-2 bg-card backdrop-blur-xl border hover:border-primary/20  rounded-md overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
 
-                            <div className="absolute top-0 right-0 p-4">
+                            <div className="absolute top-0 right-0 p-2">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
@@ -329,7 +329,7 @@ export default function CredentialPage() {
                                 </DropdownMenu>
                             </div>
 
-                            <div className="p-4 flex items-center gap-4">
+                            <div className="p-4 flex items-center gap-2">
                                 <div className="relative">
                                     <Avatar className="w-12 h-12 rounded-md border border-primary/20 shadow-inner flex items-center justify-center bg-muted/30">
                                         {account.profileImage && (

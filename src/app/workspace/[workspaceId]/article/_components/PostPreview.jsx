@@ -17,7 +17,7 @@ const FacebookPreview = ({ content, mediaUrls, profileName }) => (
  </div>
  <div className="px-3 pb-3">
  <div 
- className="text-[14px] leading-relaxed break-words prose prose-sm max-w-none"
+ className="text-[14px] leading-relaxed break-words prose prose-sm max-w-none overflow-x-auto"
  dangerouslySetInnerHTML={{ __html: content }} 
  />
  </div>
@@ -133,7 +133,7 @@ const LinkedInPreview = ({ content, mediaUrls, profileName }) => (
  </div>
  <div className="px-3 pb-3">
  <div 
- className="text-[14px] leading-relaxed break-words prose prose-sm max-w-none line-clamp-4"
+ className="text-[14px] leading-relaxed break-words prose prose-sm max-w-none line-clamp-4 overflow-x-auto"
  dangerouslySetInnerHTML={{ __html: content }} 
  />
  {content.length > 200 && <span className="text-[14px] text-gray-500 font-bold hover:underline cursor-pointer">...see more</span>}

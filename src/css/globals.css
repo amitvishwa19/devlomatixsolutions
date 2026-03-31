@@ -401,3 +401,33 @@
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted));
 }
+
+/* Prose Overflow Fixes */
+.prose {
+    max-width: 100% !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.prose table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.prose pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.prose img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+.prose a {
+    word-break: break-all;
+}

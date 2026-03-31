@@ -62,8 +62,7 @@ export default function TipTap({ data, onChange }) {
         content: data,
         editorProps: {
             attributes: {
-                class:
-                    'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none p-6 max-w-none',
+                class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none p-6 max-w-none break-words overflow-x-auto',
             },
         },
         immediatelyRender: false,
