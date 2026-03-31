@@ -66,36 +66,29 @@ export async function POST(req, { params }) {
                     expired: newExpired,
                 };
 
-                if (result.success && result.data?.profileName) {
-                    updateData.profile = result.data.profileName;
-                    
-                    // Also update credentials JSON with profileImage if available
-                    if (result.data.profileImage) {
-                        const updatedDecrypted = {
-                            ...decryptedCredentials,
-                            profileImage: result.data.profileImage
-                        };
-
-                        // Re-encrypt
-                        const key = process.env.ENCRYPTION_KEY;
-                        if (key) {
-                            const crypto = require('crypto');
-                            const iv = crypto.randomBytes(16);
-                            const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex'), iv);
-                            let encrypted = cipher.update(JSON.stringify(updatedDecrypted));
-                            encrypted = Buffer.concat([encrypted, cipher.final()]);
-                            updateData.credentials = { enc: iv.toString('hex') + ':' + encrypted.toString('hex') };
-                        } else {
-                            updateData.credentials = updatedDecrypted;
-                        }
+                if (result.success && result.data) {
+                    // Update user info and avatar directly into the new columns
+                    if (result.data.profileName) {
+                        updateData.profile = result.data.profileName;
                     }
+                    if (result.data.profileImage) {
+                        updateData.avatar = result.data.profileImage;
+                    }
+                    
+                    // Explicitly construct userInfo to avoid any hidden circular refs or non-serializable data
+                    updateData.userInfo = JSON.parse(JSON.stringify(result.data));
                 }
 
-                await db.credentials.update({
+                console.log(`[TEST_DB_UPDATE_START] ID: ${accountId} | Fields: ${Object.keys(updateData).join(', ')}`);
+                
+                const updated = await db.credentials.update({
                     where: { id: accountId },
                     data: updateData
                 });
+                
+                console.log(`[TEST_DB_UPDATE_COMPLETE] Profile: ${updated.profile} | userInfoPresent: ${!!updated.userInfo}`);
             } catch (err) {
+                console.error("[TEST_DB_UPDATE_FATAL_ERROR]", err);
                 console.warn("[TEST_DB_UPDATE_SKIP]", err.message);
             }
         }

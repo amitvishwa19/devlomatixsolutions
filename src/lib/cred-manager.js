@@ -298,7 +298,15 @@ async function testWhatsApp(credentials) {
         { headers: { Authorization: `Bearer ${token}` } }
     );
     if (ok && data?.id) {
-        return { success: true, message: `Connected: ${data.verified_name} (${data.display_phone_number})`, data };
+        return { 
+            success: true, 
+            message: `Connected: ${data.verified_name} (${data.display_phone_number})`, 
+            data: {
+                ...data,
+                profileName: data.verified_name,
+                profileImage: null // WhatsApp Cloud API doesn't easily expose profile pic per ID without extra scope
+            } 
+        };
     }
     if (status === 401) return { success: false, message: 'Invalid or expired access token', data };
     return { success: false, message: data?.error?.message || 'Connection failed', data };
@@ -380,9 +388,16 @@ async function testGemini(credentials) {
 
     try {
         const genAI = new GoogleGenerativeAI(key);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         await model.generateContent("hi");
-        return { success: true, message: 'Gemini API key is valid', data: { message: "Successfully connected to Gemini 2.5 Flash" } };
+        return { 
+            success: true, 
+            message: 'Gemini API key is valid', 
+            data: { 
+                profileName: "Google Gemini AI",
+                message: "Successfully connected to Gemini 2.0 Flash" 
+            } 
+        };
     } catch (err) {
         try {
             const fs = require('fs');
@@ -397,10 +412,11 @@ async function testGemini(credentials) {
  * Generic / Custom — just verifies credentials are non-empty
  */
 async function testGeneric(credentials) {
-    const keys = Object.keys(credentials).filter(k => k !== 'profileName');
+    const keys = Object.keys(credentials).filter(k => k !== 'profileName' && k !== 'profileImage' && k !== 'userInfo');
     if (keys.length === 0) {
         return { success: false, message: 'No credential fields found' };
     }
+    const profileName = credentials.profileName || credentials.name || "Custom Account";
     // Try a basic ping to a URL if one is provided
     const url = credentials.url || credentials.endpoint || credentials.webhookUrl;
     if (url) {
@@ -408,13 +424,14 @@ async function testGeneric(credentials) {
             const { ok, status } = await fetchWithTimeout(url, { method: 'GET' }, 5000);
             return {
                 success: ok || status < 400,
-                message: ok ? `Endpoint reachable (${status})` : `Endpoint returned ${status}`
+                message: ok ? `Endpoint reachable (${status})` : `Endpoint returned ${status}`,
+                data: { profileName }
             };
         } catch {
-            return { success: false, message: 'Could not reach the provided endpoint' };
+            return { success: false, message: 'Could not reach the provided endpoint', data: { profileName } };
         }
     }
-    return { success: true, message: 'Credentials present but no connectivity test available for this platform' };
+    return { success: true, message: 'Credentials present', data: { profileName } };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -29,8 +29,12 @@ import {
     Mail,
     MessageSquare,
     Globe,
-    Sparkles
+    Sparkles,
+    LayoutGrid,
+    List
 } from 'lucide-react';
+
+
 import { Icons } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,7 +55,16 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { toast } from 'sonner';
+
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { AddCredentialModal } from '../../article/_components/AddCredentialModal';
 
@@ -81,7 +94,9 @@ export default function CredentialPage() {
     const workspaceId = params.workspaceId;
     const { onOpen } = useModal();
 
+    const [viewType, setViewType] = useState('grid');
     const [isLoading, setIsLoading] = useState(true);
+
     const [accounts, setAccounts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [deleteId, setDeleteId] = useState(null);
@@ -144,6 +159,12 @@ export default function CredentialPage() {
         acc.profileName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    useEffect(() => {
+        if (accounts.length > 0) {
+            console.log(`[ACCOUNTS_FRONTEND_DEBUG] Count: ${accounts.length} | FirstAccount:`, accounts[0]);
+        }
+    }, [accounts]);
+
     return (
         <div className="flex-1 space-y-8 p-8 pt-6 animate-fade-in">
             <div className="flex items-center justify-between">
@@ -155,13 +176,32 @@ export default function CredentialPage() {
                         Manage your encrypted platform access tokens and API keys securely.
                     </p>
                 </div>
-                <Button
-                    variant={'outline'}
-                    onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts })}
-
-                >
-                    <Plus className="h-4 w-4" /> Add New Credential
-                </Button>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-muted/20 p-1 rounded-md border border-border/40 mr-2">
+                        <Button
+                            variant={viewType === 'grid' ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="w-8 h-8 rounded-md"
+                            onClick={() => setViewType('grid')}
+                        >
+                            <LayoutGrid className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant={viewType === 'table' ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="w-8 h-8 rounded-md"
+                            onClick={() => setViewType('table')}
+                        >
+                            <List className="w-4 h-4" />
+                        </Button>
+                    </div>
+                    <Button
+                        variant={'outline'}
+                        onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts })}
+                    >
+                        <Plus className="h-4 w-4" /> Add New Credential
+                    </Button>
+                </div>
             </div>
 
             {/* Stats/Info Section */}
@@ -250,8 +290,8 @@ export default function CredentialPage() {
                         Click to add
                     </Button>
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 h-40">
+            ) : viewType === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4">
                     {filteredAccounts.map((account) => (
                         <div key={account.id} id='credential-card' className="group h-50 relative flex flex-col bg-card backdrop-blur-xl border hover:border-primary/20  rounded-md overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
 
@@ -289,9 +329,9 @@ export default function CredentialPage() {
                                 </DropdownMenu>
                             </div>
 
-                            <div className="p-2 flex items-center gap-4">
+                            <div className="p-4 flex items-center gap-4">
                                 <div className="relative">
-                                    <Avatar className="w-10 h-10 rounded-md border border-primary/20 shadow-inner flex items-center justify-center bg-muted/30">
+                                    <Avatar className="w-12 h-12 rounded-md border border-primary/20 shadow-inner flex items-center justify-center bg-muted/30">
                                         {account.profileImage && (
                                             <AvatarImage
                                                 src={account.profileImage}
@@ -315,19 +355,16 @@ export default function CredentialPage() {
                                 </div>
                             </div>
 
-                            <div className="p-2 pt-2 space-y-2 absolute bottom-0 left-0 right-0">
-                                <div className="space-y-2">
-
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {Object.keys(account.details || {}).filter(k => k !== 'profileName').map(key => (
-                                            <Badge key={key} variant="secondary" className="bg-muted/30 border border-border/80 text-[9px] font-bold px-2 py-0.5 rounded-md text-muted-foreground">
-                                                {key}
-                                            </Badge>
-                                        ))}
-                                    </div>
+                            <div className="px-4 py-2 space-y-2">
+                                <div className="flex flex-wrap gap-1.5">
+                                    {Object.keys(account.details || {}).filter(k => k !== 'profileName' && k !== 'profileImage' && k !== 'userInfo').map(key => (
+                                        <Badge key={key} variant="secondary" className="bg-muted/30 border border-border/80 text-[9px] font-bold px-2 py-0.5 rounded-md text-muted-foreground">
+                                            {key}
+                                        </Badge>
+                                    ))}
                                 </div>
 
-                                <div className="flex items-center justify-between pt-4 border-t border-border/10">
+                                <div className="flex items-center justify-between pt-4 border-t border-border/10 mt-4 pb-4">
                                     <Badge
                                         className={`gap-1 font-bold text-[9px] tracking-wider px-2 h-5 border-none ${account.expired ? 'bg-rose-500/10 text-rose-500' :
                                             account.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500' :
@@ -350,6 +387,90 @@ export default function CredentialPage() {
 
                         </div>
                     ))}
+                </div>
+            ) : (
+                <div className="bg-card/40 backdrop-blur-md rounded-md border border-border/40 overflow-hidden shadow-soft">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent border-border/40 bg-muted/20">
+                                <TableHead className="w-[80px]">Avatar</TableHead>
+                                <TableHead>User Info</TableHead>
+                                <TableHead>Stored Data</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredAccounts.map((account) => (
+                                <TableRow key={account.id} className="border-border/10 hover:bg-muted/5 group">
+                                    <TableCell>
+                                        <div className="relative inline-block">
+                                            <Avatar className="w-10 h-10 rounded-md border border-primary/20 bg-muted/30 flex items-center justify-center">
+                                                {account.profileImage && (
+                                                    <AvatarImage src={account.profileImage} alt={account.profileName} className="object-cover" />
+                                                )}
+                                                <AvatarFallback className="bg-primary/5 rounded-md text-primary/40 flex items-center justify-center w-full h-full">
+                                                    {getPlatformIcon(account.platform, "w-5 h-5")}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            {account.profileImage && (
+                                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-background rounded-full border border-border flex items-center justify-center shadow-soft">
+                                                    {getPlatformIcon(account.platform, "w-2.5 h-2.5")}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-sm">{account.profileName}</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold flex items-center gap-1.5 opacity-60">
+                                                {getPlatformIcon(account.platform, "w-2.5 h-2.5")} {account.platform}
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                            {Object.keys(account.details || {}).filter(k => k !== 'profileName' && k !== 'profileImage' && k !== 'userInfo').map(key => (
+                                                <Badge key={key} variant="secondary" className="bg-muted/30 border border-border/80 text-[8px] font-bold px-1.5 py-0 rounded-md text-muted-foreground">
+                                                    {key}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            className={`gap-1 font-bold text-[9px] tracking-wider px-2 h-5 border-none ${account.expired ? 'bg-rose-500/10 text-rose-500' :
+                                                account.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500' :
+                                                    'bg-muted/10 text-muted-foreground'
+                                                }`}
+                                        >
+                                            {account.expired ? 'Expired' : account.status === 'connected' ? 'Connected' : (account.status || 'Disconnected')}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-52 rounded-md shadow-2xl border-border/20 p-2">
+                                                <DropdownMenuItem onClick={() => handleTestConnection(account.id, account.platform)} disabled={testingId === account.id} className="cursor-pointer font-bold px-3 py-2.5 rounded-md gap-3 text-amber-500 hover:bg-amber-500/10">
+                                                    {testingId === account.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />} Test Connection
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => onOpen("addCredential", { workspaceId, onApply: fetchAccounts, initialData: account })} className="cursor-pointer font-bold px-3 py-2.5 rounded-md gap-3">
+                                                    <Edit2 className="w-4 h-4 text-primary" /> Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setDeleteId(account.id)} className="cursor-pointer font-bold px-3 py-2.5 rounded-md text-rose-500 hover:bg-rose-500/10 gap-3">
+                                                    <Trash2 className="w-4 h-4" /> Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </div>
             )}
 

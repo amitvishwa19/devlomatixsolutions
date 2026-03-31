@@ -94,7 +94,9 @@ export async function GET(req, { params }) {
                 id: c.id,
                 platform: c.platform,
                 profileName: c.profile || decryptedData?.profileName || decryptedData?.username || `${c.platform} Account`,
-                profileImage: decryptedData?.profileImage || decryptedData?.profile_image_url_https || null,
+                profileImage: c.avatar || decryptedData?.profileImage || decryptedData?.profile_image_url_https || null,
+                avatar: c.avatar,
+                userInfo: c.userInfo,
                 status: c.status,
                 expired: c.expired,
                 details: decryptedData
