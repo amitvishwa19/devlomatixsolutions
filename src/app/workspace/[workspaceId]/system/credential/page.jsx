@@ -344,7 +344,7 @@ export default function CredentialPage() {
                                         </AvatarFallback>
                                     </Avatar>
                                     {account.profileImage && (
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-background rounded-full border border-border flex items-center justify-center shadow-soft">
+                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full border border-border flex items-center justify-center shadow-soft">
                                             {getPlatformIcon(account.platform, "w-3 h-3")}
                                         </div>
                                     )}
