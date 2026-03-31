@@ -19,8 +19,19 @@ import {
     Lock,
     RefreshCw,
     Activity,
-    Zap
+    Zap,
+    Facebook,
+    Instagram,
+    Twitter,
+    Linkedin,
+    Youtube,
+    Github,
+    Mail,
+    MessageSquare,
+    Globe,
+    Sparkles
 } from 'lucide-react';
+import { Icons } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +53,26 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
 import { AddCredentialModal } from '../../article/_components/AddCredentialModal';
+
+const getPlatformIcon = (platform) => {
+    const p = platform?.toUpperCase();
+    const props = { className: "w-4 h-4 text-primary" };
+
+    switch (p) {
+        case 'FACEBOOK': return <Facebook {...props} />;
+        case 'INSTAGRAM': return <Instagram {...props} />;
+        case 'TWITTER':
+        case 'X': return <Icons.twitter {...props} />;
+        case 'LINKEDIN': return <Linkedin {...props} />;
+        case 'WHATSAPP': return <MessageSquare {...props} />;
+        case 'YOUTUBE': return <Youtube {...props} />;
+        case 'GMAIL': return <Mail {...props} />;
+        case 'GOOGLE': return <Icons.google {...props} />;
+        case 'GEMINI': return <Sparkles {...props} />;
+        case 'GITHUB': return <Github {...props} />;
+        default: return <Database {...props} />;
+    }
+};
 
 export default function CredentialPage() {
     const params = useParams();
@@ -220,7 +251,7 @@ export default function CredentialPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 h-40">
                     {filteredAccounts.map((account) => (
-                        <div key={account.id} id='credential-card' className="group h-46 relative flex flex-col bg-card backdrop-blur-xl border hover:border-primary/20  rounded-md overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
+                        <div key={account.id} id='credential-card' className="group h-50 relative flex flex-col bg-card backdrop-blur-xl border hover:border-primary/20  rounded-md overflow-hidden hover:shadow-medium transition-all duration-300 shadow-soft">
                             <div className="absolute top-0 right-0 p-4">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -257,7 +288,7 @@ export default function CredentialPage() {
 
                             <div className="p-6 pb-2 flex items-center gap-4">
                                 <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center border border-primary/20 shadow-inner">
-                                    <Database className="w-4 h-4 text-primary" />
+                                    {getPlatformIcon(account.platform)}
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="text-sm font-bold truncate">{account.platform}</h4>
