@@ -28,6 +28,7 @@ export default function AppSidebar() {
     const baseProductivityPath = `/workspace/${workspaceId}/productivity`
     const baseAtsPath = `/workspace/${workspaceId}/ats`
     const baseAgentPath = `/workspace/${workspaceId}/agent`
+    const baseFlowbotPath = `/workspace/${workspaceId}/flowbot`
 
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
@@ -79,7 +80,9 @@ export default function AppSidebar() {
         { type: 'child', title: "Message", url: `${baseProductivityPath}/message`, icon: "bar-chart-3", category: "productivity" },
         // { type:'child', title:"Trash", url: `${baseDocPath}/trash`, icon:"trash", category:"productivity"},
 
-        // Access Management
+        // Flowbot
+        { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
+        { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
         // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
         // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},
         // { type:'child', title:"Roles", url: `${baseAccessPath}/role`, icon:"bar-chart-3", category:"access-management"},

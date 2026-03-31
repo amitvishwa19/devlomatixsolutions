@@ -290,7 +290,11 @@ async function publishTwitter(creds, content) {
     const method = 'POST';
 
     const timestamp = Math.floor(Date.now() / 1000).toString();
-    const nonce = crypto.randomBytes(16).toString('hex');
+    const nonce = crypto.randomBytes(32).toString('hex');
+
+    // OAuth 1.0a requires strict percentage encoding
+    const oauthEscape = (str) =>
+        encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 
     const oauthParams = {
         oauth_consumer_key: apiKey,
@@ -301,17 +305,18 @@ async function publishTwitter(creds, content) {
         oauth_version: '1.0',
     };
 
-    const paramString = Object.entries(oauthParams)
+    const paramString = Object.keys(oauthParams)
         .sort()
-        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .map(k => `${oauthEscape(k)}=${oauthEscape(oauthParams[k])}`)
         .join('&');
 
-    const baseString = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(paramString)}`;
-    const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessSecret)}`;
+    const baseString = `${method}&${oauthEscape(url)}&${oauthEscape(paramString)}`;
+    const signingKey = `${oauthEscape(apiSecret)}&${oauthEscape(accessSecret)}`;
     const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
 
-    const authHeader = 'OAuth ' + Object.entries({ ...oauthParams, oauth_signature: signature })
-        .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+    const finalAuthParams = { ...oauthParams, oauth_signature: signature };
+    const authHeader = 'OAuth ' + Object.keys(finalAuthParams)
+        .map(k => `${oauthEscape(k)}="${oauthEscape(finalAuthParams[k])}"`)
         .join(', ');
 
     const { ok, data } = await fetchJSON(url, {

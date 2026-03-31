@@ -54,6 +54,7 @@ model User {
   waMessages                WhatsAppMessage[]
   workspaceDocuments        WorkspaceDocument[]
   roles                     Role[]              @relation("RoleToUser")
+  workflows                 Workflow[]
 
   @@index([email])
   @@index([phone])
@@ -835,4 +836,37 @@ enum OfferStatus {
   ACCEPTED
   REJECTED
   EXPIRED
+}
+
+model Workflow {
+  id          String              @id @default(cuid())
+  name        String
+  description String?
+  status      String              @default("DRAFT") // DRAFT, ACTIVE
+  nodes       Json                @default("[]")
+  edges       Json                @default("[]")
+  workspaceId String
+  userId      String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  executions  WorkflowExecution[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model WorkflowExecution {
+  id          String    @id @default(cuid())
+  workflowId  String
+  status      String    @default("RUNNING") // RUNNING, SUCCESS, FAILED
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  nodes       Json      @default("[]")
+  edges       Json      @default("[]")
+  logs        Json      @default("[]")
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([status])
 }

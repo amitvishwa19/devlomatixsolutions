@@ -98,7 +98,7 @@ export default function ArticlePage() {
                 </div>
             </div>
 
-            <RecentLogsWidget workspaceId={workspaceId} />
+
 
             {/* Quick Stats */}
             <PostStats posts={posts} />
