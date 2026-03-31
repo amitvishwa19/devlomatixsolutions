@@ -32,8 +32,12 @@ import {
     ContextMenuTrigger,
     ContextMenuSeparator,
 } from "@/components/ui/context-menu";
+import { Button } from '@/components/ui/button';
 
 const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, status, configured, nodeId, onDelete }) => {
+    const isWorking = status === 'working';
+    const displayColor = isWorking ? 'amber-500' : colorClass;
+
     return (
         <ContextMenu>
             <ContextMenuTrigger>
@@ -41,21 +45,27 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, status
                     relative p-2 rounded-md border transition-all duration-300 group
                     dark:bg-[#1e1e2e] backdrop-blur-md min-w-[200px] shadow-lg
                     ${selected ? `border-${colorClass} shadow-${colorClass}/20 -translate-y-1` : 'border-border/50 hover:border-border'}
+                    ${isWorking ? `border-amber-500 ring-4 ring-amber-500/10 animate-pulse` : ''}
                 `}>
                     {/* Status Line */}
-                    <div className={`absolute -top-px left-4 right-4 h-[2px] rounded-full opacity-60 ${`bg-${colorClass}`}`} />
+                    <div className={`absolute -top-px left-4 right-4 h-[2px] rounded-full opacity-60 ${isWorking ? 'bg-amber-400' : `bg-${colorClass}`}`} />
 
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-lg bg-${colorClass}/10`}>
-                                <Icon size={14} className={`text-${colorClass}`} />
+                            <div className={`p-1.5 rounded-lg ${isWorking ? 'bg-amber-400/20 text-amber-400' : `bg-${colorClass}/10`}`}>
+                                <Icon size={14} className={isWorking ? 'animate-spin-slow' : `text-${colorClass}`} />
                             </div>
-                            <span className="text-[10px] font-bold  ">{title}</span>
+                            <span className="text-[10px] font-bold">{title}</span>
                         </div>
-                        {configured ? (
+                        {isWorking ? (
+                             <div className="flex items-center gap-1.5 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                                <span className="h-1 w-1 rounded-full bg-amber-400 animate-ping" />
+                                <span className="text-[8px] font-black uppercase text-amber-400 tracking-tighter">Working</span>
+                             </div>
+                        ) : configured ? (
                             <CheckCircle2 size={12} className="text-emerald-500" />
                         ) : (
-                            <AlertCircle size={12} className="text-amber-500 animate-pulse" />
+                            <AlertCircle size={12} className="text-amber-500" />
                         )}
                     </div>
 
@@ -125,9 +135,26 @@ export const TriggerNode = memo(({ id, data, selected }) => {
                 icon={getIcon()}
                 colorClass="amber-500"
                 configured={data.configured}
+                status={data.status}
             >
                 <h3 className="text-xs font-bold truncate leading-tight">{data.label}</h3>
                 <p className="text-[10px] text-muted-foreground line-clamp-1">{data.description || "Waiting for signal..."}</p>
+                
+                {data.subType === 'chat' && (
+                    <div className="pt-3">
+                        <Button 
+                            variant="secondary" 
+                            size="xs" 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                data.onOpenChat && data.onOpenChat();
+                            }}
+                            className="w-full h-7 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 border border-amber-500/20 text-[9px] font-black uppercase tracking-tighter transition-all active:scale-95"
+                        >
+                            <MessageSquare size={10} className="mr-1.5" /> Test Chat
+                        </Button>
+                    </div>
+                )}
             </NodeWrapper>
             <Handle
                 type="source"
@@ -254,12 +281,23 @@ export const MemoryNode = memo(({ id, data, selected }) => {
 });
 
 export const AgentNode = memo(({ id, data, selected }) => {
+    const isWorking = data.status === 'working';
+    
     return (
         <div className={`
             relative px-5 py-4 rounded-xl border-2 transition-all duration-300
             bg-card min-w-[220px] shadow-2xl
             ${selected ? 'border-indigo-500 shadow-indigo-500/20 -translate-y-1' : 'border-slate-700 hover:border-slate-600'}
+            ${isWorking ? 'border-indigo-400 ring-8 ring-indigo-500/10 animate-pulse' : ''}
         `}>
+            {/* Working Badge */}
+            {isWorking && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 px-3 py-1 rounded-full border border-indigo-400 shadow-xl z-20 flex items-center gap-2">
+                    <RefreshCw size={10} className="text-white animate-spin" />
+                    <span className="text-[9px] font-black uppercase text-white tracking-widest">Reasoning...</span>
+                </div>
+            )}
+            
             {/* Left Sequence Handle */}
             <Handle
                 type="target"

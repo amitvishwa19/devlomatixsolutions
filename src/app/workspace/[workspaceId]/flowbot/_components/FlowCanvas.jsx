@@ -48,6 +48,7 @@ export const FlowCanvas = () => {
     // Panel State
     const [selectedNode, setSelectedNode] = useState(null);
     const [isExecuting, setIsExecuting] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     useEffect(() => {
         const fetchFlow = async () => {
@@ -154,8 +155,20 @@ export const FlowCanvas = () => {
 
     // Node Types Injection to pass delete function
     const nodeTypes = useMemo(() => ({
-        triggerNode: (props) => <TriggerNode {...props} data={{ ...props.data, onDelete: deleteNode }} />,
+        triggerNode: (props) => (
+            <TriggerNode 
+                {...props} 
+                data={{ 
+                    ...props.data, 
+                    onDelete: deleteNode,
+                    onOpenChat: () => setIsChatOpen(true) 
+                }} 
+            />
+        ),
         actionNode: (props) => <ActionNode {...props} data={{ ...props.data, onDelete: deleteNode }} />,
+        modelNode: (props) => <ModelNode {...props} data={{ ...props.data, onDelete: deleteNode }} />,
+        memoryNode: (props) => <MemoryNode {...props} data={{ ...props.data, onDelete: deleteNode }} />,
+        agentNode: (props) => <AgentNode {...props} data={{ ...props.data, onDelete: deleteNode }} />,
     }), [deleteNode]);
 
     const updateNodeData = (nodeId, dataUpdate) => {
@@ -186,6 +199,42 @@ export const FlowCanvas = () => {
         }
     };
 
+    const animateExecution = async (logs) => {
+        if (!logs || logs.length === 0) return;
+
+        // Reset all nodes first
+        setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, status: 'idle' } })));
+
+        // Extract node names/IDs from logs. 
+        // Logs look like: "Executing node nodeName" or "Node success: {...}"
+        const sequence = [];
+        logs.forEach(log => {
+            const execMatch = log.message.match(/Executing node (.*)/);
+            if (execMatch && execMatch[1]) {
+                // Find node by label or ID
+                const node = nodes.find(n => n.data.label === execMatch[1] || n.id === execMatch[1]);
+                if (node) sequence.push(node.id);
+            }
+        });
+
+        // Unique sequence of involved nodes
+        const uniqueSequence = [...new Set(sequence)];
+
+        for (const nodeId of uniqueSequence) {
+            // Set node to working
+            setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, status: 'working' } } : n));
+            // Wait
+            await new Promise(r => setTimeout(r, 600));
+            // Set node to success (not really a state yet but clears working)
+            setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, status: 'success' } } : n));
+        }
+        
+        // Final reset after delay
+        setTimeout(() => {
+            setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, status: 'idle' } })));
+        }, 1000);
+    };
+
     const handleTest = async () => {
         setIsExecuting(true);
         const toastId = toast.loading("Saving and Executing Workflow...");
@@ -210,8 +259,9 @@ export const FlowCanvas = () => {
             const res = await axios.post(`/api/workspace/${workspaceId}/flowbot/${flowbotId}/execute`, payload);
 
             if (res.data.success) {
-                toast.success("Execution Complete - Check console for logs!", { id: toastId });
+                toast.success("Execution Complete - Replaying path...", { id: toastId });
                 console.log("[FLOWBOT_EXECUTION_LOGS]", res.data.logs);
+                await animateExecution(res.data.logs);
             } else {
                 toast.error(res.data.message || "Execution Failed", { id: toastId });
             }
@@ -303,6 +353,12 @@ export const FlowCanvas = () => {
                     chatNode={nodes.find(n => n.data.subType === 'chat')}
                     nodes={nodes}
                     edges={edges}
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                    onExecuteComplete={animateExecution}
+                    onExecuteStart={(nodeId) => {
+                        setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, status: 'working' } } : n));
+                    }}
                 />
             )}
         </div>
