@@ -29,23 +29,101 @@ export function interpolateString(str, context) {
 /**
  * Executes a single action node
  */
-async function executeNode(node, context) {
+async function executeNode(node, context, workflow, logs) {
     const type = node.data?.subType;
+    const nodeId = node.id;
     let outputData = {};
 
-    switch (type) {
-        case 'ai':
-            const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-            if (!apiKey) throw new Error("Missing Gemini API Key in environment");
+    // Helper to find "attachments" (Model, Memory) connected to this node
+    const getAttachments = () => {
+        const incomingEdges = (workflow.edges || []).filter(e => e.target === nodeId);
+        const attachments = { model: null, memory: null };
+        
+        for (const edge of incomingEdges) {
+            const sourceNode = (workflow.nodes || []).find(n => n.id === edge.source);
+            if (!sourceNode) continue;
             
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            if (sourceNode.type === 'modelNode') attachments.model = sourceNode;
+            if (sourceNode.type === 'memoryNode') attachments.memory = sourceNode;
+        }
+        return attachments;
+    };
+
+    switch (type) {
+        case 'agent':
+            const { model: modelNode, memory: memoryNode } = getAttachments();
+            
+            if (!modelNode) throw new Error("Agent node requires a connected Model node");
+            
+            const provider = modelNode.data?.provider || 'gemini';
+            const apiKey = modelNode.data?.apiKey || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+            
+            if (!apiKey) throw new Error(`Missing API Key for ${provider}`);
+
+            // 1. Handle Memory
+            let history = [];
+            const sessionId = context.trigger?.sessionId || context.payload?.sessionId || "default-session";
+            
+            if (memoryNode) {
+                const memoryRecord = await db.workflowMemory.findUnique({
+                    where: { workflowId_sessionId: { workflowId: workflow.id, sessionId } }
+                });
+                history = memoryRecord?.messages || [];
+                // Limit to window size if configured
+                const windowSize = memoryNode.data?.windowSize || 10;
+                history = history.slice(-windowSize);
+            }
+
+            // 2. Prepare Prompt
+            const systemPrompt = interpolateString(node.data?.systemPrompt || "You are a helpful AI assistant.", context);
+            const userInput = context.payload?.message || context.lastOutput?.text || "Hello";
+            
+            // 3. Call LLM
+            let aiResponse = "";
+            if (provider === 'gemini') {
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ 
+                    model: "gemini-2.5-flash", // Defaulting to flash for speed
+                    systemInstruction: systemPrompt 
+                });
+                
+                const chat = model.startChat({ history: history.map(m => ({ role: m.role, parts: [{ text: m.text }] })) });
+                const result = await chat.sendMessage(userInput);
+                aiResponse = result.response.text();
+            } else {
+                // OpenAI Placeholder (would use openai package here)
+                aiResponse = `[SIMULATED GPT-4o]: I received your message "${userInput}" and processed it with my system instructions.`;
+            }
+
+            // 4. Update Memory
+            if (memoryNode) {
+                const newMessages = [
+                    ...history,
+                    { role: 'user', text: userInput },
+                    { role: 'model', text: aiResponse }
+                ];
+                
+                await db.workflowMemory.upsert({
+                    where: { workflowId_sessionId: { workflowId: workflow.id, sessionId } },
+                    update: { messages: newMessages },
+                    create: { workflowId: workflow.id, sessionId, messages: newMessages }
+                });
+            }
+
+            outputData = { text: aiResponse, sessionId };
+            break;
+
+        case 'ai':
+            const simpleApiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+            if (!simpleApiKey) throw new Error("Missing Gemini API Key in environment");
+            
+            const genAI = new GoogleGenerativeAI(simpleApiKey);
+            const simpleModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
             
             let prompt = node.data?.prompt || "Say hello";
-            // Interpolate variables from context
             prompt = interpolateString(prompt, context);
             
-            const result = await model.generateContent(prompt);
+            const result = await simpleModel.generateContent(prompt);
             outputData = { text: result.response.text() };
             break;
             
@@ -58,13 +136,11 @@ async function executeNode(node, context) {
             break;
             
         case 'email':
-            // Stub for email node
             const emailTo = interpolateString(node.data?.toAddress || "", context);
             outputData = { message: `Email simulated sent to ${emailTo}` };
             break;
             
         default:
-            // Standard passthrough
             outputData = { completed: true };
             break;
     }
@@ -74,20 +150,19 @@ async function executeNode(node, context) {
 
 /**
  * Main execution runner
- * Takes a workflow JSON (nodes and edges), and the starting webhook payload 
  */
 export async function runWorkflow(workflowId, executionId, triggerNodeId, initialPayload) {
     const workflow = await db.workflow.findUnique({ where: { id: workflowId } });
     if (!workflow) throw new Error("Workflow not found");
     
-    // Convert to Maps for fast lookup
     const nodesMap = new Map((workflow.nodes || []).map(n => [n.id, n]));
     const edgesMap = workflow.edges || [];
     
-    // The "Context" holds outputs from each node, keyed by the node ID so subsequent 
-    // nodes can pull data from node.id outputs or webhook payloads
+    // Global context for interpolation
     const context = {
-        [triggerNodeId]: initialPayload
+        payload: initialPayload,
+        trigger: initialPayload,
+        lastOutput: null
     };
 
     const logs = [{ timestamp: new Date(), message: `Started execution at trigger ${triggerNodeId}` }];
@@ -100,7 +175,6 @@ export async function runWorkflow(workflowId, executionId, triggerNodeId, initia
     };
 
     try {
-        // Naive BFS traversal
         const queue = [triggerNodeId];
         const visited = new Set();
         
@@ -113,13 +187,16 @@ export async function runWorkflow(workflowId, executionId, triggerNodeId, initia
             const currentNode = nodesMap.get(currentId);
             if (!currentNode) continue;
             
-            // Execute Node Logic (Skip trigger since we just mapped its payload)
+            // Skip non-sequence nodes (Models and Memory are fetched as attachments)
+            if (['modelNode', 'memoryNode'].includes(currentNode.type)) continue;
+
             if (currentId !== triggerNodeId) {
-                logs.push({ timestamp: new Date(), message: `Executing node ${currentNode.data?.label} (${currentId})` });
+                logs.push({ timestamp: new Date(), message: `Executing node ${currentNode.data?.label || currentNode.id}` });
                 
                 try {
-                    const output = await executeNode(currentNode, context);
-                    context[currentId] = output; // Save output to context for future nodes
+                    const output = await executeNode(currentNode, context, workflow, logs);
+                    context[currentId] = output; 
+                    context.lastOutput = output;
                     logs.push({ timestamp: new Date(), message: `Node success: ${JSON.stringify(output)}` });
                 } catch (e) {
                     logs.push({ timestamp: new Date(), message: `Node FAILED: ${e.message}`, error: true });
@@ -127,7 +204,6 @@ export async function runWorkflow(workflowId, executionId, triggerNodeId, initia
                 }
             }
 
-            // Find all connected Target edges
             const outgoingEdges = edgesMap.filter(e => e.source === currentId);
             for (const edge of outgoingEdges) {
                 queue.push(edge.target);

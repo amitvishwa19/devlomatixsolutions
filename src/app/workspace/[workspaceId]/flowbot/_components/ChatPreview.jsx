@@ -57,7 +57,8 @@ export const ChatPreview = ({ flowbotId, workspaceId, chatNode, nodes, edges }) 
                 payload: {
                     message: userMsg.text,
                     source: 'chat-preview',
-                    user: 'Studio Tester'
+                    user: 'Studio Tester',
+                    sessionId: `preview-${flowbotId}` // Fixed session for studio preview
                 }
             });
 

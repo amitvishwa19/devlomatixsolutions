@@ -10,7 +10,7 @@ import '@xyflow/react/dist/style.css';
 export default function DynamicFlowbotEditor() {
     return (
         <ReactFlowProvider>
-            <div className="flex flex-col h-[calc(100vh-3rem)] w-full bg-background overflow-hidden relative">
+            <div className="flex flex-col h-[calc(100vh-5rem)] w-full bg-card overflow-hidden relative">
                 {/* Visual Header */}
                 <header className="h-[52px] shrink-0 bg-background border-b border-border flex items-center px-6 justify-between z-30 shadow-sm relative">
                     <div className="flex items-center gap-3">
@@ -25,7 +25,7 @@ export default function DynamicFlowbotEditor() {
                             <span className="text-[9px] font-bold text-muted-foreground opacity-60">Visual Orchestration & Node Logic</span>
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex flex-col items-end">
                             <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest leading-none">Auto-Sync Enabled</span>

@@ -38,19 +38,19 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, status
         <ContextMenu>
             <ContextMenuTrigger>
                 <div className={`
-                    relative p-2 rounded-md border bg-card transition-all duration-300 group
-                    backdrop-blur-md min-w-[200px] shadow-lg
+                    relative p-2 rounded-md border transition-all duration-300 group
+                    dark:bg-[#1e1e2e] backdrop-blur-md min-w-[200px] shadow-lg
                     ${selected ? `border-${colorClass} shadow-${colorClass}/20 -translate-y-1` : 'border-border/50 hover:border-border'}
                 `}>
                     {/* Status Line */}
-                    <div className={`absolute -top-px left-4 right-4 h-[3px] rounded-full opacity-60 ${`bg-${colorClass}`}`} />
+                    <div className={`absolute -top-px left-4 right-4 h-[2px] rounded-full opacity-60 ${`bg-${colorClass}`}`} />
 
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <div className={`p-1.5 rounded-lg bg-${colorClass}/10`}>
                                 <Icon size={14} className={`text-${colorClass}`} />
                             </div>
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-foreground/80">{title}</span>
+                            <span className="text-[10px] font-bold  ">{title}</span>
                         </div>
                         {configured ? (
                             <CheckCircle2 size={12} className="text-emerald-500" />
@@ -185,7 +185,156 @@ export const ActionNode = memo(({ id, data, selected }) => {
     );
 });
 
+export const ModelNode = memo(({ id, data, selected }) => {
+    return (
+        <>
+            <NodeWrapper
+                nodeId={id}
+                onDelete={data.onDelete}
+                selected={selected}
+                title="Model"
+                icon={Cpu}
+                colorClass="purple-500"
+                configured={data.configured}
+            >
+                <h3 className="text-xs font-bold truncate leading-tight">{data.label}</h3>
+                <div className="mt-2 flex items-center gap-2">
+                    <Badge variant="outline" className="text-[8px] bg-purple-500/5 text-purple-500 border-purple-500/20 px-1 py-0 uppercase font-black">
+                        {data.subType === 'model' ? 'Large Language Model' : 'Embedding'}
+                    </Badge>
+                </div>
+            </NodeWrapper>
+            <Handle
+                type="source"
+                id="model-out"
+                position={Position.Right}
+                className="w-3 h-3 bg-purple-500! border-2 border-background ring-4 ring-purple-500/10 transition-transform hover:scale-125"
+            />
+            <Handle
+                type="source"
+                id="model-attachment"
+                position={Position.Bottom}
+                className="w-3 h-3 bg-purple-500! border-2 border-background ring-4 ring-purple-500/10 transition-transform hover:scale-125"
+            />
+        </>
+    );
+});
+
+export const MemoryNode = memo(({ id, data, selected }) => {
+    return (
+        <>
+            <NodeWrapper
+                nodeId={id}
+                onDelete={data.onDelete}
+                selected={selected}
+                title="Memory"
+                icon={History}
+                colorClass="blue-500"
+                configured={data.configured}
+            >
+                <h3 className="text-xs font-bold truncate leading-tight">{data.label}</h3>
+                <p className="text-[10px] text-muted-foreground line-clamp-1 italic">
+                    Type: {data.subType === 'window' ? 'Sliding Window' : 'Persistent'}
+                </p>
+            </NodeWrapper>
+            <Handle
+                type="source"
+                id="memory-out"
+                position={Position.Right}
+                className="w-3 h-3 bg-blue-500! border-2 border-background ring-4 ring-blue-500/10 transition-transform hover:scale-125"
+            />
+            <Handle
+                type="source"
+                id="memory-attachment"
+                position={Position.Bottom}
+                className="w-3 h-3 bg-blue-500! border-2 border-background ring-4 ring-blue-500/10 transition-transform hover:scale-125"
+            />
+        </>
+    );
+});
+
+export const AgentNode = memo(({ id, data, selected }) => {
+    return (
+        <div className={`
+            relative px-5 py-4 rounded-xl border-2 transition-all duration-300
+            bg-card min-w-[220px] shadow-2xl
+            ${selected ? 'border-indigo-500 shadow-indigo-500/20 -translate-y-1' : 'border-slate-700 hover:border-slate-600'}
+        `}>
+            {/* Left Sequence Handle */}
+            <Handle
+                type="target"
+                id="seq-in"
+                position={Position.Left}
+                className="w-4 h-4 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rounded-sm transition-transform hover:scale-125"
+            />
+
+            <div className="flex items-center gap-4 py-2">
+                <div className="p-2 rounded-xl bg-slate-800/50">
+                    <Bot size={32} className="text-[#cdd6f4]" />
+                </div>
+                <div className="space-y-0.5">
+                    <h3 className="text-sm font-black text-[#cdd6f4] leading-tight tracking-tight uppercase">AI Agent</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{data.reasoning || 'Tools Agent'}</p>
+                </div>
+            </div>
+
+            {/* Bottom Attachment handles */}
+            <div className="absolute -bottom-6 left-0 right-0 flex justify-around px-4">
+                <div className="flex flex-col items-center">
+                    <Handle
+                        type="target"
+                        id="model-in"
+                        position={Position.Bottom}
+                        className="w-3 h-3 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rotate-45 transition-transform hover:scale-125"
+                        style={{ left: '15%', bottom: '24px' }}
+                    />
+                    <span className="text-[8px] font-black uppercase text-slate-500 mt-2">Chat Model</span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                    <Handle
+                        type="target"
+                        id="memory-in"
+                        position={Position.Bottom}
+                        className="w-3 h-3 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rotate-45 transition-transform hover:scale-125"
+                        style={{ left: '50%', bottom: '24px' }}
+                    />
+                    <span className="text-[8px] font-black uppercase text-slate-500 mt-2">Memory</span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                    <Handle
+                        type="target"
+                        id="tools-in"
+                        position={Position.Bottom}
+                        className="w-3 h-3 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rotate-45 transition-transform hover:scale-125"
+                        style={{ left: '85%', bottom: '24px' }}
+                    />
+                    <span className="text-[8px] font-black uppercase text-slate-500 mt-2">Tool</span>
+                </div>
+            </div>
+
+            {/* Right Sequence Handle */}
+            <Handle
+                type="source"
+                id="seq-out"
+                position={Position.Right}
+                className="w-4 h-4 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rounded-full transition-transform hover:scale-125"
+            />
+        </div>
+    );
+});
+
 export const nodeTypes = {
     triggerNode: TriggerNode,
     actionNode: ActionNode,
+    modelNode: ModelNode,
+    memoryNode: MemoryNode,
+    agentNode: AgentNode,
 };
+
+const Badge = ({ children, className, variant }) => (
+    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${className}`}>
+        {children}
+    </span>
+);

@@ -10,12 +10,16 @@ import {
     MessageSquare,
     Workflow,
     Play,
-    FileText,
-    AlertTriangle,
     RefreshCw,
     Layers,
     MousePointer2,
-    Settings2
+    Settings2,
+    SquareStack,
+    Brain,
+    MemoryStick,
+    Puzzle,
+    Sparkles,
+    History
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -35,16 +39,35 @@ const nodeConfig = [
             { id: 'chat', type: 'triggerNode', subType: 'chat', label: 'Chat Trigger', icon: MessageSquare, description: 'Started from a chat message' },
             { id: 'schedule', type: 'triggerNode', subType: 'schedule', label: 'Schedule', icon: Clock, description: 'Run periodically (cron)' },
             { id: 'manual', type: 'triggerNode', subType: 'manual', label: 'Manual Trigger', icon: Play, description: 'Run manually via button' },
-            { id: 'form', type: 'triggerNode', subType: 'form', label: 'Form Trigger', icon: FileText, description: 'On form submission' },
-            { id: 'api-poll', type: 'triggerNode', subType: 'api-poll', label: 'API Polling', icon: RefreshCw, description: 'Check external API regularly' },
-            { id: 'error', type: 'triggerNode', subType: 'error', label: 'Error Trigger', icon: AlertTriangle, description: 'Catch workflow errors' },
+        ]
+    },
+    {
+        category: "AI Agents",
+        icon: Sparkles,
+        items: [
+            { id: 'ai-agent', type: 'agentNode', subType: 'agent', label: 'AI Agent', icon: Brain, description: 'Reasoning engine with tool access' },
+        ]
+    },
+    {
+        category: "AI Models",
+        icon: Cpu,
+        items: [
+            { id: 'model-gemini', type: 'modelNode', subType: 'model', label: 'Gemini Pro', icon: Sparkles, description: 'Google Gemini 2.5 Flash' },
+            { id: 'model-openai', type: 'modelNode', subType: 'model', label: 'GPT-4o', icon: Cpu, description: 'OpenAI Latest Model' },
+        ]
+    },
+    {
+        category: "AI Memory",
+        icon: History,
+        items: [
+            { id: 'mem-window', type: 'memoryNode', subType: 'window', label: 'Chat Memory', icon: MemoryStick, description: 'Remembers recent messages' },
         ]
     },
     {
         category: "Logic & AI",
         icon: Bot,
         items: [
-            { id: 'gemini', type: 'actionNode', subType: 'ai', label: 'Gemini AI', icon: Bot, description: 'Process or generate with LLM' },
+            { id: 'gemini', type: 'actionNode', subType: 'ai', label: 'Simple AI', icon: Bot, description: 'Single-turn LLM response' },
             { id: 'http-req', type: 'actionNode', subType: 'http', label: 'HTTP Request', icon: Globe, description: 'Execute external API call' },
         ]
     },

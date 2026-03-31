@@ -851,6 +851,7 @@ model Workflow {
   updatedAt   DateTime            @updatedAt
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   executions  WorkflowExecution[]
+  memories    WorkflowMemory[]
 
   @@index([workspaceId])
   @@index([userId])
@@ -869,4 +870,17 @@ model WorkflowExecution {
 
   @@index([workflowId])
   @@index([status])
+}
+
+model WorkflowMemory {
+  id          String    @id @default(cuid())
+  workflowId  String
+  sessionId   String    // Unique key for the conversation context (e.g., chat_123)
+  messages    Json      @default("[]") // Stores message history [{role, text}]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, sessionId])
+  @@index([workflowId])
 }

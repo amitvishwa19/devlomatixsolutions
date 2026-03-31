@@ -25,7 +25,8 @@ import {
     Clock,
     FileText,
     AlertTriangle,
-    RefreshCw
+    RefreshCw,
+    Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -218,6 +219,108 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                         </div>
                     )}
 
+                    {localData.subType === 'model' && (
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Model Provider</label>
+                                <div className="flex gap-2">
+                                    {['gemini', 'openai'].map(p => (
+                                        <Button 
+                                            key={p} 
+                                            size="sm" 
+                                            variant={localData.provider === p ? "default" : "outline"}
+                                            onClick={() => handleInputChange('provider', p)}
+                                            className={`flex-1 h-8 text-[10px] font-bold ${localData.provider === p ? 'bg-purple-500 shadow-lg shadow-purple-500/20' : 'bg-transparent opacity-60'}`}
+                                        >
+                                            {p === 'gemini' ? 'Gemini Pro' : 'GPT-4o'}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">API Key</label>
+                                <Input 
+                                    type="password"
+                                    value={localData.apiKey || ''} 
+                                    onChange={(e) => handleInputChange('apiKey', e.target.value)}
+                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-purple-500/20 transition-all font-medium"
+                                    placeholder="sk-..."
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Temperature</label>
+                                    <Input 
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="1"
+                                        value={localData.temperature || 0.7} 
+                                        onChange={(e) => handleInputChange('temperature', e.target.value)}
+                                        className="bg-muted/20 border-border/50 h-9 text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Max Tokens</label>
+                                    <Input 
+                                        type="number"
+                                        value={localData.maxTokens || 2048} 
+                                        onChange={(e) => handleInputChange('maxTokens', e.target.value)}
+                                        className="bg-muted/20 border-border/50 h-9 text-xs"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {localData.subType === 'memory' && (
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Session ID Key</label>
+                                <Input 
+                                    value={localData.sessionIdKey || 'chatId'} 
+                                    onChange={(e) => handleInputChange('sessionIdKey', e.target.value)}
+                                    className="bg-muted/20 border-border/50 h-9 text-xs"
+                                    placeholder="chatId"
+                                />
+                                <p className="text-[9px] text-muted-foreground pl-1 mt-1">Which payload variable identifies the session?</p>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Window Size</label>
+                                <Input 
+                                    type="number"
+                                    value={localData.windowSize || 10} 
+                                    onChange={(e) => handleInputChange('windowSize', e.target.value)}
+                                    className="bg-muted/20 border-border/50 h-9 text-xs"
+                                />
+                                <p className="text-[9px] text-muted-foreground pl-1 mt-1">Number of previous messages to remember</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {localData.subType === 'agent' && (
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Agent Instructions (System Prompt)</label>
+                                <textarea 
+                                    value={localData.systemPrompt || ''} 
+                                    onChange={(e) => handleInputChange('systemPrompt', e.target.value)}
+                                    className="flex min-h-[140px] w-full rounded-xl border border-border/50 bg-muted/20 px-3 py-3 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/20 transition-all font-medium leading-relaxed resize-none"
+                                    placeholder="You are a helpful assistant that uses the provided tools..."
+                                />
+                            </div>
+                            <div className="bg-indigo-500/5 rounded-xl border border-indigo-500/10 p-4 space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles size={14} className="text-indigo-500" />
+                                    <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Reasoning Engine</span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                    This agent will automatically use any connected Model and Memory to reason about the conversation and decide which tools to call.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {localData.subType === 'chat' && (
                         <div className="space-y-4">
                             <div className="bg-amber-500/5 rounded-xl border border-amber-500/10 p-4 space-y-3">
@@ -253,19 +356,15 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                         <div className="space-y-4">
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between pl-1">
-                                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest">System Prompt</label>
-                                    <Badge variant="outline" className="text-[9px] opacity-50 bg-primary/5">Gemini 2.5 Flash</Badge>
+                                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest">Simple Prompt</label>
+                                    <Badge variant="outline" className="text-[9px] opacity-50 bg-primary/5">Stateless</Badge>
                                 </div>
                                 <textarea 
                                     value={localData.prompt || ''} 
                                     onChange={(e) => handleInputChange('prompt', e.target.value)}
                                     className="flex min-h-[160px] w-full rounded-xl border border-border/50 bg-muted/20 px-3 py-3 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20 transition-all font-medium leading-relaxed resize-none"
-                                    placeholder="Ex: Summarize this text in 2 bullet points. Use {{ input }} to reference previous data."
+                                    placeholder="Ex: Summarize this text. Use {{ input }} for data."
                                 />
-                                <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground pl-1 mt-2">
-                                    <Variable size={10} className="text-primary" />
-                                    <span>Tip: Use <b>{"{{ variable }}"}</b> to inject data from parent nodes</span>
-                                </div>
                             </div>
                         </div>
                     )}
