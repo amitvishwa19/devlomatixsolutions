@@ -93,7 +93,7 @@ export default function AppSidebar() {
         // { type:'child', title:"Permissions", url: `${baseAccessPath}/permission`, icon:"bar-chart-3", category:"access-management"},
         // { type:'child', title:"Access", url: `${baseAccessPath}/access`, icon:"bar-chart-3", category:"access-management"},
 
-        // System
+        // AI AGent
         { type: 'parent', title: "AI Agent", url: `${baseAgentPath}`, icon: "monitor-cog", category: "agent" },
         { type: 'child', title: "Dashboard", url: `${baseAgentPath}/`, icon: "bar-chart-3", category: "agent" },
         { type: 'child', title: "Credentials", url: `${baseAgentPath}/credential`, icon: "bar-chart-3", category: "agent" },
@@ -108,6 +108,7 @@ export default function AppSidebar() {
         { type: 'child', title: "Access Control", url: `${systemPath}/access`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Credentials", url: `${systemPath}/credential`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Logs", url: `${systemPath}/log`, icon: "bar-chart-3", category: "system" },
+        { type: 'child', title: "Cron Jobs", url: `${systemPath}/cron`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Settings", url: `${systemPath}/setting`, icon: "bar-chart-3", category: "system" },
 
     ]

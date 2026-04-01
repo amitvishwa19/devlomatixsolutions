@@ -171,7 +171,7 @@ export default function LogPage() {
     };
 
     return (
-        <div className="p-8 space-y-8 animate-fade-in">
+        <div className="p-4 space-y-4 animate-fade-in">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">

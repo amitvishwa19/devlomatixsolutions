@@ -26,7 +26,7 @@ export async function POST(req) {
         const { searchParams } = new URL(req.url);
 
         // Configuration: Use provided info or defaults
-        const workspaceId = body.workspaceId || "cmnbhifag000458ikwhv1zso2";
+        const workspaceId = body.workspaceId || null;
         const level = (body.level || "INFO").toUpperCase();
         const type = (body.type || "WEBHOOK").toUpperCase();
         const message = body.message || "Incoming Webhook Capture";

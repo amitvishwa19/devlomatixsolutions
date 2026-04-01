@@ -104,7 +104,7 @@ const settingItems = [
 
 
 
-export default function SettingsModalOld({ isOpen, onClose }) {
+export default function SettingsModal({ isOpen, onClose }) {
 
     const [selected, setSelected] = useState({
         title: 'General',

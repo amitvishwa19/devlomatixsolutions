@@ -55,6 +55,7 @@ model User {
   workspaceDocuments        WorkspaceDocument[]
   roles                     Role[]              @relation("RoleToUser")
   workflows                 Workflow[]
+  systemCrons               SystemCron[]
 
   @@index([email])
   @@index([phone])
@@ -889,4 +890,33 @@ model WorkflowMemory {
 
   @@unique([workflowId, sessionId])
   @@index([workflowId])
+}
+
+enum SystemCronStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+  COMPLETED
+}
+
+model SystemCron {
+  id              String            @id @default(cuid())
+  name            String
+  description     String?
+  cronExpression  String
+  status          SystemCronStatus  @default(ACTIVE)
+  targetType      String            @default("FLOWBOT")
+  targetId        String?
+  payload         Json?
+  lastRunAt       DateTime?
+  nextRunAt       DateTime?
+  workspaceId     String
+  userId          String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([nextRunAt])
 }

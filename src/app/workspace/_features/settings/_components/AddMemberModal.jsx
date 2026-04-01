@@ -11,41 +11,36 @@ import { useAction } from '@/hooks/use-action'
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
 import { Loader } from 'lucide-react'
 import { toast } from 'sonner'
-import { useOrg } from '@/providers/OrgProvider'
-import { addMemberOrg } from '../../../_actions/add-member'
+
+
 
 const AddMemberModal = ({ open, setOpen }) => {
     const { onOpen, onClose, isOpen, type, data } = useModal()
     const isModalOpen = isOpen && type === "addmember";
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(false)
-    const { server, users, refreshServer } = useOrg()
-
-    const removeIds = new Set(data?.data?.map(r => r.id));
-    const userData = users.filter(item => !removeIds.has(item.id));
 
 
+    //const removeIds = new Set(data?.data?.map(r => r.id));
+    //const userData = users.filter(item => !removeIds.has(item.id));
 
-    const { execute: addMember } = useAction(addMemberOrg, {
-        onSuccess: (data) => {
-            setUser(null)
-            setLoading(false)
-            toast.success('Member added to your organization', { id: 'addmember' })
-        },
-        onError: (error) => {
-            console.log(error)
-        }
-    })
+
+
+    // const { execute: addMember } = useAction(addMemberOrg, {
+    //     onSuccess: (data) => {
+    //         setUser(null)
+    //         setLoading(false)
+    //         toast.success('Member added to your organization', { id: 'addmember' })
+    //     },
+    //     onError: (error) => {
+    //         console.log(error)
+    //     }
+    // })
 
     const handleAddMember = async () => {
 
         try {
-            if (!user) return toast.error('Please select a user to add to organization')
-            setLoading(true)
-            toast.loading('Adding member to your organization', { id: 'addmember' })
-            await addMember({ serverId: server.id, userId: user })
-            await refreshServer().then(setOpen(false)
-            )
+
         } catch (error) {
             console.log(error)
             setLoading(false)

@@ -47,6 +47,7 @@ export default function FlowBotDashboard() {
     const [workflows, setWorkflows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState('grid');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newFlow, setNewFlow] = useState({ name: '', description: '' });
     const [creating, setCreating] = useState(false);
@@ -204,10 +205,10 @@ export default function FlowBotDashboard() {
                     />
                 </div>
                 <div className="flex items-center gap-2 px-2 border-l border-border/50">
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Button variant="ghost" size="icon" className={`h-9 w-9 ${viewMode === 'grid' ? '' : 'text-muted-foreground opacity-50'}`} onClick={() => setViewMode('grid')}>
                         <LayoutGrid className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground opacity-50">
+                    <Button variant="ghost" size="icon" className={`h-9 w-9 ${viewMode === 'list' ? '' : 'text-muted-foreground opacity-50'}`} onClick={() => setViewMode('list')}>
                         <List className="h-4 w-4" />
                     </Button>
                 </div>
@@ -223,77 +224,130 @@ export default function FlowBotDashboard() {
                     ))}
                 </div>
             ) : filteredWorkflows.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
-                    {filteredWorkflows.map(workflow => (
-                        <Card key={workflow.id} className="group relative bg-card hover:bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 cursor-pointer overflow-hidden flex flex-col h-[280px]">
-                            {/* Decorative Top Bar */}
-                            <div className={`h-1.5 w-full ${workflow.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <div>
+                    {viewMode === 'grid' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
+                            {filteredWorkflows.map(workflow => (
+                                <Card key={workflow.id} className="group relative bg-card hover:bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 cursor-pointer overflow-hidden flex flex-col h-[280px]">
+                                    {/* Decorative Top Bar */}
+                                    <div className={`h-1.5 w-full ${workflow.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
 
-                            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <div className={`p-1.5 rounded-md ${workflow.status === 'ACTIVE' ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
-                                            <GitBranch className={`w-4 h-4 ${workflow.status === 'ACTIVE' ? 'text-emerald-500' : 'text-amber-500'}`} />
+                                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`p-1.5 rounded-md ${workflow.status === 'ACTIVE' ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+                                                    <GitBranch className={`w-4 h-4 ${workflow.status === 'ACTIVE' ? 'text-emerald-500' : 'text-amber-500'}`} />
+                                                </div>
+                                                <CardTitle className="text-base truncate max-w-[180px]">{workflow.name}</CardTitle>
+                                            </div>
+                                            <CardDescription className="line-clamp-2 text-sm min-h-[40px]">
+                                                {workflow.description || "No description set for this automation."}
+                                            </CardDescription>
                                         </div>
-                                        <CardTitle className="text-base truncate max-w-[180px]">{workflow.name}</CardTitle>
-                                    </div>
-                                    <CardDescription className="line-clamp-2 text-sm min-h-[40px]">
-                                        {workflow.description || "No description set for this automation."}
-                                    </CardDescription>
-                                </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                            <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
-                                        <DropdownMenuItem onClick={() => router.push(`/workspace/${workspaceId}/flowbot/${workflow.id}`)}>
-                                            <Settings className="w-4 h-4 mr-2" />
-                                            Edit Configuration
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                            <Play className="w-4 h-4 mr-2" />
-                                            Run Test
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem className="text-rose-500 focus:text-rose-500" onClick={() => handleDeleteWorkflow(workflow.id)}>
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            Delete Workflow
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </CardHeader>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuItem onClick={() => router.push(`/workspace/${workspaceId}/flowbot/${workflow.id}`)}>
+                                                    <Settings className="w-4 h-4 mr-2" />
+                                                    Edit Configuration
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                    <Play className="w-4 h-4 mr-2" />
+                                                    Run Test
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-rose-500 focus:text-rose-500" onClick={() => handleDeleteWorkflow(workflow.id)}>
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete Workflow
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </CardHeader>
 
-                            <CardContent className="flex-1">
-                                <div className="flex flex-wrap gap-2 mt-4">
-                                    <Badge variant={workflow.status === 'ACTIVE' ? 'success' : 'secondary'} className="rounded-full text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
-                                        {workflow.status}
-                                    </Badge>
-                                    <Badge variant="outline" className="rounded-full text-[10px] font-medium opacity-70">
-                                        {workflow.nodes?.length || 0} Nodes
-                                    </Badge>
-                                </div>
-                            </CardContent>
+                                    <CardContent className="flex-1">
+                                        <div className="flex flex-wrap gap-2 mt-4">
+                                            <Badge variant={workflow.status === 'ACTIVE' ? 'success' : 'secondary'} className="rounded-full text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
+                                                {workflow.status}
+                                            </Badge>
+                                            <Badge variant="outline" className="rounded-full text-[10px] font-medium opacity-70">
+                                                {workflow.nodes?.length || 0} Nodes
+                                            </Badge>
+                                        </div>
+                                    </CardContent>
 
-                            <CardFooter className="pt-0 pb-6">
-                                <div className="w-full flex items-center justify-between border-t border-border/40 pt-4">
-                                    <div className="flex items-center text-[11px] text-muted-foreground">
-                                        <Clock className="w-3 h-3 mr-1" />
-                                        Updated {formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}
+                                    <CardFooter className="pt-0 pb-6">
+                                        <div className="w-full flex items-center justify-between border-t border-border/40 pt-4">
+                                            <div className="flex items-center text-[11px] text-muted-foreground">
+                                                <Clock className="w-3 h-3 mr-1" />
+                                                Updated {formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 text-xs font-bold text-primary group-hover:bg-primary/10 transition-colors"
+                                                onClick={() => router.push(`/workspace/${workspaceId}/flowbot/${workflow.id}`)}
+                                            >
+                                                Open Flow <ChevronRight className="w-3 h-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </CardFooter>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-3 pb-12">
+                            {filteredWorkflows.map(workflow => (
+                                <div key={workflow.id} onClick={() => router.push(`/workspace/${workspaceId}/flowbot/${workflow.id}`)} className="group flex items-center justify-between p-4 bg-card border border-border/50 rounded-xl hover:bg-card/80 hover:border-primary/30 transition-all cursor-pointer">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-2 rounded-lg ${workflow.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                            <GitBranch className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-semibold">{workflow.name}</h4>
+                                            <p className="text-xs text-muted-foreground line-clamp-1 max-w-[500px]">
+                                                {workflow.description || "No description set for this automation."}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 text-xs font-bold text-primary group-hover:bg-primary/10 transition-colors"
-                                        onClick={() => router.push(`/workspace/${workspaceId}/flowbot/${workflow.id}`)}
-                                    >
-                                        Open Flow <ChevronRight className="w-3 h-3 ml-1" />
-                                    </Button>
+                                    <div className="flex items-center gap-6">
+                                        <Badge variant={workflow.status === 'ACTIVE' ? 'success' : 'secondary'} className="rounded-full text-[10px] uppercase font-bold tracking-wider hidden md:inline-flex">
+                                            {workflow.status}
+                                        </Badge>
+                                        <div className="hidden lg:flex items-center text-xs text-muted-foreground w-40 justify-end">
+                                            <Clock className="w-3 h-3 mr-1" />
+                                            {formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground relative z-10">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuItem onClick={() => router.push(`/workspace/${workspaceId}/flowbot/${workflow.id}`)}>
+                                                    <Settings className="w-4 h-4 mr-2" />
+                                                    Edit Configuration
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                    <Play className="w-4 h-4 mr-2" />
+                                                    Run Test
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-rose-500 focus:text-rose-500" onClick={() => handleDeleteWorkflow(workflow.id)}>
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete Workflow
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </div>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                            ))}
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-20 bg-card/20 rounded-2xl border border-dashed border-border/50 text-center">
