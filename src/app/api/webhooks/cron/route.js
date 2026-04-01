@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import parser from "cron-parser";
 import { runWorkflow } from "@/lib/workflow-engine";
+import parser from "cron-parser";
+
+// Helper for v5.5.0 ESM compatibility
+const getCron = () => {
+    const p = parser.default || parser;
+    // v5.5.0 uses p.parse, previous versions use p.parseExpression
+    const parseFn = p.parse || p.parseExpression;
+    return { parseExpression: parseFn.bind(p) };
+};
+const cronHelper = getCron();
 
 export async function GET(req) {
     // Optional Security: Check Authorization Header if CRON_SECRET is defined
@@ -32,7 +41,7 @@ export async function GET(req) {
         for (const cron of dueCrons) {
             try {
                 // Determine next run time
-                const interval = parser.parseExpression(cron.cronExpression);
+                const interval = cronHelper.parseExpression(cron.cronExpression);
                 const nextRunAt = interval.next().toDate();
 
                 // If the target is a FLOWBOT, execute it

@@ -24,6 +24,15 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import parser from "cron-parser";
 
+// Helper for v5.5.0 ESM compatibility
+const getCron = () => {
+    const p = parser.default || parser;
+    // v5.5.0 uses p.parse, previous versions use p.parseExpression
+    const parseFn = p.parse || p.parseExpression;
+    return { parseExpression: parseFn.bind(p) };
+};
+const cronHelper = getCron();
+
 const CRON_PRESETS = [
     { label: "Every Minute", value: "* * * * *" },
     { label: "Every 5 Minutes", value: "*/5 * * * *" },
@@ -76,7 +85,7 @@ export default function CronPage() {
     useEffect(() => {
         if (formData.cronExpression) {
             try {
-                const interval = parser.parseExpression(formData.cronExpression);
+                const interval = cronHelper.parseExpression(formData.cronExpression);
                 setPredictedNext(interval.next().toString());
             } catch (err) {
                 setPredictedNext('Invalid expression');
@@ -173,6 +182,8 @@ export default function CronPage() {
 
     return (
         <div className="p-4 space-y-4 animate-fade-in">
+
+
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
@@ -188,20 +199,20 @@ export default function CronPage() {
                         <span className="text-[10px] font-bold text-muted-foreground mr-2 Uppercase">Webhook:</span>
                         <code className="text-[10px] font-mono text-primary truncate max-w-[200px]">/api/webhooks/cron</code>
                     </div>
-                    <Button variant="outline" onClick={fetchData} disabled={isLoading} size="sm" className="font-bold tracking-wider text-[10px] h-8 rounded-md">
-                        <RefreshCcw className={`mr-2 h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+                    <Button variant="outline" onClick={fetchData} disabled={isLoading} size="sm" className=" rounded-md">
+                        <RefreshCcw className={` h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
                     </Button>
-                    <Button onClick={openCreateDialog} size="sm" className="font-bold tracking-wider text-[10px] h-8 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground">
-                        <Plus className="mr-2 h-3.5 w-3.5" /> New Schedule
+                    <Button onClick={openCreateDialog} size="sm" className=" rounded-md bg-primary hover:bg-primary/90">
+                        <Plus className=" h-3.5 w-3.5" /> New Schedule
                     </Button>
                 </div>
             </div>
 
             {/* Table Area */}
-            <Card className="border-border shadow-soft overflow-hidden rounded-md">
+            <Card className="border-border shadow-soft overflow-hidden rounded-md p-0">
                 <CardContent className="p-0">
                     <Table>
-                        <TableHeader className="bg-muted/30">
+                        <TableHeader className="bg-background">
                             <TableRow className="hover:bg-transparent">
                                 <TableHead className="w-[100px] text-[10px] py-4">Status</TableHead>
                                 <TableHead className="w-[200px] text-[10px] py-4">Name</TableHead>
@@ -309,7 +320,9 @@ export default function CronPage() {
 
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="name" className="text-xs font-bold text-muted-foreground uppercase">Schedule Name</Label>
+                            <Label htmlFor="name" className="text-xs font-bold text-muted-foreground uppercase flex items-center">
+                                Schedule Name <span className="text-destructive ml-1">*</span>
+                            </Label>
                             <Input
                                 id="name"
                                 value={formData.name}
@@ -330,7 +343,9 @@ export default function CronPage() {
                                 className="min-h-[60px] rounded-md text-sm resize-none"
                             />
                         </div>                        <div className="grid gap-2">
-                            <Label htmlFor="targetId" className="text-xs font-bold text-muted-foreground uppercase">Target ID / Resource</Label>
+                            <Label htmlFor="targetId" className="text-xs font-bold text-muted-foreground uppercase flex items-center">
+                                Target ID / Resource <span className="text-destructive ml-1">*</span>
+                            </Label>
                             <Input
                                 id="targetId"
                                 value={formData.targetId}
@@ -359,7 +374,9 @@ export default function CronPage() {
                             </Select>
                         </div>                        <div className="grid gap-2">
                             <Label htmlFor="cron" className="text-xs font-bold text-muted-foreground uppercase flex items-center justify-between">
-                                Cron Expression
+                                <div className="flex items-center">
+                                    Cron Expression <span className="text-destructive ml-1">*</span>
+                                </div>
                                 <a href="https://crontab.guru/" target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline normal-case">Help me build this</a>
                             </Label>
                             <Input

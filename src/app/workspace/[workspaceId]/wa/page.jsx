@@ -4,16 +4,12 @@ import { use } from "react";
 import { useEffect, useState } from "react";
 import { CheckCircle2, MessageCircleDashed, Users, MessageSquare, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-
-
-
 import CampaignList from "./_components/CampaignList";
-
 import DashboardStats from "./_components/DashboardStats";
 import RecentActivity from "./_components/RecentActivity";
 import WhatsAppConnectionModal from "./_components/WhatsAppConnectionModal";
-//import WhatsAppConnectionModal from"./_components/WhatsAppConnectionModal";
+import WhatsAppSettingModal from "./_components/WhatsAppSettingModal";
+
 
 
 const mapApiCampaignToUI = (campaign) => ({
@@ -66,6 +62,10 @@ export default function DashboardPage({ params: paramsPromise }) {
     const [waStatus, setWaStatus] = useState('welcome');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [whatsappSettingOpen, setWhatsappSettingOpen] = useState({
+        open: false,
+        onClose: () => setWhatsappSettingOpen({ open: false })
+    });
 
     const fetchCampaigns = async () => {
         setLoading(true);
@@ -187,7 +187,9 @@ export default function DashboardPage({ params: paramsPromise }) {
                     <Button
                         variant=""
                         className={`gap-2 cursor-pointer brder ${waStatus === 'open' ? 'border' : 'border'}`}
-                        onClick={() => setWaConnectionOpen(true)}>
+                        // onClick={() => setWaConnectionOpen(true)}
+                        onClick={() => setWhatsappSettingOpen({ open: true, onClose: () => setWhatsappSettingOpen({ open: false }) })}
+                    >
 
                         {waStatus === 'open' ?
                             <>
@@ -268,6 +270,12 @@ export default function DashboardPage({ params: paramsPromise }) {
 
 
             <WhatsAppConnectionModal open={waConnectionOpen} onOpenChange={setWaConnectionOpen} />
+            <WhatsAppSettingModal
+                open={whatsappSettingOpen.open}
+                onClose={whatsappSettingOpen.onClose}
+
+            />
         </div>);
 
 }
+

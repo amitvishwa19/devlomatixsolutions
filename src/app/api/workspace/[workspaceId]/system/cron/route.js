@@ -4,6 +4,15 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import parser from "cron-parser";
 
+// Helper for v5.5.0 ESM compatibility
+const getCron = () => {
+    const p = parser.default || parser;
+    // v5.5.0 uses p.parse, previous versions use p.parseExpression
+    const parseFn = p.parse || p.parseExpression;
+    return { parseExpression: parseFn.bind(p) };
+};
+const cron = getCron();
+
 export async function GET(req, { params }) {
     try {
         const { workspaceId } = await params;
@@ -41,19 +50,21 @@ export async function POST(req, { params }) {
         }
 
         const userId = session.user.userId;
-        const { name, description, cronExpression, targetType, targetId } = await req.json();
+        let { name, description, cronExpression, targetType, targetId } = await req.json();
 
         if (!name || !cronExpression || !targetId) {
-            return NextResponse.json({ message: "Name, cron expression, and target are required." }, { status: 400 });
+            return NextResponse.json({ message: `Missing required fields: ${!name ? 'name ' : ''}${!cronExpression ? 'expression ' : ''}${!targetId ? 'target' : ''}` }, { status: 400 });
         }
 
         // Validate Schedule
         let nextRunAt;
         try {
-            const interval = parser.parseExpression(cronExpression);
+            const trimmedExpression = cronExpression.trim();
+            const interval = cron.parseExpression(trimmedExpression);
             nextRunAt = interval.next().toDate();
+            cronExpression = trimmedExpression; 
         } catch (err) {
-            return NextResponse.json({ message: "Invalid cron expression. Use format '* * * * *'" }, { status: 400 });
+            return NextResponse.json({ message: `Invalid cron expression "${cronExpression}": ${err.message}` }, { status: 400 });
         }
 
         const cronJob = await db.systemCron.create({
