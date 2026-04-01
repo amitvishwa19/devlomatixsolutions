@@ -7,7 +7,7 @@ import { FlowValidationContextProvider } from '../_context/FlowValidationContext
 //import { ReactFlowProvider } from 'reactflow'
 
 export default async function WorkflowIdPage({ params }) {
-    const { workflowId, orgId } = params
+    const { workflowId, orgId } = await params
     console.log(workflowId)
 
     const workflow = await db.workflow.findUnique({

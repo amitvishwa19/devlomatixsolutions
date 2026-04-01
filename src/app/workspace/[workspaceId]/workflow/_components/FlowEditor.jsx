@@ -12,7 +12,7 @@ import { useParams } from 'next/navigation';
 import DeleteEdgeButton from './edges/DeleteEdgeButton';
 import { TaskRegistry } from '../lib/tasks/registry';
 import WorkflowTopbar from './topbar/WorkflowTopbar';
-import { WORKFLOWSTATUS } from '@prisma/client';
+import { WorkflowStatus } from '@prisma/client';
 
 
 
@@ -181,7 +181,7 @@ export default function FlowEditor({ workflow }) {
                 workflowId={workflow.id}
                 hideBUttons={true}
                 defination={defination}
-                isPublished={workflow.status === WORKFLOWSTATUS.PUBLISHED}
+                isPublished={workflow.status === WorkflowStatus.PUBLISHED}
             />
 
             {/* <div className='flex items-center justify-end p-2 gap-2'>

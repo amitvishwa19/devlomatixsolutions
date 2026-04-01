@@ -55,7 +55,7 @@ export default function WorkflowPage() {
                     </div>
                     <div className='flex items-center  gap-4 mr-2'>
 
-                        <Button size='sm' role='button' onClick={() => { onOpen("createWorkFLow", { orgId, userId: session.user.userId }) }} className='bg-blue-600 hover:bg-blue-800 text-white'>
+                        <Button size='sm' role='button' onClick={() => { onOpen("createWorkFLow", { orgId: workspaceId, userId: session.user.userId }) }} className='bg-blue-600 hover:bg-blue-800 text-white'>
                             Create Workflow
                         </Button>
 
@@ -88,7 +88,7 @@ export default function WorkflowPage() {
                                 Click
                                 <span
                                     className='mx-1 cursor-pointer text-blue-600 font-semibold'
-                                    onClick={() => { onOpen("createWorkFLow", { orgId, userId: session.user.userId }) }}
+                                    onClick={() => { onOpen("createWorkFLow", { orgId: workspaceId, userId: session.user.userId }) }}
                                 >
                                     here
                                 </span>
