@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-    Search, 
-    Zap, 
-    Bot, 
-    Cpu, 
-    History, 
-    MessageSquare, 
-    Clock, 
+import {
+    Search,
+    Zap,
+    Bot,
+    Cpu,
+    History,
+    MessageSquare,
+    Clock,
     Play,
     Mail,
     Database,
@@ -37,11 +37,11 @@ const getCategories = () => {
         if (!categoriesMap[node.group]) {
             categoriesMap[node.group] = {
                 category: node.group,
-                icon: node.group === 'Triggers' ? MousePointer2 : 
-                      node.group === 'AI Agents' ? Sparkles :
-                      node.group === 'AI Models' ? Cpu :
-                      node.group === 'AI Memory' ? History :
-                      node.group === 'Logic & AI' ? Bot : Layers,
+                icon: node.group === 'Triggers' ? MousePointer2 :
+                    node.group === 'AI Agents' ? Sparkles :
+                        node.group === 'AI Models' ? Cpu :
+                            node.group === 'AI Memory' ? History :
+                                node.group === 'Logic & AI' ? Bot : Layers,
                 items: []
             };
         }
@@ -69,7 +69,7 @@ export const NodeSidebar = () => {
 
     const filteredCategories = categories.map(cat => ({
         ...cat,
-        items: cat.items.filter(item => 
+        items: cat.items.filter(item =>
             item.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.description.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -77,10 +77,7 @@ export const NodeSidebar = () => {
 
     return (
         <aside className="w-[300px] bg-background border-r border-border h-full flex flex-col p-6 space-y-6 z-10 shadow-2xl overflow-hidden">
-            <div className="space-y-1">
-                <h2 className="text-xl font-black text-foreground/90 uppercase tracking-tight italic">Node Vault</h2>
-                <p className="text-[10px] uppercase font-bold text-muted-foreground opacity-50 tracking-widest">Powered by Registry v2</p>
-            </div>
+
 
             <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -93,7 +90,7 @@ export const NodeSidebar = () => {
             </div>
 
             <ScrollArea className="flex-1 -mr-4 pr-4">
-                <Accordion type="multiple" defaultValue={categories.map(c => c.category)} className="w-full space-y-2">
+                <Accordion type="multiple" className="w-full space-y-2">
                     {filteredCategories.map((section) => (
                         <AccordionItem key={section.category} value={section.category} className="border-none">
                             <AccordionTrigger className="hover:no-underline py-2 group cursor-pointer border-b border-border/10">

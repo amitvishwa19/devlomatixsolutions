@@ -12,6 +12,7 @@ import { AppThemeProvider } from "@/hooks/useTheme";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
+import { QueryProvider } from "@/providers/QueryProvider";
 import { AccessProvider } from "@/providers/AccessProvider";
 import CookieConsent from "@/components/global/CookieConsent";
 
@@ -66,25 +67,27 @@ export default async function RootLayout({ children }) {
             <body className={`${outfit.className} `} suppressHydrationWarning={true}>
                 <SessionWrapper>
                     {/* <SocketProvider> */}
-                    <AppProvider>
-                        <AppThemeProvider>
-                            <ThemeProvider>
-                                <AuthProvider>
+                    <QueryProvider>
+                        <AppProvider>
+                            <AppThemeProvider>
+                                <ThemeProvider>
+                                    <AuthProvider>
 
-                                    <AccessProvider user={user}>
-                                        <Providers>
-                                            {/* <OrgModalProvider /> */}
+                                        <AccessProvider user={user}>
+                                            <Providers>
+                                                {/* <OrgModalProvider /> */}
 
-                                            {children}
-                                            <CookieConsent />
+                                                {children}
+                                                <CookieConsent />
 
-                                        </Providers>
-                                    </AccessProvider>
+                                            </Providers>
+                                        </AccessProvider>
 
-                                </AuthProvider>
-                            </ThemeProvider>
-                        </AppThemeProvider>
-                    </AppProvider>
+                                    </AuthProvider>
+                                </ThemeProvider>
+                            </AppThemeProvider>
+                        </AppProvider>
+                    </QueryProvider>
                     {/* </SocketProvider> */}
                 </SessionWrapper>
                 <Toaster position="top-right" className="dark:bg-sky-600" />

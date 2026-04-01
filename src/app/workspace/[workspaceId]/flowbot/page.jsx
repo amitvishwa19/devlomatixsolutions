@@ -107,7 +107,7 @@ export default function FlowBotDashboard() {
     );
 
     return (
-        <div className="flex flex-col h-full bg-background/50 overflow-auto p-8 space-y-8">
+        <div className="flex flex-col h-full  overflow-auto p-4 space-y-4">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>

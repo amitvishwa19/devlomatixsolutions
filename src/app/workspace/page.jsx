@@ -12,6 +12,9 @@ export default async function WorkspacePage() {
         redirect("/login");
     }
 
+
+    console.log('session workspace', session)
+
     let server;
 
     try {
@@ -23,7 +26,7 @@ export default async function WorkspacePage() {
             select: { id: true },
         });
 
-
+        console.log('server', server)
 
 
     } catch (error) {

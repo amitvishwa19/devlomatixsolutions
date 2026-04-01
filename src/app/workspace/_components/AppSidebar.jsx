@@ -86,7 +86,7 @@ export default function AppSidebar() {
         { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
         { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
         { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Workflow", url: `${basePath}/workflow`, icon: "bar-chart-3", category: "flowbot" },
+
         // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
         // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},
         // { type:'child', title:"Roles", url: `${baseAccessPath}/role`, icon:"bar-chart-3", category:"access-management"},

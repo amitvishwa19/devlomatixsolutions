@@ -70,6 +70,7 @@ const handler = async (data) => {
                             name: 'default',
                             inviteCode: uuidv4(),
                             selected: true,
+                            default: true,
                             channels: {
                                 create: [{ name: 'general', userId: user?.id }]
                             },
