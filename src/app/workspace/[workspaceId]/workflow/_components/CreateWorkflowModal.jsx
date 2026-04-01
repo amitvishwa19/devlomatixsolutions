@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAction } from '@/hooks/use-action';
 import { createWorkflow } from '../_actions/create-workflow';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Loader } from 'lucide-react';
 
 const formSchema = z.object({
@@ -26,6 +26,7 @@ export default function CreateWorkflowModal() {
     const { onOpen, onClose, isOpen, type, data } = useModal()
     const isModalOpen = isOpen && type === "createWorkFLow";
     const { orgId, userId } = data
+    const { workspaceId } = useParams()
     const router = useRouter()
 
     const form = useForm({
@@ -47,17 +48,17 @@ export default function CreateWorkflowModal() {
             console.log('data', data)
             handleOnOpenChange()
             toast.success(`Workflow ${data?.name} created successfully`, { id: 'create-workflow' })
-            router.push(`/workspace/${orgId}/workflow/${data.id}`)
+            router.push(`/workspace/${workspaceId}/workflow/${data.id}`)
         },
         onError: (error) => {
-            toast.error(error)
+            toast.error(error, { id: 'create-workflow' })
         }
     })
 
     const onSubmit = (values) => {
-        console.log(values, data)
+        console.log('workspaceId', workspaceId)
         toast.loading('Creating workflow', { id: 'create-workflow' })
-        execute({ orgId, userId, name: values.name, description: values.description })
+        execute({ userId, workspaceId, name: values.name, description: values.description })
     }
 
     return (

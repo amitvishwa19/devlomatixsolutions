@@ -852,6 +852,7 @@ model Workflow {
   edges       Json                @default("[]")
   workspaceId String
   userId      String
+  definition  Json?
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)

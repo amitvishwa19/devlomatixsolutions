@@ -16,7 +16,7 @@ export default function WorkflowPage() {
 
 
     const { data: session } = useSession()
-    const { orgId } = useParams()
+    const { workspaceId } = useParams()
     const [workflows, setWorkflows] = useState([])
     const { onOpen, onClose, isOpen, type, data } = useModal()
 
@@ -31,7 +31,7 @@ export default function WorkflowPage() {
     })
 
     useEffect(() => {
-        execute({ orgId, userId: session?.user?.userId })
+        execute({ workspaceId, userId: session?.user?.userId })
         //getWorkflowsData()
     }, [session, isOpen])
 
@@ -72,7 +72,7 @@ export default function WorkflowPage() {
                             workflows.map((workflow, index) => {
                                 //console.log(workflow)
                                 return (
-                                    <WorkflowCard key={workflow.id} workflow={workflow} orgId={orgId} />
+                                    <WorkflowCard key={workflow.id} workflow={workflow} orgId={workspaceId} />
                                 )
                             })
                         }

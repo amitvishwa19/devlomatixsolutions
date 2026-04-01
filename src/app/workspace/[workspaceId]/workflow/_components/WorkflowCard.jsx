@@ -43,7 +43,7 @@ export default function WorkflowCard({ workflow, orgId }) {
     //console.log(statusColor)
     //console.log(workflow)
     //console.log(isDraft)
-    const isDraft = workflow.status === WORKFLOWSTATUS.DRAFT
+    const isDraft = workflow.status === WorkflowStatus.DRAFT
     console.log(workflow.status)
     return (
         <Card key={workflow.id} className=" border border-separate shadow-sm rounded-lg overflow-hidden hover:shadow-md">
@@ -52,7 +52,7 @@ export default function WorkflowCard({ workflow, orgId }) {
                 <div className='flex items-center '>
                     <div className={cn(" w-10 h-10 rounded-full flex items-center justify-center mr-4", statusColor[workflow.status])}>
                         {
-                            workflow.status === WORKFLOWSTATUS.DRAFT ?
+                            workflow.status === WorkflowStatus.DRAFT ?
                                 (<FileTextIcon className='h-5 w-5' />) :
                                 (<PlayIcon className='h-5 w-5' />)
                         }
@@ -240,7 +240,7 @@ function SchedularSection({ isDraft, creditCost, workflowId, cron }) {
 }
 
 function LastRunDetails({ workflow, orgId }) {
-    const isDraft = workflow.status === WORKFLOWSTATUS.DRAFT
+    const isDraft = workflow.status === WorkflowStatus.DRAFT
     const { lastRunAt, lastRunStatus, nextRunAt } = workflow
     const formattedStartedAt = lastRunAt && formatDistanceToNow(lastRunAt, { addSuffix: true })
     const nextSchedule = nextRunAt && format(nextRunAt, 'yyyy-MM-dd HH:mm')

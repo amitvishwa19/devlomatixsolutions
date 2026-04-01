@@ -21,7 +21,8 @@ export default function AppSidebar() {
     const { state, setOpen } = useSidebar()
 
     const workspaceId = params?.workspaceId || "testid"
-    const basePath = `/workspace/${workspaceId}/wa`
+    const basePath = `/workspace/${workspaceId}`
+    const baseWhathappPath = `/workspace/${workspaceId}/wa`
     const baseDocPath = `/workspace/${workspaceId}/document`
     const baseAccessPath = `/workspace/${workspaceId}/management`
     const systemPath = `/workspace/${workspaceId}/system`
@@ -43,19 +44,19 @@ export default function AppSidebar() {
 
 
         // WHATSAPP
-        { type: 'parent', title: "WhatsApp Manager", url: `${basePath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
-        { type: 'child', title: "Dashboard", url: `${basePath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
-        { type: 'child', title: "Contacts", url: `${basePath}/contacts`, icon: "users", category: "WhatsApp Manager" },
-        { type: 'child', title: "Templates", url: `${basePath}/template`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "Quick Message", url: `${basePath}/quick-message`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "Campaigns", url: `${basePath}/campaigns`, icon: "megaphone", category: "WhatsApp Manager" },
-        { type: 'child', title: "Bot Flow Builder", url: `${basePath}/bot-flow-builder`, icon: "git-branch", category: "WhatsApp Manager" },
-        { type: 'child', title: "Bulk Sender", url: `${basePath}/bulk-sender`, icon: "upload", category: "WhatsApp Manager" },
-        { type: 'child', title: "Button & Quick Reply", url: `${basePath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
-        { type: 'child', title: "Auto Responder", url: `${basePath}/auto-responder`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "Media Support", url: `${basePath}/media-support`, icon: "image", category: "WhatsApp Manager" },
-        { type: 'child', title: "AI Smart Reply", url: `${basePath}/ai-smart-reply`, icon: "brain", category: "WhatsApp Manager" },
-        { type: 'child', title: "Settings", url: `${basePath}/settings`, icon: "settings", category: "WhatsApp Manager" },
+        { type: 'parent', title: "WhatsApp Manager", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
+        { type: 'child', title: "Dashboard", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
+        { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "WhatsApp Manager" },
+        { type: 'child', title: "Templates", url: `${baseWhathappPath}/template`, icon: "zap", category: "WhatsApp Manager" },
+        { type: 'child', title: "Quick Message", url: `${baseWhathappPath}/quick-message`, icon: "zap", category: "WhatsApp Manager" },
+        { type: 'child', title: "Campaigns", url: `${baseWhathappPath}/campaigns`, icon: "megaphone", category: "WhatsApp Manager" },
+        { type: 'child', title: "Bot Flow Builder", url: `${baseWhathappPath}/bot-flow-builder`, icon: "git-branch", category: "WhatsApp Manager" },
+        { type: 'child', title: "Bulk Sender", url: `${baseWhathappPath}/bulk-sender`, icon: "upload", category: "WhatsApp Manager" },
+        { type: 'child', title: "Button & Quick Reply", url: `${baseWhathappPath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
+        { type: 'child', title: "Auto Responder", url: `${baseWhathappPath}/auto-responder`, icon: "zap", category: "WhatsApp Manager" },
+        { type: 'child', title: "Media Support", url: `${baseWhathappPath}/media-support`, icon: "image", category: "WhatsApp Manager" },
+        { type: 'child', title: "AI Smart Reply", url: `${baseWhathappPath}/ai-smart-reply`, icon: "brain", category: "WhatsApp Manager" },
+        { type: 'child', title: "Settings", url: `${baseWhathappPath}/settings`, icon: "settings", category: "WhatsApp Manager" },
 
         // Document Manager
         { type: 'parent', title: "Documents", url: `${basePath}`, icon: "file", category: "documents" },
@@ -85,7 +86,7 @@ export default function AppSidebar() {
         { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
         { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
         { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Workflow", url: `${baseFlowbotPath}/workflow`, icon: "bar-chart-3", category: "flowbot" },
+        { type: 'child', title: "Workflow", url: `${basePath}/workflow`, icon: "bar-chart-3", category: "flowbot" },
         // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
         // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},
         // { type:'child', title:"Roles", url: `${baseAccessPath}/role`, icon:"bar-chart-3", category:"access-management"},

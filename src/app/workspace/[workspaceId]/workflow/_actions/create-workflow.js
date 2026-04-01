@@ -8,7 +8,7 @@ import { CreateFlowNode } from "../lib/tasks/CreateFlowNode";
 
 const CreateWorkflow = z.object({
     userId: z.string(),
-    orgId: z.optional(z.string()),
+    workspaceId: z.optional(z.string()),
     name: z.string(),
     description: z.string().optional(),
 });
@@ -16,7 +16,7 @@ const CreateWorkflow = z.object({
 const handler = async (data) => {
 
 
-    const { userId, orgId, name, description } = data;
+    const { userId, workspaceId, name, description } = data;
     let workflow
 
 
@@ -30,10 +30,12 @@ const handler = async (data) => {
 
         workflow = await db.workflow.create({
             data: {
-                userId, name,
+                userId,
+                workspaceId,
+                name,
                 description,
                 status: 'DRAFT',
-                defination: JSON.stringify(initialFlow)
+                definition: JSON.stringify(initialFlow)
             }
         })
 
