@@ -23,7 +23,8 @@ import {
     RefreshCw,
     Trash2,
     Copy,
-    ExternalLink
+    ExternalLink,
+    Key
 } from 'lucide-react';
 import {
     ContextMenu,
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/context-menu";
 import { Button } from '@/components/ui/button';
 
-const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, status, configured, nodeId, onDelete }) => {
+const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, status, configured, nodeId, onDelete, hasCredential }) => {
     const isWorking = status === 'working';
     const displayColor = isWorking ? 'amber-500' : colorClass;
 
@@ -63,7 +64,10 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, status
                                 <span className="text-[8px] font-black uppercase text-amber-400 tracking-tighter">Working</span>
                              </div>
                         ) : configured ? (
-                            <CheckCircle2 size={12} className="text-emerald-500" />
+                            <div className="flex items-center gap-1.5">
+                                {hasCredential && <Key size={10} className="text-emerald-500 animate-pulse" />}
+                                <CheckCircle2 size={12} className="text-emerald-500" />
+                            </div>
                         ) : (
                             <AlertCircle size={12} className="text-amber-500" />
                         )}
@@ -136,6 +140,7 @@ export const TriggerNode = memo(({ id, data, selected }) => {
                 colorClass="amber-500"
                 configured={data.configured}
                 status={data.status}
+                hasCredential={!!data.credentialId}
             >
                 <h3 className="text-xs font-bold truncate leading-tight">{data.label}</h3>
                 <p className="text-[10px] text-muted-foreground line-clamp-1">{data.description || "Waiting for signal..."}</p>
@@ -191,6 +196,8 @@ export const ActionNode = memo(({ id, data, selected }) => {
                 icon={getIcon()}
                 colorClass="emerald-500"
                 configured={data.configured}
+                status={data.status}
+                hasCredential={!!data.credentialId}
             >
                 <h3 className="text-xs font-bold truncate leading-tight">{data.label}</h3>
                 <p className="text-[10px] text-muted-foreground line-clamp-1 italic">
@@ -223,6 +230,8 @@ export const ModelNode = memo(({ id, data, selected }) => {
                 icon={Cpu}
                 colorClass="purple-500"
                 configured={data.configured}
+                status={data.status}
+                hasCredential={!!data.credentialId}
             >
                 <h3 className="text-xs font-bold truncate leading-tight">{data.label}</h3>
                 <div className="mt-2 flex items-center gap-2">
@@ -258,6 +267,7 @@ export const MemoryNode = memo(({ id, data, selected }) => {
                 icon={History}
                 colorClass="blue-500"
                 configured={data.configured}
+                status={data.status}
             >
                 <h3 className="text-xs font-bold truncate leading-tight">{data.label}</h3>
                 <p className="text-[10px] text-muted-foreground line-clamp-1 italic">
@@ -285,80 +295,69 @@ export const AgentNode = memo(({ id, data, selected }) => {
     
     return (
         <div className={`
-            relative px-5 py-4 rounded-xl border-2 transition-all duration-300
-            bg-card min-w-[220px] shadow-2xl
-            ${selected ? 'border-indigo-500 shadow-indigo-500/20 -translate-y-1' : 'border-slate-700 hover:border-slate-600'}
-            ${isWorking ? 'border-indigo-400 ring-8 ring-indigo-500/10 animate-pulse' : ''}
+            relative px-4 py-3 rounded-md border transition-all duration-300
+            bg-[#2a2a3a] min-w-[180px] shadow-2xl
+            ${selected ? 'border-indigo-500 ring-1 ring-indigo-500/50' : 'border-slate-700'}
+            ${isWorking ? 'animate-pulse ring-4 ring-indigo-500/20' : ''}
         `}>
-            {/* Working Badge */}
-            {isWorking && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 px-3 py-1 rounded-full border border-indigo-400 shadow-xl z-20 flex items-center gap-2">
-                    <RefreshCw size={10} className="text-white animate-spin" />
-                    <span className="text-[9px] font-black uppercase text-white tracking-widest">Reasoning...</span>
-                </div>
-            )}
-            
-            {/* Left Sequence Handle */}
+            {/* Left Sequence Handle - Square Notched */}
             <Handle
                 type="target"
                 id="seq-in"
                 position={Position.Left}
-                className="w-4 h-4 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rounded-sm transition-transform hover:scale-125"
+                className="w-[6px]! h-3! bg-slate-400! border-none! rounded-sm! -left-[3px]!"
             />
 
-            <div className="flex items-center gap-4 py-2">
-                <div className="p-2 rounded-xl bg-slate-800/50">
-                    <Bot size={32} className="text-[#cdd6f4]" />
+            <div className="flex items-center gap-3">
+                <div className="text-white/90">
+                    <Bot size={24} strokeWidth={1.5} />
                 </div>
-                <div className="space-y-0.5">
-                    <h3 className="text-sm font-black text-[#cdd6f4] leading-tight tracking-tight uppercase">AI Agent</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{data.reasoning || 'Tools Agent'}</p>
-                </div>
-            </div>
-
-            {/* Bottom Attachment handles */}
-            <div className="absolute -bottom-6 left-0 right-0 flex justify-around px-4">
-                <div className="flex flex-col items-center">
-                    <Handle
-                        type="target"
-                        id="model-in"
-                        position={Position.Bottom}
-                        className="w-3 h-3 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rotate-45 transition-transform hover:scale-125"
-                        style={{ left: '15%', bottom: '24px' }}
-                    />
-                    <span className="text-[8px] font-black uppercase text-slate-500 mt-2">Chat Model</span>
-                </div>
-
-                <div className="flex flex-col items-center">
-                    <Handle
-                        type="target"
-                        id="memory-in"
-                        position={Position.Bottom}
-                        className="w-3 h-3 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rotate-45 transition-transform hover:scale-125"
-                        style={{ left: '50%', bottom: '24px' }}
-                    />
-                    <span className="text-[8px] font-black uppercase text-slate-500 mt-2">Memory</span>
-                </div>
-
-                <div className="flex flex-col items-center">
-                    <Handle
-                        type="target"
-                        id="tools-in"
-                        position={Position.Bottom}
-                        className="w-3 h-3 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rotate-45 transition-transform hover:scale-125"
-                        style={{ left: '85%', bottom: '24px' }}
-                    />
-                    <span className="text-[8px] font-black uppercase text-slate-500 mt-2">Tool</span>
+                <div className="flex flex-col">
+                    <span className="text-[11px] font-bold text-white leading-tight tracking-tight">AI Agent</span>
+                    <span className="text-[9px] text-slate-400 font-medium leading-tight tracking-wide uppercase">{data.reasoning || 'Tools Agent'}</span>
                 </div>
             </div>
 
-            {/* Right Sequence Handle */}
+            {/* Bottom Attachment handles - Triangular */}
+            <div className="absolute -bottom-[6px] left-0 right-0 flex justify-around px-4">
+                <Handle
+                    type="target"
+                    id="model-in"
+                    position={Position.Bottom}
+                    className="w-3! h-2.5! bg-slate-400! border-none! rounded-none! static! translate-x-0!"
+                    style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
+                />
+                <Handle
+                    type="target"
+                    id="memory-in"
+                    position={Position.Bottom}
+                    className="w-3! h-2.5! bg-slate-400! border-none! rounded-none! static! translate-x-0!"
+                    style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
+                />
+                <Handle
+                    type="target"
+                    id="tools-in"
+                    position={Position.Bottom}
+                    className="w-3! h-2.5! bg-slate-400! border-none! rounded-none! static! translate-x-0!"
+                    style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
+                />
+            </div>
+
+            {/* Right Sequence Handle - Circle Notched */}
             <Handle
                 type="source"
                 id="seq-out"
                 position={Position.Right}
-                className="w-4 h-4 bg-[#cdd6f4]! border-2 border-[#1e1e2e]! rounded-full transition-transform hover:scale-125"
+                className="w-[6px]! h-[6px]! bg-slate-400! border-none! rounded-full! -right-[3px]!"
             />
+
+            {/* Working State Badge */}
+            {isWorking && (
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-indigo-500 px-2 py-0.5 rounded-full border border-indigo-400 shadow-xl z-20 flex items-center gap-1.5">
+                    <RefreshCw size={8} className="text-white animate-spin" />
+                    <span className="text-[8px] font-black uppercase text-white tracking-widest">Reasoning</span>
+                </div>
+            )}
         </div>
     );
 });

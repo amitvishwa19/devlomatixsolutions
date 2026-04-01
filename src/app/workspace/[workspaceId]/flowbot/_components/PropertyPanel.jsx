@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     X, 
     Save, 
@@ -27,62 +27,233 @@ import {
     AlertTriangle,
     RefreshCw,
     Sparkles,
-    MessageSquare
+    MessageSquare,
+    Key,
+    Puzzle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { NODE_REGISTRY } from '@/lib/flowbot/node-registry';
 
-
-export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closePanel }) => {
+/**
+ * PropertyPanel v2 (n8n Style)
+ * A dynamic renderer that builds the configuration UI based on the Node Registry.
+ */
+export const PropertyPanel = ({ selectedNode, workspaceId, updateNodeData, deleteNode, closePanel }) => {
     const [localData, setLocalData] = useState(selectedNode.data || {});
+    const [credentials, setCredentials] = useState([]);
+    const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
+    const [isTesting, setIsTesting] = useState(false);
+    const [testResult, setTestResult] = useState(null);
+
+    // Get node definition from registry
+    const nodeDef = useMemo(() => {
+        return Object.values(NODE_REGISTRY).find(n => n.name === localData.subType);
+    }, [localData.subType]);
 
     // Sync state when selectedNode changes
     useEffect(() => {
         setLocalData(selectedNode.data || {});
+        if (selectedNode.data?.subType) {
+            fetchCredentials(selectedNode.data.provider || 'http');
+        }
     }, [selectedNode.id]);
+
+    const fetchCredentials = async (platform) => {
+        if (!workspaceId) return;
+        setIsLoadingCredentials(true);
+        try {
+            const res = await fetch(`/api/workspace/${workspaceId}/flowbot/credentials?platform=${platform}`);
+            if (res.ok) {
+                const data = await res.json();
+                setCredentials(data);
+            }
+        } catch (e) {
+            console.error("Failed to fetch credentials", e);
+        } finally {
+            setIsLoadingCredentials(false);
+        }
+    };
 
     const handleInputChange = (field, value) => {
         const newData = { ...localData, [field]: value };
         setLocalData(newData);
         updateNodeData(selectedNode.id, newData);
-    };
-
-    const getIcon = () => {
-        switch(localData.subType) {
-            case 'ai': return Bot;
-            case 'email': return Mail;
-            case 'http': return Globe;
-            case 'db': return Database;
-            case 'webhook': return Zap;
-            case 'schedule': return Clock;
-            case 'manual': return Play;
-            case 'form': return FileText;
-            case 'api-poll': return RefreshCw;
-            case 'error': return AlertTriangle;
-            case 'chat': return MessageSquare;
-            default: return Cpu;
+        
+        // If provider changes, refetch credentials
+        if (field === 'provider') {
+            fetchCredentials(value);
         }
     };
 
-    const NodeIcon = getIcon();
+    const handleTestCredential = async () => {
+        if (!localData.credentialId) return;
+        setIsTesting(true);
+        setTestResult(null);
+        try {
+            const res = await fetch(`/api/workspace/${workspaceId}/flowbot/credentials/test`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    credentialId: localData.credentialId,
+                    provider: localData.provider || 'gemini'
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setTestResult({ success: true, message: data.message });
+                toast.success(data.message);
+            } else {
+                setTestResult({ success: false, message: data.error || "Connection failed" });
+                toast.error(data.error || "Connection failed");
+            }
+        } catch (e) {
+            setTestResult({ success: false, message: "Network error" });
+            toast.error("Network error");
+        } finally {
+            setIsTesting(false);
+            setTimeout(() => setTestResult(null), 5000);
+        }
+    };
 
-    const isTrigger = ['webhook', 'schedule', 'manual', 'form', 'api-poll', 'error', 'chat'].includes(localData.subType);
+    const shouldShowField = (field) => {
+        if (!field.displayOptions || !field.displayOptions.show) return true;
+        
+        const show = field.displayOptions.show;
+        return Object.entries(show).every(([key, values]) => {
+            const currentValue = localData[key];
+            return values.includes(currentValue);
+        });
+    };
+
+    const FieldRenderer = ({ field }) => {
+        if (!shouldShowField(field)) return null;
+
+        return (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="flex items-center justify-between pl-1">
+                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest leading-none">
+                        {field.displayName}
+                    </label>
+                    {field.description && (
+                        <div className="group relative">
+                            <Info size={10} className="text-muted-foreground opacity-40 hover:opacity-100 cursor-help" />
+                            <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-popover border border-border rounded-lg text-[8px] font-medium text-popover-foreground invisible group-hover:visible shadow-xl z-50">
+                                {field.description}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {field.type === 'string' && (
+                    <div className="relative">
+                        {field.typeOptions?.rows ? (
+                            <textarea 
+                                value={localData[field.name] || field.default || ''}
+                                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                                rows={field.typeOptions.rows}
+                                className="flex w-full rounded-xl border border-border/50 bg-muted/20 px-3 py-3 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20 transition-all font-medium leading-relaxed resize-none"
+                                placeholder={field.placeholder || ''}
+                            />
+                        ) : (
+                            <Input 
+                                value={localData[field.name] || field.default || ''}
+                                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                                className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
+                                placeholder={field.placeholder || ''}
+                            />
+                        )}
+                    </div>
+                )}
+
+                {field.type === 'number' && (
+                    <Input 
+                        type="number"
+                        value={localData[field.name] ?? field.default}
+                        onChange={(e) => handleInputChange(field.name, Number(e.target.value))}
+                        className="bg-muted/20 border-border/50 h-9 text-xs"
+                        min={field.typeOptions?.min}
+                        max={field.typeOptions?.max}
+                        step={field.typeOptions?.step}
+                    />
+                )}
+
+                {field.type === 'options' && (
+                    <div className="relative group">
+                        <select 
+                            value={localData[field.name] || field.default || ''}
+                            onChange={(e) => handleInputChange(field.name, e.target.value)}
+                            className="w-full bg-muted/20 border border-border/50 h-9 rounded-lg px-3 text-xs appearance-none focus:ring-1 focus:ring-primary/20 transition-all font-medium pr-8 cursor-pointer"
+                        >
+                            {field.options?.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.name}</option>
+                            ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none group-hover:text-primary transition-colors" />
+                    </div>
+                )}
+
+                {field.type === 'credential' && (
+                    <div className="space-y-2">
+                        <div className="relative group">
+                            <select 
+                                value={localData[field.name] || ''}
+                                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                                className="w-full bg-muted/20 border border-border/50 h-9 rounded-lg px-3 text-xs appearance-none focus:ring-1 focus:ring-primary/20 transition-all font-medium pr-8 cursor-pointer"
+                            >
+                                <option value="">Manual Entry (No Credential)</option>
+                                {credentials.map(c => (
+                                    <option key={c.id} value={c.id}>{c.profile || c.platform} ({c.platform})</option>
+                                ))}
+                            </select>
+                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none group-hover:text-primary transition-colors" />
+                        </div>
+                        
+                        {localData[field.name] && (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={handleTestCredential}
+                                disabled={isTesting}
+                                className={`w-full h-7 rounded-lg text-[10px] font-bold border-dashed transition-all active:scale-95 flex items-center justify-center gap-2
+                                    ${testResult?.success ? 'border-emerald-500/50 text-emerald-500 bg-emerald-500/5' : 
+                                      testResult?.success === false ? 'border-rose-500/50 text-rose-500 bg-rose-500/5' : 
+                                      'border-border hover:border-primary hover:text-primary bg-muted/20'}
+                                `}
+                            >
+                                {isTesting ? <RefreshCw size={10} className="animate-spin" /> : 
+                                 testResult?.success ? <CheckCircle2 size={10} /> : 
+                                 testResult?.success === false ? <AlertTriangle size={10} /> : <Key size={10} />}
+                                {isTesting ? "Verifying..." : testResult?.success ? "Auth Verified" : testResult?.success === false ? "Auth Failed" : "Test Connection"}
+                            </Button>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const NodeIcon = nodeDef?.icon || Cpu;
 
     return (
-        <div className="absolute top-4 right-4 bottom-4 w-[380px] bg-card border border-border shadow-2xl rounded-2xl flex flex-col z-50 animate-in slide-in-from-right duration-300">
+        <div className="absolute top-4 right-4 bottom-4 w-[380px] bg-card/95 backdrop-blur-md border border-border shadow-2xl rounded-2xl flex flex-col z-50 animate-in slide-in-from-right duration-300">
             {/* Header */}
             <div className="p-6 border-b border-border space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl bg-${isTrigger ? 'amber' : 'emerald'}-500/10`}>
-                            <NodeIcon size={20} className={`text-${isTrigger ? 'amber' : 'emerald'}-500`} />
+                        <div className={`p-2 rounded-xl bg-primary/10`}>
+                            <NodeIcon size={20} className={`text-primary`} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-foreground uppercase tracking-tight">Configuration</h2>
-                            <p className="text-[10px] font-bold text-muted-foreground opacity-50 uppercase tracking-widest">{localData.subType} Node</p>
+                            <h2 className="text-sm font-black text-foreground uppercase tracking-tight">
+                                {nodeDef?.displayName || 'Node Settings'}
+                            </h2>
+                            <p className="text-[10px] font-bold text-muted-foreground opacity-50 uppercase tracking-widest">
+                                node_id: {selectedNode.id.substring(0, 8)}...
+                            </p>
                         </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-full h-8 w-8 hover:bg-muted/50 transition-colors">
@@ -92,373 +263,72 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
                 <div className="space-y-4 pt-2">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Display Label</label>
+                        <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Node Name</label>
                         <Input 
                             value={localData.label || ''} 
                             onChange={(e) => handleInputChange('label', e.target.value)}
-                            className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                            placeholder="My Action Node"
+                            className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-black uppercase"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Scrollable Settings */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar relative">
-                {/* General Settings Section */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
                 <div className="space-y-6">
-                    <div className="flex items-center gap-2">
-                        <Settings size={14} className="text-primary shadow-lg shadow-primary/20" />
-                        <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Node Parameters</span>
+                    <div className="flex items-center gap-2 px-1">
+                        <Settings size={14} className="text-primary" />
+                        <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Parameters</span>
+                        <Separator className="flex-1 bg-border/30" />
                     </div>
 
-                    {localData.subType === 'webhook' && (
-                        <div className="space-y-4">
-                            <div className="bg-amber-500/5 rounded-xl border border-amber-500/10 p-4 space-y-3">
-                                <div className="flex items-center gap-2">
-                                    <Globe size={14} className="text-amber-500" />
-                                    <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Public Webhook URL</span>
-                                </div>
-                                <div className="flex gap-2">
-                                    <Input 
-                                        readOnly 
-                                        value={`https://api.flowbot.dev/hooks/${selectedNode.id}`}
-                                        className="bg-background/50 border-amber-500/20 h-8 text-[10px] font-mono text-amber-600/80"
-                                    />
-                                    <Button variant="outline" size="sm" className="h-8 text-[10px] bg-card hover:bg-amber-500/10 hover:text-amber-500 border-amber-500/20">Copy</Button>
-                                </div>
-                            </div>
+                    {nodeDef?.properties ? (
+                        <div className="space-y-6">
+                            {nodeDef.properties.map(field => (
+                                <FieldRenderer key={field.name} field={field} />
+                            ))}
                         </div>
-                    )}
-
-                    {localData.subType === 'schedule' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Cron Expression</label>
-                                <Input 
-                                    value={localData.cron || '* * * * *'} 
-                                    onChange={(e) => handleInputChange('cron', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium font-mono"
-                                    placeholder="* * * * *"
-                                />
-                                <p className="text-[9px] text-muted-foreground pl-1 mt-1">Format: min hour day month weekday</p>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Interval (Minutes)</label>
-                                <Input 
-                                    type="number"
-                                    value={localData.interval || 15} 
-                                    onChange={(e) => handleInputChange('interval', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'manual' && (
-                        <div className="space-y-4">
-                            <div className="bg-amber-500/5 rounded-xl border border-amber-500/10 p-4 space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Play size={14} className="text-amber-500" />
-                                    <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Manual Activation</span>
-                                </div>
-                                <p className="text-[10px] text-muted-foreground">
-                                    This workflow will only run when you click the "Test Run" button or trigger it via the dashboard.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'form' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Form Selection</label>
-                                <Input 
-                                    value={localData.formId || ''} 
-                                    onChange={(e) => handleInputChange('formId', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                                    placeholder="Enter Form ID or Name"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'api-poll' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Polling URL</label>
-                                <Input 
-                                    value={localData.pollUrl || ''} 
-                                    onChange={(e) => handleInputChange('pollUrl', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                                    placeholder="https://api.example.com/check"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Frequency (Seconds)</label>
-                                <Input 
-                                    type="number"
-                                    value={localData.pollInterval || 60} 
-                                    onChange={(e) => handleInputChange('pollInterval', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'error' && (
-                        <div className="space-y-4">
-                            <div className="bg-rose-500/5 rounded-xl border border-rose-500/10 p-4 space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <AlertTriangle size={14} className="text-rose-500" />
-                                    <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Error Handler</span>
-                                </div>
-                                <p className="text-[10px] text-muted-foreground">
-                                    This node will trigger if any other node in this specific workflow fails.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'model' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Model Provider</label>
-                                <div className="flex gap-2">
-                                    {['gemini', 'openai'].map(p => (
-                                        <Button 
-                                            key={p} 
-                                            size="sm" 
-                                            variant={localData.provider === p ? "default" : "outline"}
-                                            onClick={() => handleInputChange('provider', p)}
-                                            className={`flex-1 h-8 text-[10px] font-bold ${localData.provider === p ? 'bg-purple-500 shadow-lg shadow-purple-500/20' : 'bg-transparent opacity-60'}`}
-                                        >
-                                            {p === 'gemini' ? 'Gemini Pro' : 'GPT-4o'}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">API Key</label>
-                                <Input 
-                                    type="password"
-                                    value={localData.apiKey || ''} 
-                                    onChange={(e) => handleInputChange('apiKey', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-purple-500/20 transition-all font-medium"
-                                    placeholder="sk-..."
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Temperature</label>
-                                    <Input 
-                                        type="number"
-                                        step="0.1"
-                                        min="0"
-                                        max="1"
-                                        value={localData.temperature || 0.7} 
-                                        onChange={(e) => handleInputChange('temperature', e.target.value)}
-                                        className="bg-muted/20 border-border/50 h-9 text-xs"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Max Tokens</label>
-                                    <Input 
-                                        type="number"
-                                        value={localData.maxTokens || 2048} 
-                                        onChange={(e) => handleInputChange('maxTokens', e.target.value)}
-                                        className="bg-muted/20 border-border/50 h-9 text-xs"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'memory' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Session ID Key</label>
-                                <Input 
-                                    value={localData.sessionIdKey || 'chatId'} 
-                                    onChange={(e) => handleInputChange('sessionIdKey', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs"
-                                    placeholder="chatId"
-                                />
-                                <p className="text-[9px] text-muted-foreground pl-1 mt-1">Which payload variable identifies the session?</p>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Window Size</label>
-                                <Input 
-                                    type="number"
-                                    value={localData.windowSize || 10} 
-                                    onChange={(e) => handleInputChange('windowSize', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs"
-                                />
-                                <p className="text-[9px] text-muted-foreground pl-1 mt-1">Number of previous messages to remember</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'agent' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Agent Instructions (System Prompt)</label>
-                                <textarea 
-                                    value={localData.systemPrompt || ''} 
-                                    onChange={(e) => handleInputChange('systemPrompt', e.target.value)}
-                                    className="flex min-h-[140px] w-full rounded-xl border border-border/50 bg-muted/20 px-3 py-3 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/20 transition-all font-medium leading-relaxed resize-none"
-                                    placeholder="You are a helpful assistant that uses the provided tools..."
-                                />
-                            </div>
-                            <div className="bg-indigo-500/5 rounded-xl border border-indigo-500/10 p-4 space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Sparkles size={14} className="text-indigo-500" />
-                                    <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Reasoning Engine</span>
-                                </div>
-                                <p className="text-[10px] text-muted-foreground">
-                                    This agent will automatically use any connected Model and Memory to reason about the conversation and decide which tools to call.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'chat' && (
-                        <div className="space-y-4">
-                            <div className="bg-amber-500/5 rounded-xl border border-amber-500/10 p-4 space-y-3">
-                                <div className="flex items-center gap-2">
-                                    <MessageSquare size={14} className="text-amber-500" />
-                                    <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Chat Widget Settings</span>
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Bot Name</label>
-                                        <Input 
-                                            value={localData.botName || 'Flow Assistant'} 
-                                            onChange={(e) => handleInputChange('botName', e.target.value)}
-                                            className="bg-background/50 border-amber-500/10 h-8 text-xs font-medium"
-                                            placeholder="Flow Assistant"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Welcome Message</label>
-                                        <Input 
-                                            value={localData.welcomeMessage || 'Hello! How can I help you today?'} 
-                                            onChange={(e) => handleInputChange('welcomeMessage', e.target.value)}
-                                            className="bg-background/50 border-amber-500/10 h-8 text-xs font-medium"
-                                            placeholder="Hello! How can I help you today?"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'ai' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <div className="flex items-center justify-between pl-1">
-                                    <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest">Simple Prompt</label>
-                                    <Badge variant="outline" className="text-[9px] opacity-50 bg-primary/5">Stateless</Badge>
-                                </div>
-                                <textarea 
-                                    value={localData.prompt || ''} 
-                                    onChange={(e) => handleInputChange('prompt', e.target.value)}
-                                    className="flex min-h-[160px] w-full rounded-xl border border-border/50 bg-muted/20 px-3 py-3 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20 transition-all font-medium leading-relaxed resize-none"
-                                    placeholder="Ex: Summarize this text. Use {{ input }} for data."
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'email' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">To Address</label>
-                                <Input 
-                                    value={localData.toAddress || ''} 
-                                    onChange={(e) => handleInputChange('toAddress', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                                    placeholder="support@example.com"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {localData.subType === 'http' && (
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">Request Method</label>
-                                <div className="flex gap-2">
-                                    {['GET', 'POST', 'PUT', 'DELETE'].map(m => (
-                                        <Button 
-                                            key={m} 
-                                            size="sm" 
-                                            variant={localData.method === m ? "default" : "outline"}
-                                            onClick={() => handleInputChange('method', m)}
-                                            className={`flex-1 h-8 text-[10px] font-bold ${localData.method === m ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-transparent opacity-60'}`}
-                                        >
-                                            {m}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-extrabold text-foreground/70 uppercase tracking-widest pl-1">API URL</label>
-                                <Input 
-                                    value={localData.url || ''} 
-                                    onChange={(e) => handleInputChange('url', e.target.value)}
-                                    className="bg-muted/20 border-border/50 h-9 text-xs focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                                    placeholder="https://api.external.com/v1/endpoint"
-                                />
-                            </div>
+                    ) : (
+                        <div className="p-8 text-center space-y-3 opacity-40">
+                            <Puzzle size={24} className="mx-auto" />
+                            <p className="text-[10px] font-medium italic">No parameters available for this node type.</p>
                         </div>
                     )}
                 </div>
 
-                {/* Automation Logs Section */}
-                <Separator className="bg-border/30" />
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Terminal size={14} className="text-muted-foreground opacity-60" />
-                            <span className="text-[10px] font-bold text-foreground opacity-60 uppercase tracking-wider">Preview Logs</span>
-                        </div>
-                         <Badge variant="outline" className="text-[9px] opacity-50 bg-muted/20">Dry Run</Badge>
+                {/* Automation Preview (n8n Style) */}
+                <div className="pt-4 border-t border-border/30 space-y-4">
+                    <div className="flex items-center gap-2 px-1">
+                        <Code size={14} className="text-muted-foreground/60" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Internal State</span>
                     </div>
-                    
-                    <div className="bg-black/5 rounded-xl p-4 font-mono text-[9px] text-muted-foreground space-y-2 leading-relaxed border border-border/50">
-                        <div className="flex items-center gap-2">
-                            <span className="text-emerald-500">[0ms]</span>
-                            <span>Node initialized successfully</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-amber-500">[42ms]</span>
-                            <span>Waiting for user input parameters...</span>
-                        </div>
+                    <div className="bg-black/20 rounded-xl p-4 font-mono text-[9px] text-muted-foreground/80 leading-relaxed border border-border/50">
+                        <span className="text-emerald-500/60">"subType":</span> "{localData.subType}",<br/>
+                        <span className="text-emerald-500/60">"status":</span> "{localData.status || 'idle'}"
                     </div>
                 </div>
             </div>
 
             {/* Footer Actions */}
-            <div className="p-6 bg-muted/10 border-t border-border flex gap-3">
+            <div className="p-6 bg-muted/5 border-t border-border flex gap-3">
                 <Button 
                     variant="outline"
-                    className="flex-1 rounded-xl border-rose-500/20 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 font-bold text-xs"
+                    className="flex-1 rounded-xl border-rose-500/20 text-rose-500 hover:bg-rose-500/10 font-bold text-[10px] uppercase h-10"
                     onClick={() => deleteNode(selectedNode.id)}
                 >
-                    <Trash2 size={14} className="mr-2" />
-                    Delete Node
+                    <Trash2 size={12} className="mr-2" />
+                    Delete
                 </Button>
                 <Button 
-                    className="flex-1 rounded-xl bg-primary shadow-lg shadow-primary/20 font-bold text-xs group"
+                    className="flex-1 rounded-xl bg-primary shadow-lg shadow-primary/20 font-bold text-[10px] uppercase h-10"
                     onClick={() => {
                         handleInputChange('configured', true);
-                        toast.success("Node configuration updated");
+                        toast.success("Node updated");
                         closePanel();
                     }}
                 >
-                    <CheckCircle2 size={14} className="mr-2 group-hover:scale-110 transition-transform" />
-                    Apply Changes
+                    <CheckCircle2 size={12} className="mr-2" />
+                    Save Changes
                 </Button>
             </div>
         </div>

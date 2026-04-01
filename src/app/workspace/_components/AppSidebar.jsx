@@ -29,6 +29,7 @@ export default function AppSidebar() {
     const baseAtsPath = `/workspace/${workspaceId}/ats`
     const baseAgentPath = `/workspace/${workspaceId}/agent`
     const baseFlowbotPath = `/workspace/${workspaceId}/flowbot`
+    const baseMiscellaneousPath = `/workspace/${workspaceId}/miscellaneous`
 
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
@@ -83,6 +84,8 @@ export default function AppSidebar() {
         // Flowbot
         { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
         { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
+        { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
+        { type: 'child', title: "Workflow", url: `${baseFlowbotPath}/workflow`, icon: "bar-chart-3", category: "flowbot" },
         // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
         // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},
         // { type:'child', title:"Roles", url: `${baseAccessPath}/role`, icon:"bar-chart-3", category:"access-management"},
@@ -93,6 +96,11 @@ export default function AppSidebar() {
         { type: 'parent', title: "AI Agent", url: `${baseAgentPath}`, icon: "monitor-cog", category: "agent" },
         { type: 'child', title: "Dashboard", url: `${baseAgentPath}/`, icon: "bar-chart-3", category: "agent" },
         { type: 'child', title: "Credentials", url: `${baseAgentPath}/credential`, icon: "bar-chart-3", category: "agent" },
+
+        // Miscellaneous
+        { type: 'parent', title: "Miscellaneous", url: `${baseMiscellaneousPath}`, icon: "blocks", category: "miscellaneous" },
+        { type: 'child', title: "Dashboard", url: `${baseMiscellaneousPath}/`, icon: "bar-chart-3", category: "miscellaneous" },
+        { type: 'child', title: "Quotation", url: `${baseMiscellaneousPath}/quotation`, icon: "bar-chart-3", category: "miscellaneous" },
 
         // System
         { type: 'parent', title: "System", url: `${basePath}`, icon: "monitor-cog", category: "system" },

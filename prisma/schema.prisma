@@ -838,11 +838,16 @@ enum OfferStatus {
   EXPIRED
 }
 
+enum WorkflowStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model Workflow {
   id          String              @id @default(cuid())
   name        String
   description String?
-  status      String              @default("DRAFT") // DRAFT, ACTIVE
+  status      WorkflowStatus      @default(DRAFT)
   nodes       Json                @default("[]")
   edges       Json                @default("[]")
   workspaceId String
@@ -858,28 +863,28 @@ model Workflow {
 }
 
 model WorkflowExecution {
-  id          String    @id @default(cuid())
-  workflowId  String
-  status      String    @default("RUNNING") // RUNNING, SUCCESS, FAILED
-  startedAt   DateTime  @default(now())
-  finishedAt  DateTime?
-  nodes       Json      @default("[]")
-  edges       Json      @default("[]")
-  logs        Json      @default("[]")
-  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  workflowId String
+  status     String    @default("RUNNING") // RUNNING, SUCCESS, FAILED
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  nodes      Json      @default("[]")
+  edges      Json      @default("[]")
+  logs       Json      @default("[]")
+  workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([workflowId])
   @@index([status])
 }
 
 model WorkflowMemory {
-  id          String    @id @default(cuid())
-  workflowId  String
-  sessionId   String    // Unique key for the conversation context (e.g., chat_123)
-  messages    Json      @default("[]") // Stores message history [{role, text}]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  workflowId String
+  sessionId  String // Unique key for the conversation context (e.g., chat_123)
+  messages   Json     @default("[]") // Stores message history [{role, text}]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@unique([workflowId, sessionId])
   @@index([workflowId])

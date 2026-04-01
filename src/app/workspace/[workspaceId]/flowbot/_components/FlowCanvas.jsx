@@ -11,7 +11,7 @@ import {
     useReactFlow,
     Panel
 } from '@xyflow/react';
-import { TriggerNode, ActionNode } from './Nodes';
+import { TriggerNode, ActionNode, AgentNode, ModelNode, MemoryNode } from './Nodes';
 import { PropertyPanel } from './PropertyPanel';
 import { ChatPreview } from './ChatPreview';
 import { Button } from '@/components/ui/button';
@@ -156,13 +156,13 @@ export const FlowCanvas = () => {
     // Node Types Injection to pass delete function
     const nodeTypes = useMemo(() => ({
         triggerNode: (props) => (
-            <TriggerNode 
-                {...props} 
-                data={{ 
-                    ...props.data, 
+            <TriggerNode
+                {...props}
+                data={{
+                    ...props.data,
                     onDelete: deleteNode,
-                    onOpenChat: () => setIsChatOpen(true) 
-                }} 
+                    onOpenChat: () => setIsChatOpen(true)
+                }}
             />
         ),
         actionNode: (props) => <ActionNode {...props} data={{ ...props.data, onDelete: deleteNode }} />,
@@ -228,7 +228,7 @@ export const FlowCanvas = () => {
             // Set node to success (not really a state yet but clears working)
             setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, status: 'success' } } : n));
         }
-        
+
         // Final reset after delay
         setTimeout(() => {
             setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data, status: 'idle' } })));
@@ -340,6 +340,7 @@ export const FlowCanvas = () => {
             {selectedNode && (
                 <PropertyPanel
                     selectedNode={selectedNode}
+                    workspaceId={workspaceId}
                     updateNodeData={updateNodeData}
                     deleteNode={deleteNode}
                     closePanel={() => setSelectedNode(null)}
@@ -358,6 +359,9 @@ export const FlowCanvas = () => {
                     onExecuteComplete={animateExecution}
                     onExecuteStart={(nodeId) => {
                         setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, status: 'working' } } : n));
+                    }}
+                    onExecuteError={(nodeId) => {
+                        setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, status: 'idle' } } : n));
                     }}
                 />
             )}

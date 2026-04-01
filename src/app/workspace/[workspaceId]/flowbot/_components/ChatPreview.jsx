@@ -17,7 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import axios from '@/utils/axios';
 
-export const ChatPreview = ({ flowbotId, workspaceId, chatNode, nodes, edges, isOpen, onClose, onExecuteComplete, onExecuteStart }) => {
+export const ChatPreview = ({ flowbotId, workspaceId, chatNode, nodes, edges, isOpen, onClose, onExecuteComplete, onExecuteStart, onExecuteError }) => {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -95,9 +95,11 @@ export const ChatPreview = ({ flowbotId, workspaceId, chatNode, nodes, edges, is
                     timestamp: new Date() 
                 }]);
             } else {
+                if (onExecuteError) onExecuteError(chatNode.id);
                 throw new Error(res.data.message || "Failed to execute");
             }
         } catch (e) {
+            if (onExecuteError) onExecuteError(chatNode.id);
             setMessages(prev => [...prev, { 
                 role: 'bot', 
                 text: "Execution failed. Check your Agent configuration or API keys.", 

@@ -13,8 +13,20 @@ const AuthContext = createContext({})
 export const AuthProvider = ({ children }) => {
     const router = useRouter()
     const pathName = usePathname()
-    const [user, setUser] = useState(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null)
+    const [user, setUser] = useState(null)
     const [session, setSession] = useState(null)
+    const [hydrated, setHydrated] = useState(false)
+
+    // Safe hydration from localStorage
+    useEffect(() => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) setUser(JSON.parse(storedUser));
+        } catch (e) {
+            console.error("Auth hydration failed", e);
+        }
+        setHydrated(true);
+    }, []);
 
 
     const { execute: getRefreshUser } = useAction(getUser, {
