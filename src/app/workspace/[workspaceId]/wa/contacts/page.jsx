@@ -844,7 +844,7 @@ export default function ContactsPage() {
                                         <Button
                                             variant={waStatus === 'open' ? "outline" : "default"}
                                             size="sm"
-                                            className={`gap-2 h-9 ${waStatus !== 'open' ? 'bg-primary/20 hover:bg-primary/30 text-primary border-primary/50' : ''}`}
+                                            className={`gap-2 h-8 ${waStatus !== 'open' ? 'bg-primary/20 hover:bg-primary/30 text-primary border-primary/50' : ''}`}
                                             onClick={handleSync}
                                             disabled={loading}>
                                             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -864,7 +864,7 @@ export default function ContactsPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-9 w-9 p-0 rounded-l-none border-l border-l-border/30"
+                                                className="h-8 w-8 p-0 rounded-l-none border-l border-l-border/30"
                                                 onClick={downloadTemplate}
                                                 title="Download CSV Template">
                                                 <FileText className="w-4 h-4" />

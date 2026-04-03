@@ -105,6 +105,8 @@ export default function TemplatePage() {
     const [contactSearch, setContactSearch] = useState('');
     const [isFetchingContacts, setIsFetchingContacts] = useState(false);
     const [savedTestNumbers, setSavedTestNumbers] = useState([]);
+    const [variableMappings, setVariableMappings] = useState({});
+    const [detectedVariables, setDetectedVariables] = useState([]);
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
 
@@ -427,6 +429,19 @@ export default function TemplatePage() {
                         components: []
                     };
 
+                    // Create parameters from mappings
+                    const parameters = detectedVariables.map(v => ({
+                        type: 'text',
+                        text: variableMappings[v] || ''
+                    }));
+
+                    if (parameters.length > 0) {
+                        payload.template.components.push({
+                            type: 'body',
+                            parameters: parameters
+                        });
+                    }
+
                     // Add header component if there's media
                     if (['image', 'video', 'document'].includes(testingTemplate.type)) {
                         payload.template.components.push({
@@ -446,6 +461,14 @@ export default function TemplatePage() {
                     // unless we want to support variables {{1}}, {{2}} in the future.
                 } else {
                     payload.type = testingTemplate.type;
+                    
+                    // Variable replacement for draft/custom messages
+                    let processedText = testingTemplate.body || "";
+                    detectedVariables.forEach(v => {
+                        const val = variableMappings[v] || `{{${v}}}`;
+                        processedText = processedText.replaceAll(`{{${v}}}`, val);
+                    });
+                    payload.text = processedText;
                 }
 
                 const res = await fetch(endpoint, {
@@ -469,23 +492,6 @@ export default function TemplatePage() {
             toast.error(error.message);
         } finally {
             setIsTesting(false);
-        }
-    };
-
-    const openTestModal = async (template) => {
-        setTestingTemplate(template);
-        setIsTestModalOpen(true);
-        fetchContacts();
-
-        // Fetch saved test numbers from settings metadata
-        try {
-            const res = await fetch('/api/wa/auth');
-            const data = await res.json();
-            if (data.metadata?.testNumbers) {
-                setSavedTestNumbers(data.metadata.testNumbers);
-            }
-        } catch (error) {
-            console.error("Failed to fetch saved test numbers:", error);
         }
     };
 
@@ -818,10 +824,6 @@ export default function TemplatePage() {
             </div>
         );
     };
-
-
-    // The GetTemplates function you had was a skeleton, 
-    // I've replaced it with handleSyncCloud used in the header below.
 
     return (
         <TooltipProvider>
@@ -1649,7 +1651,52 @@ export default function TemplatePage() {
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="py-2 space-y-4">
+                        <div className="space-y-6 py-4">
+                            {/* Dynamic Variable Mapping Section */}
+                            {detectedVariables.length > 0 && (
+                                <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border/50 animate-in fade-in slide-in-from-top-2 duration-500">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                                            <Sparkles className="w-3.5 h-3.5" /> 
+                                            Variable Mapping
+                                        </h4>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-6 text-[10px] uppercase font-bold text-muted-foreground hover:text-primary"
+                                            onClick={() => {
+                                                const firstContact = allContacts.find(c => selectedContactIds.includes(c.id));
+                                                if (firstContact && detectedVariables.includes('1')) {
+                                                    setVariableMappings(prev => ({ ...prev, '1': firstContact.name }));
+                                                    toast.success(`Mapped {{1}} to ${firstContact.name}`);
+                                                } else {
+                                                    toast.error("Select a contact first to auto-map");
+                                                }
+                                            }}
+                                        >
+                                            Auto-Fill {"{{1}}"}
+                                        </Button>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {detectedVariables.map((v) => (
+                                            <div key={v} className="flex items-center gap-3 group">
+                                                <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                                                    {"{{"}{v}{"}}"}
+                                                </div>
+                                                <Input 
+                                                    placeholder={`Value for variable ${v}...`}
+                                                    className="h-9 text-sm bg-background border-border/60 group-hover:border-primary/40 transition-colors"
+                                                    value={variableMappings[v] || ''}
+                                                    onChange={(e) => setVariableMappings(prev => ({ ...prev, [v]: e.target.value }))}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground italic pl-1.5">
+                                        These values will replace the placeholders in your message.
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Manual Input */}
                             <div className="space-y-2">

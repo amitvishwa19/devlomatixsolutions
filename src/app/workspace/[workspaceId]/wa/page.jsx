@@ -23,39 +23,13 @@ const mapApiCampaignToUI = (campaign) => ({
     createdAt: campaign.createdAt
 });
 
-const activities = [
-    {
-        id: 1,
-        type: "success",
-        title: "Summer Sale Promo completed",
-        time: "2 hours ago",
-        icon: CheckCircle2,
-        color: "text-emerald-400",
-        bg: "bg-emerald-400/10"
-    },
-    {
-        id: 2,
-        type: "message",
-        title: "New reply from +1 (555) 0123",
-        time: "4 hours ago",
-        icon: MessageSquare,
-        color: "text-blue-400",
-        bg: "bg-blue-400/10"
-    },
-    {
-        id: 3,
-        type: "alert",
-        title: "API rate limit warning",
-        time: "5 hours ago",
-        icon: AlertCircle,
-        color: "text-amber-400",
-        bg: "bg-amber-400/10"
-    }];
+// Removed hardcoded activities constant
 
 export default function DashboardPage({ params: paramsPromise }) {
     const params = use(paramsPromise);
     const workspaceId = params.workspaceId;
     const [campaigns, setCampaigns] = useState([]);
+    const [activities, setActivities] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editCampaign, setEditCampaign] = useState(null);
     const [waConnectionOpen, setWaConnectionOpen] = useState(false);
@@ -88,7 +62,6 @@ export default function DashboardPage({ params: paramsPromise }) {
 
     const fetchWaStatus = async () => {
         try {
-            console.log('fetching whatsapp status');
             const res = await fetch('/api/wa/auth');
             const data = await res.json();
             setWaStatus(data.status || 'welcome');
@@ -97,9 +70,32 @@ export default function DashboardPage({ params: paramsPromise }) {
         }
     };
 
+    const fetchActivities = async () => {
+        try {
+            const res = await fetch('/api/wa/activities');
+            const data = await res.json();
+            if (data.success) {
+                // Map API activities to UI format
+                const mapped = data.activities.map(act => ({
+                    id: act.id,
+                    type: act.type,
+                    title: act.title,
+                    time: act.time ? new Date(act.time).toLocaleString() : 'Just now',
+                    description: act.description,
+                    color: act.type === 'success' ? 'text-emerald-400' : act.type === 'message' ? 'text-blue-400' : 'text-amber-400',
+                    bg: act.type === 'success' ? 'bg-emerald-400/10' : act.type === 'message' ? 'bg-blue-400/10' : 'bg-amber-400/10'
+                }));
+                setActivities(mapped);
+            }
+        } catch (err) {
+            console.error('Failed to fetch WA activities:', err);
+        }
+    };
+
     useEffect(() => {
         fetchCampaigns();
         fetchWaStatus();
+        fetchActivities();
     }, []);
 
     const refresh = () => fetchCampaigns();
