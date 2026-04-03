@@ -19,8 +19,21 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useParams } from 'next/navigation';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import axios from '@/utils/axios';
 
 export default function WhatsAppSettingModal({ open, onClose }) {
+    const params = useParams();
+    const workspaceId = params?.workspaceId || "testid";
     const [status, setStatus] = useState('welcome');
     const [testNumbers, setTestNumbers] = useState([]);
     const [newNumber, setNewNumber] = useState('');
@@ -29,6 +42,20 @@ export default function WhatsAppSettingModal({ open, onClose }) {
     const [qrDataUrl, setQrDataUrl] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+
+    // Cloud API States
+    const [cloudCredentials, setCloudCredentials] = useState([]);
+    const [selectedCloudId, setSelectedCloudId] = useState('new');
+    const [isTestingCloud, setIsTestingCloud] = useState(false);
+    const [isSavingCloud, setIsSavingCloud] = useState(false);
+    const [cloudVerified, setCloudVerified] = useState(false);
+    const [hasAutoSelected, setHasAutoSelected] = useState(false);
+    const [cloudForm, setCloudForm] = useState({
+        profileName: 'BotBee Cloud API',
+        phoneNumberId: '',
+        wabaId: '',
+        accessToken: ''
+    });
 
     const fetchStatus = useCallback(async () => {
         try {
@@ -55,13 +82,34 @@ export default function WhatsAppSettingModal({ open, onClose }) {
         }
     }, [qrCode]);
 
-    useEffect(() => {
-        if (open) {
-            fetchStatus();
-            const interval = setInterval(fetchStatus, 10000);
-            return () => clearInterval(interval);
+    const fetchCloudCredentials = useCallback(async () => {
+        try {
+            const workspaceId = window.location.pathname.split('/')[2];
+            const res = await axios.get(`/api/workspace/${workspaceId}/social/accounts`);
+            const filtered = res.data.filter(acc => acc.platform === 'WHATSAPP_CLOUD' || acc.platform === 'WHATSAPP');
+            setCloudCredentials(filtered);
+
+            // Only auto-select ONCE during the initial fetch if nothing is selected
+            if (filtered.length > 0 && selectedCloudId === 'new' && !hasAutoSelected) {
+                setSelectedCloudId(filtered[0].id);
+                setHasAutoSelected(true);
+            }
+        } catch (error) {
+            console.error('Failed to fetch Cloud credentials:', error);
         }
-    }, [open, fetchStatus]);
+    }, [workspaceId, selectedCloudId, hasAutoSelected]);
+
+    useEffect(() => {
+        if (!open) {
+            setHasAutoSelected(false); // Reset when modal closes
+            return;
+        }
+
+        fetchStatus();
+        fetchCloudCredentials();
+        const interval = setInterval(fetchStatus, 10000);
+        return () => clearInterval(interval);
+    }, [open, fetchStatus, fetchCloudCredentials]);
 
     const handleConnect = async () => {
         setActionLoading(true);
@@ -146,6 +194,64 @@ export default function WhatsAppSettingModal({ open, onClose }) {
         }
     };
 
+    const handleTestCloudConnection = async () => {
+        setIsTestingCloud(true);
+        setCloudVerified(false);
+        const toastId = toast.loading('Testing Cloud API connection...');
+        try {
+            const workspaceId = window.location.pathname.split('/')[2];
+            const payload = {
+                platform: 'WHATSAPP_CLOUD',
+                credentials: {
+                    accessToken: cloudForm.accessToken,
+                    phoneNumberId: cloudForm.phoneNumberId,
+                    wabaId: cloudForm.wabaId
+                }
+            };
+
+            const res = await axios.post(`/api/workspace/${workspaceId}/social/accounts/undefined/test`, payload);
+
+            if (res.data.success) {
+                toast.success('Connection Successful!', { id: toastId });
+                setCloudVerified(true);
+            } else {
+                toast.error(res.data.message || 'Connection failed', { id: toastId });
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Connection error', { id: toastId });
+        } finally {
+            setIsTestingCloud(false);
+        }
+    };
+
+    const handleSaveCloudCredential = async () => {
+        setIsSavingCloud(true);
+        const toastId = toast.loading('Saving to system vault...');
+        try {
+            const workspaceId = window.location.pathname.split('/')[2];
+            const payload = {
+                platform: 'WHATSAPP_CLOUD',
+                profile: cloudForm.profileName,
+                credentials: {
+                    accessToken: cloudForm.accessToken,
+                    phoneNumberId: cloudForm.phoneNumberId,
+                    wabaId: cloudForm.wabaId
+                },
+                status: 'connected'
+            };
+
+            await axios.post(`/api/workspace/${workspaceId}/social/accounts`, payload);
+            toast.success('Credential saved and verified', { id: toastId });
+            setCloudVerified(false); // Reset to allow standard flow
+            fetchCloudCredentials();
+            // Automatically select the new one?
+        } catch (error) {
+            toast.error('Failed to save credential', { id: toastId });
+        } finally {
+            setIsSavingCloud(false);
+        }
+    };
+
     const statusConfig = {
         welcome: { label: 'Not Connected', color: 'bg-zinc-500', icon: AlertCircle },
         connecting: { label: 'Connecting...', color: 'bg-yellow-500 animate-pulse', icon: RefreshCcw },
@@ -164,7 +270,7 @@ export default function WhatsAppSettingModal({ open, onClose }) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="min-w-[70vw]  p-0 bg-background overflow-hidden flex flex-col">
+            <DialogContent className="min-w-[70vw] min-h-[70vh]  p-0 bg-background overflow-hidden flex flex-col">
                 <DialogHeader className="p-6 border-b border-border/10">
                     <div className="flex justify-between items-center pr-8">
                         <div>
@@ -183,19 +289,24 @@ export default function WhatsAppSettingModal({ open, onClose }) {
                 <Tabs defaultValue="browser" className="flex-1 flex flex-col overflow-hidden">
                     <div className="px-6 py-2 border-b border-border/10">
                         <TabsList className="bg-muted/50 p-1">
-                            <TabsTrigger value="browser" className="gap-2 text-[10px] font-bold uppercase tracking-wider">
+                            <TabsTrigger value="browser" className="gap-2 font-bold ">
                                 <Smartphone size={14} /> WhatsApp Browser
                             </TabsTrigger>
-                            <TabsTrigger value="cloud" className="gap-2 text-[10px] font-bold uppercase tracking-wider">
+                            <TabsTrigger value="cloud" className="gap-2 font-bold ">
                                 <Globe size={14} /> WhatsApp Cloud API
+                            </TabsTrigger>
+                            <TabsTrigger value="test-numbers" className="gap-2 font-bold ">
+                                <Send size={14} /> Test Numbers
                             </TabsTrigger>
                         </TabsList>
                     </div>
 
                     <TabsContent value="browser" className="flex-1 p-6 overflow-y-auto m-0">
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid md:grid-cols-5 gap-6 max-w-5xl mx-auto">
+
+
                             {/* Instance Connection Card */}
-                            <Card className="bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden flex flex-col">
+                            <Card className="md:col-span-3 bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden flex flex-col">
                                 <CardHeader className="border-b border-border/10 pb-6">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="p-2 bg-primary/10 rounded-md">
@@ -206,7 +317,7 @@ export default function WhatsAppSettingModal({ open, onClose }) {
                                     <CardDescription>Scan the QR code to securely link your WhatsApp account (Browser Session)</CardDescription>
                                 </CardHeader>
 
-                                <CardContent className="flex-1 flex flex-col items-center justify-center p-4 space-y-6 min-h-[150px]">
+                                <CardContent className="flex-1 flex flex-col items-center justify-center p-4 space-y-6 min-h-[300px]">
                                     <AnimatePresence mode="wait">
                                         {status === 'qr' && qrDataUrl ? (
                                             <motion.div
@@ -287,71 +398,25 @@ export default function WhatsAppSettingModal({ open, onClose }) {
                                 </CardFooter>
                             </Card>
 
-                            {/* Side Panel: Test numbers and Info */}
-                            <div className="space-y-6">
-                                <Card className="h-[48%] bg-card/50 border-border/50 backdrop-blur-sm">
-                                    <CardHeader>
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="p-2 bg-primary/10 rounded-md">
-                                                <Send className="w-5 h-5 text-primary" />
-                                            </div>
-                                            <CardTitle className="text-white text-base">Test Recipients</CardTitle>
-                                        </div>
-                                        <CardDescription>Saved numbers for quick testing ({testNumbers.length}/5)</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="flex gap-2">
-                                            <Input
-                                                placeholder="e.g. 9876543210"
-                                                value={newNumber}
-                                                onChange={(e) => setNewNumber(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}
-                                                className="bg-background border-border text-xs"
-                                                disabled={testNumbers.length >= 5}
-                                            />
-                                            <Button
-                                                size="sm"
-                                                onClick={handleAddNumber}
-                                                disabled={!newNumber.trim() || testNumbers.length >= 5 || isSavingNumbers}
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-
-                                        <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                                            {testNumbers.length === 0 ? (
-                                                <p className="text-[10px] text-muted-foreground italic text-center py-4">No test numbers saved.</p>
-                                            ) : (
-                                                testNumbers.map((num) => (
-                                                    <div key={num} className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/30 group">
-                                                        <span className="text-xs font-mono text-white">{num}</span>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            onClick={() => handleRemoveNumber(num)}
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                <Card className="bg-card/50 h-[48%] border-border/50 backdrop-blur-sm border-l-4 border-l-primary">
+                            {/* Side Panel: Info */}
+                            <div className="md:col-span-2 space-y-6">
+                                <Card className="bg-card/50 border-border/50 backdrop-blur-sm border-l-4 border-l-primary h-full">
                                     <CardContent className="p-6">
-                                        <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
+                                        <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                                             <AlertCircle className="w-4 h-4 text-primary" />
                                             Connection Guide
                                         </h4>
-                                        <ul className="text-xs text-muted-foreground space-y-2 list-decimal list-inside">
+                                        <ul className="text-sm text-muted-foreground space-y-4 list-decimal list-inside">
                                             <li>Open WhatsApp on your phone</li>
                                             <li>Tap Menu or Settings and select Linked Devices</li>
                                             <li>Tap on Link a Device</li>
                                             <li>Point your phone to this screen to capture QR code</li>
                                         </ul>
+                                        <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                                            <p className="text-[10px] text-primary/70 font-medium leading-relaxed">
+                                                Note: Link your business account for better performance. Keep your phone connected to a stable internet session for initial synchronization.
+                                            </p>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -366,41 +431,127 @@ export default function WhatsAppSettingModal({ open, onClose }) {
                                         <div className="p-2 bg-blue-500/10 rounded-md">
                                             <Globe className="w-5 h-5 text-blue-500" />
                                         </div>
-                                        <CardTitle className="text-white">Business Account Settings</CardTitle>
+                                        <CardTitle className="text-white font-bold">API Configuration</CardTitle>
                                     </div>
-                                    <CardDescription>Setup your WhatsApp Cloud API credentials from Meta</CardDescription>
+                                    <CardDescription>Setup your official WhatsApp Cloud API credentials</CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-6 space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Phone Number ID</label>
-                                        <Input
-                                            placeholder="Enter Phone Number ID..."
-                                            className="bg-background border-border text-xs font-mono"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Business Account ID (WABA)</label>
-                                        <Input
-                                            placeholder="Enter WABA ID..."
-                                            className="bg-background border-border text-xs font-mono"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Permanent Access Token</label>
-                                        <div className="relative">
-                                            <Input
-                                                type="password"
-                                                placeholder="EAAl..."
-                                                className="bg-background border-border text-xs font-mono pr-10"
-                                            />
-                                            <Key className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                                <CardContent className="p-6 space-y-6">
+                                    <RadioGroup
+                                        value={selectedCloudId === 'new' ? 'new' : 'existing'}
+                                        onValueChange={(val) => {
+                                            if (val === 'new') setSelectedCloudId('new');
+                                            else if (cloudCredentials.length > 0) setSelectedCloudId(cloudCredentials[0].id);
+                                        }}
+                                        className="flex gap-4 mb-4"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="existing" id="existing" disabled={cloudCredentials.length === 0} />
+                                            <Label htmlFor="existing" className={`text-[10px] font-bold uppercase ${cloudCredentials.length === 0 ? 'opacity-30' : ''}`}>Use Saved</Label>
                                         </div>
-                                    </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="new" id="new" />
+                                            <Label htmlFor="new" className="text-[10px] font-bold uppercase">Add Manual</Label>
+                                        </div>
+                                    </RadioGroup>
+
+                                    {selectedCloudId !== 'new' ? (
+                                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase">Select Verified Account</Label>
+                                                <Select value={selectedCloudId} onValueChange={setSelectedCloudId}>
+                                                    <SelectTrigger className="bg-background border-border text-xs h-12">
+                                                        <SelectValue placeholder="Select credential..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {cloudCredentials.map(acc => (
+                                                            <SelectItem key={acc.id} value={acc.id} className="text-xs font-medium">
+                                                                {acc.profileName} {acc.expired ? '(Expired)' : ''}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-md flex items-center gap-3">
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                <p className="text-[10px] font-medium text-emerald-500/70">Using existing system vault credential. Connection will be verified upon start.</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase">Profile Name</Label>
+                                                <Input
+                                                    placeholder="e.g. Meta Cloud Account"
+                                                    value={cloudForm.profileName}
+                                                    onChange={(e) => setCloudForm({ ...cloudForm, profileName: e.target.value })}
+                                                    className="bg-background border-border text-xs h-11"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">Phone Number ID</Label>
+                                                    <Input
+                                                        placeholder="Enter ID..."
+                                                        value={cloudForm.phoneNumberId}
+                                                        onChange={(e) => setCloudForm({ ...cloudForm, phoneNumberId: e.target.value })}
+                                                        className="bg-background border-border text-xs font-mono h-11"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">WABA ID</Label>
+                                                    <Input
+                                                        placeholder="Enter WABA..."
+                                                        value={cloudForm.wabaId}
+                                                        onChange={(e) => setCloudForm({ ...cloudForm, wabaId: e.target.value })}
+                                                        className="bg-background border-border text-xs font-mono h-11"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase">Access Token</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="password"
+                                                        placeholder="EAAl..."
+                                                        value={cloudForm.accessToken}
+                                                        onChange={(e) => setCloudForm({ ...cloudForm, accessToken: e.target.value })}
+                                                        className="bg-background border-border text-xs font-mono pr-10 h-11"
+                                                    />
+                                                    <Key className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </CardContent>
-                                <CardFooter className="bg-zinc-900/50 border-t border-border/10 p-6">
-                                    <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-widest">
-                                        Save API Credentials
-                                    </Button>
+                                <CardFooter className="bg-zinc-900/50 border-t border-border/10 p-6 flex flex-col gap-3">
+                                    {selectedCloudId === 'new' ? (
+                                        <div className="flex w-full gap-2">
+                                            <Button
+                                                onClick={handleTestCloudConnection}
+                                                disabled={isTestingCloud || !cloudForm.accessToken}
+                                                className={`flex-1 gap-2 font-bold text-xs uppercase tracking-widest ${cloudVerified ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                            >
+                                                {isTestingCloud ? <RefreshCcw className="w-4 h-4 animate-spin" /> : cloudVerified ? <CheckCircle2 className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+                                                {cloudVerified ? 'Verified' : 'Test Connection'}
+                                            </Button>
+
+                                            {cloudVerified && (
+                                                <Button
+                                                    onClick={handleSaveCloudCredential}
+                                                    disabled={isSavingCloud}
+                                                    variant="secondary"
+                                                    className="flex-1 gap-2 border-emerald-500/20 text-emerald-500 font-bold text-xs uppercase tracking-widest"
+                                                >
+                                                    {isSavingCloud ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                                                    Save to Vault
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-widest">
+                                            Apply Selection
+                                        </Button>
+                                    )}
                                 </CardFooter>
                             </Card>
 
@@ -431,6 +582,88 @@ export default function WhatsAppSettingModal({ open, onClose }) {
                                     </CardContent>
                                 </Card>
                             </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="test-numbers" className="flex-1 p-4 overflow-y-auto m-0">
+                        <div className="space-y-4 h-full flex flex-col">
+                            <Card className="flex-1 bg-card/50 border-border/50 backdrop-blur-sm flex flex-col">
+                                <CardHeader className="border-b border-border/10">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-primary/10 rounded-md">
+                                            <Send className="w-5 h-5 text-primary" />
+                                        </div>
+                                        <CardTitle className="text-white">Global Test Recipients</CardTitle>
+                                    </div>
+                                    <CardDescription>
+                                        Manage your whitelist for quick testing across all WhatsApp channels ({testNumbers.length}/5)
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-8 space-y-8 flex-1 flex flex-col">
+                                    <div className="space-y-4">
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Add New Number</Label>
+                                        <div className="flex gap-3">
+                                            <Input
+                                                placeholder="e.g. 9876543210"
+                                                value={newNumber}
+                                                onChange={(e) => setNewNumber(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}
+                                                className="bg-background border-border text-sm h-12 flex-1 font-mono"
+                                                disabled={testNumbers.length >= 5}
+                                            />
+                                            <Button
+                                                size="lg"
+                                                onClick={handleAddNumber}
+                                                disabled={!newNumber.trim() || testNumbers.length >= 5 || isSavingNumbers}
+                                                className="px-8 font-bold"
+                                            >
+                                                {isSavingNumbers ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                                Add
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">Numbers will be automatically prefixed with +91 if code is missing.</p>
+                                    </div>
+
+                                    <div className="flex-1 space-y-4 flex flex-col min-h-0">
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Registered Whitelist</Label>
+                                        <ScrollArea className="flex-1 rounded-lg">
+                                            {testNumbers.length === 0 ? (
+                                                <div className="h-full flex flex-col items-center justify-center opacity-50 space-y-3 py-12">
+                                                    <AlertCircle className="w-8 h-8 text-muted-foreground" />
+                                                    <p className="text-xs text-muted-foreground italic">No test numbers saved in your profile.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid gap-3">
+                                                    {testNumbers.map((num) => (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, x: -10 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            key={num}
+                                                            className="flex items-center justify-between p-4 rounded-xl bg-background border border-border/30 group hover:bg-muted/50 transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-2 h-2 rounded-full bg-primary" />
+                                                                <span className="text-sm font-mono text-white tracking-wider">{num}</span>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all"
+                                                                onClick={() => handleRemoveNumber(num)}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </ScrollArea>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="bg-zinc-900/50 border-t border-border/10 p-6 italic text-[10px] text-muted-foreground text-center flex justify-center">
+                                    Changes are saved automatically to your workspace profile.
+                                </CardFooter>
+                            </Card>
                         </div>
                     </TabsContent>
                 </Tabs>

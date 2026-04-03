@@ -166,6 +166,8 @@ export default function DashboardPage({ params: paramsPromise }) {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+
+
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
@@ -273,8 +275,9 @@ export default function DashboardPage({ params: paramsPromise }) {
             <WhatsAppSettingModal
                 open={whatsappSettingOpen.open}
                 onClose={whatsappSettingOpen.onClose}
-
             />
+
+
         </div>);
 
 }

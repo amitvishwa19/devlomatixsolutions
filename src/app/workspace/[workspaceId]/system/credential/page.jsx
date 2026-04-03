@@ -30,6 +30,7 @@ import {
     MessageSquare,
     Globe,
     Sparkles,
+    MapPin,
     LayoutGrid,
     List
 } from 'lucide-react';
@@ -79,12 +80,15 @@ const getPlatformIcon = (platform, customClass) => {
         case 'TWITTER':
         case 'X': return <Icons.twitter {...props} />;
         case 'LINKEDIN': return <Linkedin {...props} />;
-        case 'WHATSAPP': return <MessageSquare {...props} />;
+        case 'WHATSAPP':
+        case 'WHATSAPP_BROWSER':
+        case 'WHATSAPP_CLOUD': return <MessageSquare {...props} />;
         case 'YOUTUBE': return <Youtube {...props} />;
         case 'GMAIL': return <Mail {...props} />;
         case 'GOOGLE': return <Icons.google {...props} />;
         case 'GEMINI': return <Sparkles {...props} />;
         case 'GITHUB': return <Github {...props} />;
+        case 'GOOGLE_PLACES': return <MapPin {...props} />;
         default: return <Database {...props} />;
     }
 };

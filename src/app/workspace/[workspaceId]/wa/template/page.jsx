@@ -18,6 +18,7 @@ import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
 import { MediaLibraryModal } from '../../article/_components/MediaLibraryModal';
+import { DynamicIcon } from 'lucide-react/dynamic';
 
 export default function TemplatePage() {
     const params = useParams();
@@ -234,6 +235,9 @@ export default function TemplatePage() {
             for (const recipient of allRecipients) {
                 const payload = { to: recipient, text: testingTemplate.body };
 
+                console.log('testingTemplate', testingTemplate)
+
+
                 // Map based on type
                 if (testingTemplate.type === 'image') payload.image = { url: testingTemplate.metadata?.mediaUrl };
                 if (testingTemplate.type === 'video') payload.video = { url: testingTemplate.metadata?.mediaUrl };
@@ -251,6 +255,7 @@ export default function TemplatePage() {
                         };
                     }
                 }
+
                 if (testingTemplate.type === 'interactive-button') {
                     payload.interactive = {
                         type: "list",
@@ -265,6 +270,7 @@ export default function TemplatePage() {
                         }
                     };
                 }
+
                 if (testingTemplate.type === 'interactive-group') {
                     payload.interactive = {
                         type: "list",
@@ -283,6 +289,7 @@ export default function TemplatePage() {
                         }
                     };
                 }
+
                 if (testingTemplate.type === 'carousel') {
                     payload.text = testingTemplate.body; // Fallback
                     payload.interactive = {
@@ -380,7 +387,7 @@ export default function TemplatePage() {
                 {/* Card Header/Badge */}
                 <div className="absolute top-3 right-3 z-20 flex gap-2">
                     {template.isDefault ? (
-                        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs uppercase tracking-wider font-bold h-5 px-1.5 ring-1 ring-blue-500/10">
+                        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs   font-semibold h-5 px-1.5 ring-1 ring-blue-500/10">
                             System Default
                         </Badge>
                     ) : (
@@ -506,15 +513,19 @@ export default function TemplatePage() {
     };
 
     return (
-        <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500">
+        <div className="flex flex-col h-full gap-2 p-2 animate-in fade-in duration-500">
 
             {/* Main Content Area */}
             <div className="flex-1 space-y-4 overflow-y-auto transition-all duration-300">
+
                 {/* Header */}
                 <div className="flex border border-border items-center justify-between bg-card p-2 rounded-md shadow-sm">
-                    <div>
-                        <h2 className="text-xl font-bold text-foreground">Message Templates</h2>
-                        <p className="text-xs text-muted-foreground mt-1">Create and manage reusable WhatsApp messages.</p>
+                    <div className="flex flex-row gap-2 items-center">
+                        <DynamicIcon name='layout-template' className="w-8 h-8 text-primary" />
+                        <div className='flex flex-col'>
+                            <h2 className="text-xl font-bold text-foreground">Message Templates</h2>
+                            <p className="text-xs text-muted-foreground">Create and manage reusable WhatsApp messages.</p>
+                        </div>
                     </div>
                     <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm">
                         <Plus className="w-4 h-4 " />
@@ -1237,6 +1248,7 @@ export default function TemplatePage() {
                     </DialogHeader>
 
                     <div className="py-2 space-y-4">
+
                         {/* Manual Input */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold flex items-center gap-2">
@@ -1322,6 +1334,7 @@ export default function TemplatePage() {
                                 }
                             </ScrollArea>
                         </div>
+
                     </div>
 
                     <DialogFooter className="gap-2">

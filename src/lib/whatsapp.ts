@@ -89,7 +89,7 @@ class WhatsAppManager {
                     const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
                     const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                     console.log(`[WA] Connection Closed. Reason: ${statusCode}, Reconnecting: ${shouldReconnect} in 5s`);
-                    
+
                     if (shouldReconnect) {
                         // Add a delay to prevent infinite immediate reconnect loops
                         setTimeout(() => this.init(sessionId), 5000);
@@ -99,7 +99,7 @@ class WhatsAppManager {
                         this.sock = null;
                         this.qrString = null;
                         this.userId = null;
-                        
+
                         db.whatsAppAuth.deleteMany({
                             where: { sessionId }
                         }).catch((e: any) => console.error('[WA] DB clear error:', e));
@@ -236,10 +236,10 @@ class WhatsAppManager {
             console.log('[WA] Interactive Data:', JSON.stringify(data.interactive, null, 2));
 
             // Check if it's a List Message (WhatsApp Business style or Flat Baileys style)
-            const isList = data.interactive.type === 'list' || 
-                           !!data.interactive.sections || 
-                           !!data.interactive.action?.sections ||
-                           !!data.interactive.buttonText;
+            const isList = data.interactive.type === 'list' ||
+                !!data.interactive.sections ||
+                !!data.interactive.action?.sections ||
+                !!data.interactive.buttonText;
 
             if (isList) {
                 console.log('[WA] Detected List Message - Attempting Native Delivery');
@@ -299,12 +299,12 @@ class WhatsAppManager {
                 }
                 const footerText = getCleanText(data.interactive.footer);
                 if (footerText) simulatedText += `_${footerText}_`;
-                
+
                 finalBody = simulatedText.trim();
                 result = await this.sock.sendMessage(jid, { text: finalBody });
             }
         }
- else {
+        else {
             finalBody = getCleanText(data.text);
             result = await this.sock.sendMessage(jid, { text: finalBody });
         }
@@ -312,7 +312,7 @@ class WhatsAppManager {
         if (result && this.userId) {
             const id = result.key?.id || Date.now().toString();
             const timestamp = Math.floor(Date.now() / 1000);
-            
+
             this.pushToHistory(id, jid, finalBody, true);
 
             // Save to Database
@@ -352,9 +352,9 @@ class WhatsAppManager {
 }
 
 // Global scope to prevent re-instantiation in Next.js HMR (dev environment)
-const globalForWA = global as unknown as { 
-    waManagerV14: any; 
-    waManagerV15: WhatsAppManager 
+const globalForWA = global as unknown as {
+    waManagerV14: any;
+    waManagerV15: WhatsAppManager
 };
 
 // Cleanup legacy managers if they exist
@@ -365,7 +365,7 @@ if (gwa.waManagerV12 || gwa.waManagerV13 || gwa.waManagerV14) {
         if (gwa.waManagerV12) gwa.waManagerV12.disconnect?.();
         if (gwa.waManagerV13) gwa.waManagerV13.disconnect?.();
         if (gwa.waManagerV14) gwa.waManagerV14.disconnect?.();
-    } catch (e) {}
+    } catch (e) { }
     delete gwa.waManagerV12;
     delete gwa.waManagerV13;
     delete gwa.waManagerV14;
