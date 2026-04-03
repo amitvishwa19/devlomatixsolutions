@@ -11,7 +11,12 @@ export async function GET(req) {
         }
         const userId = session.user.userId || session.user.id;
         const templates = await db.messageTemplate.findMany({
-            where: { userId },
+            where: {
+                OR: [
+                    { isDefault: true },
+                    { userId }
+                ]
+            },
             orderBy: { createdAt: 'desc' }
         });
         return NextResponse.json({ success: true, templates });

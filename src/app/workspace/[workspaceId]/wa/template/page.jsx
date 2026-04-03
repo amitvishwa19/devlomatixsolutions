@@ -32,11 +32,21 @@ export default function TemplatePage() {
     const fetchTemplates = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch('/api/wa/template');
+            const res = await fetch('/api/wa/templates'); // Ensure we call the exact route fetching all
             if (!res.ok) throw new Error("Failed to fetch");
             const data = await res.json();
             if (data.success) {
-                setTemplates(data.templates);
+                const parsedTemplates = data.templates.map(t => {
+                    let newT = { ...t };
+                    if (typeof t.metadata === 'string' && t.metadata.trim().startsWith('{')) {
+                        try { newT.metadata = JSON.parse(t.metadata); } catch (e) { }
+                    }
+                    if (typeof t.buttons === 'string' && t.buttons.trim().startsWith('[')) {
+                        try { newT.buttons = JSON.parse(t.buttons); } catch (e) { }
+                    }
+                    return newT;
+                });
+                setTemplates(parsedTemplates);
             }
         } catch (error) {
             console.error(error);
@@ -80,7 +90,7 @@ export default function TemplatePage() {
     const [selectedContactIds, setSelectedContactIds] = useState([]);
     const [contactSearch, setContactSearch] = useState('');
     const [isFetchingContacts, setIsFetchingContacts] = useState(false);
-    const [filterType, setFilterType] = useState('all'); // all, default, custom
+    const [filterType, setFilterType] = useState('my_templates'); // my_templates, browser, cloud_api
     const [savedTestNumbers, setSavedTestNumbers] = useState([]);
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
@@ -376,27 +386,23 @@ export default function TemplatePage() {
         const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             t.body.toLowerCase().includes(searchTerm.toLowerCase());
 
-        if (filterType === 'default') return matchesSearch && t.isDefault;
-        if (filterType === 'custom') return matchesSearch && !t.isDefault;
+        if (filterType === 'browser') return matchesSearch && t.isDefault && t.platform === 'WHATSAPP_BROWSER';
+        if (filterType === 'cloud_api') return matchesSearch && t.isDefault && t.platform === 'WHATSAPP_CLOUD';
+        if (filterType === 'my_templates') return matchesSearch && !t.isDefault;
         return matchesSearch;
     });
 
-    const TemplatePreviewCard = ({ template }) => {
-        return (
-            <div className="group relative flex flex-col h-full bg-card/50 hover:bg-card border border-border/50 hover:border-primary/30 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                {/* Card Header/Badge */}
-                <div className="absolute top-3 right-3 z-20 flex gap-2">
-                    {template.isDefault ? (
-                        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs   font-semibold h-5 px-1.5 ring-1 ring-blue-500/10">
-                            System Default
-                        </Badge>
-                    ) : (
-                        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs uppercase tracking-wider font-bold h-5 px-1.5 ring-1 ring-emerald-500/10">
-                            My Template
-                        </Badge>
-                    )}
-                </div>
+    const TemplatePreviewCard = ({ template: initialTemplate }) => {
+        const template = { ...initialTemplate };
+        if (typeof template.metadata === 'string' && template.metadata.trim().startsWith('{')) {
+            try { template.metadata = JSON.parse(template.metadata); } catch (e) { }
+        }
+        if (typeof template.buttons === 'string' && template.buttons.trim().startsWith('[')) {
+            try { template.buttons = JSON.parse(template.buttons); } catch (e) { }
+        }
 
+        return (
+            <div className="group relative flex flex-col h-full bg-card/50  hover:bg-card border  hover:border-primary/30 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
                 {/* WhatsApp Bubble Preview */}
                 <div className="flex-1 p-4 bg-muted/20 flex items-center justify-center relative min-h-[300px]">
                     <div className="w-full max-w-[280px] bg-background border border-border shadow-md rounded-md rounded-tl-none overflow-hidden flex flex-col relative z-10 transition-transform duration-300 group-hover:scale-[1.02]">
@@ -549,26 +555,26 @@ export default function TemplatePage() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className={` h-full px-3 transition-all ${filterType === 'all' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
-                                onClick={() => setFilterType('all')}
+                                className={` h-full px-3 transition-all ${filterType === 'my_templates' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
+                                onClick={() => setFilterType('my_templates')}
                             >
-                                All
+                                My Templates
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className={` h-full px-3 transition-all ${filterType === 'default' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
-                                onClick={() => setFilterType('default')}
+                                className={` h-full px-3 transition-all ${filterType === 'browser' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
+                                onClick={() => setFilterType('browser')}
                             >
-                                Defaults
+                                Browser
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`h-full px-3 transition-all ${filterType === 'custom' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
-                                onClick={() => setFilterType('custom')}
+                                className={`h-full px-3 transition-all ${filterType === 'cloud_api' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
+                                onClick={() => setFilterType('cloud_api')}
                             >
-                                Custom
+                                Cloud API
                             </Button>
                         </div>
                     </div>
