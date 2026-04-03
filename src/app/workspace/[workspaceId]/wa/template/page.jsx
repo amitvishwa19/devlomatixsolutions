@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Smartphone, Check, MessageSquare, Loader2, Image as ImageIcon, Video, Music, File, MapPin, Send, Users, X, MoreHorizontal, Sparkles, LayoutGrid, List } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Smartphone, Check, MessageSquare, Loader2, Image as ImageIcon, Video, Music, File, MapPin, Send, Users, X, MoreHorizontal, Sparkles, LayoutGrid, List, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -146,7 +146,7 @@ export default function TemplatePage() {
     const handleSyncCloud = async () => {
         setIsSyncing(true);
         try {
-            const res = await fetch('/api/wa/template/getcloud');
+            const res = await fetch('/api/wa/template/sync');
             const data = await res.json();
             if (data.success) {
                 toast.success(data.message || "Sync completed successfully");
@@ -846,7 +846,7 @@ export default function TemplatePage() {
                                 className="border-primary/20 text-primary hover:bg-primary/5 shadow-sm gap-2"
                                 disabled={isSyncing}
                             >
-                                {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />}
+                                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                                 Sync from Cloud
                             </Button>
                             <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm gap-2">

@@ -11,6 +11,7 @@ import {
     Paperclip, 
     Check, 
     CheckCheck,
+    AlertCircle,
     User,
     MessageSquare,
     Loader2,
@@ -25,6 +26,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+// Message Status Indicator Component
+const MessageStatus = ({ status }) => {
+    switch (status) {
+        case 'READ':
+            return <CheckCheck className="w-3.5 h-3.5 text-blue-400" title="Read" />;
+        case 'DELIVERED':
+            return <CheckCheck className="w-3.5 h-3.5 text-emerald-300/80" title="Delivered" />;
+        case 'SENT':
+            return <Check className="w-3.5 h-3.5 text-emerald-300/60" title="Sent to Meta" />;
+        case 'FAILED':
+            return <AlertCircle className="w-3.5 h-3.5 text-red-500 animate-pulse" title="Message Failed" />;
+        default:
+            return <Check className="w-3.5 h-3.5 text-emerald-300/50" />;
+    }
+};
 
 export default function WhatsAppChatsPage() {
     const { workspaceId } = useParams();
@@ -66,8 +83,8 @@ export default function WhatsAppChatsPage() {
 
     useEffect(() => {
         fetchConversations();
-        // Setup polling every 10 seconds for simulated real-time updates
-        const interval = setInterval(fetchConversations, 10000);
+        // Polling every 5 seconds for real-time status updates
+        const interval = setInterval(fetchConversations, 5000);
         return () => clearInterval(interval);
     }, []);
 
@@ -236,7 +253,7 @@ export default function WhatsAppChatsPage() {
                                             <p className="leading-relaxed">{msg.text}</p>
                                             <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${msg.fromMe ? 'text-primary-foreground/70' : 'text-muted-foreground/60'}`}>
                                                 {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
-                                                {msg.fromMe && <CheckCheck className="w-3 h-3 text-emerald-300" />}
+                                                {msg.fromMe && <MessageStatus status={msg.status} />}
                                             </div>
                                             
                                             {/* Source Tail (Bubble Hook) */}

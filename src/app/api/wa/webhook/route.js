@@ -46,6 +46,38 @@ export async function POST(req) {
             const value = body.entry[0].changes[0].value;
             const phoneNumberId = value.metadata?.phone_number_id;
             const messages = value.messages;
+            const statuses = value.statuses;
+
+            // 1. Handle Status Updates (Delivered, Read, Failed)
+            if (statuses && statuses.length > 0) {
+                for (const statusObj of statuses) {
+                    const status = statusObj.status;
+                    const waId = statusObj.id;
+                    
+                    try {
+                        let updateData = { status: status.toUpperCase() };
+                        
+                        // Capture failure reasons if available
+                        if (status === 'failed' && statusObj.errors) {
+                            const existingMsg = await db.whatsAppMessage.findUnique({ where: { waId } });
+                            if (existingMsg) {
+                                const metadata = existingMsg.metadata || {};
+                                updateData.metadata = {
+                                    ...metadata,
+                                    error: statusObj.errors[0]
+                                };
+                            }
+                        }
+
+                        await db.whatsAppMessage.update({
+                            where: { waId },
+                            data: updateData
+                        });
+                    } catch (e) {
+                        // Silent catch: message might not be in our local database
+                    }
+                }
+            }
 
             if (messages && messages.length > 0) {
                 // 1. Fetch all cloud credentials once to identify the user
