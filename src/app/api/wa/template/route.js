@@ -38,9 +38,9 @@ export async function POST(req) {
         const userId = session.user.userId || session.user.id;
         const body = await req.json();
 
-        const { id, name, category, language, type, body: msgBody, footer, buttons, metadata, status } = body;
+        const { id, name, templateName, category, language, type, body: msgBody, footer, buttons, metadata, status } = body;
         
-        console.log(`[Template API] Saving Template: ${name}, Type: ${type}`);
+        console.log(`[Template API] Saving Template: ${name} (${templateName}), Type: ${type}`);
         console.log(`[Template API] Metadata:`, JSON.stringify(metadata, null, 2));
 
         if (!name || !msgBody) {
@@ -70,6 +70,7 @@ export async function POST(req) {
                 where: { id },
                 data: {
                     name: cleanName,
+                    templateName: templateName || existing.templateName,
                     category: category || "UTILITY",
                     language: language || "en_US",
                     type: type || "TEXT",
@@ -94,6 +95,7 @@ export async function POST(req) {
                 data: {
                     userId,
                     name: cleanName,
+                    templateName: templateName || cleanName.toLowerCase().replace(/\s+/g, '_'),
                     category: category || "UTILITY",
                     language: language || "en_US",
                     type: type || "TEXT",

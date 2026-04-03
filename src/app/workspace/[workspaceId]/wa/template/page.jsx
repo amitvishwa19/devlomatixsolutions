@@ -28,14 +28,15 @@ export default function TemplatePage() {
     const [templates, setTemplates] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState('all');
+    const [filterType, setFilterType] = useState('my_templates');
     const [viewMode, setViewMode] = useState('list');
 
     // Fetch Templates directly from API
-    const fetchTemplates = async () => {
+    const fetchTemplates = async (isForce = false) => {
         setIsLoading(true);
         try {
-            const res = await fetch('/api/wa/templates'); // Ensure we call the exact route fetching all
+            const endpoint = isForce ? '/api/wa/templates?forceSeed=true' : '/api/wa/templates';
+            const res = await fetch(endpoint); // Ensure we call the exact route fetching all
             if (!res.ok) throw new Error("Failed to fetch");
             const data = await res.json();
             if (data.success) {
@@ -52,9 +53,12 @@ export default function TemplatePage() {
                     return newT;
                 });
                 setTemplates(parsedTemplates);
+                if (isForce) {
+                    localStorage.setItem('wa_templates_seeded_v1', 'true');
+                }
             }
         } catch (error) {
-            console.error(error);
+            console.error("Error fetching templates:", error);
             toast.error("Failed to load templates from the database.");
         } finally {
             setIsLoading(false);
@@ -62,7 +66,12 @@ export default function TemplatePage() {
     };
 
     useEffect(() => {
-        fetchTemplates();
+        const seeded = localStorage.getItem('wa_templates_seeded_v1');
+        if (!seeded) {
+            fetchTemplates(true);
+        } else {
+            fetchTemplates();
+        }
     }, []);
 
     // Modal & Builder State
@@ -130,9 +139,75 @@ export default function TemplatePage() {
     };
 
     const [isSaving, setIsSaving] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [isSubmittingId, setIsSubmittingId] = useState(null);
+
+    // Sync from Cloud API
+    const handleSyncCloud = async () => {
+        setIsSyncing(true);
+        try {
+            const res = await fetch('/api/wa/template/getcloud');
+            const data = await res.json();
+            if (data.success) {
+                toast.success(data.message || "Sync completed successfully");
+                fetchTemplates();
+            } else {
+                throw new Error(data.error || "Sync failed");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message || "Failed to sync templates from Meta.");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+    // Submit Template to Meta
+    const handleSubmitToMeta = async (templateId) => {
+        setIsSubmittingId(templateId);
+        try {
+            const res = await fetch('/api/wa/template/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ templateId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success("Submitted to Meta for approval!");
+                fetchTemplates();
+            } else {
+                throw new Error(data.error || "Submission failed");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message || "Failed to submit template to Meta.");
+        } finally {
+            setIsSubmittingId(null);
+        }
+    };
+
+    // Refresh Single Template Status
+    const handleCheckStatus = async (templateId) => {
+        setIsSubmittingId(templateId);
+        try {
+            const res = await fetch(`/api/wa/template/status?templateId=${templateId}`);
+            const data = await res.json();
+            if (data.success) {
+                toast.success(`Current Status: ${data.status}`);
+                fetchTemplates();
+            } else {
+                throw new Error(data.error || "Status check failed");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message || "Failed to check status.");
+        } finally {
+            setIsSubmittingId(null);
+        }
+    };
 
     // Form Handlers
-    const handleSave = async () => {
+    const handleSave = async (shouldSubmit = false) => {
         if (!formData.name || !formData.body) return;
         setIsSaving(true);
         try {
@@ -150,13 +225,21 @@ export default function TemplatePage() {
                 throw new Error(data.error || "Failed to save template");
             }
 
+            const templateId = data.template?.id;
             toast.success(editingId ? "Template updated!" : "Template created successfully!");
-            setIsBuilderOpen(false);
-            fetchTemplates();
+            
+            if (shouldSubmit && templateId && formData.platform === 'WHATSAPP_CLOUD') {
+                setIsSubmittingId(templateId);
+                await handleSubmitToMeta(templateId);
+            } else {
+                setIsBuilderOpen(false);
+                fetchTemplates();
+            }
         } catch (error) {
             toast.error(error.message);
         } finally {
             setIsSaving(false);
+            setIsSubmittingId(null);
         }
     };
 
@@ -174,12 +257,18 @@ export default function TemplatePage() {
     };
 
     const handleClone = (template) => {
+        const baseName = template.name || template.templateName || "New Template";
+        
         const clonedTemplate = {
             ...template,
             id: null,
-            name: `${template.name}_copy_${Math.floor(Math.random() * 1000)}`,
-            isDefault: false
+            name: `${baseName} Copy`,
+            // Exact copy of the templateName as requested
+            templateName: template.templateName || template.name,
+            isDefault: false,
+            status: template.status || 'DRAFT'
         };
+        
         setFormData(clonedTemplate);
         setEditingId(null);
         setIsBuilderOpen(true);
@@ -327,9 +416,9 @@ export default function TemplatePage() {
                 const isCloud = testingTemplate.platform === 'WHATSAPP_CLOUD';
                 const endpoint = isCloud ? '/api/wa/send-cloud-api' : '/api/wa/send-browser';
 
-                // For Cloud API, we should prefer sending as a 'template' if it's an approved template
+                // For Cloud API, we should ONLY send as a 'template' if it's an approved template
                 // otherwise it only works if a conversation is already open (24h window)
-                if (isCloud && testingTemplate.type !== 'interactive-group' && testingTemplate.type !== 'interactive-button') {
+                if (isCloud && testingTemplate.status === 'APPROVED' && testingTemplate.type !== 'interactive-group' && testingTemplate.type !== 'interactive-button') {
                     payload.type = 'template';
                     payload.template = {
                         // Use the new official templateName field if available, fallback to slugified name
@@ -415,9 +504,9 @@ export default function TemplatePage() {
         const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             t.body.toLowerCase().includes(searchTerm.toLowerCase());
 
-        if (filterType === 'browser') return matchesSearch && t.isDefault && t.platform === 'WHATSAPP_BROWSER';
-        if (filterType === 'cloud_api') return matchesSearch && t.isDefault && t.platform === 'WHATSAPP_CLOUD';
-        if (filterType === 'my_templates') return matchesSearch && !t.isDefault;
+        if (filterType === 'browser') return matchesSearch && t.platform === 'WHATSAPP_BROWSER';
+        if (filterType === 'cloud_api') return matchesSearch && t.platform === 'WHATSAPP_CLOUD' && t.isDefault;
+        if (filterType === 'my_templates') return matchesSearch && !t.isDefault; // Only user-created content
         return matchesSearch;
     });
 
@@ -476,7 +565,7 @@ export default function TemplatePage() {
                                 {template.buttons.filter(b => b).map((btn, idx) => (
                                     <div key={idx} className="p-2.5 text-center text-sm font-medium text-blue-500 hover:bg-muted/30 transition-colors flex items-center justify-center gap-2">
                                         <MessageSquare className="w-3.5 h-3.5 opacity-60" />
-                                        {btn}
+                                        {typeof btn === 'object' ? (btn.text || btn.url || "Button") : btn}
                                     </div>
                                 ))}
                             </div>
@@ -501,10 +590,16 @@ export default function TemplatePage() {
                             <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
                             {template.platform === 'WHATSAPP_CLOUD' && (
                                 <Badge
-                                    className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.approved ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'
-                                        }`}
+                                    className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold ${
+                                        template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
+                                        (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30' :
+                                        template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
+                                        'bg-muted text-muted-foreground'
+                                    }`}
                                 >
-                                    {template.approved ? "Approved" : "Draft"}
+                                    {template.status === 'APPROVED' ? "Approved" : 
+                                     (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? "In Review" :
+                                     template.status === 'REJECTED' ? "Rejected" : "Draft"}
                                 </Badge>
                             )}
                         </div>
@@ -556,6 +651,33 @@ export default function TemplatePage() {
                                 </Button>
                             </>
                         )}
+                        {template.platform === 'WHATSAPP_CLOUD' && (
+                            <>
+                                {(!template.status || template.status === 'DRAFT') ? (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 text-[10px] px-2 gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                                        onClick={() => handleSubmitToMeta(template.id)}
+                                        disabled={isSubmittingId === template.id}
+                                    >
+                                        {isSubmittingId === template.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                                        Submit for Review
+                                    </Button>
+                                ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 text-[10px] px-2 gap-1 border-orange-500/30 text-orange-500 hover:bg-orange-500/5"
+                                        onClick={() => handleCheckStatus(template.id)}
+                                        disabled={isSubmittingId === template.id}
+                                    >
+                                        {isSubmittingId === template.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Loader2 className="w-3 h-3" />}
+                                        Refresh
+                                    </Button>
+                                ) : null}
+                            </>
+                        )}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -596,10 +718,16 @@ export default function TemplatePage() {
                         <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
                         {template.platform === 'WHATSAPP_CLOUD' && (
                             <Badge
-                                className={`h-3.5 text-[8px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.approved ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'
-                                    }`}
+                                className={`h-3.5 text-[8px] px-1.5 uppercase tracking-tighter border-0 font-bold ${
+                                    template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
+                                    (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30' :
+                                    template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
+                                    'bg-muted text-muted-foreground'
+                                }`}
                             >
-                                {template.approved ? "Approved" : "Draft"}
+                                {template.status === 'APPROVED' ? "Approved" : 
+                                 (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? "In Review" :
+                                 template.status === 'REJECTED' ? "Rejected" : "Draft"}
                             </Badge>
                         )}
                         <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">• {template.type}</span>
@@ -643,6 +771,37 @@ export default function TemplatePage() {
                         </TooltipContent>
                     </Tooltip>
 
+                    {template.platform === 'WHATSAPP_CLOUD' && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                {(!template.status || template.status === 'DRAFT') ? (
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="w-8 h-8 rounded-full text-primary hover:bg-primary/10" 
+                                        onClick={() => handleSubmitToMeta(template.id)}
+                                        disabled={isSubmittingId === template.id}
+                                    >
+                                        {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                    </Button>
+                                ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="w-8 h-8 rounded-full text-orange-500 hover:bg-orange-500/10" 
+                                        onClick={() => handleCheckStatus(template.id)}
+                                        disabled={isSubmittingId === template.id}
+                                    >
+                                        <Loader2 className={`w-3.5 h-3.5 ${isSubmittingId === template.id ? 'animate-spin' : ''}`} />
+                                    </Button>
+                                ) : null}
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                {template.status === 'PENDING_APPROVAL' ? "Refresh Approval Status" : "Submit for Approval"}
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+
                     {!template.isDefault && (
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -661,19 +820,8 @@ export default function TemplatePage() {
     };
 
 
-    const GetTemplates = async () => {
-        console.log('GetTemplates');
-        try {
-            const res = await fetch('/api/wa/template/getcloud');
-            const data = await res.json();
-            if (data.success) {
-                console.log(data);
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to load templates from the database.");
-        }
-    }
+    // The GetTemplates function you had was a skeleton, 
+    // I've replaced it with handleSyncCloud used in the header below.
 
     return (
         <TooltipProvider>
@@ -692,11 +840,16 @@ export default function TemplatePage() {
                             </div>
                         </div>
                         <div className='flex flex-row gap-2'>
-                            <Button onClick={() => GetTemplates()} className="bg-primary hover:bg-primary/90 shadow-sm">
-                                <Plus className="w-4 h-4 " />
-                                Get Templates
+                            <Button 
+                                onClick={handleSyncCloud} 
+                                variant="outline"
+                                className="border-primary/20 text-primary hover:bg-primary/5 shadow-sm gap-2"
+                                disabled={isSyncing}
+                            >
+                                {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />}
+                                Sync from Cloud
                             </Button>
-                            <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm">
+                            <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm gap-2">
                                 <Plus className="w-4 h-4 " />
                                 Create Template
                             </Button>
@@ -800,6 +953,28 @@ export default function TemplatePage() {
                             )}
                         </>
                     )}
+
+                    {/* Footer Counts Bar */}
+                    <div className="mt-8 flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground font-bold bg-muted/20 px-4 py-3 rounded-xl border border-border/50 shadow-inner">
+                        <div className="flex items-center gap-8">
+                            <div className="flex items-center gap-2.5 group">
+                                <div className="h-1.5 w-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                                <span>Total <span className="text-foreground ml-1">{templates.length}</span></span>
+                            </div>
+                            <div className="flex items-center gap-2.5 group">
+                                <div className="h-1.5 w-1.5 rounded-full bg-blue-500/40 group-hover:bg-blue-500 transition-colors" />
+                                <span>My Templates <span className="text-foreground ml-1">{templates.filter(t => !t.isDefault).length}</span></span>
+                            </div>
+                            <div className="flex items-center gap-2.5 group">
+                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500/40 group-hover:bg-emerald-500 transition-colors" />
+                                <span>Cloud API <span className="text-foreground ml-1">{templates.filter(t => t.platform === 'WHATSAPP_CLOUD').length}</span></span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground/40 italic normal-case tracking-normal font-medium">
+                            <Smartphone className="w-3 h-3" />
+                            Meta API v17.0 Ready
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right Side Builder Panel (Now Sheet Modal) */}
@@ -822,20 +997,36 @@ export default function TemplatePage() {
 
                                     {/* Basic Info */}
                                     <div className="space-y-4">
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm font-semibold text-foreground mb-1.5 block">Display Name</label>
+                                                <Input
+                                                    placeholder="e.g. Welcome Message"
+                                                    value={formData.name || ''}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        const updates = { name: value };
+                                                        // Automatically update templateName for new templates
+                                                        if (!editingId) {
+                                                            updates.templateName = value.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                                                        }
+                                                        setFormData({ ...formData, ...updates });
+                                                    }}
+                                                    className="bg-background border-border" />
+                                            </div>
 
-
-                                        <div>
-                                            <label className="text-sm font-semibold text-foreground mb-1.5 block">Template Name</label>
-                                            <Input
-                                                placeholder="e.g. welcome_message_v1"
-                                                value={formData.name || ''}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setFormData({ ...formData, name: value });
-                                                }}
-                                                className="bg-background border-border" />
-
-                                            <p className="text-[11px] text-muted-foreground mt-1">Lowercase letters, numbers, and underscores only. Spaces and dashes will be converted.</p>
+                                            <div>
+                                                <label className="text-sm font-semibold text-foreground mb-1.5 block">API Name (Meta)</label>
+                                                <Input
+                                                    placeholder="welcome_message"
+                                                    value={formData.templateName || ''}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                                                        setFormData({ ...formData, templateName: value });
+                                                    }}
+                                                    className="bg-background border-border font-mono text-xs" />
+                                                <p className="text-[10px] text-muted-foreground mt-1 italic">Used for Cloud API identification.</p>
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
@@ -1424,8 +1615,20 @@ export default function TemplatePage() {
                                     <Send className="w-4 h-4 mr-2" /> Test
                                 </Button>
                                 <Button variant="outline" onClick={() => setIsBuilderOpen(false)}>Cancel</Button>
-                                <Button onClick={handleSave} disabled={!formData.name || !formData.body || isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                                    {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                {formData.platform === 'WHATSAPP_CLOUD' && (!formData.status || formData.status === 'DRAFT') && (
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={() => handleSave(true)} 
+                                        disabled={!formData.name || !formData.body || isSaving || isSubmittingId === editingId} 
+                                        className="border-primary/50 text-primary hover:bg-primary/5"
+                                    >
+                                        {(isSaving || isSubmittingId) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                        <Sparkles className="w-3.5 h-3.5 mr-2" />
+                                        Save & Submit for Review
+                                    </Button>
+                                )}
+                                <Button onClick={() => handleSave(false)} disabled={!formData.name || !formData.body || isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                                    {(isSaving && !isSubmittingId) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                     {editingId ? 'Save Changes' : 'Create Template'}
                                 </Button>
                             </SheetFooter>

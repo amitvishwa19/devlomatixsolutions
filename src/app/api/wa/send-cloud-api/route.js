@@ -67,7 +67,7 @@ export async function POST(req) {
 
         // 2. Dispatch based on type
         let result;
-        const type = body.type || 'text';
+        const type = (body.type || 'text').toLowerCase();
 
         console.log(`[Cloud API Send] Dispatching ${type} to ${cleanTo}`);
 
@@ -121,6 +121,40 @@ export async function POST(req) {
 
         if (!result.success) {
             return NextResponse.json({ error: result.error }, { status: 500 });
+        }
+
+        // 3. Log sent message to DB for history
+        try {
+            let logText = "";
+            switch (type) {
+                case 'text': logText = body.body || body.text || body.content || ""; break;
+                case 'template': logText = `[Template: ${body.template.name}]`; break;
+                case 'interactive':
+                case 'interactive-button':
+                case 'interactive-group':
+                    logText = "[Interactive Message]";
+                    break;
+                default: logText = `[${type.toUpperCase()}] ${body.caption || ""}`;
+            }
+
+            const waMessageId = result.data?.messages?.[0]?.id;
+
+            await db.whatsAppMessage.create({
+                data: {
+                    userId,
+                    waId: waMessageId || `local_${Date.now()}`,
+                    jid: cleanTo,
+                    text: logText,
+                    fromMe: true,
+                    timestamp: BigInt(Math.floor(Date.now() / 1000)),
+                    status: "SENT",
+                    metadata: { type, originalPayload: body }
+                }
+            });
+            console.log(`[Cloud API Send] Logged message to DB for ${cleanTo}`);
+        } catch (dbError) {
+            console.error(`[Cloud API Send] Database logging failed (silent):`, dbError);
+            // We don't fail the request if logging fails, but we log the error
         }
 
         return NextResponse.json({ success: true, data: result.data });

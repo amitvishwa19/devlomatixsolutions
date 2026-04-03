@@ -355,7 +355,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  </div>
  <div className="bg-[#EFEAE2] p-4 flex-1">
  {/* Dummy WhatsApp Message Bubble */}
- <div className="bg-white rounded-md rounded-tl-none p-3 shadow-sm max-w-[90%] text-sm text-gray-800 break-words whitespace-pre-wrap">
+ <div className="bg-white rounded-md rounded-tl-none p-3 shadow-sm max-w-[90%] text-sm text-gray-800 wrap-break-word whitespace-pre-wrap">
  {intBody ||'Type a message...'}
  {intFooter && <div className="text-xs text-gray-400 mt-2">{intFooter}</div>}
 
@@ -384,7 +384,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  messages.map((msg, index) =>
  <div key={`${msg.id}-${index}`} className={`flex ${msg.fromMe ?'justify-end':'justify-start'}`}>
  <div className={`max-w-[85%] p-3 rounded-md text-sm shadow-sm ${msg.fromMe ?'bg-[#005c4b] text-[#e9edef] rounded-tr-sm':'bg-[#202c33] text-[#e9edef] rounded-tl-sm'}`}>
- <p className="whitespace-pre-wrap leading-relaxed break-words">{msg.text}</p>
+ <p className="whitespace-pre-wrap leading-relaxed wrap-break-word">{msg.text}</p>
  <div className={`text-[10px] mt-1.5 opacity-70 flex ${msg.fromMe ?'justify-end':'justify-start'}`}>
  {new Date(msg.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit'})} • {msg.jid.split('@')[0]}
  </div>

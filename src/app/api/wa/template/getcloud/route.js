@@ -61,12 +61,108 @@ export async function GET(req) {
 
         const data = await response.json();
 
-        console.log('cloud templates templates', 'cloudCredentials', data)
+        if (data.error) {
+            console.error("[Cloud API Sync] Meta API error:", data.error);
+            return NextResponse.json({ error: data.error.message || "Failed to fetch from Meta" }, { status: 500 });
+        }
 
+        const cloudTemplates = data.data || [];
 
+        // Helper to parse Meta components into local format
+        const parseComponents = (components) => {
+            let body = "";
+            let footer = "";
+            let buttons = [];
+            
+            components.forEach(comp => {
+                if (comp.type === 'BODY') body = comp.text;
+                if (comp.type === 'FOOTER') footer = comp.text;
+                if (comp.type === 'BUTTONS') buttons = comp.buttons;
+            });
+            
+            return { body, footer, buttons: buttons.length > 0 ? buttons : undefined };
+        };
 
+        // 2. Sync with local database
+        let updatedCount = 0;
+        let importedCount = 0;
+        const syncedIds = [];
+        
+        await Promise.all(cloudTemplates.map(async (metaTpl) => {
+            const { body, footer, buttons } = parseComponents(metaTpl.components);
+            
+            // Use upsert to handle both new and existing templates based on the unique userId+name constraint
+            const result = await db.messageTemplate.upsert({
+                where: { 
+                    userId_name: { 
+                        userId, 
+                        name: metaTpl.name 
+                    } 
+                },
+                update: {
+                    templateId: metaTpl.id,
+                    templateName: metaTpl.name,
+                    status: metaTpl.status,
+                    approved: metaTpl.status === 'APPROVED',
+                    category: metaTpl.category,
+                    language: metaTpl.language,
+                    body,
+                    footer,
+                    buttons: buttons || [],
+                    isDefault: true // Managed cloud template - hide from My Templates
+                },
+                create: {
+                    userId,
+                    name: metaTpl.name,
+                    templateName: metaTpl.name,
+                    templateId: metaTpl.id,
+                    status: metaTpl.status,
+                    approved: metaTpl.status === 'APPROVED',
+                    category: metaTpl.category,
+                    language: metaTpl.language,
+                    type: metaTpl.type || 'TEXT',
+                    platform: 'WHATSAPP_CLOUD',
+                    body,
+                    footer,
+                    buttons: buttons || [],
+                    isDefault: true // Managed cloud template - hide from My Templates
+                }
+            });
 
-        return NextResponse.json({ success: true, templates: data });
+            syncedIds.push(result.id);
+            // Rough count based on timestamp similarity (optional)
+            if (result.createdAt.getTime() === result.updatedAt.getTime()) {
+                importedCount++;
+            } else {
+                updatedCount++;
+            }
+        }));
+
+        // 3. Reset unmatched templates to DRAFT
+        // We now reset ANY Cloud template visible to the user that wasn't found on Meta.
+        // This ensures the dashboard perfectly reflects the Meta account.
+        const resetResult = await db.messageTemplate.updateMany({
+            where: {
+                userId,
+                platform: 'WHATSAPP_CLOUD',
+                id: { notIn: syncedIds }
+                // Removed the isDefault: false check because user-owned cloud templates 
+                // should always reflect their real Meta status.
+            },
+            data: {
+                status: 'DRAFT',
+                approved: false
+            }
+        });
+
+        return NextResponse.json({ 
+            success: true, 
+            templates: cloudTemplates,
+            updatedCount,
+            importedCount,
+            resetCount: resetResult.count,
+            message: `Sync complete: ${updatedCount} updated, ${importedCount} imported, ${resetResult.count} reset to Draft.`
+        });
     } catch (error) {
         console.error("Error fetching templates:", error);
         return NextResponse.json({ error: "Failed to fetch templates" }, { status: 500 });

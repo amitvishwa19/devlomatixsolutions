@@ -323,6 +323,7 @@ model WhatsAppAuth {
 
 model MessageTemplate {
   id           String     @id @default(cuid())
+  templateId   String?
   userId       String
   name         String
   templateName String?

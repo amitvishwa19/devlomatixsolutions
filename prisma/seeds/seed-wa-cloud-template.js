@@ -47,7 +47,7 @@ async function main() {
             body: "Check out our latest product catalog here!",
             footer: "Health & Wellness",
             buttons: null,
-            metadata: { 
+            metadata: {
                 mediaUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80"
             },
             status: "APPROVED",
@@ -64,8 +64,8 @@ async function main() {
             body: "Watch this short tutorial on API integration.",
             footer: "Guided by Experts",
             buttons: null,
-            metadata: { 
-                mediaUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" 
+            metadata: {
+                mediaUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4"
             },
             status: "APPROVED",
             approved: true,
@@ -81,8 +81,8 @@ async function main() {
             body: "Your daily health tip voice note is ready.",
             footer: null,
             buttons: null,
-            metadata: { 
-                mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
+            metadata: {
+                mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
             },
             status: "APPROVED",
             approved: true,
@@ -98,8 +98,8 @@ async function main() {
             body: "Your invoice #{{1}} has been generated successfully.",
             footer: "Confidential",
             buttons: null,
-            metadata: { 
-                mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" 
+            metadata: {
+                mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
             },
             status: "APPROVED",
             approved: true,
@@ -115,7 +115,7 @@ async function main() {
             body: "Here is the exact location for your appointment tomorrow.",
             footer: "Use maps to navigate",
             buttons: null,
-            metadata: { 
+            metadata: {
                 latitude: "18.5204",
                 longitude: "73.8567",
                 locationName: "HealthyFine Headquarters",
@@ -207,7 +207,7 @@ async function main() {
     // 3. Seed Templates safely
     let count = 0;
     for (const template of templatesData) {
-        
+
         // Ensure metadata and buttons are stringified just or preserved as JSON
         // Prisma Json type logic will accept objects directly
         const payload = {

@@ -864,7 +864,7 @@ export default function ContactsPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-9 w-9 p-0 rounded-l-none border-l-[1px] border-l-border/30"
+                                                className="h-9 w-9 p-0 rounded-l-none border-l border-l-border/30"
                                                 onClick={downloadTemplate}
                                                 title="Download CSV Template">
                                                 <FileText className="w-4 h-4" />
