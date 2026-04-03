@@ -46,16 +46,17 @@ export default function AppSidebar() {
         // WHATSAPP
         { type: 'parent', title: "WhatsApp Manager", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
         { type: 'child', title: "Dashboard", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
+        { type: 'child', title: "Chats", url: `${baseWhathappPath}/chats`, icon: "message-square", category: "WhatsApp Manager" },
         { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "WhatsApp Manager" },
         { type: 'child', title: "Templates", url: `${baseWhathappPath}/template`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "Quick Message", url: `${baseWhathappPath}/quick-message`, icon: "zap", category: "WhatsApp Manager" },
         { type: 'child', title: "Campaigns", url: `${baseWhathappPath}/campaigns`, icon: "megaphone", category: "WhatsApp Manager" },
-        { type: 'child', title: "Bot Flow Builder", url: `${baseWhathappPath}/bot-flow-builder`, icon: "git-branch", category: "WhatsApp Manager" },
-        { type: 'child', title: "Bulk Sender", url: `${baseWhathappPath}/bulk-sender`, icon: "upload", category: "WhatsApp Manager" },
-        { type: 'child', title: "Button & Quick Reply", url: `${baseWhathappPath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
-        { type: 'child', title: "Auto Responder", url: `${baseWhathappPath}/auto-responder`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "Media Support", url: `${baseWhathappPath}/media-support`, icon: "image", category: "WhatsApp Manager" },
-        { type: 'child', title: "AI Smart Reply", url: `${baseWhathappPath}/ai-smart-reply`, icon: "brain", category: "WhatsApp Manager" },
+        // { type: 'child', title: "Quick Message", url: `${baseWhathappPath}/quick-message`, icon: "zap", category: "WhatsApp Manager" },
+        { type: 'child', title: "Analytics", url: `${baseWhathappPath}/analytics`, icon: "bar-chart-3", category: "WhatsApp Manager" },
+        { type: 'child', title: "API Setup", url: `${baseWhathappPath}/api-setup`, icon: "settings", category: "WhatsApp Manager" },
+        // { type: 'child', title: "Button & Quick Reply", url: `${baseWhathappPath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
+        { type: 'child', title: "Chatbot", url: `${baseWhathappPath}/chatbot`, icon: "zap", category: "WhatsApp Manager" },
+        { type: 'child', title: "eCommerce", url: `${baseWhathappPath}/ecommerce`, icon: "shopping-cart", category: "WhatsApp Manager" },
+        // { type: 'child', title: "AI Smart Reply", url: `${baseWhathappPath}/ai-smart-reply`, icon: "brain", category: "WhatsApp Manager" },
         { type: 'child', title: "Settings", url: `${baseWhathappPath}/settings`, icon: "settings", category: "WhatsApp Manager" },
 
         // Document Manager
@@ -102,6 +103,7 @@ export default function AppSidebar() {
         { type: 'parent', title: "Miscellaneous", url: `${baseMiscellaneousPath}`, icon: "blocks", category: "miscellaneous" },
         { type: 'child', title: "Dashboard", url: `${baseMiscellaneousPath}/`, icon: "bar-chart-3", category: "miscellaneous" },
         { type: 'child', title: "Quotation", url: `${baseMiscellaneousPath}/quotation`, icon: "bar-chart-3", category: "miscellaneous" },
+        { type: 'child', title: "Lead Generation", url: `${baseMiscellaneousPath}/leads`, icon: "bar-chart-3", category: "miscellaneous" },
 
         // System
         { type: 'parent', title: "System", url: `${basePath}`, icon: "monitor-cog", category: "system" },

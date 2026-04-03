@@ -50,12 +50,12 @@ model User {
   scorecards                Scorecard[]
   servers                   Server[]
   setting                   Setting?
+  systemCrons               SystemCron[]
   whatsAppAuths             WhatsAppAuth[]
   waMessages                WhatsAppMessage[]
+  workflows                 Workflow[]
   workspaceDocuments        WorkspaceDocument[]
   roles                     Role[]              @relation("RoleToUser")
-  workflows                 Workflow[]
-  systemCrons               SystemCron[]
 
   @@index([email])
   @@index([phone])
@@ -333,9 +333,10 @@ model MessageTemplate {
   buttons   Json?
   metadata  Json?
   status    String     @default("DRAFT")
-  isDefault Boolean    @default(false)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  isDefault Boolean    @default(false)
+  platform  String     @default("WHATSAPP_CLOUD")
   campaigns Campaign[]
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -521,13 +522,13 @@ model Credentials {
   platform    String
   profile     String?
   credentials Json?
-  avatar      String?
-  userInfo    Json?
   userId      String
   expired     Boolean  @default(false)
   status      String   @default("disconnected")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  avatar      String?
+  userInfo    Json?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -780,6 +781,76 @@ model Offer {
   @@index([applicationId])
 }
 
+model Workflow {
+  id          String              @id @default(cuid())
+  name        String
+  description String?
+  nodes       Json                @default("[]")
+  edges       Json                @default("[]")
+  workspaceId String
+  userId      String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  definition  Json?
+  status      WorkflowStatus      @default(DRAFT)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  executions  WorkflowExecution[]
+  memories    WorkflowMemory[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model WorkflowExecution {
+  id         String    @id @default(cuid())
+  workflowId String
+  status     String    @default("RUNNING")
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  logs       Json      @default("[]")
+  edges      Json      @default("[]")
+  nodes      Json      @default("[]")
+  workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([status])
+}
+
+model WorkflowMemory {
+  id         String   @id @default(cuid())
+  workflowId String
+  sessionId  String
+  messages   Json     @default("[]")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, sessionId])
+  @@index([workflowId])
+}
+
+model SystemCron {
+  id             String           @id @default(cuid())
+  name           String
+  description    String?
+  cronExpression String
+  status         SystemCronStatus @default(ACTIVE)
+  targetType     String           @default("FLOWBOT")
+  targetId       String?
+  payload        Json?
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  workspaceId    String
+  userId         String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([nextRunAt])
+}
+
 enum ROLE {
   ADMIN
   SUPERADMIN
@@ -844,79 +915,9 @@ enum WorkflowStatus {
   PUBLISHED
 }
 
-model Workflow {
-  id          String              @id @default(cuid())
-  name        String
-  description String?
-  status      WorkflowStatus      @default(DRAFT)
-  nodes       Json                @default("[]")
-  edges       Json                @default("[]")
-  workspaceId String
-  userId      String
-  definition  Json?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  executions  WorkflowExecution[]
-  memories    WorkflowMemory[]
-
-  @@index([workspaceId])
-  @@index([userId])
-}
-
-model WorkflowExecution {
-  id         String    @id @default(cuid())
-  workflowId String
-  status     String    @default("RUNNING") // RUNNING, SUCCESS, FAILED
-  startedAt  DateTime  @default(now())
-  finishedAt DateTime?
-  nodes      Json      @default("[]")
-  edges      Json      @default("[]")
-  logs       Json      @default("[]")
-  workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-
-  @@index([workflowId])
-  @@index([status])
-}
-
-model WorkflowMemory {
-  id         String   @id @default(cuid())
-  workflowId String
-  sessionId  String // Unique key for the conversation context (e.g., chat_123)
-  messages   Json     @default("[]") // Stores message history [{role, text}]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-
-  @@unique([workflowId, sessionId])
-  @@index([workflowId])
-}
-
 enum SystemCronStatus {
   ACTIVE
   INACTIVE
   ERROR
   COMPLETED
-}
-
-model SystemCron {
-  id              String            @id @default(cuid())
-  name            String
-  description     String?
-  cronExpression  String
-  status          SystemCronStatus  @default(ACTIVE)
-  targetType      String            @default("FLOWBOT")
-  targetId        String?
-  payload         Json?
-  lastRunAt       DateTime?
-  nextRunAt       DateTime?
-  workspaceId     String
-  userId          String
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId])
-  @@index([status])
-  @@index([nextRunAt])
 }

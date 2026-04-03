@@ -339,6 +339,37 @@ async function testYouTube(credentials) {
 }
 
 /**
+ * Google Places API (New/Old)
+ * Required keys: apiKey
+ */
+async function testGooglePlaces(credentials) {
+    const key = (credentials.apiKey || credentials['api-key'] || credentials.api_key || '').trim();
+    if (!key) return { success: false, message: 'Missing apiKey' };
+
+    // Test with a simple Find Place request (lightweight)
+    const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=Google&inputtype=textquery&fields=name&key=${key}`;
+    const { ok, data } = await fetchWithTimeout(url);
+
+    if (ok && data?.status === 'OK') {
+        const placeName = data.candidates?.[0]?.name || 'Google';
+        return { 
+            success: true, 
+            message: `Places API Valid - Found: ${placeName}`, 
+            data: { 
+                profileName: "Google Places API",
+                ...data 
+            } 
+        };
+    }
+
+    if (data?.status === 'REQUEST_DENIED') {
+        return { success: false, message: `Access Denied: ${data.error_message}`, data };
+    }
+
+    return { success: false, message: data?.status || 'Connection failed', data };
+}
+
+/**
  * Google / Gmail API
  * Required keys: access_token (or accessToken)
  */
@@ -448,6 +479,7 @@ const PLATFORM_TESTERS = {
     GOOGLE:     testGoogle,
     GMAIL:      testGoogle,
     GEMINI:     testGemini,
+    GOOGLE_PLACES: testGooglePlaces,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
