@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Smartphone, Check, MessageSquare, Loader2, Image as ImageIcon, Video, Music, File, MapPin, Send, Users, X, MoreHorizontal, Sparkles } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Smartphone, Check, MessageSquare, Loader2, Image as ImageIcon, Video, Music, File, MapPin, Send, Users, X, MoreHorizontal, Sparkles, LayoutGrid, List } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
@@ -27,6 +28,8 @@ export default function TemplatePage() {
     const [templates, setTemplates] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState('all');
+    const [viewMode, setViewMode] = useState('list');
 
     // Fetch Templates directly from API
     const fetchTemplates = async () => {
@@ -36,6 +39,8 @@ export default function TemplatePage() {
             if (!res.ok) throw new Error("Failed to fetch");
             const data = await res.json();
             if (data.success) {
+
+                console.log('data', data)
                 const parsedTemplates = data.templates.map(t => {
                     let newT = { ...t };
                     if (typeof t.metadata === 'string' && t.metadata.trim().startsWith('{')) {
@@ -90,7 +95,6 @@ export default function TemplatePage() {
     const [selectedContactIds, setSelectedContactIds] = useState([]);
     const [contactSearch, setContactSearch] = useState('');
     const [isFetchingContacts, setIsFetchingContacts] = useState(false);
-    const [filterType, setFilterType] = useState('my_templates'); // my_templates, browser, cloud_api
     const [savedTestNumbers, setSavedTestNumbers] = useState([]);
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
@@ -129,16 +133,6 @@ export default function TemplatePage() {
 
     // Form Handlers
     const handleSave = async () => {
-        // console.log("formData.name", formData.name);
-        // console.log("formData.body", formData.body);
-        // console.log("formData.category", formData.category);
-        // console.log("formData.language", formData.language);
-        // console.log("formData.type", formData.type);
-        // console.log("formData.footer", formData.footer);
-        // console.log("formData.buttons", formData.buttons);
-        // console.log("formData.metadata", formData.metadata);
-
-
         if (!formData.name || !formData.body) return;
         setIsSaving(true);
         try {
@@ -330,7 +324,42 @@ export default function TemplatePage() {
                     };
                 }
 
-                const res = await fetch('/api/wa/send', {
+                const isCloud = testingTemplate.platform === 'WHATSAPP_CLOUD';
+                const endpoint = isCloud ? '/api/wa/send-cloud-api' : '/api/wa/send-browser';
+
+                // For Cloud API, we should prefer sending as a 'template' if it's an approved template
+                // otherwise it only works if a conversation is already open (24h window)
+                if (isCloud && testingTemplate.type !== 'interactive-group' && testingTemplate.type !== 'interactive-button') {
+                    payload.type = 'template';
+                    payload.template = {
+                        // Use the new official templateName field if available, fallback to slugified name
+                        name: testingTemplate.templateName || testingTemplate.name.toLowerCase().replace(/\s+/g, '_'),
+                        language: { code: testingTemplate.language || 'en_US' },
+                        components: []
+                    };
+
+                    // Add header component if there's media
+                    if (['image', 'video', 'document'].includes(testingTemplate.type)) {
+                        payload.template.components.push({
+                            type: 'header',
+                            parameters: [
+                                {
+                                    type: testingTemplate.type,
+                                    [testingTemplate.type]: {
+                                        link: testingTemplate.metadata?.mediaUrl
+                                    }
+                                }
+                            ]
+                        });
+                    }
+
+                    // For now, we don't have complex variable mapping, so we send empty body components
+                    // unless we want to support variables {{1}}, {{2}} in the future.
+                } else {
+                    payload.type = testingTemplate.type;
+                }
+
+                const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -407,11 +436,11 @@ export default function TemplatePage() {
                 <div className="flex-1 p-4 bg-muted/20 flex items-center justify-center relative min-h-[300px]">
                     <div className="w-full max-w-[280px] bg-background border border-border shadow-md rounded-md rounded-tl-none overflow-hidden flex flex-col relative z-10 transition-transform duration-300 group-hover:scale-[1.02]">
                         {/* Source Peak */}
-                        <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-[8px] border-t-background border-l-[8px] border-l-transparent" />
+                        <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-background border-l-8 border-l-transparent" />
 
                         {/* Media Section */}
                         {['image', 'video', 'document', 'audio'].includes(template.type) && (
-                            <div className="aspect-[16/9] bg-muted/30 flex items-center justify-center border-b border-border/10 relative overflow-hidden">
+                            <div className="aspect-video bg-muted/30 flex items-center justify-center border-b border-border/10 relative overflow-hidden">
                                 {template.type === 'image' && (
                                     template.metadata?.mediaUrl ?
                                         <img src={template.metadata.mediaUrl} className="w-full h-full object-cover" alt="preview" /> :
@@ -467,9 +496,32 @@ export default function TemplatePage() {
 
                 {/* Actions Footer */}
                 <div className="px-5 py-4 bg-background border-t border-border/50 flex flex-col gap-3">
-                    <div className="flex flex-col">
-                        <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
-                        <span className="text-xs text-muted-foreground uppercase opacity-70 mt-0.5 tracking-tight">{template.category} • {template.type}</span>
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
+                            {template.platform === 'WHATSAPP_CLOUD' && (
+                                <Badge
+                                    className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.approved ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'
+                                        }`}
+                                >
+                                    {template.approved ? "Approved" : "Draft"}
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center">
+                            <code className="text-[10px] font-mono text-muted-foreground/60 truncate bg-muted/40 px-1.5 py-0.5 rounded border border-border/20 max-w-full">
+                                {template.templateName || template.name.toLowerCase().replace(/\s+/g, '_')}
+                            </code>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-muted-foreground uppercase opacity-60 tracking-wider font-semibold">
+                                {template.category}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground/40">•</span>
+                            <span className="text-[10px] text-muted-foreground uppercase opacity-60 tracking-wider font-semibold">
+                                {template.type}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2 mt-1 pt-3 border-t border-border/50">
@@ -518,855 +570,997 @@ export default function TemplatePage() {
         );
     };
 
-    return (
-        <div className="flex flex-col h-full gap-2 p-2 animate-in fade-in duration-500">
+    const TemplateListRow = ({ template: initialTemplate }) => {
+        const template = { ...initialTemplate };
+        if (typeof template.metadata === 'string' && template.metadata.trim().startsWith('{')) {
+            try { template.metadata = JSON.parse(template.metadata); } catch (e) { }
+        }
+        if (typeof template.buttons === 'string' && template.buttons.trim().startsWith('[')) {
+            try { template.buttons = JSON.parse(template.buttons); } catch (e) { }
+        }
 
-            {/* Main Content Area */}
-            <div className="flex-1 space-y-4 overflow-y-auto transition-all duration-300">
-
-                {/* Header */}
-                <div className="flex border border-border items-center justify-between bg-card p-2 rounded-md shadow-sm">
-                    <div className="flex flex-row gap-2 items-center">
-                        <DynamicIcon name='layout-template' className="w-8 h-8 text-primary" />
-                        <div className='flex flex-col'>
-                            <h2 className="text-xl font-bold text-foreground">Message Templates</h2>
-                            <p className="text-xs text-muted-foreground">Create and manage reusable WhatsApp messages.</p>
-                        </div>
-                    </div>
-                    <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm">
-                        <Plus className="w-4 h-4 " />
-                        Create Template
-                    </Button>
+        return (
+            <div className="group relative flex items-center gap-4 p-3 bg-card/50 hover:bg-card border border-border/50 hover:border-primary/30 rounded-xl transition-all duration-200">
+                {/* Mini Preview Icon */}
+                <div className="w-12 h-12 rounded-lg bg-muted/30 flex items-center justify-center shrink-0 border border-border/10 overflow-hidden">
+                    {template.type === 'image' && template.metadata?.mediaUrl ? (
+                        <img src={template.metadata.mediaUrl} className="w-full h-full object-cover" alt="mini" />
+                    ) : template.type === 'video' ? <Video className="w-5 h-5 text-muted-foreground/40" />
+                        : template.type === 'document' ? <File className="w-5 h-5 text-blue-500/40" />
+                            : <MessageSquare className="w-5 h-5 text-primary/40" />}
                 </div>
 
-                {/* Toolbar */}
-                <div className="bg-card p-2 rounded-xl shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center border border-border/50 bg-gradient-to-r from-card to-muted/20">
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-80">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search templates..."
-                                className="pl-9 bg-background/50 border-border h-10 ring-offset-background focus-visible:ring-1 focus-visible:ring-primary/20"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)} />
-                        </div>
-
-                        <div className="flex gap-1 bg-muted/40 p-1 rounded-lg border border-border h-10">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className={` h-full px-3 transition-all ${filterType === 'my_templates' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
-                                onClick={() => setFilterType('my_templates')}
+                {/* Info Section */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
+                        {template.platform === 'WHATSAPP_CLOUD' && (
+                            <Badge
+                                className={`h-3.5 text-[8px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.approved ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'
+                                    }`}
                             >
-                                My Templates
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className={` h-full px-3 transition-all ${filterType === 'browser' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
-                                onClick={() => setFilterType('browser')}
-                            >
-                                Browser
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className={`h-full px-3 transition-all ${filterType === 'cloud_api' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
-                                onClick={() => setFilterType('cloud_api')}
-                            >
-                                Cloud API
-                            </Button>
-                        </div>
+                                {template.approved ? "Approved" : "Draft"}
+                            </Badge>
+                        )}
+                        <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">• {template.type}</span>
                     </div>
-
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase font-bold tracking-widest bg-background/50 px-3 py-1.5 rounded-full border border-border/30">
-                        <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        Live Previews Active
-                    </div>
+                    <p className="text-xs text-muted-foreground truncate opacity-70">
+                        {template.body.substring(0, 100)}{template.body.length > 100 ? '...' : ''}
+                    </p>
                 </div>
 
-                {/* Templates Grid Grid */}
-                {isLoading ? (
-                    <div className="flex-1 flex flex-col items-center justify-center h-64 grayscale opacity-50">
-                        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-                        <p className="text-sm font-medium">Fetching high-fidelity previews...</p>
-                    </div>
-                ) : filteredTemplates.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-xl bg-card/10">
-                        <MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-6 drop-shadow-sm" />
-                        <h3 className="text-xl font-bold text-foreground">No templates found</h3>
-                        <p className="text-muted-foreground text-center max-w-xs mt-2">Adjust your filters or create your first custom template to get started.</p>
-                        <Button onClick={() => handleOpenBuilder()} className="mt-8 gap-2 shadow-lg shadow-primary/20">
-                            <Plus className="w-4 h-4" /> Create Custom Template
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 pb-12">
-                        {filteredTemplates.map((template) => (
-                            <TemplatePreviewCard key={template.id} template={template} />
-                        ))}
-                    </div>
-                )}
+                {/* Meta / Official Name */}
+                <div className="hidden md:flex flex-col items-end shrink-0 px-4 border-l border-border/20">
+                    <code className="text-[9px] font-mono text-muted-foreground/50 bg-muted/20 px-1 rounded whitespace-nowrap overflow-hidden">
+                        {template.templateName || template.name.toLowerCase().replace(/\s+/g, '_')}
+                    </code>
+                    <span className="text-[10px] text-muted-foreground/40 uppercase mt-1 tracking-tight">
+                        {template.category}
+                    </span>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex items-center gap-1 shrink-0 ml-auto">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => (template.isDefault ? handleClone(template) : handleOpenBuilder(template))}>
+                                {template.isDefault ? <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> : <Edit2 className="w-3.5 h-3.5" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            {template.isDefault ? "Clone Template" : "Edit Template"}
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-muted-foreground hover:text-emerald-500" onClick={() => openTestModal(template)}>
+                                <Send className="w-3.5 h-3.5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            Send Test Message
+                        </TooltipContent>
+                    </Tooltip>
+
+                    {!template.isDefault && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-muted-foreground hover:text-destructive" onClick={() => handleDelete(template.id)}>
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                Delete Template
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
             </div>
-
-            {/* Right Side Builder Panel (Now Sheet Modal) */}
-            <Sheet open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
-                <SheetContent className="w-[620px] sm:max-w-[620px] p-0 flex flex-col gap-0 border-l border-border bg-card shadow-2xl">
-                    <div className='flex flex-col h-full'>
-                        {/* Panel Header */}
-                        <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30 text-left">
-                            <SheetTitle className="text-lg font-semibold text-foreground">
-                                {editingId ? 'Edit Template' : 'Create Template'}
-                            </SheetTitle>
-                            <SheetDescription className="text-xs text-muted-foreground">
-                                Configure your WhatsApp message template content and interactive elements.
-                            </SheetDescription>
-                        </SheetHeader>
-
-                        <ScrollArea className='h-[85%]'>
-                            {/* Main Form Area */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-border">
-
-                                {/* Basic Info */}
-                                <div className="space-y-4">
+        );
+    };
 
 
-                                    <div>
-                                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Template Name</label>
-                                        <Input
-                                            placeholder="e.g. welcome_message_v1"
-                                            value={formData.name || ''}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setFormData({ ...formData, name: value });
-                                            }}
-                                            className="bg-background border-border" />
+    const GetTemplates = async () => {
+        console.log('GetTemplates');
+        try {
+            const res = await fetch('/api/wa/template/getcloud');
+            const data = await res.json();
+            if (data.success) {
+                console.log(data);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to load templates from the database.");
+        }
+    }
 
-                                        <p className="text-[11px] text-muted-foreground mt-1">Lowercase letters, numbers, and underscores only. Spaces and dashes will be converted.</p>
-                                    </div>
+    return (
+        <TooltipProvider>
+            <div className="flex flex-col h-full gap-2 p-2 animate-in fade-in duration-500">
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs font-semibold text-foreground mb-1.5 block">Category</label>
-                                            <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                                                <SelectTrigger className="bg-background border-border">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="UTILITY">Utility</SelectItem>
-                                                    <SelectItem value="MARKETING">Marketing</SelectItem>
-                                                    <SelectItem value="AUTHENTICATION">Authentication</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-semibold text-foreground mb-1.5 block">Language</label>
-                                            <Select value={formData.language} onValueChange={(v) => setFormData({ ...formData, language: v })}>
-                                                <SelectTrigger className="bg-background border-border">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="en_US">English (US)</SelectItem>
-                                                    <SelectItem value="en_GB">English (UK)</SelectItem>
-                                                    <SelectItem value="es">Spanish</SelectItem>
-                                                    <SelectItem value="fr">French</SelectItem>
-                                                    <SelectItem value="hi">Hindi</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
+                {/* Main Content Area */}
+                <div className="flex-1 space-y-4 overflow-y-auto transition-all duration-300">
 
-                                    <div>
-                                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Message Type</label>
-                                        <Select
-                                            value={formData.type}
-                                            onValueChange={(v) => {
-                                                let newMetadata = { ...formData.metadata };
-                                                if (v === 'interactive-group' && (!newMetadata.listSections || newMetadata.listSections.length === 0)) {
-                                                    newMetadata.listSections = [{ title: 'Options', rows: [{ title: '', description: '' }] }];
-                                                    newMetadata.listButton = 'Select Option';
-                                                }
-                                                setFormData({ ...formData, type: v, metadata: newMetadata });
-                                            }}>
+                    {/* Header */}
+                    <div className="flex border border-border items-center justify-between bg-card p-2 rounded-md shadow-sm">
+                        <div className="flex flex-row gap-2 items-center">
+                            <DynamicIcon name='layout-template' className="w-8 h-8 text-primary" />
+                            <div className='flex flex-col'>
+                                <h2 className="text-xl font-bold text-foreground">Message Templates</h2>
+                                <p className="text-xs text-muted-foreground">Create and manage reusable WhatsApp messages.</p>
+                            </div>
+                        </div>
+                        <div className='flex flex-row gap-2'>
+                            <Button onClick={() => GetTemplates()} className="bg-primary hover:bg-primary/90 shadow-sm">
+                                <Plus className="w-4 h-4 " />
+                                Get Templates
+                            </Button>
+                            <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm">
+                                <Plus className="w-4 h-4 " />
+                                Create Template
+                            </Button>
+                        </div>
+                    </div>
 
-                                            <SelectTrigger className="bg-background border-border">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="text">Standard Text</SelectItem>
-                                                <SelectItem value="image">Image</SelectItem>
-                                                <SelectItem value="video">Video</SelectItem>
-                                                <SelectItem value="audio">Audio</SelectItem>
-                                                <SelectItem value="document">Document / PDF</SelectItem>
-                                                <SelectItem value="location">Location</SelectItem>
-                                                <SelectItem value="contact">Contact (vCard)</SelectItem>
-                                                <SelectItem value="interactive-button">Interactive (Buttons)</SelectItem>
-                                                <SelectItem value="interactive-group">Interactive (Group)</SelectItem>
-                                                <SelectItem value="carousel">Template / Carousel (Advanced)</SelectItem>
-                                                <SelectItem value="view_once">Disappearing / View Once</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                    {/* Toolbar */}
+                    <div className="bg-card p-2 rounded-xl shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center border border-border/50 bg-gradient-to-r from-card to-muted/20">
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-80">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search templates..."
+                                    className="pl-9 bg-background/50 border-border h-10 ring-offset-background focus-visible:ring-1 focus-visible:ring-primary/20"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)} />
+                            </div>
 
+                            <div className="flex gap-1 bg-muted/40 p-1 rounded-lg border border-border h-10">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={` h-full px-3 transition-all ${filterType === 'my_templates' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
+                                    onClick={() => setFilterType('my_templates')}
+                                >
+                                    My Templates
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={` h-full px-3 transition-all ${filterType === 'browser' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
+                                    onClick={() => setFilterType('browser')}
+                                >
+                                    Browser
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-full px-3 transition-all ${filterType === 'cloud_api' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
+                                    onClick={() => setFilterType('cloud_api')}
+                                >
+                                    Cloud API
+                                </Button>
+                            </div>
 
+                            <div className="flex gap-1 bg-muted/30 p-1 rounded-lg border border-border/50 h-10 ml-auto">
+                                <Button
+                                    variant={viewMode === 'grid' ? "secondary" : "ghost"}
+                                    size="icon"
+                                    className="w-8 h-8"
+                                    onClick={() => setViewMode('grid')}
+                                >
+                                    <LayoutGrid className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant={viewMode === 'list' ? "secondary" : "ghost"}
+                                    size="icon"
+                                    className="w-8 h-8"
+                                    onClick={() => setViewMode('list')}
+                                >
+                                    <List className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase font-bold tracking-widest bg-background/50 px-3 py-1.5 rounded-full border border-border/30">
+                            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                            Live Previews Active
+                        </div>
+                    </div>
+
+                    {/* Templates Grid / List */}
+                    {isLoading ? (
+                        <div className="flex-1 flex flex-col items-center justify-center h-64 grayscale opacity-50">
+                            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+                            <p className="text-sm font-medium">Fetching high-fidelity previews...</p>
+                        </div>
+                    ) : filteredTemplates.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-xl bg-card/10">
+                            <MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-6 drop-shadow-sm" />
+                            <h3 className="text-xl font-bold text-foreground">No templates found</h3>
+                            <p className="text-muted-foreground text-center max-w-xs mt-2">Adjust your filters or create your first custom template to get started.</p>
+                            <Button onClick={() => handleOpenBuilder()} className="mt-8 gap-2 shadow-lg shadow-primary/20">
+                                <Plus className="w-4 h-4" /> Create Custom Template
+                            </Button>
+                        </div>
+                    ) : (
+                        <>
+                            {viewMode === 'grid' ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
+                                    {filteredTemplates.map((template) => (
+                                        <TemplatePreviewCard key={template.id} template={template} />
+                                    ))}
                                 </div>
+                            ) : (
+                                <div className="flex flex-col gap-3 pb-12">
+                                    {filteredTemplates.map((template) => (
+                                        <TemplateListRow key={template.id} template={template} />
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
 
-                                <hr className="border-border" />
+                {/* Right Side Builder Panel (Now Sheet Modal) */}
+                <Sheet open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
+                    <SheetContent className="w-[620px] sm:max-w-[620px] p-0 flex flex-col gap-0 border-l border-border bg-card shadow-2xl">
+                        <div className='flex flex-col h-full'>
+                            {/* Panel Header */}
+                            <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30 text-left">
+                                <SheetTitle className="text-lg font-semibold text-foreground">
+                                    {editingId ? 'Edit Template' : 'Create Template'}
+                                </SheetTitle>
+                                <SheetDescription className="text-xs text-muted-foreground">
+                                    Configure your WhatsApp message template content and interactive elements.
+                                </SheetDescription>
+                            </SheetHeader>
 
-                                {/* Conditional Media / Location Inputs */}
-                                {['image', 'video', 'audio', 'document'].includes(formData.type) &&
-                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-sm font-semibold text-foreground">
-                                                {formData.type.charAt(0).toUpperCase() + formData.type.slice(1).toLowerCase()} URL
-                                            </label>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-6 text-[10px] text-primary hover:bg-primary/5 uppercase font-bold"
-                                                onClick={() => onOpen('mediaLibrary', {
-                                                    workspaceId,
-                                                    onSelect: (url) => setFormData({
-                                                        ...formData,
-                                                        metadata: { ...formData.metadata, mediaUrl: url }
-                                                    })
-                                                })}
-                                            >
-                                                <Sparkles className="w-3 h-3 mr-1.5" /> Choose from Media Hub
-                                            </Button>
+                            <ScrollArea className='h-[85%]'>
+                                {/* Main Form Area */}
+                                <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-border">
+
+                                    {/* Basic Info */}
+                                    <div className="space-y-4">
+
+
+                                        <div>
+                                            <label className="text-sm font-semibold text-foreground mb-1.5 block">Template Name</label>
+                                            <Input
+                                                placeholder="e.g. welcome_message_v1"
+                                                value={formData.name || ''}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    setFormData({ ...formData, name: value });
+                                                }}
+                                                className="bg-background border-border" />
+
+                                            <p className="text-[11px] text-muted-foreground mt-1">Lowercase letters, numbers, and underscores only. Spaces and dashes will be converted.</p>
                                         </div>
-                                        <Input
-                                            placeholder={`https://example.com/my-${formData.type.toLowerCase()}.ext`}
-                                            value={formData.metadata?.mediaUrl || ''}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                metadata: { ...formData.metadata, mediaUrl: e.target.value }
-                                            })}
-                                            className="bg-background border-border" />
 
-                                        <p className="text-[11px] text-muted-foreground">Ensure the link is publicly accessible.</p>
-                                    </div>
-                                }
-
-                                {formData.type === 'location' &&
-                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-xs font-semibold text-foreground mb-1 block">Latitude</label>
-                                                <Input
-                                                    placeholder="e.g. 18.5204"
-                                                    value={formData.metadata?.latitude || ''}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        metadata: { ...formData.metadata, latitude: e.target.value }
-                                                    })} />
-
+                                                <label className="text-xs font-semibold text-foreground mb-1.5 block">Category</label>
+                                                <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                                                    <SelectTrigger className="bg-background border-border">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="UTILITY">Utility</SelectItem>
+                                                        <SelectItem value="MARKETING">Marketing</SelectItem>
+                                                        <SelectItem value="AUTHENTICATION">Authentication</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                             <div>
-                                                <label className="text-sm font-semibold text-foreground mb-1 block">Longitude</label>
+                                                <label className="text-sm font-semibold text-foreground mb-1.5 block">Language</label>
+                                                <Select value={formData.language} onValueChange={(v) => setFormData({ ...formData, language: v })}>
+                                                    <SelectTrigger className="bg-background border-border">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="en_US">English (US)</SelectItem>
+                                                        <SelectItem value="en_GB">English (UK)</SelectItem>
+                                                        <SelectItem value="es">Spanish</SelectItem>
+                                                        <SelectItem value="fr">French</SelectItem>
+                                                        <SelectItem value="hi">Hindi</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-semibold text-foreground mb-1.5 block">Message Type</label>
+                                            <Select
+                                                value={formData.type}
+                                                onValueChange={(v) => {
+                                                    let newMetadata = { ...formData.metadata };
+                                                    if (v === 'interactive-group' && (!newMetadata.listSections || newMetadata.listSections.length === 0)) {
+                                                        newMetadata.listSections = [{ title: 'Options', rows: [{ title: '', description: '' }] }];
+                                                        newMetadata.listButton = 'Select Option';
+                                                    }
+                                                    setFormData({ ...formData, type: v, metadata: newMetadata });
+                                                }}>
+
+                                                <SelectTrigger className="bg-background border-border">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="text">Standard Text</SelectItem>
+                                                    <SelectItem value="image">Image</SelectItem>
+                                                    <SelectItem value="video">Video</SelectItem>
+                                                    <SelectItem value="audio">Audio</SelectItem>
+                                                    <SelectItem value="document">Document / PDF</SelectItem>
+                                                    <SelectItem value="location">Location</SelectItem>
+                                                    <SelectItem value="contact">Contact (vCard)</SelectItem>
+                                                    <SelectItem value="interactive-button">Interactive (Buttons)</SelectItem>
+                                                    <SelectItem value="interactive-group">Interactive (Group)</SelectItem>
+                                                    <SelectItem value="carousel">Template / Carousel (Advanced)</SelectItem>
+                                                    <SelectItem value="view_once">Disappearing / View Once</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+
+                                    </div>
+
+                                    <hr className="border-border" />
+
+                                    {/* Conditional Media / Location Inputs */}
+                                    {['image', 'video', 'audio', 'document'].includes(formData.type) &&
+                                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-semibold text-foreground">
+                                                    {formData.type.charAt(0).toUpperCase() + formData.type.slice(1).toLowerCase()} URL
+                                                </label>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 text-[10px] text-primary hover:bg-primary/5 uppercase font-bold"
+                                                    onClick={() => onOpen('mediaLibrary', {
+                                                        workspaceId,
+                                                        onSelect: (url) => setFormData({
+                                                            ...formData,
+                                                            metadata: { ...formData.metadata, mediaUrl: url }
+                                                        })
+                                                    })}
+                                                >
+                                                    <Sparkles className="w-3 h-3 mr-1.5" /> Choose from Media Hub
+                                                </Button>
+                                            </div>
+                                            <Input
+                                                placeholder={`https://example.com/my-${formData.type.toLowerCase()}.ext`}
+                                                value={formData.metadata?.mediaUrl || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    metadata: { ...formData.metadata, mediaUrl: e.target.value }
+                                                })}
+                                                className="bg-background border-border" />
+
+                                            <p className="text-[11px] text-muted-foreground">Ensure the link is publicly accessible.</p>
+                                        </div>
+                                    }
+
+                                    {formData.type === 'location' &&
+                                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-xs font-semibold text-foreground mb-1 block">Latitude</label>
+                                                    <Input
+                                                        placeholder="e.g. 18.5204"
+                                                        value={formData.metadata?.latitude || ''}
+                                                        onChange={(e) => setFormData({
+                                                            ...formData,
+                                                            metadata: { ...formData.metadata, latitude: e.target.value }
+                                                        })} />
+
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-semibold text-foreground mb-1 block">Longitude</label>
+                                                    <Input
+                                                        placeholder="e.g. 73.8567"
+                                                        value={formData.metadata?.longitude || ''}
+                                                        onChange={(e) => setFormData({
+                                                            ...formData,
+                                                            metadata: { ...formData.metadata, longitude: e.target.value }
+                                                        })} />
+
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-semibold text-foreground mb-1 block">Location Name</label>
                                                 <Input
-                                                    placeholder="e.g. 73.8567"
-                                                    value={formData.metadata?.longitude || ''}
+                                                    placeholder="e.g. Central Park"
+                                                    value={formData.metadata?.locationName || ''}
                                                     onChange={(e) => setFormData({
                                                         ...formData,
-                                                        metadata: { ...formData.metadata, longitude: e.target.value }
+                                                        metadata: { ...formData.metadata, locationName: e.target.value }
                                                     })} />
 
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="text-sm font-semibold text-foreground mb-1 block">Location Name</label>
-                                            <Input
-                                                placeholder="e.g. Central Park"
-                                                value={formData.metadata?.locationName || ''}
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    metadata: { ...formData.metadata, locationName: e.target.value }
-                                                })} />
-
-                                        </div>
-                                    </div>
-                                }
-
-                                {/* Message Content */}
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
-                                            Message Body
-                                            <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
-                                        </label>
-                                        <Textarea
-                                            placeholder="Hello {{1}}, your order {{2}} is ready..."
-                                            className="min-h-[120px] resize-none bg-background border-border"
-                                            value={formData.body || ''}
-                                            onChange={(e) => setFormData({ ...formData, body: e.target.value })} />
-
-                                    </div>
-
-                                    <div>
-                                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Footer (Optional)</label>
-                                        <Input
-                                            placeholder="e.g. Reply STOP to unsubscribe"
-                                            className="text-sm bg-background border-border"
-                                            value={formData.footer || ''}
-                                            onChange={(e) => setFormData({ ...formData, footer: e.target.value })} />
-
-                                    </div>
-
-                                    {/* List Configuration (Interactive Group) */}
-                                    {formData.type === 'interactive-group' &&
-                                        <div className="bg-muted/30 p-4 rounded-md border border-border space-y-4">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-semibold text-foreground">List Button Label</label>
-                                                <Input
-                                                    placeholder="e.g. View Menu"
-                                                    value={formData.metadata?.listButton || ''}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        metadata: { ...formData.metadata, listButton: e.target.value }
-                                                    })}
-                                                    maxLength={20} />
-
-                                            </div>                                                <div className="space-y-6">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-sm font-semibold text-foreground">Options Groups</label>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7 text-xs gap-1.5 px-2 border"
-                                                        onClick={() => {
-                                                            const newSections = [...(formData.metadata?.listSections || [])];
-                                                            if (newSections.length < 3) {
-                                                                newSections.push({ title: `Group ${newSections.length + 1}`, rows: [{ title: '', description: '' }] });
-                                                                setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
-                                                            }
-                                                        }}
-                                                        disabled={(formData.metadata?.listSections || []).length >= 3}>
-
-                                                        <Plus className="w-3 h-3" />
-                                                        Add Group
-                                                    </Button>
-                                                </div>
-
-                                                {(formData.metadata?.listSections || []).map((section, sIdx) =>
-                                                    <div key={sIdx} className="bg-background/50 p-3 rounded-md border border-border space-y-3 relative group/section">
-                                                        <div className="flex items-center gap-2">
-                                                            <Input
-                                                                placeholder="Section Title (e.g. Beverages)"
-                                                                className="h-8 font-medium bg-muted/20"
-                                                                value={section.title}
-                                                                onChange={(e) => {
-                                                                    const newSections = [...formData.metadata.listSections];
-                                                                    newSections[sIdx].title = e.target.value;
-                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
-                                                                }}
-                                                                maxLength={24} />
-
-                                                            {formData.metadata.listSections.length > 1 &&
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                                                    onClick={() => {
-                                                                        const newSections = formData.metadata.listSections.filter((_, i) => i !== sIdx);
-                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
-                                                                    }}>
-
-                                                                    <X className="h-4 w-4" />
-                                                                </Button>
-                                                            }
-                                                        </div>
-
-                                                        <div className="space-y-2 pl-2 border-l-2 border-primary/20">
-                                                            {(section.rows || []).map((row, rIdx) =>
-                                                                <div key={rIdx} className="space-y-2 p-3 bg-background border border-border rounded-md relative group/row">
-                                                                    <Input
-                                                                        placeholder={`Option Title (e.g. Option ${rIdx + 1})`}
-                                                                        className="h-8 text-sm"
-                                                                        value={row.title}
-                                                                        onChange={(e) => {
-                                                                            const newSections = [...formData.metadata.listSections];
-                                                                            newSections[sIdx].rows[rIdx].title = e.target.value;
-                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
-                                                                        }}
-                                                                        maxLength={24} />
-
-                                                                    <Input
-                                                                        placeholder="Description (optional)"
-                                                                        className="h-7 text-xs"
-                                                                        value={row.description}
-                                                                        onChange={(e) => {
-                                                                            const newSections = [...formData.metadata.listSections];
-                                                                            newSections[sIdx].rows[rIdx].description = e.target.value;
-                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
-                                                                        }}
-                                                                        maxLength={72} />
-
-                                                                    {(section.rows.length > 1 || formData.metadata.listSections.length > 1) &&
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/row:opacity-100 transition-opacity"
-                                                                            onClick={() => {
-                                                                                const newSections = [...formData.metadata.listSections];
-                                                                                newSections[sIdx].rows = newSections[sIdx].rows.filter((_, i) => i !== rIdx);
-                                                                                setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
-                                                                            }}>
-
-                                                                            <X className="h-3 w-3" />
-                                                                        </Button>
-                                                                    }
-                                                                </div>
-                                                            )}
-
-                                                            {section.rows.length < 10 &&
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="w-full text-xs h-7 dashed"
-                                                                    onClick={() => {
-                                                                        const newSections = [...formData.metadata.listSections];
-                                                                        newSections[sIdx].rows.push({ title: '', description: '' });
-                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
-                                                                    }}>
-
-                                                                    <Plus className="w-3 h-3" />
-                                                                    Add Option
-                                                                </Button>
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    }                                    {/* Interactive Buttons Config */}
-                                    {formData.type === 'interactive-button' &&
-                                        <div className="bg-muted/30 p-4 rounded-md border border-border space-y-3">
-                                            <label className="text-sm font-semibold text-foreground flex items-center justify-between">
-                                                Quick Reply Buttons
-                                                {formData.buttons.length < 3 &&
-                                                    <Button variant="ghost" size="sm" onClick={addButton} className="px-2 text-xs text-primary bg-primary/10 hover:bg-primary/20">
-                                                        <Plus className="w-3 h-3 mr-1" /> Add Button
-                                                    </Button>
-                                                }
-                                            </label>
-                                            {formData.buttons.map((btn, idx) =>
-                                                <div key={idx} className="flex items-center gap-2">
-                                                    <Input
-                                                        placeholder={`Button ${idx + 1} text`}
-                                                        value={btn || ''}
-                                                        onChange={(e) => handleButtonChange(idx, e.target.value)}
-                                                        className="bg-background border-border"
-                                                        maxLength={20} />
-                                                    {formData.buttons.length > 1 &&
-                                                        <Button variant="ghost" size="icon" onClick={() => removeButton(idx)} className="text-muted-foreground hover:text-destructive shrink-0">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    }
-                                                </div>
-                                            )}
-                                        </div>
                                     }
 
-                                    {/* Carousel Config */}
-                                    {formData.type === 'carousel' &&
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    Carousel Cards
-                                                    <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded uppercase">
-                                                        {formData.metadata?.carouselCards?.length || 0} / 10
-                                                    </span>
-                                                </label>
-                                                {(formData.metadata?.carouselCards?.length || 0) < 10 &&
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="h-7 text-xs border-dashed"
-                                                        onClick={() => {
-                                                            const newCards = [...(formData.metadata.carouselCards || [])];
-                                                            newCards.push({ title: '', description: '', imageUrl: '', buttonText: 'View Details' });
-                                                            setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
-                                                        }}
-                                                    >
-                                                        <Plus className="w-3 h-3 mr-1" /> Add Card
-                                                    </Button>
-                                                }
-                                            </div>
+                                    {/* Message Content */}
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
+                                                Message Body
+                                                <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
+                                            </label>
+                                            <Textarea
+                                                placeholder="Hello {{1}}, your order {{2}} is ready..."
+                                                className="min-h-[120px] resize-none bg-background border-border"
+                                                value={formData.body || ''}
+                                                onChange={(e) => setFormData({ ...formData, body: e.target.value })} />
 
-                                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                                {formData.metadata?.carouselCards?.map((card, cIdx) => (
-                                                    <div key={cIdx} className="p-3 bg-muted/30 rounded-md border border-border relative group/card">
-                                                        <div className="grid gap-3">
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex items-center justify-between">
-                                                                    <label className="text-[11px] font-bold uppercase text-muted-foreground">Card {cIdx + 1} Image</label>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-semibold text-foreground mb-1.5 block">Footer (Optional)</label>
+                                            <Input
+                                                placeholder="e.g. Reply STOP to unsubscribe"
+                                                className="text-sm bg-background border-border"
+                                                value={formData.footer || ''}
+                                                onChange={(e) => setFormData({ ...formData, footer: e.target.value })} />
+
+                                        </div>
+
+                                        {/* List Configuration (Interactive Group) */}
+                                        {formData.type === 'interactive-group' &&
+                                            <div className="bg-muted/30 p-4 rounded-md border border-border space-y-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-semibold text-foreground">List Button Label</label>
+                                                    <Input
+                                                        placeholder="e.g. View Menu"
+                                                        value={formData.metadata?.listButton || ''}
+                                                        onChange={(e) => setFormData({
+                                                            ...formData,
+                                                            metadata: { ...formData.metadata, listButton: e.target.value }
+                                                        })}
+                                                        maxLength={20} />
+
+                                                </div>                                                <div className="space-y-6">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-sm font-semibold text-foreground">Options Groups</label>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-7 text-xs gap-1.5 px-2 border"
+                                                            onClick={() => {
+                                                                const newSections = [...(formData.metadata?.listSections || [])];
+                                                                if (newSections.length < 3) {
+                                                                    newSections.push({ title: `Group ${newSections.length + 1}`, rows: [{ title: '', description: '' }] });
+                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
+                                                                }
+                                                            }}
+                                                            disabled={(formData.metadata?.listSections || []).length >= 3}>
+
+                                                            <Plus className="w-3 h-3" />
+                                                            Add Group
+                                                        </Button>
+                                                    </div>
+
+                                                    {(formData.metadata?.listSections || []).map((section, sIdx) =>
+                                                        <div key={sIdx} className="bg-background/50 p-3 rounded-md border border-border space-y-3 relative group/section">
+                                                            <div className="flex items-center gap-2">
+                                                                <Input
+                                                                    placeholder="Section Title (e.g. Beverages)"
+                                                                    className="h-8 font-medium bg-muted/20"
+                                                                    value={section.title}
+                                                                    onChange={(e) => {
+                                                                        const newSections = [...formData.metadata.listSections];
+                                                                        newSections[sIdx].title = e.target.value;
+                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
+                                                                    }}
+                                                                    maxLength={24} />
+
+                                                                {formData.metadata.listSections.length > 1 &&
                                                                     <Button
                                                                         variant="ghost"
-                                                                        size="sm"
-                                                                        className="h-5 text-[9px] text-primary hover:bg-primary/5 uppercase font-bold"
-                                                                        onClick={() => onOpen('mediaLibrary', {
-                                                                            workspaceId,
-                                                                            onSelect: (url) => {
-                                                                                const newCards = [...formData.metadata.carouselCards];
-                                                                                newCards[cIdx].imageUrl = url;
-                                                                                setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
-                                                                            }
-                                                                        })}
-                                                                    >
-                                                                        <Sparkles className="w-2.5 h-2.5 mr-1" /> Choose Image
+                                                                        size="icon"
+                                                                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                                                        onClick={() => {
+                                                                            const newSections = formData.metadata.listSections.filter((_, i) => i !== sIdx);
+                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
+                                                                        }}>
+
+                                                                        <X className="h-4 w-4" />
                                                                     </Button>
-                                                                </div>
-                                                                <Input
-                                                                    placeholder="Image URL"
-                                                                    value={card.imageUrl}
-                                                                    onChange={(e) => {
-                                                                        const newCards = [...formData.metadata.carouselCards];
-                                                                        newCards[cIdx].imageUrl = e.target.value;
-                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
-                                                                    }}
-                                                                    className="h-8 text-xs"
-                                                                />
+                                                                }
                                                             </div>
 
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                <div className="space-y-1.5">
-                                                                    <label className="text-[11px] font-bold uppercase text-muted-foreground">Title</label>
-                                                                    <Input
-                                                                        placeholder="Card Title"
-                                                                        value={card.title}
-                                                                        onChange={(e) => {
-                                                                            const newCards = [...formData.metadata.carouselCards];
-                                                                            newCards[cIdx].title = e.target.value;
-                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
-                                                                        }}
-                                                                        className="h-8 text-xs"
-                                                                        maxLength={24}
-                                                                    />
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <label className="text-[11px] font-bold uppercase text-muted-foreground">Button Text</label>
-                                                                    <Input
-                                                                        placeholder="Button Text"
-                                                                        value={card.buttonText}
-                                                                        onChange={(e) => {
-                                                                            const newCards = [...formData.metadata.carouselCards];
-                                                                            newCards[cIdx].buttonText = e.target.value;
-                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
-                                                                        }}
-                                                                        className="h-8 text-xs"
-                                                                        maxLength={20}
-                                                                    />
-                                                                </div>
-                                                            </div>
+                                                            <div className="space-y-2 pl-2 border-l-2 border-primary/20">
+                                                                {(section.rows || []).map((row, rIdx) =>
+                                                                    <div key={rIdx} className="space-y-2 p-3 bg-background border border-border rounded-md relative group/row">
+                                                                        <Input
+                                                                            placeholder={`Option Title (e.g. Option ${rIdx + 1})`}
+                                                                            className="h-8 text-sm"
+                                                                            value={row.title}
+                                                                            onChange={(e) => {
+                                                                                const newSections = [...formData.metadata.listSections];
+                                                                                newSections[sIdx].rows[rIdx].title = e.target.value;
+                                                                                setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
+                                                                            }}
+                                                                            maxLength={24} />
 
-                                                            <div className="space-y-1.5">
-                                                                <label className="text-[11px] font-bold uppercase text-muted-foreground">Description</label>
-                                                                <Textarea
-                                                                    placeholder="Short description..."
-                                                                    value={card.description}
-                                                                    onChange={(e) => {
-                                                                        const newCards = [...formData.metadata.carouselCards];
-                                                                        newCards[cIdx].description = e.target.value;
-                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
-                                                                    }}
-                                                                    className="text-xs min-h-[60px]"
-                                                                    maxLength={72}
-                                                                />
-                                                            </div>
-                                                        </div>
+                                                                        <Input
+                                                                            placeholder="Description (optional)"
+                                                                            className="h-7 text-xs"
+                                                                            value={row.description}
+                                                                            onChange={(e) => {
+                                                                                const newSections = [...formData.metadata.listSections];
+                                                                                newSections[sIdx].rows[rIdx].description = e.target.value;
+                                                                                setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
+                                                                            }}
+                                                                            maxLength={72} />
 
-                                                        {formData.metadata.carouselCards.length > 1 &&
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/card:opacity-100 transition-opacity shadow-sm"
-                                                                onClick={() => {
-                                                                    const newCards = formData.metadata.carouselCards.filter((_, i) => i !== cIdx);
-                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
-                                                                }}
-                                                            >
-                                                                <X className="h-3 w-3" />
-                                                            </Button>
-                                                        }
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
+                                                                        {(section.rows.length > 1 || formData.metadata.listSections.length > 1) &&
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/row:opacity-100 transition-opacity"
+                                                                                onClick={() => {
+                                                                                    const newSections = [...formData.metadata.listSections];
+                                                                                    newSections[sIdx].rows = newSections[sIdx].rows.filter((_, i) => i !== rIdx);
+                                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
+                                                                                }}>
 
-                                {/* Live Preview UI */}
-                                <div className="mt-8 pt-6 border-t border-border">
-                                    <div className="bg-muted/30 p-4 border border-border rounded-md shadow-inner min-h-[250px] flex flex-col max-w-[320px] mx-auto relative overflow-hidden">
-                                        <h3 className="text-xs font-semibold text-muted-foreground tracking-wider mb-4 flex items-center gap-2">
-                                            <Smartphone className="w-4 h-4" /> Preview
-                                        </h3>
-
-                                        {/* Preview Content Toggle */}
-                                        {formData.type === 'carousel' ? (
-                                            <div className="space-y-3">
-                                                {/* Header Body Footer */}
-                                                <div className="bg-background border border-border rounded-md rounded-tl-none p-3 shadow-sm text-[14.5px] self-start w-full max-w-[280px]">
-                                                    <div className="body-text">{formData.body || <span className="text-muted-foreground italic">Body content...</span>}</div>
-                                                    {formData.footer && <div className="text-[12px] text-muted-foreground mt-2">{formData.footer}</div>}
-                                                </div>
-
-                                                {/* Horizontal Cards */}
-                                                <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar snap-x snap-mandatory">
-                                                    {(formData.metadata?.carouselCards || []).map((card, idx) => (
-                                                        <div key={idx} className="min-w-[220px] bg-background border border-border rounded-lg overflow-hidden shadow-md snap-center flex flex-col">
-                                                            <div className="aspect-video bg-muted/30 flex items-center justify-center relative">
-                                                                {card.imageUrl ? (
-                                                                    <img src={card.imageUrl} className="w-full h-full object-cover" alt="card" />
-                                                                ) : (
-                                                                    <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                                                                                <X className="h-3 w-3" />
+                                                                            </Button>
+                                                                        }
+                                                                    </div>
                                                                 )}
+
+                                                                {section.rows.length < 10 &&
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="w-full text-xs h-7 dashed"
+                                                                        onClick={() => {
+                                                                            const newSections = [...formData.metadata.listSections];
+                                                                            newSections[sIdx].rows.push({ title: '', description: '' });
+                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, listSections: newSections } });
+                                                                        }}>
+
+                                                                        <Plus className="w-3 h-3" />
+                                                                        Add Option
+                                                                    </Button>
+                                                                }
                                                             </div>
-                                                            <div className="p-3 flex-1 flex flex-col">
-                                                                <h4 className="text-sm font-bold text-foreground truncate">{card.title || 'Untitled Card'}</h4>
-                                                                <p className="text-[12px] text-muted-foreground line-clamp-2 mt-1 flex-1">
-                                                                    {card.description || 'No description...'}
-                                                                </p>
-                                                                <div className="mt-3 pt-3 border-t border-border text-center text-primary font-bold text-[13px]">
-                                                                    {card.buttonText || 'View Details'}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                    {(!formData.metadata?.carouselCards || formData.metadata.carouselCards.length === 0) && (
-                                                        <div className="min-w-[220px] h-[200px] bg-muted/20 border-dashed border border-border rounded-lg flex items-center justify-center text-muted-foreground text-xs">
-                                                            No cards added...
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                        ) : (
-                                            /* Standard Bubble Preview */
-                                            <div className="relative z-10 bg-background border border-border rounded-md rounded-tl-none p-0 overflow-hidden shadow-sm max-w-[95%] text-[14.5px] text-foreground break-words whitespace-pre-wrap leading-relaxed mt-2 self-start w-full">
-                                                {/* Media Rendering */}
-                                                {formData.type === 'image' &&
-                                                    <div className="aspect-video bg-muted/50 flex items-center justify-center border-b border-border">
-                                                        {formData.metadata?.mediaUrl ?
-                                                            <img src={formData.metadata.mediaUrl} className="w-full h-full object-cover" alt="preview" onError={(e) => { e.target.style.display = 'none'; }} /> :
-                                                            <ImageIcon className="w-8 h-8 text-muted-foreground/40" />}
+                                        }                                    {/* Interactive Buttons Config */}
+                                        {formData.type === 'interactive-button' &&
+                                            <div className="bg-muted/30 p-4 rounded-md border border-border space-y-3">
+                                                <label className="text-sm font-semibold text-foreground flex items-center justify-between">
+                                                    Quick Reply Buttons
+                                                    {formData.buttons.length < 3 &&
+                                                        <Button variant="ghost" size="sm" onClick={addButton} className="px-2 text-xs text-primary bg-primary/10 hover:bg-primary/20">
+                                                            <Plus className="w-3 h-3 mr-1" /> Add Button
+                                                        </Button>
+                                                    }
+                                                </label>
+                                                {formData.buttons.map((btn, idx) =>
+                                                    <div key={idx} className="flex items-center gap-2">
+                                                        <Input
+                                                            placeholder={`Button ${idx + 1} text`}
+                                                            value={btn || ''}
+                                                            onChange={(e) => handleButtonChange(idx, e.target.value)}
+                                                            className="bg-background border-border"
+                                                            maxLength={20} />
+                                                        {formData.buttons.length > 1 &&
+                                                            <Button variant="ghost" size="icon" onClick={() => removeButton(idx)} className="text-muted-foreground hover:text-destructive shrink-0">
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        }
                                                     </div>
-                                                }
-                                                {formData.type === 'video' &&
-                                                    <div className="aspect-video bg-black/80 flex items-center justify-center border-b border-border text-white">
-                                                        <Video className="w-10 opacity-70" />
-                                                    </div>
-                                                }
-                                                {formData.type === 'audio' &&
-                                                    <div className="p-3 bg-muted/20 border-b border-border flex items-center gap-3">
-                                                        <div className="w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                                                            <Music className="w-5 h-5" />
-                                                        </div>
-                                                        <div className="flex-1 h-3 bg-muted/50 rounded-full relative">
-                                                            <div className="absolute left-0 top-0 bottom-0 w-1/3 bg-primary/40 rounded-full"></div>
-                                                        </div>
-                                                    </div>
-                                                }
-                                                {formData.type === 'document' &&
-                                                    <div className="p-3 bg-muted/20 border-b border-border flex items-center gap-3">
-                                                        <div className="w-10 bg-blue-500/10 rounded-md flex items-center justify-center text-blue-500">
-                                                            <File className="w-6 h-6" />
-                                                        </div>
-                                                        <div className="flex-1 overflow-hidden">
-                                                            <div className="text-sm font-medium truncate">Document.pdf</div>
-                                                            <div className="text-xs text-muted-foreground">1.2 MB • PDF</div>
-                                                        </div>
-                                                    </div>
-                                                }
-                                                {formData.type === 'location' &&
-                                                    <div className="aspect-video bg-muted/10 border-b border-border relative flex flex-col items-center justify-center p-4 text-center">
-                                                        <div className="w-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-2">
-                                                            <MapPin className="w-6 h-6" />
-                                                        </div>
-                                                        <div className="text-sm font-semibold">{formData.metadata?.locationName || 'Select Location'}</div>
-                                                        <div className="text-[11px] text-muted-foreground">Click to view on maps</div>
-                                                        <div className="absolute bottom-0 right-0 p-1 opacity-10">
-                                                            <Smartphone className="w-16 h-16 rotate-12" />
-                                                        </div>
-                                                    </div>
-                                                }
+                                                )}
+                                            </div>
+                                        }
 
-                                                <div className="p-3">
-                                                    {formData.body || <span className="text-muted-foreground italic">Body content...</span>}
-                                                    {formData.footer && <div className="text-[12px] text-muted-foreground mt-2">{formData.footer}</div>}
-                                                    <div className="text-[10px] text-muted-foreground text-right mt-1 ml-4 flex justify-end items-center gap-1">
-                                                        10:42 AM <Check className="w-3 h-3 text-primary" />
-                                                    </div>
+                                        {/* Carousel Config */}
+                                        {formData.type === 'carousel' &&
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        Carousel Cards
+                                                        <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded uppercase">
+                                                            {formData.metadata?.carouselCards?.length || 0} / 10
+                                                        </span>
+                                                    </label>
+                                                    {(formData.metadata?.carouselCards?.length || 0) < 10 &&
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-7 text-xs border-dashed"
+                                                            onClick={() => {
+                                                                const newCards = [...(formData.metadata.carouselCards || [])];
+                                                                newCards.push({ title: '', description: '', imageUrl: '', buttonText: 'View Details' });
+                                                                setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
+                                                            }}
+                                                        >
+                                                            <Plus className="w-3 h-3 mr-1" /> Add Card
+                                                        </Button>
+                                                    }
                                                 </div>
 
-                                                {/* Interactive Group Button */}
-                                                {formData.type === 'interactive-group' &&
-                                                    <div className="mx-0 mb-0 border-t border-border bg-muted/10 p-3">
-                                                        <div className="flex items-center justify-center gap-2 py-2 w-full bg-background border border-border rounded-md text-primary text-sm font-medium shadow-sm">
-                                                            <MessageSquare className="w-4 h-4" />
-                                                            {formData.metadata?.listButton || 'Select Option'}
+                                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    {formData.metadata?.carouselCards?.map((card, cIdx) => (
+                                                        <div key={cIdx} className="p-3 bg-muted/30 rounded-md border border-border relative group/card">
+                                                            <div className="grid gap-3">
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <label className="text-[11px] font-bold uppercase text-muted-foreground">Card {cIdx + 1} Image</label>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="h-5 text-[9px] text-primary hover:bg-primary/5 uppercase font-bold"
+                                                                            onClick={() => onOpen('mediaLibrary', {
+                                                                                workspaceId,
+                                                                                onSelect: (url) => {
+                                                                                    const newCards = [...formData.metadata.carouselCards];
+                                                                                    newCards[cIdx].imageUrl = url;
+                                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
+                                                                                }
+                                                                            })}
+                                                                        >
+                                                                            <Sparkles className="w-2.5 h-2.5 mr-1" /> Choose Image
+                                                                        </Button>
+                                                                    </div>
+                                                                    <Input
+                                                                        placeholder="Image URL"
+                                                                        value={card.imageUrl}
+                                                                        onChange={(e) => {
+                                                                            const newCards = [...formData.metadata.carouselCards];
+                                                                            newCards[cIdx].imageUrl = e.target.value;
+                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
+                                                                        }}
+                                                                        className="h-8 text-xs"
+                                                                    />
+                                                                </div>
+
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    <div className="space-y-1.5">
+                                                                        <label className="text-[11px] font-bold uppercase text-muted-foreground">Title</label>
+                                                                        <Input
+                                                                            placeholder="Card Title"
+                                                                            value={card.title}
+                                                                            onChange={(e) => {
+                                                                                const newCards = [...formData.metadata.carouselCards];
+                                                                                newCards[cIdx].title = e.target.value;
+                                                                                setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
+                                                                            }}
+                                                                            className="h-8 text-xs"
+                                                                            maxLength={24}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-1.5">
+                                                                        <label className="text-[11px] font-bold uppercase text-muted-foreground">Button Text</label>
+                                                                        <Input
+                                                                            placeholder="Button Text"
+                                                                            value={card.buttonText}
+                                                                            onChange={(e) => {
+                                                                                const newCards = [...formData.metadata.carouselCards];
+                                                                                newCards[cIdx].buttonText = e.target.value;
+                                                                                setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
+                                                                            }}
+                                                                            className="h-8 text-xs"
+                                                                            maxLength={20}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="space-y-1.5">
+                                                                    <label className="text-[11px] font-bold uppercase text-muted-foreground">Description</label>
+                                                                    <Textarea
+                                                                        placeholder="Short description..."
+                                                                        value={card.description}
+                                                                        onChange={(e) => {
+                                                                            const newCards = [...formData.metadata.carouselCards];
+                                                                            newCards[cIdx].description = e.target.value;
+                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
+                                                                        }}
+                                                                        className="text-xs min-h-[60px]"
+                                                                        maxLength={72}
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            {formData.metadata.carouselCards.length > 1 &&
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/card:opacity-100 transition-opacity shadow-sm"
+                                                                    onClick={() => {
+                                                                        const newCards = formData.metadata.carouselCards.filter((_, i) => i !== cIdx);
+                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, carouselCards: newCards } });
+                                                                    }}
+                                                                >
+                                                                    <X className="h-3 w-3" />
+                                                                </Button>
+                                                            }
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    {/* Live Preview UI */}
+                                    <div className="mt-8 pt-6 border-t border-border">
+                                        <div className="bg-muted/30 p-4 border border-border rounded-md shadow-inner min-h-[250px] flex flex-col max-w-[320px] mx-auto relative overflow-hidden">
+                                            <h3 className="text-xs font-semibold text-muted-foreground tracking-wider mb-4 flex items-center gap-2">
+                                                <Smartphone className="w-4 h-4" /> Preview
+                                            </h3>
+
+                                            {/* Preview Content Toggle */}
+                                            {formData.type === 'carousel' ? (
+                                                <div className="space-y-3">
+                                                    {/* Header Body Footer */}
+                                                    <div className="bg-background border border-border rounded-md rounded-tl-none p-3 shadow-sm text-[14.5px] self-start w-full max-w-[280px]">
+                                                        <div className="body-text">{formData.body || <span className="text-muted-foreground italic">Body content...</span>}</div>
+                                                        {formData.footer && <div className="text-[12px] text-muted-foreground mt-2">{formData.footer}</div>}
+                                                    </div>
+
+                                                    {/* Horizontal Cards */}
+                                                    <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar snap-x snap-mandatory">
+                                                        {(formData.metadata?.carouselCards || []).map((card, idx) => (
+                                                            <div key={idx} className="min-w-[220px] bg-background border border-border rounded-lg overflow-hidden shadow-md snap-center flex flex-col">
+                                                                <div className="aspect-video bg-muted/30 flex items-center justify-center relative">
+                                                                    {card.imageUrl ? (
+                                                                        <img src={card.imageUrl} className="w-full h-full object-cover" alt="card" />
+                                                                    ) : (
+                                                                        <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="p-3 flex-1 flex flex-col">
+                                                                    <h4 className="text-sm font-bold text-foreground truncate">{card.title || 'Untitled Card'}</h4>
+                                                                    <p className="text-[12px] text-muted-foreground line-clamp-2 mt-1 flex-1">
+                                                                        {card.description || 'No description...'}
+                                                                    </p>
+                                                                    <div className="mt-3 pt-3 border-t border-border text-center text-primary font-bold text-[13px]">
+                                                                        {card.buttonText || 'View Details'}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        {(!formData.metadata?.carouselCards || formData.metadata.carouselCards.length === 0) && (
+                                                            <div className="min-w-[220px] h-[200px] bg-muted/20 border-dashed border border-border rounded-lg flex items-center justify-center text-muted-foreground text-xs">
+                                                                No cards added...
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* Standard Bubble Preview */
+                                                <div className="relative z-10 bg-background border border-border rounded-md rounded-tl-none p-0 overflow-hidden shadow-sm max-w-[95%] text-[14.5px] text-foreground break-words whitespace-pre-wrap leading-relaxed mt-2 self-start w-full">
+                                                    {/* Media Rendering */}
+                                                    {formData.type === 'image' &&
+                                                        <div className="aspect-video bg-muted/50 flex items-center justify-center border-b border-border">
+                                                            {formData.metadata?.mediaUrl ?
+                                                                <img src={formData.metadata.mediaUrl} className="w-full h-full object-cover" alt="preview" onError={(e) => { e.target.style.display = 'none'; }} /> :
+                                                                <ImageIcon className="w-8 h-8 text-muted-foreground/40" />}
+                                                        </div>
+                                                    }
+                                                    {formData.type === 'video' &&
+                                                        <div className="aspect-video bg-black/80 flex items-center justify-center border-b border-border text-white">
+                                                            <Video className="w-10 opacity-70" />
+                                                        </div>
+                                                    }
+                                                    {formData.type === 'audio' &&
+                                                        <div className="p-3 bg-muted/20 border-b border-border flex items-center gap-3">
+                                                            <div className="w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                                                                <Music className="w-5 h-5" />
+                                                            </div>
+                                                            <div className="flex-1 h-3 bg-muted/50 rounded-full relative">
+                                                                <div className="absolute left-0 top-0 bottom-0 w-1/3 bg-primary/40 rounded-full"></div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    {formData.type === 'document' &&
+                                                        <div className="p-3 bg-muted/20 border-b border-border flex items-center gap-3">
+                                                            <div className="w-10 bg-blue-500/10 rounded-md flex items-center justify-center text-blue-500">
+                                                                <File className="w-6 h-6" />
+                                                            </div>
+                                                            <div className="flex-1 overflow-hidden">
+                                                                <div className="text-sm font-medium truncate">Document.pdf</div>
+                                                                <div className="text-xs text-muted-foreground">1.2 MB • PDF</div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    {formData.type === 'location' &&
+                                                        <div className="aspect-video bg-muted/10 border-b border-border relative flex flex-col items-center justify-center p-4 text-center">
+                                                            <div className="w-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-2">
+                                                                <MapPin className="w-6 h-6" />
+                                                            </div>
+                                                            <div className="text-sm font-semibold">{formData.metadata?.locationName || 'Select Location'}</div>
+                                                            <div className="text-[11px] text-muted-foreground">Click to view on maps</div>
+                                                            <div className="absolute bottom-0 right-0 p-1 opacity-10">
+                                                                <Smartphone className="w-16 h-16 rotate-12" />
+                                                            </div>
+                                                        </div>
+                                                    }
+
+                                                    <div className="p-3">
+                                                        {formData.body || <span className="text-muted-foreground italic">Body content...</span>}
+                                                        {formData.footer && <div className="text-[12px] text-muted-foreground mt-2">{formData.footer}</div>}
+                                                        <div className="text-[10px] text-muted-foreground text-right mt-1 ml-4 flex justify-end items-center gap-1">
+                                                            10:42 AM <Check className="w-3 h-3 text-primary" />
                                                         </div>
                                                     </div>
-                                                }
 
-                                                {/* Interactive Quick Reply Buttons */}
-                                                {formData.type === 'interactive-button' && formData.buttons.filter((b) => b).length > 0 &&
-                                                    <div className="mx-0 mb-0 flex flex-col border-t border-border bg-muted/10">
-                                                        {formData.buttons.map((btn, idx) => btn ?
-                                                            <div key={idx} className={`py-2.5 text-center text-primary font-medium text-[15px] ${idx > 0 ? 'border-t border-border' : ''}`}>
-                                                                {btn}
-                                                            </div> :
-                                                            null)}
-                                                    </div>
-                                                }
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </ScrollArea>
+                                                    {/* Interactive Group Button */}
+                                                    {formData.type === 'interactive-group' &&
+                                                        <div className="mx-0 mb-0 border-t border-border bg-muted/10 p-3">
+                                                            <div className="flex items-center justify-center gap-2 py-2 w-full bg-background border border-border rounded-md text-primary text-sm font-medium shadow-sm">
+                                                                <MessageSquare className="w-4 h-4" />
+                                                                {formData.metadata?.listButton || 'Select Option'}
+                                                            </div>
+                                                        </div>
+                                                    }
 
-                        <SheetFooter className="p-2 border-t border-border bg-card flex flex-row items-center justify-end gap-3 shrink-0">
-                            <Button variant="ghost" onClick={() => openTestModal(formData)} disabled={!formData.body} className="mr-auto text-primary">
-                                <Send className="w-4 h-4 mr-2" /> Test
-                            </Button>
-                            <Button variant="outline" onClick={() => setIsBuilderOpen(false)}>Cancel</Button>
-                            <Button onClick={handleSave} disabled={!formData.name || !formData.body || isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                                {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                {editingId ? 'Save Changes' : 'Create Template'}
-                            </Button>
-                        </SheetFooter>
-                    </div>
-
-                </SheetContent>
-            </Sheet>
-
-            {/* Test Message Dialog */}
-            <Dialog open={isTestModalOpen} onOpenChange={setIsTestModalOpen}>
-                <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Send className="w-5 h-5 text-primary" /> Send Test Message
-                        </DialogTitle>
-                        <DialogDescription>
-                            Send a preview of this template to selected contacts or custom numbers.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="py-2 space-y-4">
-
-                        {/* Manual Input */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold flex items-center gap-2">
-                                <Smartphone className="w-4 h-4" /> Manual Numbers
-                            </label>
-                            <Input
-                                placeholder="919876543210, 919000000000"
-                                value={testRecipient || ''}
-                                onChange={(e) => setTestRecipient(e.target.value)} />
-
-                            {savedTestNumbers.length > 0 && (
-                                <div className="flex flex-wrap gap-2 border-t border-border/50 mt-3 pt-3">
-                                    <p className="w-full text-[10px] text-muted-foreground uppercase font-bold tracking-tight mb-1">Quick Select Saved Numbers:</p>
-                                    {savedTestNumbers.map((num) => (
-                                        <Badge
-                                            key={num}
-                                            variant="outline"
-                                            className={`cursor-pointer px-2 py-1 transition-all hover:bg-emerald-500/10 hover:border-emerald-500/30 ${testRecipient.includes(num) ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-500 font-bold' : 'text-muted-foreground'}`}
-                                            onClick={() => {
-                                                if (testRecipient.includes(num)) {
-                                                    setTestRecipient(prev => prev.split(',').map(s => s.trim()).filter(s => s !== num).join(', '));
-                                                } else {
-                                                    setTestRecipient(prev => prev ? `${prev}, ${num}` : num);
-                                                }
-                                            }}
-                                        >
-                                            {num}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            )}
-
-                            <p className="text-[10px] text-muted-foreground italic">Comma separated for multiple numbers.</p>
-                        </div>
-
-                        {/* Contacts Selection */}
-                        <div className="space-y-3 pt-2 border-t border-border">
-                            <label className="text-xs font-semibold flex items-center justify-between gap-2">
-                                <span className="flex items-center gap-2"><Users className="w-4 h-4" /> Select Contacts</span>
-                                {selectedContactIds.length > 0 &&
-                                    <Badge variant="secondary" className="font-normal">
-                                        {selectedContactIds.length} Selected
-                                    </Badge>
-                                }
-                            </label>
-
-                            <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search contacts..."
-                                    className="pl-9 h-9 text-sm"
-                                    value={contactSearch}
-                                    onChange={(e) => setContactSearch(e.target.value)} />
-
-                            </div>
-
-                            <ScrollArea className="h-[200px] border rounded-md p-1 bg-muted/10">
-                                {isFetchingContacts ?
-                                    <div className="flex items-center justify-center h-full">
-                                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                                    </div> :
-                                    filteredContacts.length > 0 ?
-                                        <div className="space-y-1">
-                                            {filteredContacts.map((contact) =>
-                                                <div
-                                                    key={contact.id}
-                                                    className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer"
-                                                    onClick={() => toggleContact(contact.id)}>
-
-                                                    <Checkbox checked={selectedContactIds.includes(contact.id)} />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-xs font-medium truncate">{contact.name}</p>
-                                                        <p className="text-[11px] text-muted-foreground">{contact.phone}</p>
-                                                    </div>
+                                                    {/* Interactive Quick Reply Buttons */}
+                                                    {formData.type === 'interactive-button' && formData.buttons.filter((b) => b).length > 0 &&
+                                                        <div className="mx-0 mb-0 flex flex-col border-t border-border bg-muted/10">
+                                                            {formData.buttons.map((btn, idx) => btn ?
+                                                                <div key={idx} className={`py-2.5 text-center text-primary font-medium text-[15px] ${idx > 0 ? 'border-t border-border' : ''}`}>
+                                                                    {btn}
+                                                                </div> :
+                                                                null)}
+                                                        </div>
+                                                    }
                                                 </div>
                                             )}
-                                        </div> :
-
-                                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs py-10">
-                                            <Users className="w-8 h-8 mb-2 opacity-20" />
-                                            <p>No contacts found.</p>
                                         </div>
-                                }
+                                    </div>
+                                </div>
                             </ScrollArea>
+
+                            <SheetFooter className="p-2 border-t border-border bg-card flex flex-row items-center justify-end gap-3 shrink-0">
+                                <Button variant="ghost" onClick={() => openTestModal(formData)} disabled={!formData.body} className="mr-auto text-primary">
+                                    <Send className="w-4 h-4 mr-2" /> Test
+                                </Button>
+                                <Button variant="outline" onClick={() => setIsBuilderOpen(false)}>Cancel</Button>
+                                <Button onClick={handleSave} disabled={!formData.name || !formData.body || isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                                    {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                    {editingId ? 'Save Changes' : 'Create Template'}
+                                </Button>
+                            </SheetFooter>
                         </div>
 
-                    </div>
+                    </SheetContent>
+                </Sheet>
 
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={() => setIsTestModalOpen(false)}>Cancel</Button>
-                        <Button
-                            onClick={handleSendTest}
-                            disabled={isTesting || selectedContactIds.length === 0 && !testRecipient}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                {/* Test Message Dialog */}
+                <Dialog open={isTestModalOpen} onOpenChange={setIsTestModalOpen}>
+                    <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Send className="w-5 h-5 text-primary" /> Send Test Message
+                            </DialogTitle>
+                            <DialogDescription>
+                                Send a preview of this template to selected contacts or custom numbers.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                            {isTesting ?
-                                <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Sending...
-                                </> :
+                        <div className="py-2 space-y-4">
 
-                                <>
-                                    <Send className="w-4 h-4 mr-2" />
-                                    Send to {selectedContactIds.length + testRecipient.split(',').filter((n) => n.trim()).length} Recipients
-                                </>
-                            }
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                            {/* Manual Input */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold flex items-center gap-2">
+                                    <Smartphone className="w-4 h-4" /> Manual Numbers
+                                </label>
+                                <Input
+                                    placeholder="919876543210, 919000000000"
+                                    value={testRecipient || ''}
+                                    onChange={(e) => setTestRecipient(e.target.value)} />
 
-            <MediaLibraryModal />
-        </div>);
+                                {savedTestNumbers.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 border-t border-border/50 mt-3 pt-3">
+                                        <p className="w-full text-[10px] text-muted-foreground uppercase font-bold tracking-tight mb-1">Quick Select Saved Numbers:</p>
+                                        {savedTestNumbers.map((num) => (
+                                            <Badge
+                                                key={num}
+                                                variant="outline"
+                                                className={`cursor-pointer px-2 py-1 transition-all hover:bg-emerald-500/10 hover:border-emerald-500/30 ${testRecipient.includes(num) ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-500 font-bold' : 'text-muted-foreground'}`}
+                                                onClick={() => {
+                                                    if (testRecipient.includes(num)) {
+                                                        setTestRecipient(prev => prev.split(',').map(s => s.trim()).filter(s => s !== num).join(', '));
+                                                    } else {
+                                                        setTestRecipient(prev => prev ? `${prev}, ${num}` : num);
+                                                    }
+                                                }}
+                                            >
+                                                {num}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
 
+                                <p className="text-[10px] text-muted-foreground italic">Comma separated for multiple numbers.</p>
+                            </div>
+
+                            {/* Contacts Selection */}
+                            <div className="space-y-3 pt-2 border-t border-border">
+                                <label className="text-xs font-semibold flex items-center justify-between gap-2">
+                                    <span className="flex items-center gap-2"><Users className="w-4 h-4" /> Select Contacts</span>
+                                    {selectedContactIds.length > 0 &&
+                                        <Badge variant="secondary" className="font-normal">
+                                            {selectedContactIds.length} Selected
+                                        </Badge>
+                                    }
+                                </label>
+
+                                <div className="relative">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search contacts..."
+                                        className="pl-9 h-9 text-sm"
+                                        value={contactSearch}
+                                        onChange={(e) => setContactSearch(e.target.value)} />
+
+                                </div>
+
+                                <ScrollArea className="h-[200px] border rounded-md p-1 bg-muted/10">
+                                    {isFetchingContacts ?
+                                        <div className="flex items-center justify-center h-full">
+                                            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                                        </div> :
+                                        filteredContacts.length > 0 ?
+                                            <div className="space-y-1">
+                                                {filteredContacts.map((contact) =>
+                                                    <div
+                                                        key={contact.id}
+                                                        className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer"
+                                                        onClick={() => toggleContact(contact.id)}>
+
+                                                        <Checkbox checked={selectedContactIds.includes(contact.id)} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-medium truncate">{contact.name}</p>
+                                                            <p className="text-[11px] text-muted-foreground">{contact.phone}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div> :
+
+                                            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs py-10">
+                                                <Users className="w-8 h-8 mb-2 opacity-20" />
+                                                <p>No contacts found.</p>
+                                            </div>
+                                    }
+                                </ScrollArea>
+                            </div>
+
+                        </div>
+
+                        <DialogFooter className="gap-2">
+                            <Button variant="outline" onClick={() => setIsTestModalOpen(false)}>Cancel</Button>
+                            <Button
+                                onClick={handleSendTest}
+                                disabled={isTesting || selectedContactIds.length === 0 && !testRecipient}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground">
+
+                                {isTesting ?
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Sending...
+                                    </> :
+
+                                    <>
+                                        <Send className="w-4 h-4 mr-2" />
+                                        Send to {selectedContactIds.length + testRecipient.split(',').filter((n) => n.trim()).length} Recipients
+                                    </>
+                                }
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <MediaLibraryModal />
+            </div>
+        </TooltipProvider>
+    );
 }

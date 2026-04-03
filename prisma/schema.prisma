@@ -322,23 +322,25 @@ model WhatsAppAuth {
 }
 
 model MessageTemplate {
-  id        String     @id @default(cuid())
-  userId    String
-  name      String
-  category  String     @default("UTILITY")
-  language  String     @default("en_US")
-  type      String     @default("TEXT")
-  body      String
-  footer    String?
-  buttons   Json?
-  metadata  Json?
-  status    String     @default("DRAFT")
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  isDefault Boolean    @default(false)
-  platform  String     @default("WHATSAPP_CLOUD")
-  campaigns Campaign[]
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  userId       String
+  name         String
+  templateName String?
+  approved     Boolean    @default(false)
+  category     String     @default("UTILITY")
+  language     String     @default("en_US")
+  type         String     @default("TEXT")
+  body         String
+  footer       String?
+  buttons      Json?
+  metadata     Json?
+  status       String     @default("DRAFT")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  isDefault    Boolean    @default(false)
+  platform     String     @default("WHATSAPP_CLOUD")
+  campaigns    Campaign[]
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, name])
   @@index([userId])

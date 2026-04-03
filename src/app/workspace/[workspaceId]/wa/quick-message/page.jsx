@@ -103,7 +103,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  };
  }
 
- const res = await fetch('/api/wa/send', {
+ const res = await fetch('/api/wa/send-browser', {
  method:'POST',
  headers: {'Content-Type':'application/json'},
  body: JSON.stringify(payload)

@@ -25,6 +25,7 @@ async function main() {
     const templatesData = [
         {
             name: "Cloud Standard Text",
+            templateName: "cloud_standard_text",
             category: "UTILITY",
             language: "en_US",
             type: "text",
@@ -33,11 +34,13 @@ async function main() {
             buttons: null,
             metadata: null,
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Image Message",
+            templateName: "cloud_image_message",
             category: "MARKETING",
             language: "en_US",
             type: "image",
@@ -48,11 +51,13 @@ async function main() {
                 mediaUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80"
             },
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Video Message",
+            templateName: "cloud_video_message",
             category: "MARKETING",
             language: "en_US",
             type: "video",
@@ -63,11 +68,13 @@ async function main() {
                 mediaUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" 
             },
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Audio Note",
+            templateName: "cloud_audio_note",
             category: "UTILITY",
             language: "en_US",
             type: "audio",
@@ -78,11 +85,13 @@ async function main() {
                 mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
             },
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Document PDF",
+            templateName: "cloud_document_pdf",
             category: "UTILITY",
             language: "en_US",
             type: "document",
@@ -93,11 +102,13 @@ async function main() {
                 mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" 
             },
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Interactive Location",
+            templateName: "cloud_interactive_location",
             category: "UTILITY",
             language: "en_US",
             type: "location",
@@ -111,11 +122,13 @@ async function main() {
                 locationAddress: "123 Wellness Ave, Pune, 411001"
             },
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Authentication PIN",
+            templateName: "cloud_authentication_pin",
             category: "AUTHENTICATION",
             language: "en_US",
             type: "text",
@@ -124,11 +137,13 @@ async function main() {
             buttons: ["Copy Code CTA"],
             metadata: null,
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Quick Replies",
+            templateName: "cloud_quick_replies",
             category: "MARKETING",
             language: "en_US",
             type: "interactive-button",
@@ -137,11 +152,13 @@ async function main() {
             buttons: ["Yes Please!", "No, Thanks", "Later"],
             metadata: null,
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Interactive Menu",
+            templateName: "cloud_interactive_menu",
             category: "UTILITY",
             language: "en_US",
             type: "interactive-group",
@@ -159,11 +176,13 @@ async function main() {
                 }]
             },
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         },
         {
             name: "Cloud Product Carousel",
+            templateName: "cloud_product_carousel",
             category: "MARKETING",
             language: "en_US",
             type: "carousel",
@@ -179,6 +198,7 @@ async function main() {
                 ]
             },
             status: "APPROVED",
+            approved: true,
             isDefault: true,
             platform: "WHATSAPP_CLOUD"
         }

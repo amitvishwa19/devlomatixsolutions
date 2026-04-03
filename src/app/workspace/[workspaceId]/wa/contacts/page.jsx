@@ -323,7 +323,7 @@ export default function ContactsPage() {
 
         setSendingMessage(true);
         try {
-            const response = await fetch('/api/wa/send', {
+            const response = await fetch('/api/wa/send-browser', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1070,7 +1070,7 @@ export default function ContactsPage() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex flex-col items-end gap-2">
+                                                    <div className="flex flex-col border-l border-border/50 pl-3">
                                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Button
                                                                 variant="ghost"

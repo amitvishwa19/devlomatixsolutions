@@ -7,8 +7,6 @@
  * All functions return a standardized { success, data, error } object.
  */
 
-import axios from 'axios';
-
 const DEFAULT_VERSION = 'v18.0';
 const BASE_URL = 'https://graph.facebook.com';
 
@@ -18,30 +16,66 @@ const BASE_URL = 'https://graph.facebook.com';
 const response = (success, data = null, error = null) => ({ success, data, error });
 
 /**
+ * Common fetch handler for Meta Graph API
+ */
+async function metaPost(credentials, endpoint, payload) {
+    const { accessToken, phoneNumberId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${phoneNumberId}/${endpoint}`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messaging_product: "whatsapp",
+                recipient_type: "individual",
+                ...payload
+            })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            const errorMsg = data.error?.message || data.error?.error_user_msg || 'Meta API Error';
+            console.error('[WA_CLOUD_API_ERROR]', data.error);
+            return response(false, null, errorMsg);
+        }
+
+        return response(true, data);
+    } catch (err) {
+        console.error('[WA_CLOUD_FETCH_ERROR]', err);
+        return response(false, null, err.message);
+    }
+}
+
+/**
  * 1. Connection & Identity
  * Verifies if the token and Phone ID are valid.
  */
 export async function testCloudConnection(credentials) {
     const { accessToken, phoneNumberId } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${phoneNumberId}?fields=display_phone_number,verified_name`;
 
     try {
-        const url = `${BASE_URL}/${version}/${phoneNumberId}?fields=display_phone_number,verified_name`;
-        const res = await axios.get(url, {
-            headers: { Authorization: `Bearer ${accessToken}` }
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
         });
+        const data = await res.json();
 
-        if (res.data?.id) {
+        if (data?.id) {
             return response(true, {
-                id: res.data.id,
-                profileName: res.data.verified_name,
-                displayNumber: res.data.display_phone_number
+                id: data.id,
+                profileName: data.verified_name,
+                displayNumber: data.display_phone_number
             });
         }
-        return response(false, null, 'Invalid response from Meta');
+        return response(false, null, data.error?.message || 'Invalid response from Meta');
     } catch (err) {
-        const msg = err.response?.data?.error?.message || err.message;
-        return response(false, null, msg);
+        return response(false, null, err.message);
     }
 }
 
@@ -49,56 +83,26 @@ export async function testCloudConnection(credentials) {
  * 2. Message Dispatch (Text)
  */
 export async function sendTextMessage(credentials, to, body) {
-    const { accessToken, phoneNumberId } = credentials;
-    const version = credentials.version || DEFAULT_VERSION;
-
-    try {
-        const url = `${BASE_URL}/${version}/${phoneNumberId}/messages`;
-        const res = await axios.post(url, {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
-            to: to,
-            type: "text",
-            text: { body: body }
-        }, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-
-        return response(true, res.data);
-    } catch (err) {
-        const msg = err.response?.data?.error?.message || err.message;
-        return response(false, null, msg);
-    }
+    return metaPost(credentials, 'messages', {
+        to: to,
+        type: "text",
+        text: { body: body }
+    });
 }
 
 /**
  * 3. Message Dispatch (Template)
  */
 export async function sendTemplateMessage(credentials, to, templateName, languageCode = 'en_US', components = []) {
-    const { accessToken, phoneNumberId } = credentials;
-    const version = credentials.version || DEFAULT_VERSION;
-
-    try {
-        const url = `${BASE_URL}/${version}/${phoneNumberId}/messages`;
-        const res = await axios.post(url, {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
-            to: to,
-            type: "template",
-            template: {
-                name: templateName,
-                language: { code: languageCode },
-                components: components
-            }
-        }, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-
-        return response(true, res.data);
-    } catch (err) {
-        const msg = err.response?.data?.error?.message || err.message;
-        return response(false, null, msg);
-    }
+    return metaPost(credentials, 'messages', {
+        to: to,
+        type: "template",
+        template: {
+            name: templateName,
+            language: { code: languageCode },
+            components: components
+        }
+    });
 }
 
 /**
@@ -111,16 +115,19 @@ export async function fetchTemplates(credentials) {
 
     if (!wabaId) return response(false, null, 'Missing wabaId (WhatsApp Business Account ID)');
 
-    try {
-        const url = `${BASE_URL}/${version}/${wabaId}/message_templates`;
-        const res = await axios.get(url, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
+    const url = `${BASE_URL}/${version}/${wabaId}/message_templates`;
 
-        return response(true, res.data.data); // Meta returns { data: [...] }
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to fetch templates');
+
+        return response(true, data.data); // Meta returns { data: [...] }
     } catch (err) {
-        const msg = err.response?.data?.error?.message || err.message;
-        return response(false, null, msg);
+        return response(false, null, err.message);
     }
 }
 
@@ -175,4 +182,49 @@ export function parseIncomingMessage(body) {
         console.error('[WA_CLOUD_PARSE_ERROR]', err);
         return null;
     }
+}
+
+/**
+ * 7. Message Dispatch (Media)
+ * Supports image, video, audio, document
+ */
+export async function sendMediaMessage(credentials, to, type, mediaUrl, caption = "") {
+    const mediaPayload = { link: mediaUrl };
+    if (caption && (type === 'image' || type === 'video' || type === 'document')) {
+        mediaPayload.caption = caption;
+    }
+
+    return metaPost(credentials, 'messages', {
+        to: to,
+        type: type,
+        [type]: mediaPayload
+    });
+}
+
+/**
+ * 8. Message Dispatch (Location)
+ */
+export async function sendLocationMessage(credentials, to, latitude, longitude, name, address) {
+    return metaPost(credentials, 'messages', {
+        to: to,
+        type: "location",
+        location: {
+            latitude,
+            longitude,
+            name,
+            address
+        }
+    });
+}
+
+/**
+ * 9. Message Dispatch (Interactive)
+ * Supports buttons, lists
+ */
+export async function sendInteractiveMessage(credentials, to, interactive) {
+    return metaPost(credentials, 'messages', {
+        to: to,
+        type: "interactive",
+        interactive: interactive
+    });
 }
