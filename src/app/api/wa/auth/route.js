@@ -132,7 +132,7 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { testNumbers } = await req.json();
+        const { metadata } = await req.json();
         const sessionId = session.user.userId;
 
         const auth = await db.whatsAppAuth.findUnique({ where: { sessionId } });
@@ -140,10 +140,19 @@ export async function PATCH(req) {
             return NextResponse.json({ error: "No WhatsApp instance found. Connect first." }, { status: 404 });
         }
 
+        const currentMetadata = typeof auth.metadata === 'object' && auth.metadata !== null ? auth.metadata : {};
+        
+        // Merge and validate testNumbers if provided
         const updatedMetadata = {
-            ...(typeof auth.metadata === 'object' ? auth.metadata : {}),
-            testNumbers: Array.isArray(testNumbers) ? testNumbers.slice(0, 5) : []
+            ...currentMetadata,
+            ...metadata
         };
+
+        if (updatedMetadata.testNumbers) {
+            updatedMetadata.testNumbers = Array.isArray(updatedMetadata.testNumbers) 
+                ? updatedMetadata.testNumbers.slice(0, 5) 
+                : [];
+        }
 
         const updated = await db.whatsAppAuth.update({
             where: { sessionId },
