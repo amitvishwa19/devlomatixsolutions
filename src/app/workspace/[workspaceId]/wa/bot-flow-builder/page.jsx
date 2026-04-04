@@ -1,14 +1,22 @@
-// @ts-nocheck
-export default function BotFlowBuilderPage() {
- return (
- <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
- <div>
- <h1 className="text-xl font-bold text-white mb-2">Bot Flow Builder</h1>
- <p className="text-[#A0AEC0]">Design powerful automated WhatsApp conversation flows</p>
- </div>
- <div className="flex h-[60vh] items-center justify-center rounded-md border border-border border-dashed">
- <p className="text-muted-foreground">Bot Flow Builder drag-and-drop interface coming soon.</p>
- </div>
- </div>);
+'use client';
 
+import React, { Suspense } from 'react';
+import { ReactFlowProvider } from '@xyflow/react';
+import { FlowCanvas } from './_components/FlowCanvas';
+import { Loader2 } from 'lucide-react';
+
+export default function BotFlowBuilderPage() {
+    return (
+        <div className="flex flex-col w-full h-[calc(100vh-64px)] bg-[#0f0f1a] overflow-hidden">
+            <ReactFlowProvider>
+                <Suspense fallback={
+                    <div className="flex-1 flex items-center justify-center bg-[#0f0f1a]">
+                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    </div>
+                }>
+                    <FlowCanvas />
+                </Suspense>
+            </ReactFlowProvider>
+        </div>
+    );
 }

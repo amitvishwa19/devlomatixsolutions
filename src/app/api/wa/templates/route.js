@@ -61,7 +61,7 @@ const SAMPLE_TEMPLATES = [
         type: "location",
         body: "Here is the exact location for your appointment tomorrow.",
         footer: "Use maps to navigate",
-        metadata: { 
+        metadata: {
             latitude: "18.5204",
             longitude: "73.8567",
             locationName: "HealthyFine Headquarters",
@@ -200,7 +200,7 @@ const CLOUD_SAMPLES = [
         type: "location",
         body: "Here is the exact location for your appointment tomorrow.",
         footer: "Use maps to navigate",
-        metadata: { 
+        metadata: {
             latitude: "18.5204",
             longitude: "73.8567",
             locationName: "HealthyFine Headquarters",
@@ -301,7 +301,7 @@ export async function GET(req) {
                 try {
                     await db.messageTemplate.upsert({
                         where: { userId_name: { userId, name: tpl.name } },
-                        update: {}, 
+                        update: {},
                         create: { ...tpl, userId, isDefault: true, status: 'APPROVED', approved: true }
                     });
                 } catch (e) { }
@@ -315,7 +315,7 @@ export async function GET(req) {
                 try {
                     await db.messageTemplate.upsert({
                         where: { userId_name: { userId, name: tpl.name } },
-                        update: {}, 
+                        update: {},
                         create: { ...tpl, userId, isDefault: true, status: 'DRAFT', approved: false }
                     });
                 } catch (e) { }

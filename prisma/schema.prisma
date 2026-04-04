@@ -56,6 +56,10 @@ model User {
   workflows                 Workflow[]
   workspaceDocuments        WorkspaceDocument[]
   roles                     Role[]              @relation("RoleToUser")
+  ecommerceStores           ECommerceStore[]
+  ecommerceOrders           ECommerceOrder[]
+  ecommerceProducts         ECommerceProduct[]
+  ecommerceAbandonedCarts   ECommerceAbandonedCart[]
 
   @@index([email])
   @@index([phone])
@@ -395,6 +399,7 @@ model Contact {
   updatedAt       DateTime       @updatedAt
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   groups          ContactGroup[] @relation("ContactToGroup")
+  ecommerceOrders ECommerceOrder[]
 
   @@index([userId])
   @@index([phone])
@@ -408,6 +413,9 @@ model BotFlow {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  active      Boolean       @default(true)
+  nodes       Json          @default("[]")
+  edges       Json          @default("[]")
   steps       BotFlowStep[]
 
   @@index([userId])
@@ -923,4 +931,97 @@ enum SystemCronStatus {
   INACTIVE
   ERROR
   COMPLETED
+}
+model ECommerceStore {
+  id            String   @id @default(cuid())
+  userId        String
+  platform      String   @default("shopify") // shopify | woocommerce
+  name          String
+  storeUrl      String
+  accessToken   String?
+  apiKey        String?
+  apiSecret     String?
+  webhookSecret String?
+  status        String   @default("connected")
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders        ECommerceOrder[]
+  products      ECommerceProduct[]
+  abandonedCarts ECommerceAbandonedCart[]
+
+  @@index([userId])
+}
+
+model ECommerceOrder {
+  id              String         @id @default(cuid())
+  storeId         String
+  externalOrderId String         @unique // Platform's Order ID
+  orderNumber     String?
+  totalAmount     Float
+  currency        String         @default("INR")
+  status          String
+  financialStatus String?
+  fulfillmentStatus String?
+  customerName    String?
+  customerEmail   String?
+  customerPhone   String?
+  contactId       String?        // Link to internal Contact if exists
+  metadata        Json?
+  userId          String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  store           ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contact         Contact?       @relation(fields: [contactId], references: [id])
+
+  @@index([storeId])
+  @@index([userId])
+  @@index([externalOrderId])
+}
+
+model ECommerceProduct {
+  id                String         @id @default(cuid())
+  storeId           String
+  externalProductId String         @unique
+  title             String
+  description       String?
+  price             Float
+  currency          String         @default("INR")
+  imageUrl          String?
+  status            String
+  inventoryCount    Int?
+  metadata          Json?
+  userId            String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  store             ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([userId])
+}
+
+model ECommerceAbandonedCart {
+  id                String         @id @default(cuid())
+  storeId           String
+  externalCartId    String         @unique
+  checkoutUrl       String?
+  totalAmount       Float
+  currency          String         @default("INR")
+  customerEmail     String?
+  customerPhone     String?
+  recovered         Boolean        @default(false)
+  lastReminderAt    DateTime?
+  reminderCount     Int            @default(0)
+  metadata          Json?
+  userId            String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  store             ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([userId])
 }
