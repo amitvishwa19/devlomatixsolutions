@@ -52,7 +52,6 @@ export default function AppSidebar() {
         { type: 'child', title: "Campaigns", url: `${baseWhathappPath}/campaigns`, icon: "megaphone", category: "WhatsApp Manager" },
         // { type: 'child', title: "Quick Message", url: `${baseWhathappPath}/quick-message`, icon: "zap", category: "WhatsApp Manager" },
         { type: 'child', title: "Analytics", url: `${baseWhathappPath}/analytics`, icon: "bar-chart-3", category: "WhatsApp Manager" },
-        { type: 'child', title: "API Setup", url: `${baseWhathappPath}/api-setup`, icon: "settings", category: "WhatsApp Manager" },
         // { type: 'child', title: "Button & Quick Reply", url: `${baseWhathappPath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
         { type: 'child', title: "Chatbot", url: `${baseWhathappPath}/chatbot`, icon: "zap", category: "WhatsApp Manager" },
         { type: 'child', title: "eCommerce", url: `${baseWhathappPath}/ecommerce`, icon: "shopping-cart", category: "WhatsApp Manager" },
