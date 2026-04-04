@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { ContentTopbar } from '../../(misc)/_components/ContentTopbar'
+
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import { FileText, Eye, Download, Printer, Loader2, ChevronDown, Sparkles, FileType } from 'lucide-react';
 import { toast } from 'sonner';
-//import html2canvas from 'html2canvas';
-//import jsPDF from 'jspdf';
-import logo from '@/assets/images/logo/logo.png';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
 import { QuotationForm } from './_components/QuotationForm';
 import { QuotationPreview } from './_components/QuotationPreview';
 import { ClassicQuotationPreview } from './_components/ClassicQuotationPreview';
@@ -124,7 +124,6 @@ export default function QuotationPage() {
                 title='Quotation'
                 description='Create quotation foe your client, share online and get started'
                 icon='receipt-indian-rupee'
-
             />
 
             <ScrollArea className='h-[85vh] flex flex-grow  rounded-md  '>

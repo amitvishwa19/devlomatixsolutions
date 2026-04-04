@@ -5,12 +5,10 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import { FileText, Eye, Download, Printer, Loader2, ChevronDown, Sparkles, FileType } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import logo from '@/assets/images/logo/logo.png';
 import { QuotationForm } from './_components/QuotationForm';
 import { QuotationPreview } from './_components/QuotationPreview';
 import { ClassicQuotationPreview } from './_components/ClassicQuotationPreview';
@@ -122,7 +120,7 @@ export default function QuotationPage() {
 
 
 
-            <ScrollArea className='h-[85vh] flex flex-grow  rounded-md  '>
+            <ScrollArea className='h-[85vh] flex grow  rounded-md  '>
 
                 <div>
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="no-print">
