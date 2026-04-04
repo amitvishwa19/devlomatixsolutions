@@ -120,11 +120,7 @@ export default function QuotationPage() {
     return (
         <div className='absolute inset-0 flex flex-col gap-2 p-2'>
 
-            <ContentTopbar
-                title='Quotation'
-                description='Create quotation foe your client, share online and get started'
-                icon='receipt-indian-rupee'
-            />
+            
 
             <ScrollArea className='h-[85vh] flex flex-grow  rounded-md  '>
 
