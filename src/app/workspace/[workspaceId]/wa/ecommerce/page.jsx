@@ -92,11 +92,11 @@ export default function ECommercePage() {
             {/* Stats Perspective */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat, i) => (
-                    <Card key={i} className="glassmorphism border-white/5 bg-white/[0.03] backdrop-blur-3xl group hover:bg-white/[0.05] transition-all duration-500 overflow-hidden relative">
+                    <Card key={i} className="glassmorphism border bg-card backdrop-blur-3xl group hover:border-primary/50 transition-all duration-500 overflow-hidden relative">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <stat.icon size={64} />
                         </div>
-                        <CardContent className="p-6">
+                        <CardContent className="p-2">
                             <div className="flex items-center justify-between mb-4">
                                 <div className={`p-2.5 rounded-xl ${stat.bg}`}>
                                     <stat.icon className={`h-5 w-5 ${stat.color}`} />
@@ -106,7 +106,7 @@ export default function ECommercePage() {
                                 </Badge>
                             </div>
                             <h3 className="text-sm font-bold text-muted-foreground mb-1">{stat.label}</h3>
-                            <div className="text-2xl font-black text-white tracking-tight">{stat.value}</div>
+                            <div className="text-2xl font-black ">{stat.value}</div>
                         </CardContent>
                     </Card>
                 ))}
@@ -116,7 +116,7 @@ export default function ECommercePage() {
                 {/* Store Management Section */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between px-2">
-                        <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <h2 className="text-xl font-bold  flex items-center gap-2">
                             <Store className="text-primary h-5 w-5" />
                             Connected Stores
                         </h2>
@@ -133,7 +133,7 @@ export default function ECommercePage() {
                             <div className="p-6 bg-white/5 rounded-full mb-6 border border-white/10 group-hover:scale-110 transition-transform duration-500">
                                 <RefreshCcw size={48} className="text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
                             </div>
-                            <h3 className="text-2xl font-black text-white mb-2 tracking-tight">No Stores Linked Yet</h3>
+                            <h3 className="text-xl font-black mb-2 ">No Stores Linked Yet</h3>
                             <p className="text-muted-foreground text-sm max-w-sm text-center mb-8 font-medium leading-relaxed">
                                 Unlock the power of WhatsApp commerce by connecting your Shopify or WooCommerce store instantly.
                             </p>
