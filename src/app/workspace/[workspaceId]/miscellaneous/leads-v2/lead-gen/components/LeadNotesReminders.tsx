@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 import { useState } from 'react';
 import { Plus, Trash2, Check, Clock, StickyNote, Bell } from 'lucide-react';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 import { useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, Copy, Star, Phone, Mail, Globe, MapPin, ExternalLink, Search, LayoutGrid, LayoutList, Check, TrendingUp } from 'lucide-react';

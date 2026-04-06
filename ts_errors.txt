@@ -1,0 +1,44 @@
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/BulkActionsBar.tsx(51,10): error TS2322: Type '{ children: Element; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/BulkActionsBar.tsx(57,10): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/BulkActionsBar.tsx(58,12): error TS2322: Type '{ children: string; value: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/BulkActionsBar.tsx(59,12): error TS2322: Type '{ children: string; value: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/BulkActionsBar.tsx(60,12): error TS2322: Type '{ children: string; value: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/BulkActionsBar.tsx(61,12): error TS2322: Type '{ children: string; value: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/BulkActionsBar.tsx(73,10): error TS2322: Type '{ children: Element[]; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadDetailSheet.tsx(61,14): error TS2741: Property 'className' is missing in type '{ children: string; variant: string; }' but required in type '{ [x: string]: any; className: any; variant: any; }'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadDetailSheet.tsx(76,16): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadDetailSheet.tsx(79,16): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadDetailSheet.tsx(81,20): error TS2322: Type '{ children: string; key: "new" | "contacted" | "qualified" | "converted"; value: "new" | "contacted" | "qualified" | "converted"; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadNotesReminders.tsx(101,15): error TS2322: Type '{ placeholder: string; value: string; onChange: (e: any) => void; className: string; onKeyDown: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'placeholder' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadNotesReminders.tsx(103,26): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadNotesReminders.tsx(105,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadNotesReminders.tsx(174,21): error TS2322: Type '{ checked: boolean; onCheckedChange: () => void; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'checked' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(134,20): error TS2345: Argument of type '(prev: any) => Set<unknown>' is not assignable to parameter of type 'Set<string>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(134,21): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(145,20): error TS2345: Argument of type '(prev: any) => Set<unknown>' is not assignable to parameter of type 'Set<string>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(145,21): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(240,14): error TS2322: Type '{ children: Element; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(243,14): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(245,18): error TS2322: Type '{ children: (string | number)[]; key: number; value: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(309,31): error TS2322: Type '{ checked: boolean; onCheckedChange: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'checked' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/components/LeadsTable.tsx(340,33): error TS2322: Type '{ checked: boolean; onCheckedChange: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'checked' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/pages/Index.tsx(22,26): error TS2307: Cannot find module '@/integrations/supabase/client' or its corresponding type declarations.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/pages/Index.tsx(225,20): error TS2322: Type '{ children: Element[]; align: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/pages/Index.tsx(226,22): error TS2322: Type '{ children: (string | Element)[]; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/app/workspace/[workspaceId]/miscellaneous/leads-v2/lead-gen/pages/Index.tsx(230,22): error TS2322: Type '{ children: (string | Element)[]; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.

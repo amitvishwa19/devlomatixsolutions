@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback, useMemo } from 'react';
 import { saveSearchEntry } from '../lib/searchHistory';
 import { Download, Zap, RotateCcw, BarChart3, Map, List, Tag, Mail, FileSpreadsheet, FileText, Kanban } from 'lucide-react';

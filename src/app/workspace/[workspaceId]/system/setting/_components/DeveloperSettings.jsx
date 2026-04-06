@@ -7,7 +7,8 @@ import { Input } from'@/components/ui/input';
 import { Label } from'@/components/ui/label';
 import { Badge } from'@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from'@/components/ui/tabs';
-import { Terminal, Key, Webhook, Plus, Copy, RefreshCw, Trash2, ShieldCheck, Zap, Globe, Info, Settings2, Check, AlertCircle, Loader2, Activity, ShieldAlert, Clock } from'lucide-react';
+import { Terminal, Key, Webhook, Plus, Copy, RefreshCw, Trash2, ShieldCheck, Zap, Globe, Info, Settings2, Check, AlertCircle, Loader2, Activity, ShieldAlert, Clock, Sparkles, Search, FileCode, ExternalLink } from'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from'sonner';
 import { useSettings } from'../_provider/SettingProvider';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from"@/components/ui/dialog";
@@ -28,6 +29,11 @@ export const DeveloperSettings = () => {
  const [webhooks, setWebhooks] = useState([]);
  const [activityLogs, setActivityLogs] = useState([]);
  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
+ // Class Cleaner State
+ const [searchQuery, setSearchQuery] = useState("");
+ const [searchResults, setSearchResults] = useState([]);
+ const [isSearching, setIsSearching] = useState(false);
 
  const [newWebhook, setNewWebhook] = useState({
  url:'',
@@ -159,6 +165,29 @@ export const DeveloperSettings = () => {
  toast.success("Copied to clipboard");
  };
 
+ const handleClassSearch = async () => {
+    if (!searchQuery || searchQuery.length < 2) {
+      toast.error("Please enter at least 2 characters to search");
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const { data } = await axios.get(`/api/workspace/${workspaceId}/system/style-cleaner/search?query=${encodeURIComponent(searchQuery)}`);
+      setSearchResults(data.results || []);
+      if (data.results?.length === 0) {
+        toast.info("No matches found for that class");
+      } else {
+        toast.success(`Found ${data.results.length} occurrences`);
+      }
+    } catch (error) {
+      console.error("Search Error:", error);
+      toast.error("An error occurred during project scan");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
  return (
  <div className="space-y-6 animate-fade-in">
  {/* Developer Hub Header */}
@@ -191,7 +220,129 @@ export const DeveloperSettings = () => {
  <Activity className="w-3.5 h-3.5"/>
  Live Feed
  </TabsTrigger>
+ <TabsTrigger value="cleaner" className="rounded-md gap-2 text-xs font-bold px-4 transition-all data-[state=active]:bg-card data-[state=active]:text-fuchsia-500">
+ <Sparkles className="w-3.5 h-3.5" />
+ Class Cleaner
+ </TabsTrigger>
  </TabsList>
+
+        <TabsContent value="cleaner" className="mt-0 space-y-4">
+          <Card className="rounded-md border border-border/40 shadow-xl shadow-fuchsia-500/5 bg-card/60 backdrop-blur-md overflow-hidden min-h-[500px]">
+            <CardHeader className="border-b border-border/10 bg-fuchsia-500/5 pb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-fuchsia-500" />
+                    Global Class Search
+                  </CardTitle>
+                  <CardDescription className="text-xs">Find all occurrences of a specific CSS class across your project (src/app).</CardDescription>
+                </div>
+                {searchResults.length > 0 && (
+                  <Badge className="bg-fuchsia-500/20 text-fuchsia-600 border-fuchsia-500/30 font-bold px-3 py-1">
+                    {searchResults.length} {searchResults.length === 100 ? ' (Limit reached)' : 'Matches Found'}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                  <Input 
+                    placeholder="Enter class name (e.g. font-bold, italic, uppercase...)"
+                    className="pl-10 h-11 bg-background/50 border-border/40 rounded-md font-bold text-xs"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleClassSearch()}
+                  />
+                </div>
+                <Button 
+                  onClick={handleClassSearch} 
+                  disabled={isSearching}
+                  className="rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-11 px-6 shadow-lg shadow-fuchsia-500/20"
+                >
+                  {isSearching ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
+                  Scan Project
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[400px]">
+                {searchResults.length > 0 ? (
+                  <div className="divide-y divide-border/10">
+                    {searchResults.map((result, i) => (
+                      <div key={i} className="p-4 hover:bg-fuchsia-500/5 transition-all group">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4 flex-1 min-w-0">
+                            <div className="p-2 bg-fuchsia-500/10 rounded-md mt-0.5 shrink-0">
+                              <FileCode className="w-4 h-4 text-fuchsia-500" />
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-bold text-foreground truncate">{result.file}</p>
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 opacity-60">Line {result.line}</Badge>
+                              </div>
+                              <div className="bg-background/40 p-2.5 rounded-md border border-border/20 overflow-x-auto whitespace-pre font-mono text-[10px] text-muted-foreground/80 group-hover:text-fuchsia-500/80 transition-colors">
+                                {result.snippet.replace(/className=(['"])(.*?)\1/g, (match, q, content) => {
+                                  // Highlight the search query in the snippet
+                                  const parts = content.split(searchQuery);
+                                  return `className=${q}${parts.join(`__${searchQuery}__`)}${q}`;
+                                }).replace(/__(.*?)__/g, '<span className="text-fuchsia-500 font-bold">$1</span>')}
+                                {result.snippet}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                             <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 hover:bg-fuchsia-500/10 text-fuchsia-600"
+                              onClick={() => copyToClipboard(result.file)}
+                              title="Copy File Path"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 hover:bg-fuchsia-500/10 text-fuchsia-600"
+                              title="Open File"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-24 text-center">
+                    {isSearching ? (
+                      <div className="flex flex-col items-center gap-4 animate-pulse">
+                        <Loader2 className="w-12 h-12 text-fuchsia-500/20 animate-spin" />
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40 italic">Deep scanning app directory...</p>
+                      </div>
+                    ) : (
+                      <div className="opacity-20 space-y-4">
+                        <Search className="w-16 h-16 mx-auto" />
+                        <div>
+                          <p className="text-xs font-bold">Search results will appear here</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest mt-1">Enter a class name to begin scanning</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+            {searchResults.length > 0 && (
+              <CardFooter className="bg-muted/10 p-4 border-t border-border/10">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground opacity-60">
+                  <Info className="w-3 h-3" />
+                  Showing top {searchResults.length} matches. Use the script for bulk modifications.
+                </div>
+              </CardFooter>
+            )}
+          </Card>
+        </TabsContent>
 
  <TabsContent value="webhooks"className="mt-0 space-y-4">
  <Card className="rounded-md border border-border/40 shadow-xl shadow-fuchsia-500/5 bg-card/60 backdrop-blur-md overflow-hidden">

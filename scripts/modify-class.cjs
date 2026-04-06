@@ -15,12 +15,11 @@ const classesToRemove = ['italic'];
 
 // Add the classes you want to REPLACE [from, to]
 // Example: [['font-bold', 'font-black'], ['text-sm', 'text-[10px]']]
-const classesToModify = [
-  ['font-bold', 'font-black']
-];
+// const classesToModify = [['font-bold', 'font-black']];
+const classesToModify = [['', '']];
 
 // Set to false to actually modify the files. TRUE will only log the changes.
-const dryRun = true;
+const dryRun = false;
 
 // --- Logic ---
 const classRegex = /(className=["']|class=["'])([^"']*?)(["'])/g;
