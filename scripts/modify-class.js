@@ -1,3 +1,6 @@
+//node scripts/modify-class.js
+
+
 const fs = require('fs');
 const path = require('path');
 
@@ -7,7 +10,8 @@ const scanPath = 'D:\\Dev\\React\\devlomatix\\devlomatixsolutions\\src\\app\\wor
 
 // Add the classes or prefixes you want to DELETE from your project here.
 // Example: ['tracking', 'uppercase']
-const classesToRemove = ['tracking', 'uppercase'];
+// const classesToRemove = ['tracking', 'uppercase'];
+const classesToRemove = ['italic'];
 
 // Add the classes you want to REPLACE [from, to]
 // Example: [['font-bold', 'font-black'], ['text-sm', 'text-[10px]']]
