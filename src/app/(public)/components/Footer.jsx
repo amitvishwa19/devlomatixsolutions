@@ -21,7 +21,7 @@ const Footer = () => {
                     {/* Brand */}
                     <div className="lg:col-span-2">
                         <div className="flex items-center gap-2 mb-4">
-                            <AppLogo link={'/'} />
+                            <AppLogo link={'/'} size={100} height={50} />
                         </div>
                         <p className="text-muted-foreground max-w-sm mb-6">
                             Building innovative software solutions that drive business growth and digital transformation.
