@@ -6,71 +6,33 @@ import { slugify } from "@/utils/functions";
 export async function PATCH(req, { params }) {
     try {
         const { workspaceId, categoryId } = await params;
-        const { name, description, color, type, parentId } = await req.json();
-
+        const body = await req.json();
+        const { name, slug: customSlug, description, color, type, parentId } = body;
+        
         const updateData = {};
         if (name) {
             updateData.name = name;
-            updateData.slug = slugify(name);
+            updateData.slug = customSlug || slugify(name);
+        } else if (customSlug) {
+            updateData.slug = customSlug;
         }
         if (description !== undefined) updateData.description = description;
         if (color) updateData.color = color;
         if (type) updateData.type = type;
-        if (parentId !== undefined) updateData.parentId = parentId;
-
-        try {
-            // Try standard update first
-            const category = await prisma.category.update({
-                where: {
-                    id: categoryId,
-                    workspaceId: workspaceId
-                },
-                data: updateData
-            });
-            return NextResponse.json(category);
-        } catch (prismaError) {
-            // FALLBACK: If client is stale, use raw SQL
-            if (prismaError.message.includes('parentId') || prismaError.message.includes('Unknown argument')) {
-                console.warn("FALLBACK: Using raw SQL for category update due to stale Prisma client");
-                
-                const setClauses = [];
-                const values = [];
-                let i = 1;
-
-                if (name) {
-                    setClauses.push(`name = $${i++}`, `slug = $${i++}`);
-                    values.push(name, slugify(name));
-                }
-                if (description !== undefined) {
-                    setClauses.push(`description = $${i++}`);
-                    values.push(description);
-                }
-                if (color) {
-                    setClauses.push(`color = $${i++}`);
-                    values.push(color);
-                }
-                if (type) {
-                    setClauses.push(`type = $${i++}`);
-                    values.push(type);
-                }
-                if (parentId !== undefined) {
-                    setClauses.push(`"parentId" = $${i++}`);
-                    values.push(parentId);
-                }
-
-                setClauses.push(`"updatedAt" = $${i++}`);
-                values.push(new Date());
-
-                if (setClauses.length === 0) return NextResponse.json({ message: "No changes" });
-
-                const query = `UPDATE "Category" SET ${setClauses.join(', ')} WHERE id = $${i++} AND "workspaceId" = $${i} RETURNING *`;
-                values.push(categoryId, workspaceId);
-
-                const result = await prisma.$queryRawUnsafe(query, ...values);
-                return NextResponse.json(result[0]);
-            }
-            throw prismaError;
+        if (parentId !== undefined) {
+          updateData.parentId = parentId === "none" ? null : parentId;
         }
+
+        // Standard update using natively supported parentId
+        const category = await prisma.category.update({
+            where: {
+                id: categoryId,
+                workspaceId: workspaceId
+            },
+            data: updateData
+        });
+        
+        return NextResponse.json(category);
     } catch (error) {
         console.error("PATCH Category Error:", error.message);
         if (error.code === 'P2002') {
@@ -85,6 +47,7 @@ export async function DELETE(req, { params }) {
     try {
         const { workspaceId, categoryId } = await params;
 
+        // Note: Cascade deletion is handled by Prisma schema for children
         await prisma.category.delete({
             where: {
                 id: categoryId,

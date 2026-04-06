@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from"react";
+import { useState, useEffect, Fragment } from "react";
 import { useModal } from"@/hooks/useModal";
 import {
  Dialog,
@@ -20,7 +20,7 @@ import {
 import { Button } from"@/components/ui/button";
 import { Input } from"@/components/ui/input";
 import { Textarea } from"@/components/ui/textarea";
-import { Loader2, Tags, Palette, Type, AlignLeft, FolderTree } from"lucide-react";
+import { Loader2, Tags, Palette, Type, AlignLeft, FolderTree, CornerDownRight } from "lucide-react";
 import axios from"@/utils/axios";
 import { toast } from"sonner";
 
@@ -31,6 +31,8 @@ export const AddCategoryModal = () => {
 
  const [isLoading, setIsLoading] = useState(false);
  const [name, setName] = useState("");
+ const [slug, setSlug] = useState("");
+ const [isManualSlug, setIsManualSlug] = useState(false);
  const [description, setDescription] = useState("");
  const [color, setColor] = useState("#3b82f6");
  const [categoryType, setCategoryType] = useState("GENERAL");
@@ -38,64 +40,90 @@ export const AddCategoryModal = () => {
 
  const isEdit = !!category;
 
+ const slugify = (text) => {
+   return text
+     .toString()
+     .toLowerCase()
+     .trim()
+     .replace(/\s+/g, '-')     // Replace spaces with -
+     .replace(/[^\w-]+/g, '')   // Remove all non-word chars
+     .replace(/--+/g, '-');    // Replace multiple - with single -
+ };
+
  useEffect(() => {
- if (isModalOpen) {
- if (category) {
- setName(category.name ||"");
- setDescription(category.description ||"");
- setColor(category.color ||"#3b82f6");
- setCategoryType(category.type ||"GENERAL");
- setParentId(category.parentId ||"none");
- } else {
- setName("");
- setDescription("");
- setColor("#3b82f6");
- setCategoryType("GENERAL");
- setParentId(defaultParentId ||"none");
- }
- }
+   if (isModalOpen) {
+     if (category) {
+       setName(category.name || "");
+       setSlug(category.slug || "");
+       setIsManualSlug(true);
+       setDescription(category.description || "");
+       setColor(category.color || "#3b82f6");
+       setCategoryType(category.type || "GENERAL");
+       setParentId(category.parentId || "none");
+     } else {
+       setName("");
+       setSlug("");
+       setIsManualSlug(false);
+       setDescription("");
+       setColor("#3b82f6");
+       setCategoryType("GENERAL");
+       setParentId(defaultParentId || "none");
+     }
+   }
  }, [isModalOpen, category, defaultParentId]);
 
- const onSubmit = async (e) => {
- e.preventDefault();
- try {
- setIsLoading(true);
- const payload = {
- name,
- description,
- color,
- type: categoryType,
- parentId: parentId ==="none"? null : parentId
+ const handleNameChange = (e) => {
+   const val = e.target.value;
+   setName(val);
+   if (!isManualSlug) {
+     setSlug(slugify(val));
+   }
  };
 
- if (isEdit) {
- await axios.patch(`/api/workspace/${workspaceId}/management/category/${category.id}`, payload);
- toast.success("Category updated successfully");
- } else {
- await axios.post(`/api/workspace/${workspaceId}/management/category`, payload);
- toast.success("Category created successfully");
- }
-
- onClose();
- if (onApply) onApply();
- } catch (error) {
- console.error(error);
- toast.error(error.response?.data?.message ||"Something went wrong");
- } finally {
- setIsLoading(false);
- }
+ const handleSlugChange = (e) => {
+   setSlug(e.target.value);
+   setIsManualSlug(true);
  };
 
- const handleClose = () => {
- onClose();
- };
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      const payload = {
+        name,
+        slug,
+        description,
+        color,
+        type: categoryType,
+        parentId: parentId === "none" ? null : parentId
+      };
 
- const colorPresets = [
-"#3b82f6","#ef4444","#10b981","#f59e0b","#8b5cf6",
-"#ec4899","#06b6d4","#f97316","#64748b","#000000"
- ];
+      if (isEdit) {
+        await axios.patch(`/api/workspace/${workspaceId}/management/category/${category.id}`, payload);
+        toast.success("Category updated successfully");
+      } else {
+        await axios.post(`/api/workspace/${workspaceId}/management/category`, payload);
+        toast.success("Category created successfully");
+      }
 
- const availableParents = (parentCategories || []).filter(c => c.id !== category?.id);
+      onClose();
+      if (onApply) onApply();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+  };
+
+  const colorPresets = [
+    "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6",
+    "#ec4899", "#06b6d4", "#f97316", "#64748b", "#000000"
+  ];
 
  return (
  <Dialog open={isModalOpen} onOpenChange={handleClose}>
@@ -130,10 +158,24 @@ export const AddCategoryModal = () => {
  className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-sm font-bold"
  placeholder="e.g. Blog Posts"
  value={name}
- onChange={(e) => setName(e.target.value)}
+ onChange={handleNameChange}
  required
  />
  </div>
+
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1.5 uppercase tracking-widest opacity-60">
+                  Category Slug
+                </label>
+                <Input
+                  disabled={isLoading}
+                  className="h-10 bg-muted/20 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-xs font-mono text-muted-foreground"
+                  placeholder="category-slug"
+                  value={slug}
+                  onChange={handleSlugChange}
+                  required
+                />
+              </div>
 
  <div className="space-y-2 text-left">
  <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1.5">
@@ -149,29 +191,39 @@ export const AddCategoryModal = () => {
  />
  </div>
 
- <div className="space-y-2 text-left">
- <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1.5">
- <FolderTree size={12} /> Parent Category
- </label>
- <Select value={parentId} onValueChange={setParentId} disabled={isLoading}>
- <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-[10px] font-bold">
- <SelectValue placeholder="None (Top-level)"/>
- </SelectTrigger>
- <SelectContent className="rounded-md border-border/40">
- <SelectItem value="none"className="font-bold text-[10px] rounded-md">
- NONE (TOP-LEVEL CATEGORY)
- </SelectItem>
- {availableParents.map((parent) => (
- <SelectItem key={parent.id} value={parent.id} className="font-bold text-[10px] rounded-md">
- <div className="flex items-center gap-2">
- <div className="w-3 h-3 rounded-full"style={{ backgroundColor: parent.color }} />
- {parent.name}
- </div>
- </SelectItem>
- ))}
- </SelectContent>
- </Select>
- </div>
+  <div className="space-y-2 text-left">
+    <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1.5 uppercase tracking-widest">
+      <FolderTree size={12} /> Parent Category
+    </label>
+    <Select value={parentId} onValueChange={setParentId} disabled={isLoading}>
+      <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner text-[10px] font-bold">
+        <SelectValue placeholder="None (Top-level)"/>
+      </SelectTrigger>
+      <SelectContent className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">
+        <SelectItem value="none" className="font-black text-[10px] rounded-md uppercase tracking-widest">
+          NONE (TOP-LEVEL CATEGORY)
+        </SelectItem>
+        {parentCategories?.map((parent) => (
+          <Fragment key={parent.id}>
+            <SelectItem value={parent.id} className="font-bold text-[10px] rounded-md">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: parent.color }} />
+                {parent.name}
+              </div>
+            </SelectItem>
+            {parent.children?.map(child => (
+              <SelectItem key={child.id} value={child.id} disabled={child.id === category?.id} className="font-bold text-[10px] rounded-md pl-8">
+                <div className="flex items-center gap-2 opacity-60">
+                  <CornerDownRight size={10} />
+                  {child.name}
+                </div>
+              </SelectItem>
+            ))}
+          </Fragment>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
 
  <div className="space-y-3 text-left">
  <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1.5">

@@ -12,6 +12,7 @@ export async function GET(req, { params }) {
         const jobs = await prisma.job.findMany({
             where: { workspaceId },
             include: {
+                category: true,
                 _count: {
                     select: { applications: true }
                 }
@@ -32,16 +33,15 @@ export async function POST(req, { params }) {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        console.log("session", session);
-
         const body = await req.json();
-        const { title, description, department, location, type, salaryRange } = body;
+        const { title, description, department, categoryId, location, type, salaryRange } = body;
 
         const job = await prisma.job.create({
             data: {
                 title,
                 description,
                 department,
+                categoryId,
                 location,
                 type,
                 salaryRange,
