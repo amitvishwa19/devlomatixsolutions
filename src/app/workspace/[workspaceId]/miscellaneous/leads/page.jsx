@@ -20,7 +20,8 @@ import {
     Filter,
     Trash2,
     Send,
-    Plus
+    Plus,
+    History
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,69 @@ export default function LeadsPage() {
         city: '',
         pincode: ''
     });
+
+    const [searchHistory, setSearchHistory] = useState([]);
+
+    // Load search history from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('leads_search_history');
+        if (saved) {
+            try {
+                setSearchHistory(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to parse search history", e);
+            }
+        }
+    }, []);
+
+    const saveSearchEntry = (newFilters) => {
+        if (!newFilters.keyword.trim()) return;
+        
+        setSearchHistory(prev => {
+            // Check if this search already exists (simple stringify comparison or key fields)
+            const entry = {
+                keyword: newFilters.keyword,
+                category: newFilters.category,
+                country: newFilters.country,
+                state: newFilters.state,
+                city: newFilters.city,
+                timestamp: new Date().getTime()
+            };
+
+            const isDuplicate = prev.some(h => 
+                h.keyword === entry.keyword && 
+                h.city === entry.city && 
+                h.category === entry.category
+            );
+
+            if (isDuplicate) return prev;
+
+            const updated = [entry, ...prev].slice(0, 10); // Keep last 10
+            localStorage.setItem('leads_search_history', JSON.stringify(updated));
+            return updated;
+        });
+    };
+
+    const applyHistory = (entry) => {
+        setFilters({
+            ...filters,
+            keyword: entry.keyword,
+            category: entry.category,
+            country: entry.country,
+            state: entry.state,
+            city: entry.city
+        });
+        // Trigger search after state updates
+        setTimeout(() => {
+            handleFindLeads(true);
+        }, 100);
+    };
+
+    const getHistoryLabel = (entry) => {
+        const parts = [entry.keyword];
+        if (entry.city) parts.push(`in ${entry.city}`);
+        return parts.join(' ');
+    };
 
     // Calculate displayed leads (10 per page)
     const itemsPerPage = 10;
@@ -190,6 +254,7 @@ export default function LeadsPage() {
         }
 
         if (isNewSearch) {
+            saveSearchEntry(filters); // Save to history
             setSearching(true);
             setLeads([]);
             setCurrentPage(1);
@@ -326,6 +391,37 @@ export default function LeadsPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Search History Tag Cloud */}
+            {searchHistory.length > 0 && (
+                <div className="space-y-2 animate-in slide-in-from-top duration-500">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest pl-1">
+                        <History className="w-3 h-3" />
+                        Recent Searches
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {searchHistory.map((entry, i) => (
+                            <Badge 
+                                key={`${entry.timestamp}-${i}`}
+                                variant="outline"
+                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-primary-foreground/90 cursor-pointer transition-all hover:scale-105 active:scale-95 text-[10px] font-bold py-1 px-3 rounded-full flex items-center gap-2 group"
+                                onClick={() => applyHistory(entry)}
+                            >
+                                <Search className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100" />
+                                {getHistoryLabel(entry)}
+                            </Badge>
+                        ))}
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-[9px] font-bold text-muted-foreground hover:text-destructive transition-colors"
+                            onClick={() => { setSearchHistory([]); localStorage.removeItem('leads_search_history'); }}
+                        >
+                            Clear History
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Search Filters Card */}
             <Card className="bg-card/30 border-border/40 backdrop-blur-md overflow-hidden relative group">

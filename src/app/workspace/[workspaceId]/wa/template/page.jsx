@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Smartphone, Check, MessageSquare, Loader2, Image as ImageIcon, Video, Music, File, MapPin, Send, Users, X, MoreHorizontal, Sparkles, LayoutGrid, List, RefreshCw } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Smartphone, Check, MessageSquare, Loader2, Image as ImageIcon, Video, Music, File, MapPin, Send, Users, X, MoreHorizontal, MoreVertical, Sparkles, LayoutGrid, List, RefreshCw, Copy } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -229,7 +229,7 @@ export default function TemplatePage() {
 
             const templateId = data.template?.id;
             toast.success(editingId ? "Template updated!" : "Template created successfully!");
-            
+
             if (shouldSubmit && templateId && formData.platform === 'WHATSAPP_CLOUD') {
                 setIsSubmittingId(templateId);
                 await handleSubmitToMeta(templateId);
@@ -260,7 +260,7 @@ export default function TemplatePage() {
 
     const handleClone = (template) => {
         const baseName = template.name || template.templateName || "New Template";
-        
+
         const clonedTemplate = {
             ...template,
             id: null,
@@ -270,11 +270,32 @@ export default function TemplatePage() {
             isDefault: false,
             status: template.status || 'DRAFT'
         };
-        
+
         setFormData(clonedTemplate);
         setEditingId(null);
         setIsBuilderOpen(true);
         toast.info("Template cloned. You can now customize and save it.");
+    };
+
+    const openTestModal = (template) => {
+        setTestingTemplate(template);
+
+        // Detect variables in body: {{1}}, {{2}}, etc.
+        const bodyText = template.body || "";
+        const vars = [...bodyText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+        const uniqueVars = Array.from(new Set(vars)).sort((a, b) => parseInt(a) - parseInt(b));
+
+        setDetectedVariables(uniqueVars);
+
+        // Initialize mapping for each detected variable
+        const initialMapping = {};
+        uniqueVars.forEach(v => {
+            initialMapping[v] = '';
+        });
+        setVariableMappings(initialMapping);
+
+        setIsTestModalOpen(true);
+        fetchContacts();
     };
 
     const handleButtonChange = (index, value) => {
@@ -461,7 +482,7 @@ export default function TemplatePage() {
                     // unless we want to support variables {{1}}, {{2}} in the future.
                 } else {
                     payload.type = testingTemplate.type;
-                    
+
                     // Variable replacement for draft/custom messages
                     let processedText = testingTemplate.body || "";
                     detectedVariables.forEach(v => {
@@ -596,16 +617,15 @@ export default function TemplatePage() {
                             <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
                             {template.platform === 'WHATSAPP_CLOUD' && (
                                 <Badge
-                                    className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold ${
-                                        template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
+                                    className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
                                         (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30' :
-                                        template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
-                                        'bg-muted text-muted-foreground'
-                                    }`}
+                                            template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
+                                                'bg-muted text-muted-foreground'
+                                        }`}
                                 >
-                                    {template.status === 'APPROVED' ? "Approved" : 
-                                     (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? "In Review" :
-                                     template.status === 'REJECTED' ? "Rejected" : "Draft"}
+                                    {template.status === 'APPROVED' ? "Approved" :
+                                        (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? "In Review" :
+                                            template.status === 'REJECTED' ? "Rejected" : "Draft"}
                                 </Badge>
                             )}
                         </div>
@@ -626,72 +646,67 @@ export default function TemplatePage() {
                     </div>
 
                     <div className="flex items-center gap-2 mt-1 pt-3 border-t border-border/50">
-                        {template.isDefault ? (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 bg-primary/5 border-primary/20 hover:bg-primary  text-primary h-8 text-xs gap-1.5 transition-all"
-                                onClick={() => handleClone(template)}
-                            >
-                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                Clone Template
-                            </Button>
-                        ) : (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 h-8 text-xs gap-1.5 border-border hover:border-primary/50"
-                                    onClick={() => handleOpenBuilder(template)}
-                                >
-                                    <Edit2 className="w-3.5 h-3.5" />
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="w-8 h-8 text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                                    onClick={() => handleDelete(template.id)}
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                            </>
-                        )}
-                        {template.platform === 'WHATSAPP_CLOUD' && (
-                            <>
-                                {(!template.status || template.status === 'DRAFT') ? (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 text-[10px] px-2 gap-1 border-primary/30 text-primary hover:bg-primary/5"
-                                        onClick={() => handleSubmitToMeta(template.id)}
-                                        disabled={isSubmittingId === template.id}
-                                    >
-                                        {isSubmittingId === template.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                                        Submit for Review
-                                    </Button>
-                                ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 text-[10px] px-2 gap-1 border-orange-500/30 text-orange-500 hover:bg-orange-500/5"
-                                        onClick={() => handleCheckStatus(template.id)}
-                                        disabled={isSubmittingId === template.id}
-                                    >
-                                        {isSubmittingId === template.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Loader2 className="w-3 h-3" />}
-                                        Refresh
-                                    </Button>
-                                ) : null}
-                            </>
-                        )}
                         <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8 text-muted-foreground hover:text-emerald-500 transition-colors shrink-0"
-                            onClick={() => openTestModal(template)}
+                            variant="default"
+                            size="sm"
+                            className="flex-1 h-8 text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                            onClick={() => template.isDefault ? handleClone(template) : handleOpenBuilder(template)}
                         >
-                            <Send className="w-3.5 h-3.5" />
+                            <Edit2 className="w-3.5 h-3.5" />
+                            {template.isDefault ? "Clone & Edit" : "Edit Template"}
                         </Button>
+
+                        <div className="flex gap-1">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="w-8 h-8 text-muted-foreground hover:text-emerald-500 border-border transition-colors"
+                                        onClick={() => openTestModal(template)}
+                                    >
+                                        <Send className="w-3.5 h-3.5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Send Test</TooltipContent>
+                            </Tooltip>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="icon" className="w-8 h-8 text-muted-foreground border-border">
+                                        <MoreVertical className="w-3.5 h-3.5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                                    <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => handleClone(template)}>
+                                        <Copy className="w-3.5 h-3.5 opacity-60" /> Clone Template
+                                    </DropdownMenuItem>
+
+                                    {template.platform === 'WHATSAPP_CLOUD' && (
+                                        <>
+                                            {(!template.status || template.status === 'DRAFT') ? (
+                                                <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary" onClick={() => handleSubmitToMeta(template.id)}>
+                                                    <Sparkles className="w-3.5 h-3.5 opacity-60" /> Submit for Review
+                                                </DropdownMenuItem>
+                                            ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
+                                                <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-orange-500" onClick={() => handleCheckStatus(template.id)}>
+                                                    <RefreshCw className="w-3.5 h-3.5 opacity-60" /> Refresh Status
+                                                </DropdownMenuItem>
+                                            ) : null}
+                                        </>
+                                    )}
+
+                                    {!template.isDefault && (
+                                        <>
+                                            <div className="h-px bg-border my-1" />
+                                            <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10" onClick={() => handleDelete(template.id)}>
+                                                <Trash2 className="w-3.5 h-3.5 opacity-60" /> Delete Template
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -724,16 +739,15 @@ export default function TemplatePage() {
                         <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
                         {template.platform === 'WHATSAPP_CLOUD' && (
                             <Badge
-                                className={`h-3.5 text-[8px] px-1.5 uppercase tracking-tighter border-0 font-bold ${
-                                    template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
+                                className={`h-3.5 text-[8px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
                                     (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30' :
-                                    template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
-                                    'bg-muted text-muted-foreground'
-                                }`}
+                                        template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
+                                            'bg-muted text-muted-foreground'
+                                    }`}
                             >
-                                {template.status === 'APPROVED' ? "Approved" : 
-                                 (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? "In Review" :
-                                 template.status === 'REJECTED' ? "Rejected" : "Draft"}
+                                {template.status === 'APPROVED' ? "Approved" :
+                                    (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? "In Review" :
+                                        template.status === 'REJECTED' ? "Rejected" : "Draft"}
                             </Badge>
                         )}
                         <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">• {template.type}</span>
@@ -754,15 +768,20 @@ export default function TemplatePage() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="flex items-center gap-1 shrink-0 ml-auto">
+                <div className="flex items-center gap-1 shrink-0 ml-auto mr-2">
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => (template.isDefault ? handleClone(template) : handleOpenBuilder(template))}>
-                                {template.isDefault ? <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> : <Edit2 className="w-3.5 h-3.5" />}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="w-8 h-8 rounded-full text-primary hover:bg-primary/10"
+                                onClick={() => template.isDefault ? handleClone(template) : handleOpenBuilder(template)}
+                            >
+                                <Edit2 className="w-3.5 h-3.5" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                            {template.isDefault ? "Clone Template" : "Edit Template"}
+                            {template.isDefault ? "Clone to Edit" : "Edit Template"}
                         </TooltipContent>
                     </Tooltip>
 
@@ -777,49 +796,41 @@ export default function TemplatePage() {
                         </TooltipContent>
                     </Tooltip>
 
-                    {template.platform === 'WHATSAPP_CLOUD' && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                {(!template.status || template.status === 'DRAFT') ? (
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="w-8 h-8 rounded-full text-primary hover:bg-primary/10" 
-                                        onClick={() => handleSubmitToMeta(template.id)}
-                                        disabled={isSubmittingId === template.id}
-                                    >
-                                        {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                                    </Button>
-                                ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="w-8 h-8 rounded-full text-orange-500 hover:bg-orange-500/10" 
-                                        onClick={() => handleCheckStatus(template.id)}
-                                        disabled={isSubmittingId === template.id}
-                                    >
-                                        <Loader2 className={`w-3.5 h-3.5 ${isSubmittingId === template.id ? 'animate-spin' : ''}`} />
-                                    </Button>
-                                ) : null}
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                                {template.status === 'PENDING_APPROVAL' ? "Refresh Approval Status" : "Submit for Approval"}
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-muted-foreground border-border">
+                                <MoreVertical className="w-3.5 h-3.5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                            <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => handleClone(template)}>
+                                <Copy className="w-3.5 h-3.5 opacity-60" /> Clone Template
+                            </DropdownMenuItem>
 
-                    {!template.isDefault && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-muted-foreground hover:text-destructive" onClick={() => handleDelete(template.id)}>
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                                Delete Template
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
+                            {template.platform === 'WHATSAPP_CLOUD' && (
+                                <>
+                                    {(!template.status || template.status === 'DRAFT') ? (
+                                        <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary" onClick={() => handleSubmitToMeta(template.id)}>
+                                            <Sparkles className="w-3.5 h-3.5 opacity-60" /> Submit for Review
+                                        </DropdownMenuItem>
+                                    ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
+                                        <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-orange-500" onClick={() => handleCheckStatus(template.id)}>
+                                            <RefreshCw className="w-3.5 h-3.5 opacity-60" /> Refresh Status
+                                        </DropdownMenuItem>
+                                    ) : null}
+                                </>
+                            )}
+
+                            {!template.isDefault && (
+                                <>
+                                    <div className="h-px bg-border my-1" />
+                                    <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10" onClick={() => handleDelete(template.id)}>
+                                        <Trash2 className="w-3.5 h-3.5 opacity-60" /> Delete Template
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         );
@@ -842,8 +853,8 @@ export default function TemplatePage() {
                             </div>
                         </div>
                         <div className='flex flex-row gap-2'>
-                            <Button 
-                                onClick={handleSyncCloud} 
+                            <Button
+                                onClick={handleSyncCloud}
                                 variant="outline"
                                 className="border-primary/20 text-primary hover:bg-primary/5 shadow-sm gap-2"
                                 disabled={isSyncing}
@@ -999,7 +1010,7 @@ export default function TemplatePage() {
 
                                     {/* Basic Info */}
                                     <div className="space-y-4">
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-sm font-semibold text-foreground mb-1.5 block">Display Name</label>
                                                 <Input
@@ -1182,6 +1193,7 @@ export default function TemplatePage() {
                                                 <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
                                             </label>
                                             <Textarea
+                                                rows='10'
                                                 placeholder="Hello {{1}}, your order {{2}} is ready..."
                                                 className="min-h-[120px] resize-none bg-background border-border"
                                                 value={formData.body || ''}
@@ -1618,10 +1630,10 @@ export default function TemplatePage() {
                                 </Button>
                                 <Button variant="outline" onClick={() => setIsBuilderOpen(false)}>Cancel</Button>
                                 {formData.platform === 'WHATSAPP_CLOUD' && (!formData.status || formData.status === 'DRAFT') && (
-                                    <Button 
-                                        variant="outline" 
-                                        onClick={() => handleSave(true)} 
-                                        disabled={!formData.name || !formData.body || isSaving || isSubmittingId === editingId} 
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => handleSave(true)}
+                                        disabled={!formData.name || !formData.body || isSaving || isSubmittingId === editingId}
                                         className="border-primary/50 text-primary hover:bg-primary/5"
                                     >
                                         {(isSaving || isSubmittingId) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -1657,12 +1669,12 @@ export default function TemplatePage() {
                                 <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border/50 animate-in fade-in slide-in-from-top-2 duration-500">
                                     <div className="flex items-center justify-between mb-2">
                                         <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                                            <Sparkles className="w-3.5 h-3.5" /> 
+                                            <Sparkles className="w-3.5 h-3.5" />
                                             Variable Mapping
                                         </h4>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
                                             className="h-6 text-[10px] uppercase font-bold text-muted-foreground hover:text-primary"
                                             onClick={() => {
                                                 const firstContact = allContacts.find(c => selectedContactIds.includes(c.id));
@@ -1683,7 +1695,7 @@ export default function TemplatePage() {
                                                 <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
                                                     {"{{"}{v}{"}}"}
                                                 </div>
-                                                <Input 
+                                                <Input
                                                     placeholder={`Value for variable ${v}...`}
                                                     className="h-9 text-sm bg-background border-border/60 group-hover:border-primary/40 transition-colors"
                                                     value={variableMappings[v] || ''}

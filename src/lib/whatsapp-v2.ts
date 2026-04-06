@@ -41,6 +41,10 @@ class WhatsAppManager {
         return this.contacts;
     }
 
+    getUser() {
+        return this.sock?.user || null;
+    }
+
     connect(sessionId: string = 'default') {
         console.log('wa manager connect for session:', sessionId)
         if (this.state === 'open' || this.state === 'connecting' || this.state === 'qr') return;

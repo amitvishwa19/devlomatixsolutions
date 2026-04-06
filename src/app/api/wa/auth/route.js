@@ -38,6 +38,7 @@ export async function GET() {
             status: currentStatus,
             qr,
             metadata: authRecord?.metadata || {},
+            user: waManager.getUser(),
             messages: waManager.getMessages() 
         });
     } catch (error) {
