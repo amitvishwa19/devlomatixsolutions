@@ -1042,3 +1042,17 @@ model ECommerceAbandonedCart {
   @@index([storeId])
   @@index([userId])
 }
+model EmailAssignment {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  event        String   // e.g., "USER_REGISTRATION", "USER_INVITATION"
+  templateName String   // e.g., "RegistrationMail.jsx"
+  subject      String?
+  isActive     Boolean  @default(true)
+  content      String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([workspaceId, event])
+  @@index([workspaceId])
+}

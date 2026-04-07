@@ -69,21 +69,19 @@ export async function POST(req, { params }) {
         const protocol = host.includes("localhost") ? "http" : "https";
         const inviteUrl = `${protocol}://${host}/invite/${server.inviteCode}`;
 
-        const mailData = {
-            from: process.env.MAIL_SERVICE_USERNAME || "invites@example.com",
-            to: email,
-            subject: `You have been invited to join ${server.name}`,
-        };
-
-        const template = <InviteEmailTemplate inviteUrl={inviteUrl} workspaceName={server.name} />;
-
-        // In a real scenario with proper env vars, this sends the email.
-        // We wrap it in a try-catch to avoid failing the whole request if SMTP is unconfigured.
+        // Use the new dynamic AppMailer
         try {
-            await AppMailer(mailData, template);
+            await AppMailer(workspaceId, {
+                to: email,
+                subject: `You have been invited to join ${server.name}`,
+                templateName: 'InviteEmailTemplate',
+                templateData: {
+                    inviteUrl,
+                    workspaceName: server.name
+                }
+            });
         } catch (mailError) {
-            console.error("AppMailer Error, potentially missing SMTP config:", mailError);
-            // We can return success anyway so the UI doesn't crash if SMTP is not configured in dev
+            console.error("AppMailer Error:", mailError);
         }
 
         return NextResponse.json({ success: true, message: "Invitation sent!" });

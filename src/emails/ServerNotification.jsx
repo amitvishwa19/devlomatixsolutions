@@ -7,7 +7,7 @@ const baseUrl = process.env.VERCEL_URL
     ? `https://devlomatix.online`
     : "";
 
-export default function ServerNotification({ mailData }) {
+export default function ServerNotification({ mailData = {} }) {
 
 
     return (

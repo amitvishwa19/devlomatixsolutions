@@ -7,7 +7,7 @@ const baseUrl = process.env.VERCEL_URL
     ? `https://devlomatix.online`
     : "";
 
-export default function BoardNotification({ mailData }) {
+export default function BoardNotification({ mailData = {} }) {
 
     console.log('Mail data from template', mailData)
     return (
