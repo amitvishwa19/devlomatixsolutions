@@ -535,6 +535,7 @@ model Credentials {
   profile     String?
   credentials Json?
   userId      String
+  workspaceId String?
   expired     Boolean  @default(false)
   status      String   @default("disconnected")
   createdAt   DateTime @default(now())
@@ -544,6 +545,7 @@ model Credentials {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([workspaceId])
 }
 
 model Post {
@@ -1048,6 +1050,7 @@ model EmailAssignment {
   event        String   // e.g., "USER_REGISTRATION", "USER_INVITATION"
   templateName String   // e.g., "RegistrationMail.jsx"
   subject      String?
+  fromEmail    String?
   isActive     Boolean  @default(true)
   content      String?  @db.Text
   createdAt    DateTime @default(now())

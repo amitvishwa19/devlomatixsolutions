@@ -1,9 +1,7 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
-import { render } from '@react-email/render';
+import Handlebars from "handlebars";
 import { db } from '@/lib/db';
-import fs from 'fs';
-import path from 'path';
 
 export async function AppMailer(workspaceId, { to, subject, templateName, templateData, from }) {
     try {
@@ -16,7 +14,6 @@ export async function AppMailer(workspaceId, { to, subject, templateName, templa
         });
 
         let resendClient;
-        let fromEmail = from || process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
         if (credential && credential.credentials) {
             const creds = typeof credential.credentials === 'string' 
@@ -49,27 +46,15 @@ export async function AppMailer(workspaceId, { to, subject, templateName, templa
             throw new Error(`Template ${templateName} not found in database or has no content.`);
         }
 
-        // 3. Render Template via Temp File (Next.js compatibility hack)
-        const targetDir = path.join(process.cwd(), 'src', 'emails');
-        
-        if (!fs.existsSync(targetDir)) {
-            fs.mkdirSync(targetDir, { recursive: true });
-        }
+        let fromEmail = from || assignment.fromEmail || process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
-        const filePath = path.join(targetDir, templateName);
-        fs.writeFileSync(filePath, assignment.content, 'utf8');
-
+        // 3. Render Template using Handlebars (Memory-safe, Production-safe)
         let html = '';
         try {
-            // Give the Next.js dev server/webpack a tiny moment to recognize the new file
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // Standard dynamic import (Turbopack strictly requires predictable literals)
-            const module = await import(`@/emails/${templateName}`);
-            const EmailComponent = module.default;
-            html = await render(<EmailComponent {...(templateData || {})} />);
+            const template = Handlebars.compile(assignment.content);
+            html = template(templateData || {});
         } catch (error) {
-            console.error("[APP_MAILER_IMPORT_ERROR]", error);
+            console.error("[APP_MAILER_HANDLEBARS_ERROR]", error);
             throw error;
         }
 

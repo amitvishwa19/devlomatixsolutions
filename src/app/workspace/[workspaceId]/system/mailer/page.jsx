@@ -77,6 +77,11 @@ export default function MailerPage() {
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [assignments, setAssignments] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState('');
+    const [assignFromEmail, setAssignFromEmail] = useState('');
+    const [isTesting, setIsTesting] = useState(false);
+    const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+    const [testDestinationEmail, setTestDestinationEmail] = useState('');
+    const [testSenderEmail, setTestSenderEmail] = useState('');
 
     const iframeRef = useRef(null);
 
@@ -189,13 +194,33 @@ export default function MailerPage() {
         try {
             await axios.post(`/api/workspace/${workspaceId}/mailer/assignments`, {
                 event: selectedEvent,
-                templateName: selectedFile
+                templateName: selectedFile,
+                fromEmail: assignFromEmail || null
             });
             toast.success("Event assigned successfully");
             setIsAssignModalOpen(false);
             fetchAssignments();
         } catch (error) {
             toast.error("Failed to assign event");
+        }
+    };
+
+    // Send Test Mail
+    const handleTestSend = async () => {
+        if (!selectedFile) return;
+        setIsTesting(true);
+        try {
+            await axios.post(`/api/workspace/${workspaceId}/mailer/test`, {
+                templateName: selectedFile,
+                testEmail: testDestinationEmail || null,
+                testFromEmail: testSenderEmail || null
+            });
+            toast.success("Test email sent successfully!");
+            setIsTestModalOpen(false);
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to send test email");
+        } finally {
+            setIsTesting(false);
         }
     };
 
@@ -224,6 +249,16 @@ export default function MailerPage() {
                         className="h-8 text-[10px] font-bold rounded-md gap-2"
                     >
                         <Plus className="h-3 w-3" /> New Template
+                    </Button>
+                    <Button
+                        disabled={!selectedFile || isTesting}
+                        onClick={() => setIsTestModalOpen(true)}
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 text-[10px] font-bold rounded-md gap-2 shadow-sm border"
+                    >
+                        {isTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                        Send Test
                     </Button>
                     <Button
                         disabled={!selectedFile || isSaving || !hasChanges}
@@ -258,8 +293,8 @@ export default function MailerPage() {
                                     key={file.name}
                                     onClick={() => handleFileSelect(file.name)}
                                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-[11px] font-bold transition-all ${selectedFile === file.name
-                                            ? "bg-primary/10 text-primary"
-                                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                        ? "bg-primary/10 text-primary"
+                                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
                                         }`}
                                 >
                                     <FileText className="h-3.5 w-3.5 opacity-50" />
@@ -301,7 +336,7 @@ export default function MailerPage() {
                             {selectedFile ? (
                                 <Editor
                                     height="100%"
-                                    defaultLanguage="javascript"
+                                    defaultLanguage="html"
                                     theme="vs-dark"
                                     value={fileContent}
                                     onChange={(value) => setFileContent(value)}
@@ -342,7 +377,7 @@ export default function MailerPage() {
                         </TabsContent>
 
                         <TabsContent value="settings" className="flex-1 m-0 p-8 overflow-y-auto outline-none">
-                            <div className="max-w-3xl mx-auto space-y-8">
+                            <div className="">
                                 <Card className="border-none shadow-soft overflow-hidden">
                                     <CardHeader className="bg-primary/5">
                                         <CardTitle className="text-sm font-bold">Event Assignments</CardTitle>
@@ -381,18 +416,36 @@ export default function MailerPage() {
                                                                     </div>
                                                                 )}
                                                             </td>
-                                                            <td className="px-6 py-4 text-right">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-7 text-[9px] font-bold rounded-md"
-                                                                    onClick={() => {
-                                                                        setSelectedEvent(item.event);
-                                                                        setIsAssignModalOpen(true);
-                                                                    }}
-                                                                >
-                                                                    {assigned ? 'Change Mapping' : 'Assign Template'}
-                                                                </Button>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    {assigned && (
+                                                                        <Button
+                                                                            variant="secondary"
+                                                                            size="sm"
+                                                                            className="h-7 text-[9px] font-bold rounded-md border shadow-sm"
+                                                                            onClick={() => {
+                                                                                setSelectedFile(assigned.templateName);
+                                                                                setTestSenderEmail(assigned.fromEmail || '');
+                                                                                setIsTestModalOpen(true);
+                                                                            }}
+                                                                        >
+                                                                            <Send className="h-3 w-3 mr-1" /> Test Mapping
+                                                                        </Button>
+                                                                    )}
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="h-7 text-[9px] font-bold rounded-md"
+                                                                        onClick={() => {
+                                                                            setSelectedEvent(item.event);
+                                                                            setSelectedFile(assigned ? assigned.templateName : '');
+                                                                            setAssignFromEmail(assigned?.fromEmail || '');
+                                                                            setIsAssignModalOpen(true);
+                                                                        }}
+                                                                    >
+                                                                        {assigned ? 'Change Mapping' : 'Assign Template'}
+                                                                    </Button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     );
@@ -424,7 +477,7 @@ export default function MailerPage() {
                                 onChange={(e) => setNewFileName(e.target.value)}
                                 className="h-12 bg-muted/30 border-none rounded-md font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner"
                             />
-                            <p className="text-[9px] text-muted-foreground px-1 opacity-60">This will create a .jsx file in src/emails/</p>
+                            <p className="text-[9px] text-muted-foreground px-1 opacity-60">This will store a standard HTML Handlebars template in your database</p>
                         </div>
                     </div>
                     <DialogFooter className="p-8 pt-2 bg-muted/10 border-t border-border/10">
@@ -450,23 +503,109 @@ export default function MailerPage() {
                                 <p className="text-sm font-bold">{selectedEvent}</p>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Select Template</label>
-                            <Select value={selectedFile} onValueChange={setSelectedFile}>
-                                <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md font-bold focus:ring-1 focus:ring-primary shadow-inner">
-                                    <SelectValue placeholder="Choose a template file" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-md border-border/20 shadow-2xl">
-                                    {filteredFiles.map(f => (
-                                        <SelectItem key={f.name} value={f.name} className="py-3 font-bold text-xs">{f.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Select Template</label>
+                                <Select value={selectedFile} onValueChange={setSelectedFile}>
+                                    <SelectTrigger className="h-12 bg-muted/30 border-none rounded-md font-bold focus:ring-1 focus:ring-primary shadow-inner">
+                                        <SelectValue placeholder="Choose a template file" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-md border-border/20 shadow-2xl">
+                                        {filteredFiles.map(f => (
+                                            <SelectItem key={f.name} value={f.name} className="py-3 font-bold text-xs">{f.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Custom "From" Email (Optional)</label>
+                                <Input
+                                    placeholder="e.g. support@devlomatix.com"
+                                    value={assignFromEmail}
+                                    onChange={(e) => setAssignFromEmail(e.target.value)}
+                                    className="h-12 bg-muted/30 border-none rounded-md font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner"
+                                />
+                                <p className="text-[9px] text-muted-foreground px-1 opacity-60">Leave blank to use the system default address config.</p>
+                            </div>
+                            <div className="space-y-2 pt-2 border-t">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 text-primary mt-2 flex items-center gap-1"><Send className="h-3 w-3" /> Quick Test Sandbox</label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Testing target 'To' email (Optional)"
+                                        value={testDestinationEmail}
+                                        onChange={(e) => setTestDestinationEmail(e.target.value)}
+                                        className="h-12 bg-muted/30 border-none rounded-md font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner flex-1"
+                                    />
+                                    <Button 
+                                        variant="secondary" 
+                                        className="h-12 border shadow-sm px-6 font-bold text-xs"
+                                        disabled={isTesting || !selectedFile}
+                                        onClick={async () => {
+                                            setIsTesting(true);
+                                            try {
+                                                await axios.post(`/api/workspace/${workspaceId}/mailer/test`, {
+                                                    templateName: selectedFile,
+                                                    testEmail: testDestinationEmail || null,
+                                                    testFromEmail: assignFromEmail || null
+                                                });
+                                                toast.success("Sandbox test dispatched!");
+                                            } catch (error) {
+                                                toast.error(error.response?.data?.message || "Failed to dispatch test");
+                                            } finally {
+                                                setIsTesting(false);
+                                            }
+                                        }}
+                                    >
+                                        {isTesting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Test'}
+                                    </Button>
+                                </div>
+                                <p className="text-[9px] text-muted-foreground px-1 opacity-60">Dry-run this assignment immediately to verify your layouts and mappings.</p>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter className="p-8 pt-2 bg-muted/10 border-t border-border/10">
                         <Button variant="ghost" onClick={() => setIsAssignModalOpen(false)} className="text-[10px] font-bold rounded-md">Cancel</Button>
                         <Button onClick={handleAssignEvent} className="text-[10px] font-bold rounded-md px-8 shadow-lg shadow-primary/20">Confirm Assignment</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Test Email Modal */}
+            <Dialog open={isTestModalOpen} onOpenChange={setIsTestModalOpen}>
+                <DialogContent className="max-w-md rounded-md p-0 overflow-hidden border-none shadow-2xl">
+                    <DialogHeader className="p-8 pb-4">
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2 text-primary">
+                            <Send className="h-5 w-5" /> Send Test Email
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="p-8 pt-2 space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">To Email Address</label>
+                            <Input
+                                placeholder="Optional (defaults to your admin email)"
+                                value={testDestinationEmail}
+                                onChange={(e) => setTestDestinationEmail(e.target.value)}
+                                className="h-12 bg-muted/30 border-none rounded-md font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner"
+                            />
+                            <p className="text-[9px] text-muted-foreground px-1 opacity-60">Leave blank to use your logged-in email.</p>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Custom "From" Email</label>
+                            <Input
+                                placeholder="e.g. alerts@devlomatix.com"
+                                value={testSenderEmail}
+                                onChange={(e) => setTestSenderEmail(e.target.value)}
+                                className="h-12 bg-muted/30 border-none rounded-md font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner"
+                            />
+                            <p className="text-[9px] text-muted-foreground px-1 opacity-60">Test delivery mapping using a specific sender address.</p>
+                        </div>
+                    </div>
+                    <DialogFooter className="p-8 pt-2 bg-muted/10 border-t border-border/10">
+                        <Button variant="ghost" onClick={() => setIsTestModalOpen(false)} className="text-[10px] font-bold rounded-md">Cancel</Button>
+                        <Button onClick={handleTestSend} disabled={isTesting} className="text-[10px] font-bold rounded-md px-8 shadow-lg shadow-primary/20">
+                            {isTesting ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
+                            Send Test Email
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -32,7 +32,7 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { event, templateName, subject, isActive } = await req.json();
+        const { event, templateName, subject, fromEmail, isActive } = await req.json();
 
         if (!event || !templateName) {
             return NextResponse.json({ message: "Event and template name are required" }, { status: 400 });
@@ -48,6 +48,7 @@ export async function POST(req, { params }) {
             update: {
                 templateName,
                 subject,
+                fromEmail,
                 isActive: isActive !== undefined ? isActive : true
             },
             create: {
@@ -55,6 +56,7 @@ export async function POST(req, { params }) {
                 event,
                 templateName,
                 subject,
+                fromEmail,
                 isActive: isActive !== undefined ? isActive : true
             }
         });

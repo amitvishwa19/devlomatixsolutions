@@ -50,7 +50,7 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "File name is required" }, { status: 400 });
         }
 
-        const filename = name.endsWith(".jsx") ? name : `${name}.jsx`;
+        const filename = name.endsWith(".html") ? name : (name.endsWith(".jsx") ? name : `${name}.html`);
 
         // Check if template already exists
         const existing = await db.emailAssignment.findFirst({
@@ -61,59 +61,25 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Template already exists" }, { status: 400 });
         }
 
-        const defaultContent = content || `
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Text,
-} from "@react-email/components";
-import * as React from "react";
-
-export const Template = ({ name = "User" }) => (
-  <Html>
-    <Head />
-    <Preview>Welcome to our platform!</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Welcome, {name}!</Heading>
-        <Text style={text}>
-          Thank you for joining us. We are excited to have you on board.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
-);
-
-export default Template;
-
-const main = {
-  backgroundColor: "#ffffff",
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
-};
-
-const container = {
-  margin: "0 auto",
-  padding: "20px 0 48px",
-};
-
-const h1 = {
-  color: "#333",
-  fontSize: "24px",
-  fontWeight: "bold",
-  padding: "0",
-  margin: "30px 0",
-};
-
-const text = {
-  color: "#333",
-  fontSize: "16px",
-  lineHeight: "26px",
-};
-`;
+        const defaultContent = content || `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Template</title>
+</head>
+<body style="background-color: #f6f9fc; margin: 0; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <tr>
+      <td style="padding: 40px;">
+        <h2 style="color: #333333; margin-top: 0;">Welcome, {{name}}!</h2>
+        <p style="color: #555555; font-size: 16px; line-height: 24px;">
+          Thank you for joining us. We are excited to have you on board!
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
         // Create a dummy assignment just to store the template
         await db.emailAssignment.create({
