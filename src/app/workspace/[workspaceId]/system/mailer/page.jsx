@@ -101,22 +101,39 @@ export default function MailerPage() {
     const [testSenderEmail, setTestSenderEmail] = useState('');
 
     const iframeRef = useRef(null);
-        return () => window.removeEventListener('message', handleMessage);
-    }, [fileContent]); // Depend on fileContent for accurate line swapping
+    const editorRef = useRef(null);
 
-    // Helper: Find code block for a given line (Best effort for HTML tags)
-    const findCodeBlock = (content, lineNum) => {
+    // Helper: Find code block for a given line (Find balanced HTML tags)
+    const findCodeBlock = (content, startLineIdx) => {
         const lines = content.split('\n');
-        const targetLine = lines[lineNum - 1];
-        if (!targetLine) return null;
+        const openingLine = lines[startLineIdx];
+        if (!openingLine) return { start: startLineIdx, end: startLineIdx, content: '' };
 
-        // Simplified approach: Target the entire line and its consecutive lines if it's a multi-line tag
-        // For professional use, we'll focus on line-level operations first
-        return {
-            start: lineNum - 1,
-            end: lineNum - 1,
-            content: targetLine
-        };
+        // Find the tag name
+        const match = openingLine.match(/<([a-zA-Z0-9]+)/);
+        if (!match) return { start: startLineIdx, end: startLineIdx, content: openingLine }; // Fallback to single line
+
+        const tagName = match[1];
+        const selfClosing = /<[a-zA-Z0-9]+[^>]*\/>/.test(openingLine);
+        if (selfClosing) return { start: startLineIdx, end: startLineIdx, content: openingLine };
+
+        // Stack-based search for closing tag
+        let stack = 1;
+        for (let i = startLineIdx + 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.includes(`<${tagName}`)) stack++;
+            if (line.includes(`</${tagName}>`)) stack--;
+            
+            if (stack === 0) {
+                return {
+                    start: startLineIdx,
+                    end: i,
+                    content: lines.slice(startLineIdx, i + 1).join('\n')
+                };
+            }
+        }
+
+        return { start: startLineIdx, end: startLineIdx, content: openingLine }; // Default fallback
     };
 
     const handleVisualAction = (lineNum, action, payload = {}) => {
@@ -125,35 +142,45 @@ export default function MailerPage() {
         if (idx < 0 || idx >= lines.length) return;
 
         let newLines = [...lines];
+        const block = findCodeBlock(fileContent, idx);
         
+        if (!block) {
+            toast.error("Could not identify component boundaries");
+            return;
+        }
+
         switch (action) {
-            case 'move-up':
-                if (idx > 0) {
-                    [newLines[idx], newLines[idx - 1]] = [newLines[idx - 1], newLines[idx]];
-                    setFileContent(newLines.join('\n'));
-                    toast.success("Moved component up");
+            case 'move-to':
+                const targetLineNum = parseInt(payload.targetLine);
+                const targetIdx = targetLineNum - 1;
+                
+                // Extract block
+                const blockContent = lines.slice(block.start, block.end + 1);
+                newLines.splice(block.start, blockContent.length);
+                
+                // Adjust target index if block was before it
+                let adjustedTargetIdx = targetIdx;
+                if (block.start < targetIdx) {
+                    adjustedTargetIdx -= blockContent.length - 1;
                 }
-                break;
-            case 'move-down':
-                if (idx < lines.length - 1) {
-                    [newLines[idx], newLines[idx + 1]] = [newLines[idx + 1], newLines[idx]];
-                    setFileContent(newLines.join('\n'));
-                    toast.success("Moved component down");
-                }
+                
+                newLines.splice(adjustedTargetIdx, 0, ...blockContent);
+                setFileContent(newLines.join('\n'));
+                toast.success("Component reordered");
                 break;
             case 'duplicate':
-                newLines.splice(idx + 1, 0, lines[idx]);
+                const blockToClone = lines.slice(block.start, block.end + 1);
+                newLines.splice(block.end + 1, 0, ...blockToClone);
                 setFileContent(newLines.join('\n'));
                 toast.success("Component duplicated");
                 break;
             case 'delete':
-                newLines.splice(idx, 1);
+                newLines.splice(block.start, block.end - block.start + 1);
                 setFileContent(newLines.join('\n'));
                 toast.success("Component removed");
                 break;
             case 'resize':
                 const width = payload.width;
-                // Regex find width="..." or style="width: ..."
                 if (lines[idx].includes('width=')) {
                     newLines[idx] = lines[idx].replace(/width="[^"]*"/, `width="${width}"`);
                 } else if (lines[idx].includes('style=')) {
@@ -386,27 +413,35 @@ export default function MailerPage() {
                 instrument: true // Enable Click-to-Source markers
             });
 
-            // Inject the Inspector & Visual Editor Script into the preview HTML
+            // Inject the Inspector & Draggable Editor Script into the preview HTML
             const inspectorScript = `
                 <script>
                     let selectedElement = null;
                     let selectionBox = null;
                     let toolbar = null;
+                    let resizer = null;
+                    let isResizing = false;
 
                     const showUI = (el) => {
                         if (!selectionBox) {
                             selectionBox = document.createElement('div');
-                            selectionBox.style.cssText = 'position:absolute; outline:2px solid #3b82f6; pointer-events:none; transition: all 0.1s ease; z-index: 9999;';
+                            selectionBox.style.cssText = 'position:absolute; outline:2px solid #3b82f6; pointer-events:none; transition: outline 0.1s ease; z-index: 9999;';
                             document.body.appendChild(selectionBox);
 
+                            resizer = document.createElement('div');
+                            resizer.style.cssText = 'position:absolute; bottom:-4px; right:-4px; width:12px; height:12px; background:#3b82f6; border-radius:50%; cursor:nwse-resize; z-index: 10001; border:2px solid white; pointer-events: auto; shadow: 0 2px 4px rgba(0,0,0,0.2);';
+                            selectionBox.appendChild(resizer);
+
                             toolbar = document.createElement('div');
-                            toolbar.style.cssText = 'position:absolute; background:#1e1e1e; color:white; padding:4px; border-radius:4px; display:flex; gap:4px; z-index: 10000; font-family:sans-serif; font-size:10px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.2);';
+                            toolbar.id = 'visual-toolbar';
+                            toolbar.style.cssText = 'position:absolute; background:#1e1e1e; color:white; padding:4px; border-radius:4px; display:flex; gap:4px; z-index: 10000; font-family:sans-serif; font-size:10px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.2); pointer-events: auto;';
                             toolbar.innerHTML = \`
-                                <button id="move-up" style="background:transparent; border:none; color:white; cursor:pointer; padding:2px 4px; hover:background:#3b82f6; border-radius:2px;">↑</button>
-                                <button id="move-down" style="background:transparent; border:none; color:white; cursor:pointer; padding:2px 4px; hover:background:#3b82f6; border-radius:2px;">↓</button>
-                                <button id="duplicate" style="background:transparent; border:none; color:white; cursor:pointer; padding:2px 4px; hover:background:#3b82f6; border-radius:2px;">📋</button>
-                                <button id="delete" style="background:transparent; border:none; color:#f87171; cursor:pointer; padding:2px 4px; hover:background:rgba(248,113,113,0.1); border-radius:2px;">🗑️</button>
+                                <div id="drag-handle" draggable="true" style="cursor:grab; background:transparent; border:none; color:white; padding:4px; hover:background:#3b82f6; border-radius:2px; font-size: 14px; line-height: 1;">⠿</div>
                                 <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 2px;"></div>
+                                <button id="duplicate" style="background:transparent; border:none; color:white; cursor:pointer; padding:2px 4px; hover:background:#3b82f6; border-radius:2px;" title="Duplicate Block">📋</button>
+                                <button id="delete" style="background:transparent; border:none; color:#f87171; cursor:pointer; padding:2px 4px; hover:background:rgba(248,113,113,0.1); border-radius:2px;" title="Delete Block">🗑️</button>
+                                <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 2px;"></div>
+                                <span id="width-label" style="opacity:0.6; padding:0 2px; align-self: center;">W:</span>
                                 <input type="number" id="width-input" style="width:35px; background:transparent; border:none; color:white; font-size:9px; text-align:center" placeholder="px" />
                             \`;
                             document.body.appendChild(toolbar);
@@ -414,14 +449,19 @@ export default function MailerPage() {
                             toolbar.onclick = (e) => {
                                 e.stopPropagation();
                                 const line = selectedElement.getAttribute('data-source-line');
-                                if (e.target.id === 'move-up') window.parent.postMessage({ type: 'visual-action', action: 'move-up', line }, '*');
-                                if (e.target.id === 'move-down') window.parent.postMessage({ type: 'visual-action', action: 'move-down', line }, '*');
                                 if (e.target.id === 'duplicate') window.parent.postMessage({ type: 'visual-action', action: 'duplicate', line }, '*');
                                 if (e.target.id === 'delete') {
                                     window.parent.postMessage({ type: 'visual-action', action: 'delete', line }, '*');
                                     hideUI();
                                 }
                             };
+
+                            const dragHandle = toolbar.querySelector('#drag-handle');
+                            dragHandle.ondragstart = (e) => {
+                                e.dataTransfer.setData('text/plain', selectedElement.getAttribute('data-source-line'));
+                                selectionBox.style.opacity = '0.3';
+                            };
+                            dragHandle.ondragend = () => selectionBox.style.opacity = '1';
 
                             toolbar.querySelector('#width-input').onchange = (e) => {
                                 const line = selectedElement.getAttribute('data-source-line');
@@ -431,6 +471,39 @@ export default function MailerPage() {
                                     line, 
                                     payload: { width: e.target.value + 'px' } 
                                 }, '*');
+                            };
+
+                            // Resizer Logic
+                            resizer.onmousedown = (e) => {
+                                e.preventDefault();
+                                isResizing = true;
+                                const initialX = e.clientX;
+                                const initialWidth = rect.width;
+                                
+                                const onMouseMove = (moveEvent) => {
+                                    if (!isResizing) return;
+                                    const deltaX = moveEvent.clientX - initialX;
+                                    const newWidth = Math.max(20, initialWidth + deltaX);
+                                    selectionBox.style.width = newWidth + 'px';
+                                    toolbar.querySelector('#width-input').value = Math.round(newWidth);
+                                };
+
+                                const onMouseUp = () => {
+                                    if (isResizing) {
+                                        isResizing = false;
+                                        window.parent.postMessage({ 
+                                            type: 'visual-action', 
+                                            action: 'resize', 
+                                            line: selectedElement.getAttribute('data-source-line'),
+                                            payload: { width: selectionBox.style.width }
+                                        }, '*');
+                                    }
+                                    document.removeEventListener('mousemove', onMouseMove);
+                                    document.removeEventListener('mouseup', onMouseUp);
+                                };
+
+                                document.addEventListener('mousemove', onMouseMove);
+                                document.addEventListener('mouseup', onMouseUp);
                             };
                         }
 
@@ -447,9 +520,7 @@ export default function MailerPage() {
                         toolbar.style.display = 'flex';
                         toolbar.style.left = (rect.left + scrollX) + 'px';
                         toolbar.style.top = (rect.top + scrollY - 30) + 'px';
-                        
-                        const widthInput = toolbar.querySelector('#width-input');
-                        widthInput.value = parseInt(rect.width);
+                        toolbar.querySelector('#width-input').value = Math.round(rect.width);
                     };
 
                     const hideUI = () => {
@@ -474,19 +545,45 @@ export default function MailerPage() {
                         }
                     }, true);
 
-                    // Add hover styles for inspectability
+                    // Drop Engine for Reordering
+                    document.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        const target = e.target.closest('[data-source-line]');
+                        if (target && target !== selectedElement) {
+                            target.style.borderTop = '3px solid #3b82f6';
+                        }
+                    });
+
+                    document.addEventListener('dragleave', (e) => {
+                        const target = e.target.closest('[data-source-line]');
+                        if (target) target.style.borderTop = '';
+                    });
+
+                    document.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const target = e.target.closest('[data-source-line]');
+                        if (target) {
+                            target.style.borderTop = '';
+                            const sourceLine = e.dataTransfer.getData('text/plain');
+                            const targetLine = target.getAttribute('data-source-line');
+                            window.parent.postMessage({ 
+                                type: 'visual-action', 
+                                action: 'move-to', 
+                                line: sourceLine,
+                                payload: { targetLine }
+                            }, '*');
+                        }
+                    });
+
+                    // Styles
                     const style = document.createElement('style');
                     style.textContent = \`
-                        [data-source-line]:hover { 
-                            outline: 2px dashed #93c5fd !important; 
-                            outline-offset: -2px !important; 
-                            cursor: crosshair !important;
-                        }
-                        button:hover { background: rgba(59, 130, 246, 0.2); }
+                        [data-source-line]:hover { outline: 1px dashed #93c5fd !important; cursor: crosshair; }
+                        #drag-handle:hover { background: rgba(59,130,246,0.2) !important; }
+                        button:hover { background: rgba(59,130,246,0.2) !important; }
                     \`;
                     document.head.appendChild(style);
 
-                    // Reposition UI on scroll
                     window.addEventListener('scroll', () => {
                         if (selectedElement && selectionBox.style.display !== 'none') showUI(selectedElement);
                     });

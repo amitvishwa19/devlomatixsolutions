@@ -46,9 +46,9 @@ export async function POST(req, { params }) {
         };
 
         // Inject instrumentation markers if requested
-        let instrumentedContent = templateContent;
-        if (instrument) {
-            instrumentedContent = templateContent.split('\n').map((line, idx) => {
+        let instrumentedContent = templateContent || '';
+        if (instrument && instrumentedContent) {
+            instrumentedContent = instrumentedContent.split('\n').map((line, idx) => {
                 // Find first HTML tag start and inject line number
                 // Regex: Starts with < followed by alphanumeric tag name, then space or closure
                 return line.replace(/<([a-zA-Z0-9]+)(\s|>)/, `<$1 data-source-line="${idx + 1}"$2`);

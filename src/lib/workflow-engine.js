@@ -103,6 +103,7 @@ async function executeNode(node, context, workflow, logs) {
             
             const provider = modelNode.data?.provider || 'gemini';
             let apiKey = modelNode.data?.apiKey || (provider === 'gemini' ? process.env.GEMINI_API_KEY : process.env.OPENAI_API_KEY);
+            let userSelectedModel = null;
             
             // 0. Resolve Managed Credential
             if (modelNode.data?.credentialId) {
@@ -110,6 +111,7 @@ async function executeNode(node, context, workflow, logs) {
                 if (cred && cred.credentials) {
                     const credData = cred.credentials;
                     apiKey = credData.apiKey || credData.api_key || credData.token || apiKey;
+                    userSelectedModel = credData.model;
                 }
             }
             
@@ -145,7 +147,7 @@ async function executeNode(node, context, workflow, logs) {
                 }] : [];
 
                 const model = genAI.getGenerativeModel({ 
-                    model: "gemini-2.0-flash", 
+                    model: userSelectedModel || "gemini-2.0-flash", 
                     systemInstruction: systemPrompt,
                     tools: geminiTools
                 });
@@ -268,17 +270,19 @@ async function executeNode(node, context, workflow, logs) {
 
         case 'ai':
             let simpleApiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+            let simpleModelName = "gemini-2.0-flash";
             
             if (node.data?.credentialId) {
                 const cred = await db.credentials.findUnique({ where: { id: node.data.credentialId } });
                 if (cred && cred.credentials) {
                     const d = cred.credentials;
                     simpleApiKey = d.apiKey || d.api_key || d.token || simpleApiKey;
+                    simpleModelName = d.model || simpleModelName;
                 }
             }
 
             const genAI = new GoogleGenerativeAI(simpleApiKey);
-            const simpleModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const simpleModel = genAI.getGenerativeModel({ model: simpleModelName });
             let prompt = interpolateString(node.data?.prompt || "Say hello", context);
             const result = await simpleModel.generateContent(prompt);
             outputData = { text: result.response.text() };

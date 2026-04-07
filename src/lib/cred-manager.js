@@ -418,15 +418,16 @@ async function testGemini(credentials) {
     }
 
     try {
+        const selectedModel = (credentials.model || 'gemini-2.0-flash').trim();
         const genAI = new GoogleGenerativeAI(key);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: selectedModel });
         await model.generateContent("hi");
         return { 
             success: true, 
-            message: 'Gemini API key is valid', 
+            message: `Gemini API key is valid (${selectedModel})`, 
             data: { 
                 profileName: "Google Gemini AI",
-                message: "Successfully connected to Gemini 2.0 Flash" 
+                message: `Successfully connected to ${selectedModel}` 
             } 
         };
     } catch (err) {

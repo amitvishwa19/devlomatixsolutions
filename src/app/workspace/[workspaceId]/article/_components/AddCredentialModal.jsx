@@ -30,7 +30,9 @@ import {
     Tag,
     User,
     Activity,
-    Zap
+    Zap,
+    Sparkles,
+    Bot
 } from "lucide-react";
 
 const PLATFORM_CONFIG = {
@@ -49,6 +51,16 @@ const PLATFORM_CONFIG = {
     RESEND: ['apiKey'],
 };
 
+const GEMINI_MODELS = [
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Next-gen high speed & intelligence' },
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', description: 'Fast & efficient, great for most tasks' },
+    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite', description: 'Lightest & fastest for simple tasks' },
+    { value: 'gemini-2.5-pro-exp-03-25', label: 'Gemini 2.5 Pro (Experimental)', description: 'Most capable & intelligent model' },
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Balanced performance & intelligence' },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Fast multimodal model' },
+    { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Ultra-lightweight for simpler tasks' },
+];
+
 export const AddCredentialModal = () => {
     const { isOpen, onClose, type, data, activeModals } = useModal();
     const isModalOpen = !!activeModals["addCredential"];
@@ -64,6 +76,7 @@ export const AddCredentialModal = () => {
     const [profileName, setProfileName] = useState('');
     const [status, setStatus] = useState('disconnected');
     const [fields, setFields] = useState([{ key: '', value: '' }]);
+    const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
 
     const isEdit = !!initialData?.id;
 
@@ -79,10 +92,15 @@ export const AddCredentialModal = () => {
             setProfileName(initialData.profileName || '');
             setStatus(initialData.status || 'disconnected');
 
-            // Map details to fields, excluding profileName
+            // Map details to fields, excluding profileName and model (handled separately)
             if (initialData.details) {
+                // Extract model for Gemini
+                if (platformKey === 'GEMINI' && initialData.details.model) {
+                    setGeminiModel(initialData.details.model);
+                }
+
                 const dynamicFields = Object.entries(initialData.details)
-                    .filter(([key]) => key !== 'profileName')
+                    .filter(([key]) => key !== 'profileName' && key !== 'model')
                     .map(([key, value]) => ({ key, value }));
 
                 setFields(dynamicFields.length > 0 ? dynamicFields : [{ key: '', value: '' }]);
@@ -93,6 +111,7 @@ export const AddCredentialModal = () => {
             setProfileName('');
             setStatus('disconnected');
             setFields([{ key: '', value: '' }]);
+            setGeminiModel('gemini-2.0-flash');
         }
     }, [isEdit, initialData, isModalOpen]);
 
@@ -163,6 +182,11 @@ export const AddCredentialModal = () => {
                 credentialsObject[f.key.trim()] = f.value;
             });
 
+            // Store selected model for Gemini
+            if (finalPlatform.toUpperCase() === 'GEMINI' && geminiModel) {
+                credentialsObject.model = geminiModel;
+            }
+
             const payload = {
                 platform: finalPlatform.toUpperCase(),
                 credentials: credentialsObject,
@@ -196,6 +220,7 @@ export const AddCredentialModal = () => {
             setProfileName('');
             setStatus('connected');
             setFields([{ key: '', value: '' }]);
+            setGeminiModel('gemini-2.0-flash');
         }
         onClose("addCredential");
     };
@@ -277,6 +302,33 @@ export const AddCredentialModal = () => {
                                     onChange={(e) => setProfileName(e.target.value)}
                                     className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
                                 />
+                            </div>
+                        )}
+
+                        {/* Gemini Model Selector */}
+                        {platform === 'GEMINI' && (
+                            <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
+                                <label className="text-[10px] font-bold text-purple-500 ml-1 flex items-center gap-2">
+                                    <Bot className="w-3 h-3" /> AI MODEL
+                                </label>
+                                <Select value={geminiModel} onValueChange={setGeminiModel} disabled={isLoading}>
+                                    <SelectTrigger className="bg-purple-500/5 border border-purple-500/20 rounded-md focus:ring-1 focus:ring-purple-500 h-12 font-bold text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                            <SelectValue placeholder="Select Gemini Model" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-md border-border/20 shadow-2xl">
+                                        {GEMINI_MODELS.map((model) => (
+                                            <SelectItem key={model.value} value={model.value} className="font-semibold text-xs py-3">
+                                                <div className="flex flex-col">
+                                                    <span>{model.label}</span>
+                                                    <span className="text-[9px] text-muted-foreground font-normal">{model.description}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         )}
 
@@ -370,8 +422,12 @@ export const AddCredentialModal = () => {
                                         const credentialsObject = {};
                                         fields.forEach(f => {
                                             if (f.key.trim()) credentialsObject[f.key.trim()] = f.value;
-                                            if (profileName) credentialsObject.profileName = profileName;
                                         });
+                                        if (profileName) credentialsObject.profileName = profileName;
+                                        // Include selected Gemini model so the backend tests with the right one
+                                        if (platform === 'GEMINI' && geminiModel) {
+                                            credentialsObject.model = geminiModel;
+                                        }
 
                                         const finalPlatform = platform === 'CUSTOM' ? customPlatform : platform;
 
