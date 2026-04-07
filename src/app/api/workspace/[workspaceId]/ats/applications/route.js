@@ -21,7 +21,7 @@ export async function GET(req, { params }) {
                 job: true,
                 candidate: true,
             },
-            orderBy: { appliedDate: 'desc' }
+            orderBy: { appliedAt: 'desc' }
         });
 
         return NextResponse.json(applications);

@@ -53,6 +53,7 @@ import {
  TableRow,
 } from"@/components/ui/table";
 import { CandidateModal } from'../_components/CandidateModal';
+import { CandidateDetailsModal } from '../_components/CandidateDetailsModal';
 
 import useSWR from'swr';
 import axios from'axios';
@@ -69,6 +70,9 @@ export default function TalentDatabasePage() {
 
  const { data: candidates, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/candidates`, fetcher);
  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+ const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+ const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+
 
  const talents = candidates ? candidates.map(c => ({
  id: c.id,
@@ -238,7 +242,10 @@ export default function TalentDatabasePage() {
  variant="ghost"
  size="icon"
  className="h-8 w-8 rounded-md opacity-40 hover:opacity-100 hover:bg-primary hover:text-white transition-all shadow-none"
- onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.id}`)}
+ onClick={() => {
+     setSelectedCandidateId(candidate.id);
+     setIsDetailsModalOpen(true);
+ }}
  >
  <ExternalLink size={14} />
  </Button>
@@ -332,7 +339,10 @@ export default function TalentDatabasePage() {
  <Button
  variant="outline"
  className="flex-1 rounded-md text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
- onClick={() => router.push(`/workspace/${workspaceId}/ats/candidates/${candidate.id}`)}
+ onClick={() => {
+     setSelectedCandidateId(candidate.id);
+     setIsDetailsModalOpen(true);
+ }}
  >
  View Profile <ExternalLink size={12} className="ml-2 opacity-50"/>
  </Button>
@@ -392,6 +402,13 @@ export default function TalentDatabasePage() {
  onClose={() => setIsAddModalOpen(false)}
  workspaceId={workspaceId}
  onSuccess={() => mutate()}
+ />
+
+ <CandidateDetailsModal 
+ isOpen={isDetailsModalOpen}
+ onClose={() => setIsDetailsModalOpen(false)}
+ candidateId={selectedCandidateId}
+ workspaceId={workspaceId}
  />
  </div>
  );

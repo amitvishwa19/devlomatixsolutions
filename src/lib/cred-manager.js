@@ -480,7 +480,41 @@ const PLATFORM_TESTERS = {
     GMAIL:      testGoogle,
     GEMINI:     testGemini,
     GOOGLE_PLACES: testGooglePlaces,
+    RESEND:     testResend,
 };
+
+/**
+ * Resend Email API
+ * Required keys: apiKey
+ */
+async function testResend(credentials) {
+    const key = (credentials.apiKey || credentials['api-key'] || credentials.api_key || '').trim();
+    if (!key) return { success: false, message: 'Missing apiKey' };
+
+    const { ok, status, data } = await fetchWithTimeout(
+        'https://api.resend.com/api-keys',
+        {
+            headers: {
+                'Authorization': `Bearer ${key}`,
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    if (ok) {
+        return { 
+            success: true, 
+            message: 'Resend API key is valid', 
+            data: { 
+                profileName: 'Resend Cloud',
+                ...data 
+            } 
+        };
+    }
+
+    if (status === 401) return { success: false, message: 'Invalid or expired Resend API key', data };
+    return { success: false, message: data?.message || 'Resend connection failed', data };
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Export

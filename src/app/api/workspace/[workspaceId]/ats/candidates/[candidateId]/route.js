@@ -13,9 +13,18 @@ export async function GET(req, { params }) {
             where: { id: candidateId },
             include: {
                 applications: {
+                    where: { workspaceId },
                     include: { 
                         job: true,
                     }
+                },
+                scorecards: {
+                    include: { interviewer: true },
+                    orderBy: { createdAt: 'desc' }
+                },
+                notes: {
+                    include: { user: true },
+                    orderBy: { createdAt: 'desc' }
                 }
             }
         });

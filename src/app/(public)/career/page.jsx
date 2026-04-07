@@ -44,11 +44,14 @@ export default function CareerPage() {
   const filteredJobs = useMemo(() => {
     if (!jobs) return [];
     return jobs.filter(job => {
-      const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
-        job.department.toLowerCase().includes(search.toLowerCase());
-      const matchesDept = department === 'ALL' || job.department === department;
+      const deptName = job.department || job.category?.name || "";
+      const locName = job.location || "";
+      
+      const matchesSearch = (job.title || "").toLowerCase().includes(search.toLowerCase()) ||
+        deptName.toLowerCase().includes(search.toLowerCase());
+      const matchesDept = department === 'ALL' || deptName === department;
       const matchesType = type === 'ALL' || job.type === type;
-      const matchesLoc = location === 'ALL' || job.location.toLowerCase().includes(location.toLowerCase());
+      const matchesLoc = location === 'ALL' || locName.toLowerCase().includes(location.toLowerCase());
 
       return matchesSearch && matchesDept && matchesType && matchesLoc;
     });

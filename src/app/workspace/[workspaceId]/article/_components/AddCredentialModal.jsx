@@ -46,6 +46,7 @@ const PLATFORM_CONFIG = {
     GMAIL: ['access_token', 'refresh_token'],
     GOOGLE: ['access_token', 'refresh_token'],
     GEMINI: ['apiKey'],
+    RESEND: ['apiKey'],
 };
 
 export const AddCredentialModal = () => {

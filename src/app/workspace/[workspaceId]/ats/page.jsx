@@ -36,33 +36,7 @@ import axios from 'axios';
 
 const fetcher = url => axios.get(url).then(res => res.data);
 
-// Analytics Data
-const analyticsStats = [
-    { label: "Avg. Time to Hire", value: "18 Days", trend: "-2.4%", trendStatus: "up", icon: Clock, color: "text-primary" },
-    { label: "Offer Acceptance", value: "84%", trend: "+5.1%", trendStatus: "up", icon: Target, color: "text-emerald-500" },
-    { label: "Source Quality", value: "4.2/5", trend: "+0.3", trendStatus: "up", icon: BarChart3, color: "text-blue-500" },
-    { label: "Interviewer Load", value: "12/wk", trend: "Stable", trendStatus: "neutral", icon: Users, color: "text-amber-500" },
-];
-
-const pipelineData = [
-    { stage: "Applied", count: 852, percentage: 100 },
-    { stage: "Screening", count: 340, percentage: 40 },
-    { stage: "Technical", count: 120, percentage: 14 },
-    { stage: "Cultural", count: 45, percentage: 5 },
-    { stage: "Offer", count: 18, percentage: 2 },
-];
-
-const teamPerformance = [
-    { name: "Amit Singh", count: 24, score: 4.8, rate: "92%" },
-    { name: "Neha Kapur", count: 18, score: 4.5, rate: "78%" },
-    { name: "Siddharth J.", count: 15, score: 3.9, rate: "65%" },
-];
-
-const positionsHealth = [
-    { role: "Senior Frontend Engineer", candidates: 42, health: 85, velocity: "Fast" },
-    { role: "Product Designer", candidates: 12, health: 45, velocity: "Slow" },
-    { role: "Backend Architect", candidates: 28, health: 92, velocity: "Stable" },
-];
+// Global Icon lookups or helpers can sit here if necessary
 
 export default function AtsDashboard() {
     const { workspaceId } = useParams();
@@ -226,15 +200,23 @@ export default function AtsDashboard() {
 
                     {/* Quick Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {analyticsStats.map((stat, i) => (
-                            <Card key={i} className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5 group hover:border-primary/20 transition-all">
-                                <CardContent className="p-8 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className={`w-12 h-12 rounded-md bg-muted/60 flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
-                                            <stat.icon size={22} />
-                                        </div>
-                                        <div className={`flex items-center gap-1 text-[10px] ${stat.trendStatus === 'up' ? 'text-emerald-500' : 'text-muted-foreground'}`}>
-                                            {stat.trendStatus === 'up' ? <ArrowUpRight size={12} /> : <div className="w-1.5 h-1.5 rounded-full bg-border" />}
+                        {(summary?.analyticsStats || []).map((stat, i) => {
+                            const IconCmp = {
+                                'Clock': Clock,
+                                'Target': Target,
+                                'BarChart3': BarChart3,
+                                'Users': Users
+                            }[stat.icon] || Clock;
+
+                            return (
+                                <Card key={i} className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5 group hover:border-primary/20 transition-all">
+                                    <CardContent className="p-8 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className={`w-12 h-12 rounded-md bg-muted/60 flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
+                                                <IconCmp size={22} />
+                                            </div>
+                                            <div className={`flex items-center gap-1 text-[10px] ${stat.trendStatus === 'up' ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                                                {stat.trendStatus === 'up' ? <ArrowUpRight size={12} /> : <div className="w-1.5 h-1.5 rounded-full bg-border" />}
                                             {stat.trend}
                                         </div>
                                     </div>
@@ -244,7 +226,8 @@ export default function AtsDashboard() {
                                     </div>
                                 </CardContent>
                             </Card>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -258,12 +241,12 @@ export default function AtsDashboard() {
                             </CardHeader>
                             <CardContent className="p-8 pt-4 space-y-8">
                                 <div className="space-y-6">
-                                    {pipelineData.map((stage, i) => (
+                                    {(summary?.pipelineStats || []).map((stage, i) => (
                                         <div key={i} className="space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-xs w-4 text-muted-foreground/40">{i + 1}</span>
-                                                    <span className="text-xs font-bold">{stage.stage}</span>
+                                                    <span className="text-xs font-bold">{stage.label}</span>
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                     <span className="text-xs text-primary">{stage.count} <span className="text-muted-foreground opacity-40">Candidates</span></span>
@@ -295,21 +278,17 @@ export default function AtsDashboard() {
                             <CardContent className="p-8 pt-4 space-y-8">
                                 <div className="aspect-square rounded-full border-[20px] border-muted/20 relative flex items-center justify-center overflow-hidden group mx-auto max-w-[240px]">
                                     <div className="text-center">
-                                        <h4 className="text-4xl tracking-tighter">68%</h4>
-                                        <p className="text-[10px] text-muted-foreground opacity-40">Inbound</p>
+                                        <h4 className="text-4xl tracking-tighter">{summary?.sourceMix?.[0]?.value || "100%"}</h4>
+                                        <p className="text-[10px] text-muted-foreground opacity-40">{summary?.sourceMix?.[0]?.label || "Direct Applied"}</p>
                                     </div>
                                     <div className="absolute inset-0 border-[20px] border-primary border-t-transparent border-l-transparent rotate-45 opacity-60 group-hover:rotate-90 transition-transform duration-1000" />
                                     <div className="absolute inset-4 border-[10px] border-emerald-500 border-b-transparent border-r-transparent -rotate-12 opacity-40 group-hover:-rotate-45 transition-transform duration-1000" />
                                 </div>
                                 <div className="space-y-4 pt-4">
-                                    {[
-                                        { label: "LinkedIn", value: "42%", color: "bg-primary" },
-                                        { label: "Referrals", value: "26%", color: "bg-emerald-500" },
-                                        { label: "Direct Applied", value: "32%", color: "bg-blue-500" }
-                                    ].map((source, i) => (
+                                    {(summary?.sourceMix || []).map((source, i) => (
                                         <div key={i} className="flex items-center justify-between text-xs">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${source.color}`} />
+                                                <div className={`w-2 h-2 rounded-full ${source.color.split(' ')[0]}`} />
                                                 <span className="font-bold">{source.label}</span>
                                             </div>
                                             <span className="opacity-40">{source.value}</span>
@@ -322,7 +301,10 @@ export default function AtsDashboard() {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Diversity & Inclusion */}
-                        <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
+                        <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5 relative">
+                            <div className="absolute top-2 right-4 z-10 flex items-center shrink-0">
+                                <Badge className="text-[8px] bg-primary/20 text-primary uppercase p-1">Demo Widget</Badge>
+                            </div>
                             <CardHeader className="p-8 pb-4">
                                 <CardTitle className="text-xl flex items-center gap-2">
                                     <ShieldCheck className="w-5 h-5 text-primary" />
@@ -397,19 +379,24 @@ export default function AtsDashboard() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border/10">
-                                            {teamPerformance.map((teammate, i) => (
+                                            {(summary?.teamPerformance || []).map((teammate, i) => (
                                                 <tr key={i} className="hover:bg-primary/5 transition-colors cursor-default">
                                                     <td className="px-8 py-5 flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">
-                                                            {teammate.name.split('').map(n => n[0]).join('')}
+                                                            {teammate.name.split('').map(n => n[0]).join('').substring(0,2)}
                                                         </div>
                                                         <span className="text-xs font-bold">{teammate.name}</span>
                                                     </td>
                                                     <td className="px-8 py-5 text-sm font-bold opacity-60">{teammate.count}</td>
                                                     <td className="px-8 py-5 text-sm text-primary font-bold">{teammate.score}</td>
-                                                    <td className="px-8 py-5 text-sm font-bold opacity-60">{teammate.rate}</td>
+                                                    <td className="px-8 py-5 text-[10px] font-bold opacity-40">{teammate.rate}</td>
                                                 </tr>
                                             ))}
+                                            {(!summary?.teamPerformance || summary.teamPerformance.length === 0) && (
+                                                <tr>
+                                                    <td colSpan="4" className="text-center py-6 text-xs text-muted-foreground italic">No scorecards submitted yet.</td>
+                                                </tr>
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -428,8 +415,8 @@ export default function AtsDashboard() {
                             </CardHeader>
                             <CardContent className="p-8 pt-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    {positionsHealth.map((job, i) => (
-                                        <div key={i} className="p-6 rounded-md bg-muted/20 border border-border/10 group cursor-default hover:border-primary/20 transition-all">
+                                    {(summary?.positionsHealth || []).map((job, i) => (
+                                        <div key={i} className="p-6 rounded-md bg-muted/20 border border-border/10 group cursor-default hover:border-primary/20 transition-all flex flex-col justify-between">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h4 className="text-sm font-bold tracking-tight group-hover:text-primary transition-colors">{job.role}</h4>
                                                 <Badge variant="outline" className={`text-[9px] border-border/40 ${job.velocity === 'Slow' ? 'text-amber-500 bg-amber-500/10 border-amber-500/20' : ''}`}>
@@ -444,13 +431,16 @@ export default function AtsDashboard() {
                                                     </div>
                                                     <Progress value={job.health} className={`h-1.5 ${job.health < 50 ? 'bg-amber-500/10' : 'bg-primary/10'}`} />
                                                 </div>
-                                                <div className="flex items-center justify-between">
+                                                <div className="flex items-center justify-between pt-2">
                                                     <p className="text-[10px] font-black opacity-40 uppercase tracking-widest">{job.candidates} Applicants</p>
-                                                    <Button variant="ghost" className="h-6 text-[9px] p-0 font-bold uppercase tracking-widest hover:text-primary" onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)}>Details</Button>
+                                                    <Button variant="ghost" className="h-6 text-[9px] p-0 font-bold uppercase tracking-widest hover:text-primary" onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)}>Details <ArrowUpRight className="ml-1 w-3 h-3" /></Button>
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
+                                    {(!summary?.positionsHealth || summary.positionsHealth.length === 0) && (
+                                        <p className="col-span-3 text-center py-6 text-xs text-muted-foreground italic">No open jobs to analyze.</p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

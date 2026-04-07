@@ -35,7 +35,7 @@ export const JobCard = ({ job, onApply }) => {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                {job.department}
+                {job.department || job.category?.name || "General"}
               </Badge>
               {((job.createdAt && (new Date() - new Date(job.createdAt)) < 7 * 24 * 60 * 60 * 1000) || (job.postedAt && job.postedAt.includes('day'))) && (
                 <Badge variant="outline" className="text-[10px] font-bold border-amber-500/30 text-amber-500 bg-amber-500/5 px-2 py-0.5 rounded-md flex items-center gap-1">

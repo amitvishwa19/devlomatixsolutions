@@ -4,14 +4,21 @@ import { NextResponse } from "next/server";
 export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
-        const workspaceId = searchParams.get('workspaceId') || 'cmn3zvsj6000dd8ikegztlu1m';
+        const workspaceId = searchParams.get('workspaceId');
+
+        const where = { status: 'OPEN' };
+        if (workspaceId) {
+            where.workspaceId = workspaceId;
+        } else if (process.env.APP_MODE === 'prod') {
+            where.workspaceId = 'cmn3zvsj6000dd8ikegztlu1m'; // Production Devlomatix Workspace
+        }
 
         const jobs = await prisma.job.findMany({
-            where: { 
-                workspaceId,
-                status: 'OPEN'
-            },
-            orderBy: { createdAt: 'desc' }
+            where,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                category: true
+            }
         });
 
         return NextResponse.json(jobs);

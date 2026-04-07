@@ -89,6 +89,7 @@ const getPlatformIcon = (platform, customClass) => {
         case 'GEMINI': return <Sparkles {...props} />;
         case 'GITHUB': return <Github {...props} />;
         case 'GOOGLE_PLACES': return <MapPin {...props} />;
+        case 'RESEND': return <Mail {...props} />;
         default: return <Database {...props} />;
     }
 };

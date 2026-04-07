@@ -60,6 +60,7 @@ export default function CandidateProfilePage() {
  const [isOfferGenerating, setIsOfferGenerating] = useState(false);
  const [isParsing, setIsParsing] = useState(false);
  const [isScoring, setIsScoring] = useState(false);
+ const [noteText, setNoteText] = useState("");
 
  const { data: candidateData, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/candidates/${candidateId}`, fetcher);
 
@@ -131,8 +132,6 @@ export default function CandidateProfilePage() {
  communications: [],
  resumeUrl: candidateData.resumeUrl || null
  };
-
- const [noteText, setNoteText] = useState("");
 
  const handleSubmitScorecard = async (data) => {
  try {
@@ -448,7 +447,7 @@ export default function CandidateProfilePage() {
  ))}
  </div>
  <div className="space-y-8">
- <Card className="border-border/40 bg-primary/5 backdrop-blur-xl rounded-md p-8 border-primary/20 text-center space-y-6 shadow-xl shadow-primary/5">
+ <Card className="bg-primary/5 backdrop-blur-xl rounded-md p-8 border border-primary/20 text-center space-y-6 shadow-xl shadow-primary/5">
  <Award className="w-12 h-12 text-primary mx-auto opacity-40"/>
  <div className="space-y-2">
  <h3 className="text-xl">Structured Feedback</h3>
@@ -538,7 +537,7 @@ export default function CandidateProfilePage() {
  </Card>
 
  {/* Nurture Call to Action */}
- <Card className="border-border/40 bg-emerald-500/5 backdrop-blur-xl rounded-md p-8 border-emerald-500/20 text-center space-y-6">
+ <Card className="bg-emerald-500/5 backdrop-blur-xl rounded-md p-8 border border-emerald-500/20 text-center space-y-6">
  <Sparkles className="w-12 h-12 text-emerald-500 mx-auto opacity-40"/>
  <div className="space-y-2">
  <h3 className="text-xl">AI Nurture</h3>

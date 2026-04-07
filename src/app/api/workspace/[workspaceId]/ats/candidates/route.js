@@ -10,9 +10,15 @@ export async function GET(req, { params }) {
         if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const candidates = await prisma.candidate.findMany({
-            where: { workspaceId },
+            where: {
+                OR: [
+                    { workspaceId },
+                    { applications: { some: { workspaceId } } }
+                ]
+            },
             include: {
                 applications: {
+                    where: { workspaceId },
                     include: { job: true }
                 }
             },
