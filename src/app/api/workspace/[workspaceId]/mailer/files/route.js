@@ -45,7 +45,7 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { name, content } = await req.json();
+        const { name, content, cloneFrom } = await req.json();
         if (!name) {
             return NextResponse.json({ message: "File name is required" }, { status: 400 });
         }
@@ -61,7 +61,20 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Template already exists" }, { status: 400 });
         }
 
-        const defaultContent = content || `<!DOCTYPE html>
+        let defaultContent = content;
+
+        // If cloneFrom is provided, fetch content from source
+        if (cloneFrom) {
+            const source = await db.emailAssignment.findFirst({
+                where: { workspaceId, templateName: cloneFrom }
+            });
+            if (source) {
+                defaultContent = source.content;
+            }
+        }
+
+        if (!defaultContent) {
+            defaultContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -80,6 +93,7 @@ export async function POST(req, { params }) {
   </table>
 </body>
 </html>`;
+        }
 
         // Create a dummy assignment just to store the template
         await db.emailAssignment.create({

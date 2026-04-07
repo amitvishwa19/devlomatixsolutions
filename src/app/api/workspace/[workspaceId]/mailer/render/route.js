@@ -29,10 +29,28 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Template not found in database or has no content" }, { status: 404 });
         }
 
-        // 2. Compile HTML dynamically using Handlebars
+        // 2. Fetch global app settings (Identity, Branding, Logo)
+        const globalSettings = await db.appSettings.findUnique({
+            where: { key: 'APP_GENERAL' }
+        });
+
+        const branding = globalSettings?.social || {
+            appName: "Devlomatix",
+            logoUrl: "",
+            appDescription: "Your Productivity Platform"
+        };
+
+        // 3. Compile HTML dynamically using Handlebars
         try {
             const template = Handlebars.compile(assignment.content);
-            const html = template(data || {});
+            const combinedData = {
+                ...branding,
+                appLogo: branding.logoUrl, // Alias for easier use in templates
+                platformName: branding.appName, // Alias
+                ...data,
+                workspaceId
+            };
+            const html = template(combinedData);
             
             return NextResponse.json({ html });
         } catch (engineError) {

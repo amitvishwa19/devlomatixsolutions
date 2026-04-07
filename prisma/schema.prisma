@@ -7,19 +7,19 @@ datasource db {
 }
 
 model User {
-  id                        String              @id @default(cuid())
+  id                        String                   @id @default(cuid())
   uuid                      String?
   displayName               String?
-  username                  String?             @unique
-  email                     String?             @unique
-  phone                     String?             @unique
+  username                  String?                  @unique
+  email                     String?                  @unique
+  phone                     String?                  @unique
   avatar                    String?
-  isVerified                Boolean             @default(false)
-  isActive                  Boolean             @default(false)
+  isVerified                Boolean                  @default(false)
+  isActive                  Boolean                  @default(false)
   password                  String?
   uid                       String?
   provider                  String?
-  role                      ROLE                @default(GUEST)
+  role                      ROLE                     @default(GUEST)
   webDeviceToken            String?
   deviceToken               String?
   expoPushToken             String?
@@ -30,8 +30,8 @@ model User {
   verifyToken               String?
   verifyTokenExpiry         DateTime?
   lastActive                DateTime?
-  createdAt                 DateTime            @default(now())
-  updatedAt                 DateTime            @updatedAt
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime                 @updatedAt
   atsNotes                  AtsNote[]
   botFlows                  BotFlow[]
   campaigns                 Campaign[]
@@ -40,10 +40,10 @@ model User {
   contactGroups             ContactGroup[]
   credentials               Credentials[]
   credit                    Credit?
-  sharedDocuments           DocumentAccess[]    @relation("UserToDocumentAccess")
+  sharedDocuments           DocumentAccess[]         @relation("UserToDocumentAccess")
   jobs                      Job[]
   kanbanActivities          KanbanActivity[]
-  assignedTasks             KanbanTask[]        @relation("TaskAssignee")
+  assignedTasks             KanbanTask[]             @relation("TaskAssignee")
   members                   Member[]
   messageTemplates          MessageTemplate[]
   profile                   Profile?
@@ -55,7 +55,7 @@ model User {
   waMessages                WhatsAppMessage[]
   workflows                 Workflow[]
   workspaceDocuments        WorkspaceDocument[]
-  roles                     Role[]              @relation("RoleToUser")
+  roles                     Role[]                   @relation("RoleToUser")
   ecommerceStores           ECommerceStore[]
   ecommerceOrders           ECommerceOrder[]
   ecommerceProducts         ECommerceProduct[]
@@ -92,23 +92,14 @@ model AppSettings {
   hospitalInfo  Json?
   locale        Json?
   social        Json?
-  technical     Json?
-  appointments  Json?
-  consultation  Json?
-  billing       Json?
-  departments   Json?
-  integrations  Json?
-  inventory     Json?
-  invoice       Json?
   notifications Json?
-  patients      Json?
-  pharmacy      Json?
-  prescription  Json?
   security      Json?
+  integrations  Json?
+  technical     Json?
   services      Json?
   staff         Json?
-  privacy       String?
-  terms         String?
+  privacy       Json?
+  terms         Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -386,19 +377,19 @@ model WhatsAppConnectionLog {
 }
 
 model Contact {
-  id              String         @id @default(cuid())
+  id              String           @id @default(cuid())
   userId          String
   name            String
-  phone           String         @unique
+  phone           String           @unique
   email           String?
   info            Json?
-  tags            String[]       @default([])
+  tags            String[]         @default([])
   lastMessage     String?
   lastInteraction DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  groups          ContactGroup[] @relation("ContactToGroup")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
 
   @@index([userId])
@@ -951,49 +942,50 @@ enum SystemCronStatus {
   ERROR
   COMPLETED
 }
+
 model ECommerceStore {
-  id            String   @id @default(cuid())
-  userId        String
-  platform      String   @default("shopify") // shopify | woocommerce
-  name          String
-  storeUrl      String
-  accessToken   String?
-  apiKey        String?
-  apiSecret     String?
-  webhookSecret String?
-  status        String   @default("connected")
-  metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders        ECommerceOrder[]
-  products      ECommerceProduct[]
+  id             String                   @id @default(cuid())
+  userId         String
+  platform       String                   @default("shopify") // shopify | woocommerce
+  name           String
+  storeUrl       String
+  accessToken    String?
+  apiKey         String?
+  apiSecret      String?
+  webhookSecret  String?
+  status         String                   @default("connected")
+  metadata       Json?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  user           User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders         ECommerceOrder[]
+  products       ECommerceProduct[]
   abandonedCarts ECommerceAbandonedCart[]
 
   @@index([userId])
 }
 
 model ECommerceOrder {
-  id              String         @id @default(cuid())
-  storeId         String
-  externalOrderId String         @unique // Platform's Order ID
-  orderNumber     String?
-  totalAmount     Float
-  currency        String         @default("INR")
-  status          String
-  financialStatus String?
+  id                String         @id @default(cuid())
+  storeId           String
+  externalOrderId   String         @unique // Platform's Order ID
+  orderNumber       String?
+  totalAmount       Float
+  currency          String         @default("INR")
+  status            String
+  financialStatus   String?
   fulfillmentStatus String?
-  customerName    String?
-  customerEmail   String?
-  customerPhone   String?
-  contactId       String?        // Link to internal Contact if exists
-  metadata        Json?
-  userId          String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  store           ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contact         Contact?       @relation(fields: [contactId], references: [id])
+  customerName      String?
+  customerEmail     String?
+  customerPhone     String?
+  contactId         String? // Link to internal Contact if exists
+  metadata          Json?
+  userId            String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  store             ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contact           Contact?       @relation(fields: [contactId], references: [id])
 
   @@index([storeId])
   @@index([userId])
@@ -1023,32 +1015,33 @@ model ECommerceProduct {
 }
 
 model ECommerceAbandonedCart {
-  id                String         @id @default(cuid())
-  storeId           String
-  externalCartId    String         @unique
-  checkoutUrl       String?
-  totalAmount       Float
-  currency          String         @default("INR")
-  customerEmail     String?
-  customerPhone     String?
-  recovered         Boolean        @default(false)
-  lastReminderAt    DateTime?
-  reminderCount     Int            @default(0)
-  metadata          Json?
-  userId            String
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  store             ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String         @id @default(cuid())
+  storeId        String
+  externalCartId String         @unique
+  checkoutUrl    String?
+  totalAmount    Float
+  currency       String         @default("INR")
+  customerEmail  String?
+  customerPhone  String?
+  recovered      Boolean        @default(false)
+  lastReminderAt DateTime?
+  reminderCount  Int            @default(0)
+  metadata       Json?
+  userId         String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  store          ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([storeId])
   @@index([userId])
 }
+
 model EmailAssignment {
   id           String   @id @default(cuid())
   workspaceId  String
-  event        String   // e.g., "USER_REGISTRATION", "USER_INVITATION"
-  templateName String   // e.g., "RegistrationMail.jsx"
+  event        String // e.g., "USER_REGISTRATION", "USER_INVITATION"
+  templateName String // e.g., "RegistrationMail.jsx"
   subject      String?
   fromEmail    String?
   isActive     Boolean  @default(true)

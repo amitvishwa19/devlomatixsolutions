@@ -29,9 +29,14 @@ export async function GET(req, { params }) {
             return NextResponse.json({ message: "Workspace not found" }, { status: 404 });
         }
 
-        // Fetch advanced settings from AppSettings
-        const appSettings = await prisma.appSettings.findUnique({
+        // 1. Fetch workspace-specific settings (Security, Notifications, etc.)
+        const workspaceSettings = await prisma.appSettings.findUnique({
             where: { key: workspaceId }
+        });
+
+        // 2. Fetch global app settings (Identity, Branding, Logo)
+        const globalSettings = await prisma.appSettings.findUnique({
+            where: { key: 'APP_GENERAL' }
         });
 
         // Merge with defaults
@@ -42,34 +47,39 @@ export async function GET(req, { params }) {
                 imageUrl: workspace.imageUrl || "",
                 inviteCode: workspace.inviteCode
             },
-            branding: appSettings?.social || {
+            branding: globalSettings?.social || {
                 primaryColor: "#3b82f6",
                 logoUrl: workspace.imageUrl || "",
-                appName: "",
-                appDescription: "",
-                workspaceUrl: `http://localhost:3000/workspace/${workspaceId}`
+                appName: "Devlomatix",
+                appDescription: "Your Productivity Platform",
+                workspaceUrl: `http://localhost:3000`
             },
-            security: appSettings?.security || {
+            security: workspaceSettings?.security || {
                 mfaEnabled: false,
                 sessionTimeout: 3600,
                 passwordPolicy: "standard"
             },
-            notifications: appSettings?.notifications || {
+            notifications: workspaceSettings?.notifications || {
                 whatsapp: true,
                 email: true,
                 push: false
             },
-            integrations: appSettings?.integrations || {
+            integrations: workspaceSettings?.integrations || {
                 webhooks: [],
                 apiKeys: []
             },
-            developer: appSettings?.integrations || {
+            developer: workspaceSettings?.integrations || {
                 webhooks: [],
                 apiKeys: []
             },
-            advanced: appSettings?.technical || {
+            advanced: workspaceSettings?.technical || {
                 maintenanceMode: false,
                 customCss: ""
+            },
+            privacy: workspaceSettings?.privacy || {
+                dataRetention: 365,
+                gdprCompliant: true,
+                activityLogging: true
             }
         };
 
@@ -100,17 +110,17 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 });
         }
 
-        const { general, branding, security, notifications, integrations, developer, advanced } = body;
+        const { general, branding, security, notifications, integrations, developer, advanced, privacy } = body;
 
         // Sync developer with integrations if provided
         const finalIntegrations = developer || integrations;
 
+        // 1. Update Server Identity (Workspace Name/Description)
         const serverUpdateData = {};
         if (general?.name) serverUpdateData.name = general.name;
         if (general?.description !== undefined) serverUpdateData.description = general.description;
         if (general?.imageUrl !== undefined) serverUpdateData.imageUrl = general.imageUrl;
 
-        // Update Server model if needed
         if (Object.keys(serverUpdateData).length > 0) {
             await prisma.server.update({
                 where: { id: workspaceId },
@@ -118,25 +128,44 @@ export async function PATCH(req, { params }) {
             });
         }
 
-        // Update or Create AppSettings
-        await prisma.appSettings.upsert({
-            where: { key: workspaceId },
-            create: {
-                key: workspaceId,
-                social: branding || undefined,
-                security: security || undefined,
-                notifications: notifications || undefined,
-                integrations: finalIntegrations || undefined,
-                technical: advanced || undefined
-            },
-            update: {
-                social: branding || undefined,
-                security: security || undefined,
-                notifications: notifications || undefined,
-                integrations: finalIntegrations || undefined,
-                technical: advanced || undefined
-            }
-        });
+        // 2. Update Global App Settings (if branding provided)
+        if (branding) {
+            await prisma.appSettings.upsert({
+                where: { key: 'APP_GENERAL' },
+                create: {
+                    key: 'APP_GENERAL',
+                    social: branding
+                },
+                update: {
+                    social: branding
+                }
+            });
+        }
+
+        // 3. Update Workspace-Specific Settings
+        const workspaceUpdateData = {
+            security: security || undefined,
+            notifications: notifications || undefined,
+            integrations: finalIntegrations || undefined,
+            technical: advanced || undefined,
+            privacy: privacy || undefined
+        };
+
+        // Filter out undefined to prevent clearing data
+        const cleanUpdate = Object.fromEntries(
+            Object.entries(workspaceUpdateData).filter(([_, v]) => v !== undefined)
+        );
+
+        if (Object.keys(cleanUpdate).length > 0) {
+            await prisma.appSettings.upsert({
+                where: { key: workspaceId },
+                create: {
+                    key: workspaceId,
+                    ...cleanUpdate
+                },
+                update: cleanUpdate
+            });
+        }
 
         return NextResponse.json({
             message: "Settings updated successfully"

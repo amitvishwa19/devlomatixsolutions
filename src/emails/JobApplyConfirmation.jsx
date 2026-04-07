@@ -29,10 +29,10 @@ export const JobApplyConfirmationEmail = ({
             <Container style={container}>
                 <Section style={header}>
                     <Img
-                        src={`${baseUrl}/static/devlomatix_dark.png`}
+                        src="{{appLogo}}"
                         width="170"
                         height="40"
-                        alt={companyName}
+                        alt="{{appName}}"
                         style={logo}
                     />
                 </Section>

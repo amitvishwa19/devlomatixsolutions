@@ -21,7 +21,11 @@ import {
     AlertCircle,
     CheckCircle2,
     Search,
-    Layout
+    Layout,
+    Braces,
+    Copy,
+    Check,
+    Edit2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +74,13 @@ export default function MailerPage() {
     const [isRendering, setIsRendering] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('preview');
+    const [cloningFile, setCloningFile] = useState(null);
+    const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+    const [fileToRename, setFileToRename] = useState(null);
+    const [renamingFileName, setRenamingFileName] = useState('');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [fileToDelete, setFileToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Modals
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -84,6 +95,17 @@ export default function MailerPage() {
     const [testSenderEmail, setTestSenderEmail] = useState('');
 
     const iframeRef = useRef(null);
+    const editorRef = useRef(null);
+
+    const handleEditorMount = (editor, monaco) => {
+        editorRef.current = editor;
+    };
+
+    const handleFormat = () => {
+        if (editorRef.current) {
+            editorRef.current.getAction('editor.action.formatDocument').run();
+        }
+    };
 
     // Fetch Files
     const fetchFiles = useCallback(async () => {
@@ -132,6 +154,16 @@ export default function MailerPage() {
         }
     };
 
+    // Auto-format when template charges
+    useEffect(() => {
+        if (selectedFile && editorRef.current) {
+            const timer = setTimeout(() => {
+                editorRef.current.getAction('editor.action.formatDocument')?.run();
+            }, 800);
+            return () => clearTimeout(timer);
+        }
+    }, [selectedFile, activeTab]);
+
     // Save File
     const handleSave = async () => {
         if (!selectedFile) return;
@@ -154,15 +186,95 @@ export default function MailerPage() {
     const handleCreateFile = async () => {
         if (!newFileName) return;
         try {
-            await axios.post(`/api/workspace/${workspaceId}/mailer/files`, {
+            const res = await axios.post(`/api/workspace/${workspaceId}/mailer/files`, {
                 name: newFileName
             });
             toast.success("Template created");
             setIsNewModalOpen(false);
             setNewFileName('');
             fetchFiles();
+            // Automatically select the new file
+            if (res.data.name) {
+                handleFileSelect(res.data.name);
+            }
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to create template");
+        }
+    };
+
+    // Clone Template
+    const handleCloneFile = async (sourceFilename) => {
+        setCloningFile(sourceFilename);
+        try {
+            // Remove extension for naming the copy
+            const baseName = sourceFilename.replace(/\.(html|jsx)$/, "");
+            const newName = `copy-of-${baseName}_${new Date().getTime().toString().slice(-4)}`;
+
+            const res = await axios.post(`/api/workspace/${workspaceId}/mailer/files`, {
+                name: newName,
+                cloneFrom: sourceFilename
+            });
+
+            toast.success(`Cloned ${sourceFilename} to ${res.data.name}`);
+            await fetchFiles();
+            // Select the cloned file
+            if (res.data.name) {
+                handleFileSelect(res.data.name);
+            }
+        } catch (error) {
+            toast.error("Failed to clone template");
+            console.error(error);
+        } finally {
+            setCloningFile(null);
+        }
+    };
+
+    // Rename Template
+    const handleRenameFile = async () => {
+        if (!fileToRename || !renamingFileName) return;
+        try {
+            await axios.patch(`/api/workspace/${workspaceId}/mailer/files/${fileToRename}`, {
+                newName: renamingFileName
+            });
+
+            toast.success(`Renamed ${fileToRename} to ${renamingFileName}`);
+            setIsRenameModalOpen(false);
+            setRenamingFileName('');
+            setFileToRename(null);
+            
+            await fetchFiles();
+            // Automatically select the renamed file
+            handleFileSelect(renamingFileName);
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to rename template");
+            console.error(error);
+        }
+    };
+
+    // Delete Template
+    const handleDeleteFile = async () => {
+        if (!fileToDelete) return;
+        setIsDeleting(true);
+        try {
+            await axios.delete(`/api/workspace/${workspaceId}/mailer/files/${fileToDelete}`);
+            toast.success(`Deleted template: ${fileToDelete}`);
+            setIsDeleteModalOpen(false);
+            setFileToDelete(null);
+            
+            // Refetch list and select another file if needed
+            const updatedFiles = files.filter(f => f.name !== fileToDelete);
+            setFiles(updatedFiles);
+            if (selectedFile === fileToDelete) {
+                setSelectedFile(null);
+                setFileContent('');
+                setPreviewHtml('');
+            }
+            await fetchFiles();
+        } catch (error) {
+            toast.error("Failed to delete template");
+            console.error(error);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -260,15 +372,6 @@ export default function MailerPage() {
                         {isTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
                         Send Test
                     </Button>
-                    <Button
-                        disabled={!selectedFile || isSaving || !hasChanges}
-                        onClick={handleSave}
-                        size="sm"
-                        className="h-8 text-[10px] font-bold rounded-md gap-2"
-                    >
-                        {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                        Save Changes
-                    </Button>
                 </div>
             </div>
 
@@ -289,20 +392,62 @@ export default function MailerPage() {
                     <div className="flex-1 overflow-y-auto p-2 scrollbar-none">
                         <div className="space-y-1">
                             {filteredFiles.map((file) => (
-                                <button
+                                <div
                                     key={file.name}
                                     onClick={() => handleFileSelect(file.name)}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-[11px] font-bold transition-all ${selectedFile === file.name
+                                    className={`group w-full flex items-center gap-2 px-3 py-2 rounded-md text-[11px] font-bold transition-all cursor-pointer ${selectedFile === file.name
                                         ? "bg-primary/10 text-primary"
                                         : "hover:bg-muted text-muted-foreground hover:text-foreground"
                                         }`}
                                 >
                                     <FileText className="h-3.5 w-3.5 opacity-50" />
                                     <span className="truncate flex-1 text-left">{file.name}</span>
+                                    
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleCloneFile(file.name);
+                                            }}
+                                            disabled={cloningFile === file.name}
+                                            className="p-1 hover:bg-primary/20 rounded-md transition-colors"
+                                            title="Clone Template"
+                                        >
+                                            {cloningFile === file.name ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                                <Copy className="h-3 w-3" />
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFileToRename(file.name);
+                                                setRenamingFileName(file.name.replace(/\.(html|jsx)$/, ""));
+                                                setIsRenameModalOpen(true);
+                                            }}
+                                            className="p-1 hover:bg-primary/20 rounded-md transition-colors"
+                                            title="Rename Template"
+                                        >
+                                            <Edit2 className="h-3 w-3" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFileToDelete(file.name);
+                                                setIsDeleteModalOpen(true);
+                                            }}
+                                            className="p-1 hover:bg-destructive/20 rounded-md transition-colors text-muted-foreground hover:text-destructive"
+                                            title="Delete Template"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
+
                                     {assignments.some(a => a.templateName === file.name) && (
                                         <Badge variant="outline" className="h-4 px-1 text-[8px] bg-primary/5 text-primary border-primary/20">Active</Badge>
                                     )}
-                                </button>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -325,9 +470,32 @@ export default function MailerPage() {
                             </TabsList>
                             <div className="flex items-center gap-2">
                                 {selectedFile && (
-                                    <Button variant="ghost" size="sm" onClick={() => handleRenderPreview(selectedFile)} className="h-8 w-8 p-0">
-                                        <RefreshCw className={`h-3.5 w-3.5 ${isRendering ? 'animate-spin' : ''}`} />
-                                    </Button>
+                                    <>
+                                        <Button
+                                            disabled={isSaving || !hasChanges}
+                                            onClick={handleSave}
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 text-[10px] font-bold rounded-md gap-2 px-3 text-primary hover:text-primary hover:bg-primary/10"
+                                        >
+                                            {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                                            Save Changes
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleFormat}
+                                            className="h-8 text-[10px] font-bold rounded-md gap-2 px-3"
+                                            title="Format Code (Alt+Shift+F)"
+                                        >
+                                            <Braces className="h-3 w-3" />
+                                            Format
+                                        </Button>
+                                        <div className="w-px h-4 bg-border/50 mx-1" />
+                                        <Button variant="ghost" size="sm" onClick={() => handleRenderPreview(selectedFile)} className="h-8 w-8 p-0" title="Refresh Preview">
+                                            <RefreshCw className={`h-3.5 w-3.5 ${isRendering ? 'animate-spin' : ''}`} />
+                                        </Button>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -340,6 +508,7 @@ export default function MailerPage() {
                                     theme="vs-dark"
                                     value={fileContent}
                                     onChange={(value) => setFileContent(value)}
+                                    onMount={handleEditorMount}
                                     options={{
                                         fontSize: 13,
                                         fontFamily: 'JetBrains Mono, monospace',
@@ -350,7 +519,9 @@ export default function MailerPage() {
                                         readOnly: false,
                                         cursorStyle: 'line',
                                         automaticLayout: true,
-                                        padding: { top: 20 }
+                                        padding: { top: 20 },
+                                        formatOnPaste: true,
+                                        formatOnType: true,
                                     }}
                                 />
                             ) : (
@@ -605,6 +776,64 @@ export default function MailerPage() {
                         <Button onClick={handleTestSend} disabled={isTesting} className="text-[10px] font-bold rounded-md px-8 shadow-lg shadow-primary/20">
                             {isTesting ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
                             Send Test Email
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Rename Template Modal */}
+            <Dialog open={isRenameModalOpen} onOpenChange={setIsRenameModalOpen}>
+                <DialogContent className="max-w-md rounded-md p-0 overflow-hidden border-none shadow-2xl">
+                    <DialogHeader className="p-8 pb-4">
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <Edit2 className="h-5 w-5 text-primary" /> Rename Template
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="p-8 pt-2 space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">New Template Name</label>
+                            <Input
+                                placeholder="e.g. welcome-email-v2"
+                                value={renamingFileName}
+                                onChange={(e) => setRenamingFileName(e.target.value)}
+                                className="h-12 bg-muted/30 border-none rounded-md font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner"
+                            />
+                            <p className="text-[9px] text-muted-foreground px-1 opacity-60">This will update all system event mappings associated with this template name.</p>
+                        </div>
+                    </div>
+                    <DialogFooter className="p-8 pt-2 bg-muted/10 border-t border-border/10">
+                        <Button variant="ghost" onClick={() => setIsRenameModalOpen(false)} className="text-[10px] font-bold rounded-md">Cancel</Button>
+                        <Button onClick={handleRenameFile} className="text-[10px] font-bold rounded-md px-8 shadow-lg shadow-primary/20">Rename Template</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent className="max-w-md rounded-md p-0 overflow-hidden border-none shadow-2xl">
+                    <DialogHeader className="p-8 pb-4">
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2 text-destructive">
+                            <Trash2 className="h-5 w-5" /> Delete Template
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="p-8 pt-2 space-y-4">
+                        <div className="p-4 bg-destructive/5 border border-destructive/10 rounded-md">
+                            <p className="text-sm font-bold text-destructive mb-1">Confirm Permanent Deletion</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                Are you sure you want to delete <span className="font-bold text-foreground">"{fileToDelete}"</span>? This will permanently remove all versions and unassign it from any system events. This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter className="p-8 pt-2 bg-muted/10 border-t border-border/10">
+                        <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)} className="text-[10px] font-bold rounded-md">Cancel</Button>
+                        <Button 
+                            disabled={isDeleting}
+                            onClick={handleDeleteFile} 
+                            variant="destructive"
+                            className="text-[10px] font-bold rounded-md px-8 shadow-lg shadow-destructive/20"
+                        >
+                            {isDeleting ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
+                            Delete Forever
                         </Button>
                     </DialogFooter>
                 </DialogContent>

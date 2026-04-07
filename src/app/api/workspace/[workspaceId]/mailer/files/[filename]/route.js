@@ -38,23 +38,39 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { content } = await req.json();
+        const { content, newName } = await req.json();
 
-        const assignments = await db.emailAssignment.findMany({
-            where: { workspaceId, templateName: filename }
-        });
+        // 1. If renaming is requested
+        if (newName) {
+            const normalizedNewName = newName.endsWith(".html") ? newName : (newName.endsWith(".jsx") ? newName : `${newName}.html`);
+            
+            // Check if new name already exists
+            const existing = await db.emailAssignment.findFirst({
+                where: { workspaceId, templateName: normalizedNewName }
+            });
 
-        if (assignments.length === 0) {
-            return NextResponse.json({ message: "Template not found" }, { status: 404 });
+            if (existing) {
+                return NextResponse.json({ message: "A template with this name already exists" }, { status: 400 });
+            }
+
+            await db.emailAssignment.updateMany({
+                where: { workspaceId, templateName: filename },
+                data: { templateName: normalizedNewName }
+            });
+
+            return NextResponse.json({ message: "Template renamed successfully", newName: normalizedNewName });
         }
 
-        // Update all assignments that share this template name
-        await db.emailAssignment.updateMany({
-            where: { workspaceId, templateName: filename },
-            data: { content }
-        });
+        // 2. If content update is requested
+        if (content !== undefined) {
+            await db.emailAssignment.updateMany({
+                where: { workspaceId, templateName: filename },
+                data: { content }
+            });
+            return NextResponse.json({ message: "Template content updated successfully" });
+        }
 
-        return NextResponse.json({ message: "Template updated successfully" });
+        return NextResponse.json({ message: "No changes provided" }, { status: 400 });
     } catch (error) {
         console.error("[MAILER_FILE_PATCH]", error);
         return NextResponse.json({ message: error.message }, { status: 500 });
