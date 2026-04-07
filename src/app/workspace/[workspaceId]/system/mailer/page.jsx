@@ -58,10 +58,16 @@ import {
     TabsList,
     TabsTrigger,
 } from "@/components/ui/tabs";
+import { 
+    Panel, 
+    Group, 
+    Separator 
+} from "react-resizable-panels";
 
 export default function MailerPage() {
     const params = useParams();
     const workspaceId = params.workspaceId;
+    // editorRef is declared later near handleEditorMount for cleaner grouping
 
     // State
     const [files, setFiles] = useState([]);
@@ -73,7 +79,7 @@ export default function MailerPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isRendering, setIsRendering] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState('preview');
+    const [activeTab, setActiveTab] = useState('designer');
     const [cloningFile, setCloningFile] = useState(null);
     const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
     const [fileToRename, setFileToRename] = useState(null);
@@ -95,7 +101,98 @@ export default function MailerPage() {
     const [testSenderEmail, setTestSenderEmail] = useState('');
 
     const iframeRef = useRef(null);
-    const editorRef = useRef(null);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [fileContent]); // Depend on fileContent for accurate line swapping
+
+    // Helper: Find code block for a given line (Best effort for HTML tags)
+    const findCodeBlock = (content, lineNum) => {
+        const lines = content.split('\n');
+        const targetLine = lines[lineNum - 1];
+        if (!targetLine) return null;
+
+        // Simplified approach: Target the entire line and its consecutive lines if it's a multi-line tag
+        // For professional use, we'll focus on line-level operations first
+        return {
+            start: lineNum - 1,
+            end: lineNum - 1,
+            content: targetLine
+        };
+    };
+
+    const handleVisualAction = (lineNum, action, payload = {}) => {
+        const lines = fileContent.split('\n');
+        const idx = lineNum - 1;
+        if (idx < 0 || idx >= lines.length) return;
+
+        let newLines = [...lines];
+        
+        switch (action) {
+            case 'move-up':
+                if (idx > 0) {
+                    [newLines[idx], newLines[idx - 1]] = [newLines[idx - 1], newLines[idx]];
+                    setFileContent(newLines.join('\n'));
+                    toast.success("Moved component up");
+                }
+                break;
+            case 'move-down':
+                if (idx < lines.length - 1) {
+                    [newLines[idx], newLines[idx + 1]] = [newLines[idx + 1], newLines[idx]];
+                    setFileContent(newLines.join('\n'));
+                    toast.success("Moved component down");
+                }
+                break;
+            case 'duplicate':
+                newLines.splice(idx + 1, 0, lines[idx]);
+                setFileContent(newLines.join('\n'));
+                toast.success("Component duplicated");
+                break;
+            case 'delete':
+                newLines.splice(idx, 1);
+                setFileContent(newLines.join('\n'));
+                toast.success("Component removed");
+                break;
+            case 'resize':
+                const width = payload.width;
+                // Regex find width="..." or style="width: ..."
+                if (lines[idx].includes('width=')) {
+                    newLines[idx] = lines[idx].replace(/width="[^"]*"/, `width="${width}"`);
+                } else if (lines[idx].includes('style=')) {
+                    if (lines[idx].includes('width:')) {
+                        newLines[idx] = lines[idx].replace(/width:\s*[^;"]*/, `width: ${width}`);
+                    } else {
+                        newLines[idx] = lines[idx].replace(/style="/, `style="width: ${width}; `);
+                    }
+                } else {
+                    newLines[idx] = lines[idx].replace(/<([a-zA-Z0-9]+)/, `<$1 width="${width}"`);
+                }
+                setFileContent(newLines.join('\n'));
+                break;
+        }
+    };
+
+    // Inspector Message Listener
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.data.type === 'highlight-line') {
+                const line = parseInt(event.data.line);
+                if (editorRef.current && !isNaN(line)) {
+                    editorRef.current.setSelection({
+                        startLineNumber: line,
+                        startColumn: 1,
+                        endLineNumber: line,
+                        endColumn: 1000
+                    });
+                    editorRef.current.revealLineInCenter(line);
+                    editorRef.current.focus();
+                }
+            } else if (event.data.type === 'visual-action') {
+                handleVisualAction(parseInt(event.data.line), event.data.action, event.data.payload || {});
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [fileContent]);
 
     const handleEditorMount = (editor, monaco) => {
         editorRef.current = editor;
@@ -279,14 +376,124 @@ export default function MailerPage() {
     };
 
     // Render Preview
-    const handleRenderPreview = async (filename) => {
-        if (!filename) return;
+    const handleRenderPreview = async (filename, content = null) => {
+        if (!filename && !content) return;
         setIsRendering(true);
         try {
             const res = await axios.post(`/api/workspace/${workspaceId}/mailer/render`, {
-                filename
+                filename,
+                content: content || null,
+                instrument: true // Enable Click-to-Source markers
             });
-            setPreviewHtml(res.data.html);
+
+            // Inject the Inspector & Visual Editor Script into the preview HTML
+            const inspectorScript = `
+                <script>
+                    let selectedElement = null;
+                    let selectionBox = null;
+                    let toolbar = null;
+
+                    const showUI = (el) => {
+                        if (!selectionBox) {
+                            selectionBox = document.createElement('div');
+                            selectionBox.style.cssText = 'position:absolute; outline:2px solid #3b82f6; pointer-events:none; transition: all 0.1s ease; z-index: 9999;';
+                            document.body.appendChild(selectionBox);
+
+                            toolbar = document.createElement('div');
+                            toolbar.style.cssText = 'position:absolute; background:#1e1e1e; color:white; padding:4px; border-radius:4px; display:flex; gap:4px; z-index: 10000; font-family:sans-serif; font-size:10px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.2);';
+                            toolbar.innerHTML = \`
+                                <button id="move-up" style="background:transparent; border:none; color:white; cursor:pointer; padding:2px 4px; hover:background:#3b82f6; border-radius:2px;">↑</button>
+                                <button id="move-down" style="background:transparent; border:none; color:white; cursor:pointer; padding:2px 4px; hover:background:#3b82f6; border-radius:2px;">↓</button>
+                                <button id="duplicate" style="background:transparent; border:none; color:white; cursor:pointer; padding:2px 4px; hover:background:#3b82f6; border-radius:2px;">📋</button>
+                                <button id="delete" style="background:transparent; border:none; color:#f87171; cursor:pointer; padding:2px 4px; hover:background:rgba(248,113,113,0.1); border-radius:2px;">🗑️</button>
+                                <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 2px;"></div>
+                                <input type="number" id="width-input" style="width:35px; background:transparent; border:none; color:white; font-size:9px; text-align:center" placeholder="px" />
+                            \`;
+                            document.body.appendChild(toolbar);
+
+                            toolbar.onclick = (e) => {
+                                e.stopPropagation();
+                                const line = selectedElement.getAttribute('data-source-line');
+                                if (e.target.id === 'move-up') window.parent.postMessage({ type: 'visual-action', action: 'move-up', line }, '*');
+                                if (e.target.id === 'move-down') window.parent.postMessage({ type: 'visual-action', action: 'move-down', line }, '*');
+                                if (e.target.id === 'duplicate') window.parent.postMessage({ type: 'visual-action', action: 'duplicate', line }, '*');
+                                if (e.target.id === 'delete') {
+                                    window.parent.postMessage({ type: 'visual-action', action: 'delete', line }, '*');
+                                    hideUI();
+                                }
+                            };
+
+                            toolbar.querySelector('#width-input').onchange = (e) => {
+                                const line = selectedElement.getAttribute('data-source-line');
+                                window.parent.postMessage({ 
+                                    type: 'visual-action', 
+                                    action: 'resize', 
+                                    line, 
+                                    payload: { width: e.target.value + 'px' } 
+                                }, '*');
+                            };
+                        }
+
+                        const rect = el.getBoundingClientRect();
+                        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                        
+                        selectionBox.style.display = 'block';
+                        selectionBox.style.width = rect.width + 'px';
+                        selectionBox.style.height = rect.height + 'px';
+                        selectionBox.style.left = (rect.left + scrollX) + 'px';
+                        selectionBox.style.top = (rect.top + scrollY) + 'px';
+
+                        toolbar.style.display = 'flex';
+                        toolbar.style.left = (rect.left + scrollX) + 'px';
+                        toolbar.style.top = (rect.top + scrollY - 30) + 'px';
+                        
+                        const widthInput = toolbar.querySelector('#width-input');
+                        widthInput.value = parseInt(rect.width);
+                    };
+
+                    const hideUI = () => {
+                        if (selectionBox) selectionBox.style.display = 'none';
+                        if (toolbar) toolbar.style.display = 'none';
+                    }
+
+                    document.addEventListener('click', (e) => {
+                        const target = e.target.closest('[data-source-line]');
+                        if (target) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            selectedElement = target;
+                            showUI(target);
+                            
+                            window.parent.postMessage({ 
+                                type: 'highlight-line', 
+                                line: target.getAttribute('data-source-line') 
+                            }, '*');
+                        } else if (!e.target.closest('#visual-toolbar')) {
+                            hideUI();
+                        }
+                    }, true);
+
+                    // Add hover styles for inspectability
+                    const style = document.createElement('style');
+                    style.textContent = \`
+                        [data-source-line]:hover { 
+                            outline: 2px dashed #93c5fd !important; 
+                            outline-offset: -2px !important; 
+                            cursor: crosshair !important;
+                        }
+                        button:hover { background: rgba(59, 130, 246, 0.2); }
+                    \`;
+                    document.head.appendChild(style);
+
+                    // Reposition UI on scroll
+                    window.addEventListener('scroll', () => {
+                        if (selectedElement && selectionBox.style.display !== 'none') showUI(selectedElement);
+                    });
+                </script>
+            `;
+
+            setPreviewHtml(res.data.html + inspectorScript);
         } catch (error) {
             console.error("Render error:", error);
             setPreviewHtml(`
@@ -299,6 +506,16 @@ export default function MailerPage() {
             setIsRendering(false);
         }
     };
+
+    // Live Preview Effect (Debounced)
+    useEffect(() => {
+        if (selectedFile && activeTab === 'designer') {
+            const timer = setTimeout(() => {
+                handleRenderPreview(selectedFile, fileContent);
+            }, 600); // 600ms debounce
+            return () => clearTimeout(timer);
+        }
+    }, [fileContent, selectedFile, activeTab]);
 
     // Update Assignment
     const handleAssignEvent = async () => {
@@ -453,16 +670,13 @@ export default function MailerPage() {
                     </div>
                 </div>
 
-                {/* Editor & Preview */}
+                {/* Designer Core */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-                        <div className="flex items-center justify-between px-4 border-b bg-card h-12">
+                        <div className="flex items-center justify-between px-4 border-b bg-card h-12 shrink-0">
                             <TabsList className="bg-transparent border-none gap-4">
-                                <TabsTrigger value="preview" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 text-[10px] font-bold px-4 gap-2">
-                                    {isRendering ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Preview
-                                </TabsTrigger>
-                                <TabsTrigger value="editor" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 text-[10px] font-bold px-4 gap-2">
-                                    <Code2 className="h-3.5 w-3.5" /> Editor
+                                <TabsTrigger value="designer" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 text-[10px] font-bold px-4 gap-2">
+                                    <Layout className="h-3.5 w-3.5" /> Designer
                                 </TabsTrigger>
                                 <TabsTrigger value="settings" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 text-[10px] font-bold px-4 gap-2">
                                     <Settings2 className="h-3.5 w-3.5" /> Assignments
@@ -500,51 +714,62 @@ export default function MailerPage() {
                             </div>
                         </div>
 
-                        <TabsContent value="editor" className="flex-1 m-0 p-0 overflow-hidden outline-none">
+                        <TabsContent value="designer" className="flex-1 m-0 p-0 overflow-hidden outline-none">
                             {selectedFile ? (
-                                <Editor
-                                    height="100%"
-                                    defaultLanguage="html"
-                                    theme="vs-dark"
-                                    value={fileContent}
-                                    onChange={(value) => setFileContent(value)}
-                                    onMount={handleEditorMount}
-                                    options={{
-                                        fontSize: 13,
-                                        fontFamily: 'JetBrains Mono, monospace',
-                                        minimap: { enabled: false },
-                                        scrollBeyondLastLine: false,
-                                        lineNumbers: 'on',
-                                        roundedSelection: false,
-                                        readOnly: false,
-                                        cursorStyle: 'line',
-                                        automaticLayout: true,
-                                        padding: { top: 20 },
-                                        formatOnPaste: true,
-                                        formatOnType: true,
-                                    }}
-                                />
+                                <Group orientation="horizontal">
+                                    {/* Left: Editor */}
+                                    <Panel defaultSize={50} minSize={20} className="flex flex-col bg-[#1e1e1e]">
+                                        <Editor
+                                            height="100%"
+                                            defaultLanguage="html"
+                                            theme="vs-dark"
+                                            value={fileContent}
+                                            onChange={(value) => setFileContent(value)}
+                                            onMount={handleEditorMount}
+                                            options={{
+                                                fontSize: 13,
+                                                fontFamily: 'JetBrains Mono, monospace',
+                                                minimap: { enabled: false },
+                                                scrollBeyondLastLine: false,
+                                                lineNumbers: 'on',
+                                                roundedSelection: false,
+                                                readOnly: false,
+                                                cursorStyle: 'line',
+                                                automaticLayout: true,
+                                                padding: { top: 20 },
+                                                formatOnPaste: true,
+                                                formatOnType: true,
+                                            }}
+                                        />
+                                    </Panel>
+
+                                    {/* Resize Handle */}
+                                    <Separator className="w-1.5 hover:bg-primary/30 transition-colors active:bg-primary/50 relative">
+                                        <div className="absolute inset-y-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-8 bg-border rounded-full opacity-20" />
+                                    </Separator>
+
+                                    {/* Right: Preview */}
+                                    <Panel minSize={20} className="bg-muted/20 overflow-auto p-4 flex flex-col relative">
+                                        <div className="max-w-4xl mx-auto w-full h-full rounded-md border bg-white shadow-soft overflow-hidden relative">
+                                            {isRendering && (
+                                                <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-md z-10 animate-in fade-in zoom-in duration-300">
+                                                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                                                </div>
+                                            )}
+                                            <iframe
+                                                srcDoc={previewHtml}
+                                                className="w-full h-full border-none"
+                                                title="Live Email Preview"
+                                            />
+                                        </div>
+                                    </Panel>
+                                </Group>
                             ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4 bg-muted/5">
+                                <div className="h-full flex-1 flex flex-col items-center justify-center text-muted-foreground gap-4 bg-muted/5">
                                     <Layout className="h-12 w-12 opacity-10" />
-                                    <p className="text-[10px] font-bold uppercase tracking-widest">Select a template to edit</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest">Select a template to begin designing</p>
                                 </div>
                             )}
-                        </TabsContent>
-
-                        <TabsContent value="preview" className="flex-1 m-0 p-4 bg-muted/30 overflow-auto outline-none">
-                            <div className="max-w-4xl mx-auto h-full rounded-md border bg-white shadow-xl overflow-hidden relative">
-                                {isRendering && (
-                                    <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center z-10">
-                                        <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                                    </div>
-                                )}
-                                <iframe
-                                    srcDoc={previewHtml}
-                                    className="w-full h-full border-none"
-                                    title="Email Preview"
-                                />
-                            </div>
                         </TabsContent>
 
                         <TabsContent value="settings" className="flex-1 m-0 p-8 overflow-y-auto outline-none">

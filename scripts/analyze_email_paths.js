@@ -14,7 +14,7 @@ try {
             process.env[key.trim()] = valParts.join('=').trim().replace(/^["']|["']$/g, '');
         });
     }
-} catch (e) {}
+} catch (e) { }
 
 const connectionString = process.env.APP_MODE === 'prod' ? process.env.DATABASE_URL : (process.env.DIRECT_URL || process.env.DATABASE_URL);
 const pool = new Pool({ connectionString });
@@ -30,7 +30,7 @@ async function analyze() {
         for (const template of templates) {
             if (template.content && (template.content.includes('/static/') || template.content.includes('devlomatix_dark.png'))) {
                 console.log(`\n--- Template: ${template.templateName} ---`);
-                
+
                 // Find the line containing the match
                 const lines = template.content.split('\n');
                 lines.forEach((line, i) => {

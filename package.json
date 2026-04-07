@@ -152,7 +152,7 @@
     "react-is": "^19.2.4",
     "react-leaflet": "^5.0.0",
     "react-redux": "^9.2.0",
-    "react-resizable-panels": "^4.2.0",
+    "react-resizable-panels": "^4.9.0",
     "react-speech-recognition": "^4.0.1",
     "react-to-pdf": "^2.0.3",
     "react-to-print": "^3.2.0",

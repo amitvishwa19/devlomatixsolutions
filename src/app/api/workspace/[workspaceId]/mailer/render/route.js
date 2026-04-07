@@ -12,21 +12,26 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { filename, data } = await req.json();
-        if (!filename) {
-            return NextResponse.json({ message: "Filename is required" }, { status: 400 });
+        const { filename, data, content, instrument } = await req.json();
+        if (!filename && !content) {
+            return NextResponse.json({ message: "Filename or content is required" }, { status: 400 });
         }
 
-        // 1. Fetch template HTML string from Database
-        const assignment = await db.emailAssignment.findFirst({
-            where: {
-                workspaceId,
-                templateName: filename
-            }
-        });
+        let templateContent = content;
 
-        if (!assignment || !assignment.content) {
-            return NextResponse.json({ message: "Template not found in database or has no content" }, { status: 404 });
+        // If content is not provided, fetch from DB
+        if (!templateContent) {
+            const assignment = await db.emailAssignment.findFirst({
+                where: {
+                    workspaceId,
+                    templateName: filename
+                }
+            });
+
+            if (!assignment || !assignment.content) {
+                return NextResponse.json({ message: "Template not found" }, { status: 404 });
+            }
+            templateContent = assignment.content;
         }
 
         // 2. Fetch global app settings (Identity, Branding, Logo)
@@ -40,9 +45,19 @@ export async function POST(req, { params }) {
             appDescription: "Your Productivity Platform"
         };
 
+        // Inject instrumentation markers if requested
+        let instrumentedContent = templateContent;
+        if (instrument) {
+            instrumentedContent = templateContent.split('\n').map((line, idx) => {
+                // Find first HTML tag start and inject line number
+                // Regex: Starts with < followed by alphanumeric tag name, then space or closure
+                return line.replace(/<([a-zA-Z0-9]+)(\s|>)/, `<$1 data-source-line="${idx + 1}"$2`);
+            }).join('\n');
+        }
+
         // 3. Compile HTML dynamically using Handlebars
         try {
-            const template = Handlebars.compile(assignment.content);
+            const template = Handlebars.compile(instrumentedContent);
             const combinedData = {
                 ...branding,
                 appLogo: branding.logoUrl, // Alias for easier use in templates
