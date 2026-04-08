@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { runWorkflow } from "@/lib/workflow-engine";
 import parser from "cron-parser";
+import serverLogger from "@/utils/serverLogger";
 
 // Helper for v5.5.0 ESM compatibility
 const getCron = () => {
@@ -120,27 +121,11 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-    // Log the external trigger event natively to the SystemLog for telemetry
-    try {
-        const ip = req.headers.get("x-forwarded-for") || req.ip || "Unknown IP";
-        const userAgent = req.headers.get("user-agent") || "Unknown Agent";
-        
-        await db.systemLog.create({
-            data: {
-                level: "INFO",
-                type: "SYSTEM_WEBHOOK",
-                message: "External Cron POST Request Received",
-                details: { 
-                    source: "external-cron-trigger", 
-                    ip, 
-                    userAgent,
-                    url: req.url
-                }
-            }
-        });
-    } catch (e) {
-        console.error("[CRON_POST_LOG_ERROR]", e);
-    }
+    // Log the external trigger event via serverLogger
+    await serverLogger.fromRequest(req, "External Cron POST Request Received", {
+        type: "SYSTEM_WEBHOOK",
+        details: { source: "external-cron-trigger" }
+    });
 
     // Reroute external POST webhook triggers directly into the main execution pipeline
     return GET(req);
