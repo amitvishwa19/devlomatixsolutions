@@ -53,10 +53,10 @@ export async function POST(req) {
                 for (const statusObj of statuses) {
                     const status = statusObj.status;
                     const waId = statusObj.id;
-                    
+
                     try {
                         let updateData = { status: status.toUpperCase() };
-                        
+
                         // Capture failure reasons if available
                         if (status === 'failed' && statusObj.errors) {
                             const existingMsg = await db.whatsAppMessage.findUnique({ where: { waId } });

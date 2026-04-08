@@ -31,6 +31,7 @@ export default function AppSidebar() {
     const baseAgentPath = `/workspace/${workspaceId}/agent`
     const baseFlowbotPath = `/workspace/${workspaceId}/flowbot`
     const baseMiscellaneousPath = `/workspace/${workspaceId}/miscellaneous`
+    const baseEcommercePath = `/workspace/${workspaceId}/ecommerce`
 
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
@@ -41,6 +42,10 @@ export default function AppSidebar() {
         { type: 'child', title: "Dashboard", url: `/workspace/${workspaceId}`, category: "Workspace" },
         { type: 'child', title: "Article", url: `/workspace/${workspaceId}/article`, category: "Workspace" },
         { type: 'child', title: "Category", url: `/workspace/${workspaceId}/category`, category: "Workspace" },
+
+        // eCommerce
+        { type: 'parent', title: "eCommerce", url: `${baseEcommercePath}`, icon: "shopping-cart", category: "eCommerce" },
+        { type: 'child', title: "Dashboard", url: `${baseEcommercePath}`, category: "eCommerce" },
 
 
         // WHATSAPP
