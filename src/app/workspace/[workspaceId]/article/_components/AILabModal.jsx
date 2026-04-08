@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/supabase/client";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger, } from "@/components/ui/tabs"
+import { ContentGenerator } from './ContentGenerator';
 
 // ---------------------------------------------------------
 // GEMINI API LIGHWEIGHT INTEGRATION
@@ -182,8 +183,25 @@ export const AILabModal = ({ isOpen, onOpenChange }) => {
 
                         </TabsList>
                     </DialogHeader>
-                    <ScrollArea className="flex-1 overflow-auto rounded-b-lg bg-muted/20">
+                    <ScrollArea className="flex-1 overflow-auto rounded-b-lg ">
+                        <TabsContent value="generator">
+                            <ContentGenerator />
+                        </TabsContent>
+                        <TabsContent value="hashtags">
 
+                        </TabsContent>
+                        <TabsContent value="rewriter">
+
+                        </TabsContent>
+                        <TabsContent value="content-calendar">
+
+                        </TabsContent>
+                        <TabsContent value="api-docs">
+
+                        </TabsContent>
+                        <TabsContent value="analytics">
+
+                        </TabsContent>
                     </ScrollArea>
                 </Tabs>
 
