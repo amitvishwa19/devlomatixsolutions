@@ -124,9 +124,14 @@ export async function DELETE(req, { params }) {
             });
             return NextResponse.json({ message: `Deleted ${result.count} log entries` });
         } else if (clearAll === 'true') {
-            // Total purge of all logs for workspace
+            // Total purge of all logs for workspace (including global/null ones)
             const result = await db.systemLog.deleteMany({
-                where: { workspaceId: workspaceId }
+                where: {
+                    OR: [
+                        { workspaceId: workspaceId },
+                        { workspaceId: null }
+                    ]
+                }
             });
             return NextResponse.json({ message: `Purged all ${result.count} logs completely` });
         } else {
