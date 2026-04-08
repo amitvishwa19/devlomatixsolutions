@@ -441,6 +441,58 @@ async function testGemini(credentials) {
 }
 
 /**
+ * OpenRouter AI API
+ * Required keys: apiKey
+ */
+async function testOpenRouter(credentials) {
+    let key = credentials.apiKey || credentials['api-key'] || credentials.api_key;
+    if (!key) return { success: false, message: 'Missing apiKey' };
+
+    key = key.replace(/['"]/g, '').trim();
+    
+    // Decrypt if it's the legacy iv:hex structure (though unlikely for new OpenRouter creds)
+    if (key.includes(':')) {
+        try {
+            key = symmetricDecrypt(key);
+        } catch (e) {
+            console.error("[OPENROUTER_DECRYPT_FAIL]", e);
+        }
+    }
+
+    try {
+        const selectedModel = (credentials.model || 'google/gemini-2.0-flash-exp:free').trim();
+        
+        // Lightweight test: Fetch available models or just check key info
+        // OpenRouter has a /api/v1/auth/key endpoint that returns key info
+        const { ok, status, data } = await fetchWithTimeout(
+            'https://openrouter.ai/api/v1/auth/key',
+            { headers: { 'Authorization': `Bearer ${key}` } }
+        );
+
+        if (ok && data?.data) {
+            return { 
+                success: true, 
+                message: `OpenRouter key is valid. Limit: ${data.data.limit || 'Unlimited'}`, 
+                data: {
+                    profileName: "OpenRouter AI",
+                    model: selectedModel,
+                    ...data.data
+                } 
+            };
+        }
+
+        return { 
+            success: false, 
+            message: data?.error?.message || `OpenRouter verification failed (Status: ${status})`, 
+            data 
+        };
+    } catch (err) {
+        console.error("[TEST_OPENROUTER_ERROR]", err);
+        return { success: false, message: err.message || 'OpenRouter connection failed', data: err };
+    }
+}
+
+/**
  * Generic / Custom — just verifies credentials are non-empty
  */
 async function testGeneric(credentials) {
@@ -480,9 +532,51 @@ const PLATFORM_TESTERS = {
     GOOGLE:     testGoogle,
     GMAIL:      testGoogle,
     GEMINI:     testGemini,
+    OPENROUTER: testOpenRouter,
     GOOGLE_PLACES: testGooglePlaces,
     RESEND:     testResend,
+    SUPABASE:   testSupabase,
 };
+
+/**
+ * Supabase API
+ * Required keys: supabaseUrl, supabaseKey
+ */
+async function testSupabase(credentials) {
+    const url = (credentials.supabaseUrl || '').trim();
+    const key = (credentials.supabaseKey || '').trim();
+
+    if (!url || !key) return { success: false, message: 'Missing supabaseUrl or supabaseKey' };
+
+    // Clean URL
+    const baseUrl = url.replace(/\/$/, '');
+
+    const { ok, status, data } = await fetchWithTimeout(
+        `${baseUrl}/rest/v1/`,
+        {
+            headers: {
+                'apikey': key,
+                'Authorization': `Bearer ${key}`
+            }
+        }
+    );
+
+    if (ok) {
+        return { 
+            success: true, 
+            message: 'Supabase connection verified (REST API)', 
+            data: { 
+                profileName: 'Supabase Cloud',
+                ...data 
+            } 
+        };
+    }
+
+    if (status === 401) return { success: false, message: 'Invalid Supabase API key', data };
+    if (status === 404) return { success: false, message: 'Invalid Supabase URL (PostgREST not found)', data };
+    
+    return { success: false, message: `Supabase connection failed (Status: ${status})`, data };
+}
 
 /**
  * Resend Email API

@@ -48,8 +48,20 @@ const PLATFORM_CONFIG = {
     GMAIL: ['access_token', 'refresh_token'],
     GOOGLE: ['access_token', 'refresh_token'],
     GEMINI: ['apiKey'],
+    OPENROUTER: ['apiKey'],
     RESEND: ['apiKey'],
+    SUPABASE: ['supabaseUrl', 'supabaseKey'],
 };
+
+const OPENROUTER_MODELS = [
+    { value: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash Exp (Free)', description: 'Fast & experimental' },
+    { value: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (Free)', description: 'Powerful & open' },
+    { value: 'deepseek/deepseek-r1:free', label: 'DeepSeek R1 (Free)', description: 'Optimized for reasoning' },
+    { value: 'mistralai/mistral-7b-instruct:free', label: 'Mistral 7B (Free)', description: 'Small & efficient' },
+    { value: 'qwen/qwen-2-7b-instruct:free', label: 'Qwen 2 7B (Free)', description: 'Alibaba open source' },
+    { value: 'openrouter/auto', label: 'Auto (Best Price)', description: 'Automatically select best model' },
+    { value: 'custom', label: 'Custom Model...', description: 'Enter specific OpenRouter model ID' },
+];
 
 const GEMINI_MODELS = [
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Next-gen high speed & intelligence' },
@@ -77,6 +89,8 @@ export const AddCredentialModal = () => {
     const [status, setStatus] = useState('disconnected');
     const [fields, setFields] = useState([{ key: '', value: '' }]);
     const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
+    const [openRouterModel, setOpenRouterModel] = useState('google/gemini-2.0-flash-exp:free');
+    const [customModelName, setCustomModelName] = useState('');
 
     const isEdit = !!initialData?.id;
 
@@ -97,6 +111,18 @@ export const AddCredentialModal = () => {
                 // Extract model for Gemini
                 if (platformKey === 'GEMINI' && initialData.details.model) {
                     setGeminiModel(initialData.details.model);
+                }
+
+                // Extract model for OpenRouter
+                if (platformKey === 'OPENROUTER' && initialData.details.model) {
+                    const savedModel = initialData.details.model;
+                    const isPreset = OPENROUTER_MODELS.some(m => m.value === savedModel);
+                    if (isPreset) {
+                        setOpenRouterModel(savedModel);
+                    } else {
+                        setOpenRouterModel('custom');
+                        setCustomModelName(savedModel);
+                    }
                 }
 
                 const dynamicFields = Object.entries(initialData.details)
@@ -187,6 +213,11 @@ export const AddCredentialModal = () => {
                 credentialsObject.model = geminiModel;
             }
 
+            // Store selected model for OpenRouter
+            if (finalPlatform.toUpperCase() === 'OPENROUTER') {
+                credentialsObject.model = openRouterModel === 'custom' ? customModelName : openRouterModel;
+            }
+
             const payload = {
                 platform: finalPlatform.toUpperCase(),
                 credentials: credentialsObject,
@@ -221,6 +252,8 @@ export const AddCredentialModal = () => {
             setStatus('connected');
             setFields([{ key: '', value: '' }]);
             setGeminiModel('gemini-2.0-flash');
+            setOpenRouterModel('google/gemini-2.0-flash-exp:free');
+            setCustomModelName('');
         }
         onClose("addCredential");
     };
@@ -308,8 +341,8 @@ export const AddCredentialModal = () => {
                         {/* Gemini Model Selector */}
                         {platform === 'GEMINI' && (
                             <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
-                                <label className="text-[10px] font-bold text-purple-500 ml-1 flex items-center gap-2">
-                                    <Bot className="w-3 h-3" /> AI MODEL
+                                <label className="text-[10px] font-bold text-purple-500 ml-1 flex items-center gap-2 uppercase tracking-wider opacity-80">
+                                    <Sparkles className="w-3 h-3 text-purple-500" /> GEMINI AI MODEL
                                 </label>
                                 <Select value={geminiModel} onValueChange={setGeminiModel} disabled={isLoading}>
                                     <SelectTrigger className="bg-purple-500/5 border border-purple-500/20 rounded-md focus:ring-1 focus:ring-purple-500 h-12 font-bold text-xs">
@@ -320,15 +353,62 @@ export const AddCredentialModal = () => {
                                     </SelectTrigger>
                                     <SelectContent className="rounded-md border-border/20 shadow-2xl">
                                         {GEMINI_MODELS.map((model) => (
-                                            <SelectItem key={model.value} value={model.value} className="font-semibold text-xs py-3">
+                                            <SelectItem key={model.value} value={model.value} className="font-semibold text-xs py-3 border-b border-border/5 last:border-0">
                                                 <div className="flex flex-col">
-                                                    <span>{model.label}</span>
-                                                    <span className="text-[9px] text-muted-foreground font-normal">{model.description}</span>
+                                                    <span className="font-bold tracking-tight uppercase">{model.label}</span>
+                                                    <span className="text-[9px] text-muted-foreground font-normal italic opacity-70">{model.description}</span>
                                                 </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </div>
+                        )}
+
+                        {/* OpenRouter Model Selector */}
+                        {platform === 'OPENROUTER' && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                <div className="space-y-2 text-left">
+                                    <label className="text-[10px] font-bold text-blue-500 ml-1 flex items-center gap-2 uppercase tracking-wider opacity-80">
+                                        <Bot className="w-3 h-3 text-blue-500" /> OPENROUTER AI MODEL
+                                    </label>
+                                    <Select value={openRouterModel} onValueChange={setOpenRouterModel} disabled={isLoading}>
+                                        <SelectTrigger className="bg-blue-500/5 border border-blue-500/20 rounded-md focus:ring-1 focus:ring-blue-500 h-12 font-bold text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <Bot className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                                <SelectValue placeholder="Select Model" />
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-md border-border/20 shadow-2xl">
+                                            {OPENROUTER_MODELS.map((model) => (
+                                                <SelectItem key={model.value} value={model.value} className="font-semibold text-xs py-3 border-b border-border/5 last:border-0">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold tracking-tight uppercase">{model.label}</span>
+                                                        <span className="text-[9px] text-muted-foreground font-normal italic opacity-70">{model.description}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {openRouterModel === 'custom' && (
+                                    <div className="space-y-2 animate-in zoom-in-95 duration-200 text-left">
+                                        <label className="text-[10px] font-bold text-blue-500/70 ml-1 flex items-center gap-2 italic">
+                                            <Activity className="w-3 h-3" /> CUSTOM MODEL ID
+                                        </label>
+                                        <Input
+                                            disabled={isLoading}
+                                            placeholder="e.g. meta-llama/llama-3-8b"
+                                            value={customModelName}
+                                            onChange={(e) => setCustomModelName(e.target.value)}
+                                            className="bg-blue-500/5 border-blue-500/20 rounded-md focus-visible:ring-1 focus-visible:ring-blue-500 shadow-inner h-12 font-bold text-xs"
+                                        />
+                                        <p className="text-[9px] text-muted-foreground italic px-1 opacity-70">
+                                            Find model IDs at <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-blue-500 underline">openrouter.ai/models</a>
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -427,6 +507,11 @@ export const AddCredentialModal = () => {
                                         // Include selected Gemini model so the backend tests with the right one
                                         if (platform === 'GEMINI' && geminiModel) {
                                             credentialsObject.model = geminiModel;
+                                        }
+
+                                        // Include selected OpenRouter model
+                                        if (platform === 'OPENROUTER') {
+                                            credentialsObject.model = openRouterModel === 'custom' ? customModelName : openRouterModel;
                                         }
 
                                         const finalPlatform = platform === 'CUSTOM' ? customPlatform : platform;
