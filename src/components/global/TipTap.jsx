@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Link from '@tiptap/extension-link';
@@ -28,8 +28,34 @@ import {
     Quote, Code2, Minus,
     Link as LinkIcon, Image as ImageIcon, Table as TableIcon,
     Undo, Redo, Highlighter,
-    Plus
+    Plus, Palette, Type
 } from 'lucide-react';
+
+const FontFamily = Extension.create({
+  name: 'fontFamily',
+  addOptions() { return { types: ['textStyle'] } },
+  addGlobalAttributes() {
+    return [{
+      types: this.options.types,
+      attributes: {
+        fontFamily: {
+          default: null,
+          parseHTML: element => element.style.fontFamily?.replace(/['"]+/g, ''),
+          renderHTML: attributes => {
+            if (!attributes.fontFamily) return {}
+            return { style: `font-family: ${attributes.fontFamily}` }
+          },
+        },
+      },
+    }]
+  },
+  addCommands() {
+    return {
+      setFontFamily: fontFamily => ({ chain }) => chain().setMark('textStyle', { fontFamily }).run(),
+      unsetFontFamily: () => ({ chain }) => chain().setMark('textStyle', { fontFamily: null }).removeEmptyTextStyle().run(),
+    }
+  },
+})
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +82,7 @@ export default function TipTap({ data, onChange }) {
             TaskItem.configure({ nested: true }),
             Color,
             TextStyle,
+            FontFamily,
             Highlight.configure({ multicolor: true }),
             Underline,
         ],
@@ -160,12 +187,34 @@ export default function TipTap({ data, onChange }) {
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button variant="ghost" size="icon">
-                                    <Code2 className="h-4 w-4" />
+                                    <Palette className="h-4 w-4" />
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="flex gap-2">
                                 <Input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} />
                                 <Button onClick={() => editor.chain().focus().setColor(textColor).run()}>Apply</Button>
+                            </PopoverContent>
+                        </Popover>
+
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Type className="h-4 w-4" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="flex flex-col gap-1 w-48">
+                                <Button variant="ghost" className="justify-start font-normal" onClick={() => editor.chain().focus().unsetFontFamily().run()}>Default Font</Button>
+                                {['Arial', 'Courier New', 'Georgia', 'Impact', 'Times New Roman', 'Trebuchet MS', 'Verdana'].map(font => (
+                                    <Button
+                                        key={font}
+                                        variant="ghost"
+                                        className="justify-start font-normal"
+                                        style={{ fontFamily: font }}
+                                        onClick={() => editor.chain().focus().setFontFamily(font).run()}
+                                    >
+                                        {font}
+                                    </Button>
+                                ))}
                             </PopoverContent>
                         </Popover>
 

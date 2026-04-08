@@ -51,13 +51,15 @@ import {
     ImagePlus,
     Share2,
     Search,
-    TrendingUp
+    TrendingUp,
+    Bot
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import TipTap from '@/components/global/TipTap';
 import { Separator } from '@/components/ui/separator';
 import { clientLogger } from '@/utils/logger';
 import { PostPreview, SinglePostPreview } from './PostPreview';
+import { AILabModal } from './AILabModal';
 
 export const AddPostModal = () => {
     const { isOpen, onClose, onOpen, type, data, activeModals } = useModal();
@@ -97,6 +99,9 @@ export const AddPostModal = () => {
     const [seoKeywords, setSeoKeywords] = useState([]);
     const [seoTips, setSeoTips] = useState([]);
     const [isSeoLoading, setIsSeoLoading] = useState(false);
+
+    // AI Lab modal state
+    const [isAiLabOpen, setIsAiLabOpen] = useState(false);
 
     useEffect(() => {
         if (isModalOpen && workspaceId) {
@@ -410,10 +415,10 @@ export const AddPostModal = () => {
                     {/* Header */}
                     <DialogHeader className="p-4 border-b border-border flex flex-row items-center justify-between shrink-0">
                         <div className="space-y-1 text-left">
-                            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-3">
+                            <DialogTitle className="text-xl     text-foreground flex items-center gap-3">
                                 <Layout className="text-primary h-6 w-6" /> {isEdit ? 'Edit Article' : 'Create Article'}
                             </DialogTitle>
-                            <p className="text-xs font-bold text-muted-foreground opacity-70">
+                            <p className="text-xs     text-muted-foreground opacity-70">
                                 {isEdit ? 'Update your article content and settings' : 'Create and schedule engaging article across all platforms'}
                             </p>
                         </div>
@@ -428,27 +433,27 @@ export const AddPostModal = () => {
                         <div className="flex-1 flex flex-col p-8 space-y-6 overflow-y-auto scrollbar-hide border-r border-border/10">
 
                             <div className="space-y-4 text-left">
-                                <label className="text-xs font-bold text-muted-foreground opacity-70 ml-1">Article Title</label>
+                                <label className="text-xs     text-muted-foreground opacity-70 ml-1">Article Title</label>
                                 <Input
                                     disabled={isLoading}
                                     placeholder="e.g. Product Launch Announcement - Q1"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    className="bg-muted/30 border rounded-md focus-visible:ring-2 focus-visible:ring-primary h-12 text-lg font-bold shadow-inner mt-2"
+                                    className="bg-muted/30 border rounded-md focus-visible:ring-2 focus-visible:ring-primary h-12 text-lg     shadow-inner mt-2"
                                 />
                             </div>
 
                             <div className="flex-1 flex flex-col space-y-2 text-left">
 
                                 <div className="flex justify-between ml-1">
-                                    <label className="text-sm font-bold text-muted-foreground opacity-70">Article Content</label>
+                                    <label className="text-sm     text-muted-foreground opacity-70">Article Content</label>
                                     <div className="flex items-center gap-2">
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => setShowAiAssistant(!showAiAssistant)}
-                                            className={`h-6 px-2 text-[9px] font-bold ${showAiAssistant ? 'text-primary bg-primary/10' : 'text-muted-foreground opacity-70'}`}
+                                            className={`h-6 px-2        ${showAiAssistant ? 'text-primary bg-primary/10' : 'text-muted-foreground opacity-70'}`}
                                         >
                                             <Sparkles size={12} className="mr-1" /> AI Assistant
                                         </Button>
@@ -472,7 +477,7 @@ export const AddPostModal = () => {
                                             <Button
                                                 onClick={() => handleAiAction('GENERATE')}
                                                 disabled={isAiLoading || !aiPrompt}
-                                                className="bg-primary text-primary-foreground px-4 rounded-md flex items-center gap-2 shadow-lg shadow-primary/20 transition-all font-bold text-[10px]"
+                                                className="bg-primary text-primary-foreground px-4 rounded-md flex items-center gap-2 shadow-lg shadow-primary/20 transition-all     text-[10px]"
                                             >
                                                 {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
                                                 Generate
@@ -483,7 +488,7 @@ export const AddPostModal = () => {
                                                 variant="outline"
                                                 onClick={() => handleAiAction('IMPROVE')}
                                                 disabled={isAiLoading || !content}
-                                                className="h-8 rounded-full border-primary/20 bg-background hover:bg-primary/5 text-[9px] font-bold px-3"
+                                                className="  rounded-md border bg-background hover:bg-primary/5 px-3"
                                             >
                                                 <RotateCcw size={12} className="mr-1.5" /> Polish Draft
                                             </Button>
@@ -491,7 +496,7 @@ export const AddPostModal = () => {
                                                 variant="outline"
                                                 onClick={() => handleAiAction('TAGS')}
                                                 disabled={isAiLoading || !content}
-                                                className="h-8 rounded-full border-primary/20 bg-background hover:bg-primary/5 text-[9px] font-bold px-3"
+                                                className="  rounded-md border bg-background hover:bg-primary/5 px-3"
                                             >
                                                 <TagsIcon size={12} className="mr-1.5" /> Suggest Tags
                                             </Button>
@@ -499,7 +504,7 @@ export const AddPostModal = () => {
                                                 variant="outline"
                                                 onClick={handleGenerateAiImage}
                                                 disabled={isAiLoading}
-                                                className="h-8 rounded-full border-primary/20 bg-background hover:bg-primary/5 text-[9px] font-bold px-3 border-dashed"
+                                                className="  rounded-md border bg-background hover:bg-primary/5 px-3 border-dashed"
                                             >
                                                 <ImagePlus size={12} className="mr-1.5 text-primary" /> Magic Image
                                             </Button>
@@ -511,9 +516,9 @@ export const AddPostModal = () => {
                                                     <Button
                                                         variant="outline"
                                                         disabled={isAiLoading || !content}
-                                                        className="h-8 rounded-full border-primary/20 bg-background hover:bg-primary/5 text-[9px] font-bold px-3"
+                                                        className="  rounded-md border bg-background hover:bg-primary/5 px-3"
                                                     >
-                                                        <Share2 size={12} className="mr-1.5" /> Repurpose
+                                                        <Share2 size={12} className="" /> Repurpose
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
@@ -534,10 +539,20 @@ export const AddPostModal = () => {
                                                 variant="outline"
                                                 onClick={handleRepurposeAll}
                                                 disabled={isAiLoading || isBulkGenerating || !content || selectedPlatforms.length === 0}
-                                                className="h-8 rounded-full border-primary/30 bg-primary/5 hover:bg-primary/10 text-[9px] px-4 text-primary animate-pulse-slow"
+                                                className=" rounded-md border bg-primary/5 hover:bg-primary/10 px-4 text-primary animate-pulse-slow"
                                             >
-                                                {isBulkGenerating ? <Loader2 size={12} className="mr-1.5 animate-spin" /> : <TrendingUp size={12} className="mr-1.5" />}
+                                                {isBulkGenerating ? <Loader2 size={12} className=" animate-spin" /> : <TrendingUp size={12} className="" />}
                                                 Optimize for All Active Channels
+                                            </Button>
+
+                                            <Separator orientation="vertical" className="h-4 bg-border/20 mx-1" />
+
+                                            <Button
+                                                variant="default"
+                                                onClick={() => setIsAiLabOpen(true)}
+                                                className=" rounded-md bg-primary hover:bg-primary/90  px-4 shadow-md shadow-primary/20 transition-all border border-primary/20"
+                                            >
+                                                <Bot size={12} className=" animate-pulse" /> AI Lab
                                             </Button>
                                         </div>
                                     </div>
@@ -553,7 +568,7 @@ export const AddPostModal = () => {
                                             <div className="flex flex-col items-center gap-3 bg-card p-6 rounded-md shadow-2xl border border-primary/20 animate-in zoom-in-95 duration-200">
                                                 <div className="relative">
                                                     <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                                                    <Loader2 className="h-8 w-8 text-primary animate-spin relative z-10" />
+                                                    <Loader2 className="  w-8 text-primary animate-spin relative z-10" />
                                                 </div>
                                                 <p className="text-[10px] text-primary">Gemini is Thinking...</p>
                                             </div>
@@ -614,14 +629,14 @@ export const AddPostModal = () => {
                                                                 <div className="p-1.5 bg-primary/10 rounded-md text-primary">
                                                                     {getPlatformIcon(pName)}
                                                                 </div>
-                                                                <span className="text-xs font-bold">{pName} Custom Version</span>
+                                                                <span className="text-xs    ">{pName} Custom Version</span>
                                                             </div>
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
                                                                 onClick={handleGenerate}
                                                                 disabled={isGenerating || !content}
-                                                                className="h-7 text-[9px] font-bold gap-1.5 border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+                                                                className="h-7        gap-1.5 border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
                                                             >
                                                                 {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
                                                                 Auto Configure
@@ -650,11 +665,11 @@ export const AddPostModal = () => {
                             {/* Platforms & Accounts */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-[10px] font-bold text-muted-foreground opacity-70">
+                                    <label className="text-[10px]     text-muted-foreground opacity-70">
                                         Target Platforms
                                     </label>
                                     {selectedPlatforms.length > 0 && (
-                                        <Badge variant="outline" className="text-[10px] font-bold bg-primary/10 text-primary border-primary/20 scale-90">
+                                        <Badge variant="outline" className="text-[10px]     bg-primary/10 text-primary border-primary/20 scale-90">
                                             {selectedPlatforms.length} ACTIVE
                                         </Badge>
                                     )}
@@ -683,7 +698,7 @@ export const AddPostModal = () => {
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <span className="text-[11px] block leading-none truncate">{account.platform}</span>
-                                                    <span className={`text-[9px] font-bold opacity-50 block whitespace-normal break-words ${isConnected ? 'text-green-500' : 'text-amber-500'}`}>
+                                                    <span className={`       opacity-50 block whitespace-normal break-words ${isConnected ? 'text-green-500' : 'text-amber-500'}`}>
                                                         {account.profileName || 'Connected Account'}
                                                     </span>
                                                 </div>
@@ -695,7 +710,7 @@ export const AddPostModal = () => {
                                 {accounts.filter(a => a.status === 'connected' && ['FACEBOOK', 'INSTAGRAM', 'LINKEDIN', 'TWITTER', 'WHATSAPP'].includes(a.platform?.toUpperCase())).length === 0 && (
                                     <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-md">
                                         <Info className="text-amber-500 w-5 h-5 shrink-0" />
-                                        <p className="text-[11px] font-bold text-amber-500 leading-tight">
+                                        <p className="text-[11px]     text-amber-500 leading-tight">
                                             No accounts connected. Go to System → Credentials to link accounts.
                                         </p>
                                     </div>
@@ -707,7 +722,7 @@ export const AddPostModal = () => {
                             {/* SEO Intelligence Section */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-[10px] font-bold text-muted-foreground opacity-70">
+                                    <label className="text-[10px]     text-muted-foreground opacity-70">
                                         SEO Intelligence
                                     </label>
                                     {isSeoLoading && <Loader2 size={12} className="animate-spin text-primary" />}
@@ -737,23 +752,23 @@ export const AddPostModal = () => {
                                         <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-500">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] ${seoScore > 80 ? 'bg-green-500/10 text-green-500' :
+                                                    <div className={`w-8   rounded-full flex items-center justify-center text-[11px] ${seoScore > 80 ? 'bg-green-500/10 text-green-500' :
                                                         seoScore > 50 ? 'bg-amber-500/10 text-amber-500' :
                                                             'bg-red-500/10 text-red-500'
                                                         }`}>
                                                         {seoScore}
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-muted-foreground">SEO Score</span>
+                                                    <span className="text-[10px]     text-muted-foreground">SEO Score</span>
                                                 </div>
                                                 <TrendingUp size={14} className={seoScore > 50 ? 'text-green-500' : 'text-red-500'} />
                                             </div>
 
                                             {seoKeywords.length > 0 && (
                                                 <div className="space-y-2">
-                                                    <p className="text-[9px] text-muted-foreground/60 tracking-wider">Keywords Found</p>
+                                                    <p className="   text-muted-foreground/60 tracking-wider">Keywords Found</p>
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {seoKeywords.slice(0, 5).map((kw, i) => (
-                                                            <div key={i} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/30 border border-border/50 text-[9px] font-medium">
+                                                            <div key={i} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/30 border border-border/50    font-medium">
                                                                 <span>{kw.word}</span>
                                                                 <span className="opacity-40">{kw.count}</span>
                                                             </div>
@@ -764,10 +779,10 @@ export const AddPostModal = () => {
 
                                             {seoTips.length > 0 && (
                                                 <div className="space-y-2">
-                                                    <p className="text-[9px] text-muted-foreground/60 tracking-wider">Optimization Tips</p>
+                                                    <p className="   text-muted-foreground/60 tracking-wider">Optimization Tips</p>
                                                     <ul className="space-y-1.5">
                                                         {seoTips.map((tip, i) => (
-                                                            <li key={i} className="text-[9px] font-medium text-muted-foreground flex gap-2">
+                                                            <li key={i} className="   font-medium text-muted-foreground flex gap-2">
                                                                 <div className="w-1 h-1 rounded-full bg-primary mt-1 shrink-0" />
                                                                 {tip}
                                                             </li>
@@ -779,7 +794,7 @@ export const AddPostModal = () => {
                                     )}
 
                                     {seoScore === null && !isSeoLoading && (
-                                        <p className="text-[9px] text-muted-foreground/50 text-center italic py-2">
+                                        <p className="   text-muted-foreground/50 text-center italic py-2">
                                             Enter a keyword to analyze content
                                         </p>
                                     )}
@@ -791,13 +806,13 @@ export const AddPostModal = () => {
                             {/* Classification Section */}
                             <div className="space-y-6 text-left">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1">Content Category</label>
+                                    <label className="text-[10px]     text-muted-foreground opacity-70 ml-1">Content Category</label>
                                     <Select
                                         value={categoryId}
                                         onValueChange={setCategoryId}
                                         disabled={isLoading}
                                     >
-                                        <SelectTrigger className="bg-card/100 border-border/100 h-11 text-[11px] font-bold">
+                                        <SelectTrigger className="bg-card/100 border-border/100 h-11 text-[11px]    ">
                                             <SelectValue placeholder="Select a category..." />
                                         </SelectTrigger>
                                         <SelectContent className="bg-card/100 border-border/100">
@@ -815,10 +830,10 @@ export const AddPostModal = () => {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1">Search Tags</label>
+                                    <label className="text-[10px]     text-muted-foreground opacity-70 ml-1">Search Tags</label>
                                     <div className="flex flex-wrap gap-2 mb-2">
                                         {tags.map((tag, i) => (
-                                            <Badge key={i} variant="secondary" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 transition-colors text-[9px] font-bold px-2 py-0.5 flex items-center gap-1 group">
+                                            <Badge key={i} variant="secondary" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 transition-colors        px-2 py-0.5 flex items-center gap-1 group">
                                                 {tag}
                                                 <X
                                                     size={10}
@@ -855,7 +870,7 @@ export const AddPostModal = () => {
                             {/* Media Section */}
                             <div className="space-y-4 text-left">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-[10px] font-bold text-muted-foreground opacity-70">Visual Assets</label>
+                                    <label className="text-[10px]     text-muted-foreground opacity-70">Visual Assets</label>
                                     <Button
                                         type="button"
                                         variant="link"
@@ -867,7 +882,7 @@ export const AddPostModal = () => {
                                                 }
                                             }
                                         })}
-                                        className="h-auto p-0 text-[10px] font-bold text-primary hover:no-underline opacity-70 hover:opacity-100 transition-opacity"
+                                        className="h-auto p-0 text-[10px]     text-primary hover:no-underline opacity-70 hover:opacity-100 transition-opacity"
                                     >
                                         Select from Library
                                     </Button>
@@ -907,7 +922,7 @@ export const AddPostModal = () => {
                                     ) : (
                                         <div className="col-span-3 flex flex-col items-center justify-center p-6 border-2 border-dashed border-border/10 rounded-md bg-muted/5 opacity-40">
                                             <ImageIcon className="w-6 h-6 mb-2" />
-                                            <span className="text-[9px] font-bold">No Media</span>
+                                            <span className="      ">No Media</span>
                                         </div>
                                     )}
                                 </div>
@@ -917,7 +932,7 @@ export const AddPostModal = () => {
 
                             {/* Scheduling Section */}
                             <div className="space-y-3 text-left bg-primary/5 p-5 rounded-md border border-primary/20 mt-auto">
-                                <label className="text-[10px] font-bold text-primary opacity-90 block mb-2">Publish Schedule</label>
+                                <label className="text-[10px]     text-primary opacity-90 block mb-2">Publish Schedule</label>
                                 <div className="relative">
                                     <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                                     <Input
@@ -925,10 +940,10 @@ export const AddPostModal = () => {
                                         disabled={isLoading}
                                         value={scheduledAt}
                                         onChange={(e) => setScheduledAt(e.target.value)}
-                                        className="pl-10 bg-background border-none rounded-md h-11 text-[11px] font-bold shadow-sm focus-visible:ring-1 focus-visible:ring-primary"
+                                        className="pl-10 bg-background border-none rounded-md h-11 text-[11px]     shadow-sm focus-visible:ring-1 focus-visible:ring-primary"
                                     />
                                 </div>
-                                <p className="text-[9px] font-medium text-muted-foreground italic pl-1 pt-1 opacity-70">
+                                <p className="   font-medium text-muted-foreground italic pl-1 pt-1 opacity-70">
                                     {scheduledAt ? "Post will be marked for scheduled broadcast" : "Post will be saved to your dashboard"}
                                 </p>
                             </div>
@@ -940,14 +955,14 @@ export const AddPostModal = () => {
                     <DialogFooter className="px-8 py-6 bg-muted/10 border-t border-border/10 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2 text-muted-foreground/60 transition-opacity hover:opacity-100">
                             <Info size={14} />
-                            <span className="text-[10px] font-bold">Autosave Active</span>
+                            <span className="text-[10px]    ">Autosave Active</span>
                         </div>
                         <div className="flex items-center gap-3">
                             <Button
                                 type="button"
                                 variant="ghost"
                                 onClick={handleClose}
-                                className="px-6 rounded-md font-bold text-muted-foreground text-[10px]"
+                                className="px-6 rounded-md     text-muted-foreground text-[10px]"
                             >
                                 Cancel
                             </Button>
@@ -957,7 +972,7 @@ export const AddPostModal = () => {
                                 variant="outline"
                                 disabled={isLoading}
                                 onClick={() => onSubmit("DRAFT")}
-                                className="px-6 border-border/60 hover:bg-background rounded-md font-bold text-[10px]"
+                                className="px-6 border-border/60 hover:bg-background rounded-md     text-[10px]"
                             >
                                 Save Draft
                             </Button>
@@ -976,6 +991,10 @@ export const AddPostModal = () => {
                     </DialogFooter>
                 </div>
             </DialogContent>
+
+            {/* AI Lab Modal */}
+            <AILabModal isOpen={isAiLabOpen} onOpenChange={setIsAiLabOpen} />
+
         </Dialog>
     );
 };

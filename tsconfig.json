@@ -25,6 +25,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/social-hub/*": [
+        "./src/app/workspace/[workspaceId]/article/social-hub/*"
       ]
     }
   },
