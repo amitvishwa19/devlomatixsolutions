@@ -1,4 +1,3 @@
-import { HistoryEntry } from "@/social-hub/hooks/use-content-history";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";

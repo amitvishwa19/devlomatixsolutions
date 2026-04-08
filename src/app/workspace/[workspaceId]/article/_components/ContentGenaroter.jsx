@@ -6,15 +6,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useContentHistory } from "@/social-hub/hooks/use-content-history";
 import { ContentHistory } from "./ContentHIstory";
-import { ExportContent } from "@/social-hub/components/ExportContent";
+
 
 import {
     Twitter, Instagram, Linkedin, Facebook, Sparkles, Copy, Check,
     Loader2, MessageSquare, Layers, Image, Film, Globe, Hash
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useContentHistory } from "../_hooks/use-content-history";
 
 const platforms = [
     { id: "twitter", name: "Twitter/X", icon: Twitter, color: "text-sky-400" },
@@ -108,14 +108,14 @@ export function ContentGenerator() {
     const localGenerateContent = async (opts) => {
         const { topic, platform, tone, contentType, language, wordCount } = opts;
         const promptText = `Create a ${contentType} for ${platform} with a ${tone} tone about: ${topic}. Write entirely in ${language}.${wordCount ? ` Limit to approximately ${wordCount} words.` : ''}`;
-        
+
         const res = await axios.post(`/api/workspace/${workspaceId}/social/ai/generate`, {
             prompt: promptText,
             mode: 'GENERATE'
         });
 
         const contentText = res.data.content || "";
-        
+
         // Extract dynamically generated hashtags
         const hashtags = [];
         const regex = /#[\w]+/g;

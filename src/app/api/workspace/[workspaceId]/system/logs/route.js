@@ -101,6 +101,7 @@ export async function DELETE(req, { params }) {
         const { searchParams } = new URL(req.url);
         const logId = searchParams.get('id');
         const logIdsParam = searchParams.get('ids');
+        const clearAll = searchParams.get('clearAll');
 
         if (logId) {
             // Delete specific log entry
@@ -122,6 +123,12 @@ export async function DELETE(req, { params }) {
                 }
             });
             return NextResponse.json({ message: `Deleted ${result.count} log entries` });
+        } else if (clearAll === 'true') {
+            // Total purge of all logs for workspace
+            const result = await db.systemLog.deleteMany({
+                where: { workspaceId: workspaceId }
+            });
+            return NextResponse.json({ message: `Purged all ${result.count} logs completely` });
         } else {
             // Original logic: Delete logs older than 30 days
             const thirtyDaysAgo = new Date();

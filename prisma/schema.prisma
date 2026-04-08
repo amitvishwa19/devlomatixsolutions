@@ -533,6 +533,8 @@ model Credentials {
   updatedAt   DateTime @updatedAt
   avatar      String?
   userInfo    Json?
+  expiresAt   DateTime?
+  environment String   @default("PROD")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

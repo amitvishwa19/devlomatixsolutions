@@ -7,17 +7,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Download, FileText, Table } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { GeneratedContent } from "@/social-hub/lib/gemini";
 
-interface ExportContentProps {
-  contents: { platform: string; data: GeneratedContent; imageUrl?: string }[];
-  topic: string;
-}
 
-function toCSV(contents: ExportContentProps["contents"]): string {
+
+function toCSV(contents) {
   const header = "Platform,Title,Description,Content,Hashtags\n";
   const rows = contents.map((c) => {
-    const escape = (s: string) => `"${s.replace(/"/g, '""')}"`;
+    const escape = (s) => `"${s.replace(/"/g, '""')}"`;
     return [
       c.platform,
       escape(c.data.title),
@@ -29,7 +25,7 @@ function toCSV(contents: ExportContentProps["contents"]): string {
   return header + rows.join("\n");
 }
 
-function toMarkdown(contents: ExportContentProps["contents"], topic: string): string {
+function toMarkdown(contents, topic) {
   let md = `# Generated Content: ${topic}\n\n`;
   md += `_Generated on ${new Date().toLocaleDateString()}_\n\n---\n\n`;
   for (const c of contents) {
@@ -45,7 +41,7 @@ function toMarkdown(contents: ExportContentProps["contents"], topic: string): st
   return md;
 }
 
-function downloadFile(content: string, filename: string, mimeType: string) {
+function downloadFile(content, filename, mimeType) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -55,7 +51,7 @@ function downloadFile(content: string, filename: string, mimeType: string) {
   URL.revokeObjectURL(url);
 }
 
-export function ExportContent({ contents, topic }: ExportContentProps) {
+export function ExportContent({ contents, topic }) {
   const { toast } = useToast();
 
   if (contents.length === 0) return null;

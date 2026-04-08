@@ -120,5 +120,28 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-    return NextResponse.json({ success: true, message: "New cron request" }, { status: 200 });
+    // Log the external trigger event natively to the SystemLog for telemetry
+    try {
+        const ip = req.headers.get("x-forwarded-for") || req.ip || "Unknown IP";
+        const userAgent = req.headers.get("user-agent") || "Unknown Agent";
+        
+        await db.systemLog.create({
+            data: {
+                level: "INFO",
+                type: "SYSTEM_WEBHOOK",
+                message: "External Cron POST Request Received",
+                details: { 
+                    source: "external-cron-trigger", 
+                    ip, 
+                    userAgent,
+                    url: req.url
+                }
+            }
+        });
+    } catch (e) {
+        console.error("[CRON_POST_LOG_ERROR]", e);
+    }
+
+    // Reroute external POST webhook triggers directly into the main execution pipeline
+    return GET(req);
 }

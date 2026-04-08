@@ -99,6 +99,8 @@ export async function GET(req, { params }) {
                 userInfo: c.userInfo,
                 status: c.status,
                 expired: c.expired,
+                expiresAt: c.expiresAt,
+                environment: c.environment,
                 details: decryptedData
             };
             console.log(`[ACCOUNTS_LIST_DEBUG] Account: ${account.platform} | Profile: ${account.profileName} | HasImage: ${!!account.profileImage}`);
@@ -123,7 +125,7 @@ export async function POST(req, { params }) {
 
         const userId = session.user.userId;
         const body = await req.json();
-        const { platform, credentials, profile, status } = body;
+        const { platform, credentials, profile, status, expiresAt, environment } = body;
 
         if (!platform || !credentials) {
             return NextResponse.json({ message: "Platform and credentials are required" }, { status: 400 });
@@ -137,7 +139,9 @@ export async function POST(req, { params }) {
                 userId,
                 profile: profile || null,
                 status: status || "disconnected",
-                credentials: credentialsToStore
+                credentials: credentialsToStore,
+                expiresAt: expiresAt ? new Date(expiresAt) : null,
+                environment: environment || "PROD"
             }
         });
 
