@@ -21,15 +21,21 @@ import {
  Loader2, 
  ArrowLeft,
  RefreshCw,
- Lock
+ Lock,
+ Database
 } from'lucide-react';
 import { toast } from'sonner';
 import axios from'@/utils/axios';
 import Link from'next/link';
 
+// Restored Universal Credentials
+import { useModal } from '@/hooks/useModal';
+import { AddCredentialModal } from '../../article/_components/AddCredentialModal';
+
 export default function AgentCredentials({ params: paramsPromise }) {
  const params = use(paramsPromise);
  const workspaceId = params?.workspaceId;
+ const { onOpen } = useModal();
 
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
@@ -113,7 +119,18 @@ export default function AgentCredentials({ params: paramsPromise }) {
  <h1 className="text-2xl">Agent Connectivity</h1>
  <p className="text-xs text-muted-foreground font-bold opacity-60">Secure Gateway Configuration</p>
  </div>
+ <div className="flex items-center gap-3">
+    <Button 
+        variant="outline" 
+        onClick={() => onOpen('addCredential', { workspaceId })}
+        className="rounded-md border-border/40 font-bold bg-card shadow-sm hover:shadow-md transition-all text-xs"
+    >
+        <Database className="w-4 h-4 mr-2 text-primary" /> Manage AI / Social Credentials
+    </Button>
  </div>
+ </div>
+
+ <AddCredentialModal />
 
  <div className="max-w-3xl space-y-6">
  <form onSubmit={handleSave} className="space-y-6">

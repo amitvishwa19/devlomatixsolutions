@@ -24,7 +24,7 @@ export async function GET(req) {
 
     try {
         const now = new Date();
-        
+
         // Find all active cron jobs where nextRunAt is past due (or missing and needs initialization)
         const dueCrons = await db.systemCron.findMany({
             where: {
@@ -77,7 +77,7 @@ export async function GET(req) {
                 } else if (cron.targetType === "SYSTEM") {
                     // Decoupled / Manual integration placeholder
                     console.log(`[CRON_SYSTEM_TRIGGER] Job: ${cron.name}, Target: ${cron.targetId}`);
-                    
+
                     // Log to system logs
                     await db.systemLog.create({
                         data: {
@@ -117,4 +117,8 @@ export async function GET(req) {
         console.error("[WEBHOOK_CRON_ERROR]", error);
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
+}
+
+export async function POST(req) {
+    return NextResponse.json({ success: true, message: "New cron request" }, { status: 200 });
 }

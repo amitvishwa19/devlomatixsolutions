@@ -1,25 +1,22 @@
+import { NavLink as RouterNavLink, NavLinkProps } from "react-router-dom";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
-import { useSocialRouter } from "@/social-hub/hooks/use-social-router";
 
-interface NavLinkCompatProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+interface NavLinkCompatProps extends Omit<NavLinkProps, "className"> {
+  className?: string;
   activeClassName?: string;
   pendingClassName?: string;
-  to: string;
-  end?: boolean;
 }
 
 const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
-  ({ className, activeClassName, pendingClassName, to, end, ...props }, ref) => {
-    const { currentPath, navigate } = useSocialRouter();
-    const isActive = currentPath === to;
-
+  ({ className, activeClassName, pendingClassName, to, ...props }, ref) => {
     return (
-      <a
+      <RouterNavLink
         ref={ref}
-        href="#"
-        onClick={(e) => { e.preventDefault(); navigate(to); }}
-        className={cn(className, isActive && activeClassName)}
+        to={to}
+        className={({ isActive, isPending }) =>
+          cn(className, isActive && activeClassName, isPending && pendingClassName)
+        }
         {...props}
       />
     );

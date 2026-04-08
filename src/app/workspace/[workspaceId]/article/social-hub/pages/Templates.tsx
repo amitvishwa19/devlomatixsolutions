@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useSocialRouter } from "@/social-hub/hooks/use-social-router";
+import { useNavigate } from "react-router-dom";
 import {
   Rocket, Lightbulb, Megaphone, Users, Star, Gift,
   BookOpen, TrendingUp, Heart, Briefcase, Copy, ArrowRight,
@@ -150,7 +150,7 @@ const categories = [...new Set(templates.map((t) => t.category))];
 export default function Templates() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
-  const { navigate } = useSocialRouter();
+  const navigate = useNavigate();
 
   const filtered = selectedCategory
     ? templates.filter((t) => t.category === selectedCategory)

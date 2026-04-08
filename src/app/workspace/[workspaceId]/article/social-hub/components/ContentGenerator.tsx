@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateContent, GeneratedContent } from "@/social-hub/lib/gemini";
 import { useContentHistory, HistoryEntry } from "@/social-hub/hooks/use-content-history";
 import { ContentHistory } from "@/social-hub/components/ContentHistory";
-import { supabase } from "@/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { ExportContent } from "@/social-hub/components/ExportContent";
 
 import { 

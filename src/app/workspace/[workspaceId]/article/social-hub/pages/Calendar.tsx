@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarDays, Loader2, Plus, X, Clock, Hash } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CalendarEntry {
   day: number;

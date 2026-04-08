@@ -1,5 +1,5 @@
 import { NavLink } from "@/social-hub/components/NavLink";
-import { useLocation } from "@/social-hub/hooks/use-social-router";
+import { useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/social-hub/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import {

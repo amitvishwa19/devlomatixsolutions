@@ -24,6 +24,7 @@ export async function POST(req, { params }) {
         }
 
         let apiKey = null;
+        let aiModel = "gemini-1.5-flash";
 
         // Fetch user's registered Gemini credential from DB
         if (session?.user?.userId) {
@@ -59,6 +60,9 @@ export async function POST(req, { params }) {
                 }
 
                 apiKey = data.apiKey || data['api-key'] || data.api_key;
+                if (data.model) {
+                    aiModel = data.model;
+                }
                 
                 // Final safety strip to handle any mistakenly pasted prefixes
                 if (apiKey) {
@@ -80,11 +84,11 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Gemini API key not configured" }, { status: 500 });
         }
         
-        console.log("[AI_GENERATE] Gemini request initiated using gemini-1.5-flash...");
+        console.log(`[AI_GENERATE] Gemini request initiated using ${aiModel}...`);
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
+            model: aiModel,
             // Higher safety settings for public use if needed
         });
 
@@ -172,7 +176,7 @@ export async function POST(req, { params }) {
 
     } catch (error) {
         await logger.error(`AI Generation Failed: ${error.message}`, {
-            workspaceId: params?.workspaceId,
+            workspaceId,
             type: 'AI',
             details: { stack: error.stack, error }
         });

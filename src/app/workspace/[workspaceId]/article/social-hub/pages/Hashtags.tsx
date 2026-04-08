@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Hash, Loader2, Copy, Check, Sparkles } from "lucide-react";
-import { supabase } from "@/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const platforms = ["all", "instagram", "twitter", "tiktok", "linkedin", "facebook", "youtube"];
