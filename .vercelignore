@@ -1,0 +1,6 @@
+# Ignore unnecessary files for Vercel deployment
+tmp/
+scripts/
+*.log
+*.md
+!README.md
