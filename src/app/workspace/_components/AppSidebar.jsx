@@ -46,6 +46,10 @@ export default function AppSidebar() {
         // eCommerce
         { type: 'parent', title: "eCommerce", url: `${baseEcommercePath}`, icon: "shopping-cart", category: "eCommerce" },
         { type: 'child', title: "Dashboard", url: `${baseEcommercePath}`, category: "eCommerce" },
+        { type: 'child', title: "Orders", url: `${baseEcommercePath}/orders`, category: "eCommerce" },
+        { type: 'child', title: "Products", url: `${baseEcommercePath}/products`, category: "eCommerce" },
+        { type: 'child', title: "Abandoned", url: `${baseEcommercePath}/abandoned`, category: "eCommerce" },
+        { type: 'child', title: "Settings", url: `${baseEcommercePath}/settings`, category: "eCommerce" },
 
 
         // WHATSAPP
