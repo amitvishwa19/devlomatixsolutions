@@ -24,9 +24,9 @@ export async function POST(req, { params }) {
         }
 
         let apiKey = null;
-        let aiModel = "gemini-1.5-flash";
+        let aiModel = null;
 
-        // Fetch user's registered Gemini credential from DB
+        // 1. Fetch user's registered Gemini credential from DB
         if (session?.user?.userId) {
             const credential = await db.credentials.findFirst({
                 where: {
@@ -45,7 +45,7 @@ export async function POST(req, { params }) {
                     const encKey = process.env.ENCRYPTION_KEY;
                     if (encKey) {
                         try {
-                            const crypto = require('crypto');
+                            const crypto = await import('crypto');
                             const parts = data.enc.split(':');
                             const ivBuffer = Buffer.from(parts[0], 'hex');
                             const encText = Buffer.from(parts.slice(1).join(':'), 'hex');
@@ -64,7 +64,6 @@ export async function POST(req, { params }) {
                     aiModel = data.model;
                 }
                 
-                // Final safety strip to handle any mistakenly pasted prefixes
                 if (apiKey) {
                     apiKey = apiKey.replace(/['"]/g, '').trim();
                     if (apiKey.includes('=')) {
@@ -74,24 +73,16 @@ export async function POST(req, { params }) {
             }
         }
 
-        // Fallback to env only if DB query failed or returned nothing
+        // Fallback to env
         if (!apiKey) {
             apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMENI_API_KEY;
         }
         
         if (!apiKey) {
-            console.error("[AI_GENERATE] No API key found in environment variables");
             return NextResponse.json({ message: "Gemini API key not configured" }, { status: 500 });
         }
-        
-        console.log(`[AI_GENERATE] Gemini request initiated using ${aiModel}...`);
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-            model: aiModel,
-            // Higher safety settings for public use if needed
-        });
-
+        // --- Model Preparation ---
         let systemPrompt = "";
         let finalPrompt = "";
 
@@ -129,22 +120,65 @@ export async function POST(req, { params }) {
                 break;
         }
 
-        const chat = model.startChat({
-            history: [
-                {
-                    role: "user",
-                    parts: [{ text: systemPrompt }],
-                },
-                {
-                    role: "model",
-                    parts: [{ text: "Understood. Please provide the details." }],
-                },
-            ],
-        });
+        const combinedPrompt = `${systemPrompt}\n\n${finalPrompt}`;
 
-        const result = await chat.sendMessage(finalPrompt);
-        const responseText = result.response.text();
+        // --- Robust Generation Loop ---
+        const modelsToTry = [
+            ...(aiModel ? [aiModel] : []),
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-pro"
+        ];
 
+        let responseText = "";
+        let success = false;
+        let lastError = null;
+
+        // Direct Fetch Fallback Helper (Bypasses SDK initialization issues)
+        const callDirectGeminiV1 = async (modelName, key, fullPrompt) => {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+            });
+            const resData = await response.json();
+            if (!response.ok) throw new Error(resData.error?.message || `HTTP ${response.status}`);
+            return resData.candidates?.[0]?.content?.parts?.[0]?.text;
+        };
+
+        for (const modelName of modelsToTry) {
+            try {
+                console.log(`[AI_GENERATE] Attempting ${modelName}...`);
+                try {
+                    // Try SDK first
+                    const genAI = new GoogleGenerativeAI(apiKey);
+                    const model = genAI.getGenerativeModel({ model: modelName });
+                    const result = await model.generateContent(combinedPrompt);
+                    const sdkRes = await result.response;
+                    responseText = sdkRes.text();
+                } catch (sdkErr) {
+                    // Try Direct API as fallback
+                    console.log(`[AI_GENERATE] SDK failed for ${modelName}, trying direct hit...`);
+                    responseText = await callDirectGeminiV1(modelName, apiKey, combinedPrompt);
+                }
+
+                if (responseText) {
+                    success = true;
+                    break;
+                }
+            } catch (err) {
+                lastError = err.message;
+                console.error(`[AI_GENERATE] Model ${modelName} failed:`, lastError);
+            }
+        }
+
+        if (!success) {
+            throw new Error(lastError || "All AI models failed to respond");
+        }
+
+        // --- Response Formatting ---
         if (mode === 'GENERATE') {
             const titleMatch = responseText.match(/TITLE:\s*(.*)/i);
             const contentMatch = responseText.match(/CONTENT:\s*([\s\S]*)/i);
@@ -162,7 +196,6 @@ export async function POST(req, { params }) {
 
         if (mode === 'SEO') {
             try {
-                // Remove any markdown code block formatting if present
                 const cleanJson = responseText.replace(/```json|```/g, '').trim();
                 const seoData = JSON.parse(cleanJson);
                 return NextResponse.json(seoData);
@@ -176,7 +209,7 @@ export async function POST(req, { params }) {
 
     } catch (error) {
         await logger.error(`AI Generation Failed: ${error.message}`, {
-            workspaceId,
+            workspaceId: params.workspaceId, // Safe access
             type: 'AI',
             details: { stack: error.stack, error }
         });
