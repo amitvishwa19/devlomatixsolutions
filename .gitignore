@@ -45,3 +45,4 @@ next-env.d.ts
 fcm_service_account
 /scripts
 /tmp
+/scratch
