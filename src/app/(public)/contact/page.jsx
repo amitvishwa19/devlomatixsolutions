@@ -1,313 +1,149 @@
-'use client'
-import React, { useState } from 'react'
+'use client';
+
+import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { toast } from "sonner";
-import PageTransition from '../components/PageTransition';
-
 
 const contactSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Please enter a valid email"),
-    company: z.string().optional(),
-    subject: z.string().min(5, "Subject must be at least 5 characters"),
-    message: z.string().min(20, "Message must be at least 20 characters"),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name too long"),
+  email: z.string().trim().email("Invalid email address").max(255),
+  subject: z.string().trim().min(1, "Subject is required").max(200, "Subject too long"),
+  message: z.string().trim().min(1, "Message is required").max(2000, "Message too long"),
 });
-;
 
 const contactInfo = [
-    {
-        icon: Mail,
-        title: "Email Us",
-        details: "hello@acstechhub.com",
-        description: "We'll respond within 24 hours",
-    },
-    {
-        icon: Phone,
-        title: "Call Us",
-        details: "+91 98765 43210",
-        description: "Mon-Fri from 9am to 6pm IST",
-    },
-    {
-        icon: MapPin,
-        title: "Visit Us",
-        details: "Cyber Hub, DLF Phase 2",
-        description: "Gurugram, Haryana 122002",
-    },
-    {
-        icon: Clock,
-        title: "Business Hours",
-        details: "Monday - Friday",
-        description: "9:00 AM - 6:00 PM PST",
-    },
+  { icon: Mail, label: "Email", value: "hello@crystalaura.com" },
+  { icon: Phone, label: "Phone", value: "+91 98765 43210" },
+  { icon: MapPin, label: "Address", value: "Mumbai, Maharashtra, India" },
+  { icon: Clock, label: "Hours", value: "Mon – Sat, 10am – 7pm IST" },
 ];
 
+export default function CrystalAuraContactPage() {
+  const { toast } = useToast();
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [errors, setErrors] = useState({});
 
-export default function ContactPage() {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const result = contactSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[err.path[0]] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+    toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
+    setForm({ name: "", email: "", subject: "", message: "" });
+  };
 
-    const [isSubmitted, setIsSubmitted] = useState(false);
+  return (
+    <div className="min-h-screen bg-transparent pt-12 pb-24 px-6 overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="text-center mb-16"
+        >
+          <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+            ✦ Get In Touch ✦
+          </p>
+          <h1 className="font-serif text-5xl md:text-7xl text-foreground mb-6">
+            <span className="text-gold-gradient font-semibold">Contact</span> Us
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
+            Have questions about crystals, Vastu placement, or your order? Reach out and our spiritual guides will assist you.
+          </p>
+          <div className="section-divider w-48 mx-auto mt-8" />
+        </motion.div>
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-        reset,
-    } = useForm({
-        resolver: zodResolver(contactSchema),
-    });
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
+          {/* Contact Info */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="lg:col-span-2 space-y-4"
+          >
+            {contactInfo.map((item, i) => (
+              <div key={item.label} className="flex items-center gap-6 glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 hover:border-primary/20 transition-all group">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <item.icon className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-muted-foreground/40 text-[10px] uppercase font-black tracking-widest mb-1">{item.label}</p>
+                  <p className="text-foreground text-sm font-bold uppercase tracking-widest">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
 
-    const onSubmit = async (data) => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        console.log("Contact form submitted:", data);
-        setIsSubmitted(true);
-        toast.success("Message sent successfully!");
-        reset();
-        setTimeout(() => setIsSubmitted(false), 3000);
-    };
-
-
-    return (
-        <PageTransition>
-            <div className="min-h-screen bg-background">
-
-
-                {/* Hero Section */}
-                <section className="pt-32 pb-20 relative">
-                    <div className="absolute inset-0 grid-pattern opacity-20" />
-                    <div className="container mx-auto px-6 relative z-10">
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
-                            className="text-center max-w-3xl mx-auto"
-                        >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">
-                                Contact Us
-                            </span>
-                            <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
-                                Let's Start a <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Conversation</span>
-                            </h1>
-                            <p className="text-muted-foreground text-lg md:text-xl">
-                                Have a project in mind? We'd love to hear from you. Send us a message
-                                and we'll respond as soon as possible.
-                            </p>
-                        </motion.div>
-                    </div>
-                </section>
-
-                {/* Contact Info Cards */}
-                <section className="py-12">
-                    <div className="container mx-auto px-6">
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {contactInfo.map((info, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    viewport={{ once: true }}
-                                    className="glass-card p-6 text-center"
-                                >
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-[hsl(260,100%,65%,0.2)] flex items-center justify-center mx-auto mb-4">
-                                        <info.icon className="w-6 h-6 text-primary" />
-                                    </div>
-                                    <h3 className="font-display font-semibold text-foreground mb-1">
-                                        {info.title}
-                                    </h3>
-                                    <p className="text-foreground font-medium">{info.details}</p>
-                                    <p className="text-sm text-muted-foreground">{info.description}</p>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Contact Form Section */}
-                <section className="py-20">
-                    <div className="container mx-auto px-6">
-                        <div className="grid lg:grid-cols-2 gap-16 items-start">
-                            {/* Left Column - Info */}
-                            <motion.div
-                                initial={{ opacity: 0, x: -30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.6 }}
-                                viewport={{ once: true }}
-                            >
-                                <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
-                                    Ready to Transform Your{" "}
-                                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Business</span>?
-                                </h2>
-                                <p className="text-muted-foreground text-lg mb-8">
-                                    Whether you're looking to build a new product, automate processes,
-                                    or modernize your existing systems, we're here to help you succeed.
-                                </p>
-
-                                <div className="space-y-6">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-foreground mb-1">
-                                                Free Consultation
-                                            </h4>
-                                            <p className="text-sm text-muted-foreground">
-                                                Get a free 30-minute consultation to discuss your project
-                                                requirements.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-foreground mb-1">
-                                                Custom Solutions
-                                            </h4>
-                                            <p className="text-sm text-muted-foreground">
-                                                Every project is unique. We create tailored solutions for
-                                                your specific needs.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-foreground mb-1">
-                                                Dedicated Support
-                                            </h4>
-                                            <p className="text-sm text-muted-foreground">
-                                                Our team provides ongoing support throughout and after your
-                                                project.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Right Column - Form */}
-                            <motion.div
-                                initial={{ opacity: 0, x: 30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.6 }}
-                                viewport={{ once: true }}
-                                className="glass-card p-8"
-                            >
-                                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                    <div className="grid sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name">Full Name *</Label>
-                                            <Input
-                                                id="name"
-                                                placeholder="Rahul Sharma"
-                                                {...register("name")}
-                                                className={errors.name ? "border-destructive" : ""}
-                                            />
-                                            {errors.name && (
-                                                <p className="text-sm text-destructive">{errors.name.message}</p>
-                                            )}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">Email *</Label>
-                                            <Input
-                                                id="email"
-                                                type="email"
-                                                placeholder="rahul@company.in"
-                                                {...register("email")}
-                                                className={errors.email ? "border-destructive" : ""}
-                                            />
-                                            {errors.email && (
-                                                <p className="text-sm text-destructive">{errors.email.message}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="company">Company</Label>
-                                            <Input
-                                                id="company"
-                                                placeholder="Your Company"
-                                                {...register("company")}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="subject">Subject *</Label>
-                                            <Input
-                                                id="subject"
-                                                placeholder="Project Inquiry"
-                                                {...register("subject")}
-                                                className={errors.subject ? "border-destructive" : ""}
-                                            />
-                                            {errors.subject && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.subject.message}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="message">Message *</Label>
-                                        <Textarea
-                                            id="message"
-                                            placeholder="Tell us about your project..."
-                                            rows={6}
-                                            {...register("message")}
-                                            className={errors.message ? "border-destructive" : ""}
-                                        />
-                                        {errors.message && (
-                                            <p className="text-sm text-destructive">{errors.message.message}</p>
-                                        )}
-                                    </div>
-
-                                    <Button
-                                        type="submit"
-                                        variant="hero"
-                                        size="lg"
-                                        className="w-full"
-                                        disabled={isSubmitting || isSubmitted}
-                                    >
-                                        {isSubmitting ? (
-                                            <span className="flex items-center gap-2">
-                                                <motion.div
-                                                    animate={{ rotate: 360 }}
-                                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                                    className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
-                                                />
-                                                Sending...
-                                            </span>
-                                        ) : isSubmitted ? (
-                                            <span className="flex items-center gap-2">
-                                                <CheckCircle className="w-5 h-5" />
-                                                Message Sent!
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-2">
-                                                <Send className="w-5 h-5" />
-                                                Send Message
-                                            </span>
-                                        )}
-                                    </Button>
-                                </form>
-                            </motion.div>
-                        </div>
-                    </div>
-                </section>
-
-
+          {/* Form */}
+          <motion.form
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            onSubmit={handleSubmit}
+            className="lg:col-span-3 glass-card border-white/5 bg-white/[0.02] rounded-[2.5rem] p-10 md:p-14 space-y-8"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Name</label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Seer's Name"
+                  className="bg-white/[0.03] border-white/5 py-7 rounded-2xl placeholder:text-muted-foreground/20"
+                />
+                {errors.name && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.name}</p>}
+              </div>
+              <div className="space-y-3">
+                <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Email</label>
+                <Input
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="spirit@guide.com"
+                  className="bg-white/[0.03] border-white/5 py-7 rounded-2xl placeholder:text-muted-foreground/20"
+                />
+                {errors.email && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.email}</p>}
+              </div>
             </div>
-        </PageTransition>
-    )
+            <div className="space-y-3">
+              <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Subject</label>
+              <Input
+                value={form.subject}
+                onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                placeholder="Topic of Inquiry"
+                className="bg-white/[0.03] border-white/5 py-7 rounded-2xl placeholder:text-muted-foreground/20"
+              />
+              {errors.subject && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.subject}</p>}
+            </div>
+            <div className="space-y-3">
+              <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Message</label>
+              <Textarea
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                placeholder="Share your thoughts..."
+                rows={6}
+                className="bg-white/[0.03] border-white/5 rounded-2xl resize-none placeholder:text-muted-foreground/20 p-6"
+              />
+              {errors.message && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.message}</p>}
+            </div>
+            <Button type="submit" className="w-full sm:w-auto bg-gold-gradient text-white font-sans tracking-[0.25em] font-black uppercase text-[10px] px-12 py-8 rounded-2xl hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
+              <Send className="w-5 h-5 mr-3" />
+              Send Message
+            </Button>
+          </motion.form>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -1,38 +1,18 @@
-'use client'
-import React from 'react'
+import React from "react";
+import HeroSection from "./_components/HeroSection";
+import ProductsSection from "./_components/ProductsSection";
+import FeaturesSection from "./_components/FeaturesSection";
+import TestimonialSection from "./_components/TestimonialSection";
+import InstagramFeed from "./_components/InstagramFeed";
 
-import { ArrowRight, Shield, Clock, Users, Award, Heart, Stethoscope, Brain, Bone, Baby, Siren, Sparkles, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import Hero from './components/Hero';
-import WhyChooseUs from './components/WhyChooseUs';
-import Process from './components/Process';
-import TechStack from './components/TechStack';
-import Testimonials from './components/Testimonials';
-import FAQ from './components/FAQ';
-import PageTransition from './components/PageTransition';
-import CTA from './components/CTA';
-import Services from './components/Services';
-
-
-
-
-
-
-export default function HomePage() {
-    return (
-        <PageTransition className="min-h-screen overflow-hidden w-full ">
-
-
-
-            <Hero />
-            <Services />
-            <WhyChooseUs />
-            <Process />
-            <TechStack />
-            <Testimonials />
-            <FAQ />
-            <CTA />
-        </PageTransition>
-    )
+export default function CrystalAuraHomePage() {
+  return (
+    <div className="bg-background">
+      <HeroSection />
+      <ProductsSection />
+      <FeaturesSection />
+      <TestimonialSection />
+      <InstagramFeed />
+    </div>
+  );
 }

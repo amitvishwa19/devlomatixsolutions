@@ -1,27 +1,36 @@
-//import 'aos/dist/aos.css';
-import "@/css/public.css";
-import { Unbounded, Inter, Poppins, Roboto } from "next/font/google";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import StickyBottomBar from "./components/StickyBottomBar";
+import React from 'react';
+import './_styles/crystals.css';
+import { CrystalAuraProviders } from './_context/CrystalAuraProviders';
+import Navbar from './_components/Navbar';
+import FooterSection from './_components/FooterSection';
+import CartDrawer from './_components/CartDrawer';
+import WhatsAppButton from './_components/WhatsAppButton';
 
-const unbounded = Unbounded({ subsets: ["latin"] });
-const font = Inter({ subsets: ["latin"] });
+export const metadata = {
+  title: 'Crystal Aura | Sacred Gemstones & Healing Crystals',
+  description: 'Discover our curated collection of authentic healing crystals, gemstones, and spiritual tools. Expertly sourced for your spiritual journey.',
+};
 
-export default function PublicLayout({ children }) {
-    return (
-        <div className={`${font.className} flex flex-col min-h-screen overflow-x-auto pb-24`} >
-            <div className=''>
-                <Navbar />
-            </div>
+export default function CrystalAuraLayout({ children }) {
+  return (
+    <div className="crystal-aura min-h-screen relative font-sans">
+      <CrystalAuraProviders>
+        <div className="crystal-aura-root flex flex-col min-h-screen">
+          {/* Background effects */}
+          <div className="fixed inset-0 bg-[#0a0a0a] pointer-events-none -z-10" />
+          <div className="fixed inset-0 noise-overlay pointer-events-none opacity-20 -z-10" />
+          
+          <Navbar />
+          <CartDrawer />
+          <WhatsAppButton />
+          
+          <main className="flex-grow pt-20">
+            {children}
+          </main>
 
-            <div className='flex grow w-full' >
-                {children}
-            </div>
-            <div className=''>
-                <Footer />
-            </div>
-            <StickyBottomBar />
+          <FooterSection />
         </div>
-    )
+      </CrystalAuraProviders>
+    </div>
+  );
 }
