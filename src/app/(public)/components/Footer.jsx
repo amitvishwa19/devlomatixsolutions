@@ -81,20 +81,6 @@ const Footer = () => {
                     </div>
                 </div>
 
-                {/* Bottom Bar */}
-                <div id='bottombar' className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-muted-foreground">
-                        © 2024 {process.env.NEXT_PUBLIC_APP_NAME}. All rights reserved.
-                    </p>
-                    <div className="flex items-center gap-6">
-                        <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
-                            Privacy Policy
-                        </Link>
-                        <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
-                            Terms of Service
-                        </Link>
-                    </div>
-                </div>
             </div>
         </footer>
     );
