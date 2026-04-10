@@ -1,6 +1,7 @@
 'use client';
 import { AppLogo } from "@/components/global/AppLogo";
 import { Github, Linkedin, Twitter } from "lucide-react";
+import Link from "next/link";
 
 const Footer = () => {
     const links = {
@@ -81,17 +82,17 @@ const Footer = () => {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div id='bottombar' className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-muted-foreground">
                         © 2024 {process.env.NEXT_PUBLIC_APP_NAME}. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
-                        <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
+                        <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Privacy Policy
-                        </a>
-                        <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
+                        </Link>
+                        <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Terms of Service
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </div>
