@@ -30,7 +30,8 @@ export async function GET(req, { params }) {
                 ]
             },
             include: {
-                groups: true
+                groups: true,
+                category: true
             },
             orderBy: { createdAt: 'desc' }
         });
@@ -52,7 +53,7 @@ export async function POST(req, { params }) {
 
         const userId = session.user.userId;
         const body = await req.json();
-        const { name, phone, email, info, tags, groupIds } = body;
+        const { name, phone, email, info, tags, groupIds, categoryId, type } = body;
 
         if (!name || !phone) {
             return NextResponse.json({ message: "Name and phone are required" }, { status: 400 });
@@ -77,14 +78,17 @@ export async function POST(req, { params }) {
                 email,
                 info: info || {},
                 tags: tags || [],
+                type: type || 'CONTACT',
                 workspaceId,
                 userId,
+                categoryId: categoryId || null,
                 groups: groupIds ? {
                     connect: groupIds.map(id => ({ id }))
                 } : undefined
             },
             include: {
-                groups: true
+                groups: true,
+                category: true
             }
         });
 

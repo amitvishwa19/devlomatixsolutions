@@ -13,7 +13,10 @@ export async function GET(req, { params }) {
 
         const contact = await db.contact.findUnique({
             where: { id: contactId, workspaceId },
-            include: { groups: true }
+            include: { 
+                groups: true,
+                category: true
+            }
         });
 
         if (!contact) {
@@ -36,7 +39,7 @@ export async function PATCH(req, { params }) {
         }
 
         const body = await req.json();
-        const { name, phone, email, info, tags, groupIds } = body;
+        const { name, phone, email, info, tags, groupIds, categoryId, type } = body;
 
         // Clean phone if provided
         let cleanPhone = undefined;
@@ -52,12 +55,15 @@ export async function PATCH(req, { params }) {
                 email,
                 info: info !== undefined ? info : undefined,
                 tags: tags !== undefined ? tags : undefined,
+                type: type !== undefined ? type : undefined,
+                categoryId: categoryId !== undefined ? categoryId : undefined,
                 groups: groupIds ? {
                     set: groupIds.map(id => ({ id }))
                 } : undefined
             },
             include: {
-                groups: true
+                groups: true,
+                category: true
             }
         });
 

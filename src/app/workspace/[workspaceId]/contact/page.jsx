@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Plus,
     Search,
     Users,
     UserPlus,
@@ -33,15 +32,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -57,27 +49,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-    SheetFooter,
-} from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-
-
-import { Checkbox } from "@/components/ui/checkbox";
-import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger,
 } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ContactSheet } from './_components/ContactSheet';
+import { DeleteContactDialog } from './_components/DeleteContactDialog';
 
 
 const CONTACT_TYPES = [
@@ -94,22 +72,29 @@ export default function ContactManagementPage() {
     // --- State ---
     const [contacts, setContacts] = useState([]);
     const [groups, setGroups] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedGroup, setSelectedGroup] = useState("all");
     const [selectedType, setSelectedType] = useState(defaultType);
     const [selectedContacts, setSelectedContacts] = useState([]);
 
-    // Create/Edit Dialog State
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    // Create/Edit Sheet State
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [editingContact, setEditingContact] = useState(null);
+
+    // Delete Modal State
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [contactToDelete, setContactToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
         email: '',
         type: defaultType === 'all' ? 'CONTACT' : defaultType,
         groupIds: [],
+        tags: [],
+        categoryId: '',
         info: {
             company: '',
             designation: '',
@@ -126,13 +111,15 @@ export default function ContactManagementPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [contactsRes, groupsRes] = await Promise.all([
+            const [contactsRes, groupsRes, categoriesRes] = await Promise.all([
                 fetch(`/api/workspace/${workspaceId}/contacts`),
-                fetch(`/api/workspace/${workspaceId}/contacts/groups`)
+                fetch(`/api/workspace/${workspaceId}/contacts/groups`),
+                fetch(`/api/workspace/${workspaceId}/management/category`)
             ]);
 
             if (contactsRes.ok) setContacts(await contactsRes.json());
             if (groupsRes.ok) setGroups(await groupsRes.json());
+            if (categoriesRes.ok) setCategories(await categoriesRes.json());
         } catch (error) {
             toast.error("Failed to sync with vault");
         } finally {
@@ -161,10 +148,27 @@ export default function ContactManagementPage() {
 
             if (res.ok) {
                 toast.success(editingContact ? "Contact updated" : "Contact saved to vault");
-                setIsAddModalOpen(false);
-                setIsEditModalOpen(false);
+                setIsSheetOpen(false);
                 setEditingContact(null);
-                setFormData({ name: '', phone: '', email: '', type: 'CONTACT', groupIds: [], info: {} });
+                setFormData({
+                    name: '',
+                    phone: '',
+                    email: '',
+                    type: 'CONTACT',
+                    groupIds: [],
+                    tags: [],
+                    categoryId: '',
+                    info: {
+                        company: '',
+                        designation: '',
+                        website: '',
+                        linkedin: '',
+                        city: '',
+                        country: '',
+                        source: '',
+                        notes: ''
+                    }
+                });
                 fetchData();
             } else {
                 const err = await res.json();
@@ -185,16 +189,24 @@ export default function ContactManagementPage() {
         }));
     };
 
-    const handleDeleteContact = async (id) => {
-        if (!confirm("Remove this contact permanently?")) return;
+    const handleDeleteContact = async () => {
+        if (!contactToDelete) return;
+        setIsDeleting(true);
         try {
-            const res = await fetch(`/api/workspace/${workspaceId}/contacts/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/workspace/${workspaceId}/contacts/${contactToDelete.id}`, { method: 'DELETE' });
             if (res.ok) {
-                toast.success("Contact removed");
+                toast.success("Contact removed from vault");
                 fetchData();
+                setIsDeleteDialogOpen(false);
+                setContactToDelete(null);
+            } else {
+                const err = await res.json();
+                toast.error(err.message || "Operation failed");
             }
         } catch (error) {
-            toast.error("Delete failed");
+            toast.error("Operation failed");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -248,187 +260,39 @@ export default function ContactManagementPage() {
                             <RefreshCw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
                             Sync
                         </Button>
-                        <Sheet open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                            <SheetTrigger asChild>
-                                <Button className="bg-primary/90 hover:bg-primary  shadow-lg shadow-primary/20 transition-all active:scale-95">
-                                    <Plus className="w-3.5 h-3.5 mr-2" />
-                                    Add Contact
-                                </Button>
-                            </SheetTrigger>
-                            <SheetContent side="right" className=" border-0  bg-transparent p-2 md:min-w-[620px]">
-                                <div className='border rounded-lg h-full bg-background/80 backdrop-blur-xl p-2'>
-                                    <SheetHeader>
-                                        <SheetTitle className="text-xl font-bold text-white">New Contact</SheetTitle>
-                                        <SheetDescription className="text-xs text-muted-foreground">Add a new business contact to your workspace vault.</SheetDescription>
-                                    </SheetHeader>
-                                    <ScrollArea className="h-[calc(100vh-180px)] pr-4 mt-4">
-                                        <form onSubmit={handleSaveContact} className="space-y-4 p-2">
-                                            {/* Primary Information */}
-                                            <div className="space-y-4">
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Primary Information</h4>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2 col-span-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Full Name</Label>
-                                                        <Input
-                                                            required
-                                                            placeholder="John Doe"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.name}
-                                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Number</Label>
-                                                        <Input
-                                                            required
-                                                            placeholder="+1 (555) 000-0000"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.phone}
-                                                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email Address</Label>
-                                                        <Input
-                                                            type="email"
-                                                            placeholder="john@example.com"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.email}
-                                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <Separator className="bg-white/5" />
-
-                                            {/* Professional Details */}
-                                            <div className="space-y-4">
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Professional Details</h4>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Company Name</Label>
-                                                        <Input
-                                                            placeholder="Acme Inc."
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.info.company}
-                                                            onChange={e => handleInfoChange('company', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Job Title / Designation</Label>
-                                                        <Input
-                                                            placeholder="Project Manager"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.info.designation}
-                                                            onChange={e => handleInfoChange('designation', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <Separator className="bg-white/5" />
-
-                                            {/* Classification */}
-                                            <div className="space-y-4">
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Classification</h4>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Category Type</Label>
-                                                        <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
-                                                            <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="bg-zinc-900 border-white/10">
-                                                                {CONTACT_TYPES.map(t => (
-                                                                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Lead Source</Label>
-                                                        <Select value={formData.info.source} onValueChange={v => handleInfoChange('source', v)}>
-                                                            <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
-                                                                <SelectValue placeholder="Select Source" />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="bg-zinc-900 border-white/10">
-                                                                {['Referral', 'Social Media', 'Website', 'Advertising', 'Direct', 'Other'].map(s => (
-                                                                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <Separator className="bg-white/5" />
-
-                                            {/* Location & Digital */}
-                                            <div className="space-y-4">
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">Location & Digital</h4>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">City / Region</Label>
-                                                        <Input
-                                                            placeholder="New York"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.info.city}
-                                                            onChange={e => handleInfoChange('city', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Country</Label>
-                                                        <Input
-                                                            placeholder="USA"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.info.country}
-                                                            onChange={e => handleInfoChange('country', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Website</Label>
-                                                        <Input
-                                                            placeholder="https://example.com"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.info.website}
-                                                            onChange={e => handleInfoChange('website', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">LinkedIn Profile</Label>
-                                                        <Input
-                                                            placeholder="linkedin.com/in/username"
-                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                            value={formData.info.linkedin}
-                                                            onChange={e => handleInfoChange('linkedin', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <Separator className="bg-white/5" />
-
-                                            {/* Notes */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Internal Vault Notes</Label>
-                                                <Textarea
-                                                    rows={5}
-                                                    placeholder="Add any specific details or context about this contact..."
-                                                    className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary min-h-[100px] text-xs resize-none"
-                                                    value={formData.info.notes}
-                                                    onChange={e => handleInfoChange('notes', e.target.value)}
-                                                />
-                                            </div>
-
-                                            <SheetFooter className="p-0 pt-4 pb-10">
-                                                <Button variant={'default'} type="submit" className="w-full bg-primary h-10   ">Initialize Contact</Button>
-                                            </SheetFooter>
-                                        </form>
-                                    </ScrollArea>
-                                </div>
-                            </SheetContent>
-                        </Sheet>
+                        <ContactSheet
+                            open={isSheetOpen}
+                            onOpenChange={(v) => {
+                                setIsSheetOpen(v);
+                                if (!v) {
+                                    setEditingContact(null);
+                                    setFormData({
+                                        name: '',
+                                        phone: '',
+                                        email: '',
+                                        type: 'CONTACT',
+                                        groupIds: [],
+                                        info: {
+                                            company: '',
+                                            designation: '',
+                                            website: '',
+                                            linkedin: '',
+                                            city: '',
+                                            country: '',
+                                            source: '',
+                                            notes: ''
+                                        }
+                                    });
+                                }
+                            }}
+                            formData={formData}
+                            setFormData={setFormData}
+                            onSave={handleSaveContact}
+                            handleInfoChange={handleInfoChange}
+                            CONTACT_TYPES={CONTACT_TYPES}
+                            editingContact={editingContact}
+                            categories={categories}
+                        />
                     </div>
                 </div>
 
@@ -562,9 +426,11 @@ export default function ContactManagementPage() {
                                     <thead className="sticky top-0 bg-[#0a0a0a]/80 backdrop-blur-md z-[5] border-b border-white/5">
                                         <tr className="uppercase text-[9px] font-black tracking-[0.2em] text-muted-foreground/60">
                                             <th className="px-6 py-4 w-12"><Checkbox className="border-white/20" /></th>
-                                            <th className="px-6 py-4">Identification</th>
-                                            <th className="px-6 py-4">Connectivity</th>
-                                            <th className="px-6 py-4">Classification</th>
+                                            <th className="px-6 py-4 min-w-[200px]">Identification</th>
+                                            <th className="px-6 py-4 min-w-[180px]">Corporate</th>
+                                            <th className="px-6 py-4 min-w-[180px]">Connectivity</th>
+                                            <th className="px-6 py-4 min-w-[150px]">Locality</th>
+                                            <th className="px-6 py-4 min-w-[200px]">Metadata</th>
                                             <th className="px-6 py-4 text-right">Actions</th>
                                         </tr>
                                     </thead>
@@ -604,6 +470,17 @@ export default function ContactManagementPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
+                                                    <div className="space-y-0.5">
+                                                        <div className="flex items-center gap-2 text-[11px] font-bold text-white uppercase tracking-tight">
+                                                            <Building2 className="w-3 h-3 text-blue-400/50" />
+                                                            {contact.info?.company || <span className="text-muted-foreground/20 italic">Independent</span>}
+                                                        </div>
+                                                        <div className="text-[10px] text-muted-foreground pl-5 truncate max-w-[150px]">
+                                                            {contact.info?.designation || 'Specialist'}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
                                                     <div className="space-y-1">
                                                         <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground group-hover:text-white transition-colors">
                                                             <Smartphone className="w-3 h-3 text-emerald-500/50" />
@@ -618,19 +495,45 @@ export default function ContactManagementPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`text-[9px] font-black uppercase tracking-widest border-transparent ${CONTACT_TYPES.find(t => t.value === contact.type)?.color || 'bg-zinc-500/10 text-zinc-400'
-                                                            }`}
-                                                    >
-                                                        {contact.type}
-                                                    </Badge>
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                                        <Globe className="w-3 h-3 text-purple-400/50" />
+                                                        {contact.info?.city && contact.info?.country 
+                                                          ? `${contact.info.city}, ${contact.info.country}`
+                                                          : contact.info?.country || contact.info?.city || 'Global'
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="space-y-2">
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`text-[8px] font-black uppercase tracking-widest border-transparent ${CONTACT_TYPES.find(t => t.value === contact.type)?.color || 'bg-zinc-500/10 text-zinc-400'
+                                                                    }`}
+                                                            >
+                                                                {contact.type}
+                                                            </Badge>
+                                                            {contact.category?.name && (
+                                                                <Badge variant="secondary" className="text-[8px] h-4 bg-emerald-500/10 text-emerald-400 border-transparent font-black uppercase tracking-widest">
+                                                                    {contact.category.name}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1 mt-1 empty:hidden">
+                                                            {contact.tags?.slice(0, 2).map(tag => (
+                                                                <span key={tag} className="text-[8px] px-1.5 py-0.5 bg-white/5 border border-white/5 text-muted-foreground rounded uppercase font-bold tracking-tighter">
+                                                                    #{tag}
+                                                                </span>
+                                                            ))}
+                                                            {contact.tags?.length > 2 && (
+                                                                <span className="text-[8px] text-muted-foreground/40 font-black">+ {contact.tags.length - 2}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10 text-emerald-400 hover:text-emerald-300">
-                                                            <MessageSquare className="w-3.5 h-3.5" />
-                                                        </Button>
+                                                    <div className="flex items-center justify-end gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10">
@@ -649,6 +552,8 @@ export default function ContactManagementPage() {
                                                                             email: contact.email || '',
                                                                             type: contact.type || 'CONTACT',
                                                                             groupIds: contact.groups?.map(g => g.id) || [],
+                                                                            tags: contact.tags || [],
+                                                                            categoryId: contact.categoryId || '',
                                                                             info: {
                                                                                 company: existingInfo.company || '',
                                                                                 designation: existingInfo.designation || '',
@@ -660,7 +565,7 @@ export default function ContactManagementPage() {
                                                                                 notes: existingInfo.notes || ''
                                                                             }
                                                                         });
-                                                                        setIsEditModalOpen(true);
+                                                                        setIsSheetOpen(true);
                                                                     }}
                                                                 >
                                                                     <RefreshCw className="w-3 h-3" /> Update Profile
@@ -671,7 +576,10 @@ export default function ContactManagementPage() {
                                                                 <DropdownMenuSeparator className="bg-white/5" />
                                                                 <DropdownMenuItem
                                                                     className="flex items-center gap-2 text-xs py-2 cursor-pointer text-destructive hover:bg-destructive/10"
-                                                                    onClick={() => handleDeleteContact(contact.id)}
+                                                                    onClick={() => {
+                                                                        setContactToDelete(contact);
+                                                                        setIsDeleteDialogOpen(true);
+                                                                    }}
                                                                 >
                                                                     <Trash2 className="w-3 h-3" /> Delete Permanently
                                                                 </DropdownMenuItem>
@@ -689,178 +597,13 @@ export default function ContactManagementPage() {
                 </div>
             </div>
 
-            {/* --- UPDATE SHEET --- */}
-            <Sheet open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <SheetContent side="right" className=" border-0  bg-transparent p-2 md:min-w-[620px]">
-                    <div className='border rounded-lg h-full bg-background/80 backdrop-blur-xl p-4 '>
-                        <SheetHeader>
-                            <SheetTitle className="text-xl font-bold text-white">Update Contact</SheetTitle>
-                            <SheetDescription className="text-xs text-muted-foreground text-emerald-500/70">Modify vault record for identification ID: {editingContact?.id?.slice(-8)}</SheetDescription>
-                        </SheetHeader>
-                        <ScrollArea className="h-[calc(100vh-180px)] pr-4 mt-4">
-                            <form onSubmit={handleSaveContact} className="space-y-6">
-                                {/* Primary Information */}
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Primary Information</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2 col-span-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Legal Name</Label>
-                                            <Input
-                                                required
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.name}
-                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Index</Label>
-                                            <Input
-                                                required
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.phone}
-                                                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Digital Email</Label>
-                                            <Input
-                                                type="email"
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.email}
-                                                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Separator className="bg-white/5" />
-
-                                {/* Professional Details */}
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Professional Details</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Company Name</Label>
-                                            <Input
-                                                placeholder="Acme Inc."
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.info.company}
-                                                onChange={e => handleInfoChange('company', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Job Title / Designation</Label>
-                                            <Input
-                                                placeholder="Project Manager"
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.info.designation}
-                                                onChange={e => handleInfoChange('designation', e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Separator className="bg-white/5" />
-
-                                {/* Classification */}
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Classification</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Entity Type</Label>
-                                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
-                                                <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-zinc-900 border-white/10">
-                                                    {CONTACT_TYPES.map(t => (
-                                                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Lead Source</Label>
-                                            <Select value={formData.info.source} onValueChange={v => handleInfoChange('source', v)}>
-                                                <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
-                                                    <SelectValue placeholder="Select Source" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-zinc-900 border-white/10">
-                                                    {['Referral', 'Social Media', 'Website', 'Advertising', 'Direct', 'Other'].map(s => (
-                                                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Separator className="bg-white/5" />
-
-                                {/* Location & Digital */}
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">Location & Digital</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">City / Region</Label>
-                                            <Input
-                                                placeholder="New York"
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.info.city}
-                                                onChange={e => handleInfoChange('city', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Country</Label>
-                                            <Input
-                                                placeholder="USA"
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.info.country}
-                                                onChange={e => handleInfoChange('country', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Website</Label>
-                                            <Input
-                                                placeholder="https://example.com"
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.info.website}
-                                                onChange={e => handleInfoChange('website', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">LinkedIn Profile</Label>
-                                            <Input
-                                                placeholder="linkedin.com/in/username"
-                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
-                                                value={formData.info.linkedin}
-                                                onChange={e => handleInfoChange('linkedin', e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Separator className="bg-white/5" />
-
-                                {/* Notes */}
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Internal Vault Notes</Label>
-                                    <Textarea
-                                        placeholder="Add any specific details or context about this contact..."
-                                        className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary min-h-[100px] text-xs resize-none"
-                                        value={formData.info.notes}
-                                        onChange={e => handleInfoChange('notes', e.target.value)}
-                                    />
-                                </div>
-
-                                <SheetFooter className="p-0 pt-4 pb-10">
-                                    <Button variant={'default'} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 font-black uppercase tracking-widest h-10">Commit Changes</Button>
-                                </SheetFooter>
-                            </form>
-                        </ScrollArea>
-                    </div>
-                </SheetContent>
-            </Sheet>
+            <DeleteContactDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                contactToDelete={contactToDelete}
+                onConfirm={handleDeleteContact}
+                loading={isDeleting}
+            />
         </div>
     );
 }
