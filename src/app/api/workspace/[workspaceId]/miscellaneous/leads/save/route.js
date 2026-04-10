@@ -69,19 +69,22 @@ export async function POST(req, { params }) {
                         // Upsert the contact based on phone number
                         // Note: upsert in Prisma is atomic. If phone is @unique, this is safe.
                         const contact = await tx.contact.upsert({
-                            where: { phone: cleanPhone },
+                            where: { workspaceId_phone: { workspaceId, phone: cleanPhone } },
                             update: {
                                 name: lead.name,
                                 email: lead.email || undefined,
                                 info: info,
-                                userId: userId 
+                                userId: userId,
+                                type: 'LEAD'
                             },
                             create: {
                                 name: lead.name,
                                 phone: cleanPhone,
                                 email: lead.email || undefined,
                                 info: info,
-                                userId: userId
+                                userId: userId,
+                                workspaceId,
+                                type: 'LEAD'
                             }
                         });
 

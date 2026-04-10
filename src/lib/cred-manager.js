@@ -12,6 +12,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { symmetricDecrypt } from "./encryption";
+import crypto from 'node:crypto';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Platform Testers
@@ -143,7 +144,6 @@ async function testTwitter(credentials) {
 
     // 1. OAuth 1.0a Verification (required for posting)
     try {
-        const crypto = require('crypto');
         const url = 'https://api.twitter.com/1.1/account/verify_credentials.json';
         const method = 'GET';
 
@@ -432,8 +432,7 @@ async function testGemini(credentials) {
         };
     } catch (err) {
         try {
-            const fs = require('fs');
-            fs.appendFileSync('gemini_debug.txt', JSON.stringify({ error: err.message, stack: err.stack, keyPreview: key.substring(0, 10), time: new Date().toISOString() }) + '\n');
+            // Debugging Gemini locally
         } catch(e) {}
         console.error("[TEST_GEMINI_ERROR]", err);
         return { success: false, message: err.message || 'Invalid Gemini API key', data: err };

@@ -70,6 +70,13 @@ export default function LeadsPage() {
 
     const [searchHistory, setSearchHistory] = useState([]);
 
+    // Calculate displayed leads (10 per page)
+    const itemsPerPage = 10;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const displayedLeads = leads.slice(startIndex, startIndex + itemsPerPage);
+    const totalPages = Math.ceil((leads.length + (nextPageToken ? 10 : 0)) / itemsPerPage); // Heuristic total pages
+
+
     // Load search history from localStorage on mount
     useEffect(() => {
         const saved = localStorage.getItem('leads_search_history');
@@ -84,7 +91,7 @@ export default function LeadsPage() {
 
     const saveSearchEntry = (newFilters) => {
         if (!newFilters.keyword.trim()) return;
-        
+
         setSearchHistory(prev => {
             // Check if this search already exists (simple stringify comparison or key fields)
             const entry = {
@@ -96,9 +103,9 @@ export default function LeadsPage() {
                 timestamp: new Date().getTime()
             };
 
-            const isDuplicate = prev.some(h => 
-                h.keyword === entry.keyword && 
-                h.city === entry.city && 
+            const isDuplicate = prev.some(h =>
+                h.keyword === entry.keyword &&
+                h.city === entry.city &&
                 h.category === entry.category
             );
 
@@ -131,11 +138,6 @@ export default function LeadsPage() {
         return parts.join(' ');
     };
 
-    // Calculate displayed leads (10 per page)
-    const itemsPerPage = 10;
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const displayedLeads = leads.slice(startIndex, startIndex + itemsPerPage);
-    const totalPages = Math.ceil((leads.length + (nextPageToken ? 10 : 0)) / itemsPerPage); // Heuristic total pages
 
     // Update stats based on all loaded leads
     useEffect(() => {
@@ -401,19 +403,19 @@ export default function LeadsPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {searchHistory.map((entry, i) => (
-                            <Badge 
+                            <Badge
                                 key={`${entry.timestamp}-${i}`}
                                 variant="outline"
-                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-primary-foreground/90 cursor-pointer transition-all hover:scale-105 active:scale-95 text-[10px] font-bold py-1 px-3 rounded-full flex items-center gap-2 group"
+                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-muted-foreground cursor-pointer transition-all hover:scale-105 active:scale-95 text-[10px] font-bold py-1 px-3 rounded-full flex items-center gap-2 group"
                                 onClick={() => applyHistory(entry)}
                             >
                                 <Search className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100" />
                                 {getHistoryLabel(entry)}
                             </Badge>
                         ))}
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-6 px-2 text-[9px] font-bold text-muted-foreground hover:text-destructive transition-colors"
                             onClick={() => { setSearchHistory([]); localStorage.removeItem('leads_search_history'); }}
                         >
@@ -632,7 +634,7 @@ export default function LeadsPage() {
                             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Manage and export your discovered leads</p>
                         </div>
                     </div>
-                    
+
                     {leads.length > 0 && (
                         <div className="flex items-center gap-3 w-full lg:w-auto">
                             {contactGroups.length > 0 ? (
@@ -665,8 +667,8 @@ export default function LeadsPage() {
                                     No contact groups found - Go to WhatsApp section to create one
                                 </div>
                             )}
-                            <Button 
-                                size="sm" 
+                            <Button
+                                size="sm"
                                 disabled={!selectedGroupId || leads.length === 0 || saving}
                                 onClick={() => handleSaveLeads(leads)}
                                 className="bg-primary/90 hover:bg-primary text-white font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg shadow-primary/20 transition-all active:scale-95 group relative overflow-hidden"

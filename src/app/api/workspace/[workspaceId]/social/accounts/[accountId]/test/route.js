@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { testConnection } from "@/lib/cred-manager";
+import crypto from 'node:crypto';
 
 // POST /api/workspace/[workspaceId]/social/accounts/[accountId]/test
 export async function POST(req, { params }) {
@@ -19,31 +20,35 @@ export async function POST(req, { params }) {
 
         if (!decryptedCredentials) {
             // Fetch the credential from DB
-            const credential = await db.credentials.findUnique({
-                where: { id: accountId }
-            });
+            const isPersisted = accountId && accountId !== 'undefined' && accountId !== 'null';
+            
+            if (isPersisted) {
+                const credential = await db.credentials.findUnique({
+                    where: { id: accountId }
+                });
 
-            if (!credential) {
-                return NextResponse.json({ message: "Credential not found" }, { status: 404 });
-            }
+                if (!credential) {
+                    return NextResponse.json({ message: "Credential not found" }, { status: 404 });
+                }
 
-            decryptedCredentials = credential.credentials;
+                decryptedCredentials = credential.credentials;
 
-            // Decrypt the credentials if encrypted
-            if (decryptedCredentials?.enc && typeof decryptedCredentials.enc === 'string') {
-                const key = process.env.ENCRYPTION_KEY;
-                if (key) {
-                    try {
-                        const crypto = require('crypto');
-                        const parts = decryptedCredentials.enc.split(':');
-                        const ivBuffer = Buffer.from(parts[0], 'hex');
-                        const encText = Buffer.from(parts.slice(1).join(':'), 'hex');
-                        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key, 'hex'), ivBuffer);
-                        let decrypted = decipher.update(encText);
-                        decrypted = Buffer.concat([decrypted, decipher.final()]);
-                        decryptedCredentials = JSON.parse(decrypted.toString());
-                    } catch (e) {
-                        console.error("[TEST_DECRYPT_FAILED]", e.message);
+                // Decrypt the credentials if encrypted
+                if (decryptedCredentials?.enc && typeof decryptedCredentials.enc === 'string') {
+                    const key = process.env.ENCRYPTION_KEY;
+                    if (key) {
+                        try {
+                            const ALG = 'aes-256-cbc';
+                            const parts = decryptedCredentials.enc.split(':');
+                            const ivBuffer = Buffer.from(parts[0], 'hex');
+                            const encText = Buffer.from(parts.slice(1).join(':'), 'hex');
+                            const decipher = crypto.createDecipheriv(ALG, Buffer.from(key, 'hex'), ivBuffer);
+                            let decrypted = decipher.update(encText);
+                            decrypted = Buffer.concat([decrypted, decipher.final()]);
+                            decryptedCredentials = JSON.parse(decrypted.toString());
+                        } catch (e) {
+                            console.error("[TEST_DECRYPT_FAILED]", e.message);
+                        }
                     }
                 }
             }
@@ -51,14 +56,25 @@ export async function POST(req, { params }) {
 
         // Run the platform-specific test
         // Use either the provided accountId's platform from DB, or a platform passed in the body
-        const targetPlatform = body.platform || (accountId !== 'undefined' && (await db.credentials.findUnique({ where: { id: accountId } }))?.platform);
+        let targetPlatform = body.platform;
+        
+        if (!targetPlatform && accountId && accountId !== 'undefined' && accountId !== 'null') {
+            const dbCred = await db.credentials.findUnique({ where: { id: accountId } });
+            targetPlatform = dbCred?.platform;
+        }
+
+        if (!targetPlatform) {
+            return NextResponse.json({ success: false, message: "Platform not specified" }, { status: 400 });
+        }
+
         const result = await testConnection(targetPlatform, decryptedCredentials || {});
 
         // Update the credential status in DB based on result (only if it's an existing record)
         const newStatus = result.success ? 'connected' : 'error';
         const newExpired = !result.success && result.message?.toLowerCase().includes('expired');
 
-        if (accountId && accountId !== 'undefined') {
+        const isPersisted = accountId && accountId !== 'undefined' && accountId !== 'null';
+        if (isPersisted) {
             try {
                 // Prepare update data
                 const updateData = {

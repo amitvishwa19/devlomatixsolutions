@@ -95,6 +95,17 @@ export default function WorkspaceDashboard({ workspaceId }) {
                 { label: "Team", value: "12 Members" },
                 { label: "Security", value: "Shield On" }
             ]
+        },
+        {
+            title: "Contacts & CRM",
+            description: "Centralized business vault for your leads, active clients, and team contacts.",
+            icon: Users,
+            href: `/workspace/${workspaceId}/contact`,
+            color: "purple-500",
+            stats: [
+                { label: "Total Vault", value: "Syncing..." },
+                { label: "Classification", value: "Multi-tenant" }
+            ]
         }
     ];
 

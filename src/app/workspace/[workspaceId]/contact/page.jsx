@@ -1,0 +1,579 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Plus,
+    Search,
+    Users,
+    UserPlus,
+    Filter,
+    MoreVertical,
+    Smartphone,
+    Mail,
+    Tag,
+    Download,
+    Trash2,
+    CheckCircle2,
+    X,
+    Building2,
+    Crown,
+    RefreshCw,
+    LayoutGrid,
+    List,
+    ChevronRight,
+    Star,
+    MessageSquare,
+    Globe
+} from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const CONTACT_TYPES = [
+    { value: 'CONTACT', label: 'Contact', color: 'bg-blue-500/10 text-blue-400' },
+    { value: 'CLIENT', label: 'Client', color: 'bg-emerald-500/10 text-emerald-400' },
+    { value: 'LEAD', label: 'Lead', color: 'bg-amber-500/10 text-amber-400' }
+];
+
+export default function ContactManagementPage({ defaultType = "all" }) {
+    const params = useParams();
+    const workspaceId = params?.workspaceId;
+
+    // --- State ---
+    const [contacts, setContacts] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedGroup, setSelectedGroup] = useState("all");
+    const [selectedType, setSelectedType] = useState(defaultType);
+    const [selectedContacts, setSelectedContacts] = useState([]);
+
+    // Create/Edit Dialog State
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingContact, setEditingContact] = useState(null);
+    const [formData, setFormData] = useState({
+        name: '',
+        phone: '',
+        email: '',
+        type: defaultType === 'all' ? 'CONTACT' : defaultType,
+        groupIds: [],
+        info: {}
+    });
+
+    // --- Fetch Data ---
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [contactsRes, groupsRes] = await Promise.all([
+                fetch(`/api/workspace/${workspaceId}/contacts`),
+                fetch(`/api/workspace/${workspaceId}/contacts/groups`)
+            ]);
+
+            if (contactsRes.ok) setContacts(await contactsRes.json());
+            if (groupsRes.ok) setGroups(await groupsRes.json());
+        } catch (error) {
+            toast.error("Failed to sync with vault");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (workspaceId) fetchData();
+    }, [workspaceId]);
+
+    // --- Handlers ---
+    const handleSaveContact = async (e) => {
+        e.preventDefault();
+        const method = editingContact ? 'PATCH' : 'POST';
+        const url = editingContact
+            ? `/api/workspace/${workspaceId}/contacts/${editingContact.id}`
+            : `/api/workspace/${workspaceId}/contacts`;
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (res.ok) {
+                toast.success(editingContact ? "Contact updated" : "Contact saved to vault");
+                setIsAddModalOpen(false);
+                setIsEditModalOpen(false);
+                setEditingContact(null);
+                setFormData({ name: '', phone: '', email: '', type: 'CONTACT', groupIds: [], info: {} });
+                fetchData();
+            } else {
+                const err = await res.json();
+                toast.error(err.message || "Operation failed");
+            }
+        } catch (error) {
+            toast.error("Vault interaction error");
+        }
+    };
+
+    const handleDeleteContact = async (id) => {
+        if (!confirm("Remove this contact permanently?")) return;
+        try {
+            const res = await fetch(`/api/workspace/${workspaceId}/contacts/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                toast.success("Contact removed");
+                fetchData();
+            }
+        } catch (error) {
+            toast.error("Delete failed");
+        }
+    };
+
+    // --- Filtered Data ---
+    const filteredContacts = useMemo(() => {
+        return contacts.filter(contact => {
+            const matchesSearch =
+                contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                contact.phone.includes(searchTerm) ||
+                contact.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+            const matchesGroup = selectedGroup === "all" || contact.groups?.some(g => g.id === selectedGroup);
+            const matchesType = selectedType === "all" || contact.type === selectedType;
+
+            return matchesSearch && matchesGroup && matchesType;
+        });
+    }, [contacts, searchTerm, selectedGroup, selectedType]);
+
+    // --- UI Helpers ---
+    const getAvatarColor = (name) => {
+        const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-indigo-500'];
+        const index = name.charCodeAt(0) % colors.length;
+        return colors[index];
+    };
+
+    return (
+        <div className="flex flex-col h-full overflow-hidden animate-in fade-in duration-700 ">
+            {/* --- TOP HUD --- */}
+            <div className="p-6 pb-2 border-b border-white/5 backdrop-blur-xl bg-background/20 sticky top-0 z-10">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="p-2 bg-primary/20 rounded-xl border border-primary/20">
+                                <Users className="w-5 h-5 text-primary" />
+                            </div>
+                            <h1 className="text-xl font-bold tracking-tight text-white">Contact Management</h1>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Secure Business Vault & Multi-channel CRM
+                        </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className=" hover:bg-zinc-800 transition-all active:scale-95"
+                            onClick={() => fetchData()}
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                            Sync
+                        </Button>
+                        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="bg-primary/90 hover:bg-primary  shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                    <Plus className="w-3.5 h-3.5 mr-2" />
+                                    Add Contact
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="bg-[#111111]/95 border-white/10 backdrop-blur-2xl sm:max-w-[500px]">
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl font-bold text-white">New Contact</DialogTitle>
+                                    <DialogDescription className="text-xs text-muted-foreground">Add a new business contact to your workspace vault.</DialogDescription>
+                                </DialogHeader>
+                                <form onSubmit={handleSaveContact} className="space-y-4 pt-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
+                                            <Input
+                                                required
+                                                className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
+                                                value={formData.name}
+                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone</Label>
+                                            <Input
+                                                required
+                                                className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
+                                                value={formData.phone}
+                                                onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                                        <Input
+                                            type="email"
+                                            className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
+                                            value={formData.email}
+                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Category Type</Label>
+                                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
+                                                <SelectTrigger className="bg-muted/30 border-white/10 h-11">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-zinc-900 border-white/10">
+                                                    {CONTACT_TYPES.map(t => (
+                                                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Interaction Status</Label>
+                                            <Badge variant="outline" className="h-11 w-full justify-center bg-emerald-500/5 text-emerald-500 border-emerald-500/20 font-bold">
+                                                Active / New
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <DialogFooter className="pt-4">
+                                        <Button type="submit" className="w-full bg-primary font-black uppercase tracking-widest h-12">Initialize Contact</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
+
+                {/* HUD STATS */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+                    {[
+                        { label: "Total Vault", val: contacts.length, icon: Building2, col: "text-blue-400", bg: "bg-blue-500/10" },
+                        { label: "Active Clients", val: contacts.filter(c => c.type === 'CLIENT').length, icon: Star, col: "text-emerald-400", bg: "bg-emerald-500/10" },
+                        { label: "New Leads", val: contacts.filter(c => c.type === 'LEAD').length, icon: Crown, col: "text-amber-400", bg: "bg-amber-500/10" },
+                        { label: "Tagged Groups", val: groups.length, icon: Tag, col: "text-purple-400", bg: "bg-purple-500/10" },
+                    ].map((stat, i) => (
+                        <div key={i} className="bg-zinc-900/40 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all group overflow-hidden relative">
+                            <stat.icon className={`w-8 h-8 absolute -right-2 -bottom-2 opacity-5 ${stat.col} group-hover:scale-150 transition-transform blur-sm`} />
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${stat.bg}`}>
+                                    <stat.icon className={`w-4 h-4 ${stat.col}`} />
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{stat.label}</p>
+                                    <h3 className="text-lg font-black text-white">{stat.val}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* --- MAIN WORKSPACE --- */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* SIDEBAR FILTER */}
+                <div className="w-64 border-r border-white/5 bg-background/10 backdrop-blur-md p-4 hidden lg:flex flex-col gap-6">
+                    <div>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 block">Quick Filters</Label>
+                        <div className="space-y-1">
+                            {['all', 'CLIENT', 'LEAD', 'CONTACT'].map(type => (
+                                <Button
+                                    key={type}
+                                    variant="ghost"
+                                    className={`w-full justify-start text-xs font-medium h-9 px-3 rounded-lg transition-all ${selectedType === type ? 'bg-primary/10 text-primary border border-primary/20' : 'text-muted-foreground hover:bg-white/5'}`}
+                                    onClick={() => setSelectedType(type)}
+                                >
+                                    {type === 'all' ? <LayoutGrid className="w-3.5 h-3.5 mr-2" /> : type === 'CLIENT' ? <Crown className="w-3.5 h-3.5 mr-2" /> : <Tag className="w-3.5 h-3.5 mr-2" />}
+                                    {type === 'all' ? 'All Contacts' : type.charAt(0) + type.slice(1).toLowerCase() + 's'}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 block">Contact Groups</Label>
+                            <Button size="icon" variant="ghost" className="h-5 w-5 text-muted-foreground hover:text-primary"><Plus className="w-3 h-3" /></Button>
+                        </div>
+                        <ScrollArea className="flex-1 -mx-2 px-2">
+                            <div className="space-y-1">
+                                <Button
+                                    variant="ghost"
+                                    className={`w-full justify-start text-xs font-medium h-9 px-3 rounded-lg ${selectedGroup === 'all' ? 'bg-white/5 text-white' : 'text-muted-foreground'}`}
+                                    onClick={() => setSelectedGroup('all')}
+                                >
+                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 mr-3" />
+                                    General
+                                </Button>
+                                {groups.map(group => (
+                                    <Button
+                                        key={group.id}
+                                        variant="ghost"
+                                        className={`w-full justify-start text-xs font-medium h-9 px-3 rounded-lg group ${selectedGroup === group.id ? 'bg-primary/10 text-primary border border-primary/20' : 'text-muted-foreground hover:bg-white/5'}`}
+                                        onClick={() => setSelectedGroup(group.id)}
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
+                                        <span className="flex-1 text-left truncate">{group.name}</span>
+                                        <span className="text-[10px] opacity-40 group-hover:opacity-100">{group._count?.contacts}</span>
+                                    </Button>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                </div>
+
+                {/* DATA TABLE AREA */}
+                <div className="flex-1 flex flex-col min-w-0 bg-background/5">
+                    {/* TABLE TOOLBAR */}
+                    <div className="p-4 border-b border-white/5 flex items-center justify-between gap-4">
+                        <div className="relative flex-1 max-w-md group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Input
+                                placeholder="Search by name, phone or email..."
+                                className="bg-zinc-900/50 border-white/10 pl-10 h-10 text-sm focus:ring-1 focus:ring-primary/30 transition-all font-medium"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" className="h-10 w-10 border-white/5 bg-zinc-900/50 hover:bg-zinc-800"><Download className="w-4 h-4" /></Button>
+                            <Button variant="outline" size="icon" className="h-10 w-10 border-white/5 bg-zinc-900/50 hover:bg-zinc-800 lg:hidden"><Filter className="w-4 h-4" /></Button>
+                        </div>
+                    </div>
+
+                    {/* SCROLLABLE DATA */}
+                    <ScrollArea className="flex-1">
+                        {loading ? (
+                            <div className="p-6 space-y-4">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="flex gap-4 items-center animate-pulse">
+                                        <Skeleton className="w-10 h-10 rounded-full" />
+                                        <div className="space-y-2 flex-1">
+                                            <Skeleton className="h-4 w-[250px]" />
+                                            <Skeleton className="h-3 w-[200px]" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : filteredContacts.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-20 text-center">
+                                <div className="p-6 bg-zinc-900/50 rounded-full border border-white/5 mb-6">
+                                    <Users className="w-12 h-12 text-muted-foreground/20" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">Voice of the Vault</h3>
+                                <p className="text-xs text-muted-foreground max-w-[280px]">No contacts match your current filter criteria. Try expanding your search or adding a new member.</p>
+                            </div>
+                        ) : (
+                            <div className="p-0">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="sticky top-0 bg-[#0a0a0a]/80 backdrop-blur-md z-[5] border-b border-white/5">
+                                        <tr className="uppercase text-[9px] font-black tracking-[0.2em] text-muted-foreground/60">
+                                            <th className="px-6 py-4 w-12"><Checkbox className="border-white/20" /></th>
+                                            <th className="px-6 py-4">Identification</th>
+                                            <th className="px-6 py-4">Connectivity</th>
+                                            <th className="px-6 py-4">Classification</th>
+                                            <th className="px-6 py-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {filteredContacts.map((contact, idx) => (
+                                            <motion.tr
+                                                key={contact.id}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.03 }}
+                                                className="group hover:bg-white/[0.03] transition-colors cursor-pointer"
+                                            >
+                                                <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                                                    <Checkbox className="border-white/20" />
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-10 h-10 rounded-xl ${getAvatarColor(contact.name)} border border-white/10 flex items-center justify-center text-white font-black text-sm shadow-inner group-hover:scale-105 transition-transform`}>
+                                                            {contact.name.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">{contact.name}</p>
+                                                                {idx === 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />}
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                                {contact.groups?.map(g => (
+                                                                    <Badge key={g.id} variant="secondary" className="text-[8px] h-3.5 px-1 bg-white/5 border-white/5 font-black uppercase tracking-widest opacity-60">
+                                                                        {g.name}
+                                                                    </Badge>
+                                                                ))}
+                                                                {(!contact.groups || contact.groups.length === 0) && (
+                                                                    <span className="text-[9px] text-muted-foreground/40 italic">No groups</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground group-hover:text-white transition-colors">
+                                                            <Smartphone className="w-3 h-3 text-emerald-500/50" />
+                                                            {contact.phone}
+                                                        </div>
+                                                        {contact.email && (
+                                                            <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground group-hover:text-white transition-colors">
+                                                                <Mail className="w-3 h-3 text-blue-500/50" />
+                                                                {contact.email}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={`text-[9px] font-black uppercase tracking-widest border-transparent ${CONTACT_TYPES.find(t => t.value === contact.type)?.color || 'bg-zinc-500/10 text-zinc-400'
+                                                            }`}
+                                                    >
+                                                        {contact.type}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10 text-emerald-400 hover:text-emerald-300">
+                                                            <MessageSquare className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10">
+                                                                    <MoreVertical className="w-3.5 h-3.5" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent className="bg-zinc-900 border-white/10 text-white">
+                                                                <DropdownMenuItem
+                                                                    className="flex items-center gap-2 text-xs py-2 cursor-pointer hover:bg-white/5"
+                                                                    onClick={() => {
+                                                                        setEditingContact(contact);
+                                                                        setFormData({
+                                                                            name: contact.name,
+                                                                            phone: contact.phone,
+                                                                            email: contact.email || '',
+                                                                            type: contact.type || 'CONTACT',
+                                                                            groupIds: contact.groups?.map(g => g.id) || [],
+                                                                            info: contact.info || {}
+                                                                        });
+                                                                        setIsEditModalOpen(true);
+                                                                    }}
+                                                                >
+                                                                    <RefreshCw className="w-3 h-3" /> Update Profile
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem className="flex items-center gap-2 text-xs py-2 cursor-pointer hover:bg-white/5">
+                                                                    <Tag className="w-3 h-3" /> Manage Groups
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator className="bg-white/5" />
+                                                                <DropdownMenuItem
+                                                                    className="flex items-center gap-2 text-xs py-2 cursor-pointer text-destructive hover:bg-destructive/10"
+                                                                    onClick={() => handleDeleteContact(contact.id)}
+                                                                >
+                                                                    <Trash2 className="w-3 h-3" /> Delete Permanently
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </ScrollArea>
+                </div>
+            </div>
+
+            {/* --- UPDATE DIALOG --- */}
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent className="bg-[#111111]/95 border-white/10 backdrop-blur-2xl sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-white">Update Contact</DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground text-emerald-500/70">Modify vault record for identification ID: {editingContact?.id?.slice(-8)}</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSaveContact} className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Legal Name</Label>
+                                <Input
+                                    className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Index</Label>
+                                <Input
+                                    className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
+                                    value={formData.phone}
+                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Digital Email</Label>
+                            <Input
+                                className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
+                                value={formData.email}
+                                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Entity Type</Label>
+                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
+                                <SelectTrigger className="bg-muted/30 border-white/10 h-11">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-900 border-white/10">
+                                    {CONTACT_TYPES.map(t => (
+                                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <DialogFooter className="pt-4">
+                            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 font-black uppercase tracking-widest h-12">Commit Changes</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+}

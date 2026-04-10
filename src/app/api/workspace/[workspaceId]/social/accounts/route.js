@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import crypto from 'node:crypto';
+import { logger } from "@/lib/logger";
 
 // Helper: encrypt if key available, else return a wrapper object
 function safeEncrypt(dataObj) {
     const key = process.env.ENCRYPTION_KEY;
     if (key) {
         try {
-            const crypto = require('crypto');
             const ALG = 'aes-256-cbc';
             const iv = crypto.randomBytes(16);
             const cipher = crypto.createCipheriv(ALG, Buffer.from(key, 'hex'), iv);
@@ -26,13 +27,12 @@ function safeEncrypt(dataObj) {
 // Helper: decrypt if data has enc field, else return as-is
 function safeDecrypt(storedData) {
     if (!storedData) return storedData;
-    
+
     const key = process.env.ENCRYPTION_KEY;
-    
+
     // New format: { enc: "iv:hexdata" }
     if (storedData.enc && typeof storedData.enc === 'string' && key) {
         try {
-            const crypto = require('crypto');
             const ALG = 'aes-256-cbc';
             const parts = storedData.enc.split(':');
             const ivBuffer = Buffer.from(parts[0], 'hex');
@@ -45,11 +45,10 @@ function safeDecrypt(storedData) {
             console.error("[DECRYPT_FAILED]", e.message);
         }
     }
-    
+
     // Legacy string format "iv:hexdata"
     if (typeof storedData === 'string' && storedData.includes(':') && key) {
         try {
-            const crypto = require('crypto');
             const ALG = 'aes-256-cbc';
             const parts = storedData.split(':');
             const ivBuffer = Buffer.from(parts[0], 'hex');
@@ -62,7 +61,7 @@ function safeDecrypt(storedData) {
             console.error("[DECRYPT_FAILED_LEGACY]", e.message);
         }
     }
-    
+
     // Plain JSON (no encryption was used)
     return storedData;
 }
@@ -79,7 +78,7 @@ export async function GET(req, { params }) {
         const userId = session.user.userId;
 
         const credentials = await db.credentials.findMany({
-            where: { 
+            where: {
                 OR: [
                     { userId },
                     { platform: { in: ['GMAIL', 'gmail', 'Gmail', 'GOOGLE', 'google', 'Google'] } }
@@ -93,6 +92,7 @@ export async function GET(req, { params }) {
             const account = {
                 id: c.id,
                 platform: c.platform,
+                type: c.type,
                 profileName: c.profile || decryptedData?.profileName || decryptedData?.username || `${c.platform} Account`,
                 profileImage: c.avatar || decryptedData?.profileImage || decryptedData?.profile_image_url_https || null,
                 avatar: c.avatar,
@@ -103,7 +103,6 @@ export async function GET(req, { params }) {
                 environment: c.environment,
                 details: decryptedData
             };
-            console.log(`[ACCOUNTS_LIST_DEBUG] Account: ${account.platform} | Profile: ${account.profileName} | HasImage: ${!!account.profileImage}`);
             return account;
         });
 
@@ -116,8 +115,11 @@ export async function GET(req, { params }) {
 
 // POST link a new credential
 export async function POST(req, { params }) {
+    let workspaceId = null;
     try {
-        const { workspaceId } = await params;
+        const resolvedParams = await params;
+        workspaceId = resolvedParams.workspaceId;
+
         const session = await getServerSession(authOptions);
         if (!session || !session.user?.userId) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -125,7 +127,7 @@ export async function POST(req, { params }) {
 
         const userId = session.user.userId;
         const body = await req.json();
-        const { platform, credentials, profile, status, expiresAt, environment } = body;
+        const { platform, credentials, profile, status, expiresAt, environment, type } = body;
 
         if (!platform || !credentials) {
             return NextResponse.json({ message: "Platform and credentials are required" }, { status: 400 });
@@ -137,10 +139,12 @@ export async function POST(req, { params }) {
             data: {
                 platform: platform.toUpperCase(),
                 userId,
+                workspaceId,
                 profile: profile || null,
+                type: type || null,
                 status: status || "disconnected",
                 credentials: credentialsToStore,
-                expiresAt: expiresAt ? new Date(expiresAt) : null,
+                expiresAt: (expiresAt && !isNaN(new Date(expiresAt).getTime())) ? new Date(expiresAt) : null,
                 environment: environment || "PROD"
             }
         });
@@ -148,6 +152,13 @@ export async function POST(req, { params }) {
         return NextResponse.json(credential);
     } catch (error) {
         console.error("[SOCIAL_ACCOUNTS_POST_ERROR]", error.message, error.stack);
+        if (workspaceId) {
+            await logger.error(`Credential saving failed: ${error.message}`, {
+                workspaceId,
+                type: 'SYSTEM',
+                details: { error: error.message, stack: error.stack }
+            });
+        }
         return NextResponse.json({ message: error.message }, { status: 500 });
     }
 }

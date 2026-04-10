@@ -378,10 +378,12 @@ model WhatsAppConnectionLog {
 
 model Contact {
   id              String           @id @default(cuid())
+  workspaceId     String?          @default("cmnbhifag000458ikwhv1zso2")
   userId          String
   name            String
-  phone           String           @unique
+  phone           String
   email           String?
+  type            String?          @default("CONTACT") // CONTACT, CLIENT, LEAD
   info            Json?
   tags            String[]         @default([])
   lastMessage     String?
@@ -392,7 +394,9 @@ model Contact {
   groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
 
+  @@unique([workspaceId, phone])
   @@index([userId])
+  @@index([workspaceId])
   @@index([phone])
 }
 
@@ -440,6 +444,7 @@ model WhatsAppSessionKey {
 
 model ContactGroup {
   id          String    @id @default(cuid())
+  workspaceId String?   @default("cmnbhifag000458ikwhv1zso2")
   userId      String
   name        String
   description String?
@@ -448,8 +453,9 @@ model ContactGroup {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   contacts    Contact[] @relation("ContactToGroup")
 
-  @@unique([userId, name])
+  @@unique([workspaceId, name])
   @@index([userId])
+  @@index([workspaceId])
 }
 
 model WorkspaceDocument {
@@ -521,21 +527,22 @@ model Category {
 }
 
 model Credentials {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   platform    String
   profile     String?
+  type        String?
   credentials Json?
   userId      String
   workspaceId String?
-  expired     Boolean  @default(false)
-  status      String   @default("disconnected")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  expired     Boolean   @default(false)
+  status      String    @default("disconnected")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   avatar      String?
   userInfo    Json?
   expiresAt   DateTime?
-  environment String   @default("PROD")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environment String    @default("PROD")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([workspaceId])

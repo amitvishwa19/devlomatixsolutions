@@ -42,6 +42,8 @@ export default function AppSidebar() {
         { type: 'child', title: "Dashboard", url: `/workspace/${workspaceId}`, category: "Workspace" },
         { type: 'child', title: "Article", url: `/workspace/${workspaceId}/article`, category: "Workspace" },
         { type: 'child', title: "Category", url: `/workspace/${workspaceId}/category`, category: "Workspace" },
+        { type: 'child', title: "Contacts", url: `/workspace/${workspaceId}/contact`, category: "Workspace" },
+
 
         // eCommerce
         { type: 'parent', title: "eCommerce", url: `${baseEcommercePath}`, icon: "shopping-cart", category: "eCommerce" },
