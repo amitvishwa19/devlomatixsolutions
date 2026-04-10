@@ -1,147 +1,115 @@
 'use client';
-
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Menu, X, Sun } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Menu, X, MessageCircle, Sun, Moon } from "lucide-react";
+import { useTheme } from "../_hooks/use-theme";
+import { useLanguage } from "../_hooks/use-language";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeLink, setActiveLink] = useState("#");
+const navLinks = [
+  { label: "Home", href: "/", isRoute: true, exact: true },
+  { label: "Features", href: "/#features", isRoute: false },
+  { label: "Pricing", href: "/pricing", isRoute: true },
+  { label: "Blog", href: "/blog", isRoute: true },
+  { label: "About", href: "/about", isRoute: true },
+  { label: "Contact", href: "/contact", isRoute: true },
+];
 
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
-
-  // Track active section on scroll
-  useEffect(() => {
-    const sections = ["services", "how-it-works", "cleaning-tech", "benefits", "pricing", "testimonials", "contact"];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveLink(`#${entry.target.id}`);
-          }
-        });
-      },
-      { threshold: 0.3, rootMargin: "-80px 0px -40% 0px" }
-    );
-
-    sections.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const navLinks = [
-    { label: "Home", href: "#" },
-    { label: "Services", href: "#services" },
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Tech", href: "#cleaning-tech" },
-    { label: "Why Us", href: "#benefits" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Testimonials", href: "#testimonials" },
-    { label: "Contact", href: "#contact" },
-  ];
+export function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
+  const pathname = usePathname();
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "glass shadow-elevated py-2"
-          : "bg-transparent py-4"
-      }`}
-    >
-      <div className="container mx-auto flex items-center justify-between px-4">
-        {/* Logo */}
-        <Link href="/solarbright" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center group-hover:shadow-glow transition-shadow duration-300">
-            <Sun className="h-4.5 w-4.5 text-primary-foreground" />
+    <nav className="sticky top-0 z-50 glass">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: "var(--gradient-sun)" }}>
+            <MessageCircle className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-heading text-lg font-bold tracking-tight text-foreground">
-            Solar<span className="text-primary">Bright</span>
+          <span className="text-xl font-bold tracking-tight text-foreground font-[var(--font-heading)]">
+            Konnect<span className="text-gradient-sun">X</span>
           </span>
         </Link>
 
-        {/* Desktop Nav - centered pill-style links */}
-        <div className="hidden md:flex items-center gap-0.5 bg-muted/50 rounded-full px-1.5 py-1.5 border border-border/50">
-          {navLinks.map((link) => {
-            const isActive = activeLink === link.href || (link.href === "#" && activeLink === "#");
+        <div className="hidden items-center gap-8 md:flex">
+          {navLinks.map((l) => {
+            const isActive = l.isRoute && (l.exact ? pathname === l.href : pathname?.startsWith(l.href));
             return (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={() => setActiveLink(link.href)}
-                className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 ${
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-glow"
-                    : "text-muted-foreground hover:text-foreground"
+              <Link
+                key={l.label}
+                href={l.href}
+                className={`text-sm font-medium transition-colors hover:text-foreground ${
+                  isActive ? "text-primary border-b-2 border-primary pb-0.5" : "text-muted-foreground"
                 }`}
               >
-                {link.label}
-              </a>
-            );
+                {l.label}
+              </Link>
+            )
           })}
         </div>
 
-        {/* CTA */}
-        <div className="hidden md:block">
-          <Button size="sm" className="rounded-full px-6 bg-primary text-primary-foreground hover:shadow-glow transition-all duration-300" asChild>
-            <a href="#contact">Get a Quote</a>
+        <div className="hidden items-center gap-3 md:flex">
+          <LanguageSwitcher />
+          <button
+            onClick={toggleTheme}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" asChild>
+            <Link href="/contact">{t("nav.login")}</Link>
+          </Button>
+          <Button size="sm" className="font-semibold" style={{ background: "var(--gradient-sun)" }} asChild>
+            <Link href="/pricing">{t("nav.trial")}</Link>
           </Button>
         </div>
 
-        {/* Mobile toggle */}
         <button
-          className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-muted/60 transition-colors"
-          onClick={() => setIsOpen(!isOpen)}
+          className="md:hidden text-foreground"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
         >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden glass border-t border-border/50 overflow-hidden"
-          >
-            <div className="px-4 py-4 space-y-1">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className={`block px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                    activeLink === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+      {mobileOpen && (
+        <div className="glass border-t border-border px-4 pb-4 md:hidden">
+          <div className="flex flex-col gap-3 pt-3">
+            {navLinks.map((l) => {
+              const isActive = l.isRoute && (l.exact ? pathname === l.href : pathname?.startsWith(l.href));
+              return (
+                <Link
+                  key={l.label}
+                  href={l.href}
+                  className={`text-sm font-medium transition-colors ${
+                    isActive ? "text-primary" : "text-muted-foreground"
                   }`}
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setMobileOpen(false)}
                 >
-                  {link.label}
-                </a>
-              ))}
-              <Button size="sm" className="w-full mt-2 rounded-full bg-primary text-primary-foreground" asChild>
-                <a href="#contact">Get a Quote</a>
-              </Button>
+                  {l.label}
+                </Link>
+              )
+            })}
+            <div className="mt-2 flex flex-col gap-2">
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              </button>
+              <Button variant="outline" size="sm" asChild><Link href="/contact" onClick={() => setMobileOpen(false)}>Login</Link></Button>
+              <Button size="sm" style={{ background: "var(--gradient-sun)" }} asChild><Link href="/pricing" onClick={() => setMobileOpen(false)}>Start Free Trial</Link></Button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+          </div>
+        </div>
+      )}
+    </nav>
   );
-};
-
-export default Navbar;
+}

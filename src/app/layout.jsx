@@ -1,5 +1,4 @@
 import "@/css/globals.css";
-import "@/css/custom.css";
 import { Inter, Unbounded, Geist, Geist_Mono, Outfit } from "next/font/google";
 import SessionWrapper from "@/providers/SessionWrapper";
 import { AppProvider } from "@/providers/AppProvider";

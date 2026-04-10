@@ -8,9 +8,10 @@ export default {
   ],
   theme: {
     extend: {
-      // fontFamily: {
-      //   sans: ["DM Sans", "system-ui", "sans-serif"],
-      // },
+      fontFamily: {
+        heading: ["Space Grotesk", "sans-serif"],
+        body: ["DM Sans", "sans-serif"],
+      },
 
       borderRadius: {
         lg: '10px',

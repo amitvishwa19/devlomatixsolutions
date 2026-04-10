@@ -1,131 +1,172 @@
 'use client';
-
-import { Button } from "@/components/ui/button";
-import { Check, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
 
 const plans = [
   {
-    name: "Basic Clean",
-    price: "₹18",
-    period: "per panel",
-    description: "Perfect for one-time cleaning needs",
-    features: ["Professional dry & wet cleaning", "Visual inspection report", "Same-day service", "Any number of panels"],
+    name: "Lite",
+    price: "₹7,194",
+    period: "/Half Yearly",
+    desc: "No Conversation Markup",
+    features: [
+      "3 Users",
+      "Shared Team Inbox",
+      "Agent Transfer & Assignment",
+      "Conversation Labels",
+      "Contact Notes & Reminders",
+      "Unlimited Rich Media Templates",
+      "Unlimited Campaigns",
+      "Campaign Retargeting",
+      "Advanced Campaign Report",
+      "Unlimited Tags",
+      "Unlimited Attributes",
+      "Chat Automation (Welcome, OOO)",
+      "Quick Replies",
+      "Mobile App for Team Inbox",
+    ],
+    cta: "Select Plan",
+    ctaLink: "/contact",
     popular: false,
   },
   {
-    name: "Standard Clean",
-    price: "₹16",
-    period: "per panel",
-    description: "Ideal for regular maintenance",
-    features: ["All Basic Clean features included", "Soft cleaning chemical", "Performance check & report", "Before/after photo proof", "Priority scheduling"],
+    name: "Professional",
+    price: "₹11,994",
+    period: "/Half Yearly",
+    desc: "No Conversation Markup",
+    badge: "Everything in Lite Plan",
+    features: [
+      "5 Users",
+      "All features in Lite Plan",
+      "Drag and Drop Chatbot Builder",
+      "Schedule Follow-Up Messages",
+      "Carousel & Form Fill Templates",
+      "Campaign Scheduler",
+      "Campaign Auto Pause on Spam",
+      "Round Robin Chat Assignment",
+      "Lead Management Dashboard",
+      "WhatsApp Forms",
+      "Template Sending API",
+      "Agent Custom Permissions",
+      "Shopify/Woocommerce Integration",
+      "Conversation Analytics",
+      "Click to WhatsApp Ad Acquisition Report",
+      "Download Chats and Reports",
+      "Guided Onboarding & FB Verification",
+    ],
+    cta: "Select Plan",
+    ctaLink: "/contact",
     popular: true,
   },
   {
-    name: "AMC Plan",
-    price: "₹14",
-    period: "per panel",
-    description: "Best value with annual contract",
-    features: ["All Standard Clean features included", "Lowest per-panel rate", "Scheduled cleanings twice a year", "Free emergency visits", "Weekly dashboard of unit output", "Custom app for monitoring", "Dedicated account manager"],
+    name: "Premium",
+    price: "₹17,994",
+    period: "/Half Yearly",
+    desc: "No Conversation Markup",
+    badge: "Everything in Professional Plan",
+    features: [
+      "10 Users",
+      "All features in Professional Plan",
+      "3 Active Chatbot Flows",
+      "Product Catalogue on WhatsApp",
+      "Smart Lead Priority Assignment",
+      "Reply Message API",
+      "Set Webhook",
+      "Agent Performance Report",
+      "WhatsApp Consultation with our Experts",
+      "Auto Data Deletion (on Request)",
+      "Priority Support (2 hours TAT)",
+      "Dedicated Manager for Account Setup and Campaigns (Add-on, Paid)",
+    ],
+    cta: "Select Plan",
+    ctaLink: "/contact",
     popular: false,
   },
 ];
 
-const Pricing = () => {
+export function Pricing() {
   return (
-    <section id="pricing-plans" className="py-28 relative overflow-hidden bg-background">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary/3 blur-[200px] pointer-events-none" />
-
-      <div className="container mx-auto px-4 relative">
+    <section id="pricing" className="relative py-24 sm:py-32 mesh-bg">
+      <div className="section-divider mx-auto max-w-5xl" />
+      <div className="mx-auto max-w-7xl px-4 pt-24 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-20"
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto max-w-2xl text-center"
         >
-          <span className="inline-flex items-center gap-2 text-primary font-semibold text-sm uppercase tracking-[0.2em] mb-4">
-            <span className="w-8 h-px bg-primary" />
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary">
             Pricing
-            <span className="w-8 h-px bg-primary" />
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            Simple, Transparent Pricing
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl lg:text-5xl">
+            Simple, <span className="text-gradient-sun">Transparent Pricing</span>
           </h2>
-          <p className="text-muted-foreground mt-4 text-lg font-light">
-            No hidden charges. Choose a plan that fits your solar setup.
+          <p className="mt-4 text-lg text-muted-foreground">
+            Start free. Scale as you grow. No hidden fees — just Meta's standard conversation charges apply.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
+        <div className="mt-16 grid gap-8 lg:grid-cols-3">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className={`relative rounded-2xl p-8 flex flex-col transition-all duration-500 border ${
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: i * 0.12, duration: 0.5 }}
+              className={`relative flex flex-col rounded-2xl p-8 transition-all duration-300 ${
                 plan.popular
-                  ? "border-primary/40 bg-card shadow-glow lg:scale-105"
-                  : "border-border bg-card hover:border-primary/20"
+                  ? "glass-card ring-2 ring-primary/50"
+                  : "glass-card"
               }`}
+              style={{ boxShadow: plan.popular ? "var(--shadow-glow)" : "var(--shadow-card)" }}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-primary text-primary-foreground px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-glow">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1 text-xs font-bold text-primary-foreground" style={{ background: "var(--gradient-sun)" }}>
                   Most Popular
+                </span>
+              )}
+              <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-gradient-sun">{plan.price}</span>
+                <span className="text-muted-foreground">{plan.period}</span>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">{plan.desc}</p>
+
+              {"badge" in plan && plan.badge && (
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="rounded-md px-3 py-1 text-xs font-bold text-primary-foreground" style={{ background: "var(--gradient-sun)" }}>
+                    {plan.badge}
+                  </span>
+                  <span className="text-muted-foreground font-bold">+</span>
                 </div>
               )}
 
-              <h3 className="font-heading text-xl font-bold text-foreground">{plan.name}</h3>
-              <p className="text-xs mt-1 text-muted-foreground font-light">{plan.description}</p>
-
-              <div className="mt-6 mb-8">
-                <span className="font-heading text-5xl font-bold tracking-tight text-primary">{plan.price}</span>
-                <span className="text-xs ml-2 text-muted-foreground font-light uppercase tracking-wider">{plan.period}</span>
-              </div>
-
-              <ul className="space-y-4 flex-1">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-muted-foreground font-light leading-snug">
-                    <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    {feature}
+              <ul className="mt-6 flex-1 space-y-3">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    {f}
                   </li>
                 ))}
               </ul>
 
-              <Button
-                className={`mt-10 w-full rounded-full h-12 text-sm font-bold uppercase tracking-widest transition-all duration-300 ${
-                  plan.popular
-                    ? "bg-primary text-primary-foreground shadow-glow hover:shadow-glow-lg hover:brightness-110"
-                    : "bg-muted text-foreground border border-border hover:bg-muted/80 hover:border-primary/30"
-                }`}
-                size="lg"
-                asChild
-              >
-                <a href="#contact">Get Started</a>
-              </Button>
+              <Link href={plan.ctaLink} className="mt-8">
+                <Button
+                  className="w-full font-semibold"
+                  variant={plan.popular ? "default" : "outline"}
+                  size="lg"
+                  style={plan.popular ? { background: "var(--gradient-sun)" } : undefined}
+                >
+                  {plan.cta}
+                </Button>
+              </Link>
             </motion.div>
           ))}
         </div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center text-muted-foreground text-xs mt-16 font-light uppercase tracking-widest"
-        >
-          Need a custom plan for your commercial setup?{" "}
-          <a href="#contact" className="text-primary font-bold hover:underline underline-offset-4 decoration-primary/30">
-            Contact us
-          </a>
-        </motion.p>
       </div>
     </section>
   );
-};
-
-export default Pricing;
+}

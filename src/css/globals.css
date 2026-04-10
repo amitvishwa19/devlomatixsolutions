@@ -1,4 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
@@ -62,6 +65,20 @@
     --sidebar-accent-foreground: 168 80% 30%;
     --sidebar-border: 214 32% 91%;
     --sidebar-ring: 168 80% 42%;
+
+    /* KonnectX Design Tokens */
+    --kx-cyan: 190 90% 50%;
+    --kx-teal: 170 80% 45%;
+    --gradient-sun: linear-gradient(135deg, hsl(190 90% 50%), hsl(170 80% 45%));
+    --gradient-hero: linear-gradient(180deg, hsl(220 40% 6% / 0.85), hsl(220 40% 6% / 0.98));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.02));
+    --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(190 90% 50% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(170 80% 45% / 0.03) 0%, transparent 50%);
+    --shadow-card: 0 1px 3px hsl(220 40% 4% / 0.3), 0 4px 16px hsl(220 40% 4% / 0.2);
+    --shadow-elevated: 0 4px 12px hsl(220 40% 4% / 0.4), 0 16px 48px hsl(220 40% 4% / 0.3);
+    --shadow-glow: 0 0 30px hsl(190 90% 50% / 0.15);
+    --shadow-glow-lg: 0 0 60px hsl(190 90% 50% / 0.25), 0 0 120px hsl(190 90% 50% / 0.1);
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
   }
 
   .dark {
@@ -105,6 +122,9 @@
     --success: 152 60% 45%;
     --warning: 38 92% 55%;
     --info: 205 80% 55%;
+
+    /* KonnectX Dark Overrides (if needed) */
+    --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(190 50% 50% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(172 50% 45% / 0.03) 0%, transparent 50%);
   }
 }
 
@@ -124,8 +144,22 @@
   h4,
   h5,
   h6 {
-    font-family: 'Space Grotesk', sans-serif;
+    @apply font-heading;
   }
+}
+
+.konnectx-site {
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+.konnectx-site h1, 
+.konnectx-site h2, 
+.konnectx-site h3, 
+.konnectx-site h4, 
+.konnectx-site h5, 
+.konnectx-site h6 {
+  font-family: var(--font-heading) !important;
 }
 
 @layer components {
@@ -319,6 +353,18 @@
   .icon-glow:hover::after {
     @apply opacity-100;
   }
+
+  /* KonnectX Utility Classes - Renamed to kx- to avoid global conflicts if not scoped */
+  .kx-text-gradient-sun {
+    background: var(--gradient-sun);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .kx-mesh-bg {
+    background-image: var(--gradient-mesh);
+  }
 }
 
 @layer utilities {
@@ -430,4 +476,141 @@
 
 .prose a {
     word-break: break-all;
-}
+}
+
+/* KonnectX Custom Animations */
+@keyframes shimmer-effect {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.konnectx-site {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.konnectx-site h1, 
+.konnectx-site h2, 
+.konnectx-site h3, 
+.konnectx-site h4, 
+.konnectx-site h5, 
+.konnectx-site h6 {
+  font-family: var(--font-heading);
+}
+
+/* KonnectX Theme Logic - Optimized for Tailwind Compatibility */
+.light .konnectx-site {
+  --background: 210 20% 98%;
+  --foreground: 220 30% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 30% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 30% 15%;
+  --primary: 190 90% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 15% 93%;
+  --secondary-foreground: 220 30% 20%;
+  --muted: 210 15% 93%;
+  --muted-foreground: 215 15% 45%;
+  --accent: 190 90% 40%;
+  --accent-foreground: 0 0% 100%;
+  --border: 220 15% 87%;
+  --input: 220 15% 87%;
+  --ring: 190 90% 40%;
+
+  --gradient-sun: linear-gradient(135deg, hsl(190 90% 40%), hsl(170 80% 35%));
+  --gradient-hero: linear-gradient(180deg, hsl(210 20% 98% / 0.85), hsl(210 20% 98% / 0.98));
+  --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.7), hsl(0 0% 100% / 0.4));
+  --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(190 90% 40% / 0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(170 80% 35% / 0.04) 0%, transparent 50%);
+  --shadow-card: 0 1px 3px hsl(220 20% 80% / 0.3), 0 4px 16px hsl(220 20% 80% / 0.15);
+  --shadow-elevated: 0 4px 12px hsl(220 20% 80% / 0.3), 0 16px 48px hsl(220 20% 80% / 0.2);
+  --shadow-glow: 0 0 30px hsl(190 90% 40% / 0.1);
+  --shadow-glow-lg: 0 0 60px hsl(190 90% 40% / 0.15), 0 0 120px hsl(190 90% 40% / 0.05);
+}
+
+.konnectx-site {
+  --background: 220 40% 6%;
+  --foreground: 200 20% 90%;
+  --primary: 190 90% 50%;
+  --primary-foreground: 220 40% 6%;
+  --border: 220 25% 14%;
+  --card: 220 35% 9%;
+  --card-foreground: 200 20% 90%;
+  --muted: 220 25% 14%;
+  --muted-foreground: 210 15% 50%;
+}
+
+/* Scoped Classes For KonnectX Premium Design */
+.konnectx-site .text-gradient-sun {
+  background: var(--gradient-sun);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.konnectx-site .glass {
+  background: hsl(220 35% 9% / 0.8);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsl(220 25% 18% / 0.5);
+}
+
+.light .konnectx-site .glass {
+  background: hsl(0 0% 100% / 0.75);
+  border: 1px solid hsl(220 15% 87% / 0.6);
+}
+
+.konnectx-site .glass-card {
+  background: hsl(220 35% 10% / 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(0 0% 100% / 0.06);
+}
+
+.light .konnectx-site .glass-card {
+  background: hsl(0 0% 100% / 0.7);
+  border: 1px solid hsl(220 15% 87% / 0.4);
+}
+
+.konnectx-site .mesh-bg {
+  background-image: var(--gradient-mesh);
+}
+
+.konnectx-site .section-divider {
+  background: linear-gradient(90deg, transparent, hsl(220 25% 14%), transparent);
+  height: 1px;
+}
+
+.light .konnectx-site .section-divider {
+  background: linear-gradient(90deg, transparent, hsl(220 15% 87%), transparent);
+}
+
+.konnectx-site .shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    hsl(0 0% 100% / 0.05) 37%,
+    transparent 63%
+  );
+  background-size: 200% 100%;
+  animation: kx-shimmer 3s ease-in-out infinite;
+}
+
+/* KonnectX Custom Animations */
+@keyframes kx-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes kx-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+

@@ -1,78 +1,123 @@
 'use client';
-
 import { motion } from "framer-motion";
-import { Star, Quote } from "lucide-react";
+import { Star } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Rajesh Kumar",
-    role: "Home Owner, Jaipur",
-    content: "My 5kW setup's output had dropped significantly due to construction dust nearby. After SolarBright's cleaning, the units generated increased by almost 40% the very next day!",
+    name: "Priya Sharma",
+    role: "Marketing Head, ShopEase",
+    avatar: "PS",
     rating: 5,
+    quote:
+      "KonnectX transformed our customer engagement. We saw a 3x increase in conversions within the first month of using their WhatsApp campaigns.",
   },
   {
-    name: "Anita Sharma",
-    role: "Villa Owner, Gurgaon",
-    content: "Very professional service. They used specialized brushes and purified water. No scratches on the panels and they even shared before/after photos as proof.",
+    name: "Rahul Mehta",
+    role: "CEO, EduPrime Academy",
+    avatar: "RM",
     rating: 5,
+    quote:
+      "The chatbot builder is incredibly intuitive. We automated 80% of our admissions queries and our team now focuses on what truly matters.",
   },
   {
-    name: "Vikram Singh",
-    role: "Factory Manager, Ahmedabad",
-    content: "Handling a 100kW plant was tough. Their AMC plan has simplified everything. Monthly reports and scheduled cleaning have boosted our factory's solar savings.",
+    name: "Ananya Iyer",
+    role: "Operations Manager, FreshBite",
+    avatar: "AI",
     rating: 5,
+    quote:
+      "Order confirmations, delivery updates, feedback collection — all automated on WhatsApp. Our customers love the seamless experience.",
+  },
+  {
+    name: "David Chen",
+    role: "Founder, TravelNest",
+    avatar: "DC",
+    rating: 4,
+    quote:
+      "Integrating KonnectX with our CRM was effortless. The API is well-documented and the support team is phenomenal.",
+  },
+  {
+    name: "Sara Al-Rashid",
+    role: "CTO, HealthFirst Clinics",
+    avatar: "SA",
+    rating: 5,
+    quote:
+      "Patient no-shows dropped by 45% after we set up automated appointment reminders. The ROI was immediate and measurable.",
+  },
+  {
+    name: "Michael Torres",
+    role: "Sales Director, PropHub Realty",
+    avatar: "MT",
+    rating: 5,
+    quote:
+      "We close deals faster now. Automated follow-ups and instant property sharing on WhatsApp changed our entire sales pipeline.",
   },
 ];
 
-const Testimonials = () => {
+export function Testimonials() {
   return (
-    <section id="testimonials" className="py-28 relative overflow-hidden bg-muted/10">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-primary/5 blur-[150px] pointer-events-none" />
-
-      <div className="container mx-auto px-4 relative">
+    <section id="testimonials" className="relative py-24 sm:py-32">
+      <div className="section-divider mx-auto max-w-5xl" />
+      <div className="mx-auto max-w-7xl px-4 pt-24 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-16"
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto max-w-2xl text-center"
         >
-          <span className="inline-flex items-center gap-2 text-primary font-semibold text-sm uppercase tracking-[0.2em] mb-4">
-            <span className="w-8 h-px bg-primary" />
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary">
             Testimonials
-            <span className="w-8 h-px bg-primary" />
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            Trusted by Homeowners & Businesses
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl lg:text-5xl">
+            Loved by <span className="text-gradient-sun">Businesses Worldwide</span>
           </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            See what our customers have to say about their experience with KonnectX.
+          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((t, i) => (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-              className="group relative bg-card border border-border p-8 rounded-2xl hover:border-primary/30 transition-all duration-300 shadow-sm hover:shadow-glow shadow-primary/5"
+              key={t.name}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="glass-card rounded-2xl p-6 transition-all duration-300 hover:border-primary/20"
+              style={{ boxShadow: "var(--shadow-card)" }}
             >
-              <Quote className="absolute top-6 right-6 w-10 h-10 text-primary/5 group-hover:text-primary/10 transition-colors" />
-              
-              <div className="flex gap-1 mb-6">
-                {[...Array(t.rating)].map((_, j) => (
-                  <Star key={j} className="w-4 h-4 fill-primary text-primary" />
+              {/* Stars */}
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, s) => (
+                  <Star
+                    key={s}
+                    className={`h-4 w-4 ${
+                      s < t.rating
+                        ? "fill-primary text-primary"
+                        : "fill-muted text-muted"
+                    }`}
+                  />
                 ))}
               </div>
 
-              <p className="text-foreground/90 leading-relaxed mb-8 italic font-light">
-                "{t.content}"
+              {/* Quote */}
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                "{t.quote}"
               </p>
 
-              <div>
-                <p className="font-heading font-bold text-foreground">{t.name}</p>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{t.role}</p>
+              {/* Author */}
+              <div className="mt-6 flex items-center gap-3">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
+                  style={{ background: "var(--gradient-sun)" }}
+                >
+                  {t.avatar}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -80,6 +125,4 @@ const Testimonials = () => {
       </div>
     </section>
   );
-};
-
-export default Testimonials;
+}

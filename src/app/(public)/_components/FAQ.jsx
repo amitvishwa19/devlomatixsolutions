@@ -1,88 +1,83 @@
 'use client';
-
+import { motion } from "framer-motion";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { motion } from "framer-motion";
-import { HelpCircle } from "lucide-react";
 
 const faqs = [
   {
-    question: "How often should I clean my solar panels?",
-    answer: "In India, we recommend cleaning every 15-30 days during dry/dusty seasons and once after major dust storms or the monsoon. Regular cleaning ensures output doesn't drop by 25-30%.",
+    q: "What is the WhatsApp Business API?",
+    a: "The WhatsApp Business API is a solution designed for medium and large businesses to communicate with customers at scale. Unlike the WhatsApp Business App, the API allows you to integrate WhatsApp messaging into your existing systems, automate conversations, and send bulk campaigns.",
   },
   {
-    question: "Do you use chemicals for cleaning?",
-    answer: "We primarily use demineralized (DM) water which is highly effective and safe. For stubborn stains or scaling, we use eco-friendly, panel-safe biodegradable solutions that won't damage the tempered glass or anti-reflective coating.",
+    q: "Do I need a new phone number?",
+    a: "You can use your existing business phone number or register a new one. We'll help you through the verification process to get your number approved on the WhatsApp Business API.",
   },
   {
-    question: "Is it safe to clean panels with tap water?",
-    answer: "No. Tap water often contains minerals (hard water) that leave white deposits or 'scaling' on the glass. This scaling is harder to remove than dust and permanently reduces efficiency. We always use purified water.",
+    q: "How much does WhatsApp messaging cost?",
+    a: "WhatsApp charges per conversation (24-hour window). Rates vary by country and conversation type (marketing, utility, service, or authentication). Our platform fee is separate from Meta's messaging charges.",
   },
   {
-    question: "Will cleaning my panels void the warranty?",
-    answer: "Our cleaning methods follow the guidelines provided by major panel manufacturers like Tata Power, Adani, and Waaree. We use soft brushes and avoid high-pressure washers, ensuring your warranty remains intact.",
+    q: "Can I get the green tick verification?",
+    a: "Yes! We help businesses apply for the official green tick (verified business account) on WhatsApp. You'll need a verified Meta Business Manager and meet Meta's eligibility criteria.",
   },
   {
-    question: "What is included in the AMC Plan?",
-    answer: "The AMC includes scheduled cleanings (monthly/bi-monthly), a performance health check, a detailed monthly report, and a dedicated account manager for all your solar maintenance needs.",
+    q: "How long does setup take?",
+    a: "Most businesses are up and running within 24-48 hours. Our onboarding team will guide you through number registration, template approval, and platform setup.",
+  },
+  {
+    q: "Is there a free trial?",
+    a: "Yes, we offer a 7-day free trial on our Starter and Growth plans. No credit card required — you can explore all features before committing.",
   },
 ];
 
-const FAQ = () => {
+export function FAQ() {
   return (
-    <section id="faq" className="py-28 relative overflow-hidden bg-background">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      
-      <div className="container mx-auto px-4 relative">
+    <section id="faq" className="relative py-24 sm:py-32">
+      <div className="section-divider mx-auto max-w-5xl" />
+      <div className="mx-auto max-w-3xl px-4 pt-24 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-16"
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
         >
-          <span className="inline-flex items-center gap-2 text-primary font-semibold text-sm uppercase tracking-[0.2em] mb-4">
-            <span className="w-8 h-px bg-primary" />
-            Support
-            <span className="w-8 h-px bg-primary" />
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            Frequently Asked Questions
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary">FAQ</p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl lg:text-5xl">
+            Frequently Asked <span className="text-gradient-sun">Questions</span>
           </h2>
         </motion.div>
 
-        <div className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="w-full space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+          className="mt-12"
+        >
+          <Accordion type="single" collapsible className="space-y-3">
             {faqs.map((faq, i) => (
-              <motion.div
+              <AccordionItem
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: i * 0.1 }}
+                value={`faq-${i}`}
+                className="glass-card rounded-xl px-6 border-none"
+                style={{ boxShadow: "var(--shadow-card)" }}
               >
-                <AccordionItem value={`item-${i}`} className="border border-border bg-card rounded-xl px-2 overflow-hidden hover:border-primary/30 transition-colors">
-                  <AccordionTrigger className="hover:no-underline py-5 px-4 text-left font-heading font-bold text-foreground hover:text-primary transition-colors">
-                    <div className="flex items-start gap-3">
-                      <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      {faq.question}
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-12 pb-6 text-muted-foreground leading-relaxed font-light">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              </motion.div>
+                <AccordionTrigger className="text-left text-base font-semibold text-foreground hover:no-underline">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
             ))}
           </Accordion>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
-};
-
-export default FAQ;
+}
