@@ -56,7 +56,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+    SheetFooter,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
     Tabs,
@@ -97,7 +110,16 @@ export default function ContactManagementPage() {
         email: '',
         type: defaultType === 'all' ? 'CONTACT' : defaultType,
         groupIds: [],
-        info: {}
+        info: {
+            company: '',
+            designation: '',
+            website: '',
+            linkedin: '',
+            city: '',
+            country: '',
+            source: '',
+            notes: ''
+        }
     });
 
     // --- Fetch Data ---
@@ -151,6 +173,16 @@ export default function ContactManagementPage() {
         } catch (error) {
             toast.error("Vault interaction error");
         }
+    };
+
+    const handleInfoChange = (key, value) => {
+        setFormData(prev => ({
+            ...prev,
+            info: {
+                ...prev.info,
+                [key]: value
+            }
+        }));
     };
 
     const handleDeleteContact = async (id) => {
@@ -216,75 +248,187 @@ export default function ContactManagementPage() {
                             <RefreshCw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
                             Sync
                         </Button>
-                        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                            <DialogTrigger asChild>
+                        <Sheet open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                            <SheetTrigger asChild>
                                 <Button className="bg-primary/90 hover:bg-primary  shadow-lg shadow-primary/20 transition-all active:scale-95">
                                     <Plus className="w-3.5 h-3.5 mr-2" />
                                     Add Contact
                                 </Button>
-                            </DialogTrigger>
-                            <DialogContent className="bg-[#111111]/95 border-white/10 backdrop-blur-2xl sm:max-w-[500px]">
-                                <DialogHeader>
-                                    <DialogTitle className="text-xl font-bold text-white">New Contact</DialogTitle>
-                                    <DialogDescription className="text-xs text-muted-foreground">Add a new business contact to your workspace vault.</DialogDescription>
-                                </DialogHeader>
-                                <form onSubmit={handleSaveContact} className="space-y-4 pt-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                                            <Input
-                                                required
-                                                className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
-                                                value={formData.name}
-                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone</Label>
-                                            <Input
-                                                required
-                                                className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
-                                                value={formData.phone}
-                                                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                                        <Input
-                                            type="email"
-                                            className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
-                                            value={formData.email}
-                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Category Type</Label>
-                                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
-                                                <SelectTrigger className="bg-muted/30 border-white/10 h-11">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-zinc-900 border-white/10">
-                                                    {CONTACT_TYPES.map(t => (
-                                                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Interaction Status</Label>
-                                            <Badge variant="outline" className="h-11 w-full justify-center bg-emerald-500/5 text-emerald-500 border-emerald-500/20 font-bold">
-                                                Active / New
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                    <DialogFooter className="pt-4">
-                                        <Button type="submit" className="w-full bg-primary font-black uppercase tracking-widest h-12">Initialize Contact</Button>
-                                    </DialogFooter>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                            </SheetTrigger>
+                            <SheetContent side="right" className=" border-0  bg-transparent p-2 md:min-w-[620px]">
+                                <div className='border rounded-lg h-full bg-background/80 backdrop-blur-xl p-2'>
+                                    <SheetHeader>
+                                        <SheetTitle className="text-xl font-bold text-white">New Contact</SheetTitle>
+                                        <SheetDescription className="text-xs text-muted-foreground">Add a new business contact to your workspace vault.</SheetDescription>
+                                    </SheetHeader>
+                                    <ScrollArea className="h-[calc(100vh-180px)] pr-4 mt-4">
+                                        <form onSubmit={handleSaveContact} className="space-y-4 p-2">
+                                            {/* Primary Information */}
+                                            <div className="space-y-4">
+                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Primary Information</h4>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2 col-span-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Full Name</Label>
+                                                        <Input
+                                                            required
+                                                            placeholder="John Doe"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.name}
+                                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Number</Label>
+                                                        <Input
+                                                            required
+                                                            placeholder="+1 (555) 000-0000"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.phone}
+                                                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email Address</Label>
+                                                        <Input
+                                                            type="email"
+                                                            placeholder="john@example.com"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.email}
+                                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Separator className="bg-white/5" />
+
+                                            {/* Professional Details */}
+                                            <div className="space-y-4">
+                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Professional Details</h4>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Company Name</Label>
+                                                        <Input
+                                                            placeholder="Acme Inc."
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.info.company}
+                                                            onChange={e => handleInfoChange('company', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Job Title / Designation</Label>
+                                                        <Input
+                                                            placeholder="Project Manager"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.info.designation}
+                                                            onChange={e => handleInfoChange('designation', e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Separator className="bg-white/5" />
+
+                                            {/* Classification */}
+                                            <div className="space-y-4">
+                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Classification</h4>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Category Type</Label>
+                                                        <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
+                                                            <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="bg-zinc-900 border-white/10">
+                                                                {CONTACT_TYPES.map(t => (
+                                                                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Lead Source</Label>
+                                                        <Select value={formData.info.source} onValueChange={v => handleInfoChange('source', v)}>
+                                                            <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
+                                                                <SelectValue placeholder="Select Source" />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="bg-zinc-900 border-white/10">
+                                                                {['Referral', 'Social Media', 'Website', 'Advertising', 'Direct', 'Other'].map(s => (
+                                                                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Separator className="bg-white/5" />
+
+                                            {/* Location & Digital */}
+                                            <div className="space-y-4">
+                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">Location & Digital</h4>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">City / Region</Label>
+                                                        <Input
+                                                            placeholder="New York"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.info.city}
+                                                            onChange={e => handleInfoChange('city', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Country</Label>
+                                                        <Input
+                                                            placeholder="USA"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.info.country}
+                                                            onChange={e => handleInfoChange('country', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Website</Label>
+                                                        <Input
+                                                            placeholder="https://example.com"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.info.website}
+                                                            onChange={e => handleInfoChange('website', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">LinkedIn Profile</Label>
+                                                        <Input
+                                                            placeholder="linkedin.com/in/username"
+                                                            className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                            value={formData.info.linkedin}
+                                                            onChange={e => handleInfoChange('linkedin', e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Separator className="bg-white/5" />
+
+                                            {/* Notes */}
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Internal Vault Notes</Label>
+                                                <Textarea
+                                                    rows={5}
+                                                    placeholder="Add any specific details or context about this contact..."
+                                                    className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary min-h-[100px] text-xs resize-none"
+                                                    value={formData.info.notes}
+                                                    onChange={e => handleInfoChange('notes', e.target.value)}
+                                                />
+                                            </div>
+
+                                            <SheetFooter className="p-0 pt-4 pb-10">
+                                                <Button variant={'default'} type="submit" className="w-full bg-primary h-10   ">Initialize Contact</Button>
+                                            </SheetFooter>
+                                        </form>
+                                    </ScrollArea>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
                 </div>
 
@@ -497,6 +641,7 @@ export default function ContactManagementPage() {
                                                                 <DropdownMenuItem
                                                                     className="flex items-center gap-2 text-xs py-2 cursor-pointer hover:bg-white/5"
                                                                     onClick={() => {
+                                                                        const existingInfo = contact.info || {};
                                                                         setEditingContact(contact);
                                                                         setFormData({
                                                                             name: contact.name,
@@ -504,7 +649,16 @@ export default function ContactManagementPage() {
                                                                             email: contact.email || '',
                                                                             type: contact.type || 'CONTACT',
                                                                             groupIds: contact.groups?.map(g => g.id) || [],
-                                                                            info: contact.info || {}
+                                                                            info: {
+                                                                                company: existingInfo.company || '',
+                                                                                designation: existingInfo.designation || '',
+                                                                                website: existingInfo.website || '',
+                                                                                linkedin: existingInfo.linkedin || '',
+                                                                                city: existingInfo.city || '',
+                                                                                country: existingInfo.country || '',
+                                                                                source: existingInfo.source || '',
+                                                                                notes: existingInfo.notes || ''
+                                                                            }
                                                                         });
                                                                         setIsEditModalOpen(true);
                                                                     }}
@@ -535,59 +689,178 @@ export default function ContactManagementPage() {
                 </div>
             </div>
 
-            {/* --- UPDATE DIALOG --- */}
-            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="bg-[#111111]/95 border-white/10 backdrop-blur-2xl sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-white">Update Contact</DialogTitle>
-                        <DialogDescription className="text-xs text-muted-foreground text-emerald-500/70">Modify vault record for identification ID: {editingContact?.id?.slice(-8)}</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleSaveContact} className="space-y-4 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Legal Name</Label>
-                                <Input
-                                    className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Index</Label>
-                                <Input
-                                    className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
-                                    value={formData.phone}
-                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Digital Email</Label>
-                            <Input
-                                className="bg-muted/30 border-white/10 focus:ring-1 focus:ring-primary h-11"
-                                value={formData.email}
-                                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Entity Type</Label>
-                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
-                                <SelectTrigger className="bg-muted/30 border-white/10 h-11">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10">
-                                    {CONTACT_TYPES.map(t => (
-                                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <DialogFooter className="pt-4">
-                            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 font-black uppercase tracking-widest h-12">Commit Changes</Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            {/* --- UPDATE SHEET --- */}
+            <Sheet open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <SheetContent side="right" className=" border-0  bg-transparent p-2 md:min-w-[620px]">
+                    <div className='border rounded-lg h-full bg-background/80 backdrop-blur-xl p-4 '>
+                        <SheetHeader>
+                            <SheetTitle className="text-xl font-bold text-white">Update Contact</SheetTitle>
+                            <SheetDescription className="text-xs text-muted-foreground text-emerald-500/70">Modify vault record for identification ID: {editingContact?.id?.slice(-8)}</SheetDescription>
+                        </SheetHeader>
+                        <ScrollArea className="h-[calc(100vh-180px)] pr-4 mt-4">
+                            <form onSubmit={handleSaveContact} className="space-y-6">
+                                {/* Primary Information */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Primary Information</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2 col-span-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Legal Name</Label>
+                                            <Input
+                                                required
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.name}
+                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Index</Label>
+                                            <Input
+                                                required
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.phone}
+                                                onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Digital Email</Label>
+                                            <Input
+                                                type="email"
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.email}
+                                                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator className="bg-white/5" />
+
+                                {/* Professional Details */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Professional Details</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Company Name</Label>
+                                            <Input
+                                                placeholder="Acme Inc."
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.info.company}
+                                                onChange={e => handleInfoChange('company', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Job Title / Designation</Label>
+                                            <Input
+                                                placeholder="Project Manager"
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.info.designation}
+                                                onChange={e => handleInfoChange('designation', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator className="bg-white/5" />
+
+                                {/* Classification */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Classification</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Entity Type</Label>
+                                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
+                                                <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-zinc-900 border-white/10">
+                                                    {CONTACT_TYPES.map(t => (
+                                                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Lead Source</Label>
+                                            <Select value={formData.info.source} onValueChange={v => handleInfoChange('source', v)}>
+                                                <SelectTrigger className="bg-muted/10 border-white/5 h-10 text-xs">
+                                                    <SelectValue placeholder="Select Source" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-zinc-900 border-white/10">
+                                                    {['Referral', 'Social Media', 'Website', 'Advertising', 'Direct', 'Other'].map(s => (
+                                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator className="bg-white/5" />
+
+                                {/* Location & Digital */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">Location & Digital</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">City / Region</Label>
+                                            <Input
+                                                placeholder="New York"
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.info.city}
+                                                onChange={e => handleInfoChange('city', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Country</Label>
+                                            <Input
+                                                placeholder="USA"
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.info.country}
+                                                onChange={e => handleInfoChange('country', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Website</Label>
+                                            <Input
+                                                placeholder="https://example.com"
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.info.website}
+                                                onChange={e => handleInfoChange('website', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">LinkedIn Profile</Label>
+                                            <Input
+                                                placeholder="linkedin.com/in/username"
+                                                className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary h-10 text-xs"
+                                                value={formData.info.linkedin}
+                                                onChange={e => handleInfoChange('linkedin', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator className="bg-white/5" />
+
+                                {/* Notes */}
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Internal Vault Notes</Label>
+                                    <Textarea
+                                        placeholder="Add any specific details or context about this contact..."
+                                        className="bg-muted/10 border-white/5 focus:ring-1 focus:ring-primary min-h-[100px] text-xs resize-none"
+                                        value={formData.info.notes}
+                                        onChange={e => handleInfoChange('notes', e.target.value)}
+                                    />
+                                </div>
+
+                                <SheetFooter className="p-0 pt-4 pb-10">
+                                    <Button variant={'default'} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 font-black uppercase tracking-widest h-10">Commit Changes</Button>
+                                </SheetFooter>
+                            </form>
+                        </ScrollArea>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }
