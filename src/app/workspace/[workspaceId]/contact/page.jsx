@@ -58,7 +58,14 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+
 
 const CONTACT_TYPES = [
     { value: 'CONTACT', label: 'Contact', color: 'bg-blue-500/10 text-blue-400' },
@@ -66,9 +73,10 @@ const CONTACT_TYPES = [
     { value: 'LEAD', label: 'Lead', color: 'bg-amber-500/10 text-amber-400' }
 ];
 
-export default function ContactManagementPage({ defaultType = "all" }) {
+export default function ContactManagementPage() {
     const params = useParams();
     const workspaceId = params?.workspaceId;
+    const defaultType = "all";
 
     // --- State ---
     const [contacts, setContacts] = useState([]);
@@ -304,58 +312,48 @@ export default function ContactManagementPage({ defaultType = "all" }) {
                 </div>
             </div>
 
+            {/* --- TABS NAVIGATION --- */}
+            <div className="px-6 py-2 border-b border-white/5 bg-background/40 backdrop-blur-md">
+                <Tabs value={selectedType} onValueChange={setSelectedType} className="w-full">
+                    <TabsList className="bg-zinc-900/50 border border-white/5 p-1 h-12">
+                        <TabsTrigger
+                            value="all"
+                            className="flex-1 gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all h-full cursor-pointer"
+                        >
+                            <LayoutGrid className="w-4 h-4" />
+                            <span className="font-bold uppercase tracking-widest text-[10px]">All Contacts</span>
+                            <Badge variant="secondary" className="ml-2 bg-white/5 text-[9px] h-4 px-1.5">{contacts.length}</Badge>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="CONTACT"
+                            className="flex-1 gap-2 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 rounded-md transition-all h-full cursor-pointer"
+                        >
+                            <Users className="w-4 h-4" />
+                            <span className="font-bold uppercase tracking-widest text-[10px]">Contacts</span>
+                            <Badge variant="secondary" className="ml-2 bg-white/5 text-[9px] h-4 px-1.5">{contacts.filter(c => c.type === 'CONTACT').length}</Badge>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="CLIENT"
+                            className="flex-1 gap-2 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-md transition-all h-full cursor-pointer"
+                        >
+                            <Crown className="w-4 h-4" />
+                            <span className="font-bold uppercase tracking-widest text-[10px]">Clients</span>
+                            <Badge variant="secondary" className="ml-2 bg-white/5 text-[9px] h-4 px-1.5">{contacts.filter(c => c.type === 'CLIENT').length}</Badge>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="LEAD"
+                            className="flex-1 gap-2 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 rounded-md transition-all h-full cursor-pointer"
+                        >
+                            <Tag className="w-4 h-4" />
+                            <span className="font-bold uppercase tracking-widest text-[10px]">Leads</span>
+                            <Badge variant="secondary" className="ml-2 bg-white/5 text-[9px] h-4 px-1.5">{contacts.filter(c => c.type === 'LEAD').length}</Badge>
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
+
             {/* --- MAIN WORKSPACE --- */}
             <div className="flex flex-1 overflow-hidden">
-                {/* SIDEBAR FILTER */}
-                <div className="w-64 border-r border-white/5 bg-background/10 backdrop-blur-md p-4 hidden lg:flex flex-col gap-6">
-                    <div>
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 block">Quick Filters</Label>
-                        <div className="space-y-1">
-                            {['all', 'CLIENT', 'LEAD', 'CONTACT'].map(type => (
-                                <Button
-                                    key={type}
-                                    variant="ghost"
-                                    className={`w-full justify-start text-xs font-medium h-9 px-3 rounded-lg transition-all ${selectedType === type ? 'bg-primary/10 text-primary border border-primary/20' : 'text-muted-foreground hover:bg-white/5'}`}
-                                    onClick={() => setSelectedType(type)}
-                                >
-                                    {type === 'all' ? <LayoutGrid className="w-3.5 h-3.5 mr-2" /> : type === 'CLIENT' ? <Crown className="w-3.5 h-3.5 mr-2" /> : <Tag className="w-3.5 h-3.5 mr-2" />}
-                                    {type === 'all' ? 'All Contacts' : type.charAt(0) + type.slice(1).toLowerCase() + 's'}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 block">Contact Groups</Label>
-                            <Button size="icon" variant="ghost" className="h-5 w-5 text-muted-foreground hover:text-primary"><Plus className="w-3 h-3" /></Button>
-                        </div>
-                        <ScrollArea className="flex-1 -mx-2 px-2">
-                            <div className="space-y-1">
-                                <Button
-                                    variant="ghost"
-                                    className={`w-full justify-start text-xs font-medium h-9 px-3 rounded-lg ${selectedGroup === 'all' ? 'bg-white/5 text-white' : 'text-muted-foreground'}`}
-                                    onClick={() => setSelectedGroup('all')}
-                                >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 mr-3" />
-                                    General
-                                </Button>
-                                {groups.map(group => (
-                                    <Button
-                                        key={group.id}
-                                        variant="ghost"
-                                        className={`w-full justify-start text-xs font-medium h-9 px-3 rounded-lg group ${selectedGroup === group.id ? 'bg-primary/10 text-primary border border-primary/20' : 'text-muted-foreground hover:bg-white/5'}`}
-                                        onClick={() => setSelectedGroup(group.id)}
-                                    >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
-                                        <span className="flex-1 text-left truncate">{group.name}</span>
-                                        <span className="text-[10px] opacity-40 group-hover:opacity-100">{group._count?.contacts}</span>
-                                    </Button>
-                                ))}
-                            </div>
-                        </ScrollArea>
-                    </div>
-                </div>
 
                 {/* DATA TABLE AREA */}
                 <div className="flex-1 flex flex-col min-w-0 bg-background/5">
@@ -371,8 +369,24 @@ export default function ContactManagementPage({ defaultType = "all" }) {
                             />
                         </div>
                         <div className="flex items-center gap-2">
+                            <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                                <SelectTrigger className="w-[180px] bg-zinc-900/50 border-white/10 h-10 text-xs font-bold uppercase tracking-widest ring-0 focus:ring-0">
+                                    <div className="flex items-center gap-2">
+                                        <Tag className="w-3.5 h-3.5 text-primary" />
+                                        <SelectValue placeholder="All Groups" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-900 border-white/10">
+                                    <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest py-3">All Groups</SelectItem>
+                                    {groups.map(group => (
+                                        <SelectItem key={group.id} value={group.id} className="text-[10px] font-bold uppercase tracking-widest py-3">
+                                            {group.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
                             <Button variant="outline" size="icon" className="h-10 w-10 border-white/5 bg-zinc-900/50 hover:bg-zinc-800"><Download className="w-4 h-4" /></Button>
-                            <Button variant="outline" size="icon" className="h-10 w-10 border-white/5 bg-zinc-900/50 hover:bg-zinc-800 lg:hidden"><Filter className="w-4 h-4" /></Button>
                         </div>
                     </div>
 
