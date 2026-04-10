@@ -1,0 +1,127 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { testConnection } from "@/lib/cred-manager";
+import crypto from 'node:crypto';
+
+// POST /api/workspace/[workspaceId]/social/accounts/[accountId]/test
+export async function POST(req, { params }) {
+    try {
+        const { workspaceId, accountId } = await params;
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user?.userId) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        // Check if credentials were provided in the body (for testing before saving)
+        const body = await req.json().catch(() => ({}));
+        let decryptedCredentials = body.credentials;
+
+        if (!decryptedCredentials) {
+            // Fetch the credential from DB
+            const isPersisted = accountId && accountId !== 'undefined' && accountId !== 'null';
+            
+            if (isPersisted) {
+                const credential = await db.credentials.findUnique({
+                    where: { id: accountId }
+                });
+
+                if (!credential) {
+                    return NextResponse.json({ message: "Credential not found" }, { status: 404 });
+                }
+
+                decryptedCredentials = credential.credentials;
+
+                // Decrypt the credentials if encrypted
+                if (decryptedCredentials?.enc && typeof decryptedCredentials.enc === 'string') {
+                    const key = process.env.ENCRYPTION_KEY;
+                    if (key) {
+                        try {
+                            const ALG = 'aes-256-cbc';
+                            const parts = decryptedCredentials.enc.split(':');
+                            const ivBuffer = Buffer.from(parts[0], 'hex');
+                            const encText = Buffer.from(parts.slice(1).join(':'), 'hex');
+                            const decipher = crypto.createDecipheriv(ALG, Buffer.from(key, 'hex'), ivBuffer);
+                            let decrypted = decipher.update(encText);
+                            decrypted = Buffer.concat([decrypted, decipher.final()]);
+                            decryptedCredentials = JSON.parse(decrypted.toString());
+                        } catch (e) {
+                            console.error("[TEST_DECRYPT_FAILED]", e.message);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Run the platform-specific test
+        // Use either the provided accountId's platform from DB, or a platform passed in the body
+        let targetPlatform = body.platform;
+        
+        if (!targetPlatform && accountId && accountId !== 'undefined' && accountId !== 'null') {
+            const dbCred = await db.credentials.findUnique({ where: { id: accountId } });
+            targetPlatform = dbCred?.platform;
+        }
+
+        if (!targetPlatform) {
+            return NextResponse.json({ success: false, message: "Platform not specified" }, { status: 400 });
+        }
+
+        const result = await testConnection(targetPlatform, decryptedCredentials || {});
+
+        // Update the credential status in DB based on result (only if it's an existing record)
+        const newStatus = result.success ? 'connected' : 'error';
+        const newExpired = !result.success && result.message?.toLowerCase().includes('expired');
+
+        const isPersisted = accountId && accountId !== 'undefined' && accountId !== 'null';
+        if (isPersisted) {
+            try {
+                // Prepare update data
+                const updateData = {
+                    status: newStatus,
+                    expired: newExpired,
+                };
+
+                if (result.success && result.data) {
+                    // Update user info and avatar directly into the new columns
+                    if (result.data.profileName) {
+                        updateData.profile = result.data.profileName;
+                    }
+                    if (result.data.profileImage) {
+                        updateData.avatar = result.data.profileImage;
+                    }
+                    
+                    // Explicitly construct userInfo to avoid any hidden circular refs or non-serializable data
+                    updateData.userInfo = JSON.parse(JSON.stringify(result.data));
+                }
+
+                console.log(`[TEST_DB_UPDATE_START] ID: ${accountId} | Fields: ${Object.keys(updateData).join(', ')}`);
+                
+                const updated = await db.credentials.update({
+                    where: { id: accountId },
+                    data: updateData
+                });
+                
+                console.log(`[TEST_DB_UPDATE_COMPLETE] Profile: ${updated.profile} | userInfoPresent: ${!!updated.userInfo}`);
+            } catch (err) {
+                console.error("[TEST_DB_UPDATE_FATAL_ERROR]", err);
+                console.warn("[TEST_DB_UPDATE_SKIP]", err.message);
+            }
+        }
+
+        return NextResponse.json({
+            success: result.success,
+            message: result.message,
+            status: newStatus,
+            expired: newExpired,
+            data: result.data || {} // Include raw error data for debugging
+        });
+    } catch (error) {
+        console.error("[TEST_CONNECTION_ERROR]", error.message);
+        return NextResponse.json({ 
+            success: false, 
+            message: error.message,
+            data: { stack: error.stack }
+        }, { status: 500 });
+    }
+}
