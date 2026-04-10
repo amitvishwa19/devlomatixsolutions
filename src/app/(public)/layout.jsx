@@ -1,27 +1,22 @@
-//import 'aos/dist/aos.css';
-import "@/css/public.css";
-import { Unbounded, Inter, Poppins, Roboto } from "next/font/google";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import StickyBottomBar from "./components/StickyBottomBar";
+import React from 'react';
+import './_styles/solarbright.css';
 
-const unbounded = Unbounded({ subsets: ["latin"] });
-const font = Inter({ subsets: ["latin"] });
+export const metadata = {
+  title: 'SolarBright | Premium Solar Panel Cleaning & Maintenance',
+  description: 'Maximize your solar efficiency with professional cleaning and smart monitoring solutions. Smart solar care for a brighter future.',
+};
 
-export default function PublicLayout({ children }) {
-    return (
-        <div className={`${font.className} flex flex-col min-h-screen overflow-x-auto pb-24`} >
-            <div className=''>
-                <Navbar />
-            </div>
-
-            <div className='flex grow w-full' >
-                {children}
-            </div>
-            <div className=''>
-                <Footer />
-            </div>
-            <StickyBottomBar />
-        </div>
-    )
+export default function SolarBrightLayout({ children }) {
+  return (
+    <div className="solar-bright min-h-screen relative overflow-x-hidden bg-background text-foreground selection:bg-primary/30 selection:text-white">
+      {/* Mesh Background Effect */}
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />
+      <div className="fixed inset-0 pointer-events-none -z-10 mesh-bg opacity-40" />
+      
+      {/* Root Container */}
+      <div className="relative flex flex-col min-h-screen">
+        {children}
+      </div>
+    </div>
+  );
 }
