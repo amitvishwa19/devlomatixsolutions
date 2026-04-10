@@ -42,7 +42,6 @@ export default function SolarBrightPage() {
       </main>
       <Footer />
       <AIChatbot />
-      <WhatsAppButton />
     </div>
   );
 }
