@@ -3,17 +3,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    MessageSquare,
-    Shield,
-    Smartphone,
-    RefreshCcw,
-    CheckCircle2,
-    AlertCircle,
-    LogOut,
-    QrCode,
-    Plus,
-    Trash2,
+import { 
+    MessageSquare, 
+    Shield, 
+    Smartphone, 
+    RefreshCcw, 
+    CheckCircle2, 
+    AlertCircle, 
+    LogOut, 
+    QrCode, 
+    Plus, 
+    Trash2, 
     Send,
     Settings,
     Zap,
@@ -43,8 +43,8 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-    SelectValue
+import { 
+    SelectValue 
 } from "@/components/ui/select";
 import {
     Dialog,
@@ -58,7 +58,7 @@ import {
 export default function SettingsPage() {
     // Connection Method State
     const [method, setMethod] = useState('cloud'); // 'cloud' | 'browser'
-
+    
     // Baileys / Browser States
     const [status, setStatus] = useState('welcome');
     const [metadata, setMetadata] = useState({});
@@ -68,23 +68,18 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [waUser, setWaUser] = useState(null);
-
+    
     // Cloud API States
-    const [cloudCreds, setCloudCreds] = useState([]);
+    const [cloudCreds, setCloudCreds] = useState(null);
     const [cloudLoading, setCloudLoading] = useState(false);
-    const [testState, setTestState] = useState({}); // { id: 'loading' | 'success' | 'error' | null }
-
+    
     // Shared States
     const [webhookUrl, setWebhookUrl] = useState('');
     const [copied, setCopied] = useState(false);
-
+    
     // Cloud Modal States
     const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [accountToDelete, setAccountToDelete] = useState(null);
     const [tempCreds, setTempCreds] = useState({
-        id: null,
-        profile: '',
         phoneNumberId: '',
         wabaId: '',
         accessToken: ''
@@ -127,10 +122,15 @@ export default function SettingsPage() {
             const data = await res.json();
             if (data?.data) {
                 setCloudCreds(data.data);
+                // Pre-fill modal for editing
+                setTempCreds({
+                    phoneNumberId: data.data.phoneNumberId || '',
+                    wabaId: data.data.wabaId || '',
+                    accessToken: '' // Don't pre-fill masked token
+                });
             }
         } catch (error) {
             console.error('Failed to fetch Cloud API creds:', error);
-            toast.error('Failed to load accounts');
         } finally {
             setCloudLoading(false);
         }
@@ -138,7 +138,7 @@ export default function SettingsPage() {
 
     const handleSaveCloudCreds = async () => {
         if (!tempCreds.phoneNumberId || !tempCreds.wabaId || !tempCreds.accessToken) {
-            toast.error('Required fields: Phone ID, WABA ID, and Access Token');
+            toast.error('All fields are required');
             return;
         }
 
@@ -149,13 +149,11 @@ export default function SettingsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(tempCreds)
             });
-
+            
             if (res.ok) {
-                toast.success(tempCreds.id ? 'Account updated' : 'New account added');
+                toast.success('Cloud credentials updated');
                 setIsCredsModalOpen(false);
                 fetchCloudCreds();
-                // Reset form
-                setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
             } else {
                 const data = await res.json();
                 toast.error(data.error || 'Failed to update credentials');
@@ -167,59 +165,14 @@ export default function SettingsPage() {
         }
     };
 
-    const handleTestConnection = async (id) => {
-        setTestState(prev => ({ ...prev, [id]: 'loading' }));
-        try {
-            const res = await fetch('/api/wa/credentials/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
-            });
-            const data = await res.json();
-            
-            if (res.ok) {
-                toast.success(data.message || 'Connection verified!');
-                setTestState(prev => ({ ...prev, [id]: 'success' }));
-                fetchCloudCreds(); // Refresh to show 'connected' status
-            } else {
-                toast.error(data.error || 'Connection failed');
-                setTestState(prev => ({ ...prev, [id]: 'error' }));
-            }
-        } catch (error) {
-            toast.error('Network error during test');
-            setTestState(prev => ({ ...prev, [id]: 'error' }));
-        }
-    };
-
-    const handleDeleteCloudCred = async () => {
-        if (!accountToDelete) return;
-
-        setCloudLoading(true);
-        try {
-            const res = await fetch(`/api/wa/credentials?id=${accountToDelete.id}`, { method: 'DELETE' });
-            if (res.ok) {
-                toast.success('Account removed successfully');
-                setIsDeleteModalOpen(false);
-                setAccountToDelete(null);
-                fetchCloudCreds();
-            } else {
-                toast.error('Failed to remove account');
-            }
-        } catch (error) {
-            toast.error('Error deleting account');
-        } finally {
-            setCloudLoading(false);
-        }
-    };
-
     useEffect(() => {
         fetchBrowserStatus();
         fetchCloudCreds();
-
+        
         const interval = setInterval(() => {
             if (method === 'browser') fetchBrowserStatus();
         }, 10000);
-
+        
         if (typeof window !== 'undefined') {
             setWebhookUrl(`${window.location.origin}/api/wa/webhook`);
         }
@@ -322,11 +275,11 @@ export default function SettingsPage() {
     return (
         <TooltipProvider>
             <div className="flex flex-col h-full gap-4 p-2 animate-in fade-in duration-500">
-
+                
                 {/* Unified Header with Connection Selector */}
                 <div className="flex border border-border items-center justify-between bg-card p-4 rounded-xl shadow-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 opacity-20" />
-
+                    
                     <div className="flex flex-row gap-4 items-center z-10">
                         <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-inner">
                             {method === 'cloud' ? <Globe className="w-6 h-6 text-primary" /> : <Smartphone className="w-6 h-6 text-primary" />}
@@ -341,27 +294,27 @@ export default function SettingsPage() {
                             <p className="text-xs text-muted-foreground font-medium">Manage your {method === 'cloud' ? 'Meta Cloud API' : 'Browser Session'} configuration and status.</p>
                         </div>
                     </div>
-
+                    
                     <div className="flex items-center gap-6 z-10">
                         <div className="flex flex-col items-end gap-2">
-                            <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter">Connection Method</Label>
-                            <div className="flex items-center gap-3 bg-muted/40 p-1.5 px-3 rounded-full border border-border/50 shadow-inner">
+                             <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter">Connection Method</Label>
+                             <div className="flex items-center gap-3 bg-muted/40 p-1.5 px-3 rounded-full border border-border/50 shadow-inner">
                                 <span className={`text-[10px] font-bold uppercase tracking-tight transition-opacity ${method === 'browser' ? 'text-primary' : 'text-muted-foreground/40'}`}>Browser</span>
-                                <Switch
-                                    checked={method === 'cloud'}
+                                <Switch 
+                                    checked={method === 'cloud'} 
                                     onCheckedChange={(checked) => setMethod(checked ? 'cloud' : 'browser')}
                                     className="data-[state=checked]:bg-primary h-5 w-9"
                                 />
                                 <span className={`text-[10px] font-bold uppercase tracking-tight transition-opacity ${method === 'cloud' ? 'text-primary' : 'text-muted-foreground/40'}`}>Cloud API</span>
-                            </div>
+                             </div>
                         </div>
 
                         <Separator orientation="vertical" className="h-10 mx-1 bg-border/50" />
 
                         <div className="flex flex-col items-end">
-                            <Badge variant="outline" className={`py-1.5 px-4 flex items-center gap-2 border-0 ${method === 'cloud' ? (cloudCreds.length > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500') : (`${currentStatus.color}/10 text-foreground`)} font-bold shadow-sm h-10`}>
-                                <div className={`h-2 w-2 rounded-full ${method === 'cloud' ? (cloudCreds.length > 0 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500') : currentStatus.color}`} />
-                                {method === 'cloud' ? (cloudCreds.length > 0 ? `${cloudCreds.length} Active Link${cloudCreds.length > 1 ? 's' : ''}` : 'Credentials Missing') : currentStatus.label}
+                            <Badge variant="outline" className={`py-1.5 px-4 flex items-center gap-2 border-0 ${method === 'cloud' ? (cloudCreds ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500') : (`${currentStatus.color}/10 text-foreground`)} font-bold shadow-sm h-10`}>
+                                <div className={`h-2 w-2 rounded-full ${method === 'cloud' ? (cloudCreds ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500') : currentStatus.color}`} />
+                                {method === 'cloud' ? (cloudCreds ? 'Cloud Link Active' : 'Credentials Missing') : currentStatus.label}
                             </Badge>
                         </div>
                     </div>
@@ -384,7 +337,7 @@ export default function SettingsPage() {
                     {/* General Tab */}
                     <TabsContent value="general" className="flex-1 overflow-y-auto space-y-4 focus-visible:ring-0">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
+                            
                             {/* Primary Connection Card */}
                             <Card className="lg:col-span-2 bg-card/50 border-border shadow-sm overflow-hidden flex flex-col min-h-[400px]">
                                 <CardHeader className="border-b border-border/50 pb-4 bg-muted/5">
@@ -403,102 +356,51 @@ export default function SettingsPage() {
                                                 <LogOut size={14} /> Kill Session
                                             </Button>
                                         )}
-                                        <Button onClick={() => {
-                                            setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
-                                            setIsCredsModalOpen(true);
-                                        }} size="sm" className="gap-2 font-bold h-9 bg-primary/10 text-primary hover:bg-primary/20 border-0">
-                                            <Plus size={14} /> Add Account
-                                        </Button>
                                     </div>
                                 </CardHeader>
-
+                                
                                 <CardContent className="flex-1 flex flex-col items-center justify-center p-8">
                                     {method === 'cloud' ? (
                                         <AnimatePresence mode="wait">
-                                            {cloudCreds.length > 0 ? (
-                                                <motion.div
+                                            {cloudCreds ? (
+                                                <motion.div 
                                                     initial={{ opacity: 0, scale: 0.95 }}
                                                     animate={{ opacity: 1, scale: 1 }}
-                                                    className="w-full space-y-6"
+                                                    className="w-full space-y-8"
                                                 >
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <div className="space-y-1">
-                                                            <h3 className="text-lg font-black tracking-tight">Linked Accounts</h3>
-                                                            <p className="text-xs text-muted-foreground">Manage your official Meta Business connections.</p>
+                                                    <div className="flex flex-col items-center text-center space-y-4">
+                                                        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center border-2 border-emerald-500/30 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                                                            <CheckCircle2 className="w-8 h-8" />
                                                         </div>
-
+                                                        <div>
+                                                            <h3 className="text-lg font-black tracking-tight">Cloud Connection Verified</h3>
+                                                            <p className="text-xs text-muted-foreground">Your Meta Business identifiers are correctly synchronized.</p>
+                                                        </div>
                                                     </div>
-
-                                                    <div className="grid grid-cols-1 gap-3 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
-                                                        {cloudCreds.map((cred) => (
-                                                            <div key={cred.id} className="p-4 bg-muted/20 border border-border/50 rounded-xl group hover:border-primary/30 transition-all">
-                                                                <div className="flex items-center justify-between">
-                                                                    <div className="flex items-center gap-4">
-                                                                        <div className={`w-12 h-12 ${(cred.status === 'connected' || testState[cred.id] === 'success') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : (testState[cred.id] === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-muted/30 border-border/50 text-muted-foreground')} rounded-2xl flex items-center justify-center border shadow-sm transition-all duration-300`}>
-                                                                            {(cred.status === 'connected' || testState[cred.id] === 'success') ? <CheckCircle2 className="w-6 h-6" /> : (testState[cred.id] === 'error' ? <AlertCircle className="w-6 h-6" /> : <Shield className="w-5 h-5 opacity-40" />)}
-                                                                        </div>
-                                                                        <div className="space-y-1">
-                                                                            <h4 className="text-sm font-black flex items-center gap-2">
-                                                                                {cred.profile}
-                                                                                {testState[cred.id] === 'success' && <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[8px] h-4 uppercase font-black">Verified</Badge>}
-                                                                            </h4>
-                                                                            <div className="flex flex-col gap-1">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-card/50 border-border/50 text-muted-foreground/80">Phone ID</Badge>
-                                                                                    <code className="text-[11px] font-mono font-bold text-primary/80">{cred.phoneNumberId}</code>
-                                                                                    <Button variant="ghost" size="icon" className="h-4 w-4 opacity-30 hover:opacity-100" onClick={() => copyToClipboard(cred.phoneNumberId)}>
-                                                                                        <Copy size={10} />
-                                                                                    </Button>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-card/50 border-border/50 text-muted-foreground/80">WABA ID</Badge>
-                                                                                    <code className="text-[11px] font-mono font-bold text-primary/80">{cred.wabaId}</code>
-                                                                                    <Button variant="ghost" size="icon" className="h-4 w-4 opacity-30 hover:opacity-100" onClick={() => copyToClipboard(cred.wabaId)}>
-                                                                                        <Copy size={10} />
-                                                                                    </Button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Tooltip>
-                                                                            <TooltipTrigger asChild>
-                                                                                <Button 
-                                                                                    variant="outline" 
-                                                                                    size="sm" 
-                                                                                    className={`h-9 px-4 gap-2 font-black text-[10px] uppercase tracking-widest transition-all ${testState[cred.id] === 'loading' ? 'animate-pulse' : ''}`}
-                                                                                    onClick={() => handleTestConnection(cred.id)}
-                                                                                    disabled={testState[cred.id] === 'loading'}
-                                                                                >
-                                                                                    {testState[cred.id] === 'loading' ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Zap size={14} className="text-amber-500 fill-amber-500/20" />}
-                                                                                    Test Connection
-                                                                                </Button>
-                                                                            </TooltipTrigger>
-                                                                            <TooltipContent>Verify Meta Graph API Connectivity</TooltipContent>
-                                                                        </Tooltip>
-                                                                        <Separator orientation="vertical" className="h-8 mx-1 opacity-50" />
-                                                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary transition-colors" onClick={() => {
-                                                                            setTempCreds({
-                                                                                id: cred.id,
-                                                                                profile: cred.profile,
-                                                                                phoneNumberId: cred.phoneNumberId,
-                                                                                wabaId: cred.wabaId,
-                                                                                accessToken: '' 
-                                                                            });
-                                                                            setIsCredsModalOpen(true);
-                                                                        }}>
-                                                                            <Settings size={16} />
-                                                                        </Button>
-                                                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive transition-colors" onClick={() => {
-                                                                            setAccountToDelete(cred);
-                                                                            setIsDeleteModalOpen(true);
-                                                                        }}>
-                                                                            <Trash2 size={16} />
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                                    
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                        <div className="p-4 bg-muted/20 border border-border/50 rounded-xl space-y-2 group hover:border-primary/30 transition-colors">
+                                                            <span className="text-[9px] uppercase font-black text-muted-foreground">Phone Number ID</span>
+                                                            <code className="text-xs font-mono block truncate opacity-80 group-hover:opacity-100">{cloudCreds.phoneNumberId}</code>
+                                                        </div>
+                                                        <div className="p-4 bg-muted/20 border border-border/50 rounded-xl space-y-2 group hover:border-primary/30 transition-colors">
+                                                            <span className="text-[9px] uppercase font-black text-muted-foreground">WABA ID</span>
+                                                            <code className="text-xs font-mono block truncate opacity-80 group-hover:opacity-100">{cloudCreds.wabaId}</code>
+                                                        </div>
+                                                        <div className="p-4 bg-muted/20 border border-border/50 rounded-xl space-y-2 group hover:border-primary/30 transition-colors">
+                                                            <span className="text-[9px] uppercase font-black text-muted-foreground">Access Token</span>
+                                                            <code className="text-xs font-mono block truncate opacity-80 group-hover:opacity-100">{cloudCreds.accessToken}</code>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex justify-center pt-4">
+                                                        <Button 
+                                                            variant="outline" 
+                                                            className="gap-2 font-bold h-10 px-8 border-border hover:bg-primary/5 hover:border-primary/30" 
+                                                            onClick={() => setIsCredsModalOpen(true)}
+                                                        >
+                                                            <Settings size={14} /> Update Credentials
+                                                        </Button>
                                                     </div>
                                                 </motion.div>
                                             ) : (
@@ -507,17 +409,10 @@ export default function SettingsPage() {
                                                         <AlertCircle className="w-10 h-10" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <h3 className="text-lg font-bold">No Cloud Accounts Linked</h3>
+                                                        <h3 className="text-lg font-bold">Incomplete Configuration</h3>
                                                         <p className="text-xs text-muted-foreground max-w-xs mx-auto">Please provide your Meta Cloud API credentials to enable messaging.</p>
                                                     </div>
-                                                    <Button
-                                                        variant="default"
-                                                        className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2"
-                                                        onClick={() => {
-                                                            setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
-                                                            setIsCredsModalOpen(true);
-                                                        }}
-                                                    >
+                                                    <Button variant="default" className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2">
                                                         <Plus size={16} /> Link Meta Account
                                                     </Button>
                                                 </div>
@@ -547,7 +442,7 @@ export default function SettingsPage() {
                                                         <h3 className="text-lg font-black tracking-tight">Handshake Successful</h3>
                                                         <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">Your browser session is virtualized and actively processing webhooks.</p>
                                                     </div>
-
+                                                    
                                                     {waUser && (
                                                         <div className="flex items-center gap-3 bg-muted/30 p-2 pr-4 rounded-full border border-border/50 max-w-fit mx-auto">
                                                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-sm">
@@ -566,9 +461,9 @@ export default function SettingsPage() {
                                                         <Smartphone className="w-10 h-10 text-muted-foreground" />
                                                     </div>
                                                     <p className="text-xs text-muted-foreground font-medium">Capture a new session to begin self-hosted sync.</p>
-                                                    <Button
-                                                        className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:scale-105"
-                                                        onClick={handleConnect}
+                                                    <Button 
+                                                        className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:scale-105" 
+                                                        onClick={handleConnect} 
                                                         disabled={actionLoading || status === 'connecting'}
                                                     >
                                                         {status === 'connecting' ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Zap size={16} />}
@@ -579,11 +474,11 @@ export default function SettingsPage() {
                                         </AnimatePresence>
                                     )}
                                 </CardContent>
-
+                                
                                 <CardFooter className="bg-muted/5 border-t border-border/50 px-6 py-4 flex justify-between items-center overflow-hidden">
                                     <div className="flex items-center gap-4">
                                         <div className="flex -space-x-2">
-                                            {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full bg-card border-2 border-primary shadow-sm" />)}
+                                            {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full bg-card border-2 border-background shadow-sm" />)}
                                         </div>
                                         <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Active nodes supporting this method</span>
                                     </div>
@@ -600,7 +495,7 @@ export default function SettingsPage() {
                                     <h4 className="text-xs font-black uppercase tracking-tighter flex items-center gap-2 text-primary">
                                         <Server size={14} /> Instance Metadata
                                     </h4>
-
+                                    
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between group">
                                             <div className="flex items-center gap-3">
@@ -611,7 +506,7 @@ export default function SettingsPage() {
                                             </div>
                                             <Badge variant="outline" className="text-[9px] font-black border-blue-500/20 text-blue-500 bg-blue-500/5 uppercase">High-Grade</Badge>
                                         </div>
-
+                                        
                                         <div className="flex items-center justify-between group">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
@@ -621,7 +516,7 @@ export default function SettingsPage() {
                                             </div>
                                             <Badge variant="outline" className="text-[9px] font-black border-emerald-500/20 text-emerald-500 bg-emerald-500/5 uppercase">0.4ms</Badge>
                                         </div>
-
+                                        
                                         <div className="flex items-center justify-between group">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -632,9 +527,9 @@ export default function SettingsPage() {
                                             <Badge variant="outline" className="text-[9px] font-black border-amber-500/20 text-amber-500 bg-amber-500/5 uppercase">v21.0</Badge>
                                         </div>
                                     </div>
-
+                                    
                                     <Separator className="bg-border/50" />
-
+                                    
                                     <Button variant="ghost" className="w-full justify-between text-xs font-bold group hover:bg-primary/5 hover:text-primary transition-all">
                                         Developer Documentation
                                         <ExternalLink size={14} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -666,8 +561,8 @@ export default function SettingsPage() {
                                             <Bot className="w-4 h-4 text-primary" />
                                             Unified Responder
                                         </CardTitle>
-                                        <Switch
-                                            checked={metadata.autoResponderEnabled || false}
+                                        <Switch 
+                                            checked={metadata.autoResponderEnabled || false} 
                                             onCheckedChange={(checked) => handleSaveMetadata({ autoResponderEnabled: checked })}
                                         />
                                     </div>
@@ -677,8 +572,8 @@ export default function SettingsPage() {
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-sm font-semibold">AI Assistant Analysis</Label>
-                                            <Switch
-                                                checked={metadata.aiAssistantEnabled || false}
+                                            <Switch 
+                                                checked={metadata.aiAssistantEnabled || false} 
                                                 onCheckedChange={(checked) => handleSaveMetadata({ aiAssistantEnabled: checked })}
                                             />
                                         </div>
@@ -690,8 +585,8 @@ export default function SettingsPage() {
                                             <Label className="text-sm font-bold uppercase tracking-tight text-primary/80">Default Response Protocol</Label>
                                             <Badge variant="outline" className="text-[9px] h-5 opacity-40">Markdown Support Only</Badge>
                                         </div>
-                                        <Textarea
-                                            className="min-h-[140px] text-xs bg-muted/20 border-border/50 font-medium leading-relaxed"
+                                        <Textarea 
+                                            className="min-h-[140px] text-xs bg-muted/20 border-border/50 font-medium leading-relaxed" 
                                             placeholder="Hello! Thanks for reaching out to Devlomatix. We've received your inquiry and our team will get back to you shortly."
                                             value={metadata.welcomeMessage || ''}
                                             onChange={(e) => setMetadata({ ...metadata, welcomeMessage: e.target.value })}
@@ -730,10 +625,10 @@ export default function SettingsPage() {
                                             {(metadata.testNumbers || []).map((num) => (
                                                 <Badge key={num} variant="secondary" className="pl-4 pr-1.5 py-1.5 gap-2 border border-border/50 bg-card hover:border-primary/50 transition-all font-mono text-[10px] shadow-sm">
                                                     {num}
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive transition-colors rounded-full"
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive transition-colors rounded-full" 
                                                         onClick={() => handleRemoveNumber(num)}
                                                     >
                                                         <Trash2 className="h-3 w-3" />
@@ -796,8 +691,8 @@ export default function SettingsPage() {
                                                 <Globe className="w-4 h-4 text-primary/30 group-hover:text-primary transition-colors" />
                                             </div>
                                         </div>
-                                        <Button
-                                            variant="outline"
+                                        <Button 
+                                            variant="outline" 
                                             className="h-12 w-12 border-border hover:bg-primary/5 hover:border-primary/50 transition-all shadow-lg"
                                             onClick={() => copyToClipboard(webhookUrl)}
                                         >
@@ -814,7 +709,7 @@ export default function SettingsPage() {
                                         <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">Incoming request bodies are automatically decrypted using your project-wide symmetric keys.</p>
                                         <div className="p-2 bg-muted/60 rounded-lg text-[9px] font-mono opacity-60">AES-256-GCM / IV</div>
                                     </div>
-
+                                    
                                     <div className="p-5 bg-card border border-border/50 rounded-2xl space-y-4 shadow-sm group hover:border-primary/30 transition-all">
                                         <h5 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
                                             <Smartphone size={12} /> JID Translation
@@ -850,16 +745,6 @@ export default function SettingsPage() {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="space-y-2">
-                                <Label htmlFor="profile" className="text-xs font-bold uppercase tracking-tighter opacity-70">Account Nickname</Label>
-                                <Input
-                                    id="profile"
-                                    placeholder="e.g. Sales Account, Support Line"
-                                    value={tempCreds.profile}
-                                    onChange={(e) => setTempCreds({ ...tempCreds, profile: e.target.value })}
-                                    className="bg-muted/30 border-border/50 h-10 text-xs font-bold"
-                                />
-                            </div>
-                            <div className="space-y-2">
                                 <Label htmlFor="phoneId" className="text-xs font-bold uppercase tracking-tighter opacity-70">Phone Number ID</Label>
                                 <Input
                                     id="phoneId"
@@ -883,7 +768,6 @@ export default function SettingsPage() {
                                 <Label htmlFor="token" className="text-xs font-bold uppercase tracking-tighter opacity-70">Permanent Access Token</Label>
                                 <Textarea
                                     id="token"
-                                    rows={5}
                                     placeholder="EAAGz..."
                                     value={tempCreds.accessToken}
                                     onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })}
@@ -893,56 +777,22 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <DialogFooter className="pt-4 border-t border-border/50">
-                            <Button
-                                variant="ghost"
+                            <Button 
+                                variant="ghost" 
                                 size="sm"
-                                onClick={() => setIsCredsModalOpen(false)}
+                                onClick={() => setIsCredsModalOpen(false)} 
                                 className="font-bold h-10 border border-transparent hover:border-border"
                             >
                                 Cancel
                             </Button>
-                            <Button
-                                variant="default"
-                                size="sm"
+                            <Button 
+                                variant="default" 
+                                size="sm" 
                                 onClick={handleSaveCloudCreds}
                                 disabled={cloudLoading}
                                 className="bg-primary hover:bg-primary/90 font-black h-10 px-8 shadow-lg"
                             >
                                 {cloudLoading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : 'Save Credentials'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Delete Confirmation Modal */}
-                <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-                    <DialogContent className="sm:max-w-[400px] bg-card border-border shadow-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl font-black flex items-center gap-2 text-destructive">
-                                <AlertCircle className="h-5 w-5" />
-                                Remove Account?
-                            </DialogTitle>
-                            <DialogDescription className="text-xs font-medium pt-2">
-                                Are you sure you want to remove <span className="font-bold text-foreground">"{accountToDelete?.profile}"</span>? This action cannot be undone and will stop all active automations for this account.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter className="pt-6 border-t border-border/50 gap-2">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsDeleteModalOpen(false)}
-                                className="font-bold h-10 border border-border flex-1"
-                            >
-                                Keep Account
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={handleDeleteCloudCred}
-                                disabled={cloudLoading}
-                                className="bg-destructive hover:bg-destructive/90 font-black h-10 px-8 shadow-lg flex-1"
-                            >
-                                {cloudLoading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : 'Yes, Delete'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
