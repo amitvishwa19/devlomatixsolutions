@@ -55,7 +55,7 @@ html {
 }
 
 :root {
-  --radius: 0.50rem;
+  --radius: 0.75rem;
 }
 
 /* Dark theme (default) */
@@ -102,10 +102,6 @@ html {
   --shadow-elevated: 0 4px 12px hsl(220 40% 4% / 0.4), 0 16px 48px hsl(220 40% 4% / 0.3);
   --shadow-glow: 0 0 30px hsl(190 90% 50% / 0.15);
   --shadow-glow-lg: 0 0 60px hsl(190 90% 50% / 0.25), 0 0 120px hsl(190 90% 50% / 0.1);
-
-  /* Brand Colors */
-  --kx-cyan: 190 90% 50%;
-  --kx-teal: 170 80% 45%;
 }
 
 /* Light theme */
@@ -213,15 +209,6 @@ html {
   .section-divider {
     background: linear-gradient(90deg, transparent, hsl(220 25% 14%), transparent);
     height: 1px;
-  }
-
-  .text-glow {
-    text-shadow: 0 0 10px hsl(190 90% 50% / 0.3);
-  }
-
-  .border-glow {
-    box-shadow: 0 0 15px hsl(190 90% 50% / 0.1);
-    border-color: hsl(190 90% 50% / 0.2);
   }
 
   .shimmer {

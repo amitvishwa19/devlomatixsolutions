@@ -1,22 +1,30 @@
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useSession } from 'next-auth/react';
-import { Trash2, UserPlus, Users, Phone, Mail, Pencil, X, Search, ArrowUpDown, Download, Upload, RefreshCw, Tag, FileText, Send, History } from 'lucide-react';
+import {
+    Trash2, UserPlus, Users, Phone, Mail, Pencil, X, Search,
+    ArrowUpDown, Download, Upload, RefreshCw, Tag, FileText,
+    Send, History, Filter, LayoutGrid, List, MoreVertical,
+    Plus, Check, Star, ShieldCheck, Zap, Globe, MessageSquare,
+    ChevronRight, Layers, Bookmark, Settings2, ExternalLink
+} from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-
     DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from
-    "@/components/ui/dropdown-menu";
+    DropdownMenuTrigger,
+    DropdownMenuLabel
+} from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -26,8 +34,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle
-} from
-    "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import {
     Dialog,
     DialogContent,
@@ -35,1668 +42,1123 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle
-} from
-    "@/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
     Sheet,
     SheetContent,
     SheetDescription,
     SheetHeader,
-    SheetTitle
-} from
-    "@/components/ui/sheet";
+    SheetTitle,
+    SheetFooter
+} from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger
-} from
-    "@/components/ui/tabs";
-
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export default function ContactsPage() {
-    const [contacts, setContacts] = useState([]);
-    const [newContact, setNewContact] = useState({
-        name: '',
-        phone: '',
-        email: '',
-        info: ''
-    });
+    const params = useParams();
+    const workspaceId = params.workspaceId;
     const { data: session } = useSession();
-    const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
     const userId = session?.user?.userId || '';
+    const { toast } = useToast();
 
-    // Editing State
-    const [editModalOpen, setEditModalOpen] = useState(false);
-    const [editingContact, setEditingContact] = useState({
-        id: '',
-        name: '',
-        phone: '',
-        email: '',
-        info: ''
-    });
+    // Core Data State
+    const [contacts, setContacts] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [tagDefinitions, setTagDefinitions] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Send Message State
-    const [sendMessageModalOpen, setSendMessageModalOpen] = useState(false);
-    const [selectedContactForMessage, setSelectedContactForMessage] = useState(null);
-    const [testMessageText, setTestMessageText] = useState('Hello! This is a test message from Devlomatix.');
-    const [sendingMessage, setSendingMessage] = useState(false);
-
-    // Selection State
+    // UI/Selection State
     const [selectedContacts, setSelectedContacts] = useState([]);
-
-    // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState('newest'); // newest, oldest, name-asc, name-desc
-    const [filterTag, setFilterTag] = useState('all');
+    const [sortBy, setSortBy] = useState('newest');
+    const [viewMode, setViewMode] = useState('list'); // list, grid
 
-    // Deletion Modal State
-    const [contactToDelete, setContactToDelete] = useState(null);
-    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    // Sidebar/Filter State
+    const [activeSegment, setActiveSegment] = useState('all'); // all, group:[id], category:[id], tag:[name]
+    const [waStatus, setWaStatus] = useState('loading');
 
-    // Tagging Modal State
-    const [tagModalOpen, setTagModalOpen] = useState(false);
-    const [tagInput, setTagInput] = useState('');
+    // Modals & Sheets
+    const [isAddContactOpen, setIsAddContactOpen] = useState(false);
+    const [isEditContactOpen, setIsEditContactOpen] = useState(false);
+    const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
+    const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
+    const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
+    const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isMessageOpen, setIsMessageOpen] = useState(false);
 
-    // WA Connection Status
-    const [waStatus, setWaStatus] = useState('welcome'); // welcome, connecting, qr, open, close
-
-    // History Drawer State
-    const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
-    const [selectedContactForHistory, setSelectedContactForHistory] = useState(null);
+    // Active Entity State (for editing/messing)
+    const [activeContact, setActiveContact] = useState(null);
     const [historyMessages, setHistoryMessages] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
+    const [messageText, setMessageText] = useState('');
+    const [tagInput, setTagInput] = useState('');
+    const [categoryInput, setCategoryInput] = useState('');
+    const [isImporting, setIsImporting] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-    // Groups State
-    const [groups, setGroups] = useState([]);
-    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
-    const [isAddingToGroupModalOpen, setIsAddingToGroupModalOpen] = useState(false);
-    const [newGroup, setNewGroup] = useState({ name: '', description: '' });
-    const [selectedGroupId, setSelectedGroupId] = useState('all');
-    const [activeTab, setActiveTab] = useState('contacts');
+    // Form State for Adding/Editing
+    const [contactForm, setContactForm] = useState({
+        name: '',
+        phone: '',
+        email: '',
+        categoryId: '',
+        tags: [],
+        info: ''
+    });
 
-    // Member Selector for Group View
-    const [isMemberSelectorOpen, setIsMemberSelectorOpen] = useState(false);
-    const [activeGroupId, setActiveGroupId] = useState(null);
-    const [memberSearchQuery, setMemberSearchQuery] = useState('');
-    const [selectedMemberIds, setSelectedMemberIds] = useState([]);
-    const [editingGroupId, setEditingGroupId] = useState(null);
-    const [groupEditName, setGroupEditName] = useState('');
-
-    // Filtered and Sorted Contacts
-    const filteredContacts = contacts.
-        filter((contact) => {
+    // Computed: Filtered Contacts
+    const filteredContacts = useMemo(() => {
+        return contacts.filter(contact => {
             const matchesSearch =
                 contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 contact.phone.includes(searchQuery) ||
-                contact.email && contact.email.toLowerCase().includes(searchQuery.toLowerCase());
+                contact.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
-            const matchesTag = filterTag === 'all' || contact.tags && contact.tags.includes(filterTag);
+            let matchesSegment = true;
+            if (activeSegment.startsWith('group:')) {
+                const groupId = activeSegment.split(':')[1];
+                matchesSegment = contact.groups?.some(g => g.id === groupId);
+            } else if (activeSegment.startsWith('category:')) {
+                const catId = activeSegment.split(':')[1];
+                matchesSegment = contact.categoryId === catId;
+            } else if (activeSegment.startsWith('tag:')) {
+                const tagName = activeSegment.split(':')[1];
+                matchesSegment = contact.tags?.includes(tagName);
+            }
 
-            const matchesGroup = selectedGroupId === 'all' || contact.groups && contact.groups.some((g) => g.id === selectedGroupId);
-
-            return matchesSearch && matchesTag && matchesGroup;
-        }).
-        sort((a, b) => {
+            return matchesSearch && matchesSegment;
+        }).sort((a, b) => {
             if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
             if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
             if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
             if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
             return 0;
         });
+    }, [contacts, searchQuery, activeSegment, sortBy]);
 
-    // All available tags
-    const allTags = Array.from(new Set(contacts.flatMap((c) => c.tags || [])));
+    // Computed: All Unique Tags (for ad-hoc usage)
+    const allTags = useMemo(() => {
+        const tags = new Set(contacts.flatMap(c => c.tags || []));
+        return Array.from(tags).sort();
+    }, [contacts]);
 
-    // Selection Handlers
-    const toggleSelectAll = () => {
-        if (selectedContacts.length === filteredContacts.length) {
-            setSelectedContacts([]);
-        } else {
-            setSelectedContacts(filteredContacts.map((c) => c.id));
-        }
-    };
-
-    const toggleSelectContact = (id) => {
-        setSelectedContacts((prev) =>
-            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-        );
-    };
-
-    // Fetch contacts and check WA status
+    // Initial Load
     useEffect(() => {
-        if (userId) {
-            fetchContacts();
-            fetchGroups();
+        if (userId && workspaceId) {
+            fetchInitialData();
             checkWAStatus();
-
-            // Poll WA status every 10 seconds
-            const interval = setInterval(checkWAStatus, 10000);
+            const interval = setInterval(checkWAStatus, 30000);
             return () => clearInterval(interval);
         }
-    }, [userId]);
+    }, [userId, workspaceId]);
+
+    const fetchInitialData = async () => {
+        setLoading(true);
+        try {
+            await Promise.all([
+                fetchContacts(),
+                fetchGroups(),
+                fetchCategories(),
+                fetchTagLibrary()
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- API Handlers ---
+
+    const fetchContacts = async () => {
+        const res = await fetch(`/api/wa/contacts?userId=${userId}&workspaceId=${workspaceId}`);
+        if (res.ok) setContacts(await res.json());
+    };
 
     const fetchGroups = async () => {
-        try {
-            const res = await fetch(`/api/wa/groups?userId=${userId}`);
-            if (res.ok) {
-                const data = await res.json();
-                setGroups(data);
-            }
-        } catch (error) {
-            console.error('Error fetching groups:', error);
-        }
+        const res = await fetch(`/api/wa/groups?userId=${userId}&workspaceId=${workspaceId}`);
+        if (res.ok) setGroups(await res.json());
+    };
+
+    const fetchCategories = async () => {
+        const res = await fetch(`/api/wa/categories?workspaceId=${workspaceId}&type=CONTACT`);
+        if (res.ok) setCategories(await res.json());
+    };
+
+    const fetchTagLibrary = async () => {
+        const res = await fetch(`/api/wa/categories?workspaceId=${workspaceId}&type=TAG`);
+        if (res.ok) setTagDefinitions(await res.json());
     };
 
     const checkWAStatus = async () => {
-        try {
-            const response = await fetch('/api/wa/auth');
-            if (response.ok) {
-                const data = await response.json();
-                setWaStatus(data.status);
-            }
-        } catch (error) {
-            console.error('Error checking WA status:', error);
+        const res = await fetch('/api/wa/auth');
+        if (res.ok) {
+            const data = await res.json();
+            setWaStatus(data.status);
         }
     };
 
-    const fetchHistory = async (jid) => {
-        if (!userId || !jid) return;
-        setHistoryLoading(true);
-        try {
-            const res = await fetch(`/api/wa/messages?userId=${userId}&jid=${jid}&limit=50`);
-            if (res.ok) {
-                const data = await res.json();
-                setHistoryMessages(data);
-            }
-        } catch (error) {
-            console.error('Error fetching history:', error);
-        } finally {
-            setHistoryLoading(false);
-        }
-    };
-
-    const openHistory = (contact) => {
-        setSelectedContactForHistory(contact);
-        setHistoryDrawerOpen(true);
-        fetchHistory(contact.phone.includes('@') ? contact.phone : `${contact.phone.replace(/\D/g, '')}@s.whatsapp.net`);
-    };
-
-    const fetchContacts = async () => {
-        setLoading(true);
-        try {
-            const response = await fetch(`/api/wa/contacts?userId=${userId}`);
-            if (!response.ok) throw new Error('Failed to fetch contacts');
-            const data = await response.json();
-            // Ensure groups array exists
-            const enrichedContacts = data.map((c) => ({
-                ...c,
-                groups: c.groups || []
-            }));
-            setContacts(enrichedContacts);
-        } catch (error) {
-            console.error('Error fetching contacts:', error);
-            toast({
-                title: "Error",
-                description: "Failed to fetch contacts",
-                variant: "destructive"
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewContact((prev) => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleSubmit = async (e) => {
+    const handleSaveContact = async (e) => {
         e.preventDefault();
-        if (!userId) {
-            toast({
-                title: "Error",
-                description: "User not authenticated",
-                variant: "destructive"
-            });
-            return;
-        }
+        const method = activeContact ? 'PATCH' : 'POST';
+        const url = activeContact ? `/api/wa/contacts/${activeContact.id}` : '/api/wa/contacts';
 
-        setLoading(true);
         try {
-            const response = await fetch('/api/wa/contacts', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ...newContact,
-                    userId
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to create contact');
-            }
-
-            const savedContact = await response.json();
-            setContacts((prev) => [savedContact, ...prev]);
-            setNewContact({ name: '', phone: '', email: '', info: '' });
-
-            toast({
-                title: "Success",
-                description: 'Contact added successfully'
-            });
-        } catch (error) {
-            console.error('Error creating contact:', error);
-            const message = error instanceof Error ? error.message : "Failed to create contact";
-            toast({
-                title: "Error",
-                description: message,
-                variant: "destructive"
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const startEditing = (contact) => {
-        setEditingContact({
-            id: contact.id,
-            name: contact.name,
-            phone: contact.phone,
-            email: contact.email || '',
-            info: contact.info?.notes || contact.info || ''
-        });
-        setEditModalOpen(true);
-    };
-
-    const handleSendMessage = async () => {
-        if (!selectedContactForMessage || !testMessageText.trim()) return;
-
-        setSendingMessage(true);
-        try {
-            const response = await fetch('/api/wa/send-browser', {
-                method: 'POST',
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: selectedContactForMessage.phone,
-                    text: testMessageText
-                })
+                body: JSON.stringify({ ...contactForm, userId, workspaceId })
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to send message');
+            if (res.ok) {
+                toast({ title: activeContact ? "Updated" : "Created", description: "Contact saved successfully." });
+                fetchContacts();
+                setIsAddContactOpen(false);
+                setIsEditContactOpen(false);
+                setActiveContact(null);
+                setContactForm({ name: '', phone: '', email: '', categoryId: '', tags: [], info: '' });
             }
-
-            toast({
-                title: "Message Sent",
-                description: `Successfully sent test message to ${selectedContactForMessage.name}`
-            });
-            setSendMessageModalOpen(false);
-            setTestMessageText('Hello! This is a test message from Devlomatix.');
         } catch (error) {
-            console.error('Send error:', error);
-            toast({
-                title: "Send Error",
-                description: error instanceof Error ? error.message : "Failed to send message",
-                variant: "destructive"
-            });
-        } finally {
-            setSendingMessage(false);
-        }
-    };
-
-    const handleEditChange = (e) => {
-        const { name, value } = e.target;
-        setEditingContact((prev) => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const response = await fetch(`/api/wa/contacts/${editingContact.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: editingContact.name,
-                    phone: editingContact.phone,
-                    email: editingContact.email,
-                    info: editingContact.info
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update contact');
-            }
-
-            const updated = await response.json();
-            setContacts((prev) => prev.map((c) => c.id === editingContact.id ? updated : c));
-            setEditModalOpen(false);
-
-            toast({
-                title: "Updated",
-                description: "Contact updated successfully"
-            });
-        } catch (error) {
-            console.error('Error updating contact:', error);
-            toast({
-                title: "Error",
-                description: "Failed to update contact",
-                variant: "destructive"
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const deleteContact = async () => {
-        const id = contactToDelete?.id;
-        if (!id) return;
-
-        try {
-            const response = await fetch(`/api/wa/contacts/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) throw new Error('Failed to delete contact');
-
-            setContacts((prev) => prev.filter((c) => c.id !== id));
-            setSelectedContacts((prev) => prev.filter((i) => i !== id));
-            toast({
-                title: "Deleted",
-                description: "Contact removed successfully"
-            });
-        } catch (error) {
-            console.error('Error deleting contact:', error);
-            toast({
-                title: "Error",
-                description: "Failed to delete contact",
-                variant: "destructive"
-            });
-        } finally {
-            setDeleteModalOpen(false);
-            setContactToDelete(null);
+            toast({ title: "Error", description: "Operation failed.", variant: "destructive" });
         }
     };
 
     const handleBulkDelete = async () => {
-        if (selectedContacts.length === 0) return;
-
-        setLoading(true);
+        setIsBulkProcessing(true);
         try {
-            const response = await fetch('/api/wa/contacts/bulk-delete', {
+            const res = await fetch('/api/wa/contacts/bulk-delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: selectedContacts })
             });
-
-            if (!response.ok) throw new Error('Failed to delete contacts');
-
-            const { count } = await response.json();
-            setContacts((prev) => prev.filter((c) => !selectedContacts.includes(c.id)));
-            setSelectedContacts([]);
-
-            toast({
-                title: "Bulk Delete",
-                description: `Successfully deleted ${count} contacts`
-            });
+            if (res.ok) {
+                toast({ title: "Deleted", description: "Selected contacts removed." });
+                fetchContacts();
+                setSelectedContacts([]);
+                setIsDeleteConfirmOpen(false);
+            }
         } catch (error) {
-            console.error('Bulk delete error:', error);
-            toast({
-                title: "Error",
-                description: "Failed to perform bulk delete",
-                variant: "destructive"
-            });
+            toast({ title: "Error", description: "Bulk delete failed.", variant: "destructive" });
         } finally {
-            setLoading(false);
+            setIsBulkProcessing(false);
+        }
+    };
+
+    const handleBulkTag = async () => {
+        if (!tagInput) return;
+        setIsBulkProcessing(true);
+        try {
+            const res = await fetch('/api/wa/contacts/bulk-tag', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedContacts, tag: tagInput })
+            });
+            if (res.ok) {
+                toast({ title: "Tagged", description: `Added tag to ${selectedContacts.length} contacts.` });
+                fetchContacts();
+                setIsBulkTagOpen(false);
+                setTagInput('');
+                setSelectedContacts([]);
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Bulk tagging failed.", variant: "destructive" });
+        } finally {
+            setIsBulkProcessing(false);
+        }
+    };
+
+    const handleBulkCategory = async (categoryId) => {
+        setIsBulkProcessing(true);
+        try {
+            const res = await fetch('/api/wa/contacts/bulk-category', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedContacts, categoryId })
+            });
+            if (res.ok) {
+                toast({ title: "Updated", description: `Moved ${selectedContacts.length} contacts to new category.` });
+                fetchContacts();
+                setIsBulkCategoryOpen(false);
+                setSelectedContacts([]);
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Bulk move failed.", variant: "destructive" });
+        } finally {
+            setIsBulkProcessing(false);
+        }
+    };
+
+    const handleSendMessage = async () => {
+        if (!activeContact || !messageText) return;
+        try {
+            const res = await fetch('/api/wa/send-browser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to: activeContact.phone, text: messageText })
+            });
+            if (res.ok) {
+                toast({ title: "Sent", description: "Message delivery initiated." });
+                setIsMessageOpen(false);
+                setMessageText('');
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Delivery failed.", variant: "destructive" });
         }
     };
 
     const handleSync = async () => {
-        if (waStatus !== 'open') {
-            toast({
-                title: "Not Connected",
-                description: "Please connect your WhatsApp before syncing contacts.",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        setLoading(true);
+        toast({ title: "Sync Started", description: "Pulling contacts from WhatsApp..." });
         try {
-            const response = await fetch('/api/wa/contacts/sync', {
+            const res = await fetch('/api/wa/contacts/sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId })
+                body: JSON.stringify({ userId, workspaceId })
             });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to sync with WhatsApp');
+            if (res.ok) {
+                toast({ title: "Sync Complete", description: "Audience updated." });
+                fetchContacts();
             }
-
-            const { count, message } = await response.json();
-
-            // Refresh contacts after sync
-            const contactsResponse = await fetch(`/api/wa/contacts?userId=${userId}`);
-            const updatedContacts = await contactsResponse.json();
-            setContacts(updatedContacts);
-
-            toast({
-                title: "WhatsApp Sync",
-                description: message
-            });
         } catch (error) {
-            console.error('Sync error:', error);
-            toast({
-                title: "Sync Error",
-                description: error instanceof Error ? error.message : "Failed to sync with WhatsApp. Make sure your WhatsApp is connected.",
-                variant: "destructive"
-            });
-        } finally {
-            setLoading(false);
+            toast({ title: "Sync Failed", description: "Connectivity issue.", variant: "destructive" });
         }
     };
 
-    const handleImport = async (e) => {
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            const res = await fetch(`/api/wa/contacts/export?workspaceId=${workspaceId}`);
+            if (!res.ok) throw new Error('Export failed');
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `contacts-${workspaceId}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            toast({ title: "Export Success", description: "CSV file downloaded." });
+        } catch (error) {
+            toast({ title: "Export Failed", description: "Could not generate CSV.", variant: "destructive" });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleImportFile = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = async (event) => {
-            const text = event.target.result;
-            const lines = text.split('\n');
-            const data = [];
-
-            // Simple CSV parsing: name,phone,email
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-
-                const [name, phone, email] = line.split(',');
-                if (name && phone) {
-                    data.push({ name: name.trim(), phone: phone.trim(), email: email?.trim() });
-                }
-            }
-
-            if (data.length === 0) {
-                toast({ title: "Import Error", description: "No valid contact data found in CSV", variant: "destructive" });
-                return;
-            }
-
-            setLoading(true);
-            try {
-                const response = await fetch('/api/wa/contacts/bulk', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId, contacts: data })
-                });
-
-                if (!response.ok) throw new Error('Failed to import contacts');
-
-                const { count } = await response.json();
-
-                // Refresh list
-                const contactsResponse = await fetch(`/api/wa/contacts?userId=${userId}`);
-                const updatedContacts = await contactsResponse.json();
-                setContacts(updatedContacts);
-
-                toast({
-                    title: "Import Success",
-                    description: `Successfully imported ${count} contacts`
-                });
-            } catch (error) {
-                console.error('Import error:', error);
-                toast({ title: "Error", description: "Failed to import contacts", variant: "destructive" });
-            } finally {
-                setLoading(false);
-            }
+            const csvData = event.target.result;
+            await runImport(csvData);
         };
         reader.readAsText(file);
+        // Reset input
+        e.target.value = '';
     };
 
-    const handleBulkTag = async () => {
-        if (selectedContacts.length === 0 || !tagInput) return;
-
-        setLoading(true);
+    const runImport = async (csvData) => {
+        setIsImporting(true);
+        toast({ title: "Importing...", description: "Processing CSV data." });
         try {
-            const response = await fetch('/api/wa/contacts/bulk-tag', {
+            const res = await fetch('/api/wa/contacts/import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: selectedContacts, tag: tagInput })
+                body: JSON.stringify({ csvData, workspaceId, userId })
             });
 
-            if (!response.ok) throw new Error('Failed to tag contacts');
-
-            const { count } = await response.json();
-
-            // Refresh list
-            const contactsResponse = await fetch(`/api/wa/contacts?userId=${userId}`);
-            const updatedContacts = await contactsResponse.json();
-            setContacts(updatedContacts);
-
-            setTagModalOpen(false);
-            setTagInput('');
-            setSelectedContacts([]);
-
-            toast({
-                title: "Bulk Tag",
-                description: `Successfully added tag"${tagInput}"to ${count} contacts`
-            });
-        } catch (error) {
-            console.error('Bulk tag error:', error);
-            toast({ title: "Error", description: "Failed to perform bulk tagging", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleCreateGroup = async () => {
-        if (!newGroup.name) return;
-        setLoading(true);
-        try {
-            const res = await fetch('/api/wa/groups', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...newGroup, userId })
-            });
             if (res.ok) {
                 const data = await res.json();
-                setGroups((prev) => [...prev, data]);
-                setNewGroup({ name: '', description: '' });
-                setIsGroupModalOpen(false);
-                toast({ title: "Group Created", description: `Group"${data.name}"has been created.` });
+                toast({
+                    title: "Import Complete",
+                    description: `Successfully added ${data.stats.success} contacts.`
+                });
+                fetchContacts();
+            } else {
+                throw new Error('Import failed');
             }
         } catch (error) {
-            console.error('Error creating group:', error);
+            toast({ title: "Import Failed", description: "Check CSV format.", variant: "destructive" });
         } finally {
-            setLoading(false);
+            setIsImporting(false);
         }
     };
 
-    const handleUpdateGroup = async (groupId) => {
-        if (!groupEditName.trim()) return;
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/wa/groups/${groupId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: groupEditName, userId })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, name: data.name } : g));
-                setEditingGroupId(null);
-                setGroupEditName('');
-                toast({ title: "Group Updated", description: "The group name has been successfully updated." });
-                fetchContacts(); // Refresh to see updated group name in contacts
-            }
-        } catch (error) {
-            console.error('Error updating group:', error);
-            toast({ title: "Update Error", description: "Failed to update group name.", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
-    };
+    const handleDownloadTemplate = () => {
+        const headers = 'name,phone,email,category,tags';
+        const sampleRow = 'John Doe,919876543210,john@example.com,VIP,tag1|tag2';
+        const csvContent = `${headers}\n${sampleRow}`;
 
-    const handleRemoveFromGroup = async (contactId, groupId) => {
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/wa/groups/${groupId}/contacts`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contactIds: [contactId] })
-            });
-            if (res.ok) {
-                // Refresh local state
-                setContacts((prev) => prev.map((c) => {
-                    if (c.id === contactId) {
-                        return {
-                            ...c,
-                            groups: c.groups.filter((g) => g.id !== groupId)
-                        };
-                    }
-                    return c;
-                }));
-                // Also update groups count
-                setGroups((prev) => prev.map((g) => {
-                    if (g.id === groupId) {
-                        return {
-                            ...g,
-                            _count: { ...g._count, contacts: (g._count?.contacts || 1) - 1 }
-                        };
-                    }
-                    return g;
-                }));
-                toast({ title: "Removed from Group", description: "Contact was successfully removed from the group." });
-            }
-        } catch (error) {
-            console.error('Error removing from group:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAddToGroup = async (groupId) => {
-        if (selectedContacts.length === 0) return;
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/wa/groups/${groupId}/contacts`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contactIds: selectedContacts })
-            });
-            if (res.ok) {
-                // Refresh contacts and groups
-                await fetchContacts();
-                await fetchGroups();
-                setIsAddingToGroupModalOpen(false);
-                setSelectedContacts([]);
-                toast({ title: "Contacts Added", description: `Successfully added ${selectedContacts.length} contacts to the group.` });
-            }
-        } catch (error) {
-            console.error('Error adding to group:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleDeleteGroup = async (groupId) => {
-        try {
-            const res = await fetch(`/api/wa/groups/${groupId}`, { method: 'DELETE' });
-            if (res.ok) {
-                setGroups((prev) => prev.filter((g) => g.id !== groupId));
-                if (selectedGroupId === groupId) setSelectedGroupId('all');
-                toast({ title: "Group Deleted" });
-            }
-        } catch (error) {
-            console.error('Error deleting group:', error);
-        }
-    };
-
-    const downloadTemplate = () => {
-        const csv = "Name,Phone,Email\nJohn Doe,+1234567890,john@example.com\nJane Smith,+9876543210,jane@example.com";
-        const blob = new Blob([csv], { type: 'text/csv' });
+        const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'whatsapp_contacts_template.csv');
+        a.href = url;
+        a.download = 'contacts_template.csv';
+        document.body.appendChild(a);
         a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({ title: "Template Saved", description: "CSV template downloaded." });
     };
 
+    // --- Helpers ---
+
+    const getCategoryColor = (catId) => {
+        const cat = categories.find(c => c.id === catId);
+        return cat?.color || '#3b82f6';
+    };
+
+    const getTagName = (tagName) => {
+        const def = tagDefinitions.find(t => t.name === tagName);
+        return def?.name || tagName;
+    };
+
+    const getTagColor = (tagName) => {
+        const def = tagDefinitions.find(t => t.name === tagName);
+        return def?.color || 'hsl(var(--muted))';
+    };
+
+    // --- Render ---
+
     return (
-        <>
-            <div className="animate-in fade-in duration-500">
-                <div>
-                    <h1 className="text-xl font-bold text-white mb-2">Contacts</h1>
-                    <p className="text-muted-foreground text-xs">Manage your WhatsApp audience and contact lists</p>
+        <div className="flex flex-col h-[calc(100vh-70px)] overflow-hidden bg-background">
+
+            {/* Upper Action Bar */}
+            <div className="flex items-center justify-between py-2 px-4 border-b bg-card/30">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-xl font-bold tracking-tight">CRM Audience</h1>
+                    <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10">
+                        <div className={`w-1.5 h-1.5 rounded-full ${waStatus === 'open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500'}`} />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            WA: {waStatus === 'open' ? 'Connected' : 'Disconnected'}
+                        </span>
+                    </div>
                 </div>
 
-                <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6'>
-
-                    {/* Add Contact Form */}
-                    <div className="lg:col-span-5 bg-background/50 rounded-md border border-border p-6 h-fit">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold">Add New Contact</h2>
-                        </div>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                                <div>
-                                    <label className="block text-xs font-medium mb-1">Name</label>
-                                    <Input
-                                        type="text"
-                                        name="name"
-                                        value={newContact.name}
-                                        onChange={handleInputChange}
-                                        required
-                                        placeholder="Enter contact name" />
-
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Phone Number</label>
-                                    <Input
-                                        type="tel"
-                                        name="phone"
-                                        value={newContact.phone}
-                                        onChange={handleInputChange}
-                                        required
-                                        placeholder="Enter phone number" />
-
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Email (Optional)</label>
-                                    <Input
-                                        type="email"
-                                        name="email"
-                                        value={newContact.email}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter email address" />
-
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Additional Info (Optional)</label>
-                                    <Input
-                                        type="text"
-                                        name="info"
-                                        value={newContact.info}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter notes or additional info" />
-
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full mt-2">
-
-                                {loading ? 'Adding...' : 'Add Contact'}
-                            </Button>
-                        </form>
-                    </div>
-
-                    {/* Contacts List */}
-                    <div className="lg:col-span-7 bg-background/50 rounded-md border border-border p-6 h-full flex flex-col min-h-[600px]">
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-                            <TabsList className="mb-4 w-full justify-start h-11 bg-muted/20 p-1 border border-border/50">
-                                <TabsTrigger value="contacts" className="gap-2 px-4 data-[state=active]:bg-background">
-                                    <Users className="w-4 h-4" />
-                                    Contacts
-                                </TabsTrigger>
-                                <TabsTrigger value="groups" className="gap-2 px-4 data-[state=active]:bg-background">
-                                    <Users className="w-4 h-4" />
-                                    Groups
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="contacts" className="flex-1 flex flex-col m-0 p-0 border-0 outline-none">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                                    <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-semibold">Your Audience ({filteredContacts.length})</h2>
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${waStatus === 'open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'}`} />
-                                            <span className="text-[10px] font-bold tracking-wider text-muted-foreground">
-                                                WA Status: {waStatus === 'open' ? 'Connected' : 'Disconnected'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            variant={waStatus === 'open' ? "outline" : "default"}
-                                            size="sm"
-                                            className={`gap-2 h-8 ${waStatus !== 'open' ? 'bg-primary/20 hover:bg-primary/30 text-primary border-primary/50' : ''}`}
-                                            onClick={handleSync}
-                                            disabled={loading}>
-                                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                                            <span className="hidden md:inline">{waStatus === 'open' ? 'Sync WA' : 'Connect to Sync'}</span>
-                                        </Button>
-
-                                        <div className="flex items-center">
-                                            <label className="cursor-pointer">
-                                                <Button variant="outline" size="sm" className="gap-2 rounded-r-none border-r-0" asChild disabled={loading}>
-                                                    <span>
-                                                        <Upload className="w-4 h-4" />
-                                                        <span className="hidden md:inline">Import</span>
-                                                    </span>
-                                                </Button>
-                                                <input type="file" accept=".csv" className="hidden" onChange={handleImport} />
-                                            </label>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 w-8 p-0 rounded-l-none border-l border-l-border/30"
-                                                onClick={downloadTemplate}
-                                                title="Download CSV Template">
-                                                <FileText className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Search, Sort and Group Filter Bar */}
-                                <div className="flex flex-col md:flex-row gap-3 mb-6">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search contacts..."
-                                            className="pl-9"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)} />
-
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" className="gap-2">
-                                                    <Users className="w-4 h-4" />
-                                                    <span className="hidden sm:inline">Group: {selectedGroupId === 'all' ? 'All' : groups.find((g) => g.id === selectedGroupId)?.name}</span>
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => setSelectedGroupId('all')}>All Contacts</DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                {groups.map((group) =>
-                                                    <DropdownMenuItem key={group.id} onClick={() => setSelectedGroupId(group.id)}>
-                                                        {group.name} ({group._count?.contacts})
-                                                    </DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" className="gap-2">
-                                                    <ArrowUpDown className="w-4 h-4" />
-                                                    <span className="hidden sm:inline">Sort: {sortBy}</span>
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => setSortBy('newest')}>Newest First</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => setSortBy('oldest')}>Oldest First</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => setSortBy('name-asc')}>Name (A-Z)</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => setSortBy('name-desc')}>Name (Z-A)</DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-
-                                        {allTags.length > 0 &&
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" className="gap-2">
-                                                        <Tag className="w-4 h-4" />
-                                                        <span className="hidden sm:inline">Tag: {filterTag}</span>
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => setFilterTag('all')}>All Tags</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    {allTags.map((tag) =>
-                                                        <DropdownMenuItem key={tag} onClick={() => setFilterTag(tag)}>
-                                                            {tag}
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        }
-                                    </div>
-                                </div>
-
-                                {/* Bulk Selection Bar */}
-                                <div className="flex items-center justify-between py-2 px-3 mb-4 bg-muted/30 rounded-md border border-border/50">
-                                    <div className="flex items-center gap-3">
-                                        <Checkbox
-                                            checked={filteredContacts.length > 0 && selectedContacts.length === filteredContacts.length}
-                                            onCheckedChange={toggleSelectAll} />
-
-                                        <span className="text-sm font-medium">
-                                            {selectedContacts.length > 0 ? `${selectedContacts.length} selected` : 'Select All'}
-                                        </span>
-                                    </div>
-
-                                    {selectedContacts.length > 0 &&
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
-                                                onClick={handleBulkDelete}
-                                                disabled={loading}>
-
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                                Delete
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 gap-1"
-                                                onClick={() => setTagModalOpen(true)}
-                                                disabled={loading}>
-
-                                                <Tag className="w-3.5 h-3.5" />
-                                                Tag
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 gap-1"
-                                                onClick={() => setIsAddingToGroupModalOpen(true)}
-                                                disabled={loading}>
-
-                                                <Users className="w-3.5 h-3.5" />
-                                                Add to Group
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 gap-1"
-                                                onClick={() => {
-                                                    const csv = "Name,Phone,Email\n" + contacts.
-                                                        filter((c) => selectedContacts.includes(c.id)).
-                                                        map((c) => `${c.name},${c.phone},${c.email || ''}`).
-                                                        join('\n');
-                                                    const blob = new Blob([csv], { type: 'text/csv' });
-                                                    const url = window.URL.createObjectURL(blob);
-                                                    const a = document.createElement('a');
-                                                    a.setAttribute('href', url);
-                                                    a.setAttribute('download', `whatsapp_contacts_export_${new Date().toISOString().split('T')[0]}.csv`);
-                                                    a.click();
-                                                }}>
-
-                                                <Download className="w-3.5 h-3.5" />
-                                                Export
-                                            </Button>
-                                        </div>
-                                    }
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-                                    {loading && contacts.length === 0 ?
-                                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                                            <RefreshCw className="w-8 h-8 animate-spin" />
-                                            <p>Loading contacts...</p>
-                                        </div> :
-                                        filteredContacts.length === 0 ?
-                                            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                                                <Users className="w-12 h-12 opacity-20" />
-                                                <p>{searchQuery ? 'No contacts match your search' : 'No contacts found'}</p>
-                                                {searchQuery &&
-                                                    <Button variant="link" onClick={() => setSearchQuery('')}>Clear Search</Button>
-                                                }
-                                            </div> :
-
-                                            filteredContacts.map((contact, index) =>
-                                                <div
-                                                    key={`${contact.id}-${index}`}
-                                                    className={`group relative flex items-center gap-4 p-4 rounded-md border transition-all duration-200 hover:shadow-md ${selectedContacts.includes(contact.id) ? 'border-primary/50 bg-primary/5 shadow-sm' : 'border-border/50 bg-card hover:border-border'}`}>
-
-                                                    <div className="flex items-center gap-3">
-                                                        <Checkbox
-                                                            checked={selectedContacts.includes(contact.id)}
-                                                            onCheckedChange={() => toggleSelectContact(contact.id)} />
-
-                                                        <div className="w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                            {contact.name[0].toUpperCase()}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h3 className="font-semibold text-foreground truncate">{contact.name}</h3>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-1 mt-2">
-                                                            {contact.tags && contact.tags.map((tag) =>
-                                                                <Badge key={tag} variant="secondary" className="text-[10px] py-0 px-1.5 h-4 bg-primary/10 text-primary border-primary/20">
-                                                                    {tag}
-                                                                </Badge>
-                                                            )}
-                                                            {contact.groups && contact.groups.map((group) =>
-                                                                <Badge key={group.id} variant="outline" className="text-[10px] py-0 px-1.5 h-4 bg-blue-500/10 text-blue-400 border-blue-500/20">
-                                                                    {group.name}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1">
-                                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                                <Phone className="w-3 h-3" />
-                                                                <span>{contact.phone}</span>
-                                                            </div>
-                                                            {contact.email &&
-                                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                                    <Mail className="w-3 h-3" />
-                                                                    <span className="truncate">{contact.email}</span>
-                                                                </div>
-                                                            }
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex flex-col border-l border-border/50 pl-3">
-                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="w-8 h-8 text-muted-foreground hover:text-emerald-500"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setSelectedContactForMessage(contact);
-                                                                    setSendMessageModalOpen(true);
-                                                                }}
-                                                                disabled={waStatus !== 'open'}
-                                                                title={waStatus === 'open' ? "Send Test Message" : "WhatsApp Disconnected"}>
-
-                                                                <Send className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="w-8 h-8 text-muted-foreground hover:text-blue-500"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    openHistory(contact);
-                                                                }}
-                                                                title="View Message History">
-
-                                                                <History className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="w-8 h-8 text-muted-foreground hover:text-primary"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    startEditing(contact);
-                                                                }}>
-
-                                                                <Pencil className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="w-8 h-8 text-muted-foreground hover:text-destructive"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setContactToDelete(contact);
-                                                                    setDeleteModalOpen(true);
-                                                                }}>
-
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                            {selectedGroupId !== 'all' &&
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="w-8 h-8 text-muted-foreground hover:text-orange-500"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleRemoveFromGroup(contact.id, selectedGroupId);
-                                                                    }}
-                                                                    title="Remove from this Group">
-
-                                                                    <X className="w-3.5 h-3.5" />
-                                                                </Button>
-                                                            }
-                                                        </div>
-                                                        <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                                            {new Date(contact.createdAt).toLocaleDateString()}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )
-                                    }
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="groups" className="flex-1 flex flex-col m-0 p-0 border-0 outline-none">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-semibold">Contact Groups ({groups.length})</h2>
-                                    <Button size="sm" onClick={() => setIsGroupModalOpen(true)} className="gap-2">
-                                        <Users className="w-4 h-4" />
-                                        <span>Manage Groups</span>
-                                    </Button>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-4 overflow-y-auto pr-2">
-                                    {groups.length === 0 ?
-                                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                                            <Users className="w-12 h-12 opacity-20" />
-                                            <p>No groups found. Create one to organize your contacts.</p>
-                                        </div> :
-
-                                        groups.map((group) =>
-                                            <div
-                                                key={group.id}
-                                                className="group p-4 rounded-md border border-border/50 bg-card hover:border-primary/30 transition-all hover:shadow-md cursor-pointer"
-                                                onClick={() => {
-                                                    setSelectedGroupId(group.id);
-                                                    setActiveTab('contacts');
-                                                }}>
-
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="p-2 bg-blue-500/10 rounded-md">
-                                                            <Users className="w-5 h-5 text-blue-400" />
-                                                        </div>
-                                                        <div>
-                                                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{group.name}</h3>
-                                                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">{group.description || 'No description'}</p>
-                                                        </div>
-                                                    </div>
-                                                    <Badge variant="outline" className="bg-blue-500/5 text-blue-400 border-blue-500/20">
-                                                        {group._count?.contacts || 0} contacts
-                                                    </Badge>
-                                                </div>
-
-                                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 text-xs gap-1.5"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedGroupId(group.id);
-                                                            setActiveTab('contacts');
-                                                        }}>
-
-                                                        <Search className="w-3.5 h-3.5" />
-                                                        View Contacts
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 text-xs text-blue-500 hover:bg-blue-500/10 gap-1.5"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setActiveGroupId(group.id);
-                                                            setIsMemberSelectorOpen(true);
-                                                        }}>
-
-                                                        <UserPlus className="w-3.5 h-3.5" />
-                                                        Add Members
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 text-xs text-destructive hover:bg-destructive/10 gap-1.5"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteGroup(group.id);
-                                                        }}>
-
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                        Delete
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )
-                                    }
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-
+                <div className="flex items-center gap-2">
+                    <input
+                        type="file"
+                        id="contacts-import"
+                        className="hidden"
+                        accept=".csv"
+                        onChange={handleImportFile}
+                    />
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="h-9 gap-2 border-border/40"
+                    >
+                        {isExporting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                        <span className="hidden sm:inline">Export</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('contacts-import').click()}
+                        disabled={isImporting}
+                        className="h-9 gap-2 border-border/40"
+                    >
+                        {isImporting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                        <span className="hidden sm:inline">Import</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadTemplate}
+                        className="h-9 px-2"
+                        title="Download CSV Template"
+                    >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Template</span>
+                    </Button>
+                    <Separator orientation="vertical" className="h-4 mx-1" />
+                    <Button variant="outline" size="sm" onClick={handleSync} className="h-9 gap-2">
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Sync WA</span>
+                    </Button>
+                    <Separator orientation="vertical" className="h-4 mx-1" />
+                    <Button size="sm" onClick={() => setIsAddContactOpen(true)} className="h-9 gap-2 shadow-sm">
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span>Add Contact</span>
+                    </Button>
                 </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
-            <AlertDialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+            <div className="flex flex-1 overflow-hidden">
+
+                {/* CRM Sidebar */}
+                <div className="w-64 border-r bg-card/20 flex flex-col">
+                    <ScrollArea className="flex-1">
+                        <div className="p-4 space-y-6">
+                            {/* Segments */}
+                            <div className="space-y-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-2">Core Segments</span>
+                                <Button
+                                    variant={activeSegment === 'all' ? 'secondary' : 'ghost'}
+                                    className="w-full justify-start h-9 text-sm gap-3 px-3"
+                                    onClick={() => setActiveSegment('all')}
+                                >
+                                    <Users className="w-4 h-4" />
+                                    All Contacts
+                                    <Badge variant="ghost" className="ml-auto text-[10px] opacity-60">{contacts.length}</Badge>
+                                </Button>
+                            </div>
+
+                            {/* Categories */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between px-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Categories</span>
+                                    <Button variant="ghost" size="icon" className="h-5 w-5 opacity-40 hover:opacity-100" onClick={() => setIsManageCategoriesOpen(true)}>
+                                        <Plus className="w-3 h-3" />
+                                    </Button>
+                                </div>
+                                <div className="space-y-1">
+                                    {categories.map(cat => (
+                                        <Button
+                                            key={cat.id}
+                                            variant={activeSegment === `category:${cat.id}` ? 'secondary' : 'ghost'}
+                                            className="w-full justify-start h-8 text-xs gap-3 px-3"
+                                            onClick={() => setActiveSegment(`category:${cat.id}`)}
+                                        >
+                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                                            {cat.name}
+                                            <Badge variant="ghost" className="ml-auto text-[10px] opacity-60 font-mono">{contacts.filter(c => c.categoryId === cat.id).length}</Badge>
+                                        </Button>
+                                    ))}
+                                    {categories.length === 0 && <p className="text-[10px] text-muted-foreground italic px-2">No categories defined.</p>}
+                                </div>
+                            </div>
+
+                            {/* Groups */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between px-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Broadcast Groups</span>
+                                </div>
+                                <div className="space-y-1">
+                                    {groups.map(group => (
+                                        <Button
+                                            key={group.id}
+                                            variant={activeSegment === `group:${group.id}` ? 'secondary' : 'ghost'}
+                                            className="w-full justify-start h-8 text-xs gap-3 px-3"
+                                            onClick={() => setActiveSegment(`group:${group.id}`)}
+                                        >
+                                            <Layers className="w-3.5 h-3.5 opacity-40" />
+                                            {group.name}
+                                            <Badge variant="ghost" className="ml-auto text-[10px] opacity-60 font-mono">{group._count?.contacts || 0}</Badge>
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </ScrollArea>
+
+                    <div className="p-4 border-t bg-muted/10">
+                        <Button variant="ghost" className="w-full justify-between h-9 text-[10px] px-2 font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors" onClick={() => setIsManageTagsOpen(true)}>
+                            Manage Tag Library
+                            <ChevronRight className="w-3 h-3" />
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col bg-muted/10">
+
+                    {/* Search & Sort Bar */}
+                    <div className="flex items-center gap-4 py-2 px-4 border-b bg-card/40">
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                            <Input
+                                placeholder="Search by name, phone or email..."
+                                className="pl-9 bg-background h-10 border-border/40"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-10 gap-2 border-border/40">
+                                        <Filter className="w-3.5 h-3.5" />
+                                        <span className="text-xs">Sort: {sortBy.replace('-', ' ')}</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => setSortBy('newest')}>Newest First</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSortBy('oldest')}>Oldest First</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSortBy('name-asc')}>Name A-Z</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSortBy('name-desc')}>Name Z-A</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <Separator orientation="vertical" className="h-6 mx-1" />
+
+                            <div className="flex items-center border rounded-md overflow-hidden h-10">
+                                <Button
+                                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                                    size="icon"
+                                    className="rounded-none w-10 border-none"
+                                    onClick={() => setViewMode('list')}
+                                >
+                                    <List className="w-4 h-4" />
+                                </Button>
+                                <Separator orientation="vertical" className="h-6" />
+                                <Button
+                                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                                    size="icon"
+                                    className="rounded-none w-10 border-none"
+                                    onClick={() => setViewMode('grid')}
+                                >
+                                    <LayoutGrid className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Multi-Selection Toolbar (Sticks to top if items selected) */}
+                    {selectedContacts.length > 0 && (
+                        <div className="flex items-center justify-between px-6 py-2 bg-primary/10 border-b border-primary/20 animate-in slide-in-from-top duration-300">
+                            <div className="flex items-center gap-4">
+                                <Checkbox
+                                    checked={selectedContacts.length === filteredContacts.length}
+                                    onCheckedChange={() => {
+                                        if (selectedContacts.length === filteredContacts.length) setSelectedContacts([]);
+                                        else setSelectedContacts(filteredContacts.map(c => c.id));
+                                    }}
+                                />
+                                <span className="text-sm font-bold text-primary">{selectedContacts.length} Selected</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => setIsBulkTagOpen(true)} className="h-8 gap-2 text-primary hover:bg-primary/5">
+                                    <Tag className="w-3.5 h-3.5" /> Tag
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => setIsBulkCategoryOpen(true)} className="h-8 gap-2 text-primary hover:bg-primary/5">
+                                    <Layers className="w-3.5 h-3.5" /> Category
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => setIsDeleteConfirmOpen(true)} className="h-8 gap-2 text-destructive hover:bg-destructive/5">
+                                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                                </Button>
+                                <Separator orientation="vertical" className="h-4 mx-2" />
+                                <Button variant="ghost" size="sm" className="h-8" onClick={() => setSelectedContacts([])}>Cancel</Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Audience List Container */}
+                    <div className="flex-1 overflow-hidden">
+                        {loading ? (
+                            <div className="h-full flex flex-col items-center justify-center gap-4">
+                                <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                                <p className="text-sm text-muted-foreground font-medium animate-pulse">Syncing audience library...</p>
+                            </div>
+                        ) : filteredContacts.length === 0 ? (
+                            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-40">
+                                <div className="p-8 bg-muted rounded-full">
+                                    <Users className="w-16 h-16" />
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-lg font-bold">No contacts found</p>
+                                    <p className="text-sm">Try adjusting your filters or segments.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <ScrollArea className="h-full p-2">
+                                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-1'}>
+                                    {filteredContacts.map((contact) => (
+                                        <Card
+                                            key={contact.id}
+                                            className={`group p-0 transition-all hover:border-primary/40 shadow-none bg-card/60 ${selectedContacts.includes(contact.id) ? 'border-border bg-primary/5' : 'border-border/0'}`}
+                                        >
+                                            <CardContent className="py-0.5 px-4 flex items-center gap-4 border border-border/90 rounded-md">
+                                                <div className="shrink-0 flex items-center gap-3">
+                                                    <Checkbox
+                                                        checked={selectedContacts.includes(contact.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            if (checked) setSelectedContacts([...selectedContacts, contact.id]);
+                                                            else setSelectedContacts(selectedContacts.filter(id => id !== contact.id));
+                                                        }}
+                                                    />
+                                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold border">
+                                                        {contact.name[0].toUpperCase()}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex-1 min-w-0 space-y-0.5 flex flex-row items-center justify-between">
+
+                                                    <div className=''>
+                                                        <div className="flex items-center justify-between ">
+                                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                                <h3 className="text-sm font-bold truncate tracking-tight">{contact.name}</h3>
+                                                                {contact.categoryId && (
+                                                                    <Badge variant="outline" className="h-4 text-[9px] font-bold px-1.5 border-none" style={{ backgroundColor: `${getCategoryColor(contact.categoryId)}20`, color: getCategoryColor(contact.categoryId) }}>
+                                                                        {categories.find(c => c.id === contact.categoryId)?.name || 'Cat'}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+
+
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-[11px] text-muted-foreground">
+                                                            <div className="flex items-center gap-1 font-mono">
+                                                                <Phone className="w-3 h-3 opacity-40 shrink-0" />
+                                                                {contact.phone}
+                                                            </div>
+                                                            {contact.email && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Mail className="w-3 h-3 opacity-40 shrink-0" />
+                                                                    {contact.email}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex flex-wrap gap-1 pt-0.5">
+                                                            {contact.tags?.map(tag => (
+                                                                <Badge key={tag} variant="secondary" className="text-[9px] h-4 px-1 opacity-70 border-none" style={{ backgroundColor: `${getTagColor(tag)}30`, color: getTagColor(tag) }}>
+                                                                    {tag}
+                                                                </Badge>
+                                                            ))}
+                                                            {contact.groups?.map(group => (
+                                                                <Badge key={group.id} variant="outline" className="text-[9px] h-4 px-1 opacity-50 border-blue-500/20 text-blue-400">
+                                                                    <Layers className="w-2 h-2 mr-1" />
+                                                                    {group.name}
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
+
+                                                    </div>
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8  group-hover:opacity-0 transition-opacity">
+                                                                <MoreVertical className="w-6 h-6" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className='mt-4'>
+                                                            <DropdownMenuItem onClick={() => {
+                                                                setActiveContact(contact);
+                                                                setContactForm({
+                                                                    name: contact.name,
+                                                                    phone: contact.phone,
+                                                                    email: contact.email || '',
+                                                                    categoryId: contact.categoryId || '',
+                                                                    tags: contact.tags || [],
+                                                                    info: contact.info || ''
+                                                                });
+                                                                setIsEditContactOpen(true);
+                                                            }}>
+                                                                <Pencil className="w-3.5 h-3.5 mr-2" /> Edit Details
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => {
+                                                                setActiveContact(contact);
+                                                                setIsMessageOpen(true);
+                                                            }}>
+                                                                <Send className="w-3.5 h-3.5 mr-2 text-green-500" /> Send Message
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => {
+                                                                setActiveContact(contact);
+                                                                setIsHistoryOpen(true);
+                                                            }}>
+                                                                <History className="w-3.5 h-3.5 mr-2 text-blue-500" /> Interaction History
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem className="text-destructive" onClick={() => {
+                                                                setSelectedContacts([contact.id]);
+                                                                setIsDeleteConfirmOpen(true);
+                                                            }}>
+                                                                <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete Contact
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* --- Modals & Overlays --- */}
+
+            {/* Manage Categories Modal */}
+            <Dialog open={isManageCategoriesOpen} onOpenChange={setIsManageCategoriesOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Audience Categories</DialogTitle>
+                        <DialogDescription>Define high-level segments for your contacts (e.g. VIP, Leads).</DialogDescription>
+                    </DialogHeader>
+                    <CategoriesManager
+                        workspaceId={workspaceId}
+                        categories={categories}
+                        onUpdate={fetchCategories}
+                        type="CONTACT"
+                    />
+                </DialogContent>
+            </Dialog>
+
+            {/* Manage Tag Library Modal */}
+            <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tag Library</DialogTitle>
+                        <DialogDescription>Define structured tags with colors to organize your audience.</DialogDescription>
+                    </DialogHeader>
+                    <CategoriesManager
+                        workspaceId={workspaceId}
+                        categories={tagDefinitions}
+                        onUpdate={fetchTagLibrary}
+                        type="TAG"
+                    />
+                </DialogContent>
+            </Dialog>
+
+            {/* Add/Edit Contact Sheet */}
+            <Sheet open={isAddContactOpen || isEditContactOpen} onOpenChange={(open) => {
+                if (!open) { setContactForm({ name: '', phone: '', email: '', categoryId: '', tags: [], info: '' }); setActiveContact(null); }
+                setIsAddContactOpen(open ? isAddContactOpen : false);
+                setIsEditContactOpen(open ? isEditContactOpen : false);
+            }}>
+                <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-6">
+                    <SheetHeader className="pb-8">
+                        <SheetTitle className="text-2xl font-bold tracking-tight">{activeContact ? 'Edit Identity' : 'Secure Entry'}</SheetTitle>
+                        <SheetDescription>Configure primary contact details and metadata.</SheetDescription>
+                    </SheetHeader>
+
+                    <form onSubmit={handleSaveContact} className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Identity</Label>
+                                <Input
+                                    placeholder="Full Name / Brand"
+                                    value={contactForm.name}
+                                    onChange={e => setContactForm({ ...contactForm, name: e.target.value })}
+                                    required
+                                    className="bg-muted/10 h-11"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Mobile JID</Label>
+                                    <Input
+                                        placeholder="+123456789"
+                                        value={contactForm.phone}
+                                        onChange={e => setContactForm({ ...contactForm, phone: e.target.value })}
+                                        required
+                                        className="bg-muted/10 h-11 font-mono text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Email</Label>
+                                    <Input
+                                        placeholder="user@cloud.com"
+                                        value={contactForm.email}
+                                        onChange={e => setContactForm({ ...contactForm, email: e.target.value })}
+                                        className="bg-muted/10 h-11"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <Separator className="opacity-40" />
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Logical Category</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {categories.map(cat => (
+                                        <div
+                                            key={cat.id}
+                                            onClick={() => setContactForm({ ...contactForm, categoryId: contactForm.categoryId === cat.id ? '' : cat.id })}
+                                            className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${contactForm.categoryId === cat.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/30 border-border/40 opacity-60'}`}
+                                        >
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                                            <span className="text-[11px] font-bold truncate">{cat.name}</span>
+                                            {contactForm.categoryId === cat.id && <Check className="w-3 h-3 ml-auto text-primary" />}
+                                        </div>
+                                    ))}
+                                    <div
+                                        onClick={() => setIsManageCategoriesOpen(true)}
+                                        className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-border/40 opacity-40 hover:opacity-100 cursor-pointer"
+                                    >
+                                        <Plus className="w-3 h-3" />
+                                        <span className="text-[11px]">New Category</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Attribute Tags</Label>
+                                <div className="flex flex-wrap gap-2">
+                                    {tagDefinitions.map(def => (
+                                        <Badge
+                                            key={def.id}
+                                            variant="secondary"
+                                            onClick={() => {
+                                                const tags = contactForm.tags.includes(def.name)
+                                                    ? contactForm.tags.filter(t => t !== def.name)
+                                                    : [...contactForm.tags, def.name];
+                                                setContactForm({ ...contactForm, tags });
+                                            }}
+                                            className={`h-6 px-2 cursor-pointer transition-all border-none ${contactForm.tags.includes(def.name) ? 'opacity-100 shadow-md ring-1 ring-primary' : 'opacity-40'}`}
+                                            style={{ backgroundColor: `${def.color}20`, color: def.color }}
+                                        >
+                                            {def.name}
+                                        </Badge>
+                                    ))}
+                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] opacity-40 hover:opacity-100" onClick={() => setIsManageTagsOpen(true)}>
+                                        <Settings2 className="w-3 h-3 mr-1" /> Edit Library
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1" />
+
+                        <DialogFooter className="pt-6 border-t mt-auto">
+                            <Button variant="ghost" type="button" onClick={() => { setIsAddContactOpen(false); setIsEditContactOpen(false); }}>Cancel</Button>
+                            <Button type="submit" className="px-8 shadow-lg shadow-primary/20">{activeContact ? 'Save Changes' : 'Initialize Contact'}</Button>
+                        </DialogFooter>
+                    </form>
+                </SheetContent>
+            </Sheet>
+
+            {/* Quick Message Dialog */}
+            <Dialog open={isMessageOpen} onOpenChange={setIsMessageOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Send className="w-5 h-5 text-green-500" /> Secure Message
+                        </DialogTitle>
+                        <DialogDescription>Sent to: {activeContact?.name} ({activeContact?.phone})</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <Textarea
+                            placeholder="Type your message here..."
+                            className="min-h-[150px] bg-muted/10"
+                            value={messageText}
+                            onChange={e => setMessageText(e.target.value)}
+                        />
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground italic">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            End-to-end delivery via WhatsApp Browser Sync Engine
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsMessageOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSendMessage} disabled={!messageText} className="gap-2">
+                            <Send className="w-4 h-4" /> Ship Now
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Confirm */}
+            <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the contact <strong>{contactToDelete?.name}</strong>.
-                            This action cannot be undone.
+                            This will permanently delete {selectedContacts.length} selected contacts. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={deleteContact}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-
-                            Delete Contact
+                        <AlertDialogCancel disabled={isBulkProcessing}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleBulkDelete} disabled={isBulkProcessing} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-w-[120px]">
+                            {isBulkProcessing ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
+                            {isBulkProcessing ? 'Deleting...' : 'Delete Contacts'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Edit Contact Modal */}
-            <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Contact</DialogTitle>
-                        <DialogDescription>
-                            Update information for <strong>{editingContact.phone}</strong>.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleUpdate} className="space-y-4 py-4">
-                        <div className="grid grid-cols-1 gap-4">
-                            <div>
-                                <label className="block text-xs font-medium mb-1">Name</label>
-                                <Input
-                                    type="text"
-                                    name="name"
-                                    value={editingContact.name}
-                                    onChange={handleEditChange}
-                                    required
-                                    placeholder="Enter contact name" />
-
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Phone Number</label>
-                                <Input
-                                    type="tel"
-                                    name="phone"
-                                    value={editingContact.phone}
-                                    onChange={handleEditChange}
-                                    required
-                                    placeholder="Enter phone number" />
-
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Email (Optional)</label>
-                                <Input
-                                    type="email"
-                                    name="email"
-                                    value={editingContact.email}
-                                    onChange={handleEditChange}
-                                    placeholder="Enter email address" />
-
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Additional Info (Optional)</label>
-                                <Input
-                                    type="text"
-                                    name="info"
-                                    value={editingContact.info}
-                                    onChange={handleEditChange}
-                                    placeholder="Enter notes or additional info" />
-
-                            </div>
-                        </div>
-                        <DialogFooter className="mt-6">
-                            <Button variant="outline" type="button" onClick={() => setEditModalOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={loading}>
-                                {loading ? 'Updating...' : 'Update Contact'}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Bulk Tag Modal */}
-            <Dialog open={tagModalOpen} onOpenChange={setTagModalOpen}>
-                <DialogContent className="max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle>Add Tag</DialogTitle>
-                        <DialogDescription>
-                            Enter a tag to add to {selectedContacts.length} selected contacts.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                        <Input
-                            placeholder="Customer, Lead, VIP..."
-                            value={tagInput}
-                            onChange={(e) => setTagInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleBulkTag()} />
-
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setTagModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleBulkTag} disabled={loading || !tagInput}>
-                            Add Tag
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Send Test Message Modal */}
-            <Dialog open={sendMessageModalOpen} onOpenChange={setSendMessageModalOpen}>
+            {/* Bulk Tag Dialog */}
+            <Dialog open={isBulkTagOpen} onOpenChange={setIsBulkTagOpen}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <Send className="w-5 h-5 text-emerald-500" />
-                            Send Test Message
+                            <Tag className="w-5 h-5" /> Bulk Tagging
                         </DialogTitle>
-                        <DialogDescription>
-                            Send a direct WhatsApp message to <strong>{selectedContactForMessage?.name}</strong> ({selectedContactForMessage?.phone}).
-                        </DialogDescription>
+                        <DialogDescription>Applying tag to {selectedContacts.length} selected contacts.</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Message Content</label>
-                            <Textarea
-                                value={testMessageText}
-                                onChange={(e) => setTestMessageText(e.target.value)}
-                                placeholder="Type your message here..."
-                                className="min-h-[120px] bg-background" />
-
-                            <p className="text-[10px] text-muted-foreground">
-                                This message will be sent immediately via your connected WhatsApp account.
-                            </p>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setSendMessageModalOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSendMessage}
-                            disabled={sendingMessage || !testMessageText.trim()}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
-
-                            {sendingMessage ?
-                                <RefreshCw className="w-4 h-4 animate-spin" /> :
-
-                                <Send className="w-4 h-4" />
-                            }
-                            {sendingMessage ? 'Sending...' : 'Send Message'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* History Drawer */}
-            <Sheet open={historyDrawerOpen} onOpenChange={setHistoryDrawerOpen}>
-                <SheetContent side="right" className="w-full sm:max-w-md bg-background border-l border-border p-0 flex flex-col">
-                    <SheetHeader className="p-6 border-b border-border bg-card/50">
-                        <SheetTitle className="flex items-center gap-2">
-                            <History className="w-5 h-5 text-primary" />
-                            Message History
-                        </SheetTitle>
-                        <SheetDescription>
-                            Recent WhatsApp interactions with {selectedContactForHistory?.name || 'Contact'}
-                        </SheetDescription>
-                    </SheetHeader>
-
-                    <ScrollArea className="flex-1">
-                        <div className="p-6 h-full">
-                            {historyLoading ?
-                                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                                    <RefreshCw className="w-8 h-8 animate-spin" />
-                                    <p>Loading history...</p>
-                                </div> :
-                                historyMessages.length === 0 ?
-                                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                                        <History className="w-12 h-12 opacity-20" />
-                                        <p>No messages found in history</p>
-                                    </div> :
-
-                                    <div className="space-y-4">
-                                        {historyMessages.map((msg) =>
-                                            <div
-                                                key={msg.id}
-                                                className={`flex flex-col ${msg.fromMe ? 'items-end' : 'items-start'}`}>
-
-                                                <div className={`max-w-[85%] px-4 py-2 rounded-md text-xs ${msg.fromMe ?
-                                                    'bg-primary text-primary-foreground rounded-tr-none' :
-                                                    'bg-secondary text-secondary-foreground rounded-tl-none'}`
-                                                }>
-                                                    {msg.text}
-                                                </div>
-                                                <span className="text-[10px] text-muted-foreground mt-1 px-1">
-                                                    {new Date(msg.timestamp).toLocaleString()}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                            }
-                        </div>
-                    </ScrollArea>
-                    <div className="p-4 border-t border-border bg-card/30">
-                        <Button
-                            className="w-full gap-2"
-                            variant="secondary"
-                            onClick={() => {
-                                setHistoryDrawerOpen(false);
-                                setSelectedContactForMessage(selectedContactForHistory);
-                                setSendMessageModalOpen(true);
-                            }}
-                            disabled={waStatus !== 'open'}>
-
-                            <Send className="w-4 h-4" />
-                            Send Message
-                        </Button>
-                    </div>
-                </SheetContent>
-            </Sheet>
-
-            {/* Manage Groups Dialog */}
-            <Dialog open={isGroupModalOpen} onOpenChange={setIsGroupModalOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Manage Contact Groups</DialogTitle>
-                        <DialogDescription>
-                            Create and manage groups to organize your audience.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Create New Group</label>
-                            <div className="flex gap-2">
-                                <Input
-                                    placeholder="Group Name"
-                                    value={newGroup.name}
-                                    onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })} />
-
-                                <Button onClick={handleCreateGroup} disabled={!newGroup.name || loading}>
-                                    Create
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground text-[10px] tracking-wider">Existing Groups</label>
-                            {groups.length === 0 ?
-                                <p className="text-xs text-muted-foreground italic">No groups created yet.</p> :
-
-                                <ScrollArea className="h-[200px] rounded-md border border-border p-2">
-                                    {groups.map((group) =>
-                                        <div key={group.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md group">
-                                            <div className="flex-1">
-                                                {editingGroupId === group.id ? (
-                                                    <div className="flex items-center gap-2 pr-2">
-                                                        <Input
-                                                            value={groupEditName}
-                                                            onChange={(e) => setGroupEditName(e.target.value)}
-                                                            className="h-7 text-xs py-0"
-                                                            autoFocus
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleUpdateGroup(group.id)}
-                                                        />
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-green-500 hover:text-green-600 hover:bg-green-50"
-                                                            onClick={() => handleUpdateGroup(group.id)}
-                                                            disabled={loading}
-                                                        >
-                                                            <Check className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-muted-foreground"
-                                                            onClick={() => {
-                                                                setEditingGroupId(null);
-                                                                setGroupEditName('');
-                                                            }}
-                                                        >
-                                                            <X className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <div>
-                                                        <p className="text-xs font-medium">{group.name}</p>
-                                                        <p className="text-[10px] text-muted-foreground">{group._count?.contacts} contacts</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-0.5">
-                                                {editingGroupId !== group.id && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        onClick={() => {
-                                                            setEditingGroupId(group.id);
-                                                            setGroupEditName(group.name);
-                                                        }}>
-                                                        <Pencil className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    onClick={() => handleDeleteGroup(group.id)}>
-                                                    <X className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </ScrollArea>
-                            }
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Add to Group Dialog */}
-            <Dialog open={isAddingToGroupModalOpen} onOpenChange={setIsAddingToGroupModalOpen}>
-                <DialogContent className="max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle>Add to Group</DialogTitle>
-                        <DialogDescription>
-                            Select a group to add {selectedContacts.length} selected contacts.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="py-4">
-                        {groups.length === 0 ?
-                            <div className="text-center py-4">
-                                <p className="text-xs text-muted-foreground mb-4">You haven't created any groups yet.</p>
-                                <Button variant="outline" onClick={() => {
-                                    setIsAddingToGroupModalOpen(false);
-                                    setIsGroupModalOpen(true);
-                                }}>
-                                    Create a Group First
-                                </Button>
-                            </div> :
-
-                            <ScrollArea className="h-[250px] pr-4">
-                                <div className="space-y-2">
-                                    {groups.map((group) =>
-                                        <Button
-                                            key={group.id}
-                                            variant="outline"
-                                            className="w-full justify-start h-12 text-left px-4 hover:border-blue-500/50 hover:bg-blue-500/5"
-                                            onClick={() => handleAddToGroup(group.id)}
-                                            disabled={loading}>
-
-                                            <div className="flex items-center gap-3 w-full">
-                                                <div className="bg-blue-500/10 p-2 rounded">
-                                                    <Users className="w-4 h-4 text-blue-400" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="text-sm font-medium">{group.name}</div>
-                                                    <div className="text-[10px] text-muted-foreground">{group._count?.contacts} contacts</div>
-                                                </div>
-                                            </div>
-                                        </Button>
-                                    )}
-                                </div>
-                            </ScrollArea>
-                        }
-                    </div>
-                </DialogContent>
-            </Dialog>
-            {/* Add Members (to Group) Dialog */}
-            <Dialog open={isMemberSelectorOpen} onOpenChange={setIsMemberSelectorOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Add Members to Group</DialogTitle>
-                        <DialogDescription>
-                            Select contacts to add to <strong>{groups.find((g) => g.id === activeGroupId)?.name}</strong>.
-                        </DialogDescription>
-                    </DialogHeader>
-
                     <div className="py-4 space-y-4">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search contacts..."
-                                className="pl-9"
-                                value={memberSearchQuery}
-                                onChange={(e) => setMemberSearchQuery(e.target.value)} />
-
-                        </div>
-
-                        <ScrollArea className="h-[300px] pr-4 border rounded-md p-2">
-                            <div className="space-y-2">
-                                {contacts.
-                                    filter((c) =>
-                                        !(c.groups || []).some((g) => g.id === activeGroupId) && (
-                                            c.name.toLowerCase().includes(memberSearchQuery.toLowerCase()) || c.phone.includes(memberSearchQuery))
-                                    ).
-                                    map((contact) =>
-                                        <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-md">
-                                            <Checkbox
-                                                checked={selectedMemberIds.includes(contact.id)}
-                                                onCheckedChange={() => {
-                                                    setSelectedMemberIds((prev) =>
-                                                        prev.includes(contact.id) ? prev.filter((id) => id !== contact.id) : [...prev, contact.id]
-                                                    );
-                                                }} />
-
-                                            <div className="flex-1">
-                                                <p className="text-xs font-medium">{contact.name}</p>
-                                                <p className="text-xs text-muted-foreground">{contact.phone}</p>
-                                            </div>
-                                        </div>
-                                    )}
+                        <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Select Tag from Library</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {tagDefinitions.map(def => (
+                                    <Badge
+                                        key={def.id}
+                                        variant="outline"
+                                        onClick={() => setTagInput(def.name)}
+                                        className={`h-9 px-3 cursor-pointer justify-start gap-2 border-border/40 transition-all ${tagInput === def.name ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/30'}`}
+                                        style={{ color: def.color }}
+                                    >
+                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: def.color }} />
+                                        {def.name}
+                                    </Badge>
+                                ))}
+                                {tagDefinitions.length === 0 && <p className="col-span-2 text-xs italic text-muted-foreground p-4 text-center">No tags defined in library.</p>}
                             </div>
-                        </ScrollArea>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Or Type New Tag</Label>
+                            <Input 
+                                placeholder="Enter custom tag..." 
+                                value={tagInput}
+                                onChange={e => setTagInput(e.target.value)}
+                                className="bg-muted/10 h-11"
+                            />
+                        </div>
                     </div>
-
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => {
-                            setIsMemberSelectorOpen(false);
-                            setSelectedMemberIds([]);
-                        }}>
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={async () => {
-                                if (selectedMemberIds.length === 0) return;
-                                setLoading(true);
-                                try {
-                                    const res = await fetch(`/api/wa/groups/${activeGroupId}/contacts`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ contactIds: selectedMemberIds })
-                                    });
-                                    if (res.ok) {
-                                        await fetchContacts();
-                                        await fetchGroups();
-                                        setIsMemberSelectorOpen(false);
-                                        setSelectedMemberIds([]);
-                                        toast({ title: "Members Added", description: `Successfully added ${selectedMemberIds.length} contacts to the group.` });
-                                    }
-                                } catch (error) {
-                                    console.error('Error adding members:', error);
-                                } finally {
-                                    setLoading(false);
-                                }
-                            }}
-                            disabled={loading || selectedMemberIds.length === 0}>
-
-                            {loading ? 'Adding...' : `Add ${selectedMemberIds.length} Contacts`}
+                        <Button variant="ghost" disabled={isBulkProcessing} onClick={() => { setIsBulkTagOpen(false); setTagInput(''); }}>Cancel</Button>
+                        <Button onClick={handleBulkTag} disabled={!tagInput || isBulkProcessing} className="px-8 shadow-lg shadow-primary/20 min-w-[140px]">
+                            {isBulkProcessing ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
+                            {isBulkProcessing ? 'Applying...' : 'Apply Tag'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </>);
 
+            {/* Bulk Category Dialog */}
+            <Dialog open={isBulkCategoryOpen} onOpenChange={setIsBulkCategoryOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Layers className="w-5 h-5" /> Bulk Categories
+                        </DialogTitle>
+                        <DialogDescription>Move {selectedContacts.length} contacts to a new logical segment.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 grid grid-cols-2 gap-2 relative">
+                        {isBulkProcessing && (
+                            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
+                                <div className="flex flex-col items-center gap-2">
+                                    <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+                                    <span className="text-xs font-medium text-primary">Moving Contacts...</span>
+                                </div>
+                            </div>
+                        )}
+                        {categories.map(cat => (
+                            <div
+                                key={cat.id}
+                                onClick={() => !isBulkProcessing && handleBulkCategory(cat.id)}
+                                className={`flex items-center gap-3 p-4 rounded-xl border border-border/40 transition-all group ${isBulkProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/40 hover:bg-primary/5 cursor-pointer'}`}
+                            >
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                                <span className="text-sm font-bold truncate">{cat.name}</span>
+                                <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                        ))}
+                        <div
+                            onClick={() => !isBulkProcessing && handleBulkCategory(null)}
+                            className={`flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/60 transition-all group ${isBulkProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:border-destructive/40 hover:bg-destructive/5 cursor-pointer'}`}
+                        >
+                            <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
+                            <span className="text-sm font-bold truncate">Remove Category</span>
+                            <X className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                    </div>
+                    <DialogFooter className="bg-muted/5 p-4 rounded-b-lg border-t -mx-6 -mb-6">
+                        <Button variant="ghost" className="w-full" disabled={isBulkProcessing} onClick={() => setIsBulkCategoryOpen(false)}>Cancel Bulk Operation</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+        </div>
+    );
+}
+
+// Internal Component: Categories Manager
+function CategoriesManager({ workspaceId, categories, onUpdate, type }) {
+    const [name, setName] = useState('');
+    const [color, setColor] = useState('#3b82f6');
+    const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
+
+    const handleAdd = async () => {
+        if (!name) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/wa/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, color, workspaceId, type })
+            });
+            if (res.ok) {
+                toast({ title: "Category Added" });
+                setName('');
+                onUpdate();
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        const res = await fetch(`/api/wa/categories/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            toast({ title: "Removed" });
+            onUpdate();
+        }
+    };
+
+    return (
+        <div className="space-y-4 mt-4">
+            <div className="flex gap-2">
+                <Input
+                    placeholder="Category Name"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className="flex-1"
+                />
+                <div className="relative w-10 h-10 border rounded-md overflow-hidden shrink-0">
+                    <input
+                        type="color"
+                        value={color}
+                        onChange={e => setColor(e.target.value)}
+                        className="absolute inset-0 w-full h-full scale-150 cursor-pointer"
+                    />
+                </div>
+                <Button onClick={handleAdd} disabled={loading || !name} size="icon">
+                    <Plus className="w-4 h-4" />
+                </Button>
+            </div>
+
+            <ScrollArea className="h-[300px] border rounded-md p-2 bg-muted/5">
+                <div className="space-y-1">
+                    {categories.map(cat => (
+                        <div key={cat.id} className="flex items-center justify-between p-2 hover:bg-muted/30 rounded-md transition-colors group">
+                            <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                                <span className="text-sm font-medium">{cat.name}</span>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                                onClick={() => handleDelete(cat.id)}
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    ))}
+                    {categories.length === 0 && <p className="text-center text-xs text-muted-foreground py-8">No structured {type.toLowerCase()}s found.</p>}
+                </div>
+            </ScrollArea>
+        </div>
+    );
 }

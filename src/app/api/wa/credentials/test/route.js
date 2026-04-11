@@ -67,6 +67,11 @@ export async function POST(req) {
     // 3. Perform the connection test
     const result = await cloudApi.testCloudConnection(credContent);
 
+    const { testNumber } = body;
+    if (result.success && testNumber) {
+        await cloudApi.sendTextMessage(credContent, testNumber, "🚀 *Devlomatix Connection Test*\n\nYour WhatsApp Cloud API connection has been successfully verified! This is a test message to confirm end-to-end delivery.");
+    }
+
     if (result.success) {
       // Update status in DB if successful
       await db.credentials.update({

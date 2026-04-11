@@ -1,5 +1,4 @@
 import { db } from '@/lib/db';
-import { waManager } from './whatsapp-v2';
 
 /**
  * WhatsAppQueueWorker: Enterprise-grade background job processor.
@@ -11,9 +10,7 @@ export class WhatsAppQueueWorker {
     pollInterval = 10000; // 10 seconds
 
     constructor() {
-        if (typeof window === 'undefined') {
-            this.init();
-        }
+        // No automatic initialization here to avoid build-time issues
     }
 
     static getInstance() {
@@ -40,6 +37,10 @@ export class WhatsAppQueueWorker {
         if (this.isProcessing) return;
         this.isProcessing = true;
 
+        // Note: For circular dependency reasons, we import waManager lazily or pass it in.
+        // Importing it here inside the method is fine because it's only executed at runtime.
+        const { waManager } = await import('./whatsapp-v2');
+
         try {
             const job = await db.whatsAppJob.findFirst({
                 where: {
@@ -65,9 +66,9 @@ export class WhatsAppQueueWorker {
             });
 
             if (job.type === 'CAMPAIGN') {
-                await this.handleCampaignJob(job);
+                await this.handleCampaignJob(job, waManager);
             } else if (job.type === 'SINGLE') {
-                await this.handleSingleMessage(job);
+                await this.handleSingleMessage(job, waManager);
             }
 
         } catch (error) {
@@ -77,7 +78,7 @@ export class WhatsAppQueueWorker {
         }
     }
 
-    async handleCampaignJob(job) {
+    async handleCampaignJob(job, waManager) {
         const { campaignId, userId } = job.payload;
 
         try {
@@ -162,7 +163,7 @@ export class WhatsAppQueueWorker {
         }
     }
 
-    async handleSingleMessage(job) {
+    async handleSingleMessage(job, waManager) {
         const { jid, payload, userId } = job.payload;
         try {
             const result = await waManager.sendMessage(jid, payload);

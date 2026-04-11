@@ -26,13 +26,24 @@ export async function POST(req) {
         const cleanTo = to.replace(/\D/g, '');
 
         // 1. Fetch Cloud API Credentials
-        const credential = await db.credentials.findFirst({
+        let credential = await db.credentials.findFirst({
             where: { 
                 userId, 
-                platform: 'WHATSAPP_CLOUD'
-            },
-            orderBy: { updatedAt: 'desc' }
+                platform: 'WHATSAPP_CLOUD',
+                isDefault: true
+            }
         });
+
+        // Fallback to most recent if no default set
+        if (!credential) {
+            credential = await db.credentials.findFirst({
+                where: { 
+                    userId, 
+                    platform: 'WHATSAPP_CLOUD'
+                },
+                orderBy: { updatedAt: 'desc' }
+            });
+        }
 
         if (!credential || !credential.credentials) {
             console.error(`[Cloud API Send] No credentials found for user ${userId}`);

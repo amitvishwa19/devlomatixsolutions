@@ -1,0 +1,4 @@
+name,phone,email,category,tags
+Import Tester 1,1112223333,tester1@example.com,VIP,tech|urgent
+Import Tester 2,4445556666,tester2@example.com,General,lead
+Import Tester 3,7778889999,,Internal,

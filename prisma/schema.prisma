@@ -386,8 +386,10 @@ model Contact {
   phone           String
   email           String?
   type            String?          @default("CONTACT") // CONTACT, CLIENT, LEAD
+  platform        String?          @default("WHATSAPP")
   info            Json?
   tags            String[]         @default([])
+  whatsappName    String?
   lastMessage     String?
   lastInteraction DateTime?
   createdAt       DateTime         @default(now())
@@ -447,22 +449,22 @@ model WhatsAppSessionKey {
 }
 
 model WhatsAppJob {
-  id          String               @id @default(cuid())
+  id          String                @id @default(cuid())
   userId      String
-  type        String               @default("CAMPAIGN") // CAMPAIGN, TRANSACTIONAL, AUTOMATION
-  status      String               @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED
+  type        String                @default("CAMPAIGN") // CAMPAIGN, TRANSACTIONAL, AUTOMATION
+  status      String                @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED
   payload     Json
-  priority    Int                  @default(0)
-  retryCount  Int                  @default(0)
-  maxRetries  Int                  @default(3)
+  priority    Int                   @default(0)
+  retryCount  Int                   @default(0)
+  maxRetries  Int                   @default(3)
   errorLog    String?
   scheduledAt DateTime?
   startedAt   DateTime?
   completedAt DateTime?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
   logs        WhatsAppDeliveryLog[]
-  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -470,21 +472,21 @@ model WhatsAppJob {
 }
 
 model WhatsAppDeliveryLog {
-  id         String      @id @default(cuid())
-  jobId      String?
-  userId     String
-  jid        String
-  waId       String?     @unique
-  status     String      @default("QUEUED") // QUEUED, SENT, DELIVERED, READ, FAILED
-  error      String?
-  metadata   Json?
-  sentAt     DateTime?
+  id          String       @id @default(cuid())
+  jobId       String?
+  userId      String
+  jid         String
+  waId        String?      @unique
+  status      String       @default("QUEUED") // QUEUED, SENT, DELIVERED, READ, FAILED
+  error       String?
+  metadata    Json?
+  sentAt      DateTime?
   deliveredAt DateTime?
   readAt      DateTime?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  job        WhatsAppJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  job         WhatsAppJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
   @@index([userId])
@@ -594,10 +596,12 @@ model Credentials {
   userInfo    Json?
   expiresAt   DateTime?
   environment String    @default("PROD")
+  isDefault   Boolean   @default(false)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([workspaceId])
+  @@index([userId, isDefault])
 }
 
 model Post {

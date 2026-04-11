@@ -3,14 +3,10 @@ import pino from 'pino';
 import { usePrismaAuthState } from './whatsapp-auth';
 import { db } from '@/lib/db';
 import * as fs from 'fs';
-import { waQueueWorker } from './queue-worker';
 
 class WhatsAppManager {
     constructor() {
         console.log('[WA] NEW WhatsAppManager Instance Created (JS Version)');
-        if (typeof window === 'undefined') {
-            waQueueWorker.init();
-        }
     }
     
     sock = null;
@@ -279,8 +275,8 @@ class WhatsAppManager {
 }
 
 const globalForWA = global;
-export const waManager = globalForWA.waManagerV15 || new WhatsAppManager();
+export const waManager = globalForWA.waManagerV2_Standard || new WhatsAppManager();
 
 if (process.env.NODE_ENV !== 'production') {
-    globalForWA.waManagerV15 = waManager;
+    globalForWA.waManagerV2_Standard = waManager;
 }

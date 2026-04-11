@@ -13,12 +13,12 @@ async function main() {
             process.exit(1);
         }
 
-        const sessionId = auths[0].sessionId!;
+        const sessionId = auths[0].sessionId;
         console.log("Found session for ID:", sessionId);
 
         console.log("Connecting waManager...");
         waManager.connect(sessionId);
-        
+
         // Wait for connection to open
         let tries = 0;
         const maxTries = 15;
@@ -31,10 +31,10 @@ async function main() {
         if (waManager.getState() === 'open') {
             const targetJid = '919712340450@s.whatsapp.net';
             const message = 'Hello from Antigravity! Your WhatsApp integration is now fully powered by the database. 🎉';
-            
+
             console.log(`Sending message to ${targetJid}...`);
             const result = await waManager.sendMessage(targetJid, { text: message });
-            
+
             console.log("Message sent successfully!");
             console.log("Result:", JSON.stringify(result, null, 2));
         } else {

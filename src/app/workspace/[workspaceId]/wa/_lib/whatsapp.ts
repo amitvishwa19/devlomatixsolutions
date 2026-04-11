@@ -56,7 +56,7 @@ class WhatsAppManager {
         console.log('wa manager init for session:', sessionId)
 
         try {
-            const { state, saveCreds } = await usePrismaAuthState(sessionId);
+            const { state, saveCreds } = await usePrismaAuthState(sessionId) as any;
             const { version } = await fetchLatestBaileysVersion();
 
             // Fetch userId associated with this session
@@ -68,7 +68,7 @@ class WhatsAppManager {
 
             this.sock = makeWASocket({
                 version,
-                auth: state,
+                auth: state as any,
                 printQRInTerminal: false,
                 logger: pino({ level: 'silent' }),
                 browser: ['Devlomatix', 'Chrome', '118.0.5993.88'],

@@ -39,6 +39,7 @@ export async function GET(req) {
       phoneNumberId: stored?.phoneNumberId || '',
       wabaId: stored?.wabaId || '',
       accessToken: mask(stored?.accessToken || ''),
+      isDefault: cred.isDefault,
       updatedAt: cred.updatedAt
     };
   });

@@ -22,6 +22,8 @@ export class CampaignEngine {
                 data: { status: 'QUEUED' }
             });
 
+            // Ensure worker is running
+            waQueueWorker.init();
             await waQueueWorker.enqueue(userId, 'CAMPAIGN', { campaignId, userId });
             
             console.log(`[Campaign] Enqueued Campaign ${campaignId} for User ${userId}`);
