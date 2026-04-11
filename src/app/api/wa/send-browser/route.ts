@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { waManager } from '@/lib/whatsapp-v2';
+import { waManager } from '@/app/workspace/[workspaceId]/wa/_lib/whatsapp-v2';
 
 export async function POST(req: Request) {
     try {

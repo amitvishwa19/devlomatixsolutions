@@ -55,7 +55,7 @@ export default function AppSidebar() {
 
 
         // WHATSAPP
-        { type: 'parent', title: "WhatsApp Manager", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
+        { type: 'parent', title: "WhatsApp Cloud API", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
         { type: 'child', title: "Dashboard", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
         { type: 'child', title: "Chats", url: `${baseWhathappPath}/chats`, icon: "message-square", category: "WhatsApp Manager" },
         { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "WhatsApp Manager" },

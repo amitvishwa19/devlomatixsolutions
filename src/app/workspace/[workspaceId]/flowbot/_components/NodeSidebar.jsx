@@ -28,7 +28,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { NODE_REGISTRY } from '@/lib/flowbot/node-registry';
+import { WA_NODE_REGISTRY as NODE_REGISTRY } from '@/app/workspace/[workspaceId]/wa/bot-flow-builder/_lib/node-registry';
 
 // Dynamic categories helper
 const getCategories = () => {

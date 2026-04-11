@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
-import * as cloudApi from "@/lib/whatsapp-cloud-api";
+import * as cloudApi from "@/app/workspace/[workspaceId]/wa/_lib/whatsapp-cloud-api";
 import { symmetricDecrypt } from "@/lib/encryption";
 
 export async function GET(req) {

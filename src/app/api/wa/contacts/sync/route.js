@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import * as cloudApi from '@/app/workspace/[workspaceId]/wa/_lib/whatsapp-cloud-api';
+import { waManager } from '@/app/workspace/[workspaceId]/wa/_lib/whatsapp-v2';
 import { db } from '@/lib/db';
-import { waManager } from '@/lib/whatsapp-v2';
 
 export async function POST(req) {
     try {

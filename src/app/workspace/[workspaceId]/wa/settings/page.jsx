@@ -3,17 +3,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    MessageSquare, 
-    Shield, 
-    Smartphone, 
-    RefreshCcw, 
-    CheckCircle2, 
-    AlertCircle, 
-    LogOut, 
-    QrCode, 
-    Plus, 
-    Trash2, 
+import {
+    MessageSquare,
+    Shield,
+    Smartphone,
+    RefreshCcw,
+    CheckCircle2,
+    AlertCircle,
+    LogOut,
+    QrCode,
+    Plus,
+    Trash2,
     Send,
     Settings,
     Zap,
@@ -43,8 +43,8 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { 
-    SelectValue 
+import {
+    SelectValue
 } from "@/components/ui/select";
 import {
     Dialog,
@@ -58,7 +58,7 @@ import {
 export default function SettingsPage() {
     // Connection Method State
     const [method, setMethod] = useState('cloud'); // 'cloud' | 'browser'
-    
+
     // Baileys / Browser States
     const [status, setStatus] = useState('welcome');
     const [metadata, setMetadata] = useState({});
@@ -68,15 +68,15 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [waUser, setWaUser] = useState(null);
-    
+
     // Cloud API States
     const [cloudCreds, setCloudCreds] = useState(null);
     const [cloudLoading, setCloudLoading] = useState(false);
-    
+
     // Shared States
     const [webhookUrl, setWebhookUrl] = useState('');
     const [copied, setCopied] = useState(false);
-    
+
     // Cloud Modal States
     const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
     const [tempCreds, setTempCreds] = useState({
@@ -149,7 +149,7 @@ export default function SettingsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(tempCreds)
             });
-            
+
             if (res.ok) {
                 toast.success('Cloud credentials updated');
                 setIsCredsModalOpen(false);
@@ -168,11 +168,11 @@ export default function SettingsPage() {
     useEffect(() => {
         fetchBrowserStatus();
         fetchCloudCreds();
-        
+
         const interval = setInterval(() => {
             if (method === 'browser') fetchBrowserStatus();
         }, 10000);
-        
+
         if (typeof window !== 'undefined') {
             setWebhookUrl(`${window.location.origin}/api/wa/webhook`);
         }
@@ -275,11 +275,11 @@ export default function SettingsPage() {
     return (
         <TooltipProvider>
             <div className="flex flex-col h-full gap-4 p-2 animate-in fade-in duration-500">
-                
+
                 {/* Unified Header with Connection Selector */}
                 <div className="flex border border-border items-center justify-between bg-card p-4 rounded-xl shadow-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 opacity-20" />
-                    
+
                     <div className="flex flex-row gap-4 items-center z-10">
                         <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-inner">
                             {method === 'cloud' ? <Globe className="w-6 h-6 text-primary" /> : <Smartphone className="w-6 h-6 text-primary" />}
@@ -294,19 +294,19 @@ export default function SettingsPage() {
                             <p className="text-xs text-muted-foreground font-medium">Manage your {method === 'cloud' ? 'Meta Cloud API' : 'Browser Session'} configuration and status.</p>
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-6 z-10">
                         <div className="flex flex-col items-end gap-2">
-                             <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter">Connection Method</Label>
-                             <div className="flex items-center gap-3 bg-muted/40 p-1.5 px-3 rounded-full border border-border/50 shadow-inner">
+                            <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter">Connection Method</Label>
+                            <div className="flex items-center gap-3 bg-muted/40 p-1.5 px-3 rounded-full border border-border/50 shadow-inner">
                                 <span className={`text-[10px] font-bold uppercase tracking-tight transition-opacity ${method === 'browser' ? 'text-primary' : 'text-muted-foreground/40'}`}>Browser</span>
-                                <Switch 
-                                    checked={method === 'cloud'} 
+                                <Switch
+                                    checked={method === 'cloud'}
                                     onCheckedChange={(checked) => setMethod(checked ? 'cloud' : 'browser')}
                                     className="data-[state=checked]:bg-primary h-5 w-9"
                                 />
                                 <span className={`text-[10px] font-bold uppercase tracking-tight transition-opacity ${method === 'cloud' ? 'text-primary' : 'text-muted-foreground/40'}`}>Cloud API</span>
-                             </div>
+                            </div>
                         </div>
 
                         <Separator orientation="vertical" className="h-10 mx-1 bg-border/50" />
@@ -337,7 +337,7 @@ export default function SettingsPage() {
                     {/* General Tab */}
                     <TabsContent value="general" className="flex-1 overflow-y-auto space-y-4 focus-visible:ring-0">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            
+
                             {/* Primary Connection Card */}
                             <Card className="lg:col-span-2 bg-card/50 border-border shadow-sm overflow-hidden flex flex-col min-h-[400px]">
                                 <CardHeader className="border-b border-border/50 pb-4 bg-muted/5">
@@ -358,12 +358,12 @@ export default function SettingsPage() {
                                         )}
                                     </div>
                                 </CardHeader>
-                                
+
                                 <CardContent className="flex-1 flex flex-col items-center justify-center p-8">
                                     {method === 'cloud' ? (
                                         <AnimatePresence mode="wait">
                                             {cloudCreds ? (
-                                                <motion.div 
+                                                <motion.div
                                                     initial={{ opacity: 0, scale: 0.95 }}
                                                     animate={{ opacity: 1, scale: 1 }}
                                                     className="w-full space-y-8"
@@ -377,7 +377,7 @@ export default function SettingsPage() {
                                                             <p className="text-xs text-muted-foreground">Your Meta Business identifiers are correctly synchronized.</p>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                         <div className="p-4 bg-muted/20 border border-border/50 rounded-xl space-y-2 group hover:border-primary/30 transition-colors">
                                                             <span className="text-[9px] uppercase font-black text-muted-foreground">Phone Number ID</span>
@@ -392,11 +392,11 @@ export default function SettingsPage() {
                                                             <code className="text-xs font-mono block truncate opacity-80 group-hover:opacity-100">{cloudCreds.accessToken}</code>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     <div className="flex justify-center pt-4">
-                                                        <Button 
-                                                            variant="outline" 
-                                                            className="gap-2 font-bold h-10 px-8 border-border hover:bg-primary/5 hover:border-primary/30" 
+                                                        <Button
+                                                            variant="outline"
+                                                            className="gap-2 font-bold h-10 px-8 border-border hover:bg-primary/5 hover:border-primary/30"
                                                             onClick={() => setIsCredsModalOpen(true)}
                                                         >
                                                             <Settings size={14} /> Update Credentials
@@ -442,7 +442,7 @@ export default function SettingsPage() {
                                                         <h3 className="text-lg font-black tracking-tight">Handshake Successful</h3>
                                                         <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">Your browser session is virtualized and actively processing webhooks.</p>
                                                     </div>
-                                                    
+
                                                     {waUser && (
                                                         <div className="flex items-center gap-3 bg-muted/30 p-2 pr-4 rounded-full border border-border/50 max-w-fit mx-auto">
                                                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-sm">
@@ -461,9 +461,9 @@ export default function SettingsPage() {
                                                         <Smartphone className="w-10 h-10 text-muted-foreground" />
                                                     </div>
                                                     <p className="text-xs text-muted-foreground font-medium">Capture a new session to begin self-hosted sync.</p>
-                                                    <Button 
-                                                        className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:scale-105" 
-                                                        onClick={handleConnect} 
+                                                    <Button
+                                                        className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:scale-105"
+                                                        onClick={handleConnect}
                                                         disabled={actionLoading || status === 'connecting'}
                                                     >
                                                         {status === 'connecting' ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Zap size={16} />}
@@ -474,11 +474,11 @@ export default function SettingsPage() {
                                         </AnimatePresence>
                                     )}
                                 </CardContent>
-                                
+
                                 <CardFooter className="bg-muted/5 border-t border-border/50 px-6 py-4 flex justify-between items-center overflow-hidden">
                                     <div className="flex items-center gap-4">
                                         <div className="flex -space-x-2">
-                                            {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full bg-card border-2 border-background shadow-sm" />)}
+                                            {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full bg-card border-2 border-primary shadow-sm" />)}
                                         </div>
                                         <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Active nodes supporting this method</span>
                                     </div>
@@ -495,7 +495,7 @@ export default function SettingsPage() {
                                     <h4 className="text-xs font-black uppercase tracking-tighter flex items-center gap-2 text-primary">
                                         <Server size={14} /> Instance Metadata
                                     </h4>
-                                    
+
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between group">
                                             <div className="flex items-center gap-3">
@@ -506,7 +506,7 @@ export default function SettingsPage() {
                                             </div>
                                             <Badge variant="outline" className="text-[9px] font-black border-blue-500/20 text-blue-500 bg-blue-500/5 uppercase">High-Grade</Badge>
                                         </div>
-                                        
+
                                         <div className="flex items-center justify-between group">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
@@ -516,7 +516,7 @@ export default function SettingsPage() {
                                             </div>
                                             <Badge variant="outline" className="text-[9px] font-black border-emerald-500/20 text-emerald-500 bg-emerald-500/5 uppercase">0.4ms</Badge>
                                         </div>
-                                        
+
                                         <div className="flex items-center justify-between group">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -527,9 +527,9 @@ export default function SettingsPage() {
                                             <Badge variant="outline" className="text-[9px] font-black border-amber-500/20 text-amber-500 bg-amber-500/5 uppercase">v21.0</Badge>
                                         </div>
                                     </div>
-                                    
+
                                     <Separator className="bg-border/50" />
-                                    
+
                                     <Button variant="ghost" className="w-full justify-between text-xs font-bold group hover:bg-primary/5 hover:text-primary transition-all">
                                         Developer Documentation
                                         <ExternalLink size={14} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -561,8 +561,8 @@ export default function SettingsPage() {
                                             <Bot className="w-4 h-4 text-primary" />
                                             Unified Responder
                                         </CardTitle>
-                                        <Switch 
-                                            checked={metadata.autoResponderEnabled || false} 
+                                        <Switch
+                                            checked={metadata.autoResponderEnabled || false}
                                             onCheckedChange={(checked) => handleSaveMetadata({ autoResponderEnabled: checked })}
                                         />
                                     </div>
@@ -572,8 +572,8 @@ export default function SettingsPage() {
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-sm font-semibold">AI Assistant Analysis</Label>
-                                            <Switch 
-                                                checked={metadata.aiAssistantEnabled || false} 
+                                            <Switch
+                                                checked={metadata.aiAssistantEnabled || false}
                                                 onCheckedChange={(checked) => handleSaveMetadata({ aiAssistantEnabled: checked })}
                                             />
                                         </div>
@@ -585,8 +585,8 @@ export default function SettingsPage() {
                                             <Label className="text-sm font-bold uppercase tracking-tight text-primary/80">Default Response Protocol</Label>
                                             <Badge variant="outline" className="text-[9px] h-5 opacity-40">Markdown Support Only</Badge>
                                         </div>
-                                        <Textarea 
-                                            className="min-h-[140px] text-xs bg-muted/20 border-border/50 font-medium leading-relaxed" 
+                                        <Textarea
+                                            className="min-h-[140px] text-xs bg-muted/20 border-border/50 font-medium leading-relaxed"
                                             placeholder="Hello! Thanks for reaching out to Devlomatix. We've received your inquiry and our team will get back to you shortly."
                                             value={metadata.welcomeMessage || ''}
                                             onChange={(e) => setMetadata({ ...metadata, welcomeMessage: e.target.value })}
@@ -625,10 +625,10 @@ export default function SettingsPage() {
                                             {(metadata.testNumbers || []).map((num) => (
                                                 <Badge key={num} variant="secondary" className="pl-4 pr-1.5 py-1.5 gap-2 border border-border/50 bg-card hover:border-primary/50 transition-all font-mono text-[10px] shadow-sm">
                                                     {num}
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive transition-colors rounded-full" 
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive transition-colors rounded-full"
                                                         onClick={() => handleRemoveNumber(num)}
                                                     >
                                                         <Trash2 className="h-3 w-3" />
@@ -691,8 +691,8 @@ export default function SettingsPage() {
                                                 <Globe className="w-4 h-4 text-primary/30 group-hover:text-primary transition-colors" />
                                             </div>
                                         </div>
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             className="h-12 w-12 border-border hover:bg-primary/5 hover:border-primary/50 transition-all shadow-lg"
                                             onClick={() => copyToClipboard(webhookUrl)}
                                         >
@@ -709,7 +709,7 @@ export default function SettingsPage() {
                                         <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">Incoming request bodies are automatically decrypted using your project-wide symmetric keys.</p>
                                         <div className="p-2 bg-muted/60 rounded-lg text-[9px] font-mono opacity-60">AES-256-GCM / IV</div>
                                     </div>
-                                    
+
                                     <div className="p-5 bg-card border border-border/50 rounded-2xl space-y-4 shadow-sm group hover:border-primary/30 transition-all">
                                         <h5 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
                                             <Smartphone size={12} /> JID Translation
@@ -777,17 +777,17 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <DialogFooter className="pt-4 border-t border-border/50">
-                            <Button 
-                                variant="ghost" 
+                            <Button
+                                variant="ghost"
                                 size="sm"
-                                onClick={() => setIsCredsModalOpen(false)} 
+                                onClick={() => setIsCredsModalOpen(false)}
                                 className="font-bold h-10 border border-transparent hover:border-border"
                             >
                                 Cancel
                             </Button>
-                            <Button 
-                                variant="default" 
-                                size="sm" 
+                            <Button
+                                variant="default"
+                                size="sm"
                                 onClick={handleSaveCloudCreds}
                                 disabled={cloudLoading}
                                 className="bg-primary hover:bg-primary/90 font-black h-10 px-8 shadow-lg"

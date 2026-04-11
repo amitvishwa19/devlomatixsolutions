@@ -1,5 +1,6 @@
 import { AuthenticationCreds, AuthenticationState, BufferJSON, SignalDataSet, SignalDataTypeMap, initAuthCreds } from '@whiskeysockets/baileys';
-import { db } from './db';
+import { WA_NODE_REGISTRY as NODE_REGISTRY } from '@/app/workspace/[workspaceId]/wa/bot-flow-builder/_lib/node-registry';
+import { db } from '@/lib/db';
 
 /**
  * Custom auth state for Baileys that uses Prisma as the backend.

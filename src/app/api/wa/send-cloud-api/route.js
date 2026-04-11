@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/options';
-import { db } from '@/lib/db';
-import * as cloudApi from '@/lib/whatsapp-cloud-api';
+import { waManager } from '@/app/workspace/[workspaceId]/wa/_lib/whatsapp-v2';
+import * as cloudApi from '@/app/workspace/[workspaceId]/wa/_lib/whatsapp-cloud-api';
 import { symmetricDecrypt } from '@/lib/encryption';
 
 export async function POST(req) {

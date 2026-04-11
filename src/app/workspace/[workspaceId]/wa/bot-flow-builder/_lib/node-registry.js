@@ -12,7 +12,8 @@ import {
     ShoppingBag,
     ShoppingCart,
     Truck,
-    CreditCard
+    CreditCard,
+    Package
 } from 'lucide-react';
 
 /**

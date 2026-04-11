@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { NODE_REGISTRY } from '@/lib/flowbot/node-registry';
+import { WA_NODE_REGISTRY as NODE_REGISTRY } from '@/app/workspace/[workspaceId]/wa/bot-flow-builder/_lib/node-registry';
 
 /**
  * PropertyPanel v2 (n8n Style)

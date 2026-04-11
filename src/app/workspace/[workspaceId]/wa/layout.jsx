@@ -9,7 +9,7 @@ export const metadata = {
 import { getServerSession } from"next-auth";
 import { authOptions } from"@/app/api/auth/[...nextauth]/options";
 import { db } from"@/lib/db";
-import { waManager } from"@/lib/whatsapp";
+import { waManager } from"@/app/workspace/[workspaceId]/wa/_lib/whatsapp";
 
 export default async function DashboardLayout({ children }) {
  const session = await getServerSession(authOptions);

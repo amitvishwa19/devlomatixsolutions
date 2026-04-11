@@ -3,7 +3,7 @@ import pino from 'pino';
 import { Boom } from '@hapi/boom';
 import * as fs from 'fs';
 import { usePrismaAuthState } from './whatsapp-auth';
-import { db } from './db';
+import { db } from '@/lib/db';
 
 export interface WAMessageHistory {
     id: string;
