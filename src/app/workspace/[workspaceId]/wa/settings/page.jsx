@@ -339,7 +339,7 @@ export default function SettingsPage() {
             toast.error('Maximum 5 test numbers allowed');
             return;
         }
-        
+
         handleSaveMetadata({ testNumbers: [...currentTestNumbers, cleanNumber] });
         setTestNumberInput('');
     };
@@ -580,6 +580,7 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label className="text-xs opacity-70">Default Welcome Message</Label>
                                         <Textarea
+                                            rows={6}
                                             className="min-h-[120px] bg-muted/10 text-xs focus:border-primary/40"
                                             placeholder="Hello! How can we help you today?"
                                             value={metadata.welcomeMessage || ''}
@@ -606,8 +607,8 @@ export default function SettingsPage() {
                                     <div className="flex gap-2">
                                         <div className="relative flex-1">
                                             <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                            <Input 
-                                                placeholder="Enter phone with country code (e.g. 919876543210)" 
+                                            <Input
+                                                placeholder="Enter phone with country code (e.g. 919876543210)"
                                                 className="pl-9 bg-muted/10 h-10 text-xs"
                                                 value={testNumberInput}
                                                 onChange={e => setTestNumberInput(e.target.value)}
@@ -627,9 +628,9 @@ export default function SettingsPage() {
                                                     <span className="text-sm font-mono">{num}</span>
                                                     <Badge variant="outline" className="text-[8px] h-4 border-primary/20 text-primary opacity-60">VERIFIED</Badge>
                                                 </div>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                                     onClick={() => handleRemoveTestNumber(num)}
                                                 >

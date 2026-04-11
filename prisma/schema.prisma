@@ -399,6 +399,7 @@ model Contact {
   ecommerceOrders ECommerceOrder[]
   category        Category?        @relation(fields: [categoryId], references: [id])
   categoryId      String?
+  subscribed      Boolean          @default(true)
 
   @@unique([workspaceId, phone])
   @@index([userId])

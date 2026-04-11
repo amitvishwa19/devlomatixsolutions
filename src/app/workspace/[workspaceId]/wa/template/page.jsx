@@ -66,12 +66,8 @@ export default function TemplatePage() {
     };
 
     useEffect(() => {
-        const seeded = localStorage.getItem('wa_templates_seeded_v1');
-        if (!seeded) {
-            fetchTemplates(true);
-        } else {
-            fetchTemplates();
-        }
+        fetchTemplates();
+        fetchTestNumbers();
     }, []);
 
     // Modal & Builder State
@@ -143,6 +139,20 @@ export default function TemplatePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [isSubmittingId, setIsSubmittingId] = useState(null);
+    const [isDeletingId, setIsDeletingId] = useState(null);
+
+    // Fetch Test Numbers from Auth Metadata
+    const fetchTestNumbers = async () => {
+        try {
+            const res = await fetch('/api/wa/auth');
+            const data = await res.json();
+            if (data?.metadata?.testNumbers) {
+                setSavedTestNumbers(data.metadata.testNumbers);
+            }
+        } catch (error) {
+            console.error("Failed to fetch test numbers:", error);
+        }
+    };
 
     // Sync from Cloud API
     const handleSyncCloud = async () => {
@@ -233,6 +243,7 @@ export default function TemplatePage() {
             if (shouldSubmit && templateId && formData.platform === 'WHATSAPP_CLOUD') {
                 setIsSubmittingId(templateId);
                 await handleSubmitToMeta(templateId);
+                setIsBuilderOpen(false);
             } else {
                 setIsBuilderOpen(false);
                 fetchTemplates();
@@ -246,6 +257,7 @@ export default function TemplatePage() {
     };
 
     const handleDelete = async (id) => {
+        setIsDeletingId(id);
         try {
             const res = await fetch(`/api/wa/template?id=${id}`, { method: 'DELETE' });
             const data = await res.json();
@@ -255,6 +267,8 @@ export default function TemplatePage() {
             setTemplates((prev) => prev.filter((t) => t.id !== id));
         } catch (error) {
             toast.error(error.message);
+        } finally {
+            setIsDeletingId(null);
         }
     };
 
@@ -685,12 +699,22 @@ export default function TemplatePage() {
                                     {template.platform === 'WHATSAPP_CLOUD' && (
                                         <>
                                             {(!template.status || template.status === 'DRAFT') ? (
-                                                <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary" onClick={() => handleSubmitToMeta(template.id)}>
-                                                    <Sparkles className="w-3.5 h-3.5 opacity-60" /> Submit for Review
+                                                <DropdownMenuItem 
+                                                    className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary" 
+                                                    onClick={() => handleSubmitToMeta(template.id)}
+                                                    disabled={isSubmittingId === template.id}
+                                                >
+                                                    {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 opacity-60" />} 
+                                                    Submit for Review
                                                 </DropdownMenuItem>
                                             ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
-                                                <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-orange-500" onClick={() => handleCheckStatus(template.id)}>
-                                                    <RefreshCw className="w-3.5 h-3.5 opacity-60" /> Refresh Status
+                                                <DropdownMenuItem 
+                                                    className="text-xs flex items-center gap-2 cursor-pointer py-2 text-orange-500" 
+                                                    onClick={() => handleCheckStatus(template.id)}
+                                                    disabled={isSubmittingId === template.id}
+                                                >
+                                                    {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 opacity-60" />} 
+                                                    Refresh Status
                                                 </DropdownMenuItem>
                                             ) : null}
                                         </>
@@ -699,8 +723,16 @@ export default function TemplatePage() {
                                     {!template.isDefault && (
                                         <>
                                             <div className="h-px bg-border my-1" />
-                                            <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10" onClick={() => handleDelete(template.id)}>
-                                                <Trash2 className="w-3.5 h-3.5 opacity-60" /> Delete Template
+                                            <DropdownMenuItem 
+                                                className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10" 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(template.id);
+                                                }}
+                                                disabled={isDeletingId === template.id}
+                                            >
+                                                {isDeletingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 opacity-60" />} 
+                                                {isDeletingId === template.id ? "Deleting..." : "Delete Template"}
                                             </DropdownMenuItem>
                                         </>
                                     )}
@@ -810,12 +842,22 @@ export default function TemplatePage() {
                             {template.platform === 'WHATSAPP_CLOUD' && (
                                 <>
                                     {(!template.status || template.status === 'DRAFT') ? (
-                                        <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary" onClick={() => handleSubmitToMeta(template.id)}>
-                                            <Sparkles className="w-3.5 h-3.5 opacity-60" /> Submit for Review
+                                        <DropdownMenuItem 
+                                            className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary" 
+                                            onClick={() => handleSubmitToMeta(template.id)}
+                                            disabled={isSubmittingId === template.id}
+                                        >
+                                            {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 opacity-60" />} 
+                                            Submit for Review
                                         </DropdownMenuItem>
                                     ) : (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? (
-                                        <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-orange-500" onClick={() => handleCheckStatus(template.id)}>
-                                            <RefreshCw className="w-3.5 h-3.5 opacity-60" /> Refresh Status
+                                        <DropdownMenuItem 
+                                            className="text-xs flex items-center gap-2 cursor-pointer py-2 text-orange-500" 
+                                            onClick={() => handleCheckStatus(template.id)}
+                                            disabled={isSubmittingId === template.id}
+                                        >
+                                            {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 opacity-60" />} 
+                                            Refresh Status
                                         </DropdownMenuItem>
                                     ) : null}
                                 </>
@@ -824,8 +866,16 @@ export default function TemplatePage() {
                             {!template.isDefault && (
                                 <>
                                     <div className="h-px bg-border my-1" />
-                                    <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10" onClick={() => handleDelete(template.id)}>
-                                        <Trash2 className="w-3.5 h-3.5 opacity-60" /> Delete Template
+                                    <DropdownMenuItem 
+                                        className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10" 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(template.id);
+                                        }}
+                                        disabled={isDeletingId === template.id}
+                                    >
+                                        {isDeletingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 opacity-60" />} 
+                                        {isDeletingId === template.id ? "Deleting..." : "Delete Template"}
                                     </DropdownMenuItem>
                                 </>
                             )}
@@ -890,21 +940,14 @@ export default function TemplatePage() {
                                 >
                                     My Templates
                                 </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className={` h-full px-3 transition-all ${filterType === 'browser' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
-                                    onClick={() => setFilterType('browser')}
-                                >
-                                    Browser
-                                </Button>
+
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     className={`h-full px-3 transition-all ${filterType === 'cloud_api' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`}
                                     onClick={() => setFilterType('cloud_api')}
                                 >
-                                    Cloud API
+                                    All Templates
                                 </Button>
                             </div>
 
@@ -1625,23 +1668,23 @@ export default function TemplatePage() {
                             </ScrollArea>
 
                             <SheetFooter className="p-2 border-t border-border bg-card flex flex-row items-center justify-end gap-3 shrink-0">
-                                <Button variant="ghost" onClick={() => openTestModal(formData)} disabled={!formData.body} className="mr-auto text-primary">
+                                <Button variant="ghost" onClick={() => openTestModal(formData)} disabled={!formData.body || isSaving || isSubmittingId} className="mr-auto text-primary">
                                     <Send className="w-4 h-4 mr-2" /> Test
                                 </Button>
-                                <Button variant="outline" onClick={() => setIsBuilderOpen(false)}>Cancel</Button>
+                                <Button variant="outline" onClick={() => setIsBuilderOpen(false)} disabled={isSaving || isSubmittingId}>Cancel</Button>
                                 {formData.platform === 'WHATSAPP_CLOUD' && (!formData.status || formData.status === 'DRAFT') && (
                                     <Button
                                         variant="outline"
                                         onClick={() => handleSave(true)}
-                                        disabled={!formData.name || !formData.body || isSaving || isSubmittingId === editingId}
+                                        disabled={!formData.name || !formData.body || isSaving || isSubmittingId}
                                         className="border-primary/50 text-primary hover:bg-primary/5"
                                     >
-                                        {(isSaving || isSubmittingId) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                        {isSubmittingId && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                         <Sparkles className="w-3.5 h-3.5 mr-2" />
                                         Save & Submit for Review
                                     </Button>
                                 )}
-                                <Button onClick={() => handleSave(false)} disabled={!formData.name || !formData.body || isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                                <Button onClick={() => handleSave(false)} disabled={!formData.name || !formData.body || isSaving || isSubmittingId} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                                     {(isSaving && !isSubmittingId) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                     {editingId ? 'Save Changes' : 'Create Template'}
                                 </Button>
