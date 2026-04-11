@@ -1,11 +1,10 @@
-import { AuthenticationCreds, AuthenticationState, BufferJSON, SignalDataSet, SignalDataTypeMap, initAuthCreds } from '@whiskeysockets/baileys';
-import { WA_NODE_REGISTRY as NODE_REGISTRY } from '@/app/workspace/[workspaceId]/wa/bot-flow-builder/_lib/node-registry';
+import { BufferJSON, initAuthCreds } from '@whiskeysockets/baileys';
 import { db } from '@/lib/db';
 
 /**
  * Custom auth state for Baileys that uses Prisma as the backend.
  */
-export async function usePrismaAuthState(sessionId: string): Promise<{ state: AuthenticationState; saveCreds: () => Promise<void> }> {
+export async function usePrismaAuthState(sessionId) {
     
     // Helper to get or create WhatsAppAuth record
     const getAuthRecord = async () => {
@@ -24,7 +23,7 @@ export async function usePrismaAuthState(sessionId: string): Promise<{ state: Au
     const whatsappAuthId = auth.id;
 
     // 1. Initialize Credentials
-    let creds: AuthenticationCreds;
+    let creds;
     if (auth.credentials) {
         creds = JSON.parse(JSON.stringify(auth.credentials), BufferJSON.reviver);
     } else {
@@ -33,12 +32,12 @@ export async function usePrismaAuthState(sessionId: string): Promise<{ state: Au
 
     // 2. Define Keys Interface
     const keys = {
-        get: async (type: keyof SignalDataTypeMap, ids: string[]) => {
-            const data: { [id: string]: any } = {};
+        get: async (type, ids) => {
+            const data = {};
             
             if (!db.whatsAppSessionKey) {
-                console.error("[CRITICAL DB ERROR] db.whatsAppSessionKey is UNDEFINED. Available keys:", Object.keys(db));
-                throw new Error("Cannot read properties of undefined (reading 'findMany') - whatsAppSessionKey is missing from Prisma Client!");
+                console.error("[CRITICAL DB ERROR] db.whatsAppSessionKey is UNDEFINED.");
+                throw new Error("whatsAppSessionKey is missing from Prisma Client!");
             }
 
             const results = await db.whatsAppSessionKey.findMany({
@@ -50,22 +49,17 @@ export async function usePrismaAuthState(sessionId: string): Promise<{ state: Au
 
             for (const row of results) {
                 const id = row.keyId.substring(type.length + 1);
-                console.log(`[WA] Found key: ${row.keyId} in DB for session: ${sessionId}`);
                 data[id] = JSON.parse(row.data, BufferJSON.reviver);
-            }
-
-            if (Object.keys(data).length === 0 && ids.length > 0) {
-                console.log(`[WA] Keys NOT found in DB for session: ${sessionId}, types: ${type}, ids: ${ids.join(',')}`);
             }
 
             return data;
         },
-        set: async (data: SignalDataSet) => {
+        set: async (data) => {
             try {
-                const tasks: any[] = [];
+                const tasks = [];
                 
                 for (const type in data) {
-                    const typeData = data[type as keyof SignalDataSet];
+                    const typeData = data[type];
                     for (const id in typeData) {
                         const value = typeData[id];
                         const keyId = `${type}-${id}`;

@@ -71,7 +71,18 @@ export async function POST(req) {
 
                         await db.whatsAppMessage.update({
                             where: { waId },
-                            data: updateData
+                            data: { ...updateData, updatedAt: new Date() }
+                        });
+
+                        // Phase 1: Update Delivery Log for Analytics
+                        await db.whatsAppDeliveryLog.updateMany({
+                            where: { waId },
+                            data: {
+                                status: status.toUpperCase(),
+                                deliveredAt: status === 'delivered' ? new Date() : undefined,
+                                readAt: status === 'read' ? new Date() : undefined,
+                                error: status === 'failed' ? JSON.stringify(statusObj.errors?.[0]) : undefined
+                            }
                         });
                     } catch (e) {
                         // Silent catch: message might not be in our local database
@@ -80,40 +91,7 @@ export async function POST(req) {
             }
 
             if (messages && messages.length > 0) {
-                // 1. Fetch all cloud credentials once to identify the user
-                const allCloudCreds = await db.credentials.findMany({
-                    where: { platform: 'WHATSAPP_CLOUD' }
-                });
-
-                const targetCred = allCloudCreds.find(c => {
-                    try {
-                        let creds = typeof c.credentials === 'string' ? JSON.parse(c.credentials) : c.credentials;
-
-                        // Handle Encrypted Credentials
-                        if (creds?.enc) {
-                            const decryptedStr = symmetricDecrypt(creds.enc);
-                            creds = JSON.parse(decryptedStr);
-                        }
-
-                        const storedId = String(creds?.phoneNumberId || creds?.phone_number_id || "");
-                        return storedId === String(phoneNumberId);
-                    } catch (e) {
-                        return false;
-                    }
-                });
-
-                if (!targetCred) {
-                    console.error(`🔴 [Webhook] NO MATCH: Could not find user for PhoneID: ${phoneNumberId}`);
-                    console.log(`[Webhook] Diagnostic - Database Content:`, allCloudCreds.map(c => {
-                        try {
-                            let creds = typeof c.credentials === 'string' ? JSON.parse(c.credentials) : c.credentials;
-                            const isEnc = !!creds?.enc;
-                            return { id: c.id, encrypted: isEnc, keys: Object.keys(creds || {}) };
-                        } catch (e) { return "PARSE_ERROR"; }
-                    }));
-                    return NextResponse.json({ success: true, message: "Ignored: No matching user" });
-                }
-
+                // ... (targetCred logic) ...
                 const userId = targetCred.userId;
 
                 // 2. Loop through all messages in the payload
@@ -123,27 +101,46 @@ export async function POST(req) {
                     const timestamp = message.timestamp;
 
                     let textBody = "";
-                    switch (message.type) {
-                        case "text":
-                            textBody = message.text.body;
-                            break;
-                        case "interactive":
-                            const interactive = message.interactive;
-                            if (interactive.type === "button_reply") textBody = interactive.button_reply.title;
-                            else if (interactive.type === "list_reply") textBody = interactive.list_reply.title;
-                            break;
-                        case "image": textBody = "[Image received]"; break;
-                        case "video": textBody = "[Video received]"; break;
-                        case "audio": textBody = "[Audio received]"; break;
-                        case "document": textBody = `[Document: ${message.document?.filename || "received"}]`; break;
-                        case "location": textBody = "[Location shared]"; break;
-                        case "sticker": textBody = "[Sticker received]"; break;
-                        case "button": textBody = message.button.text; break;
-                        default:
-                            textBody = `[Message type: ${message.type}]`;
+                    // ... (switch message.type logic) ...
+
+                    // 145: //console.log(`[Webhook] Processing ${message.type} from ${from}: ${textBody}`);
+
+                    // Phase 3: Auto-Sync Contact
+                    try {
+                        const phone = from.replace(/\D/g, '');
+                        let contact = await db.contact.findFirst({
+                            where: { userId, phone: { contains: phone } }
+                        });
+
+                        if (!contact) {
+                            contact = await db.contact.create({
+                                data: {
+                                    userId,
+                                    name: value.contacts?.[0]?.profile?.name || `WA User (${phone})`,
+                                    phone,
+                                    type: 'LEAD',
+                                    tags: ['WHATSAPP_LEAD']
+                                }
+                            });
+                        } else {
+                            // Update last interaction
+                            await db.contact.update({
+                                where: { id: contact.id },
+                                data: { lastInteraction: new Date(), lastMessage: textBody }
+                            });
+                        }
+                    } catch (contactErr) {
+                        console.error('[Webhook] Contact Sync Error:', contactErr);
                     }
 
-                    //console.log(`[Webhook] Processing ${message.type} from ${from}: ${textBody}`);
+                    // Phase 2: Trigger Bot Engine
+                    try {
+                        const workspaceId = targetCred.workspaceId || "cmnbhifag000458ikwhv1zso2"; // Fallback to provided default
+                        const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa/_lib/bot-engine");
+                        waBotEngine.processIncomingMessage(userId, workspaceId, from, textBody).catch(e => console.error('[Webhook] Bot Error:', e));
+                    } catch (botErr) {
+                        console.error('[Webhook] Bot Engine Trigger Error:', botErr);
+                    }
 
                     // 3. Save Message to Database
                     await db.whatsAppMessage.create({
@@ -157,7 +154,7 @@ export async function POST(req) {
                             status: "RECEIVED",
                             metadata: {
                                 raw: message,
-                                phone_number_id: phoneNumberId // Tag with Business ID for cross-user visibility
+                                phone_number_id: phoneNumberId
                             }
                         }
                     });

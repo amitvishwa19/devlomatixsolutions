@@ -60,6 +60,8 @@ model User {
   ecommerceOrders           ECommerceOrder[]
   ecommerceProducts         ECommerceProduct[]
   ecommerceAbandonedCarts   ECommerceAbandonedCart[]
+  waJobs                    WhatsAppJob[]
+  waDeliveryLogs            WhatsAppDeliveryLog[]
 
   @@index([email])
   @@index([phone])
@@ -444,6 +446,52 @@ model WhatsAppSessionKey {
   @@index([whatsappAuthId])
 }
 
+model WhatsAppJob {
+  id          String               @id @default(cuid())
+  userId      String
+  type        String               @default("CAMPAIGN") // CAMPAIGN, TRANSACTIONAL, AUTOMATION
+  status      String               @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED
+  payload     Json
+  priority    Int                  @default(0)
+  retryCount  Int                  @default(0)
+  maxRetries  Int                  @default(3)
+  errorLog    String?
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  logs        WhatsAppDeliveryLog[]
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model WhatsAppDeliveryLog {
+  id         String      @id @default(cuid())
+  jobId      String?
+  userId     String
+  jid        String
+  waId       String?     @unique
+  status     String      @default("QUEUED") // QUEUED, SENT, DELIVERED, READ, FAILED
+  error      String?
+  metadata   Json?
+  sentAt     DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  job        WhatsAppJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([userId])
+  @@index([jid])
+  @@index([status])
+}
+
 model ContactGroup {
   id          String    @id @default(cuid())
   workspaceId String?   @default("cmnbhifag000458ikwhv1zso2")
@@ -470,6 +518,7 @@ model WorkspaceDocument {
   extension   String?
   fileSize    Int?
   category    String?             @default("GENERAL")
+  content     String?             @db.Text
   isFolder    Boolean             @default(false)
   parentId    String?
   workspaceId String

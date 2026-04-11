@@ -33,17 +33,29 @@ export async function GET(req) {
 
         // 2. Prepare Time-Series Buckets
         const days = eachDayOfInterval({ start: startDate, end: endDate });
+        
+        // Fetch detailed logs for more accurate stats
+        const deliveryLogs = await db.whatsAppDeliveryLog.findMany({
+            where: {
+                userId,
+                createdAt: { gte: startDate }
+            }
+        });
+
         const timeSeriesData = days.map(day => {
             const dateStr = format(day, 'MMM d');
-            const dayMessages = messages.filter(m => format(new Date(m.createdAt), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+            const dayStr = format(day, 'yyyy-MM-dd');
+            
+            const dayMessages = messages.filter(m => format(new Date(m.createdAt), 'yyyy-MM-dd') === dayStr);
+            const dayDeliveryLogs = deliveryLogs.filter(l => format(new Date(l.createdAt), 'yyyy-MM-dd') === dayStr);
             
             return {
                 date: dateStr,
                 sent: dayMessages.filter(m => m.fromMe).length,
                 received: dayMessages.filter(m => !m.fromMe).length,
-                delivered: dayMessages.filter(m => m.status === 'DELIVERED').length,
-                read: dayMessages.filter(m => m.status === 'READ').length,
-                failed: dayMessages.filter(m => m.status === 'FAILED').length
+                delivered: dayDeliveryLogs.filter(l => l.status === 'DELIVERED').length,
+                read: dayDeliveryLogs.filter(l => l.status === 'READ').length,
+                failed: dayDeliveryLogs.filter(l => l.status === 'FAILED').length
             };
         });
 

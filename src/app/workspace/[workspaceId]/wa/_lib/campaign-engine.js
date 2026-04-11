@@ -1,36 +1,55 @@
-import { waManager } from './whatsapp';
-import { db } from './db';
+import { db } from '@/lib/db';
+import { waQueueWorker } from './queue-worker';
+import { waManager } from './whatsapp-v2';
 
 export class CampaignEngine {
-    private static instance: CampaignEngine;
-    private activeCampaigns: Set<string> = new Set();
+    static instance;
+    activeCampaigns = new Set();
 
-    private constructor() {}
+    constructor() {}
 
-    public static getInstance(): CampaignEngine {
+    static getInstance() {
         if (!CampaignEngine.instance) {
             CampaignEngine.instance = new CampaignEngine();
         }
         return CampaignEngine.instance;
     }
 
-    async startCampaign(campaignId: string, userId: string) {
+    async startCampaign(campaignId, userId) {
+        try {
+            await db.campaign.update({
+                where: { id: campaignId },
+                data: { status: 'QUEUED' }
+            });
+
+            await waQueueWorker.enqueue(userId, 'CAMPAIGN', { campaignId, userId });
+            
+            console.log(`[Campaign] Enqueued Campaign ${campaignId} for User ${userId}`);
+
+        } catch (error) {
+            console.error(`[Campaign] Fatal error in campaign ${campaignId}:`, error);
+            await db.campaign.update({
+                where: { id: campaignId },
+                data: { status: 'ERROR' }
+            });
+        }
+    }
+
+    async processCampaign(campaignId) {
         if (this.activeCampaigns.has(campaignId)) {
             console.log(`[Campaign] Campaign ${campaignId} is already running.`);
             return;
         }
 
         this.activeCampaigns.add(campaignId);
-        console.log(`[Campaign] Starting Campaign ${campaignId} for User ${userId}`);
+        console.log(`[Campaign] Processing Campaign ${campaignId}`);
 
         try {
-            // 1. Update Campaign Status
             await db.campaign.update({
                 where: { id: campaignId },
                 data: { status: 'RUNNING' }
             });
 
-            // 2. Fetch Campaign with Recipients and Template
             const campaign = await db.campaign.findUnique({
                 where: { id: campaignId },
                 include: {
@@ -41,9 +60,7 @@ export class CampaignEngine {
 
             if (!campaign) throw new Error('Campaign not found');
 
-            // 3. Process Recipients
             for (const recipient of campaign.recipients) {
-                // Check if campaign was stopped/paused externally
                 const currentCampaign = await db.campaign.findUnique({ where: { id: campaignId }, select: { status: true } });
                 if (currentCampaign?.status !== 'RUNNING') {
                     console.log(`[Campaign] Campaign ${campaignId} was ${currentCampaign?.status}. Stopping engine.`);
@@ -51,22 +68,19 @@ export class CampaignEngine {
                 }
 
                 try {
-                    // Prepare payload and inject variables
-                    let messageText = campaign.messageTemplate['text'] || '';
-                    const variables = recipient.variables as any || {};
+                    let messageText = campaign.template?.body || campaign.messageTemplate['text'] || '';
+                    const variables = recipient.variables || {};
                     
-                    // Replace {{v1}}, {{v2}}, etc.
                     Object.keys(variables).forEach(key => {
                         const placeholder = `{{${key}}}`;
                         messageText = messageText.replace(new RegExp(placeholder, 'g'), variables[key]);
                     });
 
-                    const payload: any = { text: messageText };
-                    if (campaign.messageTemplate['image']) payload.image = campaign.messageTemplate['image'];
-                    if (campaign.messageTemplate['video']) payload.video = campaign.messageTemplate['video'];
-                    if (campaign.messageTemplate['interactive']) {
+                    const payload = { text: messageText };
+                    if (campaign.messageTemplate?.image) payload.image = campaign.messageTemplate['image'];
+                    if (campaign.messageTemplate?.video) payload.video = campaign.messageTemplate['video'];
+                    if (campaign.messageTemplate?.interactive) {
                         payload.interactive = JSON.parse(JSON.stringify(campaign.messageTemplate['interactive']));
-                        // Also inject variables into interactive body if present
                         if (payload.interactive.body) {
                             Object.keys(variables).forEach(key => {
                                 const placeholder = `{{${key}}}`;
@@ -75,17 +89,15 @@ export class CampaignEngine {
                         }
                     }
 
-                    // Send Message
                     const jid = recipient.phone.includes('@') ? recipient.phone : `${recipient.phone.replace(/\D/g, '')}@s.whatsapp.net`;
                     await waManager.sendMessage(jid, payload);
 
-                    // Update Recipient Status
                     await db.campaignRecipient.update({
                         where: { id: recipient.id },
                         data: { status: 'SENT', sentAt: new Date() }
                     });
 
-                } catch (err: any) {
+                } catch (err) {
                     console.error(`[Campaign] Error sending to ${recipient.phone}:`, err);
                     await db.campaignRecipient.update({
                         where: { id: recipient.id },
@@ -93,12 +105,10 @@ export class CampaignEngine {
                     });
                 }
 
-                // Random delay between 1-3 seconds to avoid detection
                 const delay = Math.floor(Math.random() * 2000) + 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
 
-            // 4. Finalize Campaign
             const remaining = await db.campaignRecipient.count({ where: { campaignId, status: 'PENDING' } });
             await db.campaign.update({
                 where: { id: campaignId },
@@ -116,12 +126,11 @@ export class CampaignEngine {
         }
     }
 
-    async stopCampaign(campaignId: string) {
+    async stopCampaign(campaignId) {
         await db.campaign.update({
             where: { id: campaignId },
             data: { status: 'PAUSED' }
         });
-        // The process loop in startCampaign will check this status and break
     }
 }
 

@@ -7,7 +7,7 @@
  * All functions return a standardized { success, data, error } object.
  */
 
-const DEFAULT_VERSION = 'v18.0';
+const DEFAULT_VERSION = 'v21.0';
 const BASE_URL = 'https://graph.facebook.com';
 
 /**
