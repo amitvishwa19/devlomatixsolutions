@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Sparkles, Loader2 } from "lucide-react";
 import { useAts } from "../_context/AtsContext";
 import { toast } from "sonner";
 
@@ -27,6 +27,25 @@ const AddCandidateDialog = () => {
     source: "Company Website",
     skillInput: "",
   });
+  const [isScanning, setIsScanning] = useState(false);
+
+  const simulateResumeScan = () => {
+    setIsScanning(true);
+    // Simulate AI latency
+    setTimeout(() => {
+      setForm({
+        ...form,
+        name: "Sarah Chen",
+        email: "sarah.chen@example.com",
+        phone: "+1 (555) 987-6543",
+        experience: "6 years",
+        skills: ["React", "TypeScript", "Node.js", "AWS", "GraphQL", "Unit Testing"],
+        source: "LinkedIn",
+      });
+      setIsScanning(false);
+      toast.success("Resume parsed successfully!");
+    }, 2000);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -69,6 +88,27 @@ const AddCandidateDialog = () => {
           <DialogTitle>Add New Candidate</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-primary/5 rounded-lg p-4 border border-primary/10 flex flex-col items-center gap-3 text-center mb-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Have a Resume?</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Let our AI Agent extract the details for you automatically.</p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="gap-2 w-full sm:w-auto"
+              onClick={simulateResumeScan}
+              disabled={isScanning}
+            >
+              {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {isScanning ? "Scanning Resume..." : "Smart Scan Resume"}
+            </Button>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Full Name *</Label>

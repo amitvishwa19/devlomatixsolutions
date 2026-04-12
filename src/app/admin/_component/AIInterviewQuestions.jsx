@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, RefreshCw, Copy, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Sparkles, RefreshCw, Copy, ChevronDown, ChevronUp, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 const questionBank = {
@@ -39,6 +39,19 @@ const questionBank = {
   ],
 };
 
+const scenarioBank = {
+  technical: [
+    { title: "The Legacy Monolith", context: "The team is migrating a legacy monolithic system to microservices. A critical service discovery issue has brought down the staging environment.", task: "Propose a disaster recovery plan and a strategy to prevent this in production.", evaluation: "Focus on observability, circuit breakers, and staggered deployments." },
+    { title: "The Performance Peak", context: "During a flash sale, the application's latency increases by 400%, and the database connection pool is exhausted.", task: "Identify the immediate fixes and long-term scaling strategy.", evaluation: "Look for caching, query optimization, and architectural scaling." },
+  ],
+  design: [
+    { title: "The Feature Clash", context: "The product manager wants to add a high-conversion 'Buy Now' button that disrupts the clean UX flow you've established for accessibility.", task: "Present a redesign that satisfies both goals.", evaluation: "Weighting user needs vs business goals, compromise, data use." },
+  ],
+  sales: [
+    { title: "The Skeptical Enterprise", context: "A major enterprise client is happy with their current provider and sees our solution as 'nice to have' but not essential.", task: "Script a 2-minute elevator pitch to secure a follow-up trial.", evaluation: "Value proposition, addressing switching costs, urgency." },
+  ],
+};
+
 const difficultyColors = {
   Easy: "bg-success/10 text-success",
   Medium: "bg-amber-500/10 text-amber-600",
@@ -47,8 +60,23 @@ const difficultyColors = {
 
 const AIInterviewQuestions = ({ jobTitle, skills }) => {
   const [questions, setQuestions] = useState([]);
+  const [scenario, setScenario] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [genScenario, setGenScenario] = useState(false);
   const [expanded, setExpanded] = useState(null);
+
+  const generateScenario = () => {
+    setGenScenario(true);
+    setTimeout(() => {
+      const isDesign = jobTitle?.toLowerCase().includes("design");
+      const isSales = jobTitle?.toLowerCase().includes("sales");
+      const category = isDesign ? "design" : isSales ? "sales" : "technical";
+      const pool = scenarioBank[category] || scenarioBank.technical;
+      setScenario(pool[Math.floor(Math.random() * pool.length)]);
+      setGenScenario(false);
+      toast.success("Work scenario generated!");
+    }, 1500);
+  };
 
   const generateQuestions = () => {
     setGenerating(true);
@@ -131,6 +159,49 @@ const AIInterviewQuestions = ({ jobTitle, skills }) => {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Work Scenario Section */}
+        <div className="mt-6 border-t pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" /> Situational Work Scenario
+            </h3>
+            <Button variant="outline" size="sm" onClick={generateScenario} disabled={genScenario} className="gap-1 h-8">
+              {genScenario ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+              {scenario ? "Regenerate" : "Generate Scenario"}
+            </Button>
+          </div>
+
+          {!scenario && !genScenario && (
+            <p className="text-xs text-muted-foreground text-center py-4 bg-muted/30 rounded-lg border border-dashed">
+              Create a complex hypothetical problem to test this candidate's real-world problem-solving skills.
+            </p>
+          )}
+
+          {genScenario && (
+            <div className="py-6 flex flex-col items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground italic">Constructing a challenging scenario based on role requirements...</span>
+            </div>
+          )}
+
+          {scenario && (
+            <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div>
+                <Badge className="mb-2">{scenario.title}</Badge>
+                <p className="text-sm font-medium text-foreground leading-relaxed">{scenario.context}</p>
+              </div>
+              <div className="bg-background/50 rounded-lg p-3 border border-primary/10">
+                <span className="text-[11px] font-bold text-primary uppercase tracking-wider">Candidate Assignment:</span>
+                <p className="text-sm text-foreground mt-1">{scenario.task}</p>
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Interviewer's Key Look-fors:</span>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{scenario.evaluation}</p>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

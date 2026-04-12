@@ -129,6 +129,15 @@ export const timeToHireData = [
   { month: "Apr", days: 22 },
 ];
 
+export const jobRequirements = {
+  "1": { required: ["React", "TypeScript"], preferred: ["Node.js", "GraphQL", "Testing", "Next.js"], minExperience: 5 },
+  "2": { required: ["Figma", "User Research"], preferred: ["Sketch", "Design Systems", "Prototyping", "CSS"], minExperience: 4 },
+  "3": { required: ["Docker", "AWS"], preferred: ["Kubernetes", "Terraform", "CI/CD", "Linux"], minExperience: 3 },
+  "6": { required: ["Python", "PostgreSQL"], preferred: ["Django", "Redis", "Docker", "API Design"], minExperience: 3 },
+  "7": { required: ["User Research"], preferred: ["Usability Testing", "Analytics", "Prototyping", "Figma"], minExperience: 2 },
+  "8": { required: ["CRM", "Negotiation"], preferred: ["Cold Calling", "Sales Strategy", "Pipeline Management"], minExperience: 2 },
+};
+
 // Hook for managing state
 export function useAtsData() {
   const [jobList, setJobList] = useState(jobs);
@@ -236,6 +245,37 @@ export function useAtsData() {
       .sort((a, b) => b.weightedScore - a.weightedScore);
   };
 
+  const assessCandidateMatch = (candidateId) => {
+    const candidate = candidateList.find((c) => c.id === candidateId);
+    if (!candidate) return { score: 0, required: [], preferred: [], matchedRequired: [], matchedPreferred: [] };
+
+    const reqs = jobRequirements[candidate.jobId];
+    if (!reqs) return { score: 0, required: [], preferred: [], matchedRequired: [], matchedPreferred: [] };
+
+    const candidateSkillsLower = candidate.skills.map((s) => s.toLowerCase());
+    const matchedRequired = reqs.required.filter((r) => candidateSkillsLower.includes(r.toLowerCase()));
+    const matchedPreferred = reqs.preferred.filter((p) => candidateSkillsLower.includes(p.toLowerCase()));
+
+    const expYears = parseInt(candidate.experience) || 0;
+    const expScore = Math.min(expYears / reqs.minExperience, 1);
+
+    const requiredScore = reqs.required.length > 0 ? matchedRequired.length / reqs.required.length : 1;
+    const preferredScore = reqs.preferred.length > 0 ? matchedPreferred.length / reqs.preferred.length : 0;
+
+    const score = Math.round((requiredScore * 50 + preferredScore * 30 + expScore * 20));
+
+    return {
+      score,
+      required: reqs.required,
+      preferred: reqs.preferred,
+      matchedRequired,
+      matchedPreferred,
+      expScore,
+      minExperience: reqs.minExperience,
+      candidateExperience: expYears,
+    };
+  };
+
   return {
     jobs: jobList,
     candidates: candidateList,
@@ -254,5 +294,6 @@ export function useAtsData() {
     updateScoreTemplate,
     getWeightedScore,
     getCandidateRanking,
+    assessCandidateMatch,
   };
 }

@@ -16,36 +16,24 @@ const jobRequirements = {
 };
 
 const AutoMatchScore = ({ candidateId }) => {
-  const { candidates } = useAts();
-  const candidate = candidates.find((c) => c.id === candidateId);
-  if (!candidate) return null;
+  const { assessCandidateMatch } = useAts();
+  const match = assessCandidateMatch(candidateId);
+  
+  if (!match || match.required.length === 0) return null;
 
-  const reqs = jobRequirements[candidate.jobId];
-  if (!reqs) return null;
+  const { score, required, preferred, matchedRequired, matchedPreferred, expScore, minExperience, candidateExperience } = match;
 
-  const candidateSkillsLower = candidate.skills.map((s) => s.toLowerCase());
-  const requiredMatches = reqs.required.filter((r) => candidateSkillsLower.includes(r.toLowerCase()));
-  const preferredMatches = reqs.preferred.filter((p) => candidateSkillsLower.includes(p.toLowerCase()));
-
-  const expYears = parseInt(candidate.experience) || 0;
-  const expScore = Math.min(expYears / reqs.minExperience, 1);
-
-  const requiredScore = reqs.required.length > 0 ? requiredMatches.length / reqs.required.length : 1;
-  const preferredScore = reqs.preferred.length > 0 ? preferredMatches.length / reqs.preferred.length : 0;
-
-  const overall = Math.round((requiredScore * 50 + preferredScore * 30 + expScore * 20));
-
-  const getColor = (score) => {
-    if (score >= 80) return "text-success";
-    if (score >= 60) return "text-primary";
-    if (score >= 40) return "text-accent-foreground";
+  const getColor = (s) => {
+    if (s >= 80) return "text-success";
+    if (s >= 60) return "text-primary";
+    if (s >= 40) return "text-accent-foreground";
     return "text-destructive";
   };
 
-  const getLabel = (score) => {
-    if (score >= 80) return "Strong Match";
-    if (score >= 60) return "Good Match";
-    if (score >= 40) return "Partial Match";
+  const getLabel = (s) => {
+    if (s >= 80) return "Strong Match";
+    if (s >= 60) return "Good Match";
+    if (s >= 40) return "Partial Match";
     return "Weak Match";
   };
 
@@ -59,22 +47,22 @@ const AutoMatchScore = ({ candidateId }) => {
       <CardContent className="space-y-4">
         {/* Overall Score */}
         <div className="flex items-center gap-4">
-          <div className={`text-3xl font-bold ${getColor(overall)}`}>{overall}%</div>
+          <div className={`text-3xl font-bold ${getColor(score)}`}>{score}%</div>
           <div className="flex-1">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>{getLabel(overall)}</span>
-              <span>{overall}/100</span>
+              <span>{getLabel(score)}</span>
+              <span>{score}/100</span>
             </div>
-            <Progress value={overall} className="h-2" />
+            <Progress value={score} className="h-2" />
           </div>
         </div>
 
         {/* Required Skills */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Required Skills ({requiredMatches.length}/{reqs.required.length})</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Required Skills ({matchedRequired.length}/{required.length})</p>
           <div className="flex flex-wrap gap-1.5">
-            {reqs.required.map((skill) => {
-              const has = candidateSkillsLower.includes(skill.toLowerCase());
+            {required.map((skill) => {
+              const has = matchedRequired.includes(skill);
               return (
                 <Badge key={skill} variant="outline" className={`gap-1 text-xs ${has ? "border-primary/30 text-primary" : "border-destructive/30 text-destructive"}`}>
                   {has ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
@@ -87,10 +75,10 @@ const AutoMatchScore = ({ candidateId }) => {
 
         {/* Preferred Skills */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Preferred Skills ({preferredMatches.length}/{reqs.preferred.length})</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Preferred Skills ({matchedPreferred.length}/{preferred.length})</p>
           <div className="flex flex-wrap gap-1.5">
-            {reqs.preferred.map((skill) => {
-              const has = candidateSkillsLower.includes(skill.toLowerCase());
+            {preferred.map((skill) => {
+              const has = matchedPreferred.includes(skill);
               return (
                 <Badge key={skill} variant="outline" className={`gap-1 text-xs ${has ? "border-primary/20 text-foreground" : "border-muted text-muted-foreground"}`}>
                   {has ? <CheckCircle className="h-3 w-3 text-primary" /> : <AlertCircle className="h-3 w-3" />}
@@ -105,7 +93,7 @@ const AutoMatchScore = ({ candidateId }) => {
         <div className="flex items-center justify-between text-sm border-t pt-3">
           <span className="text-muted-foreground">Experience</span>
           <span className={`font-medium ${expScore >= 1 ? "text-primary" : "text-accent-foreground"}`}>
-            {candidate.experience} (min {reqs.minExperience}yr required)
+            {candidateExperience} years (min {minExperience}yr required)
           </span>
         </div>
       </CardContent>

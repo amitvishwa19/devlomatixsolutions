@@ -8,9 +8,10 @@ import StageBadge from "@/app/admin/_component/StageBadge";
 import StarRating from "@/app/admin/_component/StarRating";
 import Link from "next/link";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function PipelinePage() {
-  const { candidates, updateCandidateStage } = useAts();
+  const { candidates, updateCandidateStage, assessCandidateMatch } = useAts();
   const pipelineStages = stages.filter((s) => s.key !== "rejected");
   const [draggedId, setDraggedId] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
@@ -88,8 +89,20 @@ export default function PipelinePage() {
                       <Card className="cursor-grab active:cursor-grabbing transition-all hover:shadow-md hover:-translate-y-0.5">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary flex-shrink-0">
-                              {c.avatar}
+                            <div className="relative flex-shrink-0">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                                {c.avatar}
+                              </div>
+                              {(() => {
+                                const m = assessCandidateMatch(c.id);
+                                if (!m || m.score === 0) return null;
+                                let color = "bg-destructive";
+                                if (m.score >= 80) color = "bg-success";
+                                else if (m.score >= 50) color = "bg-primary";
+                                return (
+                                  <span className={cn("absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background", color)} title={`Match Score: ${m.score}%`} />
+                                );
+                              })()}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-sm font-medium text-foreground">{c.name}</div>

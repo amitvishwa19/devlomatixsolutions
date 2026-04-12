@@ -15,9 +15,10 @@ import AdvancedFilters, { defaultFilters } from "@/app/admin/_component/Advanced
 import { useAts } from "@/app/admin/_context/AtsContext";
 import Link from "next/link";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function CandidatesPage() {
-  const { candidates, getWeightedScore } = useAts();
+  const { candidates, getWeightedScore, assessCandidateMatch } = useAts();
   const [filters, setFilters] = useState(defaultFilters);
   const [selected, setSelected] = useState([]);
 
@@ -108,9 +109,33 @@ export default function CandidatesPage() {
                     </TableCell>
                     <TableCell>
                       <Link href={`/admin/candidates/${c.id}`} className="flex items-center gap-3 hover:underline">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">{c.avatar}</div>
+                        <div className="relative flex-shrink-0">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">{c.avatar}</div>
+                          {(() => {
+                            const m = assessCandidateMatch(c.id);
+                            if (!m || m.score === 0) return null;
+                            let color = "bg-destructive";
+                            if (m.score >= 80) color = "bg-success";
+                            else if (m.score >= 50) color = "bg-primary";
+                            return (
+                              <span className={cn("absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-background", color)} />
+                            );
+                          })()}
+                        </div>
                         <div>
-                          <div className="font-medium text-foreground">{c.name}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{c.name}</span>
+                            {(() => {
+                                const m = assessCandidateMatch(c.id);
+                                if (!m || m.score === 0) return null;
+                                let colorClass = "text-destructive bg-destructive/10";
+                                if (m.score >= 80) colorClass = "text-success bg-success/10";
+                                else if (m.score >= 50) colorClass = "text-primary bg-primary/10";
+                                return (
+                                  <span className={cn("text-[10px] px-1 rounded font-bold", colorClass)}>{m.score}% Fit</span>
+                                );
+                            })()}
+                          </div>
                           <div className="text-xs text-muted-foreground">{c.email}</div>
                         </div>
                       </Link>
