@@ -8,7 +8,7 @@ export default function Navbar() {
     return (
 
         <nav className="sticky top-0 z-50 glass border-b border-border/50">
-            <div className="container flex h-16 items-center justify-between">
+            <div className="px-20 flex h-16 items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                         <Briefcase className="h-4 w-4 text-primary-foreground" />
