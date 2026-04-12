@@ -24,6 +24,11 @@ async function metaPost(credentials, endpoint, payload) {
     const url = `${BASE_URL}/${version}/${phoneNumberId}/${endpoint}`;
 
     try {
+        const payloadWithCleanTo = { ...payload };
+        if (payloadWithCleanTo.to && typeof payloadWithCleanTo.to === 'string') {
+            payloadWithCleanTo.to = payloadWithCleanTo.to.replace(/\+/g, '');
+        }
+
         const res = await fetch(url, {
             method: 'POST',
             headers: {
@@ -33,7 +38,7 @@ async function metaPost(credentials, endpoint, payload) {
             body: JSON.stringify({
                 messaging_product: "whatsapp",
                 recipient_type: "individual",
-                ...payload
+                ...payloadWithCleanTo
             })
         });
 

@@ -76,7 +76,10 @@ export async function POST(req) {
       // Update status in DB if successful
       await db.credentials.update({
         where: { id },
-        data: { status: 'connected' }
+        data: { 
+          status: 'connected',
+          verified: true
+        }
       });
       return NextResponse.json({ 
         success: true, 

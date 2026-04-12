@@ -25,36 +25,20 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
-} from "@/components/ui/dialog";
-import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-    SheetFooter
-} from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+
+// Modular Components
+import ManageCategoriesDialog from './_components/ManageCategoriesDialog';
+import ManageTagsDialog from './_components/ManageTagsDialog';
+import ContactSheet from './_components/ContactSheet';
+import ReviewImportDialog from './_components/ReviewImportDialog';
+import BulkDeleteDialog from './_components/BulkDeleteDialog';
+import BulkTagDialog from './_components/BulkTagDialog';
+import BulkCategoryDialog from './_components/BulkCategoryDialog';
+import MessageDialog from './_components/MessageDialog';
 
 export default function ContactsPage() {
     const params = useParams();
@@ -95,22 +79,11 @@ export default function ContactsPage() {
     const [activeContact, setActiveContact] = useState(null);
     const [historyMessages, setHistoryMessages] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
-    const [messageText, setMessageText] = useState('');
-    const [tagInput, setTagInput] = useState('');
-    const [categoryInput, setCategoryInput] = useState('');
     const [isImporting, setIsImporting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isBulkProcessing, setIsBulkProcessing] = useState(false);
-
-    // Form State for Adding/Editing
-    const [contactForm, setContactForm] = useState({
-        name: '',
-        phone: '',
-        email: '',
-        categoryId: '',
-        tags: [],
-        info: ''
-    });
+    const [importReviewData, setImportReviewData] = useState([]);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
 
     // Computed: Filtered Contacts
     const filteredContacts = useMemo(() => {
@@ -356,23 +329,54 @@ export default function ContactsPage() {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = async (event) => {
+        reader.onload = (event) => {
             const csvData = event.target.result;
-            await runImport(csvData);
+
+            // Simple Client-side CSV Parser
+            const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (lines.length < 2) {
+                toast({ title: "Import Error", description: "CSV file is empty.", variant: "destructive" });
+                return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+            const dataRows = lines.slice(1);
+
+            const parsed = dataRows.map(row => {
+                const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                const cleanValues = values.map(v => v.replace(/^"|"$/g, '').trim());
+                const record = {};
+                headers.forEach((header, index) => {
+                    record[header] = cleanValues[index] || '';
+                });
+                return {
+                    name: record.name || '',
+                    phone: (record.phone || record.number || '').replace(/[^\d+]/g, ''),
+                    email: record.email || '',
+                    category: record.category || record.group || '',
+                    tags: record.tags || ''
+                };
+            }).filter(c => c.phone); // Require phone
+
+            setImportReviewData(parsed);
+            setIsReviewOpen(true);
         };
         reader.readAsText(file);
-        // Reset input
         e.target.value = '';
     };
 
-    const runImport = async (csvData) => {
+    const runImport = async (finalData) => {
         setIsImporting(true);
-        toast({ title: "Importing...", description: "Processing CSV data." });
+        toast({ title: "Importing...", description: "Finalizing audience data." });
         try {
             const res = await fetch('/api/wa/contacts/import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ csvData, workspaceId, userId })
+                body: JSON.stringify({
+                    contactsData: finalData,
+                    workspaceId,
+                    userId
+                })
             });
 
             if (res.ok) {
@@ -381,12 +385,13 @@ export default function ContactsPage() {
                     title: "Import Complete",
                     description: `Successfully added ${data.stats.success} contacts.`
                 });
+                setIsReviewOpen(false);
                 fetchContacts();
             } else {
                 throw new Error('Import failed');
             }
         } catch (error) {
-            toast({ title: "Import Failed", description: "Check CSV format.", variant: "destructive" });
+            toast({ title: "Import Failed", description: "Submission failed.", variant: "destructive" });
         } finally {
             setIsImporting(false);
         }
@@ -501,7 +506,6 @@ export default function ContactsPage() {
                 <div className="w-64 border-r bg-card/20 flex flex-col">
                     <ScrollArea className="flex-1">
                         <div className="p-4 space-y-6">
-                            {/* Segments */}
                             <div className="space-y-2">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-2">Core Segments</span>
                                 <Button
@@ -515,7 +519,6 @@ export default function ContactsPage() {
                                 </Button>
                             </div>
 
-                            {/* Categories */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Categories</span>
@@ -531,7 +534,7 @@ export default function ContactsPage() {
                                             className="w-full justify-start h-8 text-xs gap-3 px-3"
                                             onClick={() => setActiveSegment(`category:${cat.id}`)}
                                         >
-                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
                                             {cat.name}
                                             <Badge variant="ghost" className="ml-auto text-[10px] opacity-60 font-mono">{contacts.filter(c => c.categoryId === cat.id).length}</Badge>
                                         </Button>
@@ -540,7 +543,6 @@ export default function ContactsPage() {
                                 </div>
                             </div>
 
-                            {/* Groups */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Broadcast Groups</span>
@@ -626,7 +628,6 @@ export default function ContactsPage() {
                         </div>
                     </div>
 
-                    {/* Multi-Selection Toolbar (Sticks to top if items selected) */}
                     {selectedContacts.length > 0 && (
                         <div className="flex items-center justify-between px-6 py-2 bg-primary/10 border-b border-primary/20 animate-in slide-in-from-top duration-300">
                             <div className="flex items-center gap-4">
@@ -655,7 +656,6 @@ export default function ContactsPage() {
                         </div>
                     )}
 
-                    {/* Audience List Container */}
                     <div className="flex-1 overflow-hidden">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center gap-4">
@@ -695,8 +695,7 @@ export default function ContactsPage() {
                                                 </div>
 
                                                 <div className="flex-1 min-w-0 space-y-0.5 flex flex-row items-center justify-between">
-
-                                                    <div className=''>
+                                                    <div>
                                                         <div className="flex items-center justify-between ">
                                                             <div className="flex items-center gap-2 overflow-hidden">
                                                                 <h3 className="text-sm font-bold truncate tracking-tight">{contact.name}</h3>
@@ -706,8 +705,6 @@ export default function ContactsPage() {
                                                                     </Badge>
                                                                 )}
                                                             </div>
-
-
                                                         </div>
 
                                                         <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-[11px] text-muted-foreground">
@@ -736,7 +733,6 @@ export default function ContactsPage() {
                                                                 </Badge>
                                                             ))}
                                                         </div>
-
                                                     </div>
 
                                                     <DropdownMenu>
@@ -790,375 +786,75 @@ export default function ContactsPage() {
                         )}
                     </div>
                 </div>
-            </div>
 
-            {/* --- Modals & Overlays --- */}
+            {/* --- Modals & Sheets (Relocated to _components) --- */}
+            
+            <ManageCategoriesDialog 
+                isOpen={isManageCategoriesOpen} 
+                onOpenChange={setIsManageCategoriesOpen} 
+                workspaceId={workspaceId} 
+                categories={categories} 
+                onUpdate={fetchCategories} 
+            />
 
-            {/* Manage Categories Modal */}
-            <Dialog open={isManageCategoriesOpen} onOpenChange={setIsManageCategoriesOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Audience Categories</DialogTitle>
-                        <DialogDescription>Define high-level segments for your contacts (e.g. VIP, Leads).</DialogDescription>
-                    </DialogHeader>
-                    <CategoriesManager
-                        workspaceId={workspaceId}
-                        categories={categories}
-                        onUpdate={fetchCategories}
-                        type="CONTACT"
-                    />
-                </DialogContent>
-            </Dialog>
+            <ManageTagsDialog 
+                isOpen={isManageTagsOpen} 
+                onOpenChange={setIsManageTagsOpen} 
+                workspaceId={workspaceId} 
+                categories={tagDefinitions} 
+                onUpdate={fetchTagLibrary} 
+            />
 
-            {/* Manage Tag Library Modal */}
-            <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Tag Library</DialogTitle>
-                        <DialogDescription>Define structured tags with colors to organize your audience.</DialogDescription>
-                    </DialogHeader>
-                    <CategoriesManager
-                        workspaceId={workspaceId}
-                        categories={tagDefinitions}
-                        onUpdate={fetchTagLibrary}
-                        type="TAG"
-                    />
-                </DialogContent>
-            </Dialog>
+            <ContactSheet 
+                isOpen={isAddContactOpen || isEditContactOpen}
+                onOpenChange={(open) => {
+                    if (!open) { setIsAddContactOpen(false); setIsEditContactOpen(false); setActiveContact(null); }
+                }}
+                activeContact={activeContact}
+                categories={categories}
+                userId={userId}
+                workspaceId={workspaceId}
+                onSave={fetchContacts}
+            />
 
-            {/* Add/Edit Contact Sheet */}
-            <Sheet open={isAddContactOpen || isEditContactOpen} onOpenChange={(open) => {
-                if (!open) { setContactForm({ name: '', phone: '', email: '', categoryId: '', tags: [], info: '' }); setActiveContact(null); }
-                setIsAddContactOpen(open ? isAddContactOpen : false);
-                setIsEditContactOpen(open ? isEditContactOpen : false);
-            }}>
-                <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-6">
-                    <SheetHeader className="pb-8">
-                        <SheetTitle className="text-2xl font-bold tracking-tight">{activeContact ? 'Edit Identity' : 'Secure Entry'}</SheetTitle>
-                        <SheetDescription>Configure primary contact details and metadata.</SheetDescription>
-                    </SheetHeader>
+            <MessageDialog 
+                isOpen={isMessageOpen} 
+                onOpenChange={setIsMessageOpen} 
+                onSend={handleSendMessage} 
+                contactName={activeContact?.name} 
+            />
 
-                    <form onSubmit={handleSaveContact} className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Identity</Label>
-                                <Input
-                                    placeholder="Full Name / Brand"
-                                    value={contactForm.name}
-                                    onChange={e => setContactForm({ ...contactForm, name: e.target.value })}
-                                    required
-                                    className="bg-muted/10 h-11"
-                                />
-                            </div>
+            <BulkDeleteDialog 
+                isOpen={isDeleteConfirmOpen} 
+                onOpenChange={setIsDeleteConfirmOpen} 
+                count={selectedContacts.length} 
+                onConfirm={handleBulkDelete} 
+                isProcessing={isBulkProcessing} 
+            />
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Mobile JID</Label>
-                                    <Input
-                                        placeholder="+123456789"
-                                        value={contactForm.phone}
-                                        onChange={e => setContactForm({ ...contactForm, phone: e.target.value })}
-                                        required
-                                        className="bg-muted/10 h-11 font-mono text-xs"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Email</Label>
-                                    <Input
-                                        placeholder="user@cloud.com"
-                                        value={contactForm.email}
-                                        onChange={e => setContactForm({ ...contactForm, email: e.target.value })}
-                                        className="bg-muted/10 h-11"
-                                    />
-                                </div>
-                            </div>
-                        </div>
+            <BulkTagDialog 
+                isOpen={isBulkTagOpen} 
+                onOpenChange={setIsBulkTagOpen} 
+                onConfirm={handleBulkTag} 
+                isProcessing={isBulkProcessing} 
+            />
 
-                        <Separator className="opacity-40" />
+            <BulkCategoryDialog 
+                isOpen={isBulkCategoryOpen} 
+                onOpenChange={setIsBulkCategoryOpen} 
+                categories={categories} 
+                onConfirm={handleBulkCategory} 
+            />
 
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Logical Category</Label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {categories.map(cat => (
-                                        <div
-                                            key={cat.id}
-                                            onClick={() => setContactForm({ ...contactForm, categoryId: contactForm.categoryId === cat.id ? '' : cat.id })}
-                                            className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${contactForm.categoryId === cat.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/30 border-border/40 opacity-60'}`}
-                                        >
-                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                                            <span className="text-[11px] font-bold truncate">{cat.name}</span>
-                                            {contactForm.categoryId === cat.id && <Check className="w-3 h-3 ml-auto text-primary" />}
-                                        </div>
-                                    ))}
-                                    <div
-                                        onClick={() => setIsManageCategoriesOpen(true)}
-                                        className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-border/40 opacity-40 hover:opacity-100 cursor-pointer"
-                                    >
-                                        <Plus className="w-3 h-3" />
-                                        <span className="text-[11px]">New Category</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Attribute Tags</Label>
-                                <div className="flex flex-wrap gap-2">
-                                    {tagDefinitions.map(def => (
-                                        <Badge
-                                            key={def.id}
-                                            variant="secondary"
-                                            onClick={() => {
-                                                const tags = contactForm.tags.includes(def.name)
-                                                    ? contactForm.tags.filter(t => t !== def.name)
-                                                    : [...contactForm.tags, def.name];
-                                                setContactForm({ ...contactForm, tags });
-                                            }}
-                                            className={`h-6 px-2 cursor-pointer transition-all border-none ${contactForm.tags.includes(def.name) ? 'opacity-100 shadow-md ring-1 ring-primary' : 'opacity-40'}`}
-                                            style={{ backgroundColor: `${def.color}20`, color: def.color }}
-                                        >
-                                            {def.name}
-                                        </Badge>
-                                    ))}
-                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] opacity-40 hover:opacity-100" onClick={() => setIsManageTagsOpen(true)}>
-                                        <Settings2 className="w-3 h-3 mr-1" /> Edit Library
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex-1" />
-
-                        <DialogFooter className="pt-6 border-t mt-auto">
-                            <Button variant="ghost" type="button" onClick={() => { setIsAddContactOpen(false); setIsEditContactOpen(false); }}>Cancel</Button>
-                            <Button type="submit" className="px-8 shadow-lg shadow-primary/20">{activeContact ? 'Save Changes' : 'Initialize Contact'}</Button>
-                        </DialogFooter>
-                    </form>
-                </SheetContent>
-            </Sheet>
-
-            {/* Quick Message Dialog */}
-            <Dialog open={isMessageOpen} onOpenChange={setIsMessageOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Send className="w-5 h-5 text-green-500" /> Secure Message
-                        </DialogTitle>
-                        <DialogDescription>Sent to: {activeContact?.name} ({activeContact?.phone})</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <Textarea
-                            placeholder="Type your message here..."
-                            className="min-h-[150px] bg-muted/10"
-                            value={messageText}
-                            onChange={e => setMessageText(e.target.value)}
-                        />
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground italic">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            End-to-end delivery via WhatsApp Browser Sync Engine
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsMessageOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSendMessage} disabled={!messageText} className="gap-2">
-                            <Send className="w-4 h-4" /> Ship Now
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Bulk Delete Confirm */}
-            <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete {selectedContacts.length} selected contacts. This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isBulkProcessing}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleBulkDelete} disabled={isBulkProcessing} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-w-[120px]">
-                            {isBulkProcessing ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
-                            {isBulkProcessing ? 'Deleting...' : 'Delete Contacts'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-            {/* Bulk Tag Dialog */}
-            <Dialog open={isBulkTagOpen} onOpenChange={setIsBulkTagOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Tag className="w-5 h-5" /> Bulk Tagging
-                        </DialogTitle>
-                        <DialogDescription>Applying tag to {selectedContacts.length} selected contacts.</DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4 space-y-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Select Tag from Library</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {tagDefinitions.map(def => (
-                                    <Badge
-                                        key={def.id}
-                                        variant="outline"
-                                        onClick={() => setTagInput(def.name)}
-                                        className={`h-9 px-3 cursor-pointer justify-start gap-2 border-border/40 transition-all ${tagInput === def.name ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/30'}`}
-                                        style={{ color: def.color }}
-                                    >
-                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: def.color }} />
-                                        {def.name}
-                                    </Badge>
-                                ))}
-                                {tagDefinitions.length === 0 && <p className="col-span-2 text-xs italic text-muted-foreground p-4 text-center">No tags defined in library.</p>}
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Or Type New Tag</Label>
-                            <Input 
-                                placeholder="Enter custom tag..." 
-                                value={tagInput}
-                                onChange={e => setTagInput(e.target.value)}
-                                className="bg-muted/10 h-11"
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" disabled={isBulkProcessing} onClick={() => { setIsBulkTagOpen(false); setTagInput(''); }}>Cancel</Button>
-                        <Button onClick={handleBulkTag} disabled={!tagInput || isBulkProcessing} className="px-8 shadow-lg shadow-primary/20 min-w-[140px]">
-                            {isBulkProcessing ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
-                            {isBulkProcessing ? 'Applying...' : 'Apply Tag'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Bulk Category Dialog */}
-            <Dialog open={isBulkCategoryOpen} onOpenChange={setIsBulkCategoryOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Layers className="w-5 h-5" /> Bulk Categories
-                        </DialogTitle>
-                        <DialogDescription>Move {selectedContacts.length} contacts to a new logical segment.</DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4 grid grid-cols-2 gap-2 relative">
-                        {isBulkProcessing && (
-                            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
-                                <div className="flex flex-col items-center gap-2">
-                                    <RefreshCw className="w-6 h-6 animate-spin text-primary" />
-                                    <span className="text-xs font-medium text-primary">Moving Contacts...</span>
-                                </div>
-                            </div>
-                        )}
-                        {categories.map(cat => (
-                            <div
-                                key={cat.id}
-                                onClick={() => !isBulkProcessing && handleBulkCategory(cat.id)}
-                                className={`flex items-center gap-3 p-4 rounded-xl border border-border/40 transition-all group ${isBulkProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/40 hover:bg-primary/5 cursor-pointer'}`}
-                            >
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                                <span className="text-sm font-bold truncate">{cat.name}</span>
-                                <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                        ))}
-                        <div
-                            onClick={() => !isBulkProcessing && handleBulkCategory(null)}
-                            className={`flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/60 transition-all group ${isBulkProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:border-destructive/40 hover:bg-destructive/5 cursor-pointer'}`}
-                        >
-                            <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
-                            <span className="text-sm font-bold truncate">Remove Category</span>
-                            <X className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                    </div>
-                    <DialogFooter className="bg-muted/5 p-4 rounded-b-lg border-t -mx-6 -mb-6">
-                        <Button variant="ghost" className="w-full" disabled={isBulkProcessing} onClick={() => setIsBulkCategoryOpen(false)}>Cancel Bulk Operation</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
+            <ReviewImportDialog 
+                isOpen={isReviewOpen} 
+                onOpenChange={setIsReviewOpen} 
+                data={importReviewData} 
+                setData={setImportReviewData} 
+                onImport={runImport} 
+                isImporting={isImporting} 
+            />
         </div>
-    );
-}
-
-// Internal Component: Categories Manager
-function CategoriesManager({ workspaceId, categories, onUpdate, type }) {
-    const [name, setName] = useState('');
-    const [color, setColor] = useState('#3b82f6');
-    const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
-
-    const handleAdd = async () => {
-        if (!name) return;
-        setLoading(true);
-        try {
-            const res = await fetch('/api/wa/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, color, workspaceId, type })
-            });
-            if (res.ok) {
-                toast({ title: "Category Added" });
-                setName('');
-                onUpdate();
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleDelete = async (id) => {
-        const res = await fetch(`/api/wa/categories/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-            toast({ title: "Removed" });
-            onUpdate();
-        }
-    };
-
-    return (
-        <div className="space-y-4 mt-4">
-            <div className="flex gap-2">
-                <Input
-                    placeholder="Category Name"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="flex-1"
-                />
-                <div className="relative w-10 h-10 border rounded-md overflow-hidden shrink-0">
-                    <input
-                        type="color"
-                        value={color}
-                        onChange={e => setColor(e.target.value)}
-                        className="absolute inset-0 w-full h-full scale-150 cursor-pointer"
-                    />
-                </div>
-                <Button onClick={handleAdd} disabled={loading || !name} size="icon">
-                    <Plus className="w-4 h-4" />
-                </Button>
-            </div>
-
-            <ScrollArea className="h-[300px] border rounded-md p-2 bg-muted/5">
-                <div className="space-y-1">
-                    {categories.map(cat => (
-                        <div key={cat.id} className="flex items-center justify-between p-2 hover:bg-muted/30 rounded-md transition-colors group">
-                            <div className="flex items-center gap-3">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                                <span className="text-sm font-medium">{cat.name}</span>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
-                                onClick={() => handleDelete(cat.id)}
-                            >
-                                <X className="w-4 h-4" />
-                            </Button>
-                        </div>
-                    ))}
-                    {categories.length === 0 && <p className="text-center text-xs text-muted-foreground py-8">No structured {type.toLowerCase()}s found.</p>}
-                </div>
-            </ScrollArea>
-        </div>
+    </div>
     );
 }

@@ -4,59 +4,65 @@ import { db } from '@/lib/db';
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { csvData, workspaceId, userId } = body;
+        const { csvData, contactsData, workspaceId, userId } = body;
 
-        if (!csvData || !workspaceId || !userId) {
+        if ((!csvData && !contactsData) || !workspaceId || !userId) {
             return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
         }
 
-        // Simple CSV Parser (handles basic quotes and commas)
-        const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
-        if (lines.length < 2) {
-            return NextResponse.json({ error: 'CSV file is empty or has no data rows' }, { status: 400 });
-        }
+        let contactsToProcess = [];
 
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
-        const dataRows = lines.slice(1);
+        if (contactsData && Array.isArray(contactsData)) {
+            // Use provided JSON objects directly
+            contactsToProcess = contactsData;
+        } else if (csvData) {
+            // Fallback to legacy CSV Parsing
+            const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (lines.length < 2) {
+                return NextResponse.json({ error: 'CSV file is empty' }, { status: 400 });
+            }
 
-        let successCount = 0;
-        let errorCount = 0;
-        const results = [];
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+            const dataRows = lines.slice(1);
 
-        // Fetch existing categories for this workspace to avoid redundant DB calls in loop
-        const existingCategories = await db.category.findMany({
-            where: { workspaceId, type: 'CONTACT' }
-        });
-
-        for (const row of dataRows) {
-            try {
-                // Regex to split by comma but ignore commas inside quotes
+            contactsToProcess = dataRows.map(row => {
                 const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
                 const cleanValues = values.map(v => v.replace(/^"|"$/g, '').trim());
-
                 const record = {};
                 headers.forEach((header, index) => {
                     record[header] = cleanValues[index] || '';
                 });
+                return record;
+            });
+        }
 
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Fetch existing categories
+        const existingCategories = await db.category.findMany({
+            where: { workspaceId, type: 'CONTACT' }
+        });
+
+        for (const record of contactsToProcess) {
+            try {
                 const name = record.name || 'Unnamed Contact';
-                const phone = (record.phone || '').replace(/[^\d+]/g, ''); // Clean phone
-                
+                const phone = (record.phone || record.number || '').replace(/[^\d+]/g, ''); // Use 'phone' or 'number'
+
                 if (!phone) {
                     errorCount++;
                     continue;
                 }
 
                 const email = record.email || null;
-                const categoryName = record.category || null;
+                const categoryName = record.category || record.group || null; // Use 'category' or 'group'
                 const tagsRaw = record.tags || '';
-                const tags = tagsRaw ? tagsRaw.split('|').map(t => t.trim()).filter(Boolean) : [];
+                const tags = Array.isArray(tagsRaw) ? tagsRaw : (tagsRaw ? tagsRaw.split('|').map(t => t.trim()).filter(Boolean) : []);
 
                 let categoryId = null;
                 if (categoryName) {
                     let cat = existingCategories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
                     if (!cat) {
-                        // Create missing category
                         const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
                         cat = await db.category.create({
                             data: { name: categoryName, slug, workspaceId, type: 'CONTACT' }
@@ -95,9 +101,9 @@ export async function POST(req) {
             }
         }
 
-        return NextResponse.json({ 
-            message: 'Import complete', 
-            stats: { total: dataRows.length, success: successCount, errors: errorCount } 
+        return NextResponse.json({
+            message: 'Import complete',
+            stats: { total: contactsToProcess.length, success: successCount, errors: errorCount }
         });
 
     } catch (error) {

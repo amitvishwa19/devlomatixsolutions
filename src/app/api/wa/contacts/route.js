@@ -5,13 +5,18 @@ export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get('userId');
+        const workspaceId = searchParams.get('workspaceId');
 
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+        if (!userId && !workspaceId) {
+            return NextResponse.json({ error: 'User ID or Workspace ID is required' }, { status: 400 });
         }
 
+        const where = {};
+        if (workspaceId) where.workspaceId = workspaceId;
+        else if (userId) where.userId = userId;
+
         const contacts = await db.contact.findMany({
-            where: { userId },
+            where,
             include: { 
                 groups: true,
                 category: true 

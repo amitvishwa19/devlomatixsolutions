@@ -40,6 +40,7 @@ export async function GET(req) {
       wabaId: stored?.wabaId || '',
       accessToken: mask(stored?.accessToken || ''),
       isDefault: cred.isDefault,
+      verified: cred.verified,
       updatedAt: cred.updatedAt
     };
   });
@@ -74,6 +75,7 @@ export async function POST(req) {
       data: { 
         credentials: encrypted,
         profile: profile || 'Cloud Account',
+        verified: false,
         updatedAt: new Date()
       },
     });

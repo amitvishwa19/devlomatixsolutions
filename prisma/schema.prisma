@@ -598,6 +598,7 @@ model Credentials {
   expiresAt   DateTime?
   environment String    @default("PROD")
   isDefault   Boolean   @default(false)
+  verified    Boolean   @default(false)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

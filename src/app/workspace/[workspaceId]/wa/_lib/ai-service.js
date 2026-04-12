@@ -93,18 +93,64 @@ export class WhatsAppAIService {
     }
 
     /**
-     * Classify an incoming message for smart routing.
+     * Generate a WhatsApp template suggest based on a user prompt.
      */
-    async classifyMessage(message) {
+    async generateTemplateSuggestion(prompt) {
+        try {
+            const model = this.genAI.getGenerativeModel({ 
+                model: "gemini-1.5-flash",
+                generationConfig: { responseMimeType: "application/json" }
+            });
+            
+            const systemPrompt = `
+                You are an expert WhatsApp Marketing and Automation specialist.
+                Generate a professional WhatsApp template based on the following USER INTENT: "${prompt}"
+
+                RETURN A JSON OBJECT WITH THE FOLLOWING STRUCTURE:
+                {
+                    "name": "Short Descriptive Name (Lower case, no spaces, e.g. festive_offer)",
+                    "displayName": "Capitalized Name (e.g. Festive Offer)",
+                    "category": "One of [MARKETING, UTILITY, AUTHENTICATION]",
+                    "body": "The main message text. Use {{1}}, {{2}}, etc. for variables if needed.",
+                    "footer": "Optional footer text (max 60 chars)",
+                    "buttons": ["Up to 3 Quick Reply button labels"]
+                }
+
+                RULES:
+                - Body should be engaging and compliant with WhatsApp policies.
+                - Buttons should be short (max 20 chars).
+                - Use a professional yet conversational tone.
+            `;
+
+            const result = await model.generateContent(systemPrompt);
+            const response = await result.response;
+            const text = response.text();
+            
+            // Clean markdown if present
+            const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(cleanJson);
+        } catch (error) {
+            console.error("[WA_AI] Suggestion Error:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Translate template content to another language using AI.
+     */
+    async translateTemplate(text, targetLanguage) {
         try {
             const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const prompt = `Classify this customer message into one category: [SALES, SUPPORT, BILLING, FEEDBACK, SPAM, OTHER]. 
-            Return ONLY the category name. Message: "${message}"`;
+            const prompt = `Translate the following WhatsApp message to ${targetLanguage}. 
+            IMPORTANT: Keep all variables like {{1}}, {{2}}, etc. EXACTLY as they are. Do not translate them.
+            
+            Text: "${text}"`;
             
             const result = await model.generateContent(prompt);
             return result.response.text().trim();
-        } catch (e) {
-            return "OTHER";
+        } catch (error) {
+            console.error("[WA_AI] Translation Error:", error);
+            return text; // Fallback to original
         }
     }
 }

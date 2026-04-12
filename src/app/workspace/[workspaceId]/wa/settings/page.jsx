@@ -254,7 +254,7 @@ export default function SettingsPage() {
             const data = await res.json();
 
             if (res.ok) {
-                toast.success(testNumber ? `Verified! Test message sent to ${testNumber}` : 'Connection verified!');
+                toast.success(testNumber ? `Request accepted! Note: Message only delivers if ${testNumber} has messaged you in the last 24h.` : 'Connection verified!');
                 setTestState(prev => ({ ...prev, [id]: 'success' }));
                 fetchCloudCreds();
             } else {
@@ -325,7 +325,7 @@ export default function SettingsPage() {
     };
 
     const handleAddTestNumber = () => {
-        const cleanNumber = testNumberInput.replace(/[^\d]/g, '');
+        const cleanNumber = testNumberInput.replace(/[^\d+]/g, '');
         if (!cleanNumber) {
             toast.error('Invalid number');
             return;
@@ -441,6 +441,21 @@ export default function SettingsPage() {
                                                         <div className="space-y-1">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-sm font-semibold">{cred.profile || 'WhatsApp Account'}</span>
+                                                                {cred.verified ? (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 fill-green-500/10" />
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>Verified Node</TooltipContent>
+                                                                    </Tooltip>
+                                                                ) : (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <AlertCircle className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>Needs Re-verification</TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
                                                                 {cred.isDefault && <Badge variant="secondary" className="h-4 text-[9px] bg-primary/10 text-primary border-0">DEFAULT</Badge>}
                                                             </div>
                                                             <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-mono">
@@ -486,6 +501,16 @@ export default function SettingsPage() {
                                                             )}
                                                             {testState[cred.id] === 'loading' ? 'Testing...' : 'Test'}
                                                         </Button>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Info className="w-3 h-3 text-muted-foreground cursor-help" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="max-w-[200px] text-[10px]">
+                                                                Sends a direct text message. 
+                                                                <br />
+                                                                <b>Important:</b> Recipient must have messaged you in the last 24h.
+                                                            </TooltipContent>
+                                                        </Tooltip>
                                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => {
                                                             setTempCreds({ ...cred, accessToken: '' });
                                                             setIsCredsModalOpen(true);
@@ -608,7 +633,7 @@ export default function SettingsPage() {
                                         <div className="relative flex-1">
                                             <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                                             <Input
-                                                placeholder="Enter phone with country code (e.g. 919876543210)"
+                                                placeholder="Enter phone with country code (e.g. +919876543210)"
                                                 className="pl-9 bg-muted/10 h-10 text-xs"
                                                 value={testNumberInput}
                                                 onChange={e => setTestNumberInput(e.target.value)}
@@ -627,6 +652,14 @@ export default function SettingsPage() {
                                                     </div>
                                                     <span className="text-sm font-mono">{num}</span>
                                                     <Badge variant="outline" className="text-[8px] h-4 border-primary/20 text-primary opacity-60">VERIFIED</Badge>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Info className="w-2.5 h-2.5 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="text-[10px]">
+                                                            Ensure this number is also added to 'Test Numbers' in Meta Dev Console.
+                                                        </TooltipContent>
+                                                    </Tooltip>
                                                 </div>
                                                 <Button
                                                     variant="ghost"

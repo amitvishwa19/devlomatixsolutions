@@ -24,63 +24,93 @@ export async function GET(req) {
             return NextResponse.json({ error: "Cloud API credentials not found" }, { status: 404 });
         }
 
-        let cloudCredentials = typeof credential.credentials === 'string' 
-            ? JSON.parse(credential.credentials) 
-            : credential.credentials;
+        let cloudCredentials = null;
+        const stored = credential.credentials;
 
-        if (cloudCredentials?.enc) {
-            const decrypted = symmetricDecrypt(cloudCredentials.enc);
-            cloudCredentials = JSON.parse(decrypted);
+        if (typeof stored === 'string' && stored.includes(':')) {
+            try {
+                const decrypted = symmetricDecrypt(stored);
+                cloudCredentials = JSON.parse(decrypted);
+            } catch (e) {
+                console.error("[Template Sync] Decryption failed:", e);
+                return NextResponse.json({ error: "Failed to decrypt credentials" }, { status: 500 });
+            }
+        } else if (typeof stored === 'string') {
+            try {
+                cloudCredentials = JSON.parse(stored);
+            } catch (e) {
+                console.error("[Template Sync] JSON parse failed:", e);
+                return NextResponse.json({ error: "Malformed credentials in database" }, { status: 500 });
+            }
+        } else {
+            cloudCredentials = stored;
         }
 
-        if (!cloudCredentials.accessToken || !cloudCredentials.wabaId) {
+        if (!cloudCredentials || !cloudCredentials.accessToken || !cloudCredentials.wabaId) {
             return NextResponse.json({ error: "Incomplete credentials (missing Access Token or WABA ID)" }, { status: 400 });
         }
 
         // 2. Fetch Templates from Meta
+        console.log("[Template Sync] Fetching from Meta for WABA:", cloudCredentials.wabaId);
         const metaRes = await cloudApi.fetchTemplates(cloudCredentials);
         if (!metaRes.success) {
-            return NextResponse.json({ error: metaRes.error }, { status: 500 });
+            console.error("[Template Sync] Meta API Error:", metaRes.error);
+            return NextResponse.json({ error: metaRes.error || "Failed to fetch from Meta" }, { status: 500 });
         }
 
         const metaTemplates = metaRes.data; // Array of templates
+        if (!Array.isArray(metaTemplates)) {
+            console.error("[Template Sync] Expected array from Meta, got:", typeof metaTemplates);
+            return NextResponse.json({ error: "Invalid response format from Meta" }, { status: 500 });
+        }
+        
         console.log(`[Template Sync] Fetched ${metaTemplates.length} templates from Meta`);
 
         // 3. Upsert into Database
         const syncResults = [];
         for (const metaT of metaTemplates) {
-            // Find content components
-            const bodyComp = metaT.components?.find(c => c.type === 'BODY');
-            const footerComp = metaT.components?.find(c => c.type === 'FOOTER');
-            const buttonComp = metaT.components?.find(c => c.type === 'BUTTONS');
+            try {
+                // Find content components
+                const headerComp = metaT.components?.find(c => c.type === 'HEADER');
+                const bodyComp = metaT.components?.find(c => c.type === 'BODY');
+                const footerComp = metaT.components?.find(c => c.type === 'FOOTER');
+                const buttonComp = metaT.components?.find(c => c.type === 'BUTTONS');
 
-            const templateData = {
-                userId,
-                name: metaT.name, // Display name
-                templateName: metaT.name, // Slug
-                category: metaT.category,
-                language: metaT.language,
-                status: metaT.status,
-                type: 'TEXT', // Default type, can be refined based on components
-                body: bodyComp?.text || "",
-                footer: footerComp?.text || null,
-                buttons: buttonComp?.buttons || [],
-                isDefault: true, // Synced templates are considered system/default
-                platform: 'WHATSAPP_CLOUD'
-            };
+                const templateData = {
+                    userId,
+                    name: metaT.name, // Display name
+                    templateName: metaT.name, // Slug
+                    category: metaT.category,
+                    language: metaT.language,
+                    status: metaT.status,
+                    type: 'TEXT', // Default type, can be refined based on components
+                    body: bodyComp?.text || "",
+                    footer: footerComp?.text || null,
+                    buttons: buttonComp?.buttons || [],
+                    metadata: {
+                        headerText: headerComp?.format === 'TEXT' ? headerComp.text : null,
+                        mediaUrl: headerComp?.format === 'IMAGE' ? headerComp.example?.header_handle?.[0] : null
+                    },
+                    isDefault: true, // Synced templates are considered system/default
+                    platform: 'WHATSAPP_CLOUD'
+                };
 
-            // Use upsert to update if exists (by userId + name unique constraint) or create
-            const synced = await db.messageTemplate.upsert({
-                where: {
-                    userId_name: {
-                        userId,
-                        name: metaT.name
-                    }
-                },
-                update: templateData,
-                create: templateData
-            });
-            syncResults.push(synced);
+                // Use upsert to update if exists (by userId + name unique constraint) or create
+                const synced = await db.messageTemplate.upsert({
+                    where: {
+                        userId_name: {
+                            userId,
+                            name: metaT.name
+                        }
+                    },
+                    update: templateData,
+                    create: templateData
+                });
+                syncResults.push(synced);
+            } catch (upsertError) {
+                console.error(`[Template Sync] Failed to upsert template ${metaT.name}:`, upsertError);
+                // Continue with other templates
+            }
         }
 
         return NextResponse.json({ 
@@ -91,6 +121,9 @@ export async function GET(req) {
 
     } catch (error) {
         console.error("[TEMPLATE_SYNC_ERROR]", error);
-        return NextResponse.json({ error: "Failed to sync templates" }, { status: 500 });
+        return NextResponse.json({ 
+            error: error.message || "Failed to sync templates",
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        }, { status: 500 });
     }
 }
