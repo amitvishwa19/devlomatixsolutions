@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { symmetricDecrypt } from "@/lib/encryption";
 
 export async function GET(req) {
     try {
@@ -18,32 +19,53 @@ export async function GET(req) {
         });
 
         const myPhoneIDs = userCredentials.map(c => {
-            const creds = typeof c.credentials === 'string' ? JSON.parse(c.credentials) : c.credentials;
-            let finalCreds = creds;
-            if (creds?.enc) {
+            let cloudCreds = null;
+            const stored = c.credentials;
+
+            if (typeof stored === 'string' && stored.includes(':')) {
                 try {
-                    const decrypted = symmetricDecrypt(creds.enc);
-                    finalCreds = JSON.parse(decrypted);
-                } catch (e) { console.error("Decryption failed", e); }
+                    const decryptedStr = symmetricDecrypt(stored);
+                    cloudCreds = JSON.parse(decryptedStr);
+                } catch (e) {
+                    console.error(`[Conversations API] Decryption failed!`, e);
+                }
+            } else if (typeof stored === 'string') {
+                try {
+                    cloudCreds = JSON.parse(stored);
+                } catch (e) {
+                    console.error(`[Conversations API] JSON Parse failed!`, e);
+                }
+            } else {
+                cloudCreds = stored;
             }
-            return String(finalCreds?.phoneNumberId || finalCreds?.phone_number_id || "");
+
+            // Handle Legacy Object Wrapping
+            if (cloudCreds?.enc) {
+                try {
+                    const decryptedStr = symmetricDecrypt(cloudCreds.enc);
+                    cloudCreds = JSON.parse(decryptedStr);
+                } catch (e) {
+                    console.error(`[Conversations API] legacy Decryption failed!`, e);
+                }
+            }
+
+            return String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
         }).filter(id => id);
 
         console.log(`📡 [Conversations API] User manages PhoneIDs:`, myPhoneIDs);
 
         // 2. Fetch all messages for this user OR associated with their phone IDs
-        // We use a permissive query to ensure cross-user visibility if credentials have changed
         const [messages, contacts] = await Promise.all([
             db.whatsAppMessage.findMany({
                 where: {
                     OR: [
                         { userId },
-                        {
+                        ...myPhoneIDs.map(id => ({
                             metadata: {
                                 path: ['phone_number_id'],
-                                string_contains: myPhoneIDs.length > 0 ? myPhoneIDs[0] : "NONE_MATCHING" // Prisma limited on JSON IN, so we look for at least one
+                                string_contains: id
                             }
-                        }
+                        }))
                     ]
                 },
                 orderBy: { timestamp: 'desc' }

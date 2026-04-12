@@ -10,7 +10,8 @@ import {
     Copy, 
     Sparkles, 
     RefreshCw, 
-    Loader2 
+    Loader2,
+    Eye
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ export const TemplatePreviewCard = ({
     onClone, 
     onDelete, 
     onTest, 
+    onPreview,
     onSubmit, 
     onCheckStatus,
     isSubmittingId,
@@ -88,6 +90,20 @@ export const TemplatePreviewCard = ({
                     </Button>
 
                     <div className="flex gap-1">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="w-8 h-8 text-primary hover:bg-primary/5 hover:text-primary transition-colors border-border"
+                                    onClick={() => onPreview(template)}
+                                >
+                                    <Eye className="w-3.5 h-3.5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Preview</TooltipContent>
+                        </Tooltip>
+
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
@@ -185,6 +201,7 @@ export const TemplateListRow = ({
     onClone, 
     onDelete, 
     onTest, 
+    onPreview,
     onSubmit, 
     onCheckStatus,
     isSubmittingId,
@@ -246,6 +263,22 @@ export const TemplateListRow = ({
                     </TooltipTrigger>
                     <TooltipContent side="top">
                         {template.isDefault ? "Clone to Edit" : "Edit Template"}
+                    </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="w-8 h-8 rounded-full text-primary hover:bg-primary/10" 
+                            onClick={() => onPreview(template)}
+                        >
+                            <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                        Preview Template
                     </TooltipContent>
                 </Tooltip>
 

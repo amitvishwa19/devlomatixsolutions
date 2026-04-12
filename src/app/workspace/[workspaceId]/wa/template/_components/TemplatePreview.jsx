@@ -11,11 +11,18 @@ import {
     Smartphone,
     Reply,
     ExternalLink,
-    Sparkles
+    Sparkles,
+    Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
-export default function TemplatePreview({ template, showHeader = true }) {
+export default function TemplatePreview({ template, showHeader = true, isModal = false, isOpen = false, onClose }) {
     const [isDarkMode, setIsDarkMode] = React.useState(false);
 
     if (!template) return null;
@@ -39,8 +46,10 @@ export default function TemplatePreview({ template, showHeader = true }) {
     const metadata = getMetadata();
     const buttons = getButtons();
 
-    return (
-        <div className={`relative flex flex-col w-full max-w-[340px] mx-auto overflow-hidden rounded-[30px] border-[8px] border-[#1a1a1b] shadow-2xl transition-all duration-500 ${isDarkMode ? 'bg-[#0b141a]' : 'bg-[#e5ddd5]'}`}>
+    const Content = (
+        <div className={`relative flex flex-col w-full max-w-[340px] mx-auto overflow-hidden rounded-[30px] border-[8px] border-primary shadow-2xl transition-all duration-500 ${isDarkMode ? 'bg-[#0b141a]' : 'bg-[#e5ddd5]'}`}>
+
+
             {/* Phone Notch/Status Bar */}
             <div className="h-6 flex items-center justify-between px-6 py-4 bg-muted/10 opacity-50 relative z-20">
                 <span className="text-[10px] font-bold text-foreground/60 tracking-wider">9:41</span>
@@ -67,7 +76,10 @@ export default function TemplatePreview({ template, showHeader = true }) {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 rounded-full hover:bg-white/10 text-white/80"
-                        onClick={() => setIsDarkMode(!isDarkMode)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDarkMode(!isDarkMode);
+                        }}
                     >
                         {isDarkMode ? <Sparkles className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />}
                     </Button>
@@ -79,7 +91,7 @@ export default function TemplatePreview({ template, showHeader = true }) {
                 {template.type === 'carousel' ? (
                     <div className="space-y-4 animate-in fade-in duration-300">
                         {/* Header Body Footer */}
-                        <div className={`relative rounded-md rounded-tl-none p-3 shadow-md max-w-[280px] self-start transition-colors duration-300 ${isDarkMode ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-foreground'}`}>
+                        <div className={`relative rounded-md rounded-tl-none p-3 shadow-md max-w-[280px] self-start transition-colors duration-300 ${isDarkMode ? 'bg-[#202c33] text-[#f1f1f2]' : 'bg-white text-foreground'}`}>
                             <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-inherit border-l-8 border-l-transparent" />
                             <div className="text-[14.5px] leading-relaxed whitespace-pre-wrap">{template.body || <span className="opacity-40 italic">Body content...</span>}</div>
                             {template.footer && <div className={`text-[11.5px] mt-2 opacity-70 ${isDarkMode ? 'text-[#8696a0]' : 'text-muted-foreground'}`}>{template.footer}</div>}
@@ -97,7 +109,7 @@ export default function TemplatePreview({ template, showHeader = true }) {
                                         )}
                                     </div>
                                     <div className="p-3.5 flex-1 flex flex-col gap-1.5">
-                                        <h4 className={`text-[14px] font-bold truncate ${isDarkMode ? 'text-[#e9edef]' : 'text-foreground'}`}>{card.title || 'Untitled Card'}</h4>
+                                        <h4 className={`text-[14px] font-bold truncate ${isDarkMode ? 'text-[#f1f1f2]' : 'text-foreground'}`}>{card.title || 'Untitled Card'}</h4>
                                         <p className={`text-[12.5px] line-clamp-2 leading-snug ${isDarkMode ? 'text-[#8696a0]' : 'text-muted-foreground'}`}>
                                             {card.description || 'No description added yet...'}
                                         </p>
@@ -111,7 +123,7 @@ export default function TemplatePreview({ template, showHeader = true }) {
                     </div>
                 ) : (
                     /* Standard Bubble Preview */
-                    <div className={`relative z-10 rounded-xl rounded-tl-none overflow-hidden shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] max-w-[85%] self-start transition-all duration-300 animate-in fade-in slide-in-from-left-2 ${isDarkMode ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-foreground'}`}>
+                    <div className={`relative z-10 rounded-xl rounded-tl-none overflow-hidden shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] max-w-[85%] self-start transition-all duration-300 animate-in fade-in slide-in-from-left-2 ${isDarkMode ? 'bg-[#202c33] text-[#f1f1f2]' : 'bg-white text-foreground'}`}>
                         {/* Source Peak */}
                         <div className={`absolute -left-[8px] top-0 w-3 h-3 transition-colors duration-300 ${isDarkMode ? 'text-[#202c33]' : 'text-white'}`}>
                             <svg viewBox="0 0 8 13" width="8" height="13">
@@ -166,7 +178,7 @@ export default function TemplatePreview({ template, showHeader = true }) {
                         {/* Header Text */}
                         {metadata.headerText && (
                             <div className="p-3 pb-0">
-                                <div className="text-[14.5px] font-bold leading-tight">
+                                <div className={`text-[14.5px] font-bold leading-tight ${isDarkMode ? 'text-[#f8f8f8]' : 'text-foreground'}`}>
                                     {metadata.headerText}
                                 </div>
                             </div>
@@ -179,7 +191,7 @@ export default function TemplatePreview({ template, showHeader = true }) {
                             </div>
 
                             {template.footer && (
-                                <div className={`text-[12px] mt-2 opacity-60 italic ${isDarkMode ? 'text-[#8696a0]' : 'text-muted-foreground'}`}>
+                                <div className={`text-[12px] mt-2 opacity-80 italic ${isDarkMode ? 'text-[#8696a0]' : 'text-muted-foreground'}`}>
                                     {template.footer}
                                 </div>
                             )}
@@ -198,7 +210,7 @@ export default function TemplatePreview({ template, showHeader = true }) {
                                 {buttons.filter(b => b).map((btn, idx) => {
                                     const btnText = typeof btn === 'object' ? (btn.text || btn.url || "Button") : btn;
                                     const isUrl = typeof btn === 'object' && btn.type === 'URL';
-                                    
+
                                     return (
                                         <div key={idx} className="py-3 px-4 text-center text-[14px] text-[#00a884] hover:bg-black/[0.02] active:bg-black/[0.05] transition-colors cursor-pointer flex items-center justify-center gap-2">
                                             {!isUrl && (
@@ -229,4 +241,21 @@ export default function TemplatePreview({ template, showHeader = true }) {
             <div className={`absolute inset-0 z-0 opacity-[0.05] pointer-events-none transition-colors duration-500 ${isDarkMode ? 'invert' : ''}`} style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }} />
         </div>
     );
+
+    if (isModal) {
+        return (
+            <Dialog open={isOpen} onOpenChange={onClose}>
+                <DialogContent className="max-w-[360px] p-0 overflow-hidden bg-transparent border-none shadow-none focus-visible:outline-none">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Template Preview</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center p-4">
+                        {Content}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
+    return Content;
 }

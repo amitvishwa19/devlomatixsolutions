@@ -24,6 +24,7 @@ import { DynamicIcon } from 'lucide-react/dynamic';
 import TemplateBuilder from './_components/TemplateBuilder';
 import { TemplatePreviewCard, TemplateListRow } from './_components/TemplateItems';
 import TestTemplateDialog from './_components/TestTemplateDialog';
+import TemplatePreview from './_components/TemplatePreview';
 
 export default function TemplatePage() {
     const params = useParams();
@@ -43,6 +44,8 @@ export default function TemplatePage() {
     const [isSyncing, setIsSyncing] = useState(false);
     const [isSubmittingId, setIsSubmittingId] = useState(null);
     const [isDeletingId, setIsDeletingId] = useState(null);
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [selectedPreviewTemplate, setSelectedPreviewTemplate] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         category: 'UTILITY',
@@ -240,6 +243,11 @@ export default function TemplatePage() {
         setIsTestModalOpen(true);
     };
 
+    const openPreviewModal = (template) => {
+        setSelectedPreviewTemplate(template);
+        setIsPreviewModalOpen(true);
+    };
+
     const fetchContacts = async () => {
         if (!userId) return;
         setIsFetchingContacts(true);
@@ -262,6 +270,20 @@ export default function TemplatePage() {
         if (recipients.length === 0) {
             toast.error("No recipients selected");
             return;
+        }
+
+        // Validate that all detected variables have mappings
+        const headerText = testingTemplate.metadata?.headerText || '';
+        const headerVars = [...headerText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+        const bodyVars = [...(testingTemplate.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+        const allRequiredVars = [...new Set([...headerVars, ...bodyVars])];
+
+        for (const v of allRequiredVars) {
+            const val = variableMappings[v];
+            if (val === undefined || val === null || val.toString().trim() === "") {
+                toast.error(`Please fill in a value for variable {{${v}}}`);
+                return;
+            }
         }
 
         setIsTesting(true);
@@ -437,6 +459,7 @@ export default function TemplatePage() {
                                         onDelete={handleDelete} 
                                         onClone={handleClone} 
                                         onTest={openTestModal} 
+                                        onPreview={openPreviewModal}
                                         onSubmit={handleSubmitToMeta} 
                                         onCheckStatus={handleCheckStatus}
                                         isSubmittingId={isSubmittingId}
@@ -450,6 +473,7 @@ export default function TemplatePage() {
                                         onDelete={handleDelete} 
                                         onClone={handleClone} 
                                         onTest={openTestModal} 
+                                        onPreview={openPreviewModal}
                                         onSubmit={handleSubmitToMeta} 
                                         onCheckStatus={handleCheckStatus}
                                         isSubmittingId={isSubmittingId}
@@ -491,6 +515,13 @@ export default function TemplatePage() {
                     detectedVariables={detectedVariables}
                     variableMappings={variableMappings}
                     setVariableMappings={setVariableMappings}
+                />
+
+                <TemplatePreview 
+                    isModal={true}
+                    isOpen={isPreviewModalOpen}
+                    onClose={() => setIsPreviewModalOpen(false)}
+                    template={selectedPreviewTemplate}
                 />
             </div>
         </TooltipProvider>

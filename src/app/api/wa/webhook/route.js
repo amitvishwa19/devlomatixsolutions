@@ -91,7 +91,43 @@ export async function POST(req) {
             }
 
             if (messages && messages.length > 0) {
-                // ... (targetCred logic) ...
+                // 1. Identify the user/credential associated with this phone number ID
+                const credentials = await db.credentials.findMany({
+                    where: { platform: 'WHATSAPP_CLOUD' }
+                });
+
+                let targetCred = null;
+                for (const c of credentials) {
+                    let cloudCreds = null;
+                    const stored = c.credentials;
+                    if (typeof stored === 'string' && stored.includes(':')) {
+                        try {
+                            const decryptedStr = symmetricDecrypt(stored);
+                            cloudCreds = JSON.parse(decryptedStr);
+                        } catch (e) {}
+                    } else if (typeof stored === 'string') {
+                        try { cloudCreds = JSON.parse(stored); } catch (e) {}
+                    } else { cloudCreds = stored; }
+
+                    if (cloudCreds?.enc) {
+                        try {
+                            const decryptedStr = symmetricDecrypt(cloudCreds.enc);
+                            cloudCreds = JSON.parse(decryptedStr);
+                        } catch (e) {}
+                    }
+
+                    const credPhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+                    if (credPhoneId === String(phoneNumberId)) {
+                        targetCred = c;
+                        break;
+                    }
+                }
+
+                if (!targetCred) {
+                    console.error(`[Webhook] No credential found matching PhoneID: ${phoneNumberId}`);
+                    return NextResponse.json({ success: true });
+                }
+
                 const userId = targetCred.userId;
 
                 // 2. Loop through all messages in the payload
@@ -100,10 +136,40 @@ export async function POST(req) {
                     const msgId = message.id;
                     const timestamp = message.timestamp;
 
-                    let textBody = "";
-                    // ... (switch message.type logic) ...
+                    // Skip if message already exists
+                    const existing = await db.whatsAppMessage.findUnique({ where: { waId: msgId } });
+                    if (existing) continue;
 
-                    // 145: //console.log(`[Webhook] Processing ${message.type} from ${from}: ${textBody}`);
+                    let textBody = "";
+
+                    // Determine content based on message type
+                    switch (message.type) {
+                        case "text":
+                            textBody = message.text?.body || "";
+                            break;
+                        case "image":
+                        case "video":
+                        case "audio":
+                        case "document":
+                            textBody = `[${message.type.toUpperCase()}] ${message[message.type]?.caption || ""}`;
+                            break;
+                        case "location":
+                            textBody = `📍 [Location Shared] ${message.location?.name || `${message.location?.latitude}, ${message.location?.longitude}`}`;
+                            break;
+                        case "interactive":
+                            const iType = message.interactive?.type;
+                            if (iType === "button_reply") textBody = message.interactive.button_reply?.title;
+                            else if (iType === "list_reply") textBody = message.interactive.list_reply?.title;
+                            else textBody = "[Interactive Response]";
+                            break;
+                        case "button":
+                            textBody = message.button?.text || "[Button Click]";
+                            break;
+                        default:
+                            textBody = `[${message.type.toUpperCase()}]`;
+                    }
+
+                    console.log(`[Webhook] Processing ${message.type} from ${from}: ${textBody}`);
 
                     // Phase 3: Auto-Sync Contact
                     try {
@@ -135,7 +201,7 @@ export async function POST(req) {
 
                     // Phase 2: Trigger Bot Engine
                     try {
-                        const workspaceId = targetCred.workspaceId || "cmnbhifag000458ikwhv1zso2"; // Fallback to provided default
+                        const workspaceId = targetCred.workspaceId || "cmnbhifag000458ikwhv1zso2";
                         const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa/_lib/bot-engine");
                         waBotEngine.processIncomingMessage(userId, workspaceId, from, textBody).catch(e => console.error('[Webhook] Bot Error:', e));
                     } catch (botErr) {

@@ -160,15 +160,45 @@ export async function POST(req) {
         // 3. Log sent message to DB for history
         try {
             let logText = "";
-            switch (type) {
-                case 'text': logText = body.body || body.text || body.content || ""; break;
-                case 'template': logText = `[Template: ${body.template.name}]`; break;
-                case 'interactive':
-                case 'interactive-button':
-                case 'interactive-group':
-                    logText = "[Interactive Message]";
-                    break;
-                default: logText = `[${type.toUpperCase()}] ${body.caption || ""}`;
+            if (type === 'template') {
+                try {
+                    // Try to fetch template body to reconstruct the log text
+                    const template = await db.messageTemplate.findFirst({
+                        where: { 
+                            userId,
+                            OR: [
+                                { name: body.template.name },
+                                { templateName: body.template.name }
+                            ]
+                        }
+                    });
+                    
+                    if (template) {
+                        let fullText = template.body;
+                        // Replace variables {{1}}, {{2}}, etc.
+                        const bodyComp = body.template.components?.find(c => c.type?.toLowerCase() === 'body');
+                        if (bodyComp?.parameters) {
+                            bodyComp.parameters.forEach((param, idx) => {
+                                fullText = fullText.replace(`{{${idx + 1}}}`, param.text || "");
+                            });
+                        }
+                        logText = fullText;
+                    } else {
+                        logText = `[Template: ${body.template.name}]`;
+                    }
+                } catch (e) {
+                    logText = `[Template: ${body.template.name}]`;
+                }
+            } else {
+                switch (type) {
+                    case 'text': logText = body.body || body.text || body.content || ""; break;
+                    case 'interactive':
+                    case 'interactive-button':
+                    case 'interactive-group':
+                        logText = "[Interactive Message]";
+                        break;
+                    default: logText = `[${type.toUpperCase()}] ${body.caption || ""}`;
+                }
             }
 
             const waMessageId = result.data?.messages?.[0]?.id;
