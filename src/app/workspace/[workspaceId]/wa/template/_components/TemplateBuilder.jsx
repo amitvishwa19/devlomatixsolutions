@@ -411,14 +411,13 @@ export default function TemplateBuilder({
                     <div className="px-6 py-4 border-t border-border bg-muted/30 flex items-center justify-between gap-3">
                         <Button variant="ghost" onClick={onClose} disabled={isSaving}>Cancel</Button>
                         <div className='flex gap-2'>
-                            <Button variant="outline" onClick={() => onSave(false)} disabled={isSaving}>
-                                {isSaving ? "Saving..." : "Save Template"}
+                            <Button 
+                                onClick={() => onSave(false)} 
+                                disabled={isSaving}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                            >
+                                {isSaving ? "Saving..." : "Save as Draft"}
                             </Button>
-                            {formData.platform === 'WHATSAPP_CLOUD' && (
-                                <Button onClick={() => onSave(true)} disabled={isSaving || isSubmittingId}>
-                                    Save & Submit
-                                </Button>
-                            )}
                         </div>
                     </div>
                 </div>

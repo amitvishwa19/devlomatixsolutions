@@ -49,13 +49,13 @@ export const TemplatePreviewCard = ({
                         {template.platform === 'WHATSAPP_CLOUD' && (
                             <Badge
                                 className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
-                                    (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30' :
+                                    (template.status === 'PENDING_APPROVAL' || template.status === 'IN_APPEAL') ? 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30' :
                                         template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
                                             'bg-muted text-muted-foreground'
                                     }`}
                             >
                                 {template.status === 'APPROVED' ? "Approved" :
-                                    (template.status === 'PENDING_APPROVAL' || template.status === 'PENDING' || template.status === 'IN_APPEAL') ? "In Review" :
+                                    (template.status === 'PENDING_APPROVAL' || template.status === 'IN_APPEAL') ? "In Review" :
                                         template.status === 'REJECTED' ? "Rejected" : "Draft"}
                             </Badge>
                         )}
@@ -102,6 +102,23 @@ export const TemplatePreviewCard = ({
                             <TooltipContent>Send Test</TooltipContent>
                         </Tooltip>
 
+                        {template.platform === 'WHATSAPP_CLOUD' && (!template.status || template.status === 'DRAFT' || template.status === 'REJECTED') && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="w-8 h-8 text-primary hover:bg-primary/10 border-primary/20 transition-colors"
+                                        onClick={() => onSubmit(template.id)}
+                                        disabled={isSubmittingId === template.id}
+                                    >
+                                        {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Send for Review</TooltipContent>
+                            </Tooltip>
+                        )}
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="icon" className="w-8 h-8 text-muted-foreground border-border">
@@ -115,7 +132,7 @@ export const TemplatePreviewCard = ({
 
                                 {template.platform === 'WHATSAPP_CLOUD' && (
                                     <>
-                                        {(!template.status || template.status === 'DRAFT') ? (
+                                        {(!template.status || template.status === 'DRAFT' || template.status === 'REJECTED') ? (
                                             <DropdownMenuItem
                                                 className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary"
                                                 onClick={() => onSubmit(template.id)}
@@ -242,6 +259,25 @@ export const TemplateListRow = ({
                         Send Test Message
                     </TooltipContent>
                 </Tooltip>
+
+                {template.platform === 'WHATSAPP_CLOUD' && (!template.status || template.status === 'DRAFT' || template.status === 'REJECTED') && (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="w-8 h-8 rounded-full text-primary hover:bg-primary/10" 
+                                onClick={() => onSubmit(template.id)}
+                                disabled={isSubmittingId === template.id}
+                            >
+                                {isSubmittingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            Send for Review
+                        </TooltipContent>
+                    </Tooltip>
+                )}
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

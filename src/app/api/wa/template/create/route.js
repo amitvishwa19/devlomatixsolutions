@@ -67,13 +67,35 @@ export async function POST(req) {
         }
 
         // Standardize and decrypt credentials
-        let cloudCreds = typeof credential.credentials === 'string'
-            ? JSON.parse(credential.credentials)
-            : credential.credentials;
+        let cloudCreds = null;
+        const stored = credential.credentials;
 
+        if (typeof stored === 'string' && stored.includes(':')) {
+            try {
+                const decryptedStr = symmetricDecrypt(stored);
+                cloudCreds = JSON.parse(decryptedStr);
+            } catch (e) {
+                console.error(`[Template Create] Decryption failed!`, e);
+                return NextResponse.json({ error: "Failed to decrypt WhatsApp credentials." }, { status: 500 });
+            }
+        } else if (typeof stored === 'string') {
+            try {
+                cloudCreds = JSON.parse(stored);
+            } catch (e) {
+                return NextResponse.json({ error: "Invalid credentials format." }, { status: 500 });
+            }
+        } else {
+            cloudCreds = stored;
+        }
+
+        // Handle Legacy Object Wrapping
         if (cloudCreds?.enc) {
-            const decrypted = symmetricDecrypt(cloudCreds.enc);
-            cloudCreds = JSON.parse(decrypted);
+            try {
+                const decryptedStr = symmetricDecrypt(cloudCreds.enc);
+                cloudCreds = JSON.parse(decryptedStr);
+            } catch (e) {
+                console.error(`[Template Create] legacy Decryption failed!`, e);
+            }
         }
 
         // 3. Prepare Meta Template Data
@@ -84,13 +106,44 @@ export async function POST(req) {
             .replace(/\s+/g, '_')
             .replace(/[^a-z0-9_]/g, '');
 
-        const components = [
-            {
-                type: "BODY",
-                text: template.body
-            }
-        ];
+        // Helper to detect variables and generate samples
+        const getExampleSamples = (text) => {
+            const matches = [...(text || "").matchAll(/{{(\d+)}}/g)];
+            if (matches.length === 0) return null;
+            
+            // Meta expects body_text: [ ["sample1", "sample2"] ] for multiple variables
+            // or header_text: ["sample"] for header
+            return matches.map((_, i) => `Sample ${i + 1}`);
+        };
 
+        const components = [];
+
+        // 1. HEADER
+        if (template.metadata?.headerText) {
+            const headerExamples = getExampleSamples(template.metadata.headerText);
+            const headerComp = {
+                type: "HEADER",
+                format: "TEXT",
+                text: template.metadata.headerText
+            };
+            if (headerExamples) {
+                headerComp.example = { header_text: headerExamples };
+            }
+            components.push(headerComp);
+        }
+
+        // 2. BODY
+        const bodyExamples = getExampleSamples(template.body);
+        const bodyComp = {
+            type: "BODY",
+            text: template.body
+        };
+        if (bodyExamples) {
+            bodyComp.example = { body_text: [bodyExamples] }; // Meta expects nested array for body
+        }
+        components.push(bodyComp);
+
+        // 3. FOOTER
         if (template.footer) {
             components.push({
                 type: "FOOTER",
@@ -98,18 +151,29 @@ export async function POST(req) {
             });
         }
 
-        // Add buttons if they exist
+        // 4. BUTTONS
         if (template.buttons && Array.isArray(template.buttons) && template.buttons.length > 0) {
+            // Normalize buttons for creation (some Meta versions require specific fields)
+            const metaButtons = template.buttons.map(btn => {
+                const b = typeof btn === 'string' ? { type: 'QUICK_REPLY', text: btn } : btn;
+                return {
+                    type: b.type || 'QUICK_REPLY',
+                    text: b.text || b.url || 'Click here',
+                    url: b.type === 'URL' ? b.url : undefined,
+                    phone_number: b.type === 'PHONE_NUMBER' ? b.phone_number : undefined
+                };
+            });
+
             components.push({
                 type: "BUTTONS",
-                buttons: template.buttons
+                buttons: metaButtons
             });
         }
 
         const metaPayload = {
             name: sanitizedName,
             language: template.language || "en_US",
-            category: template.category || "UTILITY",
+            category: (template.category || "UTILITY").toUpperCase(),
             components: components
         };
 
@@ -136,13 +200,15 @@ export async function POST(req) {
             }, { status: response.status || 500 });
         }
 
-        // 5. Update local database
+        // 5. Update local database ONLY after success
+        const metaStatus = result.status === 'APPROVED' ? 'APPROVED' : 'PENDING_APPROVAL';
+
         const updatedTemplate = await db.messageTemplate.update({
             where: { id: templateId },
             data: {
                 templateId: result.id, // Store the official Meta ID
                 templateName: sanitizedName,
-                status: result.status || "PENDING_APPROVAL",
+                status: metaStatus,
                 approved: result.status === "APPROVED"
             }
         });

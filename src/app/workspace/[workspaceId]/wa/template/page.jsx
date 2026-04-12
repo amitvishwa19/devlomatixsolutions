@@ -112,17 +112,18 @@ export default function TemplatePage() {
     // Sync from Cloud API
     const handleSyncCloud = async () => {
         setIsSyncing(true);
+        const toastId = toast.loading("Syncing all templates from Meta Cloud...");
         try {
             const res = await fetch('/api/wa/template/sync');
             const data = await res.json();
-            if (data.success) {
-                toast.success(data.message || "Sync completed successfully");
+            if (res.ok && data.success) {
+                toast.success(data.message || "Template sync completed!", { id: toastId });
                 fetchTemplates();
             } else {
                 throw new Error(data.error || "Sync failed");
             }
         } catch (error) {
-            toast.error(error.message || "Failed to sync templates from Meta.");
+            toast.error(error.message || "Failed to sync templates", { id: toastId });
         } finally {
             setIsSyncing(false);
         }
@@ -142,6 +143,7 @@ export default function TemplatePage() {
                 body: '',
                 footer: '',
                 buttons: [''],
+                platform: 'WHATSAPP_CLOUD',
                 metadata: {
                     mediaUrl: '',
                     latitude: '',
@@ -167,7 +169,12 @@ export default function TemplatePage() {
             const res = await fetch('/api/wa/template', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, id: editingId, platform: formData.platform || 'WHATSAPP_CLOUD' })
+                body: JSON.stringify({ 
+                    ...formData, 
+                    id: editingId, 
+                    platform: formData.platform || 'WHATSAPP_CLOUD',
+                    status: 'DRAFT'
+                })
             });
             const data = await res.json();
             if (!res.ok || !data.success) throw new Error(data.error || "Failed to save");
@@ -208,7 +215,9 @@ export default function TemplatePage() {
             name: `${template.name} Copy`,
             templateName: `${template.templateName || template.name}_copy`.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
             isDefault: false,
-            status: 'DRAFT'
+            status: 'DRAFT',
+            approved: false,
+            templateId: null
         });
         setEditingId(null);
         setIsBuilderOpen(true);
@@ -216,9 +225,15 @@ export default function TemplatePage() {
 
     const openTestModal = (template) => {
         setTestingTemplate(template);
-        const vars = [...(template.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
-        const uniqueVars = Array.from(new Set(vars)).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        // Detect variables from body and header
+        const bodyVars = [...(template.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+        const headerText = template.metadata?.headerText || "";
+        const headerVars = [...headerText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+        
+        const uniqueVars = Array.from(new Set([...headerVars, ...bodyVars])).sort((a, b) => parseInt(a) - parseInt(b));
         setDetectedVariables(uniqueVars);
+        
         const initialMapping = {};
         uniqueVars.forEach(v => initialMapping[v] = '');
         setVariableMappings(initialMapping);
@@ -251,20 +266,42 @@ export default function TemplatePage() {
 
         setIsTesting(true);
         try {
-            // Prepare components if there are variables
-            const components = [];
-            if (detectedVariables.length > 0) {
-                components.push({
-                    type: 'body',
-                    parameters: detectedVariables.map(v => ({
-                        type: 'text',
-                        text: variableMappings[v] || ''
-                    }))
-                });
-            }
+            // Prepare components based on where variables are located
+            const buildComponents = () => {
+                const components = [];
+                
+                // 1. Header Variables
+                const headerText = testingTemplate.metadata?.headerText || '';
+                const headerVars = [...headerText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+                if (headerVars.length > 0) {
+                    components.push({
+                        type: 'HEADER',
+                        parameters: headerVars.map(v => ({
+                            type: 'TEXT',
+                            text: variableMappings[v] || ''
+                        }))
+                    });
+                }
+
+                // 2. Body Variables
+                const bodyVars = [...(testingTemplate.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+                if (bodyVars.length > 0) {
+                    components.push({
+                        type: 'BODY',
+                        parameters: bodyVars.map(v => ({
+                            type: 'TEXT',
+                            text: variableMappings[v] || ''
+                        }))
+                    });
+                }
+
+                return components;
+            };
+
+            const components = buildComponents();
 
             for (const to of recipients) {
-                await fetch('/api/wa/send-cloud-api', {
+                const res = await fetch('/api/wa/send-cloud-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -277,12 +314,17 @@ export default function TemplatePage() {
                         }
                     })
                 });
+                
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || "Failed to send to one or more recipients");
+                }
             }
-            toast.success(`Sent to ${recipients.length} recipients`);
+            toast.success(`Success! Sent to ${recipients.length} recipients`);
             setIsTestModalOpen(false);
         } catch (error) {
             console.error("Test send error:", error);
-            toast.error("Failed to send test");
+            toast.error(error.message || "Failed to send test message");
         } finally {
             setIsTesting(false);
         }
@@ -290,13 +332,22 @@ export default function TemplatePage() {
 
     const handleSubmitToMeta = async (templateId) => {
         setIsSubmittingId(templateId);
+        const toastId = toast.loading("Submitting template to Meta for review...");
         try {
             const res = await fetch('/api/wa/template/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ templateId })
             });
-            if (res.ok) toast.success("Submitted for review!");
+            const data = await res.json();
+            if (res.ok && data.success) {
+                toast.success("Submitted for review!", { id: toastId });
+                fetchTemplates();
+            } else {
+                throw new Error(data.error || "Submission failed");
+            }
+        } catch (error) {
+            toast.error(error.message || "Failed to submit template", { id: toastId });
         } finally {
             setIsSubmittingId(null);
         }
@@ -304,13 +355,18 @@ export default function TemplatePage() {
 
     const handleCheckStatus = async (templateId) => {
         setIsSubmittingId(templateId);
+        const toastId = toast.loading("Fetching latest status from Meta...");
         try {
             const res = await fetch(`/api/wa/template/status?templateId=${templateId}`);
             const data = await res.json();
-            if (data.success) {
-                toast.success(`Status: ${data.status}`);
+            if (res.ok && data.success) {
+                toast.success(`Status updated: ${data.status}`, { id: toastId });
                 fetchTemplates();
+            } else {
+                throw new Error(data.error || "Failed to fetch status");
             }
+        } catch (error) {
+            toast.error(error.message || "Status check failed", { id: toastId });
         } finally {
             setIsSubmittingId(null);
         }
