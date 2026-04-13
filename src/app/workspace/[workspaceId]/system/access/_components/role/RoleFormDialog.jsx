@@ -303,9 +303,9 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
  className="mt-0.5 transition-transform hover:scale-110"
  />
  <div className="flex flex-col min-w-0 flex-1">
- <span className="text-xs font-bold leading-tight truncate">
- {p.title.split('')[0]}
- </span>
+                          <span className="text-xs font-bold leading-tight truncate">
+                            {p.title}
+                          </span>
  <span className="text-[9px] text-muted-foreground opacity-60 font-mono truncate">
  {p.value}
  </span>

@@ -162,7 +162,7 @@ const Navbar = () => {
                     {/* Right: Actions */}
                     <div className="hidden md:flex items-center gap-2">
                         {/* <ThemeToggle /> */}
-                        <ThemeSwitcher />
+                        {/* <ThemeSwitcher /> */}
 
                         {session ? (
                             <Link href="/workspace">
@@ -183,7 +183,7 @@ const Navbar = () => {
 
                     {/* Mobile */}
                     <div className="flex md:hidden items-center gap-3">
-                        <ThemeToggle />
+                        {/* <ThemeToggle /> */}
                         <button className="text-foreground" onClick={() => setIsOpen(!isOpen)}>
                             {isOpen ? <X size={22} /> : <Menu size={22} />}
                         </button>

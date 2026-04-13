@@ -62,6 +62,42 @@ const projects = [
         results: "500+ integrations, 1M+ workflows executed monthly",
         link: null,
     },
+    {
+        title: "HealthGPT",
+        category: "AI & Healthcare",
+        description: "AI-powered health assistant that helps users understand medical reports and symptoms through a secure, HIPAA-compliant interface.",
+        tech: ["Next.js", "OpenAI API", "Supabase", "Tailwind CSS"],
+        image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&h=600&fit=crop",
+        results: "98% accuracy in medical terminology analysis",
+        link: null,
+    },
+    {
+        title: "EcoTrack",
+        category: "Sustainability",
+        description: "Sustainability dashboard for businesses to monitor carbon footprint, manage waste, and track renewable energy adoption with real-time analytics.",
+        tech: ["React", "D3.js", "Node.js", "PostgreSQL"],
+        image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&h=600&fit=crop",
+        results: "Helped clients reduce carbon emissions by 15%",
+        link: null,
+    },
+    {
+        title: "CryptoVault",
+        category: "Fintech",
+        description: "Secure, multi-signature wallet platform for institutional investors with real-time asset valuation and compliance reporting.",
+        tech: ["Solidity", "Ethers.js", "React", "Hardhat"],
+        image: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=800&h=600&fit=crop",
+        results: "$500M+ in digital assets secured",
+        link: null,
+    },
+    {
+        title: "LearnLoop",
+        category: "Education",
+        description: "Adaptive learning platform using ML to personalize course content based on student performance and learning style.",
+        tech: ["Vue.js", "Python", "Scikit-learn", "AWS"],
+        image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop",
+        results: "40% improvement in student engagement scores",
+        link: null,
+    },
 ];
 
 export default function ProjectPage() {
