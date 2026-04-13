@@ -175,9 +175,10 @@ html {
 
 .react-flow__edge-path {
   stroke: hsl(var(--n8n-connection)) !important;
-  stroke-width: 2;
-  stroke-dasharray: 8 4;
-  animation: dash-flow 0.6s linear infinite;
+  stroke-width: 2.5;
+  stroke-dasharray: 6 6;
+  filter: drop-shadow(0 0 4px hsl(var(--n8n-connection) / 0.3));
+  animation: dash-flow 0.4s linear infinite;
 }
 
 @keyframes dash-flow {
@@ -319,12 +320,20 @@ html {
   }
 
   .text-glow {
-    text-shadow: 0 0 10px hsl(190 90% 50% / 0.3);
+    text-shadow: 0 0 12px hsl(var(--primary) / 0.4);
   }
 
   .border-glow {
-    box-shadow: 0 0 15px hsl(190 90% 50% / 0.1);
-    border-color: hsl(190 90% 50% / 0.2);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .shadow-node {
+    box-shadow: var(--shadow-node);
+  }
+
+  .shadow-node-sm {
+    box-shadow: var(--shadow-node-sm);
   }
 
   .shimmer {

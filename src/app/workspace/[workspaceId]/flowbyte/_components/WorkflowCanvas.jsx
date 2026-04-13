@@ -31,7 +31,7 @@ const initialNodes = [
 const initialEdges = [];
 
 function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges, initialCron, initialScheduleEnabled }) {
-    const [workflowName, setWorkflowName] = useState(initialName || "Untitled Workflow");
+  const [workflowName, setWorkflowName] = useState(initialName || "Untitled Workflow");
   const router = useRouter();
   const { workspaceId } = useParams();
   const reactFlowWrapper = useRef(null);
@@ -248,9 +248,9 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
         edges,
         workspaceId
       });
-      
+
       if (res.error) throw new Error(res.error);
-      
+
       if (!savedId || savedId === "new") {
         setSavedId(res.data.id);
         window.history.replaceState(null, "", `/workspace/${workspaceId}/flowbyte/${res.data.id}`);
@@ -431,20 +431,20 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
             {scheduleEnabled ? "Scheduled" : "Schedule"}
           </Button>
           <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => {
-              if (hasChatTrigger) {
-                setShowChat(true);
-                setNodes((nds) => nds.map((n) =>
-                  n.data?.type === "chat-trigger"
-                    ? { ...n, data: { ...n.data, status: "waiting" } }
-                    : n.data?.type === "ai-agent"
+            if (hasChatTrigger) {
+              setShowChat(true);
+              setNodes((nds) => nds.map((n) =>
+                n.data?.type === "chat-trigger"
+                  ? { ...n, data: { ...n.data, status: "waiting" } }
+                  : n.data?.type === "ai-agent"
                     ? { ...n, data: { ...n.data, status: "idle" } }
                     : n
-                ));
-                toast.info("Waiting for chat input...");
-              } else {
-                execute();
-              }
-            }} disabled={isExecuting}>
+              ));
+              toast.info("Waiting for chat input...");
+            } else {
+              execute();
+            }
+          }} disabled={isExecuting}>
             {isExecuting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
             {isExecuting ? "Running..." : "Execute"}
           </Button>
@@ -467,13 +467,17 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
           nodeTypes={nodeTypes}
           fitView
           fitViewOptions={{ padding: 0.3 }}
+          defaultViewport={{ x: 0, y: 0, zoom: 1.2 }}
+          onMove={(event, viewport) => {
+            console.log("Current Zoom Level:", viewport.zoom);
+          }}
         >
           {selectedEdge && (() => {
             const edge = edges.find((e) => e.id === selectedEdge);
             if (!edge) return null;
             return (
               <Panel position="top-left" style={{ left: 0, top: 0 }}>
-                <div className="fixed z-50" style={{ left: "50%", top: "45%" , transform: "translate(-50%, -50%)" }}>
+                <div className="fixed z-50" style={{ left: "50%", top: "45%", transform: "translate(-50%, -50%)" }}>
                   <Button
                     variant="destructive"
                     size="sm"

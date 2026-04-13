@@ -105,7 +105,7 @@ export default function TemplatesPage() {
     };
 
     return (
-        <div className="p-6 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="p-4  space-y-4 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">Templates Library</h1>

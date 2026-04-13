@@ -15,6 +15,7 @@ export function NodeCard({ children, nodeId, isSelected }) {
                 hasInvalidInputs && 'border-destructive ring-1 ring-destructive'
             )}
         >
+
             {children}
         </div>
     )
