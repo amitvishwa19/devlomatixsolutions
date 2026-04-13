@@ -13,8 +13,8 @@ export default function FlowbyteLayout({ children }) {
     const isEditor = /\/flowbyte\/[a-zA-Z0-9-]{10,}/.test(pathname);
 
     return (
-        <div className="">
-            <main className="flex-1 h-full min-w-0 flex flex-col relative">
+        <div className="h-full flex flex-col overflow-hidden">
+            <main className="flex-1 h-full min-w-0 flex flex-col relative overflow-hidden">
                 {children}
             </main>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Search, X, Zap, Code, GitBranch, Send, Mail, Database, FileText, Webhook,
   MessageSquare, Clock, Bot, Brain, HardDrive, Cpu, Sparkles, BookOpen,
@@ -10,7 +10,7 @@ import {
   Link, Plug, Settings, Hash, List, CheckSquare, AlertTriangle
 } from "lucide-react";
 
-export const nodeCategories = [
+const nodeCategories = [
   {
     name: "Triggers",
     nodes: [
@@ -157,6 +157,7 @@ export const nodeCategories = [
   },
 ];
 
+// Mapping from agent slot id to allowed node category names
 const SLOT_CATEGORY_FILTER = {
   llm: ["LLM Models"],
   memory: ["Memory"],
@@ -182,7 +183,7 @@ export default function NodePanel({ onClose, onAddNode, slotFilter }) {
     .filter((cat) => cat.nodes.length > 0);
 
   const onDragStart = (event, type, label) => {
-    event.dataTransfer.setData("application/reactFlow", type);
+    event.dataTransfer.setData("application/reactflow-type", type);
     event.dataTransfer.setData("application/reactflow-label", label);
     event.dataTransfer.effectAllowed = "move";
   };

@@ -1,12 +1,23 @@
 import React from 'react'
 import { db } from '@/lib/db'
-import { ReactFlowProvider } from '@xyflow/react'
-import FlowEditor from '../_components/FlowEditor'
-import { FlowValidationContextProvider } from '../_context/FlowValidationContext'
+import WorkflowCanvas from '../_components/WorkflowCanvas'
 import { redirect } from 'next/navigation'
 
 export default async function WorkflowIdPage({ params }) {
     const { workflowId, workspaceId } = await params
+
+    if (workflowId === "new") {
+        return (
+            <div className='flex h-[calc(100vh-145px)] w-full overflow-hidden bg-background relative'>
+                <WorkflowCanvas 
+                    workflowId="new"
+                    initialName="New Workflow"
+                    loadedNodes={[]}
+                    loadedEdges={[]}
+                />
+            </div>
+        )
+    }
 
     const workflow = await db.workflow.findUnique({
         where: {
@@ -19,14 +30,13 @@ export default async function WorkflowIdPage({ params }) {
     }
 
     return (
-        <div className='flex h-screen w-full overflow-hidden bg-background'>
-            <FlowValidationContextProvider>
-                <ReactFlowProvider>
-                    <div className='flex-1 h-full relative'>
-                        <FlowEditor workflow={workflow} />
-                    </div>
-                </ReactFlowProvider>
-            </FlowValidationContextProvider>
+        <div className='flex h-[calc(100vh-145px)] w-full overflow-hidden bg-background relative'>
+            <WorkflowCanvas 
+                workflowId={workflow.id}
+                initialName={workflow.name}
+                loadedNodes={workflow.nodes || []}
+                loadedEdges={workflow.edges || []}
+            />
         </div>
     )
 }

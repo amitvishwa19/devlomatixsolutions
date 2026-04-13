@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, RotateCcw, MessageSquare, Trash2, Loader2, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -52,7 +52,7 @@ export default function ChatPanel({
           <span className="text-sm font-medium text-foreground">Chat</span>
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">
-              Session: {sessionId.slice(0, 5)}...
+              Session: {sessionId?.slice(0, 5)}...
             </span>
             <button onClick={onNewSession} className="text-muted-foreground hover:text-foreground transition-colors" title="New session">
               <RotateCcw className="h-3.5 w-3.5" />
@@ -96,9 +96,12 @@ export default function ChatPanel({
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1.5">
               <Wrench className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground font-medium">Tools</span>
+              <span className="text-[10px] text-muted-foreground font-medium">LangChain Tools</span>
             </div>
             <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-muted-foreground">
+                {enableTools ? "Calculator, Fetch, Time" : "Off"}
+              </span>
               <Switch
                 checked={enableTools || false}
                 onCheckedChange={(checked) => onToggleTools?.(checked)}
@@ -111,7 +114,7 @@ export default function ChatPanel({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
+              placeholder={enableTools ? "Ask with tools (calculator, time, URL)..." : "Type a message..."}
               rows={2}
               disabled={isStreaming}
               className="flex-1 bg-transparent text-sm resize-none outline-none text-foreground placeholder:text-muted-foreground disabled:opacity-50"
@@ -142,15 +145,17 @@ export default function ChatPanel({
           )}
           {logs.map((log) => (
             <div key={log.id} className="text-xs space-y-1">
+              <div className="text-muted-foreground">
+                {log.status === "success" ? "✓" : "✗"} {log.duration}ms
+              </div>
               <button
                 onClick={() => setSelectedLog(log)}
                 className={`flex items-center gap-2 w-full px-3 py-2 rounded-md text-left transition-colors ${
                   selectedLog?.id === log.id ? "bg-primary/20 text-foreground" : "hover:bg-muted text-muted-foreground"
                 }`}
               >
-                <div className={`w-1.5 h-1.5 rounded-full ${log.status === "success" ? "bg-emerald-500" : "bg-destructive"}`} />
-                <span className="truncate text-xs flex-1">{log.nodeName}</span>
-                <span className="text-[10px] opacity-50">{log.duration}ms</span>
+                <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate text-xs">{log.nodeName}</span>
               </button>
             </div>
           ))}
@@ -165,7 +170,7 @@ export default function ChatPanel({
               <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">{selectedLog.nodeName}</span>
               <span className={`text-xs ${selectedLog.status === "success" ? "text-emerald-400" : "text-destructive"}`}>
-                {selectedLog.status === "success" ? "Success" : "Error"}
+                {selectedLog.status === "success" ? "Success" : "Error"} in {selectedLog.duration}ms
               </span>
             </>
           ) : (
@@ -176,7 +181,7 @@ export default function ChatPanel({
           {selectedLog ? (
             <div>
               <div className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase mb-2">OUTPUT</div>
-              <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap bg-muted/20 rounded-lg p-3">
+              <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap bg-muted/50 rounded-lg p-3">
                 {JSON.stringify(selectedLog.output, null, 2)}
               </pre>
             </div>

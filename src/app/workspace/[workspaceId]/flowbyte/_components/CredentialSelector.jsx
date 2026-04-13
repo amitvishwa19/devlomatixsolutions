@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Key, Plus, ExternalLink } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getCredentials } from "../_actions/get-credentials";
+import { toast } from "sonner";
 
+// Maps node types to credential types they accept
 export const NODE_CREDENTIAL_TYPES = {
   http: ["generic", "oauth2", "jwt"],
   slack: ["slack"],
@@ -51,20 +53,16 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
     const fetch = async () => {
       setLoading(true);
       try {
-        const data = await getCredentials({ workspaceId, types });
-        setCredentials(data || []);
+          const data = await getCredentials({ workspaceId, types });
+          setCredentials(data || []);
       } catch (error) {
-        console.error("Error fetching credentials:", error);
+          toast.error("Failed to load credentials");
       } finally {
-        setLoading(false);
+          setLoading(false);
       }
     };
     fetch();
-  }, [workspaceId, JSON.stringify(types)]);
-
-  const goToCredentials = () => {
-    router.push(`/workspace/${workspaceId}/flowbyte/credentials`);
-  };
+  }, [workspaceId, types?.join(",")]);
 
   return (
     <div>
@@ -76,21 +74,21 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
         <select
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-3 py-1.5 text-sm border border-border rounded-md bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+          className="flex-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
           disabled={loading}
         >
           <option value="">
             {loading ? "Loading..." : credentials.length === 0 ? "No credentials found" : "— Select credential —"}
           </option>
           {credentials.map((c) => (
-            <option key={c.id} value={c.id} className="bg-background">
+            <option key={c.id} value={c.id}>
               {c.name} ({c.credential_type})
             </option>
           ))}
         </select>
         <button
           type="button"
-          onClick={goToCredentials}
+          onClick={() => router.push(`/workspace/${workspaceId}/flowbyte/credentials`)}
           className="px-2 py-1.5 border border-border rounded-md bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           title="Manage credentials"
         >
@@ -100,7 +98,7 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
       {value && (
         <button
           type="button"
-          onClick={goToCredentials}
+          onClick={() => router.push(`/workspace/${workspaceId}/flowbyte/credentials`)}
           className="mt-1 text-[10px] text-primary hover:underline flex items-center gap-1"
         >
           <ExternalLink className="h-2.5 w-2.5" /> Manage credentials

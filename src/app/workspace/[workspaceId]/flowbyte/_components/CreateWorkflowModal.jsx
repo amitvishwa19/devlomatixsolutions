@@ -1,6 +1,8 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useModal } from '@/hooks/useModal'
+import { useAuth } from '@/providers/AuthProvider'
+import { useSession } from 'next-auth/react'
 import { Button } from "@/components/ui/button"
 import { 
     Dialog, 
@@ -37,7 +39,12 @@ const formSchema = z.object({
 export default function CreateWorkflowModal() {
     const { onClose, isOpen, type, data } = useModal()
     const isModalOpen = isOpen && type === "createWorkFLow"
-    const { workspaceId, userId } = data
+    const { workspaceId, userId: modalUserId } = data
+    const { user } = useAuth()
+    const { data: session } = useSession()
+    
+    // Fallback to current user if modal data doesn't have it
+    const userId = modalUserId || user?.id || session?.user?.userId;
     const router = useRouter()
 
     const form = useForm({
@@ -48,7 +55,7 @@ export default function CreateWorkflowModal() {
         },
     })
 
-    const { execute, isLoading } = useAction(createWorkflow, {
+    const { execute, isLoading, fieldErrors } = useAction(createWorkflow, {
         onSuccess: (data) => {
             onClose()
             form.reset()
@@ -59,6 +66,13 @@ export default function CreateWorkflowModal() {
             toast.error(error, { id: 'create-workflow' })
         }
     })
+
+    useEffect(() => {
+        if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+            const firstError = Object.values(fieldErrors)[0][0];
+            toast.error(firstError, { id: 'create-workflow' });
+        }
+    }, [fieldErrors]);
 
     const onSubmit = (values) => {
         toast.loading('Creating workflow...', { id: 'create-workflow' })
