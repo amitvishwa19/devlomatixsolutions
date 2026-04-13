@@ -89,6 +89,7 @@ export default function AppSidebar() {
         // flowbyte
         { type: 'parent', title: "FLowByte", url: `${baseFlowbytePath}`, icon: "workflow", category: "flowbyte" },
         { type: 'child', title: "Workflows", url: `${baseFlowbytePath}`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Executions", url: `${baseFlowbytePath}/executions`, icon: "bar-chart-3", category: "flowbyte" },
         { type: 'child', title: "Credentials", url: `${baseFlowbytePath}/credentials`, icon: "bar-chart-3", category: "flowbyte" },
         { type: 'child', title: "Templates", url: `${baseFlowbytePath}/templates`, icon: "bar-chart-3", category: "flowbyte" },
         { type: 'child', title: "Settings", url: `${baseFlowbytePath}/settings`, icon: "bar-chart-3", category: "flowbyte" },
@@ -102,13 +103,7 @@ export default function AppSidebar() {
         { type: 'child', title: "Message", url: `${baseProductivityPath}/message`, icon: "bar-chart-3", category: "productivity" },
         // { type:'child', title:"Trash", url: `${baseDocPath}/trash`, icon:"trash", category:"productivity"},
 
-        // Flowbot
-        { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
-        { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Credentials", url: `${baseFlowbotPath}/credentials`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Templates", url: `${baseFlowbotPath}/templates`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Settings", url: `${baseFlowbotPath}/settings`, icon: "bar-chart-3", category: "flowbot" },
+
 
         // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
         // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},

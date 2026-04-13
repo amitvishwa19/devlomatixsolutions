@@ -106,6 +106,109 @@ html {
   /* Brand Colors */
   --kx-cyan: 190 90% 50%;
   --kx-teal: 170 80% 45%;
+
+  /* n8n specific tokens (Light) */
+  --n8n-sidebar-bg: 210 15% 96%;
+  --n8n-sidebar-fg: 220 30% 40%;
+  --n8n-sidebar-active: 190 90% 40%;
+  --n8n-sidebar-hover: 210 15% 90%;
+  --n8n-canvas-bg: 210 20% 98%;
+  --n8n-canvas-dot: 220 15% 82%;
+  --n8n-node-bg: 0 0% 100%;
+  --n8n-node-border: 220 15% 87%;
+  --n8n-node-shadow: 220 20% 80%;
+  --n8n-success: 170 80% 35%;
+  --n8n-warning: 38 92% 50%;
+  --n8n-header-bg: 0 0% 100%;
+  --n8n-header-border: 220 15% 87%;
+  --n8n-connection: 190 90% 40%;
+}
+
+/* Light theme adjustments if needed */
+.light {
+    --n8n-sidebar-bg: 210 15% 96%;
+    --n8n-sidebar-fg: 220 30% 40%;
+}
+
+/* Dark theme overrides for n8n tokens */
+.dark {
+  --n8n-sidebar-bg: 220 35% 8%;
+  --n8n-sidebar-fg: 200 20% 70%;
+  --n8n-sidebar-active: 190 90% 50%;
+  --n8n-sidebar-hover: 220 30% 12%;
+  --n8n-canvas-bg: 220 40% 6%;
+  --n8n-canvas-dot: 220 25% 14%;
+  --n8n-node-bg: 220 35% 9%;
+  --n8n-node-border: 220 25% 14%;
+  --n8n-node-shadow: 220 40% 4%;
+  --n8n-success: 170 80% 45%;
+  --n8n-warning: 38 92% 50%;
+  --n8n-header-bg: 220 35% 9%;
+  --n8n-header-border: 220 25% 14%;
+  --n8n-connection: 190 90% 50%;
+}
+
+/* React Flow overrides */
+.react-flow__background {
+  background-color: hsl(var(--n8n-canvas-bg)) !important;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
+.react-flow__controls {
+  box-shadow: var(--shadow-card);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  fill: hsl(var(--foreground)) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: hsl(var(--muted)) !important;
+}
+
+.react-flow__edge-path {
+  stroke: hsl(var(--n8n-connection)) !important;
+  stroke-width: 2;
+  stroke-dasharray: 8 4;
+  animation: dash-flow 0.6s linear infinite;
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+/* Node animations */
+@keyframes node-appear {
+  from { opacity: 0; transform: scale(0.9) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.workflow-node {
+  animation: node-appear 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.workflow-node:hover {
+  box-shadow: 0 4px 20px hsl(var(--primary) / 0.15), 0 0 0 1px hsl(var(--primary) / 0.1);
+}
+
+/* Execution pulse animation */
+@keyframes execution-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+}
+
+.node-executing {
+  animation: execution-pulse 1.5s ease-in-out infinite;
 }
 
 /* Light theme */

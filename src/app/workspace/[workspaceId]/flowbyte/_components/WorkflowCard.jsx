@@ -1,119 +1,63 @@
 'use client'
-import React from 'react'
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from '@/lib/utils'
-import { 
-    FileTextIcon, 
-    PlayIcon, 
-    ShuffleIcon, 
-    EllipsisVertical, 
-    Edit, 
-    Trash2,
-    CoinsIcon,
-    CornerDownRightIcon,
-    MoveRightIcon,
-    ClockIcon,
-    ChevronRightIcon
-} from 'lucide-react'
-import Link from 'next/link'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuLabel, 
-    DropdownMenuShortcut, 
-    DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu"
-import { useAuth } from '@/providers/AuthProvider'
-import { useModal } from '@/hooks/useModal'
-import { Badge } from '@/components/ui/badge'
-import { WORKFLOW_STATUS } from '../_utils/constants'
-import { formatDistanceToNow } from 'date-fns'
 
-const statusColor = {
-    [WORKFLOW_STATUS.DRAFT]: "bg-yellow-400/10 text-yellow-600 border-yellow-200",
-    [WORKFLOW_STATUS.PUBLISHED]: "bg-emerald-400/10 text-emerald-600 border-emerald-200"
-}
+import React from 'react'
+import Link from 'next/link'
+import { Clock, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useModal } from '@/hooks/useModal'
+import { useAuth } from '@/providers/AuthProvider'
+
+const statusColors = {
+    active: "bg-n8n-success/15 text-n8n-success",
+    error: "bg-destructive/15 text-destructive",
+    inactive: "bg-muted text-muted-foreground",
+    draft: "bg-n8n-warning/15 text-n8n-warning",
+};
 
 export default function WorkflowCard({ workflow, workspaceId }) {
-    const isDraft = workflow.status === WORKFLOW_STATUS.DRAFT
     const { onOpen } = useModal()
     const { user } = useAuth()
+    const nodeCount = Array.isArray(workflow.nodes) ? workflow.nodes.length : 0;
+    const status = workflow.status?.toLowerCase() || 'draft';
 
     return (
-        <Card className="group border-separate shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-all duration-300">
-            <CardContent className='p-5 flex items-center h-[100px] justify-between bg-card/50'>
-                <div className='flex items-center gap-4'>
-                    <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors", 
-                        statusColor[workflow.status]
-                    )}>
-                        {isDraft ? <FileTextIcon className='h-6 w-6' /> : <PlayIcon className='h-6 w-6' />}
-                    </div>
-                    <div>
-                        <div className='flex items-center gap-2'>
-                            <Link 
-                                href={`/workspace/${workspaceId}/flowbyte/${workflow.id}`} 
-                                className='text-lg font-bold text-foreground hover:text-primary transition-colors'
-                            >
-                                {workflow.name}
-                            </Link>
-                            {isDraft && (
-                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 font-bold text-[10px] h-5">
-                                    DRAFT
-                                </Badge>
-                            )}
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                            {workflow.description || "No description provided"}
-                        </p>
+        <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:border-primary/30 hover:shadow-sm transition-all group">
+            <Link 
+                href={`/workspace/${workspaceId}/flowbyte/${workflow.id}`} 
+                className="flex items-center gap-4 flex-1 min-w-0"
+            >
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${status === "active" ? "bg-n8n-success" : status === "error" ? "bg-destructive" : "bg-muted-foreground/40"}`} />
+                <div className="min-w-0">
+                    <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                        {workflow.name}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${statusColors[status] || statusColors.draft}`}>
+                            {status.toUpperCase()}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {new Date(workflow.updatedAt).toLocaleDateString()}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{nodeCount} nodes</span>
                     </div>
                 </div>
+            </Link>
 
-                <div className='flex items-center gap-2'>
-                    <Link 
-                        href={`/workspace/${workspaceId}/flowbyte/${workflow.id}`} 
-                        className={cn('gap-2 rounded-xl transition-all', buttonVariants({ variant: 'outline', size: 'sm' }))}
-                    >
-                        <ShuffleIcon size={16} />
-                        <span className="hidden sm:inline">Edit</span>
-                    </Link>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="rounded-xl">
-                                <EllipsisVertical size={18} />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-muted">
-                            <DropdownMenuLabel className="text-xs text-muted-foreground">Actions</DropdownMenuLabel>
-                            <DropdownMenuItem className="cursor-pointer gap-2 rounded-lg">
-                                <Edit size={16} /> Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                                className="cursor-pointer gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 rounded-lg"
-                                onSelect={() => onOpen("deleteWorkFLow", { workflow, workspaceId, userId: user?.id })}
-                            >
-                                <Trash2 size={16} /> Delete Workflow
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </CardContent>
-            
-            {workflow.lastRunAt && (
-                <div className='px-5 py-2 flex justify-between items-center text-[11px] text-muted-foreground bg-muted/20 border-t border-muted/50'>
-                    <div className='flex items-center gap-2'>
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Last run {formatDistanceToNow(new Date(workflow.lastRunAt), { addSuffix: true })}</span>
-                    </div>
-                    <div className='flex items-center gap-1 opacity-70'>
-                        <ClockIcon size={12} />
-                        <span>Next run scheduled</span>
-                    </div>
-                </div>
-            )}
-        </Card>
-    )
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onOpen("deleteWorkFLow", { workflow, workspaceId, userId: user?.id })
+                    }}
+                >
+                    <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+            </div>
+        </div>
+    );
 }
