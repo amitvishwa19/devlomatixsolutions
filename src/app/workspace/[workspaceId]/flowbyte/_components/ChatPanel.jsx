@@ -52,7 +52,7 @@ export default function ChatPanel({
           <span className="text-sm font-medium text-foreground">Chat</span>
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">
-              Session: {sessionId?.slice(0, 5)}...
+              Session: {sessionId.slice(0, 5)}...
             </span>
             <button onClick={onNewSession} className="text-muted-foreground hover:text-foreground transition-colors" title="New session">
               <RotateCcw className="h-3.5 w-3.5" />

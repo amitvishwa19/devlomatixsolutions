@@ -1,11 +1,12 @@
 'use server'
 import { db } from "@/lib/db"
-import { getSession } from "@/lib/auth"
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { revalidatePath } from "next/cache"
 
 export async function createCredential({ workspaceId, name, type, value }) {
-    const session = await getSession()
-    const userId = session?.data?.id
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.userId;
     if (!userId) throw new Error("Unauthorized")
 
     const credential = await db.credentials.create({
@@ -24,8 +25,8 @@ export async function createCredential({ workspaceId, name, type, value }) {
 }
 
 export async function updateCredential({ id, workspaceId, name, type, value }) {
-    const session = await getSession()
-    const userId = session?.data?.id
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.userId;
     if (!userId) throw new Error("Unauthorized")
 
     const data = {
@@ -47,8 +48,8 @@ export async function updateCredential({ id, workspaceId, name, type, value }) {
 }
 
 export async function deleteCredential({ id, workspaceId }) {
-    const session = await getSession()
-    const userId = session?.data?.id
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.userId;
     if (!userId) throw new Error("Unauthorized")
 
     await db.credentials.delete({

@@ -2,15 +2,24 @@
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 const DeleteWorkflow = z.object({
     workflowId: z.string(),
-    userId: z.string(),
     workspaceId: z.optional(z.string()),
 });
 
 const handler = async (data) => {
-    const { userId, workflowId } = data;
+    const { workflowId, workspaceId } = data;
+    
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.userId;
+
+    if (!userId) {
+        return { error: "Unauthorized" };
+    }
+
     try {
         const workflow = await db.workflow.delete({
             where: {
@@ -20,7 +29,7 @@ const handler = async (data) => {
         })
         return { data: workflow };
     } catch (error) {
-        console.error(error)
+        console.error("[deleteWorkflow] Error:", error);
         return {
             error: "Failed to delete workflow"
         }

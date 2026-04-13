@@ -4,7 +4,7 @@ import { memo, useState, useCallback } from "react";
 import { Check, X, Copy, ChevronDown, ChevronRight, ArrowDownToLine, ArrowUpFromLine, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import CredentialSelector, { NODE_CREDENTIAL_TYPES } from "./CredentialSelector";
+import CredentialSelector from "./CredentialSelector";
 
 function JsonBlock({ data, label }) {
   const [expanded, setExpanded] = useState(true);
@@ -18,7 +18,7 @@ function JsonBlock({ data, label }) {
           {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
           {label}
         </span>
-        <span className="text-[10px] opacity-60">{Object.keys(data || {}).length} fields</span>
+        <span className="text-[10px] opacity-60">{Object.keys(data).length} fields</span>
       </button>
       {expanded && (
         <div className="relative">
@@ -39,25 +39,25 @@ function HttpConfig({ config, onChange }) {
       <CredentialSelector
         value={config.credentialId}
         onChange={(id) => onChange({ ...config, credentialId: id })}
-        types={NODE_CREDENTIAL_TYPES.http}
+        type="http"
         label="Authentication"
       />
       <div>
         <label className="text-xs text-muted-foreground">Method</label>
         <select value={config.method || "GET"} onChange={(e) => onChange({ ...config, method: e.target.value })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background">
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground">
           <option value="GET">GET</option><option value="POST">POST</option><option value="PUT">PUT</option><option value="PATCH">PATCH</option><option value="DELETE">DELETE</option>
         </select>
       </div>
       <div>
         <label className="text-xs text-muted-foreground">URL</label>
         <input value={config.url || ""} onChange={(e) => onChange({ ...config, url: e.target.value })}
-          placeholder="https://api.example.com/data" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="https://api.example.com/data" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Body (JSON)</label>
         <textarea value={config.body || ""} onChange={(e) => onChange({ ...config, body: e.target.value })}
-          placeholder='{"key": "value"}' rows={3} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono" />
+          placeholder='{"key": "value"}' rows={3} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono text-foreground" />
       </div>
     </div>
   );
@@ -69,7 +69,7 @@ function CodeConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">JavaScript Code</label>
         <textarea value={config.code || "return items;"} onChange={(e) => onChange({ ...config, code: e.target.value })}
-          rows={8} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono" placeholder="return items;" />
+          rows={8} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono text-foreground" placeholder="return items;" />
       </div>
       <p className="text-[10px] text-muted-foreground">Use <code className="bg-muted px-1 rounded">items</code> for previous node output. <code className="bg-muted px-1 rounded">$input</code> for raw input.</p>
     </div>
@@ -82,12 +82,12 @@ function IfConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Field</label>
         <input value={config.field || ""} onChange={(e) => onChange({ ...config, field: e.target.value })}
-          placeholder="data.statusCode" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="data.statusCode" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Operator</label>
         <select value={config.operator || "equals"} onChange={(e) => onChange({ ...config, operator: e.target.value })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background">
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground">
           <option value="equals">Equals</option><option value="not_equals">Not Equals</option><option value="contains">Contains</option>
           <option value="greater_than">Greater Than</option><option value="less_than">Less Than</option>
           <option value="exists">Exists</option><option value="not_exists">Not Exists</option>
@@ -96,7 +96,7 @@ function IfConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Value</label>
         <input value={config.value || ""} onChange={(e) => onChange({ ...config, value: e.target.value })}
-          placeholder="200" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="200" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
     </div>
   );
@@ -119,9 +119,9 @@ function SetConfig({ config, onChange }) {
         <div key={i} className="flex gap-2 items-start">
           <div className="flex-1 space-y-1">
             <input value={a.field} onChange={(e) => updateAssignment(i, "field", e.target.value)}
-              placeholder="fieldName" className="w-full px-2 py-1 text-xs border border-border rounded bg-background" />
+              placeholder="fieldName" className="w-full px-2 py-1 text-xs border border-border rounded bg-background text-foreground" />
             <input value={a.value} onChange={(e) => updateAssignment(i, "value", e.target.value)}
-              placeholder="value or {{$input.field}}" className="w-full px-2 py-1 text-xs border border-border rounded bg-background font-mono" />
+              placeholder="value or {{$input.field}}" className="w-full px-2 py-1 text-xs border border-border rounded bg-background font-mono text-foreground" />
           </div>
           <button onClick={() => removeAssignment(i)} className="text-muted-foreground hover:text-destructive mt-1"><Trash2 className="h-3 w-3" /></button>
         </div>
@@ -137,7 +137,7 @@ function WaitConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Duration (seconds)</label>
         <input type="number" value={Number(config.duration) || 1} onChange={(e) => onChange({ ...config, duration: Number(e.target.value) })}
-          min={1} max={60} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          min={1} max={60} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
     </div>
   );
@@ -149,18 +149,18 @@ function SlackConfig({ config, onChange }) {
       <CredentialSelector
         value={config.credentialId}
         onChange={(id) => onChange({ ...config, credentialId: id })}
-        types={NODE_CREDENTIAL_TYPES.slack}
+        type="slack"
         label="Slack Account"
       />
       <div>
         <label className="text-xs text-muted-foreground">Channel</label>
         <input value={config.channel || ""} onChange={(e) => onChange({ ...config, channel: e.target.value })}
-          placeholder="#general" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="#general" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Message</label>
         <textarea value={config.text || ""} onChange={(e) => onChange({ ...config, text: e.target.value })}
-          placeholder="Hello from workflow!" rows={3} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="Hello from workflow!" rows={3} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
     </div>
   );
@@ -172,23 +172,23 @@ function EmailConfig({ config, onChange }) {
       <CredentialSelector
         value={config.credentialId}
         onChange={(id) => onChange({ ...config, credentialId: id })}
-        types={NODE_CREDENTIAL_TYPES.email}
+        type="email"
         label="Email Account"
       />
       <div>
         <label className="text-xs text-muted-foreground">To</label>
         <input value={config.to || ""} onChange={(e) => onChange({ ...config, to: e.target.value })}
-          placeholder="user@example.com" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="user@example.com" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Subject</label>
         <input value={config.subject || ""} onChange={(e) => onChange({ ...config, subject: e.target.value })}
-          placeholder="Notification" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="Notification" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Body</label>
         <textarea value={config.body || ""} onChange={(e) => onChange({ ...config, body: e.target.value })}
-          placeholder="Email body..." rows={3} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="Email body..." rows={3} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
     </div>
   );
@@ -200,13 +200,13 @@ function DatabaseConfig({ config, onChange }) {
       <CredentialSelector
         value={config.credentialId}
         onChange={(id) => onChange({ ...config, credentialId: id })}
-        types={NODE_CREDENTIAL_TYPES.database}
+        type="database"
         label="Database Connection"
       />
       <div>
         <label className="text-xs text-muted-foreground">Query</label>
         <textarea value={config.query || ""} onChange={(e) => onChange({ ...config, query: e.target.value })}
-          placeholder="SELECT * FROM users LIMIT 10" rows={4} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono" />
+          placeholder="SELECT * FROM users LIMIT 10" rows={4} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono text-foreground" />
       </div>
     </div>
   );
@@ -219,13 +219,6 @@ function AgentConfig({ config, onChange }) {
 
   return (
     <div className="space-y-4">
-      {/* Credential */}
-      <CredentialSelector
-        value={config.credentialId}
-        onChange={(id) => onChange({ ...config, credentialId: id })}
-        types={NODE_CREDENTIAL_TYPES["ai-agent"]}
-        label="API Key"
-      />
       {/* Built-in LLM */}
       <div className="p-3 border border-border rounded-md bg-muted/30 space-y-3">
         <div className="flex items-center gap-2">
@@ -237,7 +230,7 @@ function AgentConfig({ config, onChange }) {
           <select
             value={builtinLlm}
             onChange={(e) => onChange({ ...config, builtinLlm: e.target.value })}
-            className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+            className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
           >
             <optgroup label="OpenAI">
               <option value="gpt-4">GPT-4</option>
@@ -268,10 +261,9 @@ function AgentConfig({ config, onChange }) {
             step={0.1}
             value={Number(config.temperature) || 0.7}
             onChange={(e) => onChange({ ...config, temperature: Number(e.target.value) })}
-            className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+            className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
           />
         </div>
-        <p className="text-[10px] text-muted-foreground">Built-in model is used by default. Connect an external LLM node to override.</p>
       </div>
 
       {/* Built-in Memory */}
@@ -285,7 +277,7 @@ function AgentConfig({ config, onChange }) {
           <select
             value={builtinMemory}
             onChange={(e) => onChange({ ...config, builtinMemory: e.target.value })}
-            className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+            className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
           >
             <option value="none">None (Stateless)</option>
             <option value="buffer">Buffer Memory</option>
@@ -302,11 +294,10 @@ function AgentConfig({ config, onChange }) {
               max={50}
               value={Number(config.windowSize) || 10}
               onChange={(e) => onChange({ ...config, windowSize: Number(e.target.value) })}
-              className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+              className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
             />
           </div>
         )}
-        <p className="text-[10px] text-muted-foreground">Connect an external Memory node to override.</p>
       </div>
 
       {/* System Prompt */}
@@ -317,7 +308,7 @@ function AgentConfig({ config, onChange }) {
           onChange={(e) => onChange({ ...config, systemPrompt: e.target.value })}
           placeholder="You are a helpful assistant..."
           rows={4}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
         />
       </div>
 
@@ -330,7 +321,7 @@ function AgentConfig({ config, onChange }) {
           max={20}
           value={Number(config.maxIterations) || 5}
           onChange={(e) => onChange({ ...config, maxIterations: Number(e.target.value) })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
         />
       </div>
     </div>
@@ -356,20 +347,20 @@ function SwitchConfig({ config, onChange }) {
             <span className="text-[10px] font-medium text-muted-foreground">Rule {i + 1}</span>
             <button onClick={() => removeRule(i)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
           </div>
-          <input value={r.field} onChange={(e) => updateRule(i, "field", e.target.value)} placeholder="Field path" className="w-full px-2 py-1 text-xs border border-border rounded bg-background" />
-          <select value={r.operator} onChange={(e) => updateRule(i, "operator", e.target.value)} className="w-full px-2 py-1 text-xs border border-border rounded bg-background">
+          <input value={r.field} onChange={(e) => updateRule(i, "field", e.target.value)} placeholder="Field path" className="w-full px-2 py-1 text-xs border border-border rounded bg-background text-foreground" />
+          <select value={r.operator} onChange={(e) => updateRule(i, "operator", e.target.value)} className="w-full px-2 py-1 text-xs border border-border rounded bg-background text-foreground">
             <option value="equals">Equals</option><option value="not_equals">Not Equals</option><option value="contains">Contains</option>
             <option value="greater_than">Greater Than</option><option value="less_than">Less Than</option>
           </select>
-          <input value={r.value} onChange={(e) => updateRule(i, "value", e.target.value)} placeholder="Compare value" className="w-full px-2 py-1 text-xs border border-border rounded bg-background" />
-          <input value={r.output} onChange={(e) => updateRule(i, "output", e.target.value)} placeholder="Output label" className="w-full px-2 py-1 text-xs border border-border rounded bg-background" />
+          <input value={r.value} onChange={(e) => updateRule(i, "value", e.target.value)} placeholder="Compare value" className="w-full px-2 py-1 text-xs border border-border rounded bg-background text-foreground" />
+          <input value={r.output} onChange={(e) => updateRule(i, "output", e.target.value)} placeholder="Output label" className="w-full px-2 py-1 text-xs border border-border rounded bg-background text-foreground" />
         </div>
       ))}
       <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addRule}><Plus className="h-3 w-3" /> Add Rule</Button>
       <div>
         <label className="text-xs text-muted-foreground">Fallback Output</label>
         <input value={config.fallback || "Default"} onChange={(e) => onChange({ ...config, fallback: e.target.value })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
     </div>
   );
@@ -381,14 +372,13 @@ function LoopConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Batch Size</label>
         <input type="number" value={Number(config.batchSize) || 1} onChange={(e) => onChange({ ...config, batchSize: Number(e.target.value) })}
-          min={1} max={1000} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          min={1} max={1000} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Max Iterations</label>
         <input type="number" value={Number(config.maxIterations) || 100} onChange={(e) => onChange({ ...config, maxIterations: Number(e.target.value) })}
-          min={1} max={10000} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          min={1} max={10000} className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
-      <p className="text-[10px] text-muted-foreground">Items from previous node will be processed in batches.</p>
     </div>
   );
 }
@@ -400,7 +390,7 @@ function ErrorTriggerConfig({ config, onChange }) {
         <label className="text-xs text-muted-foreground">Error Types to Catch</label>
         <div className="mt-1 space-y-1">
           {["all", "node_error", "timeout", "auth_error"].map((t) => (
-            <label key={t} className="flex items-center gap-2 text-xs">
+            <label key={t} className="flex items-center gap-2 text-xs text-foreground">
               <input type="checkbox" checked={(config.errorTypes || ["all"]).includes(t)}
                 onChange={(e) => {
                   const current = config.errorTypes || ["all"];
@@ -416,7 +406,7 @@ function ErrorTriggerConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Continue on Error</label>
         <select value={String(config.continueOnError ?? "false")} onChange={(e) => onChange({ ...config, continueOnError: e.target.value === "true" })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background">
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground">
           <option value="false">Stop Workflow</option>
           <option value="true">Continue to Next Node</option>
         </select>
@@ -431,19 +421,19 @@ function GoogleSheetsConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Operation</label>
         <select value={config.operation || "read"} onChange={(e) => onChange({ ...config, operation: e.target.value })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background">
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground">
           <option value="read">Read Rows</option><option value="append">Append Row</option><option value="update">Update Row</option><option value="delete">Delete Row</option>
         </select>
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Spreadsheet ID</label>
         <input value={config.spreadsheetId || ""} onChange={(e) => onChange({ ...config, spreadsheetId: e.target.value })}
-          placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono text-xs" />
+          placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background font-mono text-xs text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Range</label>
         <input value={config.range || ""} onChange={(e) => onChange({ ...config, range: e.target.value })}
-          placeholder="Sheet1!A1:D10" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="Sheet1!A1:D10" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
     </div>
   );
@@ -455,12 +445,12 @@ function FilterConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Field to Filter</label>
         <input value={config.field || ""} onChange={(e) => onChange({ ...config, field: e.target.value })}
-          placeholder="data.status" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+          placeholder="data.status" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Condition</label>
         <select value={config.operator || "exists"} onChange={(e) => onChange({ ...config, operator: e.target.value })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background">
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground">
           <option value="exists">Exists</option><option value="not_exists">Does Not Exist</option>
           <option value="equals">Equals</option><option value="not_equals">Not Equals</option>
           <option value="contains">Contains</option><option value="greater_than">Greater Than</option>
@@ -471,10 +461,9 @@ function FilterConfig({ config, onChange }) {
         <div>
           <label className="text-xs text-muted-foreground">Value</label>
           <input value={config.value || ""} onChange={(e) => onChange({ ...config, value: e.target.value })}
-            placeholder="Compare value" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background" />
+            placeholder="Compare value" className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground" />
         </div>
       )}
-      <p className="text-[10px] text-muted-foreground">Items matching the condition will pass through.</p>
     </div>
   );
 }
@@ -494,16 +483,8 @@ function WebhookConfig({ config, onChange }) {
       <div>
         <label className="text-xs text-muted-foreground">Accepted Methods</label>
         <select value={config.method || "POST"} onChange={(e) => onChange({ ...config, method: e.target.value })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background">
+          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground">
           <option value="POST">POST</option><option value="GET">GET</option><option value="ANY">Any</option>
-        </select>
-      </div>
-      <div>
-        <label className="text-xs text-muted-foreground">Response Mode</label>
-        <select value={config.responseMode || "onReceived"} onChange={(e) => onChange({ ...config, responseMode: e.target.value })}
-          className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background">
-          <option value="onReceived">Respond Immediately</option>
-          <option value="lastNode">Respond with Last Node Output</option>
         </select>
       </div>
     </div>
@@ -557,7 +538,7 @@ function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <h3 className="font-semibold text-sm truncate">{data.label}</h3>
+          <h3 className="font-semibold text-sm truncate text-foreground">{data.label}</h3>
           {executionResult && (
             <span className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
               executionResult.status === "success" ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
@@ -596,20 +577,18 @@ function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {activeTab === "params" && (
-          <>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Configuration</label>
-              <div className="mt-2 space-y-3">
-                {ConfigPanel ? (
-                  <ConfigPanel config={config} onChange={handleConfigChange} />
-                ) : (
-                  <div className="p-3 bg-muted rounded-md">
-                    <p className="text-xs text-muted-foreground">No configuration needed for this node type.</p>
-                  </div>
-                )}
-              </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Configuration</label>
+            <div className="mt-2 space-y-3">
+              {ConfigPanel ? (
+                <ConfigPanel config={config} onChange={handleConfigChange} />
+              ) : (
+                <div className="p-3 bg-muted rounded-md text-foreground">
+                  <p className="text-xs text-muted-foreground">No configuration needed for this node type.</p>
+                </div>
+              )}
             </div>
-          </>
+          </div>
         )}
 
         {activeTab === "input" && (
@@ -630,7 +609,7 @@ function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
                   <p className="text-xs text-destructive/80 font-mono">{executionResult.error}</p>
                 </div>
               )}
-              {Object.keys(executionResult.output || {}).length > 0 && <JsonBlock data={executionResult.output} label="Output Data" />}
+              {Object.keys(executionResult.output).length > 0 && <JsonBlock data={executionResult.output} label="Output Data" />}
             </div>
           ) : (
             <div className="text-center py-8">

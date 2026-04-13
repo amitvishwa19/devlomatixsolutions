@@ -54,7 +54,6 @@ const nodeCategories = [
     name: "Vector Stores",
     nodes: [
       { type: "pinecone", label: "Pinecone", icon: Database, description: "Pinecone vector database" },
-      { type: "supabase-vector", label: "Supabase Vector", icon: Database, description: "pgvector embeddings" },
       { type: "qdrant", label: "Qdrant", icon: Database, description: "Qdrant vector search" },
       { type: "chromadb", label: "ChromaDB", icon: Database, description: "Open-source embeddings DB" },
     ],
@@ -191,7 +190,7 @@ export default function NodePanel({ onClose, onAddNode, slotFilter }) {
   return (
     <div className="absolute top-12 right-0 w-80 h-[calc(100%-3rem)] bg-card border-l border-border shadow-lg z-20 flex flex-col">
       <div className="p-3 border-b border-border flex items-center justify-between">
-        <h3 className="font-semibold text-sm">{slotFilter ? `Add ${slotFilter === 'llm' ? 'Chat Model' : slotFilter === 'memory' ? 'Memory' : 'Tool'}` : 'Add Node'}</h3>
+        <h3 className="font-semibold text-sm text-foreground">{slotFilter ? `Add ${slotFilter === 'llm' ? 'Chat Model' : slotFilter === 'memory' ? 'Memory' : 'Tool'}` : 'Add Node'}</h3>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />
         </button>
@@ -204,7 +203,7 @@ export default function NodePanel({ onClose, onAddNode, slotFilter }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search nodes..."
-            className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
             autoFocus
           />
         </div>

@@ -1,6 +1,7 @@
 'use server'
 import { db } from "@/lib/db"
-import { getSession } from "@/lib/auth"
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 export async function saveExecutionAction({
   workflowId,
@@ -9,29 +10,24 @@ export async function saveExecutionAction({
   finishedAt,
   logs,
   edges,
-  nodes,
-  userId: userIdArg
+  nodes
 }) {
-  let userId = userIdArg;
-  if (!userId) {
-    const session = await getSession()
-    userId = session?.data?.id
-  }
-  
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.userId;
+
   if (!userId) {
     return { error: "Unauthorized" }
   }
 
-  // Only set workflowId if it's a valid ID (cuid or uuid)
-  // Our schema uses cuid() for Workflow.id
-  const workflow = workflowId ? await db.workflow.findUnique({
-    where: { id: workflowId }
+  // Only set workflowId if it's a valid ID (cuid or uuid) and owned by the user
+  const workflow = (workflowId && workflowId !== "new") ? await db.workflow.findUnique({
+    where: { id: workflowId, userId }
   }) : null;
 
   try {
     const execution = await db.workflowExecution.create({
       data: {
-        workflowId: workflow ? workflowId : undefined, // Must exist in DB if provided
+        workflowId: workflow ? workflowId : undefined,
         status: status.toUpperCase(),
         startedAt: new Date(startedAt),
         finishedAt: finishedAt ? new Date(finishedAt) : null,
@@ -42,7 +38,7 @@ export async function saveExecutionAction({
     })
     return { success: true, id: execution.id }
   } catch (error) {
-    console.error("Failed to save execution:", error)
+    console.error("[saveExecutionAction] Error:", error)
     return { error: error.message }
   }
 }

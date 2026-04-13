@@ -1,12 +1,18 @@
 'use server'
 import { runWorkflow } from "@/lib/workflow-engine";
 import { db } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 export async function executeWorkflowAction({ workflowId, nodes, edges, chatInput }) {
-  // If we don't have a saved workflowId yet (it's new), 
-  // we might need a different way to run it since runWorkflow expects a DB record.
-  // For now, let's assume it's saved or we use a temporary record.
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.userId;
 
+  if (!userId) {
+    return { error: "Unauthorized" };
+  }
+
+  // If it's a new unsaved workflow, we can't create an execution record in DB yet
   if (!workflowId || workflowId === "new") {
     // Simulation fallback for unsaved flows
     return {
@@ -24,6 +30,15 @@ export async function executeWorkflowAction({ workflowId, nodes, edges, chatInpu
   }
 
   try {
+    // Ensure user owns the workflow
+    const workflow = await db.workflow.findUnique({
+        where: { id: workflowId, userId }
+    });
+
+    if (!workflow) {
+        return { error: "Workflow not found or access denied" };
+    }
+
     // Ensure execution record exists
     const execution = await db.workflowExecution.create({
         data: {
@@ -38,8 +53,6 @@ export async function executeWorkflowAction({ workflowId, nodes, edges, chatInpu
     // Call the internal engine
     const result = await runWorkflow(workflowId, execution.id, triggerNode?.id || nodes[0].id, { message: chatInput });
 
-    // Map result logs back to the format useWorkflowExecution expects
-    // Note: this may require more sophisticated mapping depending on what runWorkflow returns
     return {
         results: nodes.map(n => {
             const log = result.logs?.find(l => l.message?.includes(n.data.label));
@@ -56,7 +69,7 @@ export async function executeWorkflowAction({ workflowId, nodes, edges, chatInpu
         })
     };
   } catch (error) {
-    console.error("Execution action failed:", error);
+    console.error("[executeWorkflowAction] Error:", error);
     return { error: error.message };
   }
 }

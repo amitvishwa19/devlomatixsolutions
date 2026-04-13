@@ -1,10 +1,11 @@
 'use server'
 import { db } from "@/lib/db"
-import { getSession } from "@/lib/auth"
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 export async function getExecutions({ workspaceId, workflowId } = {}) {
-    const session = await getSession()
-    const userId = session?.data?.id
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.userId;
     if (!userId) return []
 
     const where = {}
@@ -17,7 +18,13 @@ export async function getExecutions({ workspaceId, workflowId } = {}) {
     }
 
     const executions = await db.workflowExecution.findMany({
-        where,
+        where: {
+            ...where,
+            workflow: {
+                userId,
+                workspaceId: workspaceId || undefined,
+            }
+        },
         include: {
             workflow: {
                 select: {

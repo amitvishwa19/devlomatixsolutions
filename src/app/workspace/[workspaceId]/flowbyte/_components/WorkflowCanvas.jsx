@@ -6,8 +6,7 @@ import {
   Background, BackgroundVariant, Panel, useReactFlow, ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-
-import WorkflowNode from "./nodes/WorkflowNode";
+import WorkflowNode from "./WorkflowNode";
 import NodePanel from "./NodePanel";
 import NodeDetailPanel from "./NodeDetailPanel";
 import TemplateGallery from "./TemplateGallery";
@@ -15,13 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Plus, Play, Save, Pencil, Trash2, Loader2, Home, MessageSquare, BookOpen, Download, Clock } from "lucide-react";
 import ScheduleDialog from "./ScheduleDialog";
 import ChatPanel from "./ChatPanel";
-
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useWorkflowExecution } from "../_hooks/useWorkflowExecution";
 import { useWorkflowKeyboard } from "../_hooks/useWorkflowKeyboard";
 import { toast } from "sonner";
 import { streamChat } from "../_lib/streamChat";
-import { saveWorkflowAction, saveAsTemplateAction } from "../_actions/workflow-mgmt";
+import { saveWorkflowAction, saveAsTemplateAction, updateScheduleAction } from "../_actions/workflow-mgmt";
+import { useParams } from "next/navigation";
 
 const nodeTypes = { workflowNode: WorkflowNode };
 
@@ -30,13 +29,17 @@ const initialNodes = [
 ];
 const initialEdges = [];
 
-function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges, initialCron, initialScheduleEnabled }) {
-  const [workflowName, setWorkflowName] = useState(initialName || "Untitled Workflow");
+function WorkflowCanvasInner({ workflowId, workflowName: controlledName, initialName, onNameChange, loadedNodes, loadedEdges, initialCron: initCron, initialScheduleEnabled: initSchedule }) {
   const router = useRouter();
-  const { workspaceId } = useParams();
+  const params = useParams();
+  const workspaceId = params.workspaceId;
   const reactFlowWrapper = useRef(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState(loadedNodes && loadedNodes.length > 0 ? loadedNodes : initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(loadedEdges || initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState((loadedNodes && loadedNodes.length > 0) ? loadedNodes : initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState((loadedEdges && loadedEdges.length > 0) ? loadedEdges : initialEdges);
+  
+  // Local state for name if not controlled from outside
+  const [workflowName, setWorkflowName] = useState(controlledName || initialName || "Untitled Workflow");
+
   const [showNodePanel, setShowNodePanel] = useState(false);
   const [nodePanelSlotFilter, setNodePanelSlotFilter] = useState(undefined);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -51,28 +54,40 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
   const [conversationHistory, setConversationHistory] = useState([]);
   const [enableTools, setEnableTools] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
-  const [cronExpression, setCronExpression] = useState(initialCron || "");
-  const [scheduleEnabled, setScheduleEnabled] = useState(initialScheduleEnabled || false);
+  const [cronExpression, setCronExpression] = useState(initCron || "");
+  const [scheduleEnabled, setScheduleEnabled] = useState(initSchedule || false);
   const { screenToFlowPosition } = useReactFlow();
 
-  const hasChatTrigger = nodes.some((n) => n.data?.type === "chat-trigger");
-  const isWaitingForChat = nodes.some((n) => n.data?.type === "chat-trigger" && n.data?.status === "waiting");
+  // Sync internal name if controlled name changes
+  useEffect(() => {
+    if (controlledName) setWorkflowName(controlledName);
+  }, [controlledName]);
+
+  const handleNameChange = (newName) => {
+    setWorkflowName(newName);
+    if (typeof onNameChange === "function") {
+      onNameChange(newName);
+    }
+  };
+
+  const hasChatTrigger = nodes.some((n) => (n.data).type === "chat-trigger");
+  const isWaitingForChat = nodes.some((n) => (n.data).type === "chat-trigger" && (n.data).status === "waiting");
 
   // Get AI agent config for the chat — only if connected to the chat trigger via edges
-  const chatTriggerNode = nodes.find((n) => n.data?.type === "chat-trigger");
-  const agentNode = nodes.find((n) => n.data?.type === "ai-agent");
+  const chatTriggerNode = nodes.find((n) => (n.data).type === "chat-trigger");
+  const agentNode = nodes.find((n) => (n.data).type === "ai-agent");
   const isChatConnectedToAgent = !!(chatTriggerNode && agentNode && edges.some(
     (e) => e.source === chatTriggerNode.id && e.target === agentNode.id
   ));
   const connectedAgentNode = isChatConnectedToAgent ? agentNode : null;
-  const agentConfig = connectedAgentNode ? connectedAgentNode.data?.config : null;
+  const agentConfig = connectedAgentNode ? (connectedAgentNode.data).config : null;
 
   // Dynamic edge styling based on execution state
   const styledEdges = edges.map((edge) => {
     const sourceNode = nodes.find((n) => n.id === edge.source);
     const targetNode = nodes.find((n) => n.id === edge.target);
-    const sourceStatus = sourceNode?.data?.status;
-    const targetStatus = targetNode?.data?.status;
+    const sourceStatus = (sourceNode?.data)?.status;
+    const targetStatus = (targetNode?.data)?.status;
 
     if (isWaitingForChat) {
       return {
@@ -142,7 +157,7 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
   }, []);
 
   const nodesWithCallbacks = nodes.map((n) => {
-    if (n.data?.type === "ai-agent") {
+    if ((n.data).type === "ai-agent") {
       return { ...n, data: { ...n.data, onSlotAdd: handleSlotAdd } };
     }
     return n;
@@ -212,11 +227,11 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
 
   const addNode = useCallback(
     (type, label) => {
-      const hasTriggerPlaceholder = nodes.some((n) => n.data?.type === "trigger-placeholder");
+      const hasTriggerPlaceholder = nodes.some((n) => (n.data).type === "trigger-placeholder");
       if (hasTriggerPlaceholder) {
         setNodes((nds) =>
           nds.map((n) =>
-            n.data?.type === "trigger-placeholder"
+            (n.data).type === "trigger-placeholder"
               ? { ...n, data: { label, type, subtitle: "", status: "idle", ...(type === "ai-agent" ? { config: { builtinLlm: "gpt-4", builtinMemory: "buffer", temperature: 0.7, maxIterations: 5 } } : {}) } }
               : n
           )
@@ -246,36 +261,37 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
         name: workflowName,
         nodes,
         edges,
-        workspaceId
+        workspaceId,
       });
 
-      if (res.error) throw new Error(res.error);
-
-      if (!savedId || savedId === "new") {
-        setSavedId(res.data.id);
-        window.history.replaceState(null, "", `/workspace/${workspaceId}/flowbyte/${res.data.id}`);
-        toast.success("Workflow created");
+      if (res.error) {
+        toast.error(res.error);
       } else {
-        toast.success("Workflow saved");
+        toast.success("Workflow saved successfully");
+        if (res.data?.id && savedId === "new") {
+          setSavedId(res.data.id);
+          // Update URL without refreshing if it was "new"
+          router.replace(`/workspace/${workspaceId}/flowbyte/${res.data.id}`);
+        }
       }
-    } catch (err) {
-      toast.error("Failed to save: " + err.message);
+    } catch (error) {
+      toast.error("Failed to save workflow");
     } finally {
       setIsSaving(false);
     }
-  }, [workflowName, nodes, edges, savedId, workspaceId]);
+  }, [workflowName, nodes, edges, savedId, workspaceId, router]);
 
   const saveAsTemplate = useCallback(async () => {
     try {
       const res = await saveAsTemplateAction({
-        name: workflowName,
+        name: `${workflowName} (Template)`,
         nodes,
-        edges,
+        edges
       });
-      if (res.error) throw new Error(res.error);
-      toast.success("Saved as template!");
-    } catch (err) {
-      toast.error("Failed to save template: " + err.message);
+      if (res.error) toast.error(res.error);
+      else toast.success("Saved as template");
+    } catch (error) {
+      toast.error("Failed to save as template");
     }
   }, [workflowName, nodes, edges]);
 
@@ -293,6 +309,7 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
     [screenToFlowPosition, setNodes]
   );
 
+  // Streaming chat handler
   const handleChatSend = useCallback(async (text) => {
     const userMsg = { id: crypto.randomUUID(), role: "user", text, timestamp: new Date() };
     setChatMessages((prev) => [...prev, userMsg]);
@@ -300,13 +317,15 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
     const newHistory = [...conversationHistory, { role: "user", content: text }];
     setConversationHistory(newHistory);
 
+    // Mark chat-trigger as success (input received) and agent as running
     setNodes((nds) => nds.map((n) => {
-      const t = n.data?.type;
+      const t = (n.data).type;
       if (t === "chat-trigger") return { ...n, data: { ...n.data, status: "success" } };
       if (t === "ai-agent") return { ...n, data: { ...n.data, status: "running" } };
       return n;
     }));
 
+    // Log the Chat Trigger execution
     setChatLogs((prev) => [...prev, {
       id: crypto.randomUUID(),
       nodeName: "Chat Trigger",
@@ -316,11 +335,13 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
       output: { chatInput: text, sessionId: chatSessionId, triggered: true },
     }]);
 
+    // If we have an AI agent, stream directly
     if (connectedAgentNode) {
       setIsStreaming(true);
       const botMsgId = crypto.randomUUID();
       const startTime = Date.now();
 
+      // Add empty bot message that will be filled with streaming tokens
       setChatMessages((prev) => [...prev, { id: botMsgId, role: "bot", text: "", timestamp: new Date(), isStreaming: true }]);
 
       let fullResponse = "";
@@ -328,8 +349,8 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
       await streamChat({
         messages: newHistory,
         model: agentConfig?.builtinLlm || "gpt-4",
-        temperature: agentConfig?.temperature ?? 0.7,
-        systemPrompt: agentConfig?.systemPrompt || "You are a helpful AI assistant.",
+        temperature: (agentConfig?.temperature) ?? 0.7,
+        systemPrompt: (agentConfig?.systemPrompt) || "You are a helpful AI assistant. Keep answers clear and concise.",
         enableTools,
         onDelta: (chunk) => {
           fullResponse += chunk;
@@ -353,8 +374,9 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
             timestamp: new Date(),
             output: { input: text, response: fullResponse },
           }]);
+          // Mark agent node as success
           setNodes((nds) => nds.map((n) =>
-            n.data?.type === "ai-agent" ? { ...n, data: { ...n.data, status: "success" } } : n
+            (n.data).type === "ai-agent" ? { ...n, data: { ...n.data, status: "success" } } : n
           ));
         },
         onError: (errMsg) => {
@@ -362,22 +384,24 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
             prev.map((m) => m.id === botMsgId ? { ...m, text: `Error: ${errMsg}`, isStreaming: false } : m)
           );
           setIsStreaming(false);
+          // Mark agent node as error
           setNodes((nds) => nds.map((n) =>
-            n.data?.type === "ai-agent" ? { ...n, data: { ...n.data, status: "error" } } : n
+            (n.data).type === "ai-agent" ? { ...n, data: { ...n.data, status: "error" } } : n
           ));
           toast.error(errMsg);
         },
       });
     } else {
+      // Fallback: execute workflow
       const startTime = Date.now();
       execute(text).then(() => {
         const duration = Date.now() - startTime;
         const lastResult = Array.from(executionResults.values()).pop();
         const outputData = lastResult?.output || { chatInput: text };
-        setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "bot", text: typeof outputData === 'string' ? outputData : JSON.stringify(outputData, null, 2), timestamp: new Date() }]);
+        setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "bot", text: JSON.stringify(outputData, null, 2), timestamp: new Date() }]);
         setChatLogs((prev) => [...prev, {
           id: crypto.randomUUID(), nodeName: "Workflow", duration,
-          status: lastResult?.status || "success",
+          status: (lastResult?.status || "success"),
           timestamp: new Date(), output: outputData,
         }]);
       });
@@ -393,22 +417,22 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
   const handleClearExecution = useCallback(() => { setChatLogs([]); }, []);
 
   const handleLoadTemplate = useCallback((name, templateNodes, templateEdges) => {
-    setWorkflowName(name);
+    handleNameChange(name);
     setNodes(templateNodes);
     setEdges(templateEdges);
-  }, [setNodes, setEdges]);
+  }, [handleNameChange, setNodes, setEdges]);
 
   return (
     <div className="flex-1 relative h-full flex flex-col" ref={reactFlowWrapper}>
       {/* Top toolbar */}
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 h-12 bg-card/80 glass border-b border-border/60">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/workspace/${workspaceId}/flowbyte`)}>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push("/")}>
             <Home className="h-4 w-4" />
           </Button>
           <input
             value={workflowName}
-            onChange={(e) => setWorkflowName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             className="text-sm font-semibold bg-transparent border-none outline-none text-foreground hover:bg-muted px-2 py-1 rounded transition-colors"
           />
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Draft</span>
@@ -420,10 +444,10 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
           </Button>
           <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5" onClick={saveAsTemplate}>
             <Download className="h-3.5 w-3.5" />
-            Save Template
+            Save as Template
           </Button>
           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={saveWorkflow} disabled={isSaving}>
-            {isExecuting || isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             {isSaving ? "Saving..." : "Save"}
           </Button>
           <Button variant="outline" size="sm" className={`h-8 text-xs gap-1.5 ${scheduleEnabled ? "border-primary text-primary" : ""}`} onClick={() => setShowSchedule(true)}>
@@ -431,26 +455,28 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
             {scheduleEnabled ? "Scheduled" : "Schedule"}
           </Button>
           <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => {
-            if (hasChatTrigger) {
-              setShowChat(true);
-              setNodes((nds) => nds.map((n) =>
-                n.data?.type === "chat-trigger"
-                  ? { ...n, data: { ...n.data, status: "waiting" } }
-                  : n.data?.type === "ai-agent"
+              if (hasChatTrigger) {
+                // Open chat and wait for user input instead of executing immediately
+                setShowChat(true);
+                setNodes((nds) => nds.map((n) =>
+                  (n.data).type === "chat-trigger"
+                    ? { ...n, data: { ...n.data, status: "waiting" } }
+                    : (n.data).type === "ai-agent"
                     ? { ...n, data: { ...n.data, status: "idle" } }
                     : n
-              ));
-              toast.info("Waiting for chat input...");
-            } else {
-              execute();
-            }
-          }} disabled={isExecuting}>
+                ));
+                toast.info("Chat Trigger activated — send a message in the chat panel to continue execution");
+              } else {
+                execute();
+              }
+            }} disabled={isExecuting}>
             {isExecuting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
             {isExecuting ? "Running..." : "Execute"}
           </Button>
         </div>
       </div>
 
+      {/* Canvas */}
       <div className="flex-1 pt-12">
         <ReactFlow
           nodes={nodesWithCallbacks}
@@ -467,21 +493,22 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
           nodeTypes={nodeTypes}
           fitView
           fitViewOptions={{ padding: 0.3 }}
-          defaultViewport={{ x: 0, y: 0, zoom: 1.2 }}
-          onMove={(event, viewport) => {
-            console.log("Current Zoom Level:", viewport.zoom);
-          }}
+          defaultEdgeOptions={{ type: "smoothstep", animated: true, style: { stroke: "hsl(var(--n8n-connection))", strokeWidth: 2, strokeDasharray: "8 4" } }}
         >
+          {/* Floating delete button for selected edge */}
           {selectedEdge && (() => {
             const edge = edges.find((e) => e.id === selectedEdge);
             if (!edge) return null;
+            const sourceNode = nodes.find((n) => n.id === edge.source);
+            const targetNode = nodes.find((n) => n.id === edge.target);
+            if (!sourceNode || !targetNode) return null;
             return (
-              <Panel position="top-left" style={{ left: 0, top: 0 }}>
-                <div className="fixed z-50" style={{ left: "50%", top: "45%", transform: "translate(-50%, -50%)" }}>
+              <Panel position="top-left" className="!absolute !pointer-events-auto" style={{ left: 0, top: 0 }}>
+                <div className="fixed z-50" style={{ left: "50%", top: "45%" , transform: "translate(-50%, -50%)" }}>
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="h-7 text-xs gap-1 px-2 shadow-lg"
+                    className="h-7 text-xs gap-1 px-2 shadow-lg animate-scale-in"
                     onClick={() => deleteEdge(selectedEdge)}
                   >
                     <Trash2 className="h-3 w-3" /> Delete Connection
@@ -495,9 +522,11 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
           <MiniMap position="top-right" style={{ background: 'hsl(var(--card))' }} maskColor="hsl(var(--muted) / 0.7)" nodeColor="hsl(var(--primary))" nodeBorderRadius={4} />
 
           <Panel position="bottom-left">
-            <Button onClick={() => { setNodePanelSlotFilter(undefined); setShowNodePanel(true); }} size="sm" className="gap-1.5 shadow-lg">
-              <Plus className="h-4 w-4" /> Add Node
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => { setNodePanelSlotFilter(undefined); setShowNodePanel(true); }} size="sm" className="gap-1.5 shadow-lg">
+                <Plus className="h-4 w-4" /> Add Node
+              </Button>
+            </div>
           </Panel>
 
           {hasChatTrigger && (
@@ -509,13 +538,14 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
                 className="gap-1.5 shadow-lg bg-orange-600 hover:bg-orange-700 text-white border-orange-600"
               >
                 <MessageSquare className="h-4 w-4" />
-                {showChat ? "Hide Chat" : "Open Chat"}
+                {showChat ? "Hide chat" : "Open chat"}
               </Button>
             </Panel>
           )}
         </ReactFlow>
       </div>
 
+      {/* Chat Panel */}
       {showChat && hasChatTrigger && (
         <div className="h-[300px] border-t border-border">
           <ChatPanel
@@ -550,8 +580,9 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
         <TemplateGallery onClose={() => setShowTemplates(false)} onLoadTemplate={handleLoadTemplate} />
       )}
 
+      {/* Context Menu */}
       {contextMenu && (
-        <div className="fixed z-50 min-w-[160px] rounded-md border border-border bg-popover text-popover-foreground shadow-md" style={{ top: contextMenu.y, left: contextMenu.x }}>
+        <div className="fixed z-50 min-w-[160px] rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95" style={{ top: contextMenu.y, left: contextMenu.x }}>
           <div className="p-1">
             <button onClick={() => editNode(contextMenu.nodeId)} className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors">
               <Pencil className="h-3.5 w-3.5" /> Edit
@@ -568,10 +599,16 @@ function WorkflowCanvasInner({ workflowId, initialName, loadedNodes, loadedEdges
         onClose={() => setShowSchedule(false)}
         cronExpression={cronExpression}
         scheduleEnabled={scheduleEnabled}
-        onSave={(cron, enabled) => {
+        onSave={async (cron, enabled) => {
           setCronExpression(cron);
           setScheduleEnabled(enabled);
-          toast.success("Schedule updated");
+          try {
+            const res = await updateScheduleAction({ workflowId: savedId, cron, enabled });
+            if (res.error) toast.error(res.error);
+            else toast.success("Schedule updated");
+          } catch (e) {
+            toast.error("Failed to update schedule");
+          }
         }}
       />
     </div>

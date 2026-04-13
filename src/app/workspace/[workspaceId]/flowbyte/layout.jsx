@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import Sidebar from './_components/Sidebar'
 import { usePathname } from 'next/navigation'
 
 export default function FlowbyteLayout({ children }) {

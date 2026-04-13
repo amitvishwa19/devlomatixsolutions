@@ -308,10 +308,6 @@ const generators = {
     input: { operation: "query", vector: [0.1, 0.2, 0.3], topK: 5, namespace: "products" },
     output: { matches: [{ id: randomId(), score: 0.95, metadata: { title: "Product Guide" } }], namespace: "products" },
   }),
-  "supabase-vector": () => ({
-    input: { operation: "search", query: "pricing information", matchCount: 5 },
-    output: { documents: [{ id: randomInt(1, 100), content: "Enterprise pricing starts at...", similarity: 0.89 }] },
-  }),
   qdrant: () => ({
     input: { collection: "docs", vector: [0.5, 0.3, 0.8], limit: 3 },
     output: { points: [{ id: randomId(), score: 0.91, payload: { text: "API documentation" } }] },

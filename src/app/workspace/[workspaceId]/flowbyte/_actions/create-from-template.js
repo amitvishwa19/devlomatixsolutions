@@ -1,12 +1,16 @@
 'use server'
 import { db } from "@/lib/db"
-import { getSession } from "@/lib/auth"
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { revalidatePath } from "next/cache"
 
 export async function createFromTemplate({ workspaceId, name, definition }) {
-    const session = await getSession()
-    const userId = session?.data?.id
-    if (!userId) throw new Error("Unauthorized")
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.userId;
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
 
     const workflow = await db.workflow.create({
         data: {

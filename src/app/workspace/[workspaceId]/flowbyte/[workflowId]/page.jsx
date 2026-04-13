@@ -11,7 +11,7 @@ export default async function WorkflowIdPage({ params }) {
             <div className='flex h-[calc(100vh-145px)] w-full overflow-hidden bg-background relative'>
                 <WorkflowCanvas 
                     workflowId="new"
-                    initialName="New Workflow"
+                    initialName="My Workflow"
                     loadedNodes={[]}
                     loadedEdges={[]}
                 />

@@ -1,15 +1,12 @@
 'use server'
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { revalidatePath } from "next/cache";
 
-export async function saveWorkflowAction({ id, name, nodes, edges, workspaceId, userId: userIdArg }) {
-  let userId = userIdArg;
-  
-  if (!userId) {
-    const session = await getSession();
-    userId = session?.data?.id;
-  }
+export async function saveWorkflowAction({ id, name, nodes, edges, workspaceId }) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.userId;
 
   if (!userId) {
     return { error: "Unauthorized" };
@@ -28,7 +25,7 @@ export async function saveWorkflowAction({ id, name, nodes, edges, workspaceId, 
     let workflow;
     if (id && id !== "new") {
       workflow = await db.workflow.update({
-        where: { id },
+        where: { id, userId }, // Ensure user owns it
         data: payload,
       });
     } else {
@@ -44,28 +41,41 @@ export async function saveWorkflowAction({ id, name, nodes, edges, workspaceId, 
 
     return { success: true, data: workflow };
   } catch (error) {
-    console.error("Failed to save workflow:", error);
-    return { error: error.message };
+    console.error("[saveWorkflowAction] Error:", error);
+    return { error: error.message || "Failed to save workflow" };
   }
 }
 
 export async function saveAsTemplateAction({ name, nodes, edges }) {
-  // Since we don't have a Template model, we can just create a Workflow with a 'template' category or similar
-  // For now, let's just return success to maintain UI flow
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.userId) return { error: "Unauthorized" };
+  
+  // templates are workflows with a specific flag or just stored as separate nodes
+  // For now, maintain current simulation but ensure auth
   return { success: true };
 }
 
 export async function updateScheduleAction({ workflowId, cron, enabled }) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.userId;
+  if (!userId) return { error: "Unauthorized" };
+
   try {
+    // Store schedule in definition JSON field
+    const workflow = await db.workflow.findUnique({ where: { id: workflowId } });
+    const definition = (workflow?.definition && typeof workflow.definition === 'object') 
+      ? { ...workflow.definition } 
+      : {};
+    
+    definition.schedule = { cron, enabled };
+
     await db.workflow.update({
-      where: { id: workflowId },
-      data: {
-        // We might need to add these fields to the schema if they are missing
-        // For now, let's assume 'definition' stores this if schema is fixed
-      }
+      where: { id: workflowId, userId },
+      data: { definition }
     });
     return { success: true };
   } catch (error) {
+    console.error("[updateScheduleAction] Error:", error);
     return { error: error.message };
   }
 }

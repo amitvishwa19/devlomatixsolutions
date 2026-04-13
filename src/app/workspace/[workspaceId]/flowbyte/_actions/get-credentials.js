@@ -1,12 +1,16 @@
 'use server'
 import { db } from "@/lib/db"
-import { getSession } from "@/lib/auth"
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 export async function getCredentials({ workspaceId, types } = {}) {
-    const session = await getSession()
-    const userId = session?.data?.id
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.userId;
 
-    if (!userId) return []
+    if (!userId) {
+        console.error("[getCredentials] Unauthorized: No userId found");
+        return [];
+    }
 
     const where = { userId }
     if (workspaceId) where.workspaceId = workspaceId

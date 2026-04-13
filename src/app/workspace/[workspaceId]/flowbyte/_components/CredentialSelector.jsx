@@ -1,10 +1,9 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from "react";
 import { Key, Plus, ExternalLink } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getCredentials } from "../_actions/get-credentials";
-import { toast } from "sonner";
 
 // Maps node types to credential types they accept
 export const NODE_CREDENTIAL_TYPES = {
@@ -35,7 +34,6 @@ export const NODE_CREDENTIAL_TYPES = {
   twilio: ["twilio", "generic"],
   s3: ["aws", "generic"],
   pinecone: ["pinecone", "generic"],
-  "supabase-vector": ["supabase", "generic"],
   "openai-embeddings": ["openai", "generic"],
   "cohere-embeddings": ["cohere", "generic"],
   "google-embeddings": ["google-ai", "generic"],
@@ -45,20 +43,21 @@ export const NODE_CREDENTIAL_TYPES = {
 
 export default function CredentialSelector({ value, onChange, types, label = "Credential" }) {
   const [credentials, setCredentials] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { workspaceId } = useParams();
+  const params = useParams();
+  const workspaceId = params.workspaceId;
 
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       try {
-          const data = await getCredentials({ workspaceId, types });
-          setCredentials(data || []);
+        const data = await getCredentials({ workspaceId, types });
+        setCredentials(data || []);
       } catch (error) {
-          toast.error("Failed to load credentials");
+        console.error("Failed to fetch credentials:", error);
       } finally {
-          setLoading(false);
+        setLoading(false);
       }
     };
     fetch();
@@ -74,7 +73,7 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
         <select
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+          className="flex-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
           disabled={loading}
         >
           <option value="">
@@ -88,7 +87,7 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
         </select>
         <button
           type="button"
-          onClick={() => router.push(`/workspace/${workspaceId}/flowbyte/credentials`)}
+          onClick={() => router.push("/credentials")}
           className="px-2 py-1.5 border border-border rounded-md bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           title="Manage credentials"
         >
@@ -98,7 +97,7 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
       {value && (
         <button
           type="button"
-          onClick={() => router.push(`/workspace/${workspaceId}/flowbyte/credentials`)}
+          onClick={() => router.push("/credentials")}
           className="mt-1 text-[10px] text-primary hover:underline flex items-center gap-1"
         >
           <ExternalLink className="h-2.5 w-2.5" /> Manage credentials

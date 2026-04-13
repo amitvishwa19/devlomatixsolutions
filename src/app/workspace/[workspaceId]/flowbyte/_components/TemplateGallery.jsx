@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Zap, Bot, MessageSquare, Database, GitBranch, Code, Mail, Globe, Loader2, BookOpen } from "lucide-react";
+import { X, Zap, Bot, MessageSquare, Database, GitBranch, Code, Mail, Globe, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { useParams } from "next/navigation";
+import { getWorkflow } from "../_actions/get-workflows";
 
 const iconMap = {
   zap: Zap, bot: Bot, message: MessageSquare, database: Database,
@@ -76,12 +79,32 @@ const BUILT_IN_TEMPLATES = [
 ];
 
 export default function TemplateGallery({ onClose, onLoadTemplate }) {
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [savedTemplates, setSavedTemplates] = useState([]); // Placeholder for user-saved templates
+  const [savedTemplates, setSavedTemplates] = useState([]);
+  const params = useParams();
+  const workspaceId = params.workspaceId;
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        // We'll need a userId, but the action handles it if we pass it or get it from session
+        // For now, let's assume it works with workspaceId/session
+        const res = await getWorkflow({ workspaceId });
+        if (res.data) setSavedTemplates(res.data);
+      } catch (e) {
+        console.error("Failed to fetch saved templates:", e);
+      }
+    };
+    fetch();
+  }, [workspaceId]);
 
   const allTemplates = [
     ...BUILT_IN_TEMPLATES.map((t) => ({ ...t, isBuiltin: true })),
-    ...savedTemplates.map((t) => ({ ...t, isBuiltin: false })),
+    ...savedTemplates.map((t) => ({
+      ...t,
+      isBuiltin: false,
+      category: "Saved",
+      icon: "zap",
+    })),
   ];
 
   const categories = ["All", ...Array.from(new Set(allTemplates.map((t) => t.category)))];
