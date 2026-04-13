@@ -32,6 +32,7 @@ export default function AppSidebar() {
     const baseFlowbotPath = `/workspace/${workspaceId}/flowbot`
     const baseMiscellaneousPath = `/workspace/${workspaceId}/miscellaneous`
     const baseEcommercePath = `/workspace/${workspaceId}/ecommerce`
+    const baseFlowbytePath = `/workspace/${workspaceId}/flowbyte`
 
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
@@ -85,6 +86,14 @@ export default function AppSidebar() {
         { type: 'child', title: "Pipeline", url: `${baseAtsPath}/pipeline`, icon: "bar-chart-3", category: "ats" },
 
 
+        // flowbyte
+        { type: 'parent', title: "FLowByte", url: `${baseFlowbytePath}`, icon: "workflow", category: "flowbyte" },
+        { type: 'child', title: "Workflows", url: `${baseFlowbytePath}`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Credentials", url: `${baseFlowbytePath}/credentials`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Templates", url: `${baseFlowbytePath}/templates`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Settings", url: `${baseFlowbytePath}/settings`, icon: "bar-chart-3", category: "flowbyte" },
+
+
         // Productivity Manager
         { type: 'parent', title: "Productivity", url: `${baseProductivityPath}`, icon: "folder-kanban", category: "productivity" },
         { type: 'child', title: "Dashboard", url: `${baseProductivityPath}/`, icon: "bar-chart-3", category: "productivity" },
@@ -97,6 +106,9 @@ export default function AppSidebar() {
         { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
         { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
         { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
+        { type: 'child', title: "Credentials", url: `${baseFlowbotPath}/credentials`, icon: "bar-chart-3", category: "flowbot" },
+        { type: 'child', title: "Templates", url: `${baseFlowbotPath}/templates`, icon: "bar-chart-3", category: "flowbot" },
+        { type: 'child', title: "Settings", url: `${baseFlowbotPath}/settings`, icon: "bar-chart-3", category: "flowbot" },
 
         // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
         // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},
