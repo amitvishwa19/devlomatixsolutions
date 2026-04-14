@@ -1,4 +1,0 @@
-name,phone,email,category,tags
-Alice Johnson,1234567890,alice@example.com,Customer,tag1|tag2
-Bob Smith,0987654321,bob@example.com,Lead,tag3
-Charlie Brown,5556667777,charlie@gmail.com,,tag4|tag5
