@@ -17,7 +17,7 @@ const Hero = () => {
 
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 w-full ">
                 {/* Background gradient for light theme */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background dark:from-background dark:via-background dark:to-background" />
+                <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-accent/5 to-background dark:from-background dark:via-background dark:to-background" />
 
                 {/* Background Effects */}
                 <div className="absolute inset-0 grid-pattern opacity-40" />
@@ -64,7 +64,7 @@ const Hero = () => {
                                 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-primary "
                             >
                                 We Build{" "}
-                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-500">Software</span>
+                                <span className="bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-500 to-indigo-500">Software</span>
                                 <br />
                                 That Drives Growth
                             </motion.h1>
@@ -121,7 +121,7 @@ const Hero = () => {
                                         whileHover={{ scale: 1.05, y: -2 }}
                                     >
                                         <motion.div
-                                            className="font-display text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"
+                                            className="font-display text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-primary to-accent"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ delay: 0.8 + index * 0.1 }}
@@ -153,11 +153,11 @@ const Hero = () => {
 
                                 {/* Floating card overlay */}
                                 <motion.div
-                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl shadow-primary/10"
+                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl shadow-primary/10 bg-red-500 rounded-lg"
                                     animate={{ y: [0, -10, 0] }}
                                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 ">
                                         <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                                             <span className="text-emerald-600 text-lg">✓</span>
                                         </div>

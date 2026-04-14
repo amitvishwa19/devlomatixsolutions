@@ -18,7 +18,7 @@ export async function middleware(request) {
   const isDev = process.env.NODE_ENV !== 'production'
 
   // =========================
-  // 🌐 PATH → SUBDOMAIN
+  // PATH -> SUBDOMAIN
   // =========================
   if (isMainDomain) {
     const segments = pathname.split('/').filter(Boolean)
@@ -44,7 +44,7 @@ export async function middleware(request) {
   }
 
   // =========================
-  // 🔒 AUTH PROTECTION
+  // AUTH PROTECTION
   // =========================
 
   const isProtectedRoute =
@@ -58,18 +58,32 @@ export async function middleware(request) {
     pathname === '/verify' ||
     pathname === '/reset'
 
-  // 🚫 Not logged in → block protected routes
+  // Not logged in -> block protected routes
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // 🔐 Logged in → block login page
+  // Workspace Access Control (RBAC)
+  if (pathname.startsWith('/workspace') && token) {
+    const hasWorkspaceAccess =
+      token.role === 'admin' ||
+      token.role === 'superadmin' ||
+      token.role === 'super-admin' ||
+      token.roles?.some(role => role.title === 'workspace');
+
+    if (!hasWorkspaceAccess) {
+      console.log(`[Middleware] Access denied for ${token.email} to ${pathname}`);
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
+  // Logged in -> block login page
   if (pathname === '/login' && token) {
     return NextResponse.redirect(new URL('/workspace', request.url))
   }
 
   // =========================
-  // ✅ DEFAULT
+  // DEFAULT
   // =========================
   return NextResponse.next()
 }

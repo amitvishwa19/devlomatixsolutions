@@ -57,7 +57,7 @@ html {
 }
 
 :root {
-  --radius: 0.50rem;
+  --radius: 0.75rem;
 }
 
 /* Dark theme (default) */
@@ -128,8 +128,8 @@ html {
 
 /* Light theme adjustments if needed */
 .light {
-    --n8n-sidebar-bg: 210 15% 96%;
-    --n8n-sidebar-fg: 220 30% 40%;
+  --n8n-sidebar-bg: 210 15% 96%;
+  --n8n-sidebar-fg: 220 30% 40%;
 }
 
 /* Dark theme overrides for n8n tokens */
@@ -191,8 +191,15 @@ html {
 
 /* Node animations */
 @keyframes node-appear {
-  from { opacity: 0; transform: scale(0.9) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .workflow-node {
@@ -206,8 +213,15 @@ html {
 
 /* Execution pulse animation */
 @keyframes execution-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
-  50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+  }
 }
 
 .node-executing {

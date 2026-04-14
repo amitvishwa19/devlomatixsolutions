@@ -164,20 +164,23 @@ const Navbar = () => {
                         {/* <ThemeToggle /> */}
                         {/* <ThemeSwitcher /> */}
 
-                        {session ? (
+                        {session && (
+                            session.user.role === 'ADMIN' ||
+                            session.user.role === 'SUPERADMIN' ||
+                            session.user.roles?.some(role => role.title === 'workspace')
+                        ) ? (
                             <Link href="/workspace">
                                 <button variant="outline" size="sm" className="rounded-full h-9 px-5 text-sm  border border-primary/30 bg-primary/10 item-center justify-center hover:bg-primary/20 hover:text-primary cursor-pointer">
                                     Workspace
                                 </button>
                             </Link>
-                        ) : (
-
+                        ) : !session ? (
                             <Link href="/login">
                                 <button variant="ghost" size="sm" className="rounded-full h-9 px-5 text-sm  border border-primary/30 bg-primary/10 item-center justify-center hover:bg-primary/20 hover:text-primary cursor-pointer">
                                     Login
                                 </button>
                             </Link>
-                        )}
+                        ) : null}
 
                     </div>
 
@@ -195,7 +198,7 @@ const Navbar = () => {
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        className="md:hidden px-4 pb-4 border-t border-border/30 pt-3 flex flex-col gap-1"
+                        className="md:hidden px-4 pb-4 border-t border-border/30 pt-3 flex flex-col gap-1 bg-card rounded-lg border"
                     >
                         {navLinks.map((link) =>
                             link.hasDropdown ? (
@@ -242,7 +245,7 @@ const Navbar = () => {
                             ) : (
                                 <Link
                                     key={link.name}
-                                    to={link.href}
+                                    href={link.href}
                                     onClick={() => setIsOpen(false)}
                                     className={cn(
                                         "px-4 py-2.5 text-sm font-medium rounded-full transition-all",
@@ -256,10 +259,21 @@ const Navbar = () => {
                             )
                         )}
                         <div className="flex gap-2 mt-3">
-                            <Link to="/auth" onClick={() => setIsOpen(false)} className="flex-1">
-                                <Button variant="outline" className="w-full rounded-full">Login</Button>
-                            </Link>
-                            <Link to="/consultation" onClick={() => setIsOpen(false)} className="flex-1">
+                            {session && (
+                                session.user.role === 'admin' ||
+                                session.user.role === 'superadmin' ||
+                                session.user.role === 'super-admin' ||
+                                session.user.roles?.some(role => role.title === 'workspace')
+                            ) ? (
+                                <Link href="/workspace" onClick={() => setIsOpen(false)} className="flex-1">
+                                    <Button variant="outline" className="w-full rounded-full">Workspace</Button>
+                                </Link>
+                            ) : !session ? (
+                                <Link href="/login" onClick={() => setIsOpen(false)} className="flex-1">
+                                    <Button variant="outline" className="w-full rounded-full">Login</Button>
+                                </Link>
+                            ) : null}
+                            <Link href="/contact" onClick={() => setIsOpen(false)} className="flex-1">
                                 <Button variant="hero" className="w-full rounded-full">Get Started</Button>
                             </Link>
                         </div>

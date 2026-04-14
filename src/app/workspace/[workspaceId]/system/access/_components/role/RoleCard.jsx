@@ -66,7 +66,7 @@ export function RoleCard({ role, onEdit, onDelete }) {
               variant="outline" 
               className="bg-primary/5 border-primary/10 hover:border-primary/30 transition-colors text-[10px] py-0 px-2.5 h-6 flex items-center font-bold tracking-tight text-primary/80"
             >
-              {perm.title}
+              {titleCaseLabel(perm.title)}
             </Badge>
           ))}
           {permissionCount > 15 && (
