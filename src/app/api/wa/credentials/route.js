@@ -17,7 +17,7 @@ export async function GET(req) {
 
   const creds = await db.credentials.findMany({
     where: { userId, platform: 'WHATSAPP_CLOUD' },
-    orderBy: { updatedAt: 'desc' },
+    orderBy: { createdAt: 'asc' },
   });
 
   const mask = (str) => (str ? str.slice(0, 4) + '****' + str.slice(-4) : '');

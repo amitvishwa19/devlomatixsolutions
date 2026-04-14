@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
+import SonarLoader from '@/components/global/SonarLoader';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +100,7 @@ export default function SettingsPage() {
     const [copied, setCopied] = useState(false);
     const [showWebhookSecret, setShowWebhookSecret] = useState(false);
     const [testNumberInput, setTestNumberInput] = useState('');
+    const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
 
     // Cloud Modal States
     const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
@@ -223,6 +225,7 @@ export default function SettingsPage() {
     };
 
     const handleSetDefaultAccount = async (id) => {
+        setIsSwitchingAccount(true);
         try {
             const res = await fetch('/api/wa/credentials/default', {
                 method: 'POST',
@@ -232,12 +235,15 @@ export default function SettingsPage() {
             const data = await res.json();
             if (res.ok) {
                 toast.success(data.message || 'Default account updated');
-                fetchCloudCreds();
+                await fetchCloudCreds();
             } else {
                 toast.error(data.error || 'Failed to set default');
             }
         } catch (error) {
             toast.error('Network error');
+        } finally {
+            // Small delay for visual impact of the premium loader
+            setTimeout(() => setIsSwitchingAccount(false), 800);
         }
     };
 
@@ -361,41 +367,42 @@ export default function SettingsPage() {
 
     return (
         <TooltipProvider>
+            <SonarLoader show={isSwitchingAccount} text="Switching account..." />
             <div className="flex flex-col h-full text-foreground overflow-hidden">
 
                 {/* Header Section */}
-                <div className="flex items-center justify-between p-4 border-b">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                            <DynamicIcon name="whatsapp" className="w-5 h-5 text-primary" />
+                <div className="flex items-center justify-between p-6 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-20">
+                    <div className="flex items-center gap-5">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
+                            <DynamicIcon name="whatsapp" className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-xl tracking-tight">WhatsApp Instance</h1>
-                                <Badge variant="outline" className="h-5 px-2 text-[10px] border-primary/20 text-primary">
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/60">WhatsApp Instance</h1>
+                                <Badge variant="outline" className="h-5 px-2 text-[9px] font-bold uppercase tracking-widest border-primary/20 text-primary bg-primary/5">
                                     Cloud API Engine
                                 </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground font-medium">Manage your Meta API configuration and status.</p>
+                            <p className="text-xs text-muted-foreground font-medium mt-0.5">Manage your Meta API configuration and instance health.</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-primary/5 border border-primary/10 shadow-sm">
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        <span className="text-[10px] font-bold text-primary">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
                             {cloudCreds.length} Active Cloud Nodes
                         </span>
                     </div>
                 </div>
 
                 {/* Tabs Navigation */}
-                <Tabs defaultValue="status" className="flex-1 flex flex-col m-4">
-                    <TabsList className="bg-transparent w-full justify-start rounded-none h-auto p-0 gap-2 mb-4">
+                <Tabs defaultValue="status" className="flex-1 flex flex-col p-6 overflow-hidden">
+                    <TabsList className="bg-muted/5 w-full justify-start rounded-xl h-auto p-1.5 gap-2 mb-6 border border-border/20 backdrop-blur-sm">
                         {['status', 'automation', 'webhooks', 'messaging', 'notifications', 'security', 'general'].map((tab) => (
                             <TabsTrigger
                                 key={tab}
                                 value={tab}
-                                className="rounded-md w-36 p-2 border border-border/20 text-sm capitalize data-[state=active]:border-primary/20 data-[state=active]:text-primary data-[state=active]:bg-muted/50 transition-all opacity-60 data-[state=active]:opacity-100"
+                                className="rounded-lg px-6 py-2.5 text-xs font-bold capitalize data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:border-primary/20 data-[state=active]:shadow-lg transition-all border border-transparent hover:bg-muted/10 opacity-70 data-[state=active]:opacity-100"
                             >
                                 {tab.replace('_', ' ')}
                             </TabsTrigger>
@@ -403,24 +410,25 @@ export default function SettingsPage() {
                     </TabsList>
 
                     {/* STATUS TAB */}
-                    <TabsContent value="status" className="flex-1 outline-none pr-2 custom-scrollbar">
+                    <TabsContent value="status" className="flex-1 outline-none custom-scrollbar overflow-y-auto">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                             {/* Main Content (Left) */}
                             <div className="md:col-span-8 space-y-6">
-                                <Card className="border-border/40 shadow-none relative">
+                                <Card className="glass-card shadow-none border-none relative">
                                     <CardHeader className="flex flex-row items-center justify-between pb-6">
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-primary/5 rounded-lg border border-primary/10">
+                                            <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
                                                 <Globe className="w-4 h-4 text-primary" />
                                             </div>
                                             <div>
-                                                <CardTitle className="text-base tracking-tight">Cloud API Integration</CardTitle>
-                                                <CardDescription className="text-xs">Meta Business Platform Connectivity</CardDescription>
+                                                <CardTitle className="text-base font-bold tracking-tight">Cloud API Integration</CardTitle>
+                                                <CardDescription className="text-xs font-medium">Meta Business Platform Connectivity</CardDescription>
                                             </div>
                                         </div>
                                         <Button
                                             size="sm"
-                                            className="h-8 text-xs px-4"
+                                            variant="secondary"
+                                            className="h-8 text-xs px-4 rounded-lg font-bold"
                                             onClick={() => {
                                                 setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
                                                 setIsCredsModalOpen(true);
@@ -432,54 +440,58 @@ export default function SettingsPage() {
 
                                     <CardContent className="space-y-4">
                                         {cloudCreds.map((cred) => (
-                                            <div key={cred.id} className="p-4 bg-muted/20 rounded-lg border border-border/40 hover:border-primary/30 transition-all group">
+                                            <div key={cred.id} className="p-5 bg-background/40 backdrop-blur-sm rounded-xl border border-border/20 hover:border-primary/30 transition-all group shadow-sm">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all">
-                                                            <MessageSquare className="w-5 h-5" />
+                                                        <div className="w-14 h-14 rounded-2xl bg-muted/20 border border-border/40 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shadow-inner">
+                                                            <MessageSquare className="w-6 h-6" />
                                                         </div>
-                                                        <div className="space-y-1">
+                                                        <div className="space-y-1.5">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-semibold">{cred.profile || 'WhatsApp Account'}</span>
+                                                                <span className="text-sm font-bold tracking-tight">{cred.profile || 'WhatsApp Account'}</span>
                                                                 {cred.verified ? (
-                                                                    <Tooltip>
+                                                                    <Tooltip shrink>
                                                                         <TooltipTrigger asChild>
-                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 fill-green-500/10" />
+                                                                            <CheckCircle2 className="w-4 h-4 text-green-500 fill-green-500/10" />
                                                                         </TooltipTrigger>
                                                                         <TooltipContent>Verified Node</TooltipContent>
                                                                     </Tooltip>
                                                                 ) : (
-                                                                    <Tooltip>
+                                                                    <Tooltip shrink>
                                                                         <TooltipTrigger asChild>
-                                                                            <AlertCircle className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+                                                                            <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />
                                                                         </TooltipTrigger>
                                                                         <TooltipContent>Needs Re-verification</TooltipContent>
                                                                     </Tooltip>
                                                                 )}
-                                                                {cred.isDefault && <Badge variant="secondary" className="h-4 text-[9px] bg-primary/10 text-primary border-0">DEFAULT</Badge>}
+                                                                {cred.isDefault && (
+                                                                    <Badge className="h-4 text-[9px] font-black tracking-widest bg-primary/20 text-primary border-primary/20">
+                                                                        DEFAULT
+                                                                    </Badge>
+                                                                )}
                                                             </div>
                                                             <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-mono">
-                                                                <span className="opacity-50 uppercase">Phone ID:</span>
-                                                                <span>••••••••</span>
-                                                                <Copy size={10} className="hover:text-primary cursor-pointer" onClick={() => copyToClipboard(cred.phoneNumberId)} />
-                                                                <Separator orientation="vertical" className="h-2" />
-                                                                <span className="opacity-50 uppercase">WABA ID:</span>
-                                                                <span>••••••••</span>
-                                                                <Copy size={10} className="hover:text-primary cursor-pointer" onClick={() => copyToClipboard(cred.wabaId)} />
+                                                                <span className="opacity-40 uppercase font-bold">Phone ID:</span>
+                                                                <span className="tracking-widest">••••••••</span>
+                                                                <Copy size={11} className="hover:text-primary cursor-pointer transition-colors" onClick={() => copyToClipboard(cred.phoneNumberId)} />
+                                                                <Separator orientation="vertical" className="h-3 bg-border/40" />
+                                                                <span className="opacity-40 uppercase font-bold">WABA ID:</span>
+                                                                <span className="tracking-widest">••••••••</span>
+                                                                <Copy size={11} className="hover:text-primary cursor-pointer transition-colors" onClick={() => copyToClipboard(cred.wabaId)} />
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex items-center gap-3">
-                                                        <Tooltip>
+                                                        <Tooltip shrink>
                                                             <TooltipTrigger asChild>
                                                                 <Button
-                                                                    variant="outline"
+                                                                    variant="ghost"
                                                                     size="icon"
-                                                                    className={`h-8 w-8 transition-all ${cred.isDefault ? 'bg-primary/20 border-primary/30 text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                                                                    className={`h-9 w-9 rounded-xl transition-all ${cred.isDefault ? 'bg-primary/20 border border-primary/30 text-primary' : 'text-muted-foreground hover:bg-muted/30 hover:text-primary'}`}
                                                                     onClick={() => handleSetDefaultAccount(cred.id)}
                                                                 >
-                                                                    <Star className={`w-3.5 h-3.5 ${cred.isDefault ? 'fill-current' : ''}`} />
+                                                                    <Star className={`w-4 h-4 ${cred.isDefault ? 'fill-current' : ''}`} />
                                                                 </Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent>
@@ -488,101 +500,128 @@ export default function SettingsPage() {
                                                         </Tooltip>
 
                                                         <Button
-                                                            variant="outline"
+                                                            variant="secondary"
                                                             size="sm"
-                                                            className="h-8 text-[10px] font-bold uppercase transition-all flex items-center gap-2"
+                                                            className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-border/20 shadow-sm"
                                                             onClick={() => handleTestConnection(cred.id)}
                                                             disabled={testState[cred.id] === 'loading'}
                                                         >
                                                             {testState[cred.id] === 'loading' ? (
-                                                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                                                             ) : (
-                                                                <Zap size={12} className={testState[cred.id] === 'success' ? 'fill-green-500 text-green-500' : ''} />
+                                                                <Zap size={13} className={testState[cred.id] === 'success' ? 'fill-green-500 text-green-500' : 'text-primary'} />
                                                             )}
                                                             {testState[cred.id] === 'loading' ? 'Testing...' : 'Test'}
                                                         </Button>
-                                                        <Tooltip>
+
+                                                        <Tooltip shrink>
                                                             <TooltipTrigger asChild>
-                                                                <Info className="w-3 h-3 text-muted-foreground cursor-help" />
+                                                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help opacity-40 hover:opacity-100 transition-opacity" />
                                                             </TooltipTrigger>
-                                                            <TooltipContent className="max-w-[200px] text-[10px]">
+                                                            <TooltipContent className="max-w-[200px] text-[10px] rounded-lg border-border/20 p-3 leading-relaxed">
                                                                 Sends a direct text message. 
                                                                 <br />
-                                                                <b>Important:</b> Recipient must have messaged you in the last 24h.
+                                                                <b className="text-primary">Important:</b> Recipient must have messaged you in the last 24h.
                                                             </TooltipContent>
                                                         </Tooltip>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => {
+
+                                                        <Separator orientation="vertical" className="h-6 mx-1 bg-border/20" />
+
+                                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all" onClick={() => {
                                                             setTempCreds({ ...cred, accessToken: '' });
                                                             setIsCredsModalOpen(true);
                                                         }}>
-                                                            <Settings size={14} />
+                                                            <Settings size={15} />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => {
+                                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all" onClick={() => {
                                                             setAccountToDelete(cred);
                                                             setIsDeleteModalOpen(true);
                                                         }}>
-                                                            <Trash2 size={14} />
+                                                            <Trash2 size={15} />
                                                         </Button>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))}
                                         {cloudCreds.length === 0 && (
-                                            <div className="text-center py-12 border border-dashed border-border/40 rounded-lg">
-                                                <p className="text-xs text-muted-foreground">No Cloud API accounts linked yet.</p>
+                                            <div className="text-center py-16 bg-muted/5 border border-dashed border-border/40 rounded-2xl flex flex-col items-center gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-muted/10 flex items-center justify-center">
+                                                    <Globe className="w-6 h-6 text-muted-foreground/30" />
+                                                </div>
+                                                <p className="text-xs text-muted-foreground font-medium">No Cloud API accounts linked yet.</p>
                                             </div>
                                         )}
                                     </CardContent>
                                 </Card>
 
-                                <div className="flex items-center justify-between text-[10px] px-2">
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                <div className="flex items-center justify-between text-[10px] px-3 font-bold tracking-widest uppercase text-muted-foreground/40">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
                                         <span>Active Nodes Online</span>
                                     </div>
-                                    <span className="text-muted-foreground italic">VWA-Engine v3.4.0 (Enterprise)</span>
+                                    <span className="italic">VWA-Engine v3.4.0 (Enterprise)</span>
                                 </div>
                             </div>
 
                             {/* Sidebar Stats (Right) */}
-                            <div className="md:col-span-4 space-y-4">
-                                <Card className="border-border/40 p-5 space-y-4">
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <Database size={14} />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Instance Health</span>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="opacity-70">App Security</span>
-                                            <Badge variant="outline" className="text-[9px] h-5 border-green-500/20 text-green-500 bg-green-500/5">High</Badge>
+                            <div className="md:col-span-4 space-y-6">
+                                <Card className="glass-card border-none p-6 space-y-5">
+                                    <div className="flex items-center gap-3 text-muted-foreground">
+                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                            <Database size={14} className="text-primary" />
                                         </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="opacity-70">Latency</span>
-                                            <span className="font-bold text-primary">0.4ms</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Instance Health</span>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between text-xs font-medium">
+                                            <span className="opacity-60 uppercase tracking-tighter">App Security</span>
+                                            <Badge variant="outline" className="text-[9px] font-black h-5 border-green-500/20 text-green-500 bg-green-500/5 tracking-widest uppercase">High</Badge>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs font-medium">
+                                            <span className="opacity-60 uppercase tracking-tight">Latency</span>
+                                            <span className="font-black text-primary tracking-tighter">0.4ms</span>
+                                        </div>
+                                        <div className="pt-2">
+                                            <div className="w-full h-1 bg-muted/20 rounded-full overflow-hidden">
+                                                <motion.div 
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: "98%" }}
+                                                    className="h-full bg-primary" 
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </Card>
 
-                                <Card className="bg-primary/5 border-primary/20 p-5 space-y-3">
-                                    <div className="flex items-center gap-2 text-primary">
-                                        <Zap size={14} className="fill-current" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Priority Mode</span>
+                                <Card className="bg-primary/5 border-primary/10 p-6 space-y-4 shadow-[inset_0_0_20px_rgba(var(--primary-rgb),0.05)] rounded-2xl">
+                                    <div className="flex items-center gap-3 text-primary">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <Zap size={14} className="fill-current" />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Priority Mode</span>
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground leading-relaxed">System is running on a high-availability node for zero-latency delivery.</p>
+                                    <p className="text-[10px] text-muted-foreground font-medium leading-relaxed opacity-80">
+                                        System is running on a high-availability node for zero-latency delivery. Node: <span className="text-primary font-bold">AWS-MUM-01</span>
+                                    </p>
                                 </Card>
                             </div>
                         </div>
                     </TabsContent>
 
                     {/* AUTOMATION TAB */}
-                    <TabsContent value="automation" className="flex-1 space-y-6 outline-none">
+                    <TabsContent value="automation" className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
                         <div className="max-w-3xl space-y-6">
-                            <Card className="border-border/40 shadow-none">
+                            <Card className="glass-card border-none shadow-none">
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <CardTitle className="text-base">Auto-Responder</CardTitle>
-                                            <CardDescription className="text-xs">Automated message handlers for incoming payloads.</CardDescription>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                                <Bot className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <CardTitle className="text-base font-bold tracking-tight">Auto-Responder</CardTitle>
+                                                <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">Message Handlers</CardDescription>
+                                            </div>
                                         </div>
                                         <Switch
                                             checked={metadata.autoResponderEnabled || false}
@@ -591,10 +630,10 @@ export default function SettingsPage() {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <div className="flex items-center justify-between p-4 bg-muted/20 border rounded-lg">
+                                    <div className="flex items-center justify-between p-5 bg-background/40 backdrop-blur-sm rounded-xl border border-border/20 shadow-sm">
                                         <div className="space-y-1">
-                                            <Label className="text-xs font-semibold">AI Synthesis Hub</Label>
-                                            <p className="text-[10px] text-muted-foreground">Use AI to analyze intent before replying.</p>
+                                            <Label className="text-xs font-bold tracking-tight">AI Synthesis Hub</Label>
+                                            <p className="text-[10px] text-muted-foreground font-medium">Use AI to analyze intent before replying.</p>
                                         </div>
                                         <Switch
                                             checked={metadata.aiAssistantEnabled || false}
@@ -602,11 +641,11 @@ export default function SettingsPage() {
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-70">Default Welcome Message</Label>
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Default Welcome Message</Label>
                                         <Textarea
                                             rows={6}
-                                            className="min-h-[120px] bg-muted/10 text-xs focus:border-primary/40"
+                                            className="min-h-[120px] bg-background/40 backdrop-blur-sm text-xs font-medium focus:border-primary/40 rounded-xl border-border/20 shadow-inner p-4 leading-relaxed"
                                             placeholder="Hello! How can we help you today?"
                                             value={metadata.welcomeMessage || ''}
                                             onChange={(e) => setMetadata({ ...metadata, welcomeMessage: e.target.value })}
@@ -616,65 +655,71 @@ export default function SettingsPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="border-border/40 shadow-none">
+                            <Card className="glass-card border-none shadow-none">
                                 <CardHeader>
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
                                             <Smartphone className="w-4 h-4 text-primary" />
                                         </div>
-                                        <div className="space-y-1">
-                                            <CardTitle className="text-base text-primary">Test Audience</CardTitle>
-                                            <CardDescription className="text-xs">Manage phone numbers reserved for system testing and quality assurance.</CardDescription>
+                                        <div className="space-y-0.5">
+                                            <CardTitle className="text-base font-bold tracking-tight text-primary">Test Audience</CardTitle>
+                                            <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">Internal QA Node</CardDescription>
                                         </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-3">
                                         <div className="relative flex-1">
-                                            <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40">
+                                                <Plus size={16} />
+                                            </div>
                                             <Input
                                                 placeholder="Enter phone with country code (e.g. +919712340450)"
-                                                className="pl-9 bg-muted/10 h-10 text-xs"
+                                                className="pl-11 bg-background/40 backdrop-blur-sm h-11 text-xs font-medium border-border/20 rounded-xl shadow-inner px-4"
                                                 value={testNumberInput}
                                                 onChange={e => setTestNumberInput(e.target.value)}
                                                 onKeyDown={e => e.key === 'Enter' && handleAddTestNumber()}
                                             />
                                         </div>
-                                        <Button size="sm" onClick={handleAddTestNumber} className="h-10 px-4">Add Number</Button>
+                                        <Button size="sm" onClick={handleAddTestNumber} className="h-11 px-6 rounded-xl font-bold">Add Number</Button>
                                     </div>
 
-                                    <div className="grid gap-2">
+                                    <div className="grid gap-3">
                                         {(metadata.testNumbers || []).map((num) => (
-                                            <div key={num} className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card hover:border-primary/20 transition-all group">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                                                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <div key={num} className="flex items-center justify-between p-4 rounded-xl border border-border/20 bg-background/40 backdrop-blur-sm hover:border-primary/20 transition-all group shadow-sm">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center border border-border/40 shadow-inner">
+                                                        <User className="w-4 h-4 text-muted-foreground/60" />
                                                     </div>
-                                                    <span className="text-sm font-mono">{num}</span>
-                                                    <Badge variant="outline" className="text-[8px] h-4 border-primary/20 text-primary opacity-60">VERIFIED</Badge>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Info className="w-2.5 h-2.5 text-muted-foreground cursor-help" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent className="text-[10px]">
-                                                            Ensure this number is also added to 'Test Numbers' in Meta Dev Console.
-                                                        </TooltipContent>
-                                                    </Tooltip>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-sm font-bold font-mono tracking-tight">{num}</span>
+                                                        <Badge variant="outline" className="text-[8px] font-black tracking-widest h-4 border-primary/20 text-primary bg-primary/5 py-0 px-1.5">VERIFIED</Badge>
+                                                        <Tooltip shrink>
+                                                            <TooltipTrigger asChild>
+                                                                <Info className="w-3 h-3 text-muted-foreground cursor-help opacity-40 hover:opacity-100 transition-opacity" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="text-[10px] rounded-lg p-2 leading-relaxed">
+                                                                Ensure this number is also added to 'Test Numbers' in Meta Dev Console.
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
                                                 </div>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                                                     onClick={() => handleRemoveTestNumber(num)}
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    <Trash2 size={16} />
                                                 </Button>
                                             </div>
                                         ))}
                                         {(metadata.testNumbers || []).length === 0 && (
-                                            <div className="flex flex-col items-center justify-center py-8 text-center space-y-2 bg-muted/5 border border-dashed rounded-lg">
-                                                <Smartphone className="w-8 h-8 text-muted-foreground/20" />
-                                                <p className="text-[10px] text-muted-foreground italic">No test numbers defined yet.</p>
+                                            <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 bg-muted/5 border border-dashed border-border/40 rounded-2xl">
+                                                <div className="p-3 bg-muted/10 rounded-full">
+                                                    <Smartphone className="w-6 h-6 text-muted-foreground/30" />
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest italic">No test numbers defined yet.</p>
                                             </div>
                                         )}
                                     </div>
@@ -684,56 +729,63 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     {/* WEBHOOKS TAB */}
-                    <TabsContent value="webhooks" className="flex-1 space-y-6 outline-none">
+                    <TabsContent value="webhooks" className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
                         <div className="max-w-3xl space-y-6">
-                            <Card className="border-border/40 shadow-none">
+                            <Card className="glass-card border-none shadow-none">
                                 <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <Link className="w-4 h-4 text-primary" />
-                                        <CardTitle className="text-base text-primary">Webhook Configuration</CardTitle>
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                            <Link className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <CardTitle className="text-base font-bold tracking-tight text-primary">Webhook Configuration</CardTitle>
+                                            <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">Event Bridge</CardDescription>
+                                        </div>
                                     </div>
-                                    <CardDescription className="text-xs">Incoming event notification bridge for your external systems.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="space-y-3">
-                                        <Label className="text-xs opacity-70">Webhook Payload URL</Label>
-                                        <div className="flex gap-2">
-                                            <Input readOnly value={webhookUrl} className="bg-muted/30 text-xs font-mono border-border/40" />
-                                            <Button variant="outline" size="icon" className="shrink-0" onClick={() => copyToClipboard(webhookUrl)}>
-                                                <Copy size={14} />
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Webhook Payload URL</Label>
+                                        <div className="flex gap-3">
+                                            <Input readOnly value={webhookUrl} className="bg-background/40 backdrop-blur-sm h-11 text-xs font-mono font-bold border-border/20 rounded-xl shadow-inner px-4 text-primary/80" />
+                                            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 rounded-xl border-border/20 hover:bg-muted/10" onClick={() => copyToClipboard(webhookUrl)}>
+                                                <Copy size={16} />
                                             </Button>
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground">Configure this URL in your Meta Developer Portal Webhooks section.</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium ml-1 flex items-center gap-2">
+                                            <Info size={12} className="text-primary/60" />
+                                            Configure this URL in your Meta Developer Portal Webhooks section.
+                                        </p>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <Label className="text-xs opacity-70">Verify Token</Label>
-                                        <div className="flex gap-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Verify Token</Label>
+                                        <div className="flex gap-3">
                                             <div className="relative flex-1">
                                                 <Input
                                                     type={showWebhookSecret ? "text" : "password"}
                                                     value={metadata.webhookSecret || 'devlomatix_secret'}
                                                     onChange={(e) => setMetadata({ ...metadata, webhookSecret: e.target.value })}
                                                     onBlur={(e) => handleSaveMetadata({ webhookSecret: e.target.value })}
-                                                    className="bg-muted/30 text-xs font-mono border-border/40 pr-10"
+                                                    className="bg-background/40 backdrop-blur-sm h-11 text-xs font-mono font-bold border-border/20 rounded-xl shadow-inner px-4 pr-12"
                                                 />
                                                 <button
                                                     onClick={() => setShowWebhookSecret(!showWebhookSecret)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                                 >
-                                                    {showWebhookSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                    {showWebhookSecret ? <EyeOff size={16} /> : <Eye size={16} />}
                                                 </button>
                                             </div>
-                                            <Button variant="outline" size="icon" className="shrink-0" onClick={() => copyToClipboard(metadata.webhookSecret || 'devlomatix_secret')}>
-                                                <Copy size={14} />
+                                            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 rounded-xl border-border/20 hover:bg-muted/10" onClick={() => copyToClipboard(metadata.webhookSecret || 'devlomatix_secret')}>
+                                                <Copy size={16} />
                                             </Button>
                                         </div>
                                     </div>
 
-                                    <Separator />
+                                    <Separator className="bg-border/20" />
 
-                                    <div className="space-y-4">
-                                        <Label className="text-xs font-semibold">Event Subscriptions</Label>
+                                    <div className="space-y-5">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Event Subscriptions</Label>
                                         <div className="grid grid-cols-2 gap-4">
                                             {[
                                                 { label: 'Message Events', key: 'hook_messages' },
@@ -741,8 +793,8 @@ export default function SettingsPage() {
                                                 { label: 'Delivery Reports', key: 'hook_delivery' },
                                                 { label: 'Error Notifications', key: 'hook_errors' }
                                             ].map((evt) => (
-                                                <div key={evt.key} className="flex items-center justify-between p-3 border rounded-md">
-                                                    <span className="text-[11px] font-medium">{evt.label}</span>
+                                                <div key={evt.key} className="flex items-center justify-between p-4 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm">
+                                                    <span className="text-[11px] font-bold tracking-tight">{evt.label}</span>
                                                     <Switch
                                                         checked={metadata[evt.key] !== false}
                                                         onCheckedChange={(c) => handleSaveMetadata({ [evt.key]: c })}
@@ -757,69 +809,73 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     {/* MESSAGING TAB */}
-                    <TabsContent value="messaging" className="flex-1 space-y-6 outline-none">
+                    <TabsContent value="messaging" className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
                         <div className="max-w-3xl space-y-6">
-                            <Card className="border-border/40 shadow-none">
+                            <Card className="glass-card border-none shadow-none">
                                 <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <Send className="w-4 h-4 text-primary" />
-                                        <CardTitle className="text-base text-primary">Messaging Standards</CardTitle>
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                            <Send className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <CardTitle className="text-base font-bold tracking-tight text-primary">Messaging Standards</CardTitle>
+                                            <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">Engine Preferences</CardDescription>
+                                        </div>
                                     </div>
-                                    <CardDescription className="text-xs">Behavioral rules for outbound communications.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label className="text-xs opacity-70">Message Retention</Label>
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Message Retention</Label>
                                             <Select
                                                 value={metadata.retention || '90'}
                                                 onValueChange={(v) => handleSaveMetadata({ retention: v })}
                                             >
-                                                <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                <SelectTrigger className="h-11 bg-background/40 backdrop-blur-sm text-xs font-bold border-border/20 rounded-xl shadow-inner px-4">
                                                     <SelectValue placeholder="Select period" />
                                                 </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="30">30 Days</SelectItem>
-                                                    <SelectItem value="90">90 Days</SelectItem>
-                                                    <SelectItem value="365">1 Year</SelectItem>
-                                                    <SelectItem value="0">Indefinite</SelectItem>
+                                                <SelectContent className="glass-card border-border/20 rounded-xl">
+                                                    <SelectItem value="30" className="text-xs">30 Days</SelectItem>
+                                                    <SelectItem value="90" className="text-xs">90 Days</SelectItem>
+                                                    <SelectItem value="365" className="text-xs">1 Year</SelectItem>
+                                                    <SelectItem value="0" className="text-xs">Indefinite</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs opacity-70">Media Quality</Label>
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Media Quality</Label>
                                             <Select
                                                 value={metadata.mediaQuality || 'standard'}
                                                 onValueChange={(v) => handleSaveMetadata({ mediaQuality: v })}
                                             >
-                                                <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                <SelectTrigger className="h-11 bg-background/40 backdrop-blur-sm text-xs font-bold border-border/20 rounded-xl shadow-inner px-4">
                                                     <SelectValue placeholder="Select quality" />
                                                 </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="standard">Standard (Comp.)</SelectItem>
-                                                    <SelectItem value="hd">High Definition</SelectItem>
+                                                <SelectContent className="glass-card border-border/20 rounded-xl">
+                                                    <SelectItem value="standard" className="text-xs">Standard (Comp.)</SelectItem>
+                                                    <SelectItem value="hd" className="text-xs">High Definition</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
                                     </div>
 
-                                    <Separator />
+                                    <Separator className="bg-border/20" />
 
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
+                                    <div className="space-y-5">
+                                        <div className="flex items-center justify-between p-4 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm">
                                             <div className="space-y-0.5">
-                                                <Label className="text-xs font-semibold">Auto-Sync Templates</Label>
-                                                <p className="text-[10px] text-muted-foreground">Automatically download Meta templates every hour.</p>
+                                                <Label className="text-xs font-bold tracking-tight">Auto-Sync Templates</Label>
+                                                <p className="text-[10px] text-muted-foreground font-medium">Automatically download Meta templates every hour.</p>
                                             </div>
                                             <Switch
                                                 checked={metadata.autoSyncTemplates || false}
                                                 onCheckedChange={(c) => handleSaveMetadata({ autoSyncTemplates: c })}
                                             />
                                         </div>
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between p-4 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm">
                                             <div className="space-y-0.5">
-                                                <Label className="text-xs font-semibold">Legacy Read Receipts</Label>
-                                                <p className="text-[10px] text-muted-foreground">Simulate blue ticks for incoming browser messages.</p>
+                                                <Label className="text-xs font-bold tracking-tight">Legacy Read Receipts</Label>
+                                                <p className="text-[10px] text-muted-foreground font-medium">Simulate blue ticks for incoming browser messages.</p>
                                             </div>
                                             <Switch
                                                 checked={metadata.readReceipts || false}
@@ -833,24 +889,30 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     {/* NOTIFICATIONS TAB */}
-                    <TabsContent value="notifications" className="flex-1 space-y-6 outline-none">
+                    <TabsContent value="notifications" className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
                         <div className="max-w-3xl space-y-6">
-                            <Card className="border-border/40 shadow-none">
+                            <Card className="glass-card border-none shadow-none">
                                 <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <BellRing className="w-4 h-4 text-primary" />
-                                        <CardTitle className="text-base text-primary">Alert Center</CardTitle>
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                            <BellRing className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <CardTitle className="text-base font-bold tracking-tight text-primary">Alert Center</CardTitle>
+                                            <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">System Stability</CardDescription>
+                                        </div>
                                     </div>
-                                    <CardDescription className="text-xs">Configure how you receive system stability reports.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="space-y-4">
-                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/5">
-                                            <div className="flex items-center gap-3">
-                                                <Mail className="w-4 h-4 text-muted-foreground" />
+                                        <div className="flex items-center justify-between p-5 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center border border-border/40 shadow-inner">
+                                                    <Mail className="w-4 h-4 text-muted-foreground/60" />
+                                                </div>
                                                 <div className="space-y-0.5">
-                                                    <span className="text-xs font-semibold">Disconnect Alerts</span>
-                                                    <p className="text-[10px] text-muted-foreground">Email notification when a session drops unexpectedly.</p>
+                                                    <span className="text-xs font-bold tracking-tight">Disconnect Alerts</span>
+                                                    <p className="text-[10px] text-muted-foreground font-medium">Email notification when a session drops unexpectedly.</p>
                                                 </div>
                                             </div>
                                             <Switch
@@ -859,12 +921,14 @@ export default function SettingsPage() {
                                             />
                                         </div>
 
-                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/5">
-                                            <div className="flex items-center gap-3">
-                                                <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                                        <div className="flex items-center justify-between p-5 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center border border-border/40 shadow-inner">
+                                                    <AlertCircle className="w-4 h-4 text-muted-foreground/60" />
+                                                </div>
                                                 <div className="space-y-0.5">
-                                                    <span className="text-xs font-semibold">Delivery Failures</span>
-                                                    <p className="text-[10px] text-muted-foreground">Alert when a template or broadcast fails to deliver.</p>
+                                                    <span className="text-xs font-bold tracking-tight">Delivery Failures</span>
+                                                    <p className="text-[10px] text-muted-foreground font-medium">Alert when a template or broadcast fails to deliver.</p>
                                                 </div>
                                             </div>
                                             <Switch
@@ -874,11 +938,11 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-70">Admin Alert Email</Label>
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Admin Alert Email</Label>
                                         <Input
                                             placeholder="admin@example.com"
-                                            className="h-9 text-xs bg-muted/10"
+                                            className="h-11 bg-background/40 backdrop-blur-sm text-xs font-bold border-border/20 rounded-xl shadow-inner px-4"
                                             value={metadata.alertEmail || ''}
                                             onChange={(e) => setMetadata({ ...metadata, alertEmail: e.target.value })}
                                             onBlur={(e) => handleSaveMetadata({ alertEmail: e.target.value })}
@@ -890,57 +954,61 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     {/* SECURITY TAB */}
-                    <TabsContent value="security" className="flex-1 space-y-6 outline-none">
+                    <TabsContent value="security" className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
                         <div className="max-w-3xl space-y-6">
-                            <Card className="border-border/40 shadow-none">
+                            <Card className="glass-card border-none shadow-none">
                                 <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <ShieldCheck className="w-4 h-4 text-primary" />
-                                        <CardTitle className="text-base text-primary">Encryption & Governance</CardTitle>
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                            <ShieldCheck className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <CardTitle className="text-base font-bold tracking-tight text-primary">Encryption & Governance</CardTitle>
+                                            <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">Security Manifests</CardDescription>
+                                        </div>
                                     </div>
-                                    <CardDescription className="text-xs">Security manifests and session integrity logs.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-4 border rounded-lg space-y-2">
-                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest">
-                                                <Lock size={12} /> Cipher Status
+                                        <div className="p-5 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm space-y-3">
+                                            <div className="flex items-center gap-3 text-[10px] font-black uppercase text-primary tracking-widest">
+                                                <Lock size={13} className="text-primary/60" /> Cipher Status
                                             </div>
-                                            <p className="text-xs font-bold font-mono">AES-256-GCM</p>
-                                            <p className="text-[9px] text-muted-foreground leading-tight">All session keys are salted and encrypted before DB persistence.</p>
+                                            <p className="text-xs font-black font-mono tracking-tight text-foreground">AES-256-GCM</p>
+                                            <p className="text-[9px] text-muted-foreground font-medium leading-tight opacity-70">All session keys are salted and encrypted before DB persistence.</p>
                                         </div>
-                                        <div className="p-4 border rounded-lg space-y-2">
-                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest">
-                                                <Key size={12} /> Key Rotation
+                                        <div className="p-5 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm space-y-3">
+                                            <div className="flex items-center gap-3 text-[10px] font-black uppercase text-primary tracking-widest">
+                                                <Key size={13} className="text-primary/60" /> Key Rotation
                                             </div>
-                                            <p className="text-xs font-bold font-mono">AUTOMATED</p>
-                                            <p className="text-[9px] text-muted-foreground leading-tight">Rotating 128-bit challenges periodically for browser sessions.</p>
+                                            <p className="text-xs font-black font-mono tracking-tight text-primary">AUTOMATED</p>
+                                            <p className="text-[9px] text-muted-foreground font-medium leading-tight opacity-70">Rotating 128-bit challenges periodically for browser sessions.</p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-muted-foreground opacity-60">
-                                            <History size={12} /> Recent Connection Audit
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3 text-[10px] font-black uppercase text-muted-foreground opacity-60 ml-1">
+                                            <History size={13} /> Recent Connection Audit
                                         </div>
-                                        <div className="space-y-2">
+                                        <div className="space-y-3">
                                             {[
-                                                { event: 'Session Refreshed', status: 'OK', color: 'text-green-500', time: '12m ago' },
-                                                { event: 'Credential Check', status: 'PASS', color: 'text-green-500', time: '4h ago' },
-                                                { event: 'Key Handshake', status: 'SYNC', color: 'text-blue-500', time: 'Yesterday' }
+                                                { event: 'Session Refreshed', status: 'OK', color: 'text-green-500', bg: 'bg-green-500/10', time: '12m ago' },
+                                                { event: 'Credential Check', status: 'PASS', color: 'text-green-500', bg: 'bg-green-500/10', time: '4h ago' },
+                                                { event: 'Key Handshake', status: 'SYNC', color: 'text-blue-500', bg: 'bg-blue-500/10', time: 'Yesterday' }
                                             ].map((log, i) => (
-                                                <div key={i} className="flex items-center justify-between p-3 bg-muted/10 rounded-md border border-border/20">
-                                                    <span className="text-xs">{log.event}</span>
-                                                    <div className="flex items-center gap-3">
-                                                        <span className={`text-[10px] font-black ${log.color}`}>{log.status}</span>
-                                                        <span className="text-[10px] text-muted-foreground font-mono">{log.time}</span>
+                                                <div key={i} className="flex items-center justify-between p-4 bg-background/40 backdrop-blur-sm rounded-xl border border-border/20 shadow-sm">
+                                                    <span className="text-xs font-bold tracking-tight text-foreground">{log.event}</span>
+                                                    <div className="flex items-center gap-4">
+                                                        <Badge variant="outline" className={`text-[9px] font-black tracking-widest h-5 ${log.color} ${log.bg} border-0 px-2`}>{log.status}</Badge>
+                                                        <span className="text-[10px] text-muted-foreground font-black font-mono opacity-50 uppercase tracking-tighter">{log.time}</span>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="pt-0 pb-6 pr-6 justify-end">
-                                    <Button variant="ghost" size="sm" className="text-destructive text-[10px] font-bold uppercase hover:bg-destructive/10">
+                                <CardFooter className="pt-0 pb-8 px-8 justify-end">
+                                    <Button variant="ghost" size="sm" className="text-destructive text-[10px] font-black uppercase tracking-widest hover:bg-destructive/10 rounded-xl px-6">
                                         Revoke All Remote Access
                                     </Button>
                                 </CardFooter>
@@ -949,22 +1017,26 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     {/* GENERAL TAB */}
-                    <TabsContent value="general" className="flex-1 space-y-6 outline-none">
+                    <TabsContent value="general" className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
                         <div className="max-w-3xl space-y-6">
-                            <Card className="border-border/40 shadow-none">
+                            <Card className="glass-card border-none shadow-none">
                                 <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <Database className="w-4 h-4 text-primary" />
-                                        <CardTitle className="text-base text-primary">Core Configuration</CardTitle>
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                            <Database className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <CardTitle className="text-base font-bold tracking-tight text-primary">Core Configuration</CardTitle>
+                                            <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">System Preferences</CardDescription>
+                                        </div>
                                     </div>
-                                    <CardDescription className="text-xs">Primary workspace-level engine preferences.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="grid gap-6">
-                                        <div className="space-y-2">
-                                            <Label className="text-xs opacity-70">Instance Display Name</Label>
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Instance Display Name</Label>
                                             <Input
-                                                className="bg-muted/10"
+                                                className="bg-background/40 backdrop-blur-sm h-11 text-xs font-bold border-border/20 rounded-xl shadow-inner px-4"
                                                 placeholder="e.g. Production Cluster A"
                                                 value={metadata.instanceName || ''}
                                                 onChange={(e) => setMetadata({ ...metadata, instanceName: e.target.value })}
@@ -972,60 +1044,65 @@ export default function SettingsPage() {
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-xs opacity-70">Region / Timezone</Label>
+                                            <div className="space-y-3">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Region / Timezone</Label>
                                                 <Select
                                                     value={metadata.timezone || 'UTC'}
                                                     onValueChange={(v) => handleSaveMetadata({ timezone: v })}
                                                 >
-                                                    <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                    <SelectTrigger className="h-11 bg-background/40 backdrop-blur-sm text-xs font-bold border-border/20 rounded-xl shadow-inner px-4">
                                                         <SelectValue placeholder="Select zone" />
                                                     </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="UTC">UTC (Universal)</SelectItem>
-                                                        <SelectItem value="Asia/Kolkata">IST (Kolkata)</SelectItem>
-                                                        <SelectItem value="America/New_York">EST (New York)</SelectItem>
-                                                        <SelectItem value="Europe/London">GMT (London)</SelectItem>
+                                                    <SelectContent className="glass-card border-border/20 rounded-xl">
+                                                        <SelectItem value="UTC" className="text-xs">UTC (Universal)</SelectItem>
+                                                        <SelectItem value="Asia/Kolkata" className="text-xs">IST (Kolkata)</SelectItem>
+                                                        <SelectItem value="America/New_York" className="text-xs">EST (New York)</SelectItem>
+                                                        <SelectItem value="Europe/London" className="text-xs">GMT (London)</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs opacity-70">System Language</Label>
+                                            <div className="space-y-3">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">System Language</Label>
                                                 <Select
                                                     value={metadata.language || 'en_US'}
                                                     onValueChange={(v) => handleSaveMetadata({ language: v })}
                                                 >
-                                                    <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                    <SelectTrigger className="h-11 bg-background/40 backdrop-blur-sm text-xs font-bold border-border/20 rounded-xl shadow-inner px-4">
                                                         <SelectValue placeholder="Select lang" />
                                                     </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="en_US">English (US)</SelectItem>
-                                                        <SelectItem value="en_GB">English (GB)</SelectItem>
-                                                        <SelectItem value="hi_IN">Hindi (IN)</SelectItem>
-                                                        <SelectItem value="es_ES">Spanish (ES)</SelectItem>
+                                                    <SelectContent className="glass-card border-border/20 rounded-xl">
+                                                        <SelectItem value="en_US" className="text-xs">English (US)</SelectItem>
+                                                        <SelectItem value="en_GB" className="text-xs">English (GB)</SelectItem>
+                                                        <SelectItem value="hi_IN" className="text-xs">Hindi (IN)</SelectItem>
+                                                        <SelectItem value="es_ES" className="text-xs">Spanish (ES)</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <Separator />
+                                    <Separator className="bg-border/20" />
 
-                                    <div className="p-4 bg-muted/10 rounded-lg space-y-3">
-                                        <Label className="text-xs font-semibold">Workspace Signature</Label>
+                                    <div className="p-6 bg-background/40 backdrop-blur-sm rounded-2xl border border-border/20 shadow-sm space-y-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary/10 rounded-lg">
+                                                <MessageSquare size={16} className="text-primary" />
+                                            </div>
+                                            <Label className="text-sm font-bold tracking-tight">Workspace Signature</Label>
+                                        </div>
                                         <Textarea
-                                            className="min-h-[80px] text-xs bg-background"
+                                            className="min-h-[100px] text-xs font-medium bg-background/40 backdrop-blur-sm border-border/20 rounded-xl shadow-inner p-4 leading-relaxed"
                                             placeholder="Sent via Devlomatix WA Engine..."
                                             value={metadata.signature || ''}
                                             onChange={(e) => setMetadata({ ...metadata, signature: e.target.value })}
                                             onBlur={(e) => handleSaveMetadata({ signature: e.target.value })}
                                         />
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
                                             <Switch
                                                 checked={metadata.appendSignature || false}
                                                 onCheckedChange={(c) => handleSaveMetadata({ appendSignature: c })}
                                             />
-                                            <span className="text-[10px] text-muted-foreground font-medium">Prepend to all outbound browser messages</span>
+                                            <span className="text-[10px] text-primary font-black uppercase tracking-widest">Prepend to all outbound browser messages</span>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -1036,35 +1113,40 @@ export default function SettingsPage() {
 
                 {/* MODALS */}
                 <Dialog open={isCredsModalOpen} onOpenChange={setIsCredsModalOpen}>
-                    <DialogContent className="sm:max-w-[450px] bg-card border p-8 rounded-xl shadow-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl tracking-tight">Meta Engine Config</DialogTitle>
-                            <DialogDescription className="text-xs font-medium text-muted-foreground/60 tracking-tight">Enter your official Meta Graph API credentials to link this node.</DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-6 py-8">
-                            <div className="grid gap-2.5">
-                                <Label className="text-muted-foreground/70 ml-1">Account Nickname</Label>
-                                <Input className="bg-black/40 h-12 text-sm font-bold rounded-md px-4 border border-border/40" value={tempCreds.profile} onChange={(e) => setTempCreds({ ...tempCreds, profile: e.target.value })} placeholder="e.g. Sales Primary" />
-                            </div>
-                            <div className="grid gap-2.5">
-                                <Label className="text-muted-foreground/70 ml-1">Phone Number ID</Label>
-                                <Input className="bg-black/40 h-12 text-sm font-bold rounded-md px-4 border border-border/40" value={tempCreds.phoneNumberId} onChange={(e) => setTempCreds({ ...tempCreds, phoneNumberId: e.target.value })} placeholder="10492..." />
-                            </div>
-                            <div className="grid gap-2.5">
-                                <Label className="text-muted-foreground/70 ml-1">Business Account ID</Label>
-                                <Input className="bg-black/40 border-border/40 h-12 text-sm font-bold rounded-md px-4 font-mono" value={tempCreds.wabaId} onChange={(e) => setTempCreds({ ...tempCreds, wabaId: e.target.value })} placeholder="92837..." />
-                            </div>
-                            <div className="grid gap-2.5">
-                                <Label className="text-muted-foreground/70 ml-1">System Access Token</Label>
-                                <Input className="bg-black/40 border-border/40 h-12 text-sm font-bold rounded-md px-4 font-mono" type="password" value={tempCreds.accessToken} onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })} placeholder="EAAG..." />
+                    <DialogContent className="sm:max-w-[480px] bg-background/80 backdrop-blur-xl border-border/20 p-0 rounded-2xl shadow-2xl overflow-hidden glass-card">
+                        <div className="p-8 space-y-8">
+                            <DialogHeader>
+                                <div className="p-3 bg-primary/10 w-fit rounded-2xl mb-4">
+                                    <Cpu className="w-6 h-6 text-primary" />
+                                </div>
+                                <DialogTitle className="text-2xl font-black tracking-tighter">Meta Engine Config</DialogTitle>
+                                <DialogDescription className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">Link your official Meta Node</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-6 py-2">
+                                <div className="grid gap-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 ml-1">Account Nickname</Label>
+                                    <Input className="bg-background/40 backdrop-blur-sm h-12 text-sm font-bold rounded-xl px-4 border-border/20 shadow-inner" value={tempCreds.profile} onChange={(e) => setTempCreds({ ...tempCreds, profile: e.target.value })} placeholder="e.g. Sales Primary" />
+                                </div>
+                                <div className="grid gap-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 ml-1">Phone Number ID</Label>
+                                    <Input className="bg-background/40 backdrop-blur-sm h-12 text-sm font-bold rounded-xl px-4 border-border/20 shadow-inner" value={tempCreds.phoneNumberId} onChange={(e) => setTempCreds({ ...tempCreds, phoneNumberId: e.target.value })} placeholder="10492..." />
+                                </div>
+                                <div className="grid gap-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 ml-1">Business Account ID</Label>
+                                    <Input className="bg-background/40 backdrop-blur-sm h-12 text-sm font-bold rounded-xl px-4 border-border/20 shadow-inner font-mono" value={tempCreds.wabaId} onChange={(e) => setTempCreds({ ...tempCreds, wabaId: e.target.value })} placeholder="92837..." />
+                                </div>
+                                <div className="grid gap-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 ml-1">System Access Token</Label>
+                                    <Input className="bg-background/40 backdrop-blur-sm h-12 text-sm font-bold rounded-xl px-4 border-border/20 shadow-inner font-mono" type="password" value={tempCreds.accessToken} onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })} placeholder="EAAG..." />
+                                </div>
                             </div>
                         </div>
-                        <DialogFooter className="gap-4">
-                            <Button variant="ghost" className="font-bold text-xs h-12 rounded-xl" onClick={() => setIsCredsModalOpen(false)}>Cancel</Button>
-                            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] tracking-widest h-12 px-8 rounded-xl shadow-lg shadow-primary/20 flex-1" onClick={handleSaveCloudCreds} disabled={cloudLoading}>
-                                {cloudLoading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : (tempCreds.id ? 'Save Updates' : 'Activate Node')}
+                        <div className="p-6 bg-muted/5 border-t border-border/20 flex items-center justify-between gap-4">
+                            <Button variant="ghost" className="font-black text-[10px] uppercase tracking-widest h-12 rounded-xl px-6 hover:bg-muted/10" onClick={() => setIsCredsModalOpen(false)}>Cancel Action</Button>
+                            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest h-12 px-10 rounded-xl shadow-lg shadow-primary/20 flex-1" onClick={handleSaveCloudCreds} disabled={cloudLoading}>
+                                {cloudLoading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : (tempCreds.id ? 'Push Updates' : 'Activate Node')}
                             </Button>
-                        </DialogFooter>
+                        </div>
                     </DialogContent>
                 </Dialog>
 
