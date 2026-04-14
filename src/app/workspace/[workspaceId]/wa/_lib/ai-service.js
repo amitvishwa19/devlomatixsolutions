@@ -152,6 +152,48 @@ export class WhatsAppAIService {
             console.error("[WA_AI] Translation Error:", error);
             return text; // Fallback to original
         }
+    /**
+     * Generate 3 suggested replies based on conversation history.
+     */
+    async generateReplySuggestions(messages) {
+        try {
+            const model = this.genAI.getGenerativeModel({ 
+                model: "gemini-1.5-flash",
+                generationConfig: { responseMimeType: "application/json" }
+            });
+
+            // Format history for context
+            const history = messages
+                .slice(-10) // Take last 10 messages
+                .map(m => `${m.fromMe ? 'YOU' : 'CUSTOMER'}: ${m.text}`)
+                .join('\n');
+
+            const prompt = `
+                You are a helpful business customer support agent.
+                Based on the following conversation history, generate exactly 3 short, professional, and helpful reply suggestions.
+                Keep them concise and ready to send.
+
+                CONVERSATION HISTORY:
+                ---
+                ${history}
+                ---
+
+                RETURN A JSON OBJECT WITH THE FOLLOWING STRUCTURE:
+                {
+                    "suggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"]
+                }
+            `;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            
+            const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(cleanJson);
+        } catch (error) {
+            console.error("[WA_AI] Reply Suggestion Error:", error);
+            return { suggestions: ["How can I help you today?", "Please share more details.", "I will get back to you."] };
+        }
     }
 }
 

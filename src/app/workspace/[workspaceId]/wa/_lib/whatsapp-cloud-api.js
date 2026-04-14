@@ -60,7 +60,7 @@ async function metaPost(credentials, endpoint, payload) {
  * 1. Connection & Identity
  * Verifies if the token and Phone ID are valid.
  */
-export async function testCloudConnection(credentials) {
+async function testCloudConnection(credentials) {
     const { accessToken, phoneNumberId } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
     const url = `${BASE_URL}/${version}/${phoneNumberId}?fields=display_phone_number,verified_name`;
@@ -87,7 +87,7 @@ export async function testCloudConnection(credentials) {
 /**
  * 2. Message Dispatch (Text)
  */
-export async function sendTextMessage(credentials, to, body) {
+async function sendTextMessage(credentials, to, body) {
     return metaPost(credentials, 'messages', {
         to: to,
         type: "text",
@@ -98,7 +98,7 @@ export async function sendTextMessage(credentials, to, body) {
 /**
  * 3. Message Dispatch (Template)
  */
-export async function sendTemplateMessage(credentials, to, templateName, languageCode = 'en_US', components = []) {
+async function sendTemplateMessage(credentials, to, templateName, languageCode = 'en_US', components = []) {
     return metaPost(credentials, 'messages', {
         to: to,
         type: "template",
@@ -114,7 +114,7 @@ export async function sendTemplateMessage(credentials, to, templateName, languag
  * 4. Template Management
  * Fetches the list of message templates from the Business Account (WABA).
  */
-export async function fetchTemplates(credentials) {
+async function fetchTemplates(credentials) {
     const { accessToken, wabaId } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
 
@@ -139,7 +139,7 @@ export async function fetchTemplates(credentials) {
 /**
  * 5. Webhook Validation (Handshake)
  */
-export function verifyWebhook(query, hubVerifyToken) {
+function verifyWebhook(query, hubVerifyToken) {
     const mode = query['hub.mode'];
     const token = query['hub.verify_token'];
     const challenge = query['hub.challenge'];
@@ -154,7 +154,7 @@ export function verifyWebhook(query, hubVerifyToken) {
  * 6. Webhook Parsing (Normalization)
  * Converts Meta's complex nested payload into a clean flat object.
  */
-export function parseIncomingMessage(body) {
+function parseIncomingMessage(body) {
     try {
         const entry = body.entry?.[0];
         const changes = entry?.changes?.[0];
@@ -193,7 +193,7 @@ export function parseIncomingMessage(body) {
  * 7. Message Dispatch (Media)
  * Supports image, video, audio, document
  */
-export async function sendMediaMessage(credentials, to, type, mediaUrl, caption = "") {
+async function sendMediaMessage(credentials, to, type, mediaUrl, caption = "") {
     const mediaPayload = { link: mediaUrl };
     if (caption && (type === 'image' || type === 'video' || type === 'document')) {
         mediaPayload.caption = caption;
@@ -209,7 +209,7 @@ export async function sendMediaMessage(credentials, to, type, mediaUrl, caption 
 /**
  * 8. Message Dispatch (Location)
  */
-export async function sendLocationMessage(credentials, to, latitude, longitude, name, address) {
+async function sendLocationMessage(credentials, to, latitude, longitude, name, address) {
     return metaPost(credentials, 'messages', {
         to: to,
         type: "location",
@@ -226,10 +226,47 @@ export async function sendLocationMessage(credentials, to, latitude, longitude, 
  * 9. Message Dispatch (Interactive)
  * Supports buttons, lists
  */
-export async function sendInteractiveMessage(credentials, to, interactive) {
+async function sendInteractiveMessage(credentials, to, interactive) {
     return metaPost(credentials, 'messages', {
         to: to,
         type: "interactive",
         interactive: interactive
     });
 }
+
+/**
+ * 10. Fetch Media URL
+ * Converts a Meta media_id into a downloadable URL.
+ */
+const getMediaUrl = async (credentials, mediaId) => {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${mediaId}`;
+
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+
+        if (data?.url) {
+            return { success: true, data: data.url };
+        }
+        return { success: false, error: data.error?.message || 'Failed to fetch media URL' };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
+export {
+    testCloudConnection,
+    sendTextMessage,
+    sendTemplateMessage,
+    fetchTemplates,
+    verifyWebhook,
+    parseIncomingMessage,
+    sendMediaMessage,
+    sendLocationMessage,
+    sendInteractiveMessage,
+    getMediaUrl
+};

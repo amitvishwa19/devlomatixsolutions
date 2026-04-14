@@ -16,7 +16,8 @@ import {
     MessageSquare,
     Loader2,
     ArrowLeft,
-    Eye
+    Eye,
+    Sparkles
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "react-hot-toast";
@@ -30,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ChatTemplatePreview from "./_components/ChatTemplatePreview";
 import TemplateMessage from "./_components/TemplateMessage";
+import MediaBubble from "./_components/MediaBubble";
 import { Users } from "lucide-react";
 
 // Message Status Indicator Component
@@ -61,6 +63,8 @@ export default function WhatsAppChatsPage() {
     const [templates, setTemplates] = useState([]);
     const [previewTemplate, setPreviewTemplate] = useState(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [aiSuggestions, setAiSuggestions] = useState([]);
+    const [isAiLoading, setIsAiLoading] = useState(false);
 
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
@@ -256,6 +260,33 @@ export default function WhatsAppChatsPage() {
         } finally {
             setIsSending(false);
         }
+    };
+
+    const handleGetAiSuggestions = async () => {
+        if (!selectedChat || selectedChat.messages.length === 0) return;
+        setIsAiLoading(true);
+        try {
+            const res = await fetch('/api/wa/ai-suggest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: selectedChat.messages.slice(-10) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setAiSuggestions(data.suggestions);
+            } else {
+                toast.error("Failed to get AI suggestions");
+            }
+        } catch (error) {
+            console.error("AI Suggest Error:", error);
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
+
+    const handleApplySuggestion = (text) => {
+        setNewMessage(text);
+        setAiSuggestions([]);
     };
 
     const handleTemplateClick = (msg) => {
@@ -495,6 +526,8 @@ export default function WhatsAppChatsPage() {
                                     ) : (
                                         selectedChat.messages.slice().reverse().map((msg, i) => {
                                             const isTemplate = msg.metadata?.type === 'template';
+                                            const type = msg.metadata?.type?.toLowerCase() || 'text';
+                                            const isMedia = ['image', 'video', 'audio', 'document'].includes(type);
                                             const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
                                             const templateDef = isTemplate ? templates.find(t => t.templateName === templateName || t.name === templateName) : null;
 
@@ -513,6 +546,13 @@ export default function WhatsAppChatsPage() {
                                                                     msg={msg} 
                                                                     templateDefinition={templateDef} 
                                                                 />
+                                                            </div>
+                                                        ) : isMedia ? (
+                                                            <div className={`relative px-1 py-1 rounded-2xl shadow-sm text-sm transition-all duration-200 ${msg.fromMe
+                                                                ? 'bg-primary/5 border border-primary/20 rounded-tr-none'
+                                                                : 'bg-card border border-border/50 rounded-tl-none'
+                                                                }`}>
+                                                                <MediaBubble msg={msg} />
                                                             </div>
                                                         ) : (
                                                             <div
@@ -555,20 +595,56 @@ export default function WhatsAppChatsPage() {
                                     <Paperclip className="w-5 h-5" />
                                 </Button>
 
-                                <form onSubmit={handleSendMessage} className="flex-1 flex gap-3">
-                                    <Input
-                                        className="bg-background/50 border-border/30 h-10 rounded-full px-4 text-xs focus-visible:ring-primary/20"
-                                        placeholder="Type a message..."
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                    />
-                                    <Button
-                                        type="submit"
-                                        disabled={!newMessage.trim() || isSending}
-                                        className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
-                                    >
-                                        {isSending ? <Loader2 className="w-4 h-4 animate-spin font-bold" /> : <Send className="w-4 h-4" />}
-                                    </Button>
+                                <form onSubmit={handleSendMessage} className="flex-1 flex flex-col gap-2">
+                                    {/* AI Suggestions Chips */}
+                                    {aiSuggestions.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mb-1 animate-in slide-in-from-bottom-2 duration-300">
+                                            {aiSuggestions.map((s, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => handleApplySuggestion(s)}
+                                                    className="bg-primary/10 hover:bg-primary/20 text-primary text-[10px] px-2.5 py-1 rounded-full border border-primary/20 transition-colors max-w-[200px] truncate"
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setAiSuggestions([])}
+                                                className="text-[10px] text-muted-foreground hover:text-foreground px-2"
+                                            >
+                                                Clear
+                                            </button>
+                                        </div>
+                                    )}
+                                    <div className="flex gap-3 items-center">
+                                        <div className="flex-1 relative">
+                                            <Input
+                                                className="bg-background/50 border-border/30 h-10 rounded-full px-4 text-xs focus-visible:ring-primary/20 w-full"
+                                                placeholder="Type a message..."
+                                                value={newMessage}
+                                                onChange={(e) => setNewMessage(e.target.value)}
+                                            />
+                                            <Button
+                                                type="button"
+                                                onClick={handleGetAiSuggestions}
+                                                disabled={isAiLoading || !selectedChat}
+                                                variant="ghost"
+                                                size="icon"
+                                                className="absolute right-1 top-1 w-8 h-8 rounded-full text-primary hover:bg-primary/10"
+                                            >
+                                                {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                            </Button>
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            disabled={!newMessage.trim() || isSending}
+                                            className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
+                                        >
+                                            {isSending ? <Loader2 className="w-4 h-4 animate-spin font-bold" /> : <Send className="w-4 h-4" />}
+                                        </Button>
+                                    </div>
                                 </form>
                             </div>
                         </>

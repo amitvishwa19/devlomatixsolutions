@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
+import { getMediaUrl } from "@/app/workspace/[workspaceId]/wa/_lib/whatsapp-cloud-api";
 
 // The VERIFY_TOKEN is now strictly tied to the ENCRYPTION_KEY environment variable
 const VERIFY_TOKEN = process.env.ENCRYPTION_KEY;
@@ -156,6 +157,31 @@ export async function POST(req) {
                         case "audio":
                         case "document":
                             textBody = `[${message.type.toUpperCase()}] ${message[message.type]?.caption || ""}`;
+                            // Try to get actual media URL from Meta
+                            try {
+                                const mediaId = message[message.type]?.id;
+                                if (mediaId) {
+                                    // Extract credentials from targetCred for getMediaUrl
+                                    let cloudCreds = null;
+                                    const stored = targetCred.credentials;
+                                    if (typeof stored === 'string' && stored.includes(':')) {
+                                        cloudCreds = JSON.parse(symmetricDecrypt(stored));
+                                    } else if (typeof stored === 'string') {
+                                        cloudCreds = JSON.parse(stored);
+                                    } else { cloudCreds = stored; }
+                                    
+                                    if (cloudCreds?.enc) {
+                                        cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
+                                    }
+
+                                    const urlRes = await getMediaUrl(cloudCreds, mediaId);
+                                    if (urlRes.success) {
+                                        message[message.type].url = urlRes.data;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('[Webhook] Media URL fetch error:', e);
+                            }
                             break;
                         case "location":
                             textBody = `📍 [Location Shared] ${message.location?.name || `${message.location?.latitude}, ${message.location?.longitude}`}`;
@@ -223,6 +249,11 @@ export async function POST(req) {
                             timestamp: BigInt(timestamp),
                             status: "RECEIVED",
                             metadata: {
+                                type: message.type,
+                                mediaUrl: message[message.type]?.url,
+                                caption: message[message.type]?.caption,
+                                fileName: message[message.type]?.filename,
+                                mimetype: message[message.type]?.mime_type,
                                 raw: message,
                                 phone_number_id: phoneNumberId
                             }
