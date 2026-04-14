@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
 
-// This is the token you will enter in the Meta Developer Dashboard
-const VERIFY_TOKEN = "HEALTHYFINE_WA_WEBHOOK_SECRET";
+// The VERIFY_TOKEN is now strictly tied to the ENCRYPTION_KEY environment variable
+const VERIFY_TOKEN = process.env.ENCRYPTION_KEY;
 
 /**
  * GET Handler: Handshake for Meta Webhook Verification
@@ -15,10 +15,10 @@ export async function GET(req) {
         const token = searchParams.get("hub.verify_token");
         const challenge = searchParams.get("hub.challenge");
 
-        console.log(`🔍 [Webhook] Verification Handshake:`, { mode, token, challenge });
+        console.log(`🔍 [Webhook] Handshake Request:`, { mode, token });
 
         if (mode === "subscribe" && token === VERIFY_TOKEN) {
-            console.log("✅ [Webhook] Token Match! Responding with challenge...");
+            console.log("✅ [Webhook] Token verified! Responding with challenge.");
             return new Response(challenge, {
                 status: 200,
                 headers: { 'Content-Type': 'text/plain' }
@@ -133,6 +133,10 @@ export async function POST(req) {
                 // 2. Loop through all messages in the payload
                 for (const message of messages) {
                     const from = message.from;
+                    // Normalize JID: Ensure no '+' or spaces, and append @s.whatsapp.net
+                    const cleanPhone = from.replace(/\D/g, '');
+                    const contactJid = `${cleanPhone}@s.whatsapp.net`;
+                    
                     const msgId = message.id;
                     const timestamp = message.timestamp;
 
@@ -213,7 +217,7 @@ export async function POST(req) {
                         data: {
                             userId,
                             waId: msgId,
-                            jid: from,
+                            jid: contactJid,
                             text: textBody,
                             fromMe: false,
                             timestamp: BigInt(timestamp),

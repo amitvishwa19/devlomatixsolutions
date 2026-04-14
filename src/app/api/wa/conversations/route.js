@@ -88,10 +88,14 @@ export async function GET(req) {
         // 2. Group by JID to create conversation list
         const conversationsMap = {};
         messages.forEach(msg => {
-            if (!conversationsMap[msg.jid]) {
-                conversationsMap[msg.jid] = {
-                    jid: msg.jid,
-                    name: contactMap[msg.jid] || null, // Resolve name if contact exists
+            // Normalize JID on-the-fly to consolidate legacy formats (+91..., 91...)
+            const normalizedJid = msg.jid.replace(/\D/g, '').split('@')[0] + "@s.whatsapp.net";
+
+            if (!conversationsMap[normalizedJid]) {
+                const cleanPhone = normalizedJid.split('@')[0];
+                conversationsMap[normalizedJid] = {
+                    jid: normalizedJid,
+                    name: contactMap[cleanPhone] || null,
                     lastMessage: msg.text,
                     timestamp: Number(msg.timestamp),
                     fromMe: msg.fromMe,
@@ -99,9 +103,10 @@ export async function GET(req) {
                     messages: []
                 };
             }
-            // Add message to conversation (we'll only return a few for the sidebar preview)
-            conversationsMap[msg.jid].messages.push({
+            // Add message to conversation
+            conversationsMap[normalizedJid].messages.push({
                 ...msg,
+                jid: normalizedJid, // Ensure internal jid is also normalized
                 timestamp: Number(msg.timestamp)
             });
         });
