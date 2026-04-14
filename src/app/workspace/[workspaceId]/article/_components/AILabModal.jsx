@@ -13,7 +13,7 @@ import { ContentRewriter } from './ContentRewriter';
 import { ContentCalendar } from './ContentCalendar';
 import { ApiDocs } from './ApiDocs';
 import { AiAnalytics } from './AiAnalytics';
-import { ContentGenerator } from './ContentGenaroter';
+import { ContentGenerator } from './ContentGenerator';
 
 
 // ---------------------------------------------------------

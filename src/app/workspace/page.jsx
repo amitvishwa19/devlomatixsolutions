@@ -8,12 +8,10 @@ import WorkspaceLoader from "./_components/WorkspaceLoader";
 export default async function WorkspacePage() {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.userId) {
+    if (!session) {
         redirect("/login");
     }
 
-
-    console.log('session workspace', session)
 
     let server;
 

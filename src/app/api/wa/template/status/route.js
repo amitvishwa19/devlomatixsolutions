@@ -46,13 +46,35 @@ export async function GET(req) {
         }
 
         // Standardize and decrypt credentials
-        let cloudCreds = typeof credential.credentials === 'string'
-            ? JSON.parse(credential.credentials)
-            : credential.credentials;
+        let cloudCreds = null;
+        const stored = credential.credentials;
 
+        if (typeof stored === 'string' && stored.includes(':')) {
+            try {
+                const decryptedStr = symmetricDecrypt(stored);
+                cloudCreds = JSON.parse(decryptedStr);
+            } catch (e) {
+                console.error(`[Template Status] Decryption failed!`, e);
+                return NextResponse.json({ error: "Failed to decrypt WhatsApp credentials." }, { status: 500 });
+            }
+        } else if (typeof stored === 'string') {
+            try {
+                cloudCreds = JSON.parse(stored);
+            } catch (e) {
+                return NextResponse.json({ error: "Invalid credentials format." }, { status: 500 });
+            }
+        } else {
+            cloudCreds = stored;
+        }
+
+        // Handle Legacy Object Wrapping
         if (cloudCreds?.enc) {
-            const decrypted = symmetricDecrypt(cloudCreds.enc);
-            cloudCreds = JSON.parse(decrypted);
+            try {
+                const decryptedStr = symmetricDecrypt(cloudCreds.enc);
+                cloudCreds = JSON.parse(decryptedStr);
+            } catch (e) {
+                console.error(`[Template Status] legacy Decryption failed!`, e);
+            }
         }
 
         // 3. Fetch status from Meta

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssTypography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -79,6 +80,28 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "n8n-success": "hsl(var(--n8n-success))",
+        "n8n-warning": "hsl(var(--n8n-warning))",
+        "n8n-sidebar": {
+          bg: "hsl(var(--n8n-sidebar-bg))",
+          fg: "hsl(var(--n8n-sidebar-fg))",
+          active: "hsl(var(--n8n-sidebar-active))",
+          hover: "hsl(var(--n8n-sidebar-hover))",
+        },
+        "n8n-canvas": {
+          bg: "hsl(var(--n8n-canvas-bg))",
+          dot: "hsl(var(--n8n-canvas-dot))",
+        },
+        "n8n-node": {
+          bg: "hsl(var(--n8n-node-bg))",
+          border: "hsl(var(--n8n-node-border))",
+          shadow: "hsl(var(--n8n-node-shadow))",
+        },
+        "n8n-header": {
+          bg: "hsl(var(--n8n-header-bg))",
+          border: "hsl(var(--n8n-header-border))",
+        },
+        "n8n-connection": "hsl(var(--n8n-connection))",
       },
       keyframes: {
         "accordion-down": {
@@ -113,5 +136,5 @@ export default {
       }
     }
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [tailwindcssAnimate, tailwindcssTypography],
 }

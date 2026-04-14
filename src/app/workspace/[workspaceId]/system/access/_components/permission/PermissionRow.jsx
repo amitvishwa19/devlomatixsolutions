@@ -62,7 +62,7 @@ export const PermissionRow = ({
  style={{ backgroundColor: getColor() }}
  />
  <div className="flex flex-col flex-1 min-w-0">
- <p className="font-medium text-xs flex items-center gap-2">
+  <div className="font-medium text-xs flex items-center gap-2">
  {module.displayName}
  <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
  <Tooltip>
@@ -92,7 +92,7 @@ export const PermissionRow = ({
  <TooltipContent>Disable all in {module.displayName}</TooltipContent>
  </Tooltip>
  </div>
- </p>
+  </div>
  <p className="text-xs text-muted-foreground font-mono">{module.category}</p>
  </div>
  <HoverCard>

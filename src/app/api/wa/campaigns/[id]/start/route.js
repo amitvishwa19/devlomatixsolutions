@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authOptions } from '../../../../auth/[...nextauth]/options';
 import { getServerSession } from "next-auth/next";
-import { campaignEngine } from '@/lib/campaign-engine';
+import { campaignEngine } from '@/app/workspace/[workspaceId]/wa/_lib/campaign-engine';
 
 export async function POST(request, { params }) {
     try {

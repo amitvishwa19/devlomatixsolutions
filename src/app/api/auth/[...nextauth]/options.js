@@ -135,33 +135,40 @@ export const authOptions = {
             return true
         },
 
-        async session({ session, token, trigger, }) {
-
-            if (!token?.email) return session;
-
-            const usr = await db.user.findUnique({
-                where: { email: token.email },
-                include: {
-                    roles: {
-                        include: {
-                            permissions: true,
-                        },
-                    },
-                },
-            });
-
-            session.user.userId = usr.id;
-            session.user.displayName = usr.displayName;
-            session.user.avatar = usr.avatar;
-            session.user.role = usr.role;
-            session.user.roles = usr.roles;
-
-
-
+        async session({ session, token }) {
+            if (token) {
+                session.user.userId = token.userId;
+                session.user.displayName = token.displayName;
+                session.user.avatar = token.avatar;
+                session.user.role = token.role;
+                session.user.roles = token.roles;
+            }
             return session
         },
 
-        async jwt({ token, user, account, profile, isNewUser }) {
+        async jwt({ token, user, trigger, session }) {
+            if (user) {
+                token.userId = user.id;
+                token.role = user.role;
+            }
+
+            // Fetch roles and extra info if not in token or on sign in
+            if (!token.roles || trigger === "signIn") {
+                const usr = await db.user.findUnique({
+                    where: { email: token.email },
+                    include: {
+                        roles: true
+                    }
+                });
+
+                if (usr) {
+                    token.userId = usr.id;
+                    token.displayName = usr.displayName;
+                    token.avatar = usr.avatar;
+                    token.role = usr.role;
+                    token.roles = usr.roles;
+                }
+            }
 
             return token
         }

@@ -4,29 +4,26 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
+import crypto from 'node:crypto';
 
 export async function POST(req, { params }) {
+    let workspaceId = null;
     try {
-        const { workspaceId } = await params;
+        const resolvedParams = await params;
+        workspaceId = resolvedParams.workspaceId;
+
         const session = await getServerSession(authOptions);
         const body = await req.json();
         const { prompt, mode, context } = body;
-
-        await logger.info(`AI Content Request: ${mode}`, {
-            workspaceId,
-            userId: session?.user?.userId,
-            type: 'AI',
-            details: { mode, promptLength: prompt?.length }
-        });
 
         if (!prompt && mode !== 'TAGS') {
             return NextResponse.json({ message: "Prompt is required" }, { status: 400 });
         }
 
         let apiKey = null;
-        let aiModel = "gemini-1.5-flash";
+        let aiModel = null;
 
-        // Fetch user's registered Gemini credential from DB
+        // 1. Fetch user's registered Gemini credential from DB
         if (session?.user?.userId) {
             const credential = await db.credentials.findFirst({
                 where: {
@@ -39,13 +36,12 @@ export async function POST(req, { params }) {
 
             if (credential && credential.credentials) {
                 let data = credential.credentials;
-                
+
                 // Decrypt if necessary
                 if (data.enc && typeof data.enc === 'string') {
                     const encKey = process.env.ENCRYPTION_KEY;
                     if (encKey) {
                         try {
-                            const crypto = require('crypto');
                             const parts = data.enc.split(':');
                             const ivBuffer = Buffer.from(parts[0], 'hex');
                             const encText = Buffer.from(parts.slice(1).join(':'), 'hex');
@@ -60,11 +56,8 @@ export async function POST(req, { params }) {
                 }
 
                 apiKey = data.apiKey || data['api-key'] || data.api_key;
-                if (data.model) {
-                    aiModel = data.model;
-                }
+                aiModel = data.model; // Strictly use the model from DB
                 
-                // Final safety strip to handle any mistakenly pasted prefixes
                 if (apiKey) {
                     apiKey = apiKey.replace(/['"]/g, '').trim();
                     if (apiKey.includes('=')) {
@@ -74,24 +67,18 @@ export async function POST(req, { params }) {
             }
         }
 
-        // Fallback to env only if DB query failed or returned nothing
+        // 2. Fallback to system env ONLY if no credential was found at all
         if (!apiKey) {
             apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMENI_API_KEY;
         }
         
+        const targetModel = aiModel || "gemini-1.5-flash";
+        
         if (!apiKey) {
-            console.error("[AI_GENERATE] No API key found in environment variables");
             return NextResponse.json({ message: "Gemini API key not configured" }, { status: 500 });
         }
-        
-        console.log(`[AI_GENERATE] Gemini request initiated using ${aiModel}...`);
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-            model: aiModel,
-            // Higher safety settings for public use if needed
-        });
-
+        // --- Model Preparation ---
         let systemPrompt = "";
         let finalPrompt = "";
 
@@ -129,22 +116,108 @@ export async function POST(req, { params }) {
                 break;
         }
 
-        const chat = model.startChat({
-            history: [
-                {
-                    role: "user",
-                    parts: [{ text: systemPrompt }],
-                },
-                {
-                    role: "model",
-                    parts: [{ text: "Understood. Please provide the details." }],
-                },
-            ],
-        });
+        const combinedPrompt = `${systemPrompt}\n\n${finalPrompt}`;
 
-        const result = await chat.sendMessage(finalPrompt);
-        const responseText = result.response.text();
+        // --- Generation Execution ---
+        let responseText = "";
+        let success = false;
+        let lastGenerationError = null;
+        let isQuotaError = false;
 
+        // Direct Fetch Fallback Helper (Bypasses SDK initialization issues)
+        const callDirectGeminiV1 = async (modelName, key, fullPrompt) => {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+            });
+            const resData = await response.json();
+            if (!response.ok) {
+                const errorMsg = resData.error?.message || `HTTP ${response.status}`;
+                if (resData.error?.status === 'RESOURCE_EXHAUSTED' || errorMsg.toLowerCase().includes('quota')) {
+                    isQuotaError = true;
+                }
+                throw new Error(errorMsg);
+            }
+            return resData.candidates?.[0]?.content?.parts?.[0]?.text;
+        };
+
+        try {
+            console.log(`[AI_GENERATE] Strictly utilizing model: ${targetModel}`);
+            try {
+                // Try SDK first
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: targetModel });
+                const result = await model.generateContent(combinedPrompt);
+                const sdkRes = await result.response;
+                responseText = sdkRes.text();
+            } catch (sdkErr) {
+                // Detect quota error in SDK
+                if (sdkErr.message?.toLowerCase().includes('quota') || sdkErr.message?.includes('429')) {
+                    isQuotaError = true;
+                }
+                // Try Direct API fallback (same model)
+                console.log(`[AI_GENERATE] SDK err, trying direct hit for ${targetModel}...`);
+                responseText = await callDirectGeminiV1(targetModel, apiKey, combinedPrompt);
+            }
+
+            if (responseText) {
+                success = true;
+            }
+        } catch (err) {
+            lastGenerationError = err.message;
+            if (lastGenerationError.toLowerCase().includes('quota') || lastGenerationError.includes('429')) {
+                isQuotaError = true;
+            }
+            console.error(`[AI_GENERATE] Execution failed:`, lastGenerationError);
+        }
+
+        // --- Post-Generation Usage Tracking ---
+        if (session?.user?.userId) {
+            try {
+                // Find the credential again to update usage (safest way to handle JSON merge)
+                const cred = await db.credentials.findFirst({
+                    where: { userId: session.user.userId, platform: 'GEMINI', status: 'connected' },
+                    orderBy: { createdAt: 'desc' }
+                });
+
+                if (cred) {
+                    let credJson = typeof cred.credentials === 'string' ? JSON.parse(cred.credentials) : (cred.credentials || {});
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    if (!credJson.usage) credJson.usage = { dailyCount: 0, lastReset: today, quotaReached: false };
+                    
+                    // Reset if new day
+                    if (credJson.usage.lastReset !== today) {
+                        credJson.usage.dailyCount = 0;
+                        credJson.usage.lastReset = today;
+                        credJson.usage.quotaReached = false;
+                    }
+
+                    if (success) {
+                        credJson.usage.dailyCount = (credJson.usage.dailyCount || 0) + 1;
+                        credJson.usage.quotaReached = false; // Reset if it was previously flagged but now succeeds
+                    } else if (isQuotaError) {
+                        credJson.usage.quotaReached = true;
+                    }
+
+                    await db.credentials.update({
+                        where: { id: cred.id },
+                        data: { credentials: credJson }
+                    });
+                }
+            } catch (uErr) {
+                console.error("[USAGE_TRACK_ERR]", uErr.message);
+            }
+        }
+
+        if (!success) {
+            const errorMsg = isQuotaError ? `API Quota Exceeded: Your Gemini daily limit has been reached. ${lastGenerationError}` : (lastGenerationError || `AI model ${targetModel} failed to respond`);
+            throw new Error(errorMsg);
+        }
+
+        // --- Response Formatting ---
         if (mode === 'GENERATE') {
             const titleMatch = responseText.match(/TITLE:\s*(.*)/i);
             const contentMatch = responseText.match(/CONTENT:\s*([\s\S]*)/i);
@@ -162,7 +235,6 @@ export async function POST(req, { params }) {
 
         if (mode === 'SEO') {
             try {
-                // Remove any markdown code block formatting if present
                 const cleanJson = responseText.replace(/```json|```/g, '').trim();
                 const seoData = JSON.parse(cleanJson);
                 return NextResponse.json(seoData);
@@ -175,11 +247,13 @@ export async function POST(req, { params }) {
         return NextResponse.json({ content: responseText });
 
     } catch (error) {
-        await logger.error(`AI Generation Failed: ${error.message}`, {
-            workspaceId,
-            type: 'AI',
-            details: { stack: error.stack, error }
-        });
+        if (workspaceId) {
+            await logger.error(`AI Generation Failed: ${error.message}`, {
+                workspaceId,
+                type: 'AI',
+                details: { stack: error.stack, error }
+            });
+        }
         console.error("[AI_GENERATE_ERROR]", error);
         return NextResponse.json({ message: error.message || "Failed to generate content" }, { status: 500 });
     }

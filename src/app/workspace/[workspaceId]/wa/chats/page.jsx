@@ -15,7 +15,8 @@ import {
     User,
     MessageSquare,
     Loader2,
-    ArrowLeft
+    ArrowLeft,
+    Eye
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "react-hot-toast";
@@ -26,6 +27,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ChatTemplatePreview from "./_components/ChatTemplatePreview";
 
 // Message Status Indicator Component
 const MessageStatus = ({ status }) => {
@@ -51,6 +53,9 @@ export default function WhatsAppChatsPage() {
     const [isSending, setIsSending] = useState(false);
     const [newMessage, setNewMessage] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const [templates, setTemplates] = useState([]);
+    const [previewTemplate, setPreviewTemplate] = useState(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     
     const scrollRef = useRef(null);
 
@@ -81,8 +86,21 @@ export default function WhatsAppChatsPage() {
         }
     };
 
+    const fetchTemplates = async () => {
+        try {
+            const res = await fetch(`/api/wa/templates`);
+            const data = await res.json();
+            if (data.success) {
+                setTemplates(data.templates || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch templates:", error);
+        }
+    };
+
     useEffect(() => {
         fetchConversations();
+        fetchTemplates();
         // Polling every 5 seconds for real-time status updates
         const interval = setInterval(fetchConversations, 5000);
         return () => clearInterval(interval);
@@ -122,6 +140,24 @@ export default function WhatsAppChatsPage() {
             toast.error("Error sending message");
         } finally {
             setIsSending(false);
+        }
+    };
+
+    const handleTemplateClick = (msg) => {
+        const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
+        if (!templateName) return;
+
+        console.log(`[Preview] Looking for template: ${templateName}`);
+        
+        const foundTemplate = templates.find(t => 
+            t.templateName === templateName || t.name === templateName
+        );
+
+        if (foundTemplate) {
+            setPreviewTemplate(foundTemplate);
+            setIsPreviewOpen(true);
+        } else {
+            toast.error("Template details not found locally.");
         }
     };
 
@@ -244,12 +280,19 @@ export default function WhatsAppChatsPage() {
                                         key={msg.id} 
                                         className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                                     >
-                                        <div className={`relative max-w-[75%] px-3.5 py-2 rounded-2xl shadow-sm text-sm ${
+                                        <div 
+                                            onClick={() => msg.metadata?.type === 'template' ? handleTemplateClick(msg) : null}
+                                            className={`relative max-w-[75%] px-3.5 py-2 rounded-2xl shadow-sm text-sm group transition-all duration-200 ${
                                             msg.fromMe 
                                                 ? 'bg-primary text-primary-foreground rounded-tr-none' 
                                                 : 'bg-card border border-border/50 rounded-tl-none'
-                                            }`}
+                                            } ${msg.metadata?.type === 'template' ? 'cursor-pointer hover:ring-2 hover:ring-primary/30' : ''}`}
                                         >
+                                            {msg.metadata?.type === 'template' && (
+                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Eye className="w-3.5 h-3.5 text-primary-foreground/40" />
+                                                </div>
+                                            )}
                                             <p className="leading-relaxed">{msg.text}</p>
                                             <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${msg.fromMe ? 'text-primary-foreground/70' : 'text-muted-foreground/60'}`}>
                                                 {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
@@ -307,6 +350,12 @@ export default function WhatsAppChatsPage() {
                     </div>
                 )}
             </div>
+            {/* Template Preview Modal */}
+            <ChatTemplatePreview 
+                template={previewTemplate}
+                isOpen={isPreviewOpen}
+                onClose={() => setIsPreviewOpen(false)}
+            />
         </div>
     );
 }

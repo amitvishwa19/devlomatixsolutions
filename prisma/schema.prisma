@@ -60,6 +60,8 @@ model User {
   ecommerceOrders           ECommerceOrder[]
   ecommerceProducts         ECommerceProduct[]
   ecommerceAbandonedCarts   ECommerceAbandonedCart[]
+  waJobs                    WhatsAppJob[]
+  waDeliveryLogs            WhatsAppDeliveryLog[]
 
   @@index([email])
   @@index([phone])
@@ -378,12 +380,16 @@ model WhatsAppConnectionLog {
 
 model Contact {
   id              String           @id @default(cuid())
+  workspaceId     String?          @default("cmnbhifag000458ikwhv1zso2")
   userId          String
   name            String
-  phone           String           @unique
+  phone           String
   email           String?
+  type            String?          @default("CONTACT") // CONTACT, CLIENT, LEAD
+  platform        String?          @default("WHATSAPP")
   info            Json?
   tags            String[]         @default([])
+  whatsappName    String?
   lastMessage     String?
   lastInteraction DateTime?
   createdAt       DateTime         @default(now())
@@ -391,8 +397,13 @@ model Contact {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  categoryId      String?
+  subscribed      Boolean          @default(true)
 
+  @@unique([workspaceId, phone])
   @@index([userId])
+  @@index([workspaceId])
   @@index([phone])
 }
 
@@ -438,8 +449,55 @@ model WhatsAppSessionKey {
   @@index([whatsappAuthId])
 }
 
+model WhatsAppJob {
+  id          String                @id @default(cuid())
+  userId      String
+  type        String                @default("CAMPAIGN") // CAMPAIGN, TRANSACTIONAL, AUTOMATION
+  status      String                @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED
+  payload     Json
+  priority    Int                   @default(0)
+  retryCount  Int                   @default(0)
+  maxRetries  Int                   @default(3)
+  errorLog    String?
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  logs        WhatsAppDeliveryLog[]
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model WhatsAppDeliveryLog {
+  id          String       @id @default(cuid())
+  jobId       String?
+  userId      String
+  jid         String
+  waId        String?      @unique
+  status      String       @default("QUEUED") // QUEUED, SENT, DELIVERED, READ, FAILED
+  error       String?
+  metadata    Json?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  job         WhatsAppJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([userId])
+  @@index([jid])
+  @@index([status])
+}
+
 model ContactGroup {
   id          String    @id @default(cuid())
+  workspaceId String?   @default("cmnbhifag000458ikwhv1zso2")
   userId      String
   name        String
   description String?
@@ -448,8 +506,9 @@ model ContactGroup {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   contacts    Contact[] @relation("ContactToGroup")
 
-  @@unique([userId, name])
+  @@unique([workspaceId, name])
   @@index([userId])
+  @@index([workspaceId])
 }
 
 model WorkspaceDocument {
@@ -462,6 +521,7 @@ model WorkspaceDocument {
   extension   String?
   fileSize    Int?
   category    String?             @default("GENERAL")
+  content     String?             @db.Text
   isFolder    Boolean             @default(false)
   parentId    String?
   workspaceId String
@@ -513,6 +573,7 @@ model Category {
   children    Category[] @relation("CategoryHierarchy")
   posts       Post[]
   jobs        Job[]
+  contacts    Contact[]
 
   @@unique([workspaceId, name])
   @@unique([workspaceId, slug])
@@ -521,24 +582,28 @@ model Category {
 }
 
 model Credentials {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   platform    String
   profile     String?
+  type        String?
   credentials Json?
   userId      String
   workspaceId String?
-  expired     Boolean  @default(false)
-  status      String   @default("disconnected")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  expired     Boolean   @default(false)
+  status      String    @default("disconnected")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   avatar      String?
   userInfo    Json?
   expiresAt   DateTime?
-  environment String   @default("PROD")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environment String    @default("PROD")
+  isDefault   Boolean   @default(false)
+  verified    Boolean   @default(false)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([workspaceId])
+  @@index([userId, isDefault])
 }
 
 model Post {

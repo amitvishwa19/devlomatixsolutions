@@ -3,7 +3,7 @@ import React from 'react'
 import { motion } from "framer-motion";
 import { Code2, Cpu, Globe, Layers, Rocket, Shield, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PageTransition from '../components/PageTransition';
+import PageTransition from '../_components/PageTransition';
 
 const services = [
     {

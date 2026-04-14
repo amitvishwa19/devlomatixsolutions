@@ -143,6 +143,16 @@ Every interactive element is engineered for sensory feedback:
 
 ---
 
+## 🛡️ Developer Best Practices
+
+To maintain a secure and scalable multi-tenant environment, all developers must adhere to the following architectural rules:
+
+- **🔐 No Hardcoded Keys:** Under no circumstances should API keys, secrets, or platform identifiers be hardcoded into the source code or `.env` files for workspace-specific functionality.
+- **📁 Dynamic Credential Management:** All service integrations (WhatsApp, Meta, Gemini, Google, etc.) must retrieve their credentials dynamically from the `credentials` table via the `db.credentials` model.
+- **🗝️ Workspace Isolation:** Ensure that every database query specifically filters by `workspaceId` to prevent cross-tenant data leakage.
+- **📄 Descriptive Logging:** Every significant action should be logged using the global `logger` utility to ensure full observability through the Telemetry Console.
+
+---
 ## 🛠️ Technical Foundation
 
 ### Tech Stack

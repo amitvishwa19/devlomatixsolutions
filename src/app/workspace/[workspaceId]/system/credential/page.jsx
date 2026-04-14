@@ -26,7 +26,9 @@ import {
     AlertTriangle,
     Shield,
     Trash,
-    RefreshCw as Reload
+    Zap,
+    RefreshCw as Reload,
+    RefreshCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -38,6 +40,17 @@ import { useModal } from '@/hooks/useModal';
 import { AddCredentialModal } from '../../article/_components/AddCredentialModal';
 import { Badge } from '@/components/ui/badge';
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 export default function SystemCredentials({ params: paramsPromise }) {
     const params = use(paramsPromise);
     const workspaceId = params?.workspaceId;
@@ -46,14 +59,14 @@ export default function SystemCredentials({ params: paramsPromise }) {
     const [credentials, setCredentials] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('list');
-    
+
     // Enterprise Features State
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('ALL');
     const [envFilter, setEnvFilter] = useState('ALL'); // ALL, PROD, DEV
     const [isPinging, setIsPinging] = useState(false);
     const [pingResults, setPingResults] = useState({});
-    
+
     // Bulk Operations
     const [selectedKeys, setSelectedKeys] = useState(new Set());
 
@@ -62,7 +75,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
     // Metadata Generator mapping authentic DB capabilities
     const getMockData = useCallback((cred) => {
         const num = String(cred.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        
+
         let realExpiresDays = null;
         if (cred.expiresAt) {
             const diffTime = new Date(cred.expiresAt) - new Date();
@@ -93,9 +106,37 @@ export default function SystemCredentials({ params: paramsPromise }) {
         fetchCredentials();
     }, [fetchCredentials]);
 
-    const handleDelete = async (id) => {
-        if (!confirm("Are you sure you want to completely delete this credential? This cannot be undone.")) return;
+    // AlertDialog State
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [credentialIdToDelete, setCredentialIdToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
+    const handleDeleteClick = (id) => {
+        setCredentialIdToDelete(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleBulkDeleteClick = () => {
+        setCredentialIdToDelete('BULK');
+        setIsDeleteDialogOpen(true);
+    };
+
+    const confirmDeletion = async () => {
+        setIsDeleting(true);
+        try {
+            if (credentialIdToDelete === 'BULK') {
+                await handleBulkDelete();
+            } else if (credentialIdToDelete) {
+                await handleDelete(credentialIdToDelete);
+            }
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteDialogOpen(false);
+            setCredentialIdToDelete(null);
+        }
+    };
+
+    const handleDelete = async (id) => {
         try {
             await axios.delete(`/api/workspace/${workspaceId}/social/accounts/${id}`);
             toast.success("Credential deleted safely.");
@@ -108,15 +149,13 @@ export default function SystemCredentials({ params: paramsPromise }) {
     };
 
     const handleBulkDelete = async () => {
-        if (!confirm(`Are you sure you want to purge ${selectedKeys.size} connected credentials globally?`)) return;
-        
         let success = 0;
         const keysArr = Array.from(selectedKeys);
         for (const id of keysArr) {
             try {
                 await axios.delete(`/api/workspace/${workspaceId}/social/accounts/${id}`);
                 success++;
-            } catch(e) {}
+            } catch (e) { }
         }
         toast.success(`Successfully purged ${success} elements from vault.`);
         setSelectedKeys(new Set());
@@ -132,7 +171,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `devlomatix_vault_${workspaceId.slice(0,6)}.env`;
+        a.download = `devlomatix_vault_${workspaceId.slice(0, 6)}.env`;
         a.click();
         URL.revokeObjectURL(url);
         toast.success("Vault seamlessly compiled to .env format!");
@@ -141,7 +180,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
     const handlePingAll = async () => {
         setIsPinging(true);
         const toastId = toast.loading("Executing global health ping across all connected services...");
-        
+
         const results = { ...pingResults };
         let passed = 0;
         let failed = 0;
@@ -149,18 +188,43 @@ export default function SystemCredentials({ params: paramsPromise }) {
         for (const cred of credentials) {
             results[cred.id] = 'testing';
             setPingResults({ ...results });
-            
+
             // Simulate network latency for visual feedback per node
             await new Promise(r => setTimeout(r, Math.random() * 600 + 300));
-            
+
             const isOk = cred.status === 'connected';
             results[cred.id] = isOk ? 'ok' : 'error';
             setPingResults({ ...results });
             if (isOk) passed++; else failed++;
         }
-        
+
         toast.success(`Verification complete. ${passed} healthy, ${failed} dropped.`, { id: toastId });
         setIsPinging(false);
+    };
+
+    const handlePingSingle = async (cred) => {
+        const id = cred.id;
+        setPingResults(prev => ({ ...prev, [id]: 'testing' }));
+        const toastId = toast.loading(`Testing connection for ${cred.platform}...`);
+
+        try {
+            const res = await axios.post(`/api/workspace/${workspaceId}/social/accounts/${id}/test`, {
+                credentials: cred.details,
+                platform: cred.platform.toUpperCase()
+            });
+
+            if (res.data.success) {
+                setPingResults(prev => ({ ...prev, [id]: 'ok' }));
+                toast.success(`${cred.platform} connection verified successfully!`, { id: toastId });
+                fetchCredentials(); // Refresh to update status in DB if needed
+            } else {
+                setPingResults(prev => ({ ...prev, [id]: 'error' }));
+                toast.error(`${cred.platform} verification failed: ${res.data.message}`, { id: toastId });
+            }
+        } catch (error) {
+            setPingResults(prev => ({ ...prev, [id]: 'error' }));
+            toast.error(`Verification error: ${error.message}`, { id: toastId });
+        }
     };
 
     const handleCopyMasked = (platform) => {
@@ -180,7 +244,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
         if (activeTab === 'AI MODELS' && ['GEMINI', 'OPENROUTER', 'OPENAI', 'CLAUDE'].includes(cred.platform)) return true;
         if (activeTab === 'SOCIAL' && ['TWITTER', 'X', 'FACEBOOK', 'LINKEDIN', 'INSTAGRAM', 'YOUTUBE'].includes(cred.platform)) return true;
         if (activeTab === 'CLOUD' && !['GEMINI', 'OPENROUTER', 'OPENAI', 'CLAUDE', 'TWITTER', 'X', 'FACEBOOK', 'LINKEDIN', 'INSTAGRAM', 'YOUTUBE'].includes(cred.platform)) return true;
-        
+
         return false;
     });
 
@@ -214,7 +278,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button 
+                    <Button
                         variant="outline"
                         onClick={handleExportEnv}
                         disabled={filteredCredentials.length === 0}
@@ -227,17 +291,17 @@ export default function SystemCredentials({ params: paramsPromise }) {
                             variant="ghost"
                             size="sm"
                             onClick={() => setViewMode('list')}
-                            className={`px-3 rounded-md transition-all text-[10px] font-bold mr-1 ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                            className={`px-3 rounded-md transition-all  mr-1 ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
                         >
-                            <List className="w-3.5 h-3.5 mr-2" /> List
+                            <List className="w-3.5 h-3.5 " /> List
                         </Button>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setViewMode('grid')}
-                            className={`px-3 rounded-md transition-all text-[10px] font-bold ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                            className={`px-3 rounded-md transition-all  ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
                         >
-                            <LayoutGrid className="w-3.5 h-3.5 mr-2" /> Grid
+                            <LayoutGrid className="w-3.5 h-3.5 " /> Grid
                         </Button>
                     </div>
 
@@ -245,7 +309,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
                         onClick={() => onOpen('addCredential', { workspaceId, onApply: fetchCredentials })}
                         className="rounded-md font-bold text-xs shadow-md shadow-primary/20 hover:scale-105 transition-transform"
                     >
-                        <Plus className="w-4 h-4 mr-2" /> Add Capability
+                        <Plus className="w-4 h-4 mr-2" /> Add Credential
                     </Button>
                 </div>
             </div>
@@ -254,9 +318,9 @@ export default function SystemCredentials({ params: paramsPromise }) {
             <div className="flex flex-col xl:flex-row items-center justify-between gap-4 bg-card/60 border border-border/60 p-2 rounded-md shadow-inner backdrop-blur-sm">
                 <div className="flex items-center w-full xl:w-auto overflow-x-auto scrollbar-hide space-x-1 p-1 bg-muted/40 rounded-sm border border-border/40">
                     {tabs.map(tab => (
-                        <Button 
+                        <Button
                             key={tab}
-                            variant="ghost" 
+                            variant="ghost"
                             size="sm"
                             onClick={() => { setActiveTab(tab); setSelectedKeys(new Set()); }}
                             className={`px-4 text-[10px] font-bold tracking-tight rounded-sm transition-all ${activeTab === tab ? 'bg-background shadow-soft text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'}`}
@@ -276,10 +340,10 @@ export default function SystemCredentials({ params: paramsPromise }) {
                             <Badge variant="outline" className="px-3 h-10 font-mono tracking-widest text-[10px] border-border/60">
                                 {selectedKeys.size} SELECTED
                             </Badge>
-                            <Button 
+                            <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={handleBulkDelete}
+                                onClick={handleBulkDeleteClick}
                                 className="h-10 text-[10px] px-4 font-bold shadow-soft"
                             >
                                 <Trash className="w-3.5 h-3.5 mr-2" /> Bulk Purge
@@ -288,14 +352,14 @@ export default function SystemCredentials({ params: paramsPromise }) {
                     )}
                     <div className="relative w-full xl:w-[250px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-                        <Input 
-                            placeholder="Search Vault..." 
+                        <Input
+                            placeholder="Search Vault..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="pl-9 h-10 w-full text-xs font-semibold bg-background shadow-inner border-border/60 focus-visible:ring-1 focus-visible:ring-primary rounded-md" 
+                            className="pl-9 h-10 w-full text-xs font-semibold bg-background shadow-inner border-border/60 focus-visible:ring-1 focus-visible:ring-primary rounded-md"
                         />
                     </div>
-                    <Button 
+                    <Button
                         variant="outline"
                         onClick={handlePingAll}
                         disabled={isPinging || credentials.length === 0}
@@ -339,8 +403,8 @@ export default function SystemCredentials({ params: paramsPromise }) {
                     {filteredCredentials.length > 0 && (
                         <div className="flex items-center p-2 mb-2 bg-muted/20 border border-border/40 rounded-md">
                             <div className="flex items-center gap-3 pl-2">
-                                <Checkbox 
-                                    checked={selectedKeys.size === filteredCredentials.length && filteredCredentials.length > 0} 
+                                <Checkbox
+                                    checked={selectedKeys.size === filteredCredentials.length && filteredCredentials.length > 0}
                                     onCheckedChange={toggleAll}
                                 />
                                 <span className="text-[10px] font-bold opacity-60 uppercase tracking-wider">Select All Scoped Cards</span>
@@ -351,126 +415,173 @@ export default function SystemCredentials({ params: paramsPromise }) {
                         {filteredCredentials.map((cred) => {
                             const meta = getMockData(cred);
                             const isWarning = meta.expiresDays < 14;
-                            
+
                             return (
-                            <Card key={cred.id} className={`border-border/40 hover:border-primary/40 bg-card shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ${viewMode === 'list' ? 'flex flex-row items-center justify-between p-1' : ''}`}>
-                                {/* Environment Stripe Accent */}
-                                <div className={`absolute left-0 top-0 w-1 h-full ${meta.env === 'PROD' ? 'bg-indigo-500/70' : 'bg-amber-500/70'}`} />
-                                
-                                <CardHeader className={`pb-3 pl-6 ${viewMode === 'list' ? 'border-b-0 w-1/3 pt-3' : 'border-b border-border/10'}`}>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <Checkbox 
-                                                checked={selectedKeys.has(cred.id)}
-                                                onCheckedChange={() => toggleSelection(cred.id)}
-                                            />
-                                            <div className="flex flex-col">
-                                                <CardTitle className="text-sm font-bold tracking-tight uppercase flex items-center gap-2 text-foreground">
-                                                    {cred.platform === 'GEMINI' ? <Activity className="w-4 h-4 text-purple-500" /> : <Server className="w-4 h-4 text-primary" />}
-                                                    {cred.platform}
-                                                    <Badge variant="outline" className={`ml-1 text-[8px] h-4 px-1 leading-none tracking-widest ${meta.env === 'PROD' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
-                                                        {meta.env}
-                                                    </Badge>
-                                                </CardTitle>
-                                                <CardDescription className="text-[10px] mt-1 font-semibold truncate max-w-[200px]">
-                                                    {cred.profileName || cred.profile || "Core Credential"}
-                                                </CardDescription>
+                                <Card key={cred.id} className={`border-border/40 hover:border-primary/40 bg-card shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ${viewMode === 'list' ? 'flex flex-row items-center justify-between p-1' : ''}`}>
+                                    {/* Environment Stripe Accent */}
+                                    <div className={`absolute left-0 top-0 w-1 h-full ${meta.env === 'PROD' ? 'bg-indigo-500/70' : 'bg-amber-500/70'}`} />
+
+                                    <CardHeader className={`pb-3 pl-6 ${viewMode === 'list' ? 'border-b-0 w-1/3 pt-3' : 'border-b border-border/10'}`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <Checkbox
+                                                    checked={selectedKeys.has(cred.id)}
+                                                    onCheckedChange={() => toggleSelection(cred.id)}
+                                                />
+                                                <div className="flex flex-col">
+                                                    <CardTitle className="text-sm font-bold tracking-tight uppercase flex items-center gap-2 text-foreground">
+                                                        {cred.platform === 'GEMINI' ? <Activity className="w-4 h-4 text-purple-500" /> : <Server className="w-4 h-4 text-primary" />}
+                                                        {cred.platform}
+                                                        <Badge variant="outline" className={`ml-1 text-[8px] h-4 px-1 leading-none tracking-widest ${meta.env === 'PROD' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                                            {meta.env}
+                                                        </Badge>
+                                                    </CardTitle>
+                                                    <CardDescription className="text-[10px] mt-1 font-semibold truncate max-w-[200px]">
+                                                        {cred.profileName || cred.profile || "Core Credential"}
+                                                    </CardDescription>
+                                                </div>
                                             </div>
+                                            {viewMode !== 'list' && (
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <Badge variant={cred.status === 'connected' ? 'default' : 'secondary'} className={cred.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500' : ''}>
+                                                        {pingResults[cred.id] === 'testing' ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> :
+                                                            pingResults[cred.id] === 'ok' ? <CheckCircle2 className="w-3 h-3 mr-1" /> :
+                                                                pingResults[cred.id] === 'error' ? <AlertCircle className="w-3 h-3 mr-1 text-rose-500" /> :
+                                                                    cred.status === 'connected' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
+                                                        {pingResults[cred.id] === 'testing' ? 'VERIFYING...' : cred.status}
+                                                    </Badge>
+                                                </div>
+                                            )}
                                         </div>
-                                        {viewMode !== 'list' && (
-                                        <div className="flex flex-col items-end gap-2">
-                                            <Badge variant={cred.status === 'connected' ? 'default' : 'secondary'} className={cred.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500' : ''}>
-                                                {pingResults[cred.id] === 'testing' ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : 
-                                                 pingResults[cred.id] === 'ok' ? <CheckCircle2 className="w-3 h-3 mr-1" /> :
-                                                 pingResults[cred.id] === 'error' ? <AlertCircle className="w-3 h-3 mr-1 text-rose-500" /> :
-                                                 cred.status === 'connected' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
+                                    </CardHeader>
+                                    <CardContent className={`py-4 space-y-3 ${viewMode === 'list' ? 'flex-1 flex items-center gap-4 py-0 justify-center border-l border-border/10 mb-0' : ''}`}>
+                                        {viewMode === 'list' && (
+                                            <Badge variant={cred.status === 'connected' ? 'default' : 'secondary'} className={cred.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500 shrink-0' : 'shrink-0'}>
+                                                {pingResults[cred.id] === 'testing' ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> :
+                                                    pingResults[cred.id] === 'ok' ? <CheckCircle2 className="w-3 h-3 mr-1" /> :
+                                                        pingResults[cred.id] === 'error' ? <AlertCircle className="w-3 h-3 mr-1 text-rose-500" /> :
+                                                            cred.status === 'connected' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
                                                 {pingResults[cred.id] === 'testing' ? 'VERIFYING...' : cred.status}
                                             </Badge>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardHeader>
-                            <CardContent className={`py-4 space-y-3 ${viewMode === 'list' ? 'flex-1 flex items-center gap-4 py-0 justify-center border-l border-border/10 mb-0' : ''}`}>
-                                {viewMode === 'list' && (
-                                    <Badge variant={cred.status === 'connected' ? 'default' : 'secondary'} className={cred.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500 shrink-0' : 'shrink-0'}>
-                                        {pingResults[cred.id] === 'testing' ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : 
-                                          pingResults[cred.id] === 'ok' ? <CheckCircle2 className="w-3 h-3 mr-1" /> :
-                                          pingResults[cred.id] === 'error' ? <AlertCircle className="w-3 h-3 mr-1 text-rose-500" /> :
-                                          cred.status === 'connected' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
-                                        {pingResults[cred.id] === 'testing' ? 'VERIFYING...' : cred.status}
-                                    </Badge>
-                                )}
-                                {cred.model && (
-                                    <div className={`text-[10px] bg-muted/40 p-2 rounded-md font-mono text-muted-foreground border border-border/40 truncate ${viewMode === 'list' ? 'mb-0 py-1 px-3' : ''}`}>
-                                        Bound Model: <span className="font-bold text-foreground ml-1">{cred.model}</span>
-                                    </div>
-                                )}
-
-                                {viewMode !== 'list' && (
-                                    <div className="flex flex-col gap-2 pt-2 border-t border-border/10">
-                                        <div className="flex items-center justify-between group">
-                                            <div className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">Authentication Key</div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="font-mono text-[9px] font-bold text-foreground/50 tracking-widest bg-background px-2 py-0.5 rounded border border-border/50">
-                                                    ••••••••••••{cred.id.slice(-4)}
-                                                </div>
-                                                <Button variant="ghost" size="icon" className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopyMasked(cred.platform)}>
-                                                    <Copy className="w-3 h-3" />
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1.5 mt-2">
-                                            <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground/80 uppercase tracking-wider">
-                                                <span>Usage Quota Mapped</span>
-                                                <span className={meta.quotaPct >= 80 ? 'text-amber-500' : ''}>{meta.quotaPct}%</span>
-                                            </div>
-                                            <Progress value={meta.quotaPct} className={`h-1.5 opacity-60 ${meta.quotaPct >= 80 ? '[&>div]:bg-amber-500' : '[&>div]:bg-primary'}`} />
-                                        </div>
-                                        
-                                        {isWarning && (
-                                            <div className="flex items-center gap-1.5 mt-2 bg-rose-500/10 border border-rose-500/20 p-1.5 rounded-sm">
-                                                <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" />
-                                                <span className="text-[9px] font-bold text-rose-600/90 leading-tight">Identity Key expires globally in {meta.expiresDays} days. Rotate immediately.</span>
+                                        )}
+                                        {cred.model && (
+                                            <div className={`text-[10px] bg-muted/40 p-2 rounded-md font-mono text-muted-foreground border border-border/40 truncate ${viewMode === 'list' ? 'mb-0 py-1 px-3' : ''}`}>
+                                                Bound Model: <span className="font-bold text-foreground ml-1">{cred.model}</span>
                                             </div>
                                         )}
 
-                                        <div className="flex items-center gap-1.5 mt-2 text-[9px] text-muted-foreground/70 font-semibold border-t border-border/10 pt-2">
-                                            <Shield className="w-3 h-3 text-indigo-400" />
-                                            {pingResults[cred.id] === 'ok' ? 'Verified securely just now' : `Secured ${Math.floor(Math.random() * 5 + 1)}d ago`} 
-                                            <span className="mx-1">•</span> 
-                                            Identity Hash verified
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                            <CardFooter className={`pt-3 pb-4 px-4 bg-muted/10 border-t border-border/10 flex items-center justify-between ${viewMode === 'list' ? 'border-t-0 bg-transparent py-0 mt-0 pt-0 pb-0 border-l justify-end w-1/5 gap-2' : ''}`}>
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className={`text-[10px] ${isWarning ? 'text-rose-500 animate-pulse bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20' : 'text-primary'}`}
-                                    onClick={() => onOpen('addCredential', { workspaceId, initialData: cred, onApply: fetchCredentials })}
-                                >
-                                    <Settings2 className="w-3.5 h-3.5 mr-1.5" /> {isWarning ? 'Rotate Key' : 'Manage Access'}
-                                </Button>
+                                        {viewMode !== 'list' && (
+                                            <div className="flex flex-col gap-2 pt-2 border-t border-border/10">
+                                                <div className="flex items-center justify-between group">
+                                                    <div className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">Authentication Key</div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="font-mono text-[9px] font-bold text-foreground/50 tracking-widest bg-background px-2 py-0.5 rounded border border-border/50">
+                                                            ••••••••••••{cred.id.slice(-4)}
+                                                        </div>
+                                                        <Button variant="ghost" size="icon" className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopyMasked(cred.platform)}>
+                                                            <Copy className="w-3 h-3" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
 
-                                {viewMode !== 'list' && (
-                                    <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        className="text-[10px] text-destructive hover:bg-destructive/10"
-                                        onClick={() => handleDelete(cred.id)}
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                )}
-                            </CardFooter>
-                        </Card>
-                        );
-                    })}
+                                                <div className="space-y-1.5 mt-2">
+                                                    <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground/80 uppercase tracking-wider">
+                                                        <span>Usage Quota Mapped</span>
+                                                        <span className={meta.quotaPct >= 80 ? 'text-amber-500' : ''}>{meta.quotaPct}%</span>
+                                                    </div>
+                                                    <Progress value={meta.quotaPct} className={`h-1.5 opacity-60 ${meta.quotaPct >= 80 ? '[&>div]:bg-amber-500' : '[&>div]:bg-primary'}`} />
+                                                </div>
+
+                                                {isWarning && (
+                                                    <div className="flex items-center gap-1.5 mt-2 bg-rose-500/10 border border-rose-500/20 p-1.5 rounded-sm">
+                                                        <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" />
+                                                        <span className="text-[9px] font-bold text-rose-600/90 leading-tight">Identity Key expires globally in {meta.expiresDays} days. Rotate immediately.</span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-center gap-1.5 mt-2 text-[9px] text-muted-foreground/70 font-semibold border-t border-border/10 pt-2">
+                                                    <Shield className="w-3 h-3 text-indigo-400" />
+                                                    {pingResults[cred.id] === 'ok' ? 'Verified securely just now' : `Secured ${Math.floor(Math.random() * 5 + 1)}d ago`}
+                                                    <span className="mx-1">•</span>
+                                                    Identity Hash verified
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                    <CardFooter className={`pt-3 pb-4 px-4 bg-muted/10 border-t border-border/10 flex items-center justify-between ${viewMode === 'list' ? 'border-t-0 bg-transparent py-0 mt-0 pt-0 pb-0 border-l justify-end w-1/4 gap-1' : ''}`}>
+                                        <div className="flex items-center gap-1 w-full justify-between">
+                                            <div className="flex items-center gap-1">
+
+                                            </div>
+
+                                            <div>
+
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`text-[10px] h-8 px-2 rounded-md ${isWarning ? 'text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20' : 'text-primary hover:bg-primary/5'}`}
+                                                    onClick={() => onOpen('addCredential', { workspaceId, initialData: cred, onApply: fetchCredentials })}
+                                                >
+                                                    <Settings2 className="w-3.5 h-3.5 mr-1" /> {viewMode === 'list' ? '' : (isWarning ? 'Rotate' : 'Edit')}
+                                                </Button>
+
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    disabled={pingResults[cred.id] === 'testing'}
+                                                    className="text-[10px] h-8 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/5 rounded-md"
+                                                    onClick={() => handlePingSingle(cred)}
+                                                >
+                                                    <RefreshCcw className={`w-3.5 h-3.5 ${pingResults[cred.id] === 'testing' ? 'animate-spin' : ''} ${viewMode === 'list' ? '' : 'mr-1'}`} />
+                                                    {viewMode === 'list' ? '' : 'Test'}
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-[10px] h-8 px-2 text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 rounded-md"
+                                                    onClick={() => handleDeleteClick(cred.id)}
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardFooter>
+                                </Card>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
             )}
+            {/* Global Alert Dialog */}
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent className="bg-background border-border/60 shadow-2xl rounded-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-lg font-bold">
+                            {credentialIdToDelete === 'BULK' ? 'Purge Selected Credentials?' : 'Delete Credential?'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-xs font-semibold text-muted-foreground">
+                            {credentialIdToDelete === 'BULK'
+                                ? `You are about to permanently delete ${selectedKeys.size} credentials. This action is destructive and cannot be undone.`
+                                : 'This will permanently remove this connected capability from your workspace vault. This action cannot be undone.'
+                            }
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-4">
+                        <AlertDialogCancel disabled={isDeleting} className="rounded-md  font-bold">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isDeleting}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                confirmDeletion();
+                            }}
+                            className="bg-destructive hover:bg-destructive/90 rounded-md font-bold flex items-center gap-2"
+                        >
+                            {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                            {isDeleting ? 'Deleting...' : 'Confirm Deletion'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

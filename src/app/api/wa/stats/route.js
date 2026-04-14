@@ -46,6 +46,17 @@ export async function GET(req) {
             where: { userId, status: 'PENDING_APPROVAL' }
         });
 
+        // 6. Job Stats (Latest Batch)
+        const latestJob = await db.whatsAppJob.findFirst({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                _count: {
+                    select: { logs: true }
+                }
+            }
+        });
+
         // Calculate rates
         const successRate = sentMessages > 0 ? (((sentMessages - failedMessages) / sentMessages) * 100).toFixed(1) : 0;
         const readRate = sentMessages > 0 ? ((readMessages / sentMessages) * 100).toFixed(1) : 0;
@@ -71,7 +82,13 @@ export async function GET(req) {
                 templates: {
                     approved: approvedTemplates,
                     pending: pendingTemplates
-                }
+                },
+                latestJob: latestJob ? {
+                    id: latestJob.id,
+                    status: latestJob.status,
+                    total: latestJob._count.logs,
+                    completedAt: latestJob.completedAt
+                } : null
             }
         });
 

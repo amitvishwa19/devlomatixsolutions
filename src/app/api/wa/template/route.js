@@ -103,7 +103,7 @@ export async function POST(req) {
                     footer: footer || null,
                     buttons: buttons || [],
                     metadata: metadata || null,
-                    status: "PENDING"
+                    status: status || "DRAFT"
                 }
             });
         }

@@ -1,5 +1,5 @@
 import { db } from './db';
-import { waManager } from './whatsapp';
+
 
 /**
  * SocialEngine handles the asynchronous publishing of social media posts.
@@ -11,8 +11,7 @@ export class SocialEngine {
     private interval: NodeJS.Timeout | null = null;
 
     private constructor() {
-        // Automatically start the scheduler when initialized in dev/prod
-        this.startScheduler();
+        // No automatic start here to avoid build-time issues
     }
 
     public static getInstance(): SocialEngine {
@@ -24,7 +23,7 @@ export class SocialEngine {
 
     private startScheduler() {
         if (this.interval) return;
-        
+
         console.log("[SocialEngine] Starting scheduler (every 1 minute)...");
         this.interval = setInterval(() => {
             this.checkAndPublishScheduledPosts();
@@ -86,7 +85,7 @@ export class SocialEngine {
             });
 
             const results = [];
-            
+
             // Process each platform/account
             for (const platform of post.platforms) {
                 try {
@@ -110,8 +109,8 @@ export class SocialEngine {
             if (allFailed) {
                 await db.socialPost.update({
                     where: { id: postId },
-                    data: { 
-                        status: 'FAILED', 
+                    data: {
+                        status: 'FAILED',
                         errorLog: JSON.stringify(results)
                     }
                 });
@@ -132,10 +131,10 @@ export class SocialEngine {
         // For WhatsApp, we assume the user has a connected session
         // We might need to select a specific WhatsApp account if multiple exist
         const whatsappAccount = post.accounts.find((acc: any) => acc.platform === 'WHATSAPP');
-        
+
         // If no specific account linked, try to use the first active session found in WAAuth
         // (Simplified for now)
-        
+
         const payload = { text: post.content };
         if (post.mediaUrls && post.mediaUrls.length > 0) {
             // Support first image for now

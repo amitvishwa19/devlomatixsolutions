@@ -53,24 +53,18 @@ const PLATFORM_CONFIG = {
     SUPABASE: ['supabaseUrl', 'supabaseKey'],
 };
 
-const OPENROUTER_MODELS = [
-    { value: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash Exp (Free)', description: 'Fast & experimental' },
-    { value: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (Free)', description: 'Powerful & open' },
-    { value: 'deepseek/deepseek-r1:free', label: 'DeepSeek R1 (Free)', description: 'Optimized for reasoning' },
-    { value: 'mistralai/mistral-7b-instruct:free', label: 'Mistral 7B (Free)', description: 'Small & efficient' },
-    { value: 'qwen/qwen-2-7b-instruct:free', label: 'Qwen 2 7B (Free)', description: 'Alibaba open source' },
-    { value: 'openrouter/auto', label: 'Auto (Best Price)', description: 'Automatically select best model' },
-    { value: 'custom', label: 'Custom Model...', description: 'Enter specific OpenRouter model ID' },
-];
 
-const GEMINI_MODELS = [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Next-gen high speed & intelligence' },
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', description: 'Fast & efficient, great for most tasks' },
-    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite', description: 'Lightest & fastest for simple tasks' },
-    { value: 'gemini-2.5-pro-exp-03-25', label: 'Gemini 2.5 Pro (Experimental)', description: 'Most capable & intelligent model' },
-    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Balanced performance & intelligence' },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Fast multimodal model' },
-    { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Ultra-lightweight for simpler tasks' },
+const CREDENTIAL_TYPES = [
+    'AI Models',
+    'Socials',
+    'Cloud',
+    'Email',
+    'Messaging',
+    'Database',
+    'Analytics',
+    'Advertising',
+    'Payments',
+    'Other'
 ];
 
 export const AddCredentialModal = () => {
@@ -81,6 +75,7 @@ export const AddCredentialModal = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [isTesting, setIsTesting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Form States
     const [platform, setPlatform] = useState('');
@@ -90,7 +85,7 @@ export const AddCredentialModal = () => {
     const [fields, setFields] = useState([{ key: '', value: '' }]);
     const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
     const [openRouterModel, setOpenRouterModel] = useState('google/gemini-2.0-flash-exp:free');
-    const [customModelName, setCustomModelName] = useState('');
+    const [credentialType, setCredentialType] = useState('Other');
 
     const isEdit = !!initialData?.id;
 
@@ -115,16 +110,10 @@ export const AddCredentialModal = () => {
 
                 // Extract model for OpenRouter
                 if (platformKey === 'OPENROUTER' && initialData.details.model) {
-                    const savedModel = initialData.details.model;
-                    const isPreset = OPENROUTER_MODELS.some(m => m.value === savedModel);
-                    if (isPreset) {
-                        setOpenRouterModel(savedModel);
-                    } else {
-                        setOpenRouterModel('custom');
-                        setCustomModelName(savedModel);
-                    }
+                    setOpenRouterModel(initialData.details.model);
                 }
 
+                setCredentialType(initialData.type || 'Other');
                 const dynamicFields = Object.entries(initialData.details)
                     .filter(([key]) => key !== 'profileName' && key !== 'model')
                     .map(([key, value]) => ({ key, value }));
@@ -138,6 +127,7 @@ export const AddCredentialModal = () => {
             setStatus('disconnected');
             setFields([{ key: '', value: '' }]);
             setGeminiModel('gemini-2.0-flash');
+            setCredentialType('Other');
         }
     }, [isEdit, initialData, isModalOpen]);
 
@@ -173,6 +163,23 @@ export const AddCredentialModal = () => {
         const newFields = [...fields];
         newFields[index] = { ...newFields[index], [part]: val };
         setFields(newFields);
+    };
+
+    const onDelete = async () => {
+        if (!confirm("Are you sure you want to delete this credential?")) return;
+
+        setIsDeleting(true);
+        try {
+            await axios.delete(`/api/workspace/${workspaceId}/social/accounts/${initialData.id}`);
+            toast.success(`${platform} credentials deleted successfully`);
+            onApply?.();
+            handleClose();
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete credentials");
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     const onSubmit = async (e) => {
@@ -215,14 +222,17 @@ export const AddCredentialModal = () => {
 
             // Store selected model for OpenRouter
             if (finalPlatform.toUpperCase() === 'OPENROUTER') {
-                credentialsObject.model = openRouterModel === 'custom' ? customModelName : openRouterModel;
+                credentialsObject.model = openRouterModel;
             }
 
             const payload = {
                 platform: finalPlatform.toUpperCase(),
                 credentials: credentialsObject,
                 profile: profileName,
-                status: status
+                status: status,
+                type: credentialType,
+                environment: initialData?.environment || "PROD",
+                expiresAt: initialData?.expiresAt || null
             };
 
             if (isEdit) {
@@ -253,22 +263,23 @@ export const AddCredentialModal = () => {
             setFields([{ key: '', value: '' }]);
             setGeminiModel('gemini-2.0-flash');
             setOpenRouterModel('google/gemini-2.0-flash-exp:free');
-            setCustomModelName('');
+            setCredentialType('Other');
+            setIsDeleting(false);
         }
         onClose("addCredential");
     };
 
     return (
         <Dialog open={isModalOpen} onOpenChange={handleClose}>
-            <DialogContent className="bg-background border border-border/100 rounded-md shadow-2xl p-0 overflow-hidden">
+            <DialogContent className=" bg-background border border-border/100 rounded-md shadow-2xl p-2 ">
                 <form onSubmit={onSubmit} className="flex flex-col max-h-[85vh]">
                     <DialogHeader className="p-8 pb-4">
-                        <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                            <Database className="text-primary h-6 w-6" /> {isEdit ? "Edit Credentials" : "Add Credentials"}
+                        <DialogTitle className="text-md font-bold text-foreground flex items-center gap-2">
+                            <Database className="text-primary h-5 w-5" /> {isEdit ? "Edit Credentials" : "Add Credentials"}
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto p-8 pt-0 space-y-6 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto scrollbar-hide p-2 mr-2 pt-0 space-y-4">
                         <div className="p-4 bg-primary/5 border border-primary/10 rounded-md flex items-start gap-3">
                             <Shield className="text-primary h-5 w-5 mt-0.5 shrink-0" />
                             <p className="text-xs font-bold text-muted-foreground leading-relaxed text-left">
@@ -280,20 +291,38 @@ export const AddCredentialModal = () => {
                         <div className="grid grid-cols-2 gap-4 text-left">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
-                                    <Tag className="w-3 h-3" /> PLATFORM
+                                    <Database className="w-3 h-3" /> CREDENTIAL TYPE
                                 </label>
-                                <Select value={platform} onValueChange={handlePlatformChange} disabled={isLoading}>
-                                    <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs">
-                                        <SelectValue placeholder="Select Platform" />
+                                <Select value={credentialType} onValueChange={setCredentialType} disabled={isLoading}>
+                                    <SelectTrigger className="bg-muted/30 border border-primary/20 rounded-md  focus:ring-0.5 focus:ring-primary">
+                                        <SelectValue placeholder="Select Type" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-md border-border/20 shadow-2xl">
-                                        {Object.keys(PLATFORM_CONFIG).map(p => (
-                                            <SelectItem key={p} value={p} className="font-semibold text-xs text-muted-foreground  py-3">{p}</SelectItem>
+                                        {CREDENTIAL_TYPES.map(t => (
+                                            <SelectItem key={t} value={t} className="f  ">{t}</SelectItem>
                                         ))}
-                                        <SelectItem value="CUSTOM" className="font-semibold py-3 text-muted-foreground italic">Custom / Other</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
+                                    <Tag className="w-3 h-3" /> PLATFORM
+                                </label>
+                                <Select value={platform} onValueChange={handlePlatformChange} disabled={isLoading}>
+                                    <SelectTrigger className="bg-muted/30 border border-primary/20 rounded-md  focus:ring-0.5 focus:ring-primary">
+                                        <SelectValue placeholder="Select Platform" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-md border-border/20 text-sm shadow-2xl">
+                                        {Object.keys(PLATFORM_CONFIG).map(p => (
+                                            <SelectItem key={p} value={p} className="  text-muted-foreground ">{p}</SelectItem>
+                                        ))}
+                                        <SelectItem value="CUSTOM" className=" text-muted-foreground italic">Custom / Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-left">
                             {platform === 'CUSTOM' ? (
                                 <div className="space-y-2 animate-in fade-in slide-in-from-left-2 transition-all">
                                     <label className="text-[10px] font-bold text-primary ml-1 flex items-center gap-2">
@@ -304,7 +333,7 @@ export const AddCredentialModal = () => {
                                         placeholder="e.g. TIKTOK, REDDIT"
                                         value={customPlatform}
                                         onChange={(e) => setCustomPlatform(e.target.value)}
-                                        className="bg-primary/5 border-primary/20 rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold text-xs"
+                                        className="bg-muted/30 border border-primary/20 rounded-md focus:ring-0.5 focus:ring-primary  font-bold text-xs"
                                     />
                                 </div>
                             ) : (
@@ -317,26 +346,26 @@ export const AddCredentialModal = () => {
                                         placeholder="e.g. Personal Account"
                                         value={profileName}
                                         onChange={(e) => setProfileName(e.target.value)}
-                                        className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
+                                        className="bg-muted/30 border border-primary/20 rounded-md focus:ring-0.5 focus:ring-primary "
+                                    />
+                                </div>
+                            )}
+
+                            {platform === 'CUSTOM' && (
+                                <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
+                                    <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
+                                        <User className="w-3 h-3" /> PROFILE NAME
+                                    </label>
+                                    <Input
+                                        disabled={isLoading}
+                                        placeholder="e.g. Personal Account"
+                                        value={profileName}
+                                        onChange={(e) => setProfileName(e.target.value)}
+                                        className="bg-muted/30 border border-primary/20 rounded-md focus:ring-0.5 focus:ring-primary  font-bold"
                                     />
                                 </div>
                             )}
                         </div>
-
-                        {platform === 'CUSTOM' && (
-                            <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
-                                <label className="text-[10px] font-bold text-muted-foreground opacity-70 ml-1 flex items-center gap-2">
-                                    <User className="w-3 h-3" /> PROFILE NAME
-                                </label>
-                                <Input
-                                    disabled={isLoading}
-                                    placeholder="e.g. Personal Account"
-                                    value={profileName}
-                                    onChange={(e) => setProfileName(e.target.value)}
-                                    className="bg-muted/30 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary shadow-inner h-12 font-bold"
-                                />
-                            </div>
-                        )}
 
                         {/* Gemini Model Selector */}
                         {platform === 'GEMINI' && (
@@ -344,71 +373,35 @@ export const AddCredentialModal = () => {
                                 <label className="text-[10px] font-bold text-purple-500 ml-1 flex items-center gap-2 uppercase tracking-wider opacity-80">
                                     <Sparkles className="w-3 h-3 text-purple-500" /> GEMINI AI MODEL
                                 </label>
-                                <Select value={geminiModel} onValueChange={setGeminiModel} disabled={isLoading}>
-                                    <SelectTrigger className="bg-purple-500/5 border border-purple-500/20 rounded-md focus:ring-1 focus:ring-purple-500 h-12 font-bold text-xs">
-                                        <div className="flex items-center gap-2">
-                                            <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                                            <SelectValue placeholder="Select Gemini Model" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-md border-border/20 shadow-2xl">
-                                        {GEMINI_MODELS.map((model) => (
-                                            <SelectItem key={model.value} value={model.value} className="font-semibold text-xs py-3 border-b border-border/5 last:border-0">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold tracking-tight uppercase">{model.label}</span>
-                                                    <span className="text-[9px] text-muted-foreground font-normal italic opacity-70">{model.description}</span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Input
+                                    disabled={isLoading}
+                                    placeholder="e.g. gemini-2.0-flash"
+                                    value={geminiModel}
+                                    onChange={(e) => setGeminiModel(e.target.value)}
+                                    className="bg-muted/30 border border-primary/20 rounded-md focus:ring-0.5 focus:ring-primary  font-bold text-xs"
+                                />
+                                <p className="text-[9px] text-muted-foreground italic px-1 opacity-70">
+                                    Enter specific Gemini model ID (e.g. gemini-2.5-flash)
+                                </p>
                             </div>
                         )}
 
                         {/* OpenRouter Model Selector */}
                         {platform === 'OPENROUTER' && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                                <div className="space-y-2 text-left">
-                                    <label className="text-[10px] font-bold text-blue-500 ml-1 flex items-center gap-2 uppercase tracking-wider opacity-80">
-                                        <Bot className="w-3 h-3 text-blue-500" /> OPENROUTER AI MODEL
-                                    </label>
-                                    <Select value={openRouterModel} onValueChange={setOpenRouterModel} disabled={isLoading}>
-                                        <SelectTrigger className="bg-blue-500/5 border border-blue-500/20 rounded-md focus:ring-1 focus:ring-blue-500 h-12 font-bold text-xs">
-                                            <div className="flex items-center gap-2">
-                                                <Bot className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                                                <SelectValue placeholder="Select Model" />
-                                            </div>
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-md border-border/20 shadow-2xl">
-                                            {OPENROUTER_MODELS.map((model) => (
-                                                <SelectItem key={model.value} value={model.value} className="font-semibold text-xs py-3 border-b border-border/5 last:border-0">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold tracking-tight uppercase">{model.label}</span>
-                                                        <span className="text-[9px] text-muted-foreground font-normal italic opacity-70">{model.description}</span>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {openRouterModel === 'custom' && (
-                                    <div className="space-y-2 animate-in zoom-in-95 duration-200 text-left">
-                                        <label className="text-[10px] font-bold text-blue-500/70 ml-1 flex items-center gap-2 italic">
-                                            <Activity className="w-3 h-3" /> CUSTOM MODEL ID
-                                        </label>
-                                        <Input
-                                            disabled={isLoading}
-                                            placeholder="e.g. meta-llama/llama-3-8b"
-                                            value={customModelName}
-                                            onChange={(e) => setCustomModelName(e.target.value)}
-                                            className="bg-blue-500/5 border-blue-500/20 rounded-md focus-visible:ring-1 focus-visible:ring-blue-500 shadow-inner h-12 font-bold text-xs"
-                                        />
-                                        <p className="text-[9px] text-muted-foreground italic px-1 opacity-70">
-                                            Find model IDs at <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-blue-500 underline">openrouter.ai/models</a>
-                                        </p>
-                                    </div>
-                                )}
+                            <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
+                                <label className="text-[10px] font-bold text-blue-500 ml-1 flex items-center gap-2 uppercase tracking-wider opacity-80">
+                                    <Bot className="w-3 h-3 text-blue-500" /> OPENROUTER AI MODEL
+                                </label>
+                                <Input
+                                    disabled={isLoading}
+                                    placeholder="e.g. google/gemini-2.0-flash-exp:free"
+                                    value={openRouterModel}
+                                    onChange={(e) => setOpenRouterModel(e.target.value)}
+                                    className="bg-muted/30 border border-primary/20 rounded-md focus:ring-0.5 focus:ring-primary  font-bold text-xs"
+                                />
+                                <p className="text-[9px] text-muted-foreground italic px-1 opacity-70">
+                                    Find model IDs at <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-blue-500 underline">openrouter.ai/models</a>
+                                </p>
                             </div>
                         )}
 
@@ -417,7 +410,7 @@ export const AddCredentialModal = () => {
                                 <Activity className="w-3 h-3" /> CONNECTION STATUS
                             </label>
                             <Select value={status} onValueChange={setStatus} disabled={isLoading}>
-                                <SelectTrigger className="bg-muted/30 border-none rounded-md focus:ring-1 focus:ring-primary h-12 font-bold text-xs">
+                                <SelectTrigger className="bg-muted/30 border border-primary/20 rounded-md  focus:ring-0.5 focus:ring-primary font-bold text-xs">
                                     <SelectValue placeholder="Select Status" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-md border-border/20 shadow-2xl">
@@ -427,6 +420,45 @@ export const AddCredentialModal = () => {
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        {/* Usage Monitor */}
+                        {isEdit && (platform === 'GEMINI' || platform === 'OPENROUTER') && initialData?.details?.usage && (
+                            <div className="space-y-3 p-4 bg-muted/20 border border-border/50 rounded-md animate-in fade-in slide-in-from-bottom-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[10px] font-bold text-muted-foreground opacity-70 flex items-center gap-2">
+                                        <Activity className="w-3 h-3" /> USAGE MONITOR
+                                    </label>
+                                    <span className="text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full uppercase">
+                                        Today
+                                    </span>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-end">
+                                        <div className="flex flex-col">
+                                            <span className="text-xl font-black text-foreground">{initialData.details.usage.dailyCount || 0}</span>
+                                            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter">Requests Made Today</span>
+                                        </div>
+                                        {initialData.details.usage.quotaReached && (
+                                            <div className="flex items-center gap-1.5 text-rose-500 animate-pulse">
+                                                <Zap className="w-3.5 h-3.5 fill-rose-500" />
+                                                <span className="text-[10px] font-black uppercase italic">Quota Reached</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-500 ${initialData.details.usage.quotaReached ? 'bg-rose-500' : 'bg-primary'}`}
+                                            style={{ width: `${Math.min(((initialData.details.usage.dailyCount || 0) / 20) * 100, 100)}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground italic opacity-60">
+                                        * Tracking resets every 24 hours. (Estimated limit: ~20/day)
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Dynamic Fields */}
                         <div className="space-y-4 text-left">
@@ -447,21 +479,21 @@ export const AddCredentialModal = () => {
 
                             <div className="space-y-3">
                                 {fields.map((field, index) => (
-                                    <div key={index} className="flex gap-2 items-end group animate-in slide-in-from-top-2 duration-300">
-                                        <div className="flex-1 space-y-1">
+                                    <div key={index} className="flex gap-2 items-end group animate-in slide-in-from-top-2 duration-300 min-w-0 w-full overflow-hidden">
+                                        <div className="flex-1 space-y-1 min-w-0">
                                             <Input
                                                 placeholder="Key (e.g. api_key)"
                                                 value={field.key}
                                                 onChange={(e) => updateField(index, 'key', e.target.value)}
-                                                className="bg-muted/10 border-dashed border-border/40 rounded-md text-[10px] font-bold"
+                                                className="bg-muted/30 border border-primary/20 rounded-md focus:ring-0.5 focus:ring-primary text-[10px] font-bold"
                                             />
                                         </div>
-                                        <div className="flex-2 space-y-1">
+                                        <div className="flex-[3] space-y-1 min-w-0">
                                             <Input
                                                 placeholder="Value"
                                                 value={field.value}
                                                 onChange={(e) => updateField(index, 'value', e.target.value)}
-                                                className="bg-muted/30 border-none rounded-md text-[10px]"
+                                                className="bg-muted/30 border border-primary/20 rounded-md focus:ring-0.5 focus:ring-primary text-[10px] font-mono"
                                             />
                                         </div>
                                         {fields.length > 1 && (
@@ -481,12 +513,27 @@ export const AddCredentialModal = () => {
                         </div>
                     </div>
 
-                    <DialogFooter className="p-8 bg-muted/10 border-t border-border/10 flex flex-row items-center gap-3">
+                    <DialogFooter className="p-4 bg-muted/10 border-t border-border/10 flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+                        {isEdit && (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                disabled={isLoading || isTesting || isDeleting}
+                                onClick={onDelete}
+                                className="px-6 rounded-md text-sm bg-rose-500/10  hover:bg-rose-500 hover:text-white border border-rose-500/20"
+                            >
+                                {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1.5" />}
+                                {isDeleting ? "Deleting..." : "Delete Connection"}
+                            </Button>
+                        )}
+
+                        <div className="flex-1" />
+
                         <Button
                             type="button"
-                            variant="ghost"
+                            variant="outline"
                             onClick={handleClose}
-                            className="px-6 rounded-md font-bold text-muted-foreground text-[10px]"
+                            className="px-6 rounded-md text-sm"
                         >
                             Cancel
                         </Button>
@@ -511,12 +558,13 @@ export const AddCredentialModal = () => {
 
                                         // Include selected OpenRouter model
                                         if (platform === 'OPENROUTER') {
-                                            credentialsObject.model = openRouterModel === 'custom' ? customModelName : openRouterModel;
+                                            credentialsObject.model = openRouterModel;
                                         }
 
                                         const finalPlatform = platform === 'CUSTOM' ? customPlatform : platform;
+                                        const testId = initialData?.id || 'new';
 
-                                        const res = await axios.post(`/api/workspace/${workspaceId}/social/accounts/${initialData.id}/test`, {
+                                        const res = await axios.post(`/api/workspace/${workspaceId}/social/accounts/${testId}/test`, {
                                             credentials: credentialsObject,
                                             platform: finalPlatform.toUpperCase()
                                         });
@@ -539,7 +587,7 @@ export const AddCredentialModal = () => {
                                         setIsTesting(false);
                                     }
                                 }}
-                                className="px-6 rounded-md font-bold text-[10px] border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 transition-all"
+                                className="px-6 rounded-md text-sm border border-amber-500/30  hover:bg-amber-500/10 transition-all"
                             >
                                 {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
                                 Test Connection
@@ -548,7 +596,7 @@ export const AddCredentialModal = () => {
                         <Button
                             type="submit"
                             disabled={isLoading || isTesting}
-                            className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px] rounded-md font-extrabold text-[10px] shadow-lg shadow-primary/20 transition-all active:scale-95"
+                            className="px-8 bg-primary hover:bg-primary/90  rounded-md font-semibold  shadow-lg shadow-primary/20 transition-all active:scale-95"
                         >
                             {isLoading ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

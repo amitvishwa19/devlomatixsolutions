@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import PageTransition from '../components/PageTransition';
+import PageTransition from '../_components/PageTransition';
 
 
 const contactSchema = z.object({
@@ -26,13 +26,13 @@ const contactInfo = [
     {
         icon: Mail,
         title: "Email Us",
-        details: "hello@acstechhub.com",
+        details: "hello@devlomatixsolutions.com",
         description: "We'll respond within 24 hours",
     },
     {
         icon: Phone,
         title: "Call Us",
-        details: "+91 98765 43210",
+        details: "+91 97123 40450",
         description: "Mon-Fri from 9am to 6pm IST",
     },
     {

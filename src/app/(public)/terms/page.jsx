@@ -80,7 +80,7 @@ const TermsPage = () => {
                             Terms of Service
                         </h1>
                         <p className="text-muted-foreground text-xl max-w-2xl mx-auto leading-relaxed">
-                            A clear and comprehensive guide to our services, mutual responsibilities, and legal commitments at AcsTechHub.
+                            A clear and comprehensive guide to our services, mutual responsibilities, and legal commitments at Devlomatix Solutions.
                         </p>
                         <div className="mt-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold backdrop-blur-sm">
                             <Clock size={16} />
@@ -140,7 +140,7 @@ const TermsPage = () => {
                                     1. Agreement to Terms
                                 </h2>
                                 <p className="text-muted-foreground leading-relaxed text-lg">
-                                    These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you") and AcsTechHub ("we," "us" or "our"), concerning your access to and use of our website and services.
+                                    These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you") and Devlomatix Solutions ("we," "us" or "our"), concerning your access to and use of our website and services.
                                 </p>
                                 <p className="mt-4 text-muted-foreground leading-relaxed">
                                     By accessing our services, you confirm that you have read, understood, and agreed to be bound by all of these Terms of Service. If you do not agree with all of these terms, then you are expressly prohibited from using the Site and you must discontinue use immediately.
@@ -314,7 +314,7 @@ const TermsPage = () => {
                                     Questions or complaints? We're here to help you understand our terms and ensure a great experience.
                                 </p>
                                 <a 
-                                    href="mailto:legal@acstechhub.com" 
+                                    href="mailto:legal@devlomatixsolutions.com" 
                                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
                                 >
                                     Email Legal Team <ChevronRight size={18} />

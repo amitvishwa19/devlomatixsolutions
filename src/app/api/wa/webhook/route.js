@@ -53,10 +53,10 @@ export async function POST(req) {
                 for (const statusObj of statuses) {
                     const status = statusObj.status;
                     const waId = statusObj.id;
-                    
+
                     try {
                         let updateData = { status: status.toUpperCase() };
-                        
+
                         // Capture failure reasons if available
                         if (status === 'failed' && statusObj.errors) {
                             const existingMsg = await db.whatsAppMessage.findUnique({ where: { waId } });
@@ -71,7 +71,18 @@ export async function POST(req) {
 
                         await db.whatsAppMessage.update({
                             where: { waId },
-                            data: updateData
+                            data: { ...updateData, updatedAt: new Date() }
+                        });
+
+                        // Phase 1: Update Delivery Log for Analytics
+                        await db.whatsAppDeliveryLog.updateMany({
+                            where: { waId },
+                            data: {
+                                status: status.toUpperCase(),
+                                deliveredAt: status === 'delivered' ? new Date() : undefined,
+                                readAt: status === 'read' ? new Date() : undefined,
+                                error: status === 'failed' ? JSON.stringify(statusObj.errors?.[0]) : undefined
+                            }
                         });
                     } catch (e) {
                         // Silent catch: message might not be in our local database
@@ -80,38 +91,41 @@ export async function POST(req) {
             }
 
             if (messages && messages.length > 0) {
-                // 1. Fetch all cloud credentials once to identify the user
-                const allCloudCreds = await db.credentials.findMany({
+                // 1. Identify the user/credential associated with this phone number ID
+                const credentials = await db.credentials.findMany({
                     where: { platform: 'WHATSAPP_CLOUD' }
                 });
 
-                const targetCred = allCloudCreds.find(c => {
-                    try {
-                        let creds = typeof c.credentials === 'string' ? JSON.parse(c.credentials) : c.credentials;
+                let targetCred = null;
+                for (const c of credentials) {
+                    let cloudCreds = null;
+                    const stored = c.credentials;
+                    if (typeof stored === 'string' && stored.includes(':')) {
+                        try {
+                            const decryptedStr = symmetricDecrypt(stored);
+                            cloudCreds = JSON.parse(decryptedStr);
+                        } catch (e) {}
+                    } else if (typeof stored === 'string') {
+                        try { cloudCreds = JSON.parse(stored); } catch (e) {}
+                    } else { cloudCreds = stored; }
 
-                        // Handle Encrypted Credentials
-                        if (creds?.enc) {
-                            const decryptedStr = symmetricDecrypt(creds.enc);
-                            creds = JSON.parse(decryptedStr);
-                        }
-
-                        const storedId = String(creds?.phoneNumberId || creds?.phone_number_id || "");
-                        return storedId === String(phoneNumberId);
-                    } catch (e) {
-                        return false;
+                    if (cloudCreds?.enc) {
+                        try {
+                            const decryptedStr = symmetricDecrypt(cloudCreds.enc);
+                            cloudCreds = JSON.parse(decryptedStr);
+                        } catch (e) {}
                     }
-                });
+
+                    const credPhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+                    if (credPhoneId === String(phoneNumberId)) {
+                        targetCred = c;
+                        break;
+                    }
+                }
 
                 if (!targetCred) {
-                    console.error(`🔴 [Webhook] NO MATCH: Could not find user for PhoneID: ${phoneNumberId}`);
-                    console.log(`[Webhook] Diagnostic - Database Content:`, allCloudCreds.map(c => {
-                        try {
-                            let creds = typeof c.credentials === 'string' ? JSON.parse(c.credentials) : c.credentials;
-                            const isEnc = !!creds?.enc;
-                            return { id: c.id, encrypted: isEnc, keys: Object.keys(creds || {}) };
-                        } catch (e) { return "PARSE_ERROR"; }
-                    }));
-                    return NextResponse.json({ success: true, message: "Ignored: No matching user" });
+                    console.error(`[Webhook] No credential found matching PhoneID: ${phoneNumberId}`);
+                    return NextResponse.json({ success: true });
                 }
 
                 const userId = targetCred.userId;
@@ -122,28 +136,77 @@ export async function POST(req) {
                     const msgId = message.id;
                     const timestamp = message.timestamp;
 
+                    // Skip if message already exists
+                    const existing = await db.whatsAppMessage.findUnique({ where: { waId: msgId } });
+                    if (existing) continue;
+
                     let textBody = "";
+
+                    // Determine content based on message type
                     switch (message.type) {
                         case "text":
-                            textBody = message.text.body;
+                            textBody = message.text?.body || "";
+                            break;
+                        case "image":
+                        case "video":
+                        case "audio":
+                        case "document":
+                            textBody = `[${message.type.toUpperCase()}] ${message[message.type]?.caption || ""}`;
+                            break;
+                        case "location":
+                            textBody = `📍 [Location Shared] ${message.location?.name || `${message.location?.latitude}, ${message.location?.longitude}`}`;
                             break;
                         case "interactive":
-                            const interactive = message.interactive;
-                            if (interactive.type === "button_reply") textBody = interactive.button_reply.title;
-                            else if (interactive.type === "list_reply") textBody = interactive.list_reply.title;
+                            const iType = message.interactive?.type;
+                            if (iType === "button_reply") textBody = message.interactive.button_reply?.title;
+                            else if (iType === "list_reply") textBody = message.interactive.list_reply?.title;
+                            else textBody = "[Interactive Response]";
                             break;
-                        case "image": textBody = "[Image received]"; break;
-                        case "video": textBody = "[Video received]"; break;
-                        case "audio": textBody = "[Audio received]"; break;
-                        case "document": textBody = `[Document: ${message.document?.filename || "received"}]`; break;
-                        case "location": textBody = "[Location shared]"; break;
-                        case "sticker": textBody = "[Sticker received]"; break;
-                        case "button": textBody = message.button.text; break;
+                        case "button":
+                            textBody = message.button?.text || "[Button Click]";
+                            break;
                         default:
-                            textBody = `[Message type: ${message.type}]`;
+                            textBody = `[${message.type.toUpperCase()}]`;
                     }
 
-                    //console.log(`[Webhook] Processing ${message.type} from ${from}: ${textBody}`);
+                    console.log(`[Webhook] Processing ${message.type} from ${from}: ${textBody}`);
+
+                    // Phase 3: Auto-Sync Contact
+                    try {
+                        const phone = from.replace(/\D/g, '');
+                        let contact = await db.contact.findFirst({
+                            where: { userId, phone: { contains: phone } }
+                        });
+
+                        if (!contact) {
+                            contact = await db.contact.create({
+                                data: {
+                                    userId,
+                                    name: value.contacts?.[0]?.profile?.name || `WA User (${phone})`,
+                                    phone,
+                                    type: 'LEAD',
+                                    tags: ['WHATSAPP_LEAD']
+                                }
+                            });
+                        } else {
+                            // Update last interaction
+                            await db.contact.update({
+                                where: { id: contact.id },
+                                data: { lastInteraction: new Date(), lastMessage: textBody }
+                            });
+                        }
+                    } catch (contactErr) {
+                        console.error('[Webhook] Contact Sync Error:', contactErr);
+                    }
+
+                    // Phase 2: Trigger Bot Engine
+                    try {
+                        const workspaceId = targetCred.workspaceId || "cmnbhifag000458ikwhv1zso2";
+                        const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa/_lib/bot-engine");
+                        waBotEngine.processIncomingMessage(userId, workspaceId, from, textBody).catch(e => console.error('[Webhook] Bot Error:', e));
+                    } catch (botErr) {
+                        console.error('[Webhook] Bot Engine Trigger Error:', botErr);
+                    }
 
                     // 3. Save Message to Database
                     await db.whatsAppMessage.create({
@@ -157,7 +220,7 @@ export async function POST(req) {
                             status: "RECEIVED",
                             metadata: {
                                 raw: message,
-                                phone_number_id: phoneNumberId // Tag with Business ID for cross-user visibility
+                                phone_number_id: phoneNumberId
                             }
                         }
                     });

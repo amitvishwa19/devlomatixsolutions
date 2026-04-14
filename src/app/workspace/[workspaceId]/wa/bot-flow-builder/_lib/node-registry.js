@@ -12,7 +12,9 @@ import {
     ShoppingBag,
     ShoppingCart,
     Truck,
-    CreditCard
+    CreditCard,
+    Package,
+    Bot
 } from 'lucide-react';
 
 /**

@@ -5,28 +5,36 @@ export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get('userId');
+        const workspaceId = searchParams.get('workspaceId');
 
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+        if (!userId && !workspaceId) {
+            return NextResponse.json({ error: 'User ID or Workspace ID is required' }, { status: 400 });
         }
 
+        const where = {};
+        if (workspaceId) where.workspaceId = workspaceId;
+        else if (userId) where.userId = userId;
+
         const contacts = await db.contact.findMany({
-            where: { userId },
-            include: { groups: true },
+            where,
+            include: { 
+                groups: true,
+                category: true 
+            },
             orderBy: { createdAt: 'desc' }
         });
 
         return NextResponse.json(contacts);
     } catch (error) {
         console.error('API Error (GET /api/wa/contacts):', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
     }
 }
 
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { name, phone, email, info, userId } = body;
+        const { name, phone, email, info, userId, categoryId, tags, type, workspaceId } = body;
 
         if (!name || !phone || !userId) {
             return NextResponse.json({ error: 'Missing required fields (name, phone, userId)' }, { status: 400 });
@@ -35,9 +43,14 @@ export async function POST(req) {
         // Clean phone number (remove non-digits, but keep + if present)
         const cleanPhone = phone.replace(/[^\d+]/g, '');
 
-        // Check if contact already exists (phone is unique in schema)
+        // Check if contact already exists in this workspace
         const existingContact = await db.contact.findUnique({
-            where: { phone: cleanPhone }
+            where: {
+                workspaceId_phone: { 
+                    workspaceId: workspaceId || 'cmnbhifag000458ikwhv1zso2', 
+                    phone: cleanPhone 
+                }
+            }
         });
 
         if (existingContact) {
@@ -48,7 +61,15 @@ export async function POST(req) {
             // Update existing if it's the same user
             const updated = await db.contact.update({
                 where: { id: existingContact.id },
-                data: { name, email, info: info ? info : undefined }
+                data: { 
+                    name, 
+                    email, 
+                    info: info ? info : undefined,
+                    categoryId: categoryId || undefined,
+                    tags: tags || undefined,
+                    type: type || undefined
+                },
+                include: { category: true, groups: true }
             });
             return NextResponse.json(updated);
         }
@@ -59,8 +80,12 @@ export async function POST(req) {
                 phone: cleanPhone,
                 email,
                 info: info ? info : undefined,
-                userId
-            }
+                userId,
+                categoryId: categoryId || undefined,
+                tags: tags || [],
+                type: type || 'CONTACT'
+            },
+            include: { category: true, groups: true }
         });
 
         return NextResponse.json(contact);

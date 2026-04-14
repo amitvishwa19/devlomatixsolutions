@@ -3,17 +3,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    MessageSquare, 
-    Shield, 
-    Smartphone, 
-    RefreshCcw, 
-    CheckCircle2, 
-    AlertCircle, 
-    LogOut, 
-    QrCode, 
-    Plus, 
-    Trash2, 
+import {
+    MessageSquare,
+    Shield,
+    Smartphone,
+    RefreshCcw,
+    CheckCircle2,
+    AlertCircle,
+    LogOut,
+    QrCode,
+    Plus,
+    Trash2,
     Send,
     Settings,
     Zap,
@@ -28,7 +28,22 @@ import {
     Server,
     ExternalLink,
     ChevronRight,
-    Cpu
+    Cpu,
+    Star,
+    RefreshCw,
+    LayoutDashboard,
+    Bell,
+    ShieldCheck,
+    Info,
+    Share2,
+    Database,
+    Link,
+    Eye,
+    EyeOff,
+    Mail,
+    BellRing,
+    History,
+    Key
 } from 'lucide-react';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
@@ -41,11 +56,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { 
-    SelectValue 
-} from "@/components/ui/select";
 import {
     Dialog,
     DialogContent,
@@ -54,11 +65,18 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select";
 
 export default function SettingsPage() {
     // Connection Method State
     const [method, setMethod] = useState('cloud'); // 'cloud' | 'browser'
-    
+
     // Baileys / Browser States
     const [status, setStatus] = useState('welcome');
     const [metadata, setMetadata] = useState({});
@@ -68,18 +86,27 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [waUser, setWaUser] = useState(null);
-    
+
     // Cloud API States
-    const [cloudCreds, setCloudCreds] = useState(null);
+    const [cloudCreds, setCloudCreds] = useState([]);
     const [cloudLoading, setCloudLoading] = useState(false);
-    
+    const [testState, setTestState] = useState({}); // { id: 'loading' | 'success' | 'error' | null }
+    const [templates, setTemplates] = useState([]);
+    const [syncingTemplates, setSyncingTemplates] = useState({}); // { id: true/false }
+
     // Shared States
     const [webhookUrl, setWebhookUrl] = useState('');
     const [copied, setCopied] = useState(false);
-    
+    const [showWebhookSecret, setShowWebhookSecret] = useState(false);
+    const [testNumberInput, setTestNumberInput] = useState('');
+
     // Cloud Modal States
     const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [accountToDelete, setAccountToDelete] = useState(null);
     const [tempCreds, setTempCreds] = useState({
+        id: null,
+        profile: '',
         phoneNumberId: '',
         wabaId: '',
         accessToken: ''
@@ -122,23 +149,52 @@ export default function SettingsPage() {
             const data = await res.json();
             if (data?.data) {
                 setCloudCreds(data.data);
-                // Pre-fill modal for editing
-                setTempCreds({
-                    phoneNumberId: data.data.phoneNumberId || '',
-                    wabaId: data.data.wabaId || '',
-                    accessToken: '' // Don't pre-fill masked token
-                });
             }
         } catch (error) {
             console.error('Failed to fetch Cloud API creds:', error);
+            toast.error('Failed to load accounts');
         } finally {
             setCloudLoading(false);
         }
     };
 
+    const fetchTemplatesList = async () => {
+        try {
+            const res = await fetch('/api/wa/templates');
+            const data = await res.json();
+            if (data.success) {
+                setTemplates(data.templates);
+            }
+        } catch (error) {
+            console.error('Failed to fetch templates:', error);
+        }
+    };
+
+    const handleSyncTemplates = async (id) => {
+        setSyncingTemplates(prev => ({ ...prev, [id]: true }));
+        try {
+            const res = await fetch('/api/wa/templates/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message || 'Templates synced!');
+                fetchTemplatesList();
+            } else {
+                toast.error(data.error || 'Sync failed');
+            }
+        } catch (error) {
+            toast.error('Network error during sync');
+        } finally {
+            setSyncingTemplates(prev => ({ ...prev, [id]: false }));
+        }
+    };
+
     const handleSaveCloudCreds = async () => {
         if (!tempCreds.phoneNumberId || !tempCreds.wabaId || !tempCreds.accessToken) {
-            toast.error('All fields are required');
+            toast.error('Required fields: Phone ID, WABA ID, and Access Token');
             return;
         }
 
@@ -149,11 +205,12 @@ export default function SettingsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(tempCreds)
             });
-            
+
             if (res.ok) {
-                toast.success('Cloud credentials updated');
+                toast.success(tempCreds.id ? 'Account updated' : 'New account added');
                 setIsCredsModalOpen(false);
                 fetchCloudCreds();
+                setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
             } else {
                 const data = await res.json();
                 toast.error(data.error || 'Failed to update credentials');
@@ -165,54 +222,85 @@ export default function SettingsPage() {
         }
     };
 
+    const handleSetDefaultAccount = async (id) => {
+        try {
+            const res = await fetch('/api/wa/credentials/default', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message || 'Default account updated');
+                fetchCloudCreds();
+            } else {
+                toast.error(data.error || 'Failed to set default');
+            }
+        } catch (error) {
+            toast.error('Network error');
+        }
+    };
+
+    const handleTestConnection = async (id) => {
+        setTestState(prev => ({ ...prev, [id]: 'loading' }));
+        const testNumber = metadata.testNumbers?.[0];
+
+        try {
+            const res = await fetch('/api/wa/credentials/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, testNumber })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                toast.success(testNumber ? `Request accepted! Note: Message only delivers if ${testNumber} has messaged you in the last 24h.` : 'Connection verified!');
+                setTestState(prev => ({ ...prev, [id]: 'success' }));
+                fetchCloudCreds();
+            } else {
+                toast.error(data.error || 'Connection failed');
+                setTestState(prev => ({ ...prev, [id]: 'error' }));
+            }
+        } catch (error) {
+            toast.error('Network error during test');
+            setTestState(prev => ({ ...prev, [id]: 'error' }));
+        }
+    };
+
+    const handleDeleteCloudCred = async () => {
+        if (!accountToDelete) return;
+        setCloudLoading(true);
+        try {
+            const res = await fetch(`/api/wa/credentials?id=${accountToDelete.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                toast.success('Account removed successfully');
+                setIsDeleteModalOpen(false);
+                setAccountToDelete(null);
+                fetchCloudCreds();
+            } else {
+                toast.error('Failed to remove account');
+            }
+        } catch (error) {
+            toast.error('Error deleting account');
+        } finally {
+            setCloudLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchBrowserStatus();
         fetchCloudCreds();
-        
+        fetchTemplatesList();
+
         const interval = setInterval(() => {
             if (method === 'browser') fetchBrowserStatus();
         }, 10000);
-        
+
         if (typeof window !== 'undefined') {
             setWebhookUrl(`${window.location.origin}/api/wa/webhook`);
         }
-
         return () => clearInterval(interval);
     }, [fetchBrowserStatus, method]);
-
-    const handleConnect = async () => {
-        setActionLoading(true);
-        try {
-            const res = await fetch('/api/wa/auth', { method: 'POST' });
-            if (res.ok) {
-                toast.success('Connection process started');
-                fetchBrowserStatus();
-            } else {
-                toast.error('Failed to start connection');
-            }
-        } catch (error) {
-            toast.error('Connection error');
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
-    const handleDisconnect = async () => {
-        setActionLoading(true);
-        try {
-            const res = await fetch('/api/wa/auth', { method: 'DELETE' });
-            if (res.ok) {
-                toast.success('Disconnected successfully');
-                fetchBrowserStatus();
-            } else {
-                toast.error('Failed to disconnect');
-            }
-        } catch (error) {
-            toast.error('Disconnect error');
-        } finally {
-            setActionLoading(false);
-        }
-    };
 
     const handleSaveMetadata = async (updates) => {
         const newMetadata = { ...metadata, ...updates };
@@ -223,36 +311,10 @@ export default function SettingsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ metadata: newMetadata })
             });
-            if (!res.ok) throw new Error('Failed to save');
-            toast.success('Settings updated');
+            if (res.ok) toast.success('Settings updated');
         } catch (error) {
             toast.error('Failed to save settings');
-            console.error(error);
         }
-    };
-
-    const handleAddNumber = () => {
-        let formatted = newNumber.trim();
-        if (!formatted) return;
-        if (!formatted.startsWith('+')) {
-            formatted = '+' + formatted.replace(/[^0-9]/g, '');
-        }
-        const currentNumbers = metadata.testNumbers || [];
-        if (currentNumbers.includes(formatted)) {
-            toast.error('Number already exists.');
-            return;
-        }
-        if (currentNumbers.length >= 5) {
-            toast.error('Maximum 5 test numbers allowed.');
-            return;
-        }
-        handleSaveMetadata({ testNumbers: [...currentNumbers, formatted] });
-        setNewNumber('');
-    };
-
-    const handleRemoveNumber = (num) => {
-        const updated = (metadata.testNumbers || []).filter(n => n !== num);
-        handleSaveMetadata({ testNumbers: updated });
     };
 
     const copyToClipboard = (text) => {
@@ -260,6 +322,31 @@ export default function SettingsPage() {
         setCopied(true);
         toast.success("Copied to clipboard");
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleAddTestNumber = () => {
+        const cleanNumber = testNumberInput.replace(/[^\d+]/g, '');
+        if (!cleanNumber) {
+            toast.error('Invalid number');
+            return;
+        }
+        const currentTestNumbers = metadata.testNumbers || [];
+        if (currentTestNumbers.includes(cleanNumber)) {
+            toast.error('Number already added');
+            return;
+        }
+        if (currentTestNumbers.length >= 5) {
+            toast.error('Maximum 5 test numbers allowed');
+            return;
+        }
+
+        handleSaveMetadata({ testNumbers: [...currentTestNumbers, cleanNumber] });
+        setTestNumberInput('');
+    };
+
+    const handleRemoveTestNumber = (num) => {
+        const currentTestNumbers = metadata.testNumbers || [];
+        handleSaveMetadata({ testNumbers: currentTestNumbers.filter(n => n !== num) });
     };
 
     const statusConfig = {
@@ -274,525 +361,725 @@ export default function SettingsPage() {
 
     return (
         <TooltipProvider>
-            <div className="flex flex-col h-full gap-4 p-2 animate-in fade-in duration-500">
-                
-                {/* Unified Header with Connection Selector */}
-                <div className="flex border border-border items-center justify-between bg-card p-4 rounded-xl shadow-sm relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 opacity-20" />
-                    
-                    <div className="flex flex-row gap-4 items-center z-10">
-                        <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-inner">
-                            {method === 'cloud' ? <Globe className="w-6 h-6 text-primary" /> : <Smartphone className="w-6 h-6 text-primary" />}
+            <div className="flex flex-col h-full text-foreground overflow-hidden">
+
+                {/* Header Section */}
+                <div className="flex items-center justify-between p-4 border-b">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                            <DynamicIcon name="whatsapp" className="w-5 h-5 text-primary" />
                         </div>
-                        <div className='flex flex-col'>
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-xl font-black text-foreground tracking-tight">WhatsApp Instance</h2>
-                                <Badge variant="secondary" className="bg-primary/10 text-primary border-0 text-[10px] h-5 uppercase tracking-widest font-black">
-                                    {method} Engine
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-xl tracking-tight">WhatsApp Instance</h1>
+                                <Badge variant="outline" className="h-5 px-2 text-[10px] border-primary/20 text-primary">
+                                    Cloud API Engine
                                 </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground font-medium">Manage your {method === 'cloud' ? 'Meta Cloud API' : 'Browser Session'} configuration and status.</p>
+                            <p className="text-xs text-muted-foreground font-medium">Manage your Meta API configuration and status.</p>
                         </div>
                     </div>
-                    
-                    <div className="flex items-center gap-6 z-10">
-                        <div className="flex flex-col items-end gap-2">
-                             <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter">Connection Method</Label>
-                             <div className="flex items-center gap-3 bg-muted/40 p-1.5 px-3 rounded-full border border-border/50 shadow-inner">
-                                <span className={`text-[10px] font-bold uppercase tracking-tight transition-opacity ${method === 'browser' ? 'text-primary' : 'text-muted-foreground/40'}`}>Browser</span>
-                                <Switch 
-                                    checked={method === 'cloud'} 
-                                    onCheckedChange={(checked) => setMethod(checked ? 'cloud' : 'browser')}
-                                    className="data-[state=checked]:bg-primary h-5 w-9"
-                                />
-                                <span className={`text-[10px] font-bold uppercase tracking-tight transition-opacity ${method === 'cloud' ? 'text-primary' : 'text-muted-foreground/40'}`}>Cloud API</span>
-                             </div>
-                        </div>
 
-                        <Separator orientation="vertical" className="h-10 mx-1 bg-border/50" />
-
-                        <div className="flex flex-col items-end">
-                            <Badge variant="outline" className={`py-1.5 px-4 flex items-center gap-2 border-0 ${method === 'cloud' ? (cloudCreds ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500') : (`${currentStatus.color}/10 text-foreground`)} font-bold shadow-sm h-10`}>
-                                <div className={`h-2 w-2 rounded-full ${method === 'cloud' ? (cloudCreds ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500') : currentStatus.color}`} />
-                                {method === 'cloud' ? (cloudCreds ? 'Cloud Link Active' : 'Credentials Missing') : currentStatus.label}
-                            </Badge>
-                        </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <span className="text-[10px] font-bold text-primary">
+                            {cloudCreds.length} Active Cloud Nodes
+                        </span>
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <Tabs defaultValue="general" className="flex-1 flex flex-col gap-4 overflow-hidden">
-                    <TabsList className="bg-card border border-border p-1 h-12 w-fit">
-                        <TabsTrigger value="general" className="gap-2 px-6 h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary font-bold transition-all uppercase text-[10px] tracking-widest">
-                            <Cpu className="w-4 h-4" /> Core Status
-                        </TabsTrigger>
-                        <TabsTrigger value="automation" className="gap-2 px-6 h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary font-bold transition-all uppercase text-[10px] tracking-widest">
-                            <Zap className="w-4 h-4" /> Automation
-                        </TabsTrigger>
-                        <TabsTrigger value="api" className="gap-2 px-6 h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary font-bold transition-all uppercase text-[10px] tracking-widest">
-                            <Terminal className="w-4 h-4" /> Webhooks
-                        </TabsTrigger>
+                {/* Tabs Navigation */}
+                <Tabs defaultValue="status" className="flex-1 flex flex-col m-4">
+                    <TabsList className="bg-transparent w-full justify-start rounded-none h-auto p-0 gap-2 mb-4">
+                        {['status', 'automation', 'webhooks', 'messaging', 'notifications', 'security', 'general'].map((tab) => (
+                            <TabsTrigger
+                                key={tab}
+                                value={tab}
+                                className="rounded-md w-36 p-2 border border-border/20 text-sm capitalize data-[state=active]:border-primary/20 data-[state=active]:text-primary data-[state=active]:bg-muted/50 transition-all opacity-60 data-[state=active]:opacity-100"
+                            >
+                                {tab.replace('_', ' ')}
+                            </TabsTrigger>
+                        ))}
                     </TabsList>
 
-                    {/* General Tab */}
-                    <TabsContent value="general" className="flex-1 overflow-y-auto space-y-4 focus-visible:ring-0">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            
-                            {/* Primary Connection Card */}
-                            <Card className="lg:col-span-2 bg-card/50 border-border shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-                                <CardHeader className="border-b border-border/50 pb-4 bg-muted/5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <CardTitle className="text-base flex items-center gap-2">
-                                                {method === 'cloud' ? <Globe className="w-4 h-4 text-primary" /> : <QrCode className="w-4 h-4 text-primary" />}
-                                                {method === 'cloud' ? 'Cloud API Integration' : 'Browser Session Management'}
-                                            </CardTitle>
-                                            <CardDescription className="text-[10px] uppercase font-bold tracking-tight text-muted-foreground/60">
-                                                {method === 'cloud' ? 'Official Meta Business Platform Connectivity' : 'High-Speed Web Instance Virtualization'}
-                                            </CardDescription>
+                    {/* STATUS TAB */}
+                    <TabsContent value="status" className="flex-1 outline-none pr-2 custom-scrollbar">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                            {/* Main Content (Left) */}
+                            <div className="md:col-span-8 space-y-6">
+                                <Card className="border-border/40 shadow-none relative">
+                                    <CardHeader className="flex flex-row items-center justify-between pb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary/5 rounded-lg border border-primary/10">
+                                                <Globe className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <CardTitle className="text-base tracking-tight">Cloud API Integration</CardTitle>
+                                                <CardDescription className="text-xs">Meta Business Platform Connectivity</CardDescription>
+                                            </div>
                                         </div>
-                                        {method === 'browser' && status === 'open' && (
-                                            <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10 font-bold gap-2" onClick={handleDisconnect}>
-                                                <LogOut size={14} /> Kill Session
-                                            </Button>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                
-                                <CardContent className="flex-1 flex flex-col items-center justify-center p-8">
-                                    {method === 'cloud' ? (
-                                        <AnimatePresence mode="wait">
-                                            {cloudCreds ? (
-                                                <motion.div 
-                                                    initial={{ opacity: 0, scale: 0.95 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    className="w-full space-y-8"
-                                                >
-                                                    <div className="flex flex-col items-center text-center space-y-4">
-                                                        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center border-2 border-emerald-500/30 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                                                            <CheckCircle2 className="w-8 h-8" />
+                                        <Button
+                                            size="sm"
+                                            className="h-8 text-xs px-4"
+                                            onClick={() => {
+                                                setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
+                                                setIsCredsModalOpen(true);
+                                            }}
+                                        >
+                                            <Plus className="w-3.5 h-3.5 mr-2" /> Add Account
+                                        </Button>
+                                    </CardHeader>
+
+                                    <CardContent className="space-y-4">
+                                        {cloudCreds.map((cred) => (
+                                            <div key={cred.id} className="p-4 bg-muted/20 rounded-lg border border-border/40 hover:border-primary/30 transition-all group">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all">
+                                                            <MessageSquare className="w-5 h-5" />
                                                         </div>
-                                                        <div>
-                                                            <h3 className="text-lg font-black tracking-tight">Cloud Connection Verified</h3>
-                                                            <p className="text-xs text-muted-foreground">Your Meta Business identifiers are correctly synchronized.</p>
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-semibold">{cred.profile || 'WhatsApp Account'}</span>
+                                                                {cred.verified ? (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 fill-green-500/10" />
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>Verified Node</TooltipContent>
+                                                                    </Tooltip>
+                                                                ) : (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <AlertCircle className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>Needs Re-verification</TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
+                                                                {cred.isDefault && <Badge variant="secondary" className="h-4 text-[9px] bg-primary/10 text-primary border-0">DEFAULT</Badge>}
+                                                            </div>
+                                                            <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-mono">
+                                                                <span className="opacity-50 uppercase">Phone ID:</span>
+                                                                <span>••••••••</span>
+                                                                <Copy size={10} className="hover:text-primary cursor-pointer" onClick={() => copyToClipboard(cred.phoneNumberId)} />
+                                                                <Separator orientation="vertical" className="h-2" />
+                                                                <span className="opacity-50 uppercase">WABA ID:</span>
+                                                                <span>••••••••</span>
+                                                                <Copy size={10} className="hover:text-primary cursor-pointer" onClick={() => copyToClipboard(cred.wabaId)} />
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                        <div className="p-4 bg-muted/20 border border-border/50 rounded-xl space-y-2 group hover:border-primary/30 transition-colors">
-                                                            <span className="text-[9px] uppercase font-black text-muted-foreground">Phone Number ID</span>
-                                                            <code className="text-xs font-mono block truncate opacity-80 group-hover:opacity-100">{cloudCreds.phoneNumberId}</code>
-                                                        </div>
-                                                        <div className="p-4 bg-muted/20 border border-border/50 rounded-xl space-y-2 group hover:border-primary/30 transition-colors">
-                                                            <span className="text-[9px] uppercase font-black text-muted-foreground">WABA ID</span>
-                                                            <code className="text-xs font-mono block truncate opacity-80 group-hover:opacity-100">{cloudCreds.wabaId}</code>
-                                                        </div>
-                                                        <div className="p-4 bg-muted/20 border border-border/50 rounded-xl space-y-2 group hover:border-primary/30 transition-colors">
-                                                            <span className="text-[9px] uppercase font-black text-muted-foreground">Access Token</span>
-                                                            <code className="text-xs font-mono block truncate opacity-80 group-hover:opacity-100">{cloudCreds.accessToken}</code>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="flex justify-center pt-4">
-                                                        <Button 
-                                                            variant="outline" 
-                                                            className="gap-2 font-bold h-10 px-8 border-border hover:bg-primary/5 hover:border-primary/30" 
-                                                            onClick={() => setIsCredsModalOpen(true)}
+
+                                                    <div className="flex items-center gap-3">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    className={`h-8 w-8 transition-all ${cred.isDefault ? 'bg-primary/20 border-primary/30 text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                                                                    onClick={() => handleSetDefaultAccount(cred.id)}
+                                                                >
+                                                                    <Star className={`w-3.5 h-3.5 ${cred.isDefault ? 'fill-current' : ''}`} />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                {cred.isDefault ? 'Current Default Account' : 'Set as Default Account'}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-8 text-[10px] font-bold uppercase transition-all flex items-center gap-2"
+                                                            onClick={() => handleTestConnection(cred.id)}
+                                                            disabled={testState[cred.id] === 'loading'}
                                                         >
-                                                            <Settings size={14} /> Update Credentials
+                                                            {testState[cred.id] === 'loading' ? (
+                                                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                                            ) : (
+                                                                <Zap size={12} className={testState[cred.id] === 'success' ? 'fill-green-500 text-green-500' : ''} />
+                                                            )}
+                                                            {testState[cred.id] === 'loading' ? 'Testing...' : 'Test'}
+                                                        </Button>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Info className="w-3 h-3 text-muted-foreground cursor-help" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="max-w-[200px] text-[10px]">
+                                                                Sends a direct text message. 
+                                                                <br />
+                                                                <b>Important:</b> Recipient must have messaged you in the last 24h.
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => {
+                                                            setTempCreds({ ...cred, accessToken: '' });
+                                                            setIsCredsModalOpen(true);
+                                                        }}>
+                                                            <Settings size={14} />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => {
+                                                            setAccountToDelete(cred);
+                                                            setIsDeleteModalOpen(true);
+                                                        }}>
+                                                            <Trash2 size={14} />
                                                         </Button>
                                                     </div>
-                                                </motion.div>
-                                            ) : (
-                                                <div className="text-center space-y-6">
-                                                    <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center border-2 border-red-500/20 text-red-500 mx-auto opacity-50">
-                                                        <AlertCircle className="w-10 h-10" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <h3 className="text-lg font-bold">Incomplete Configuration</h3>
-                                                        <p className="text-xs text-muted-foreground max-w-xs mx-auto">Please provide your Meta Cloud API credentials to enable messaging.</p>
-                                                    </div>
-                                                    <Button variant="default" className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2">
-                                                        <Plus size={16} /> Link Meta Account
-                                                    </Button>
                                                 </div>
-                                            )}
-                                        </AnimatePresence>
-                                    ) : (
-                                        <AnimatePresence mode="wait">
-                                            {status === 'qr' && qrDataUrl ? (
-                                                <motion.div
-                                                    initial={{ opacity: 0, scale: 0.9 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    className="p-6 bg-white rounded-2xl shadow-2xl relative group border-4 border-primary/20"
-                                                >
-                                                    <img src={qrDataUrl} alt="QR Code" className="w-56 h-56" />
-                                                    <div className="absolute inset-0 bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
-                                                        <Badge className="bg-primary hover:bg-primary gap-2">
-                                                            <RefreshCcw className="w-3 h-3 animate-spin" /> Auto-Refreshing
-                                                        </Badge>
-                                                    </div>
-                                                </motion.div>
-                                            ) : status === 'open' ? (
-                                                <div className="text-center space-y-6">
-                                                    <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center border-2 border-emerald-500/20 mx-auto group">
-                                                        <CheckCircle2 className="w-12 h-12 text-emerald-500 group-hover:scale-110 transition-transform" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <h3 className="text-lg font-black tracking-tight">Handshake Successful</h3>
-                                                        <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">Your browser session is virtualized and actively processing webhooks.</p>
-                                                    </div>
-                                                    
-                                                    {waUser && (
-                                                        <div className="flex items-center gap-3 bg-muted/30 p-2 pr-4 rounded-full border border-border/50 max-w-fit mx-auto">
-                                                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-sm">
-                                                                {waUser.name?.charAt(0) || 'W'}
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <p className="text-[10px] font-black uppercase text-muted-foreground leading-none mb-1">Authenticated as</p>
-                                                                <p className="text-xs font-bold leading-none">{waUser.name || 'WhatsApp Device'}</p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="text-center space-y-6">
-                                                    <div className="w-20 h-20 bg-muted/40 rounded-full flex items-center justify-center mx-auto border-2 border-dashed border-border opacity-50">
-                                                        <Smartphone className="w-10 h-10 text-muted-foreground" />
-                                                    </div>
-                                                    <p className="text-xs text-muted-foreground font-medium">Capture a new session to begin self-hosted sync.</p>
-                                                    <Button 
-                                                        className="bg-primary hover:bg-primary/90 h-11 px-10 font-black gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:scale-105" 
-                                                        onClick={handleConnect} 
-                                                        disabled={actionLoading || status === 'connecting'}
-                                                    >
-                                                        {status === 'connecting' ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Zap size={16} />}
-                                                        Generate QR Sync
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </AnimatePresence>
-                                    )}
-                                </CardContent>
-                                
-                                <CardFooter className="bg-muted/5 border-t border-border/50 px-6 py-4 flex justify-between items-center overflow-hidden">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex -space-x-2">
-                                            {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full bg-card border-2 border-background shadow-sm" />)}
-                                        </div>
-                                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Active nodes supporting this method</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="text-[9px] border-border/50 h-6 px-3 bg-muted/20">v3.4.0 Engine</Badge>
-                                        <Badge variant="outline" className="text-[9px] border-emerald-500/20 text-emerald-500 h-6 px-3 bg-emerald-500/5">Encrypted</Badge>
-                                    </div>
-                                </CardFooter>
-                            </Card>
-
-                            {/* Secondary Info Stack */}
-                            <div className="space-y-4">
-                                <Card className="bg-card/50 border-border shadow-sm p-5 space-y-6">
-                                    <h4 className="text-xs font-black uppercase tracking-tighter flex items-center gap-2 text-primary">
-                                        <Server size={14} /> Instance Metadata
-                                    </h4>
-                                    
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between group">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
-                                                    <Shield size={16} />
-                                                </div>
-                                                <span className="text-xs font-bold">App Security</span>
                                             </div>
-                                            <Badge variant="outline" className="text-[9px] font-black border-blue-500/20 text-blue-500 bg-blue-500/5 uppercase">High-Grade</Badge>
-                                        </div>
-                                        
-                                        <div className="flex items-center justify-between group">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                                    <Clock size={16} />
-                                                </div>
-                                                <span className="text-xs font-bold">Latency Pool</span>
+                                        ))}
+                                        {cloudCreds.length === 0 && (
+                                            <div className="text-center py-12 border border-dashed border-border/40 rounded-lg">
+                                                <p className="text-xs text-muted-foreground">No Cloud API accounts linked yet.</p>
                                             </div>
-                                            <Badge variant="outline" className="text-[9px] font-black border-emerald-500/20 text-emerald-500 bg-emerald-500/5 uppercase">0.4ms</Badge>
-                                        </div>
-                                        
-                                        <div className="flex items-center justify-between group">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
-                                                    <Globe size={16} />
-                                                </div>
-                                                <span className="text-xs font-bold">API Version</span>
-                                            </div>
-                                            <Badge variant="outline" className="text-[9px] font-black border-amber-500/20 text-amber-500 bg-amber-500/5 uppercase">v21.0</Badge>
-                                        </div>
-                                    </div>
-                                    
-                                    <Separator className="bg-border/50" />
-                                    
-                                    <Button variant="ghost" className="w-full justify-between text-xs font-bold group hover:bg-primary/5 hover:text-primary transition-all">
-                                        Developer Documentation
-                                        <ExternalLink size={14} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                                    </Button>
+                                        )}
+                                    </CardContent>
                                 </Card>
 
-                                <Card className="bg-primary/5 border border-primary/20 p-5 shadow-[inset_0_0_20px_rgba(0,0,0,0.1)]">
-                                    <div className="flex gap-4">
-                                        <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center shrink-0 border border-primary/30">
-                                            <Zap size={20} className="text-primary" />
+                                <div className="flex items-center justify-between text-[10px] px-2">
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                        <span>Active Nodes Online</span>
+                                    </div>
+                                    <span className="text-muted-foreground italic">VWA-Engine v3.4.0 (Enterprise)</span>
+                                </div>
+                            </div>
+
+                            {/* Sidebar Stats (Right) */}
+                            <div className="md:col-span-4 space-y-4">
+                                <Card className="border-border/40 p-5 space-y-4">
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Database size={14} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Instance Health</span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="opacity-70">App Security</span>
+                                            <Badge variant="outline" className="text-[9px] h-5 border-green-500/20 text-green-500 bg-green-500/5">High</Badge>
                                         </div>
-                                        <div className="space-y-1">
-                                            <h4 className="text-xs font-black uppercase tracking-widest text-primary">Priority Mode Enabled</h4>
-                                            <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">Your current {method} node is hosted on a priority bypass server, ensuring zero-queue delivery for critical transactional alerts.</p>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="opacity-70">Latency</span>
+                                            <span className="font-bold text-primary">0.4ms</span>
                                         </div>
                                     </div>
+                                </Card>
+
+                                <Card className="bg-primary/5 border-primary/20 p-5 space-y-3">
+                                    <div className="flex items-center gap-2 text-primary">
+                                        <Zap size={14} className="fill-current" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Priority Mode</span>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground leading-relaxed">System is running on a high-availability node for zero-latency delivery.</p>
                                 </Card>
                             </div>
                         </div>
                     </TabsContent>
 
-                    {/* Automation Tab */}
-                    <TabsContent value="automation" className="flex-1 overflow-y-auto space-y-4 focus-visible:ring-0">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Card className="bg-card/50 border-border shadow-sm">
-                                <CardHeader className="pb-4 border-b border-border/50">
+                    {/* AUTOMATION TAB */}
+                    <TabsContent value="automation" className="flex-1 space-y-6 outline-none">
+                        <div className="max-w-3xl space-y-6">
+                            <Card className="border-border/40 shadow-none">
+                                <CardHeader>
                                     <div className="flex items-center justify-between">
-                                        <CardTitle className="text-base flex items-center gap-2">
-                                            <Bot className="w-4 h-4 text-primary" />
-                                            Unified Responder
-                                        </CardTitle>
-                                        <Switch 
-                                            checked={metadata.autoResponderEnabled || false} 
+                                        <div className="space-y-1">
+                                            <CardTitle className="text-base">Auto-Responder</CardTitle>
+                                            <CardDescription className="text-xs">Automated message handlers for incoming payloads.</CardDescription>
+                                        </div>
+                                        <Switch
+                                            checked={metadata.autoResponderEnabled || false}
                                             onCheckedChange={(checked) => handleSaveMetadata({ autoResponderEnabled: checked })}
                                         />
                                     </div>
-                                    <CardDescription className="text-xs">Automatically reply to all incoming messages across both Cloud & Browser methods.</CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-4 space-y-6 pt-6">
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-sm font-semibold">AI Assistant Analysis</Label>
-                                            <Switch 
-                                                checked={metadata.aiAssistantEnabled || false} 
-                                                onCheckedChange={(checked) => handleSaveMetadata({ aiAssistantEnabled: checked })}
-                                            />
+                                <CardContent className="space-y-6">
+                                    <div className="flex items-center justify-between p-4 bg-muted/20 border rounded-lg">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs font-semibold">AI Synthesis Hub</Label>
+                                            <p className="text-[10px] text-muted-foreground">Use AI to analyze intent before replying.</p>
                                         </div>
-                                        <p className="text-[11px] text-muted-foreground font-medium">Enable real-time intent analysis using LLMs before generating an automated response payload.</p>
+                                        <Switch
+                                            checked={metadata.aiAssistantEnabled || false}
+                                            onCheckedChange={(checked) => handleSaveMetadata({ aiAssistantEnabled: checked })}
+                                        />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <Label className="text-sm font-bold uppercase tracking-tight text-primary/80">Default Response Protocol</Label>
-                                            <Badge variant="outline" className="text-[9px] h-5 opacity-40">Markdown Support Only</Badge>
-                                        </div>
-                                        <Textarea 
-                                            className="min-h-[140px] text-xs bg-muted/20 border-border/50 font-medium leading-relaxed" 
-                                            placeholder="Hello! Thanks for reaching out to Devlomatix. We've received your inquiry and our team will get back to you shortly."
+                                        <Label className="text-xs opacity-70">Default Welcome Message</Label>
+                                        <Textarea
+                                            rows={6}
+                                            className="min-h-[120px] bg-muted/10 text-xs focus:border-primary/40"
+                                            placeholder="Hello! How can we help you today?"
                                             value={metadata.welcomeMessage || ''}
                                             onChange={(e) => setMetadata({ ...metadata, welcomeMessage: e.target.value })}
                                             onBlur={(e) => handleSaveMetadata({ welcomeMessage: e.target.value })}
                                         />
-                                        <p className="text-[10px] text-muted-foreground italic bg-primary/5 p-2 rounded flex gap-2">
-                                            <Info size={12} className="shrink-0" /> Shared Logic: This message is triggered for both official Cloud and custom BrowserSync instances.
-                                        </p>
                                     </div>
                                 </CardContent>
                             </Card>
 
-                            <div className="space-y-4">
-                                <Card className="bg-card/50 border-border shadow-sm">
-                                    <CardHeader className="pb-3 px-5">
-                                        <CardTitle className="text-sm font-black flex items-center gap-2 uppercase tracking-tighter">
-                                            <Send className="w-4 h-4 text-primary" />
-                                            Developer Test Pool
-                                        </CardTitle>
-                                        <CardDescription className="text-[11px] font-medium italic opacity-70">Numbers whitelisted for direct server-to-client priority delivery.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4 px-5">
-                                        <div className="flex gap-2 p-1.5 bg-muted/20 border border-border/50 rounded-xl">
+                            <Card className="border-border/40 shadow-none">
+                                <CardHeader>
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <Smartphone className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <CardTitle className="text-base text-primary">Test Audience</CardTitle>
+                                            <CardDescription className="text-xs">Manage phone numbers reserved for system testing and quality assurance.</CardDescription>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                                             <Input
-                                                placeholder="e.g. 919876543210"
-                                                value={newNumber}
-                                                onChange={(e) => setNewNumber(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}
-                                                className="bg-transparent border-0 h-9 text-xs focus-visible:ring-0 shadow-none font-bold"
+                                                placeholder="Enter phone with country code (e.g. +919712340450)"
+                                                className="pl-9 bg-muted/10 h-10 text-xs"
+                                                value={testNumberInput}
+                                                onChange={e => setTestNumberInput(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && handleAddTestNumber()}
                                             />
-                                            <Button size="sm" onClick={handleAddNumber} className="h-9 px-4 bg-primary hover:bg-primary/90 font-black shadow-lg">
-                                                ADD
-                                            </Button>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 min-h-[60px] p-2 bg-muted/10 rounded-lg">
-                                            {(metadata.testNumbers || []).map((num) => (
-                                                <Badge key={num} variant="secondary" className="pl-4 pr-1.5 py-1.5 gap-2 border border-border/50 bg-card hover:border-primary/50 transition-all font-mono text-[10px] shadow-sm">
-                                                    {num}
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive transition-colors rounded-full" 
-                                                        onClick={() => handleRemoveNumber(num)}
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
-                                                </Badge>
-                                            ))}
-                                            {(metadata.testNumbers || []).length === 0 && (
-                                                <div className="w-full flex flex-col items-center justify-center py-4 space-y-1 opacity-20">
-                                                    <Smartphone size={24} />
-                                                    <p className="text-[10px] font-black uppercase tracking-widest">No active test targets</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                        <Button size="sm" onClick={handleAddTestNumber} className="h-10 px-4">Add Number</Button>
+                                    </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Card className="bg-card/50 border-border p-4 space-y-2">
-                                        <Clock size={16} className="text-primary/50" />
-                                        <h5 className="text-[10px] font-black uppercase text-muted-foreground">Rate Limit</h5>
-                                        <p className="text-xs font-bold">No Limit (Test)</p>
-                                    </Card>
-                                    <Card className="bg-card/50 border-border p-4 space-y-2">
-                                        <Shield size={16} className="text-primary/50" />
-                                        <h5 className="text-[10px] font-black uppercase text-muted-foreground">Protocol</h5>
-                                        <p className="text-xs font-bold">HTTPS/GCM</p>
-                                    </Card>
-                                </div>
-                            </div>
+                                    <div className="grid gap-2">
+                                        {(metadata.testNumbers || []).map((num) => (
+                                            <div key={num} className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card hover:border-primary/20 transition-all group">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                                                    </div>
+                                                    <span className="text-sm font-mono">{num}</span>
+                                                    <Badge variant="outline" className="text-[8px] h-4 border-primary/20 text-primary opacity-60">VERIFIED</Badge>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Info className="w-2.5 h-2.5 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="text-[10px]">
+                                                            Ensure this number is also added to 'Test Numbers' in Meta Dev Console.
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={() => handleRemoveTestNumber(num)}
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                        {(metadata.testNumbers || []).length === 0 && (
+                                            <div className="flex flex-col items-center justify-center py-8 text-center space-y-2 bg-muted/5 border border-dashed rounded-lg">
+                                                <Smartphone className="w-8 h-8 text-muted-foreground/20" />
+                                                <p className="text-[10px] text-muted-foreground italic">No test numbers defined yet.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </TabsContent>
 
-                    {/* API & Webhook Tab */}
-                    <TabsContent value="api" className="flex-1 overflow-y-auto space-y-4 focus-visible:ring-0">
-                        <Card className="bg-card/50 border-border shadow-sm">
-                            <CardHeader className="border-b border-border/50 pb-4 bg-muted/5">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <CardTitle className="text-base flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
-                                                <Globe className="w-4 h-4 text-primary" />
+                    {/* WEBHOOKS TAB */}
+                    <TabsContent value="webhooks" className="flex-1 space-y-6 outline-none">
+                        <div className="max-w-3xl space-y-6">
+                            <Card className="border-border/40 shadow-none">
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Link className="w-4 h-4 text-primary" />
+                                        <CardTitle className="text-base text-primary">Webhook Configuration</CardTitle>
+                                    </div>
+                                    <CardDescription className="text-xs">Incoming event notification bridge for your external systems.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="space-y-3">
+                                        <Label className="text-xs opacity-70">Webhook Payload URL</Label>
+                                        <div className="flex gap-2">
+                                            <Input readOnly value={webhookUrl} className="bg-muted/30 text-xs font-mono border-border/40" />
+                                            <Button variant="outline" size="icon" className="shrink-0" onClick={() => copyToClipboard(webhookUrl)}>
+                                                <Copy size={14} />
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">Configure this URL in your Meta Developer Portal Webhooks section.</p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <Label className="text-xs opacity-70">Verify Token</Label>
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Input
+                                                    type={showWebhookSecret ? "text" : "password"}
+                                                    value={metadata.webhookSecret || 'devlomatix_secret'}
+                                                    onChange={(e) => setMetadata({ ...metadata, webhookSecret: e.target.value })}
+                                                    onBlur={(e) => handleSaveMetadata({ webhookSecret: e.target.value })}
+                                                    className="bg-muted/30 text-xs font-mono border-border/40 pr-10"
+                                                />
+                                                <button
+                                                    onClick={() => setShowWebhookSecret(!showWebhookSecret)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    {showWebhookSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                </button>
                                             </div>
-                                            Ingress Gateway Configuration
-                                        </CardTitle>
-                                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-11">Unified Event Polling Interface (Webhook)</CardDescription>
+                                            <Button variant="outline" size="icon" className="shrink-0" onClick={() => copyToClipboard(metadata.webhookSecret || 'devlomatix_secret')}>
+                                                <Copy size={14} />
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <Badge variant="outline" className="border-emerald-500/20 text-emerald-500 bg-emerald-500/5 h-6 px-4 font-black text-[9px] uppercase tracking-widest">Global Endpoint</Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-8 space-y-8">
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-[11px] font-black uppercase tracking-widest text-primary/80">Production Webhook Absolute URL</Label>
-                                        <span className="text-[9px] font-bold opacity-30 italic">POST Requests Only</span>
+
+                                    <Separator />
+
+                                    <div className="space-y-4">
+                                        <Label className="text-xs font-semibold">Event Subscriptions</Label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[
+                                                { label: 'Message Events', key: 'hook_messages' },
+                                                { label: 'Status Updates', key: 'hook_status' },
+                                                { label: 'Delivery Reports', key: 'hook_delivery' },
+                                                { label: 'Error Notifications', key: 'hook_errors' }
+                                            ].map((evt) => (
+                                                <div key={evt.key} className="flex items-center justify-between p-3 border rounded-md">
+                                                    <span className="text-[11px] font-medium">{evt.label}</span>
+                                                    <Switch
+                                                        checked={metadata[evt.key] !== false}
+                                                        onCheckedChange={(c) => handleSaveMetadata({ [evt.key]: c })}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <div className="relative flex-1 group">
-                                            <Input readOnly value={webhookUrl} className="bg-muted/30 border-border/50 font-mono text-[11px] pr-12 h-12 cursor-default focus:ring-0 font-bold opacity-70 group-hover:opacity-100 transition-opacity" />
-                                            <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                                                <Globe className="w-4 h-4 text-primary/30 group-hover:text-primary transition-colors" />
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </TabsContent>
+
+                    {/* MESSAGING TAB */}
+                    <TabsContent value="messaging" className="flex-1 space-y-6 outline-none">
+                        <div className="max-w-3xl space-y-6">
+                            <Card className="border-border/40 shadow-none">
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Send className="w-4 h-4 text-primary" />
+                                        <CardTitle className="text-base text-primary">Messaging Standards</CardTitle>
+                                    </div>
+                                    <CardDescription className="text-xs">Behavioral rules for outbound communications.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs opacity-70">Message Retention</Label>
+                                            <Select
+                                                value={metadata.retention || '90'}
+                                                onValueChange={(v) => handleSaveMetadata({ retention: v })}
+                                            >
+                                                <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                    <SelectValue placeholder="Select period" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="30">30 Days</SelectItem>
+                                                    <SelectItem value="90">90 Days</SelectItem>
+                                                    <SelectItem value="365">1 Year</SelectItem>
+                                                    <SelectItem value="0">Indefinite</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs opacity-70">Media Quality</Label>
+                                            <Select
+                                                value={metadata.mediaQuality || 'standard'}
+                                                onValueChange={(v) => handleSaveMetadata({ mediaQuality: v })}
+                                            >
+                                                <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                    <SelectValue placeholder="Select quality" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="standard">Standard (Comp.)</SelectItem>
+                                                    <SelectItem value="hd">High Definition</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <Separator />
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-xs font-semibold">Auto-Sync Templates</Label>
+                                                <p className="text-[10px] text-muted-foreground">Automatically download Meta templates every hour.</p>
+                                            </div>
+                                            <Switch
+                                                checked={metadata.autoSyncTemplates || false}
+                                                onCheckedChange={(c) => handleSaveMetadata({ autoSyncTemplates: c })}
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-xs font-semibold">Legacy Read Receipts</Label>
+                                                <p className="text-[10px] text-muted-foreground">Simulate blue ticks for incoming browser messages.</p>
+                                            </div>
+                                            <Switch
+                                                checked={metadata.readReceipts || false}
+                                                onCheckedChange={(c) => handleSaveMetadata({ readReceipts: c })}
+                                            />
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </TabsContent>
+
+                    {/* NOTIFICATIONS TAB */}
+                    <TabsContent value="notifications" className="flex-1 space-y-6 outline-none">
+                        <div className="max-w-3xl space-y-6">
+                            <Card className="border-border/40 shadow-none">
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <BellRing className="w-4 h-4 text-primary" />
+                                        <CardTitle className="text-base text-primary">Alert Center</CardTitle>
+                                    </div>
+                                    <CardDescription className="text-xs">Configure how you receive system stability reports.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/5">
+                                            <div className="flex items-center gap-3">
+                                                <Mail className="w-4 h-4 text-muted-foreground" />
+                                                <div className="space-y-0.5">
+                                                    <span className="text-xs font-semibold">Disconnect Alerts</span>
+                                                    <p className="text-[10px] text-muted-foreground">Email notification when a session drops unexpectedly.</p>
+                                                </div>
+                                            </div>
+                                            <Switch
+                                                checked={metadata.notifyDisconnect || false}
+                                                onCheckedChange={(c) => handleSaveMetadata({ notifyDisconnect: c })}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/5">
+                                            <div className="flex items-center gap-3">
+                                                <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                                                <div className="space-y-0.5">
+                                                    <span className="text-xs font-semibold">Delivery Failures</span>
+                                                    <p className="text-[10px] text-muted-foreground">Alert when a template or broadcast fails to deliver.</p>
+                                                </div>
+                                            </div>
+                                            <Switch
+                                                checked={metadata.notifyFailure || false}
+                                                onCheckedChange={(c) => handleSaveMetadata({ notifyFailure: c })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs opacity-70">Admin Alert Email</Label>
+                                        <Input
+                                            placeholder="admin@example.com"
+                                            className="h-9 text-xs bg-muted/10"
+                                            value={metadata.alertEmail || ''}
+                                            onChange={(e) => setMetadata({ ...metadata, alertEmail: e.target.value })}
+                                            onBlur={(e) => handleSaveMetadata({ alertEmail: e.target.value })}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </TabsContent>
+
+                    {/* SECURITY TAB */}
+                    <TabsContent value="security" className="flex-1 space-y-6 outline-none">
+                        <div className="max-w-3xl space-y-6">
+                            <Card className="border-border/40 shadow-none">
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <ShieldCheck className="w-4 h-4 text-primary" />
+                                        <CardTitle className="text-base text-primary">Encryption & Governance</CardTitle>
+                                    </div>
+                                    <CardDescription className="text-xs">Security manifests and session integrity logs.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-4 border rounded-lg space-y-2">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest">
+                                                <Lock size={12} /> Cipher Status
+                                            </div>
+                                            <p className="text-xs font-bold font-mono">AES-256-GCM</p>
+                                            <p className="text-[9px] text-muted-foreground leading-tight">All session keys are salted and encrypted before DB persistence.</p>
+                                        </div>
+                                        <div className="p-4 border rounded-lg space-y-2">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest">
+                                                <Key size={12} /> Key Rotation
+                                            </div>
+                                            <p className="text-xs font-bold font-mono">AUTOMATED</p>
+                                            <p className="text-[9px] text-muted-foreground leading-tight">Rotating 128-bit challenges periodically for browser sessions.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-muted-foreground opacity-60">
+                                            <History size={12} /> Recent Connection Audit
+                                        </div>
+                                        <div className="space-y-2">
+                                            {[
+                                                { event: 'Session Refreshed', status: 'OK', color: 'text-green-500', time: '12m ago' },
+                                                { event: 'Credential Check', status: 'PASS', color: 'text-green-500', time: '4h ago' },
+                                                { event: 'Key Handshake', status: 'SYNC', color: 'text-blue-500', time: 'Yesterday' }
+                                            ].map((log, i) => (
+                                                <div key={i} className="flex items-center justify-between p-3 bg-muted/10 rounded-md border border-border/20">
+                                                    <span className="text-xs">{log.event}</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={`text-[10px] font-black ${log.color}`}>{log.status}</span>
+                                                        <span className="text-[10px] text-muted-foreground font-mono">{log.time}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="pt-0 pb-6 pr-6 justify-end">
+                                    <Button variant="ghost" size="sm" className="text-destructive text-[10px] font-bold uppercase hover:bg-destructive/10">
+                                        Revoke All Remote Access
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    </TabsContent>
+
+                    {/* GENERAL TAB */}
+                    <TabsContent value="general" className="flex-1 space-y-6 outline-none">
+                        <div className="max-w-3xl space-y-6">
+                            <Card className="border-border/40 shadow-none">
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Database className="w-4 h-4 text-primary" />
+                                        <CardTitle className="text-base text-primary">Core Configuration</CardTitle>
+                                    </div>
+                                    <CardDescription className="text-xs">Primary workspace-level engine preferences.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="grid gap-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs opacity-70">Instance Display Name</Label>
+                                            <Input
+                                                className="bg-muted/10"
+                                                placeholder="e.g. Production Cluster A"
+                                                value={metadata.instanceName || ''}
+                                                onChange={(e) => setMetadata({ ...metadata, instanceName: e.target.value })}
+                                                onBlur={(e) => handleSaveMetadata({ instanceName: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs opacity-70">Region / Timezone</Label>
+                                                <Select
+                                                    value={metadata.timezone || 'UTC'}
+                                                    onValueChange={(v) => handleSaveMetadata({ timezone: v })}
+                                                >
+                                                    <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                        <SelectValue placeholder="Select zone" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="UTC">UTC (Universal)</SelectItem>
+                                                        <SelectItem value="Asia/Kolkata">IST (Kolkata)</SelectItem>
+                                                        <SelectItem value="America/New_York">EST (New York)</SelectItem>
+                                                        <SelectItem value="Europe/London">GMT (London)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-xs opacity-70">System Language</Label>
+                                                <Select
+                                                    value={metadata.language || 'en_US'}
+                                                    onValueChange={(v) => handleSaveMetadata({ language: v })}
+                                                >
+                                                    <SelectTrigger className="h-9 text-xs bg-muted/10">
+                                                        <SelectValue placeholder="Select lang" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="en_US">English (US)</SelectItem>
+                                                        <SelectItem value="en_GB">English (GB)</SelectItem>
+                                                        <SelectItem value="hi_IN">Hindi (IN)</SelectItem>
+                                                        <SelectItem value="es_ES">Spanish (ES)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-12 w-12 border-border hover:bg-primary/5 hover:border-primary/50 transition-all shadow-lg"
-                                            onClick={() => copyToClipboard(webhookUrl)}
-                                        >
-                                            {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="grid md:grid-cols-3 gap-6">
-                                    <div className="p-5 bg-card border border-border/50 rounded-2xl space-y-4 shadow-sm group hover:border-primary/30 transition-all">
-                                        <h5 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                                            <Lock size={12} /> Payload Security
-                                        </h5>
-                                        <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">Incoming request bodies are automatically decrypted using your project-wide symmetric keys.</p>
-                                        <div className="p-2 bg-muted/60 rounded-lg text-[9px] font-mono opacity-60">AES-256-GCM / IV</div>
-                                    </div>
-                                    
-                                    <div className="p-5 bg-card border border-border/50 rounded-2xl space-y-4 shadow-sm group hover:border-primary/30 transition-all">
-                                        <h5 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                                            <Smartphone size={12} /> JID Translation
-                                        </h5>
-                                        <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">The engine automatically translates standard phone numbers into WhatsApp Identifiers (JIDs).</p>
-                                        <div className="p-2 bg-muted/60 rounded-lg text-[9px] font-mono opacity-60">format: number@s.wa.net</div>
                                     </div>
 
-                                    <div className="p-5 bg-card border border-border/50 rounded-2xl space-y-4 shadow-sm group hover:border-primary/30 transition-all">
-                                        <h5 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                                            <Zap size={12} /> Event Routing
-                                        </h5>
-                                        <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">Webhooks are processed through the Bot Flow Builder logic in real-time with zero queue lag.</p>
-                                        <div className="p-2 bg-muted/60 rounded-lg text-[9px] font-mono opacity-60">Latency: ~40ms - 150ms</div>
+                                    <Separator />
+
+                                    <div className="p-4 bg-muted/10 rounded-lg space-y-3">
+                                        <Label className="text-xs font-semibold">Workspace Signature</Label>
+                                        <Textarea
+                                            className="min-h-[80px] text-xs bg-background"
+                                            placeholder="Sent via Devlomatix WA Engine..."
+                                            value={metadata.signature || ''}
+                                            onChange={(e) => setMetadata({ ...metadata, signature: e.target.value })}
+                                            onBlur={(e) => handleSaveMetadata({ signature: e.target.value })}
+                                        />
+                                        <div className="flex items-center gap-2">
+                                            <Switch
+                                                checked={metadata.appendSignature || false}
+                                                onCheckedChange={(c) => handleSaveMetadata({ appendSignature: c })}
+                                            />
+                                            <span className="text-[10px] text-muted-foreground font-medium">Prepend to all outbound browser messages</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </TabsContent>
                 </Tabs>
 
-                {/* Cloud Credentials Modal */}
+                {/* MODALS */}
                 <Dialog open={isCredsModalOpen} onOpenChange={setIsCredsModalOpen}>
-                    <DialogContent className="sm:max-w-[425px] bg-card border-border shadow-2xl">
+                    <DialogContent className="sm:max-w-[450px] bg-card border p-8 rounded-xl shadow-2xl">
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-black flex items-center gap-2">
-                                <Globe className="text-primary h-5 w-5" />
-                                Meta Cloud API Setup
-                            </DialogTitle>
-                            <DialogDescription className="text-xs font-medium">
-                                Provide your official Meta Business credentials to enable Cloud messaging.
-                            </DialogDescription>
+                            <DialogTitle className="text-2xl tracking-tight">Meta Engine Config</DialogTitle>
+                            <DialogDescription className="text-xs font-medium text-muted-foreground/60 tracking-tight">Enter your official Meta Graph API credentials to link this node.</DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="phoneId" className="text-xs font-bold uppercase tracking-tighter opacity-70">Phone Number ID</Label>
-                                <Input
-                                    id="phoneId"
-                                    placeholder="e.g. 10492837482"
-                                    value={tempCreds.phoneNumberId}
-                                    onChange={(e) => setTempCreds({ ...tempCreds, phoneNumberId: e.target.value })}
-                                    className="bg-muted/30 border-border/50 h-10 text-xs font-mono"
-                                />
+                        <div className="grid gap-6 py-8">
+                            <div className="grid gap-2.5">
+                                <Label className="text-muted-foreground/70 ml-1">Account Nickname</Label>
+                                <Input className="bg-black/40 h-12 text-sm font-bold rounded-md px-4 border border-border/40" value={tempCreds.profile} onChange={(e) => setTempCreds({ ...tempCreds, profile: e.target.value })} placeholder="e.g. Sales Primary" />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="wabaId" className="text-xs font-bold uppercase tracking-tighter opacity-70">WABA ID (Business Account ID)</Label>
-                                <Input
-                                    id="wabaId"
-                                    placeholder="e.g. 92837465019"
-                                    value={tempCreds.wabaId}
-                                    onChange={(e) => setTempCreds({ ...tempCreds, wabaId: e.target.value })}
-                                    className="bg-muted/30 border-border/50 h-10 text-xs font-mono"
-                                />
+                            <div className="grid gap-2.5">
+                                <Label className="text-muted-foreground/70 ml-1">Phone Number ID</Label>
+                                <Input className="bg-black/40 h-12 text-sm font-bold rounded-md px-4 border border-border/40" value={tempCreds.phoneNumberId} onChange={(e) => setTempCreds({ ...tempCreds, phoneNumberId: e.target.value })} placeholder="10492..." />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="token" className="text-xs font-bold uppercase tracking-tighter opacity-70">Permanent Access Token</Label>
-                                <Textarea
-                                    id="token"
-                                    placeholder="EAAGz..."
-                                    value={tempCreds.accessToken}
-                                    onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })}
-                                    className="bg-muted/30 border-border/50 min-h-[100px] text-xs font-mono"
-                                />
-                                <p className="text-[10px] text-muted-foreground italic">Use a Permanent System User token from Meta Developer Portal.</p>
+                            <div className="grid gap-2.5">
+                                <Label className="text-muted-foreground/70 ml-1">Business Account ID</Label>
+                                <Input className="bg-black/40 border-border/40 h-12 text-sm font-bold rounded-md px-4 font-mono" value={tempCreds.wabaId} onChange={(e) => setTempCreds({ ...tempCreds, wabaId: e.target.value })} placeholder="92837..." />
+                            </div>
+                            <div className="grid gap-2.5">
+                                <Label className="text-muted-foreground/70 ml-1">System Access Token</Label>
+                                <Input className="bg-black/40 border-border/40 h-12 text-sm font-bold rounded-md px-4 font-mono" type="password" value={tempCreds.accessToken} onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })} placeholder="EAAG..." />
                             </div>
                         </div>
-                        <DialogFooter className="pt-4 border-t border-border/50">
-                            <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => setIsCredsModalOpen(false)} 
-                                className="font-bold h-10 border border-transparent hover:border-border"
-                            >
-                                Cancel
+                        <DialogFooter className="gap-4">
+                            <Button variant="ghost" className="font-bold text-xs h-12 rounded-xl" onClick={() => setIsCredsModalOpen(false)}>Cancel</Button>
+                            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] tracking-widest h-12 px-8 rounded-xl shadow-lg shadow-primary/20 flex-1" onClick={handleSaveCloudCreds} disabled={cloudLoading}>
+                                {cloudLoading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : (tempCreds.id ? 'Save Updates' : 'Activate Node')}
                             </Button>
-                            <Button 
-                                variant="default" 
-                                size="sm" 
-                                onClick={handleSaveCloudCreds}
-                                disabled={cloudLoading}
-                                className="bg-primary hover:bg-primary/90 font-black h-10 px-8 shadow-lg"
-                            >
-                                {cloudLoading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : 'Save Credentials'}
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                    <DialogContent className="sm:max-w-[400px] bg-[#0E141B] border-border/50 rounded-3xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-destructive flex items-center gap-3 text-xl tracking-tight">
+                                <Trash2 className="w-6 h-6" /> Purge Credentials?
+                            </DialogTitle>
+                            <DialogDescription className="text-xs font-medium py-2 leading-relaxed">This will permanently terminate the cloud bridge and stop all automated handlers for <span className="text-foreground tracking-tight">"{accountToDelete?.profile}"</span>.</DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="mt-8 gap-3">
+                            <Button variant="ghost" className="font-bold h-12 rounded-xl flex-1" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+                            <Button variant="destructive" className="text-[11px] tracking-widest h-12 px-8 rounded-xl shadow-lg shadow-destructive/20 flex-1" onClick={handleDeleteCloudCred} disabled={cloudLoading}>
+                                Confirm Purge
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -802,23 +1089,13 @@ export default function SettingsPage() {
     );
 }
 
-function Info(props) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4" />
-            <path d="M12 8h.01" />
-        </svg>
-    )
+function DynamicIcon({ name, className }) {
+    if (name === 'whatsapp') {
+        return (
+            <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+            </svg>
+        );
+    }
+    return <Key className={className} />;
 }

@@ -79,7 +79,7 @@ const PrivacyPage = () => {
                             Privacy Policy
                         </h1>
                         <p className="text-muted-foreground text-xl max-w-2xl mx-auto leading-relaxed">
-                            Transparency and trust are the foundation of AcsTechHub. Learn how we handle your data with the highest security standards.
+                            Transparency and trust are the foundation of Devlomatix Solutions. Learn how we handle your data with the highest security standards.
                         </p>
                         <div className="mt-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold backdrop-blur-sm">
                             <Clock size={16} />
@@ -139,7 +139,7 @@ const PrivacyPage = () => {
                                     1. Introduction
                                 </h2>
                                 <p className="text-muted-foreground leading-relaxed text-lg text-balance">
-                                    Welcome to AcsTechHub. We are committed to protecting your personal data and your right to privacy. This policy explains what information we collect, how we use it, and what rights you have in relation to it.
+                                    Welcome to Devlomatix Solutions. We are committed to protecting your personal data and your right to privacy. This policy explains what information we collect, how we use it, and what rights you have in relation to it.
                                 </p>
                             </motion.section>
 
@@ -283,7 +283,7 @@ const PrivacyPage = () => {
                                     If you have questions or comments about this policy, we're ready to provide the answers you need.
                                 </p>
                                 <a 
-                                    href="mailto:support@acstechhub.com" 
+                                    href="mailto:support@devlomatixsolutions.com" 
                                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
                                 >
                                     Contact Support <ChevronRight size={18} />

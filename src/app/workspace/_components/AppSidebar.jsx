@@ -31,6 +31,8 @@ export default function AppSidebar() {
     const baseAgentPath = `/workspace/${workspaceId}/agent`
     const baseFlowbotPath = `/workspace/${workspaceId}/flowbot`
     const baseMiscellaneousPath = `/workspace/${workspaceId}/miscellaneous`
+    const baseEcommercePath = `/workspace/${workspaceId}/ecommerce`
+    const baseFlowbytePath = `/workspace/${workspaceId}/flowbyte`
 
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
@@ -41,10 +43,20 @@ export default function AppSidebar() {
         { type: 'child', title: "Dashboard", url: `/workspace/${workspaceId}`, category: "Workspace" },
         { type: 'child', title: "Article", url: `/workspace/${workspaceId}/article`, category: "Workspace" },
         { type: 'child', title: "Category", url: `/workspace/${workspaceId}/category`, category: "Workspace" },
+        { type: 'child', title: "Contacts", url: `/workspace/${workspaceId}/contact`, category: "Workspace" },
+
+
+        // eCommerce
+        { type: 'parent', title: "eCommerce", url: `${baseEcommercePath}`, icon: "shopping-cart", category: "eCommerce" },
+        { type: 'child', title: "Dashboard", url: `${baseEcommercePath}`, category: "eCommerce" },
+        { type: 'child', title: "Orders", url: `${baseEcommercePath}/orders`, category: "eCommerce" },
+        { type: 'child', title: "Products", url: `${baseEcommercePath}/products`, category: "eCommerce" },
+        { type: 'child', title: "Abandoned", url: `${baseEcommercePath}/abandoned`, category: "eCommerce" },
+        { type: 'child', title: "Settings", url: `${baseEcommercePath}/settings`, category: "eCommerce" },
 
 
         // WHATSAPP
-        { type: 'parent', title: "WhatsApp Manager", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
+        { type: 'parent', title: "WhatsApp Cloud API", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
         { type: 'child', title: "Dashboard", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
         { type: 'child', title: "Chats", url: `${baseWhathappPath}/chats`, icon: "message-square", category: "WhatsApp Manager" },
         { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "WhatsApp Manager" },
@@ -74,6 +86,15 @@ export default function AppSidebar() {
         { type: 'child', title: "Pipeline", url: `${baseAtsPath}/pipeline`, icon: "bar-chart-3", category: "ats" },
 
 
+        // flowbyte
+        { type: 'parent', title: "FLowByte", url: `${baseFlowbytePath}`, icon: "workflow", category: "flowbyte" },
+        { type: 'child', title: "Workflows", url: `${baseFlowbytePath}`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Executions", url: `${baseFlowbytePath}/executions`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Credentials", url: `${baseFlowbytePath}/credentials`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Templates", url: `${baseFlowbytePath}/templates`, icon: "bar-chart-3", category: "flowbyte" },
+        { type: 'child', title: "Settings", url: `${baseFlowbytePath}/settings`, icon: "bar-chart-3", category: "flowbyte" },
+
+
         // Productivity Manager
         { type: 'parent', title: "Productivity", url: `${baseProductivityPath}`, icon: "folder-kanban", category: "productivity" },
         { type: 'child', title: "Dashboard", url: `${baseProductivityPath}/`, icon: "bar-chart-3", category: "productivity" },
@@ -82,10 +103,7 @@ export default function AppSidebar() {
         { type: 'child', title: "Message", url: `${baseProductivityPath}/message`, icon: "bar-chart-3", category: "productivity" },
         // { type:'child', title:"Trash", url: `${baseDocPath}/trash`, icon:"trash", category:"productivity"},
 
-        // Flowbot
-        { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
-        { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
+
 
         // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
         // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},

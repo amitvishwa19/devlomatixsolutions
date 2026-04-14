@@ -14,6 +14,8 @@ import DeleteServerModal from "@/app/(workspace)/workspace/_components/general/D
 import InviteModal from "@/app/(workspace)/workspace/_components/general/InviteModal";
 import LeaveServerModal from "@/app/(workspace)/workspace/_components/general/LeaveServerModal";
 import ManageAccount from "@/app/(workspace)/workspace/_components/general/ManageAccount";
+import CreateWorkflowModal from "@/app/workspace/[workspaceId]/flowbyte/_components/CreateWorkflowModal";
+import DeleteWorkflowModal from "@/app/workspace/[workspaceId]/flowbyte/_components/DeleteWorkflowModal";
 import { useEffect, useState } from "react";
 
 
@@ -57,6 +59,9 @@ export const OrgModalProvider = () => {
 
             <AIPostGenerator />
             <PreviewDialouge />
+
+            <CreateWorkflowModal />
+            <DeleteWorkflowModal />
 
 
             {/* <DeletePost /> */}

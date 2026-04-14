@@ -1,0 +1,10 @@
+export const WORKFLOW_STATUS = {
+    DRAFT: 'DRAFT',
+    PUBLISHED: 'PUBLISHED',
+};
+
+export const TASK_TYPE = {
+    LAUNCH_BROWSER: 'LAUNCH_BROWSER',
+    WEB_SCRAPER: 'WEB_SCRAPER',
+    HTTP_REQUEST: 'HTTP_REQUEST',
+};
