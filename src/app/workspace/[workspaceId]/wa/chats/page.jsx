@@ -239,10 +239,10 @@ export default function WhatsAppChatsPage() {
                             <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 h-full [&>div>div]:h-full ">
                                 <div id="chats-contacts-list-content" className="flex flex-col h-full ">
                                     {filteredConversations.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-500">
+                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
                                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
                                                 <MessageSquare className="w-8 h-8 text-primary/60" />
-                                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-3000" />
+                                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
                                             </div>
                                             <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Yet</h3>
                                             <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
@@ -285,7 +285,7 @@ export default function WhatsAppChatsPage() {
                             <ScrollArea className="flex-1 min-h-0 h-full [&>div>div]:h-full">
                                 <div className="flex flex-col h-full">
                                     {filteredContacts.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-500">
+                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
                                             <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 relative">
                                                 <Users className="w-8 h-8 text-emerald-500/60" />
                                                 <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping duration-[3000ms]" />
@@ -328,7 +328,7 @@ export default function WhatsAppChatsPage() {
                     </Tabs>
                 </div>
 
-                <div className=" w-full">
+                <div className="flex-1 min-w-0 bg-background/30 backdrop-blur-[2px]">
                     {selectedChat ? (
                         <>
                             {/* Chat Header */}
@@ -431,32 +431,16 @@ export default function WhatsAppChatsPage() {
                             </div>
                         </>
                     ) : (
-                        <div id='chat-empty' className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full bg-muted/5 relative overflow-hidden">
-                            {/* Animated Background Glow */}
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] animate-pulse" />
-                            
-                            <div className="relative z-10 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-700">
-                                <div className="relative mb-8">
-                                    <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center relative z-20 shadow-inner">
-                                        <MessageSquare className="w-12 h-12 text-primary animate-bounce duration-[3000ms]" />
-                                    </div>
-                                    {/* Decorative Rings with Staggered Animations */}
-                                    <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
-                                    <div className="absolute inset-[-10px] rounded-full border border-primary/10 animate-ping duration-[4000ms] delay-500" />
-                                    <div className="absolute inset-[-20px] rounded-full border border-primary/5 animate-pulse duration-[5000ms]" />
-                                </div>
-                                
-                                <h3 className="text-xl font-bold text-zinc-800 mb-3 tracking-tight">Select a conversation</h3>
-                                <p className="text-sm text-muted-foreground max-w-[320px] leading-relaxed opacity-80">
-                                    Choose from your existing chats or find a colleague in the contacts tab to begin messaging.
-                                </p>
-                                
-                                <div className="mt-8 flex gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce" />
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce delay-150" />
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce delay-300" />
-                                </div>
+                        <div id='chat-empty' className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full bg-muted/5 animate-in fade-in zoom-in duration-700">
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
+                                <MessageSquare className="w-8 h-8 text-primary/60" />
+                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
                             </div>
+                            
+                            <h3 className="text-sm font-bold text-zinc-800 mb-1">Select a conversation</h3>
+                            <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed opacity-80">
+                                Choose from your existing chats or find a colleague in the contacts tab to begin messaging.
+                            </p>
                         </div>
                     )}
                 </div>
