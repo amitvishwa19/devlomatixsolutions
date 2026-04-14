@@ -120,11 +120,12 @@ export async function POST(req) {
 
         // 1. HEADER
         if (template.metadata?.headerText) {
-            const headerExamples = getExampleSamples(template.metadata.headerText);
+            const headerText = template.metadata.headerText.trim();
+            const headerExamples = getExampleSamples(headerText);
             const headerComp = {
                 type: "HEADER",
                 format: "TEXT",
-                text: template.metadata.headerText
+                text: headerText
             };
             if (headerExamples) {
                 headerComp.example = { header_text: headerExamples };
@@ -133,10 +134,11 @@ export async function POST(req) {
         }
 
         // 2. BODY
-        const bodyExamples = getExampleSamples(template.body);
+        const bodyText = (template.body || "").trim();
+        const bodyExamples = getExampleSamples(bodyText);
         const bodyComp = {
             type: "BODY",
-            text: template.body
+            text: bodyText
         };
         if (bodyExamples) {
             bodyComp.example = { body_text: [bodyExamples] }; // Meta expects nested array for body
@@ -147,7 +149,7 @@ export async function POST(req) {
         if (template.footer) {
             components.push({
                 type: "FOOTER",
-                text: template.footer
+                text: template.footer.trim()
             });
         }
 

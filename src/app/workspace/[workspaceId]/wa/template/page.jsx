@@ -169,11 +169,22 @@ export default function TemplatePage() {
         }
         setIsSaving(true);
         try {
+            // Sanitize content to prevent unnecessary "Read More" on devices
+            const sanitizedFormData = {
+                ...formData,
+                body: formData.body?.trim() || '',
+                footer: formData.footer?.trim() || '',
+                metadata: {
+                    ...formData.metadata,
+                    headerText: formData.metadata?.headerText?.trim() || ''
+                }
+            };
+
             const res = await fetch('/api/wa/template', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    ...formData, 
+                    ...sanitizedFormData, 
                     id: editingId, 
                     platform: formData.platform || 'WHATSAPP_CLOUD',
                     status: 'DRAFT'

@@ -108,7 +108,7 @@ export async function POST(req) {
         // Direct mapping of payload types to Cloud API functions
         switch (type) {
             case 'text':
-                const textBody = body.body || body.text || (typeof body.content === 'string' ? body.content : "");
+                const textBody = (body.body || body.text || (typeof body.content === 'string' ? body.content : "")).trim();
                 result = await cloudApi.sendTextMessage(cloudCredentials, cleanTo, textBody);
                 break;
             case 'image':
@@ -116,7 +116,7 @@ export async function POST(req) {
             case 'audio':
             case 'document':
                 const mediaUrl = body.mediaUrl || body[type]?.url || body.url;
-                const caption = body.caption || (body[type]?.caption);
+                const caption = (body.caption || (body[type]?.caption) || "").trim();
                 result = await cloudApi.sendMediaMessage(cloudCredentials, cleanTo, type, mediaUrl, caption);
                 break;
             case 'location':

@@ -1,15 +1,15 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { 
-    Search, 
-    MoreVertical, 
-    Phone, 
-    Video, 
-    Send, 
-    Smile, 
-    Paperclip, 
-    Check, 
+import {
+    Search,
+    MoreVertical,
+    Phone,
+    Video,
+    Send,
+    Smile,
+    Paperclip,
+    Check,
     CheckCheck,
     AlertCircle,
     User,
@@ -27,7 +27,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ChatTemplatePreview from "./_components/ChatTemplatePreview";
+import { Users } from "lucide-react";
 
 // Message Status Indicator Component
 const MessageStatus = ({ status }) => {
@@ -56,7 +58,11 @@ export default function WhatsAppChatsPage() {
     const [templates, setTemplates] = useState([]);
     const [previewTemplate, setPreviewTemplate] = useState(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    
+
+    const [allContacts, setAllContacts] = useState([]);
+    const [activeTab, setActiveTab] = useState("chats");
+    const [isFetchingContacts, setIsFetchingContacts] = useState(false);
+
     const scrollRef = useRef(null);
 
     // Derived State: Get the actual chat object based on selectedJid
@@ -69,7 +75,7 @@ export default function WhatsAppChatsPage() {
             const data = await res.json();
             if (data.success) {
                 setConversations(data.conversations);
-                
+
                 // Functional update to avoid stale closure in setInterval
                 setSelectedJid(currentJid => {
                     // Auto-select first chat ONLY if nothing is selected yet
@@ -83,6 +89,19 @@ export default function WhatsAppChatsPage() {
             console.error("Failed to fetch conversations:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchContacts = async () => {
+        setIsFetchingContacts(true);
+        try {
+            const res = await fetch(`/api/wa/contacts?workspaceId=${workspaceId}`);
+            const data = await res.json();
+            setAllContacts(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Failed to fetch contacts:", error);
+        } finally {
+            setIsFetchingContacts(false);
         }
     };
 
@@ -101,6 +120,7 @@ export default function WhatsAppChatsPage() {
     useEffect(() => {
         fetchConversations();
         fetchTemplates();
+        fetchContacts();
         // Polling every 5 seconds for real-time status updates
         const interval = setInterval(fetchConversations, 5000);
         return () => clearInterval(interval);
@@ -148,8 +168,8 @@ export default function WhatsAppChatsPage() {
         if (!templateName) return;
 
         console.log(`[Preview] Looking for template: ${templateName}`);
-        
-        const foundTemplate = templates.find(t => 
+
+        const foundTemplate = templates.find(t =>
             t.templateName === templateName || t.name === templateName
         );
 
@@ -161,8 +181,14 @@ export default function WhatsAppChatsPage() {
         }
     };
 
-    const filteredConversations = conversations.filter(c => 
-        c.jid.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredConversations = conversations.filter(c =>
+        c.jid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const filteredContacts = allContacts.filter(contact =>
+        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.phone.includes(searchTerm)
     );
 
     if (isLoading && conversations.length === 0) {
@@ -174,188 +200,269 @@ export default function WhatsAppChatsPage() {
     }
 
     return (
-        <div className="flex h-[calc(100vh-100px)] bg-background/50 border rounded-2xl overflow-hidden shadow-2xl transition-all">
-            
-            {/* Sidebar: Conversations List */}
-            <Card className="w-full md:w-80 lg:w-96 rounded-none border-0 border-r flex flex-col bg-card/10">
-                <div className="p-5 border-b border-border/50 bg-card/20 backdrop-blur-sm sticky top-0 z-10">
-                    <div className="flex items-center justify-between mb-4">
+        <div id='main-content-container' className="h-full flex flex-col overflow-hidden shadow-2xl transition-all ">
+
+
+            <div className="p-5 border-b border-border/50 bg-card/20 backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-primary" />
                         <h1 className="text-xl font-bold tracking-tight">WhatsApp Chats</h1>
-                        <Button variant="ghost" size="icon" className="rounded-full w-9 h-9">
-                            <MessageSquare className="w-4 h-4" />
-                        </Button>
                     </div>
-                    <div className="relative">
+                    <div className="relative w-80 border rounded-lg">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-                        <Input 
-                            placeholder="Search chats..." 
-                            className="bg-background/50 border-border/40 pl-9 h-9 text-xs" 
+                        <Input
+                            placeholder={`Search ${activeTab}...`}
+                            className="bg-background/50 border-border/40 pl-9 h-9 text-xs rounded-lg"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <ScrollArea className="flex-1">
-                    <div className="flex flex-col">
-                        {filteredConversations.length === 0 ? (
-                            <div className="p-8 text-center text-muted-foreground">
-                                <p className="text-sm">No conversations found</p>
-                            </div>
-                        ) : (
-                            filteredConversations.map((chat) => (
-                                <div 
-                                    key={chat.jid}
-                                    onClick={() => setSelectedJid(chat.jid)}
-                                    className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${selectedJid === chat.jid ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
-                                >
-                                    <Avatar className="w-12 h-12 border-2 border-background shadow-md">
-                                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                                            {(chat.name || chat.jid).substring(0, 2).toUpperCase()}
+            </div>
+
+
+            <div className="flex h-full">
+                <div className="w-1/4 border-r border-border/50 flex flex-col">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+
+
+                        <div className="px-4 py-2 border-b bg-muted/5">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="chats" className="text-xs h-7">Chats</TabsTrigger>
+                                <TabsTrigger value="contacts" className="text-xs h-7">Contacts</TabsTrigger>
+                            </TabsList>
+                        </div>
+
+                        <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                            <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 h-full [&>div>div]:h-full ">
+                                <div id="chats-contacts-list-content" className="flex flex-col h-full ">
+                                    {filteredConversations.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-500">
+                                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
+                                                <MessageSquare className="w-8 h-8 text-primary/60" />
+                                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-3000" />
+                                            </div>
+                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Yet</h3>
+                                            <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                                                Your message history will appear here. Start a new chat from the contacts tab!
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        filteredConversations.map((chat) => (
+                                            <div
+                                                key={chat.jid}
+                                                onClick={() => setSelectedJid(chat.jid)}
+                                                className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${selectedJid === chat.jid ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                            >
+                                                <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
+                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                        {(chat.name || chat.jid).substring(0, 2).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-0.5">
+                                                        <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid}</h3>
+                                                        <span className="text-[9px] text-muted-foreground">
+                                                            {formatDistanceToNow(chat.timestamp)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[11px] text-muted-foreground truncate opacity-70">
+                                                        {chat.fromMe && <span className="text-[9px] uppercase font-bold mr-1 text-primary/60">You:</span>}
+                                                        {chat.lastMessage}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+
+                        <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col ">
+                            <ScrollArea className="flex-1 min-h-0 h-full [&>div>div]:h-full">
+                                <div className="flex flex-col h-full">
+                                    {filteredContacts.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-500">
+                                            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 relative">
+                                                <Users className="w-8 h-8 text-emerald-500/60" />
+                                                <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping duration-[3000ms]" />
+                                            </div>
+                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">Contacts list is empty</h3>
+                                            <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                                                We couldn't find any contacts matching your search or in this workspace.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        filteredContacts.map((contact) => (
+                                            <div
+                                                key={contact.id}
+                                                onClick={() => setSelectedJid(contact.phone + "@s.whatsapp.net")}
+                                                className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${selectedJid === contact.phone + "@s.whatsapp.net" ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                            >
+                                                <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
+                                                    <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold text-xs">
+                                                        {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-0.5">
+                                                        <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{contact.name}</h3>
+                                                        <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50">
+                                                            {contact.type || "Contact"}
+                                                        </Badge>
+                                                    </div>
+                                                    <p className="text-[11px] text-muted-foreground truncate opacity-70">
+                                                        {contact.phone}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+                    </Tabs>
+                </div>
+
+                <div className=" w-full">
+                    {selectedChat ? (
+                        <>
+                            {/* Chat Header */}
+                            <div className="p-4 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Button variant="ghost" size="icon" className="md:hidden">
+                                        <ArrowLeft className="w-4 h-4" />
+                                    </Button>
+                                    <Avatar className="w-10 h-10 border border-border/50">
+                                        <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold">
+                                            {(selectedChat.name || selectedChat.jid).substring(0, 2).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
-                                    
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between mb-0.5">
-                                            <h3 className="text-sm font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid}</h3>
-                                            <span className="text-[10px] text-muted-foreground">
-                                                {formatDistanceToNow(chat.timestamp)} ago
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground truncate opacity-70">
-                                            {chat.fromMe && <span className="text-[10px] uppercase font-bold mr-1 text-primary/60">You:</span>}
-                                            {chat.lastMessage}
+                                    <div>
+                                        <h2 className="text-sm font-bold">{selectedChat.name || selectedChat.jid}</h2>
+                                        <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">
+                                            {selectedChat.name ? selectedChat.jid : "Active Conversation"}
                                         </p>
                                     </div>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </ScrollArea>
-            </Card>
-
-            {/* Main Content: Chat Window */}
-            <div className="flex-1 flex flex-col relative bg-[#fcfcfc] dark:bg-[#0b141a]/20">
-                {selectedChat ? (
-                    <>
-                        {/* Chat Header */}
-                        <div className="p-4 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between sticky top-0 z-10">
-                            <div className="flex items-center gap-3">
-                                <Button variant="ghost" size="icon" className="md:hidden">
-                                    <ArrowLeft className="w-4 h-4" />
-                                </Button>
-                                <Avatar className="w-10 h-10 border border-border/50">
-                                    <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold">
-                                        {(selectedChat.name || selectedChat.jid).substring(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <h2 className="text-sm font-bold">{selectedChat.name || selectedChat.jid}</h2>
-                                    <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">
-                                        {selectedChat.name ? selectedChat.jid : "Active Conversation"}
-                                    </p>
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
+                                        <Video className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
+                                        <Phone className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
+                                        <MoreVertical className="w-4 h-4" />
+                                    </Button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
-                                    <Video className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
-                                    <Phone className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
-                                    <MoreVertical className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
 
-                        {/* Chat Messages */}
-                        <ScrollArea className="flex-1 p-6 relative">
-                            {/* WhatsApp-style Background Pattern Overlay */}
-                            <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
-                            
-                            <div className="flex flex-col gap-3 relative z-10">
-                                {selectedChat.messages.slice().reverse().map((msg, i) => (
-                                    <div 
-                                        key={msg.id} 
-                                        className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
-                                    >
-                                        <div 
-                                            onClick={() => msg.metadata?.type === 'template' ? handleTemplateClick(msg) : null}
-                                            className={`relative max-w-[75%] px-3.5 py-2 rounded-2xl shadow-sm text-sm group transition-all duration-200 ${
-                                            msg.fromMe 
-                                                ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                                                : 'bg-card border border-border/50 rounded-tl-none'
-                                            } ${msg.metadata?.type === 'template' ? 'cursor-pointer hover:ring-2 hover:ring-primary/30' : ''}`}
+                            {/* Chat Messages */}
+                            <ScrollArea className="h-[75vh] p-6 relative">
+                                {/* WhatsApp-style Background Pattern Overlay */}
+                                <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
+
+                                <div className="flex flex-col gap-3 relative z-10">
+                                    {selectedChat.messages.slice().reverse().map((msg, i) => (
+                                        <div
+                                            key={msg.id}
+                                            className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                                         >
-                                            {msg.metadata?.type === 'template' && (
-                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Eye className="w-3.5 h-3.5 text-primary-foreground/40" />
+                                            <div
+                                                onClick={() => msg.metadata?.type === 'template' ? handleTemplateClick(msg) : null}
+                                                className={`relative max-w-[75%] px-3.5 py-2 rounded-2xl shadow-sm text-sm group transition-all duration-200 ${msg.fromMe
+                                                    ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                                    : 'bg-card border border-border/50 rounded-tl-none'
+                                                    } ${msg.metadata?.type === 'template' ? 'cursor-pointer hover:ring-2 hover:ring-primary/30' : ''}`}
+                                            >
+                                                {msg.metadata?.type === 'template' && (
+                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Eye className="w-3.5 h-3.5 text-primary-foreground/40" />
+                                                    </div>
+                                                )}
+                                                <p className="leading-relaxed">{msg.text}</p>
+                                                <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${msg.fromMe ? 'text-primary-foreground/70' : 'text-muted-foreground/60'}`}>
+                                                    {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
+                                                    {msg.fromMe && <MessageStatus status={msg.status} />}
                                                 </div>
-                                            )}
-                                            <p className="leading-relaxed">{msg.text}</p>
-                                            <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${msg.fromMe ? 'text-primary-foreground/70' : 'text-muted-foreground/60'}`}>
-                                                {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
-                                                {msg.fromMe && <MessageStatus status={msg.status} />}
-                                            </div>
-                                            
-                                            {/* Source Tail (Bubble Hook) */}
-                                            {msg.fromMe ? (
-                                                <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
-                                            ) : (
-                                                <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-card border-l-8 border-l-transparent" />
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                                <div ref={scrollRef} />
-                            </div>
-                        </ScrollArea>
 
-                        {/* Chat Input */}
-                        <div className="p-4 bg-card/30 backdrop-blur-sm border-t border-border/50 flex items-center gap-3">
-                            <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
-                                <Smile className="w-5 h-5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
-                                <Paperclip className="w-5 h-5" />
-                            </Button>
-                            
-                            <form onSubmit={handleSendMessage} className="flex-1 flex gap-3">
-                                <Input 
-                                    className="bg-background/50 border-border/30 h-10 rounded-full px-4 text-xs focus-visible:ring-primary/20" 
-                                    placeholder="Type a message..."
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                />
-                                <Button 
-                                    type="submit" 
-                                    disabled={!newMessage.trim() || isSending}
-                                    className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
-                                >
-                                    {isSending ? <Loader2 className="w-4 h-4 animate-spin font-bold" /> : <Send className="w-4 h-4" />}
+                                                {/* Source Tail (Bubble Hook) */}
+                                                {msg.fromMe ? (
+                                                    <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
+                                                ) : (
+                                                    <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-card border-l-8 border-l-transparent" />
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div ref={scrollRef} />
+                                </div>
+                            </ScrollArea>
+
+                            {/* Chat Input */}
+                            <div className="p-4 bg-card/30 backdrop-blur-sm border-t border-border/50 flex items-center gap-3">
+                                <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
+                                    <Smile className="w-5 h-5" />
                                 </Button>
-                            </form>
+                                <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
+                                    <Paperclip className="w-5 h-5" />
+                                </Button>
+
+                                <form onSubmit={handleSendMessage} className="flex-1 flex gap-3">
+                                    <Input
+                                        className="bg-background/50 border-border/30 h-10 rounded-full px-4 text-xs focus-visible:ring-primary/20"
+                                        placeholder="Type a message..."
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={!newMessage.trim() || isSending}
+                                        className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
+                                    >
+                                        {isSending ? <Loader2 className="w-4 h-4 animate-spin font-bold" /> : <Send className="w-4 h-4" />}
+                                    </Button>
+                                </form>
+                            </div>
+                        </>
+                    ) : (
+                        <div id='chat-empty' className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full bg-muted/5 relative overflow-hidden">
+                            {/* Animated Background Glow */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] animate-pulse" />
+                            
+                            <div className="relative z-10 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-700">
+                                <div className="relative mb-8">
+                                    <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center relative z-20 shadow-inner">
+                                        <MessageSquare className="w-12 h-12 text-primary animate-bounce duration-[3000ms]" />
+                                    </div>
+                                    {/* Decorative Rings with Staggered Animations */}
+                                    <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
+                                    <div className="absolute inset-[-10px] rounded-full border border-primary/10 animate-ping duration-[4000ms] delay-500" />
+                                    <div className="absolute inset-[-20px] rounded-full border border-primary/5 animate-pulse duration-[5000ms]" />
+                                </div>
+                                
+                                <h3 className="text-xl font-bold text-zinc-800 mb-3 tracking-tight">Select a conversation</h3>
+                                <p className="text-sm text-muted-foreground max-w-[320px] leading-relaxed opacity-80">
+                                    Choose from your existing chats or find a colleague in the contacts tab to begin messaging.
+                                </p>
+                                
+                                <div className="mt-8 flex gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce delay-150" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce delay-300" />
+                                </div>
+                            </div>
                         </div>
-                    </>
-                ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-muted/5">
-                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                            <MessageSquare className="w-10 h-10 text-primary animate-pulse" />
-                        </div>
-                        <h3 className="text-xl font-bold mb-2 tracking-tight">Select a conversation</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
-                            Click on a contact from the list on the left to view your message history or start a new conversation.
-                        </p>
-                    </div>
-                )}
+                    )}
+                </div>
+
             </div>
-            {/* Template Preview Modal */}
-            <ChatTemplatePreview 
-                template={previewTemplate}
-                isOpen={isPreviewOpen}
-                onClose={() => setIsPreviewOpen(false)}
-            />
+
         </div>
     );
 }
