@@ -4,13 +4,13 @@ import Tagline from "./Tagline";
 
 const testimonials = [
   {
-    quote: "AcsTechHub transformed our entire business operations. Their automation solutions saved us 40+ hours weekly and the custom software they built is flawless.",
+    quote: "Devlomatix Solutions transformed our entire business operations. Their automation solutions saved us 40+ hours weekly and the custom software they built is flawless.",
     author: "Rajesh Kumar",
     role: "COO, TechFlow Industries",
     rating: 5,
   },
   {
-    quote: "Working with AcsTechHub was a game-changer. They delivered our MVP in record time and helped us secure our Series A funding with a polished product.",
+    quote: "Working with Devlomatix Solutions was a game-changer. They delivered our MVP in record time and helped us secure our Series A funding with a polished product.",
     author: "Meera Nair",
     role: "Founder, DataPulse",
     rating: 5,

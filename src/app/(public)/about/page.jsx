@@ -2,7 +2,7 @@
 import React from 'react'
 import { motion } from "framer-motion";
 import { Target, Heart, Zap, Users, Award, Globe, MapPin, Calendar, Briefcase, GraduationCap } from "lucide-react";
-import PageTransition from '../components/PageTransition';
+import PageTransition from '../_components/PageTransition';
 
 const team = [
     {
@@ -185,7 +185,7 @@ export default function AboutPage() {
                                 </h2>
                                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                                     <p>
-                                        Founded in 2016, AcsTechHub began with a simple mission: to bridge the gap
+                                        Founded in 2016, Devlomatix Solutions began with a simple mission: to bridge the gap
                                         between ambitious business goals and the technology needed to achieve them.
                                     </p>
                                     <p>

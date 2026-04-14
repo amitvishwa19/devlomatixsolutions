@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, TrendingUp, Clock, Users, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import PageTransition from '../components/PageTransition';
+import PageTransition from '../_components/PageTransition';
 import Link from 'next/link';
 
 const caseStudies = [

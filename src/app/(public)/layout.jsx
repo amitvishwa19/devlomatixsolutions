@@ -1,9 +1,9 @@
 //import 'aos/dist/aos.css';
 import "@/css/public.css";
 import { Unbounded, Inter, Poppins, Roboto } from "next/font/google";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import StickyBottomBar from "./components/StickyBottomBar";
+import Navbar from "./_components/Navbar";
+import Footer from "./_components/Footer";
+import StickyBottomBar from "./_components/StickyBottomBar";
 
 const unbounded = Unbounded({ subsets: ["latin"] });
 const font = Inter({ subsets: ["latin"] });

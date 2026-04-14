@@ -3,7 +3,7 @@ import React from 'react'
 import { Calendar, Clock, ArrowRight, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { articles, categories } from '../data/articles';
-import PageTransition from '../components/PageTransition';
+import PageTransition from '../_components/PageTransition';
 import Link from 'next/link';
 
 export default function ArticlePage() {

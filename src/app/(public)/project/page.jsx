@@ -3,9 +3,9 @@ import React from 'react'
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import PageTransition from '../components/PageTransition';
-import ContactDialog from '../components/ContactDialog';
-import ProjectInquiryDialog from '../components/ProjectInquiryDialog';
+import PageTransition from '../_components/PageTransition';
+import ContactDialog from '../_components/ContactDialog';
+import ProjectInquiryDialog from '../_components/ProjectInquiryDialog';
 
 const projects = [
     {

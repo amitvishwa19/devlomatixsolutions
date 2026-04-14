@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from 'next/navigation';
 import { articles } from '../../data/articles';
-import PageTransition from '../../components/PageTransition';
+import PageTransition from '../../_components/PageTransition';
 import Link from 'next/link';
 
 export default function ArticleDetailPage() {
