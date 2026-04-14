@@ -29,11 +29,14 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ChatTemplatePreview from "./_components/ChatTemplatePreview";
+import TemplateMessage from "./_components/TemplateMessage";
 import { Users } from "lucide-react";
 
 // Message Status Indicator Component
 const MessageStatus = ({ status }) => {
     switch (status) {
+        case 'PENDING':
+            return <Loader2 className="w-3 h-3 text-zinc-400 animate-spin" title="Sending..." />;
         case 'READ':
             return <CheckCheck className="w-3.5 h-3.5 text-blue-400" title="Read" />;
         case 'DELIVERED':
@@ -78,7 +81,39 @@ export default function WhatsAppChatsPage() {
             const res = await fetch(`/api/wa/conversations`);
             const data = await res.json();
             if (data.success) {
-                setConversations(data.conversations);
+                setConversations(prevConversations => {
+                    // Merge logic: keep local "temp_" messages that aren't yet on server
+                    const incomingConvMap = new Map(data.conversations.map(c => [c.jid, c]));
+                    
+                    const mergedResults = data.conversations.map(newConv => {
+                        const prevConv = prevConversations.find(p => p.jid === newConv.jid);
+                        if (!prevConv) return newConv;
+
+                        // Filter for temp messages in local state
+                        const localTempMsgs = prevConv.messages.filter(m => 
+                            String(m.id).startsWith('temp_') && 
+                            // Optimization: If server now has a message with same text sent recently, 
+                            // we assume it's the same message confirmed and hide the temp one
+                            !newConv.messages.some(nm => nm.text === m.text && Math.abs(nm.timestamp - m.timestamp) < 30)
+                        );
+
+                        return {
+                            ...newConv,
+                            messages: [...localTempMsgs, ...newConv.messages]
+                        };
+                    });
+
+                    // Handle entirely new chats created locally that aren't on server yet
+                    prevConversations.forEach(prevConv => {
+                        if (!incomingConvMap.has(prevConv.jid)) {
+                            const hasTemp = prevConv.messages.some(m => String(m.id).startsWith('temp_'));
+                            if (hasTemp) mergedResults.push(prevConv);
+                        }
+                    });
+
+                    // Sort by timestamp if we added local-only chats
+                    return mergedResults.sort((a, b) => b.timestamp - a.timestamp);
+                });
 
                 // Functional update to avoid stale closure in setInterval
                 setSelectedJid(currentJid => {
@@ -139,9 +174,36 @@ export default function WhatsAppChatsPage() {
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!newMessage.trim() || !selectedJid) return;
+        const textToSend = newMessage.trim();
+        if (!textToSend || !selectedJid) return;
 
+        const tempId = `temp_${Date.now()}`;
+        const optimisticMsg = {
+            id: tempId,
+            waId: tempId,
+            text: textToSend,
+            fromMe: true,
+            timestamp: Math.floor(Date.now() / 1000),
+            status: 'PENDING',
+            metadata: { type: 'text' }
+        };
+
+        // UI OPTIMISTIC UPDATE
+        setConversations(prev => prev.map(conv => {
+            if (conv.jid === selectedJid) {
+                return {
+                    ...conv,
+                    lastMessage: textToSend,
+                    timestamp: optimisticMsg.timestamp,
+                    messages: [optimisticMsg, ...conv.messages]
+                };
+            }
+            return conv;
+        }));
+
+        setNewMessage("");
         setIsSending(true);
+
         try {
             const res = await fetch(`/api/wa/send-cloud-api`, {
                 method: 'POST',
@@ -149,19 +211,48 @@ export default function WhatsAppChatsPage() {
                 body: JSON.stringify({
                     to: selectedJid,
                     type: 'text',
-                    body: newMessage.trim()
+                    body: textToSend
                 })
             });
 
             if (res.ok) {
-                setNewMessage("");
-                // Immediate local update for better UX before polling kicks in
-                fetchConversations();
+                // Success - Update status to SENT locally
+                setConversations(prev => prev.map(conv => {
+                    if (conv.jid === selectedJid) {
+                        return {
+                            ...conv,
+                            messages: conv.messages.map(m => 
+                                m.id === tempId ? { ...m, status: 'SENT' } : m
+                            )
+                        };
+                    }
+                    return conv;
+                }));
             } else {
                 toast.error("Failed to send message");
+                // Rollback
+                setConversations(prev => prev.map(conv => {
+                    if (conv.jid === selectedJid) {
+                        return {
+                            ...conv,
+                            messages: conv.messages.filter(m => m.id !== tempId)
+                        };
+                    }
+                    return conv;
+                }));
             }
         } catch (error) {
             toast.error("Error sending message");
+            // Rollback
+            setConversations(prev => prev.map(conv => {
+                if (conv.jid === selectedJid) {
+                    return {
+                        ...conv,
+                        messages: conv.messages.filter(m => m.id !== tempId)
+                    };
+                }
+                return conv;
+            }));
         } finally {
             setIsSending(false);
         }
@@ -402,38 +493,54 @@ export default function WhatsAppChatsPage() {
                                             <p className="text-sm font-medium italic">Starting a new conversation...</p>
                                         </div>
                                     ) : (
-                                        selectedChat.messages.slice().reverse().map((msg, i) => (
-                                            <div
-                                                key={msg.id}
-                                                className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
-                                            >
-                                                <div
-                                                    onClick={() => msg.metadata?.type === 'template' ? handleTemplateClick(msg) : null}
-                                                    className={`relative max-w-[75%] px-3.5 py-2 rounded-2xl shadow-sm text-sm group transition-all duration-200 ${msg.fromMe
-                                                        ? 'bg-primary text-primary-foreground rounded-tr-none'
-                                                        : 'bg-card border border-border/50 rounded-tl-none'
-                                                        } ${msg.metadata?.type === 'template' ? 'cursor-pointer hover:ring-2 hover:ring-primary/30' : ''}`}
-                                                >
-                                                    {msg.metadata?.type === 'template' && (
-                                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Eye className="w-3.5 h-3.5 text-primary-foreground/40" />
-                                                        </div>
-                                                    )}
-                                                    <p className="leading-relaxed">{msg.text}</p>
-                                                    <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${msg.fromMe ? 'text-primary-foreground/70' : 'text-muted-foreground/60'}`}>
-                                                        {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
-                                                        {msg.fromMe && <MessageStatus status={msg.status} />}
-                                                    </div>
+                                        selectedChat.messages.slice().reverse().map((msg, i) => {
+                                            const isTemplate = msg.metadata?.type === 'template';
+                                            const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
+                                            const templateDef = isTemplate ? templates.find(t => t.templateName === templateName || t.name === templateName) : null;
 
-                                                    {/* Source Tail (Bubble Hook) */}
-                                                    {msg.fromMe ? (
-                                                        <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
-                                                    ) : (
-                                                        <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-card border-l-8 border-l-transparent" />
-                                                    )}
+                                            return (
+                                                <div
+                                                    key={msg.id}
+                                                    className={`flex w-full mb-4 ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
+                                                >
+                                                    <div className="relative group max-w-[85%]">
+                                                        {isTemplate ? (
+                                                            <div 
+                                                                onClick={() => handleTemplateClick(msg)}
+                                                                className="cursor-pointer transition-transform active:scale-[0.98]"
+                                                            >
+                                                                <TemplateMessage 
+                                                                    msg={msg} 
+                                                                    templateDefinition={templateDef} 
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div
+                                                                className={`relative px-4 py-2.5 rounded-2xl shadow-sm text-sm transition-all duration-200 ${msg.fromMe
+                                                                    ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                                                    : 'bg-card border border-border/50 rounded-tl-none'
+                                                                    }`}
+                                                            >
+                                                                <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                                                
+                                                                {/* Source Tail (Bubble Hook) for regular text */}
+                                                                {msg.fromMe ? (
+                                                                    <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
+                                                                ) : (
+                                                                    <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-card border-l-8 border-l-transparent" />
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Common Meta Info (Time & Status) */}
+                                                        <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] px-1 ${msg.fromMe ? 'text-primary/60' : 'text-muted-foreground/60'}`}>
+                                                            {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
+                                                            {msg.fromMe && <MessageStatus status={msg.status} />}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     )}
                                     <div ref={scrollRef} />
                                 </div>
