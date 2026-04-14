@@ -78,7 +78,7 @@ const Services = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="group glass-card p-8 hover:border-primary/50 transition-all duration-300 shimmer"
+              className="group glass-card p-8 hover:border-primary/50 transition-all duration-300 shimmer border border-primary"
             >
               <motion.div
                 className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6 group-hover:shadow-[0_0_30px_var(--glow-primary)] transition-shadow duration-300"
