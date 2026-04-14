@@ -256,7 +256,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                       required 
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+91 98765 43210" 
+                      placeholder="+91 97123 40450" 
                       className="bg-muted/30 border-none h-12 rounded-xl text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary shadow-inner" 
                     />
                   </div>

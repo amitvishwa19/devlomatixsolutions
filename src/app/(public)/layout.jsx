@@ -4,6 +4,7 @@ import { Unbounded, Inter, Poppins, Roboto } from "next/font/google";
 import Navbar from "./_components/Navbar";
 import Footer from "./_components/Footer";
 import StickyBottomBar from "./_components/StickyBottomBar";
+import WhatsAppButton from "./_components/WhatsAppButton";
 
 const unbounded = Unbounded({ subsets: ["latin"] });
 const font = Inter({ subsets: ["latin"] });
@@ -21,6 +22,7 @@ export default function PublicLayout({ children }) {
             <div className=''>
                 <Footer />
             </div>
+            <WhatsAppButton />
             <StickyBottomBar />
         </div>
     )

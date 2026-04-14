@@ -633,7 +633,7 @@ export default function SettingsPage() {
                                         <div className="relative flex-1">
                                             <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                                             <Input
-                                                placeholder="Enter phone with country code (e.g. +919876543210)"
+                                                placeholder="Enter phone with country code (e.g. +919712340450)"
                                                 className="pl-9 bg-muted/10 h-10 text-xs"
                                                 value={testNumberInput}
                                                 onChange={e => setTestNumberInput(e.target.value)}

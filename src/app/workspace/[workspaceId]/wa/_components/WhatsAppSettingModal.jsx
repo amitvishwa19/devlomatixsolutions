@@ -604,7 +604,7 @@ export default function WhatsAppSettingModal({ open, onClose }) {
                                         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Add New Number</Label>
                                         <div className="flex gap-3">
                                             <Input
-                                                placeholder="e.g. 9876543210"
+                                                placeholder="e.g. 9712340450"
                                                 value={newNumber}
                                                 onChange={(e) => setNewNumber(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}

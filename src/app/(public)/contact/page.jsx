@@ -32,7 +32,7 @@ const contactInfo = [
     {
         icon: Phone,
         title: "Call Us",
-        details: "+91 98765 43210",
+        details: "+91 97123 40450",
         description: "Mon-Fri from 9am to 6pm IST",
     },
     {

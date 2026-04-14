@@ -310,7 +310,7 @@ const ProjectInquiryDialog = ({ isOpen, onClose }) => {
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="+91 98765 43210"
+                            placeholder="+91 97123 40450"
                             className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                           />
                         </div>

@@ -20,7 +20,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  const [messages, setMessages] = useState([]);
 
  // Messaging State
- const [toNumber, setToNumber] = useState('+919712340450');
+ const [toNumber, setToNumber] = useState('919712340450');
  const [msgType, setMsgType] = useState('text'); //'text'|'interactive'
  const [messageText, setMessageText] = useState('');
 
@@ -201,7 +201,7 @@ export default function QuickMessage({ params: paramsPromise }) {
  <label className="text-sm font-semibold text-foreground">Recipient Number (with country code)</label>
  <Input
  type="tel"
- placeholder="919876543210"
+ placeholder="919712340450"
  value={toNumber}
  onChange={(e) => setToNumber(e.target.value)}
  required
