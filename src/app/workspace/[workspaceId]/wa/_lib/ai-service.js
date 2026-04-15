@@ -152,6 +152,8 @@ export class WhatsAppAIService {
             console.error("[WA_AI] Translation Error:", error);
             return text; // Fallback to original
         }
+    }
+
     /**
      * Generate 3 suggested replies based on conversation history.
      */

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -17,7 +18,9 @@ import {
     Loader2,
     ArrowLeft,
     Eye,
-    Sparkles
+    Sparkles,
+    Layout,
+    StickyNote
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "react-hot-toast";
@@ -33,6 +36,15 @@ import ChatTemplatePreview from "./_components/ChatTemplatePreview";
 import TemplateMessage from "./_components/TemplateMessage";
 import MediaBubble from "./_components/MediaBubble";
 import { Users } from "lucide-react";
+
+// Helper: replace {{N}} placeholders in a template body string
+function fillTemplatePreview(body, vars) {
+    let text = body || '';
+    Object.entries(vars).forEach(([key, val]) => {
+        text = text.replace(key, val || key);
+    });
+    return text;
+}
 
 // Message Status Indicator Component
 const MessageStatus = ({ status }) => {
@@ -65,6 +77,9 @@ export default function WhatsAppChatsPage() {
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState([]);
     const [isAiLoading, setIsAiLoading] = useState(false);
+    const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState(false);
+    const [selectedTemplateForSend, setSelectedTemplateForSend] = useState(null);
+    const [templateVars, setTemplateVars] = useState({});
 
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
@@ -287,6 +302,100 @@ export default function WhatsAppChatsPage() {
     const handleApplySuggestion = (text) => {
         setNewMessage(text);
         setAiSuggestions([]);
+    };
+
+    const handleOpenTemplatePicker = () => {
+        setSelectedTemplateForSend(null);
+        setTemplateVars({});
+        setIsTemplateDrawerOpen(true);
+    };
+
+    const handleSelectTemplate = (tpl) => {
+        setSelectedTemplateForSend(tpl);
+        // Parse body for variable placeholders like {{1}}, {{2}}
+        const matches = (tpl.body || '').match(/\{\{(\d+)\}\}/g) || [];
+        const vars = {};
+        matches.forEach(m => { vars[m] = ''; });
+        setTemplateVars(vars);
+    };
+
+    const handleSendTemplate = async () => {
+        if (!selectedTemplateForSend || !selectedJid) return;
+        
+        const templateName = selectedTemplateForSend.templateName || selectedTemplateForSend.name;
+        
+        // Build body parameters from vars
+        const bodyParams = Object.entries(templateVars).map(([, val]) => ({
+            type: 'text',
+            text: val || ' '
+        }));
+
+        const components = bodyParams.length > 0
+            ? [{ type: 'body', parameters: bodyParams }]
+            : [];
+
+        // Build preview text for optimistic UI
+        let previewText = selectedTemplateForSend.body || `[Template: ${templateName}]`;
+        Object.entries(templateVars).forEach(([key, val]) => {
+            previewText = previewText.replace(key, val || key);
+        });
+
+        const tempId = `temp_${Date.now()}`;
+        const optimisticMsg = {
+            id: tempId,
+            text: previewText,
+            fromMe: true,
+            timestamp: Math.floor(Date.now() / 1000),
+            status: 'PENDING',
+            metadata: { type: 'template', templateName }
+        };
+        setConversations(prev => prev.map(conv => {
+            if (conv.jid === selectedJid) {
+                return { ...conv, lastMessage: previewText, messages: [optimisticMsg, ...conv.messages] };
+            }
+            return conv;
+        }));
+        setIsTemplateDrawerOpen(false);
+        setSelectedTemplateForSend(null);
+        setTemplateVars({});
+        setIsSending(true);
+
+        try {
+            const res = await fetch('/api/wa/send-cloud-api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: selectedJid,
+                    type: 'template',
+                    template: {
+                        name: templateName,
+                        language: { code: selectedTemplateForSend.language || 'en_US' },
+                        components
+                    }
+                })
+            });
+            if (res.ok) {
+                setConversations(prev => prev.map(conv => {
+                    if (conv.jid === selectedJid) {
+                        return { ...conv, messages: conv.messages.map(m => m.id === tempId ? { ...m, status: 'SENT' } : m) };
+                    }
+                    return conv;
+                }));
+                toast.success('Template sent!');
+            } else {
+                toast.error('Failed to send template');
+                setConversations(prev => prev.map(conv => {
+                    if (conv.jid === selectedJid) {
+                        return { ...conv, messages: conv.messages.filter(m => m.id !== tempId) };
+                    }
+                    return conv;
+                }));
+            }
+        } catch (err) {
+            toast.error('Error sending template');
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const handleTemplateClick = (msg) => {
@@ -594,6 +703,16 @@ export default function WhatsAppChatsPage() {
                                 <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
                                     <Paperclip className="w-5 h-5" />
                                 </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    title="Send a Template"
+                                    onClick={handleOpenTemplatePicker}
+                                    className="rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                    <Layout className="w-5 h-5" />
+                                </Button>
 
                                 <form onSubmit={handleSendMessage} className="flex-1 flex flex-col gap-2">
                                     {/* AI Suggestions Chips */}
@@ -665,6 +784,131 @@ export default function WhatsAppChatsPage() {
 
             </div>
 
+            {/* ===== Template Picker Modal ===== */}
+            {isTemplateDrawerOpen && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-lg bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-border/50 bg-muted/10">
+                            <div className="flex items-center gap-2">
+                                <Layout className="w-4 h-4 text-primary" />
+                                <h2 className="font-semibold text-sm">
+                                    {selectedTemplateForSend ? 'Fill Variables' : 'Select a Template'}
+                                </h2>
+                            </div>
+                            <button
+                                onClick={() => { setIsTemplateDrawerOpen(false); setSelectedTemplateForSend(null); }}
+                                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 max-h-[65vh] overflow-y-auto">
+                            {!selectedTemplateForSend ? (
+                                /* Template List */
+                                <>
+                                    {templates.filter(t => t.approved || t.status === 'APPROVED').length === 0 ? (
+                                        <div className="text-center py-10 text-muted-foreground">
+                                            <Layout className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                            <p className="text-xs">No approved templates found.</p>
+                                            <p className="text-xs opacity-70 mt-1">Sync your templates from the Templates page.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-2">
+                                            {templates
+                                                .filter(t => t.approved || t.status === 'APPROVED')
+                                                .map(tpl => (
+                                                    <button
+                                                        key={tpl.id}
+                                                        onClick={() => handleSelectTemplate(tpl)}
+                                                        className="text-left p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:bg-primary/5 transition-all duration-150 group"
+                                                    >
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                                                                    {tpl.name}
+                                                                </p>
+                                                                <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+                                                                    {tpl.body}
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                                <span className="text-[9px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-medium">
+                                                                    APPROVED
+                                                                </span>
+                                                                <span className="text-[9px] text-muted-foreground uppercase">{ tpl.language || 'en' }</span>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                /* Variable Input View */
+                                <div className="flex flex-col gap-4">
+                                    {/* Template Preview */}
+                                    <div className="rounded-xl bg-muted/30 border border-border/40 p-3">
+                                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Preview</p>
+                                        <p className="text-xs leading-relaxed text-foreground whitespace-pre-wrap">
+                                            {fillTemplatePreview(selectedTemplateForSend.body, templateVars)}
+                                        </p>
+                                    </div>
+
+                                    {/* Variable Fields */}
+                                    {Object.keys(templateVars).length > 0 ? (
+                                        <div className="flex flex-col gap-3">
+                                            <p className="text-xs font-medium text-muted-foreground">Fill in the variables:</p>
+                                            {Object.keys(templateVars).map((key, idx) => (
+                                                <div key={key} className="flex flex-col gap-1">
+                                                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                                                        Variable {idx + 1} <span className="text-primary">{key}</span>
+                                                    </label>
+                                                    <Input
+                                                        autoFocus={idx === 0}
+                                                        value={templateVars[key]}
+                                                        onChange={(e) => setTemplateVars(prev => ({ ...prev, [key]: e.target.value }))}
+                                                        placeholder={`Enter value for ${key}...`}
+                                                        className="h-9 text-xs bg-background/60 border-border/40"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground text-center py-2">No variables required for this template.</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="px-5 py-3 border-t border-border/50 bg-muted/5 flex items-center justify-between gap-3">
+                            {selectedTemplateForSend ? (
+                                <>
+                                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedTemplateForSend(null)}>
+                                        ← Back
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="text-xs bg-primary hover:bg-primary/90 gap-1.5"
+                                        onClick={handleSendTemplate}
+                                        disabled={isSending}
+                                    >
+                                        {isSending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                                        Send Template
+                                    </Button>
+                                </>
+                            ) : (
+                                <Button variant="ghost" size="sm" className="text-xs ml-auto" onClick={() => setIsTemplateDrawerOpen(false)}>
+                                    Cancel
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

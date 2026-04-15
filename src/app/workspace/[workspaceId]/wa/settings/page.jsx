@@ -95,6 +95,14 @@ export default function SettingsPage() {
     const [templates, setTemplates] = useState([]);
     const [syncingTemplates, setSyncingTemplates] = useState({}); // { id: true/false }
 
+    // Meta Cloud API Tab States
+    const [metaCloudName, setMetaCloudName] = useState('');
+    const [metaCloudUrl, setMetaCloudUrl] = useState('');
+    const [metaCloudVersion, setMetaCloudVersion] = useState('v25.0');
+    const [metaCloudAccessToken, setMetaCloudAccessToken] = useState('');
+    const [metaCloudTesting, setMetaCloudTesting] = useState(false);
+    const [metaCloudResult, setMetaCloudResult] = useState(null);
+
     // Shared States
     const [webhookUrl, setWebhookUrl] = useState('');
     const [copied, setCopied] = useState(false);
@@ -293,6 +301,38 @@ export default function SettingsPage() {
         }
     };
 
+    const handleTestMetaCloud = async () => {
+        if (!metaCloudAccessToken.trim()) {
+            toast.error('Please enter an Access Token.');
+            return;
+        }
+        const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/debug_token?input_token=${metaCloudAccessToken.trim()}`;
+        setMetaCloudTesting(true);
+        setMetaCloudResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: builtUrl,
+                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+                }),
+            });
+            const result = await res.json();
+            setMetaCloudResult(result);
+            if (result.success) {
+                toast.success(`App Info â€” ${result.status} ${result.statusText}`);
+            } else {
+                toast.error(`Failed: ${result.error || result.status}`);
+            }
+        } catch (err) {
+            setMetaCloudResult({ success: false, error: err.message });
+            toast.error('Network error');
+        } finally {
+            setMetaCloudTesting(false);
+        }
+    };
+
     useEffect(() => {
         fetchBrowserStatus();
         fetchCloudCreds();
@@ -398,7 +438,7 @@ export default function SettingsPage() {
                 {/* Tabs Navigation */}
                 <Tabs defaultValue="status" className="flex-1 flex flex-col p-6 overflow-hidden">
                     <TabsList className="bg-muted/5 w-full justify-start rounded-xl h-auto p-1.5 gap-2 mb-6 border border-border/20 backdrop-blur-sm">
-                        {['status', 'automation', 'webhooks', 'messaging', 'notifications', 'security', 'general'].map((tab) => (
+                        {['status', 'automation', 'webhooks', 'messaging', 'notifications', 'security', 'general', 'meta-cloud'].map((tab) => (
                             <TabsTrigger
                                 key={tab}
                                 value={tab}
@@ -472,11 +512,11 @@ export default function SettingsPage() {
                                                             </div>
                                                             <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-mono">
                                                                 <span className="opacity-40 uppercase font-bold">Phone ID:</span>
-                                                                <span className="tracking-widest">••••••••</span>
+                                                                <span className="tracking-widest">{cred.phoneNumberId}</span>
                                                                 <Copy size={11} className="hover:text-primary cursor-pointer transition-colors" onClick={() => copyToClipboard(cred.phoneNumberId)} />
                                                                 <Separator orientation="vertical" className="h-3 bg-border/40" />
                                                                 <span className="opacity-40 uppercase font-bold">WABA ID:</span>
-                                                                <span className="tracking-widest">••••••••</span>
+                                                                <span className="tracking-widest">{cred.wabaId}</span>
                                                                 <Copy size={11} className="hover:text-primary cursor-pointer transition-colors" onClick={() => copyToClipboard(cred.wabaId)} />
                                                             </div>
                                                         </div>
@@ -519,7 +559,7 @@ export default function SettingsPage() {
                                                                 <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help opacity-40 hover:opacity-100 transition-opacity" />
                                                             </TooltipTrigger>
                                                             <TooltipContent className="max-w-[200px] text-[10px] rounded-lg border-border/20 p-3 leading-relaxed">
-                                                                Sends a direct text message. 
+                                                                Sends a direct text message.
                                                                 <br />
                                                                 <b className="text-primary">Important:</b> Recipient must have messaged you in the last 24h.
                                                             </TooltipContent>
@@ -583,10 +623,10 @@ export default function SettingsPage() {
                                         </div>
                                         <div className="pt-2">
                                             <div className="w-full h-1 bg-muted/20 rounded-full overflow-hidden">
-                                                <motion.div 
+                                                <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: "98%" }}
-                                                    className="h-full bg-primary" 
+                                                    className="h-full bg-primary"
                                                 />
                                             </div>
                                         </div>
@@ -1109,8 +1149,116 @@ export default function SettingsPage() {
                             </Card>
                         </div>
                     </TabsContent>
-                </Tabs>
 
+                    {/* META CLOUD API TAB */}
+                    <TabsContent value="meta-cloud" className="flex-1 outline-none custom-scrollbar overflow-y-auto">
+                        <div className=" space-y-6">
+
+                            {/* Header */}
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-green-500/10 rounded-xl border border-green-500/20">
+                                    <Globe className="w-5 h-5 text-green-500" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold tracking-tight">Meta Cloud API</h2>
+                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest opacity-60">Configure your Meta Cloud API endpoint</p>
+                                </div>
+                            </div>
+
+                            <div id='all-test-container' className='flex flex-col gap-2'>
+                                {/* Card 1 â€” Developer App Info */}
+                                <Card className="glass-card border-none shadow-none w-full">
+                                    <CardContent className="flex flex-col gap-4 pt-5">
+
+                                        {/* Title */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            <Label className="text-sm font-bold tracking-tight">Developer App Info</Label>
+                                            <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">GET /debug_token</span>
+                                        </div>
+
+                                        {/* Inputs Row */}
+                                        <div className="flex gap-3">
+                                            {/* API Version */}
+                                            <div className="space-y-1.5 w-28 shrink-0">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Version</Label>
+                                                <Input
+                                                    value={metaCloudVersion ?? ''}
+                                                    onChange={(e) => setMetaCloudVersion(e.target.value)}
+                                                    className="bg-background/40 text-xs font-mono font-bold border rounded-md px-3 shadow-inner"
+                                                />
+                                            </div>
+                                            {/* Access Token */}
+                                            <div className="space-y-1.5 flex-1">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Access Token</Label>
+                                                <Input
+                                                    type="password"
+                                                    placeholder="EAAG..."
+                                                    value={metaCloudAccessToken ?? ''}
+                                                    onChange={(e) => setMetaCloudAccessToken(e.target.value)}
+                                                    className="bg-background/40 text-xs font-mono font-medium border rounded-md px-3 shadow-inner"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Computed URL Preview */}
+                                        <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                            GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion || '<API_VERSION>'}</span>/debug_token?input_token=<span className="text-primary/80">{metaCloudAccessToken ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : '<ACCESS_TOKEN>'}</span>
+                                            <br />
+                                            <span className="opacity-50">Authorization: Bearer {metaCloudAccessToken ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : '<ACCESS_TOKEN>'}</span>
+                                        </div>
+
+                                        {/* Get Info Button */}
+                                        <div>
+                                            <Button
+                                                className="px-8 rounded-md text-xs gap-2"
+                                                onClick={handleTestMetaCloud}
+                                                disabled={metaCloudTesting || !metaCloudAccessToken.trim()}
+                                            >
+                                                {metaCloudTesting
+                                                    ? <RefreshCw className="w-4 h-4 animate-spin" />
+                                                    : <Zap className="w-4 h-4" />
+                                                }
+                                                {metaCloudTesting ? 'Getting Info...' : 'Get Info'}
+                                            </Button>
+                                        </div>
+
+                                        {/* Response Panel */}
+                                        {metaCloudResult && (
+                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${metaCloudResult.success
+                                                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                                        : 'bg-red-500/10 text-red-500 border-red-500/20'
+                                                    }`}>
+                                                        {metaCloudResult.success ? 'âœ“ Success' : 'âœ— Failed'}
+                                                    </span>
+                                                    {metaCloudResult.status && (
+                                                        <span className="text-[10px] font-mono text-muted-foreground">
+                                                            {metaCloudResult.status} {metaCloudResult.statusText}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <pre className="text-[10px] font-mono bg-muted/10 border border-border/20 rounded-lg p-3 overflow-x-auto max-h-64 text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+                                                    {metaCloudResult.error
+                                                        ? metaCloudResult.error
+                                                        : JSON.stringify(metaCloudResult.data, null, 2)
+                                                    }
+                                                </pre>
+                                            </div>
+                                        )}
+
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+
+                        </div>
+                    </TabsContent>
+
+
+
+                </Tabs>
                 {/* MODALS */}
                 <Dialog open={isCredsModalOpen} onOpenChange={setIsCredsModalOpen}>
                     <DialogContent className="sm:max-w-[480px] bg-background/80 backdrop-blur-xl border-border/20 p-0 rounded-2xl shadow-2xl overflow-hidden glass-card">
