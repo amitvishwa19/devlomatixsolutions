@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -73,6 +73,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function SettingsPage() {
     // Connection Method State
@@ -102,6 +103,51 @@ export default function SettingsPage() {
     const [metaCloudAccessToken, setMetaCloudAccessToken] = useState('');
     const [metaCloudTesting, setMetaCloudTesting] = useState(false);
     const [metaCloudResult, setMetaCloudResult] = useState(null);
+    const [metaCloudResultOpen, setMetaCloudResultOpen] = useState(true);
+
+    // Meta Cloud â€” Card 2: Display Names
+    const [displayNamesPhoneId, setDisplayNamesPhoneId] = useState('');
+    const [displayNamesTesting, setDisplayNamesTesting] = useState(false);
+    const [displayNamesResult, setDisplayNamesResult] = useState(null);
+    const [displayNamesResultOpen, setDisplayNamesResultOpen] = useState(true);
+
+    // Meta Cloud - Card 3: OBA Status
+    const [obaPhoneId, setObaPhoneId] = useState('');
+    const [obaWebsiteUrl, setObaWebsiteUrl] = useState('');
+    const [obaParentBusiness, setObaParentBusiness] = useState('');
+    const [obaCountry, setObaCountry] = useState('');
+    const [obaLanguage, setObaLanguage] = useState('English');
+    const [obaAdditionalInfo, setObaAdditionalInfo] = useState('');
+    const [obaTesting, setObaTesting] = useState(false);
+    const [obaResult, setObaResult] = useState(null);
+    const [obaResultOpen, setObaResultOpen] = useState(true);
+    const [obaStatusTesting, setObaStatusTesting] = useState(false);
+    const [obaStatusResult, setObaStatusResult] = useState(null);
+    const [obaStatusResultOpen, setObaStatusResultOpen] = useState(true);
+
+    // Meta Cloud — Card 5: Create QR Code
+    const [qrMessage, setQrMessage] = useState('');
+    const [qrFormat, setQrFormat] = useState('SVG');
+    const [qrTesting, setQrTesting] = useState(false);
+    const [qrResult, setQrResult] = useState(null);
+    const [qrResultOpen, setQrResultOpen] = useState(true);
+    // QR — Get List tab
+    const [qrListTesting, setQrListTesting] = useState(false);
+    const [qrListResult, setQrListResult] = useState(null);
+    const [qrListResultOpen, setQrListResultOpen] = useState(true);
+    // QR — Update tab
+    const [qrUpdateCodeId, setQrUpdateCodeId] = useState('');
+    const [qrUpdateMessage, setQrUpdateMessage] = useState('');
+    const [qrUpdateFormat, setQrUpdateFormat] = useState('SVG');
+    const [qrUpdateTesting, setQrUpdateTesting] = useState(false);
+    const [qrUpdateResult, setQrUpdateResult] = useState(null);
+    const [qrUpdateResultOpen, setQrUpdateResultOpen] = useState(true);
+    // QR — Delete tab
+    const [qrDeleteCodeId, setQrDeleteCodeId] = useState('');
+    const [qrDeleteTesting, setQrDeleteTesting] = useState(false);
+    const [qrDeleteResult, setQrDeleteResult] = useState(null);
+    const [qrDeleteResultOpen, setQrDeleteResultOpen] = useState(true);
+
 
     // Shared States
     const [webhookUrl, setWebhookUrl] = useState('');
@@ -320,8 +366,9 @@ export default function SettingsPage() {
             });
             const result = await res.json();
             setMetaCloudResult(result);
+            setMetaCloudResultOpen(true);
             if (result.success) {
-                toast.success(`App Info â€” ${result.status} ${result.statusText}`);
+                toast.success(`App Info ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${result.status} ${result.statusText}`);
             } else {
                 toast.error(`Failed: ${result.error || result.status}`);
             }
@@ -333,10 +380,210 @@ export default function SettingsPage() {
         }
     };
 
+    const handleGetDisplayNames = async () => {
+        if (!displayNamesPhoneId.trim()) {
+            toast.error('Please enter a Phone Number ID.');
+            return;
+        }
+        if (!metaCloudAccessToken.trim()) {
+            toast.error('Please enter an Access Token.');
+            return;
+        }
+        const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${displayNamesPhoneId.trim()}?fields=verified_name,name_status`;
+        setDisplayNamesTesting(true);
+        setDisplayNamesResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: builtUrl,
+                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+                }),
+            });
+            const result = await res.json();
+            setDisplayNamesResult(result);
+            setDisplayNamesResultOpen(true);
+            if (result.success) {
+                toast.success(`Display Names â€” ${result.status} ${result.statusText}`);
+            } else {
+                toast.error(`Failed: ${result.error || result.status}`);
+            }
+        } catch (err) {
+            setDisplayNamesResult({ success: false, error: err.message });
+            toast.error('Network error');
+        } finally {
+            setDisplayNamesTesting(false);
+        }
+    };
+
+    const handleObaStatus = async () => {
+        if (!obaPhoneId.trim()) { toast.error('Please enter a Phone Number ID.'); return; }
+        if (!metaCloudAccessToken.trim()) { toast.error('Please enter an Access Token.'); return; }
+        const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/official_business_account`;
+        setObaTesting(true);
+        setObaResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: builtUrl,
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}`, 'Content-Type': 'application/json' },
+                    body: {
+                        additional_supporting_information: obaAdditionalInfo,
+                        business_website_url: obaWebsiteUrl,
+                        parent_business_or_brand: obaParentBusiness,
+                        primary_country_of_operation: obaCountry,
+                        primary_language: obaLanguage,
+                    },
+                }),
+            });
+            const result = await res.json();
+            setObaResult(result);
+            setObaResultOpen(true);
+            if (result.success) { toast.success(`OBA Status - ${result.status} ${result.statusText}`); }
+            else { toast.error(`Failed: ${result.error || result.status}`); }
+        } catch (err) {
+            setObaResult({ success: false, error: err.message });
+            toast.error('Network error');
+        } finally {
+            setObaTesting(false);
+        }
+    };
+
+    const handleCheckObaStatus = async () => {
+        if (!obaPhoneId.trim()) { toast.error('Please enter a Phone Number ID.'); return; }
+        if (!metaCloudAccessToken.trim()) { toast.error('Please enter an Access Token.'); return; }
+        const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}?fields=name_status,code_verification_status`;
+        setObaStatusTesting(true);
+        setObaStatusResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: builtUrl,
+                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+                }),
+            });
+            const result = await res.json();
+            setObaStatusResult(result);
+            setObaStatusResultOpen(true);
+            if (result.success) { toast.success(`OBA Status - ${result.status} ${result.statusText}`); }
+            else { toast.error(`Failed: ${result.error || result.status}`); }
+        } catch (err) {
+            setObaStatusResult({ success: false, error: err.message });
+            toast.error('Network error');
+        } finally {
+            setObaStatusTesting(false);
+        }
+    };
+
+    const handleCreateQR = async () => {
+        if (!obaPhoneId.trim()) { toast.error('Please enter a Phone Number ID.'); return; }
+        if (!qrMessage.trim()) { toast.error('Please enter a prefilled message.'); return; }
+        if (!metaCloudAccessToken.trim()) { toast.error('Please enter an Access Token.'); return; }
+        const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`;
+        setQrTesting(true);
+        setQrResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: builtUrl,
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}`, 'Content-Type': 'application/json' },
+                    body: { prefilled_message: qrMessage.trim(), generate_qr_image: qrFormat },
+                }),
+            });
+            const result = await res.json();
+            setQrResult(result);
+            setQrResultOpen(true);
+            if (result.success) { toast.success(`QR Code Created — ${result.status} ${result.statusText}`); }
+            else { toast.error(`Failed: ${result.error || result.status}`); }
+        } catch (err) {
+            setQrResult({ success: false, error: err.message });
+            toast.error('Network error');
+        } finally {
+            setQrTesting(false);
+        }
+    };
+
+    const handleListQR = async () => {
+        if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
+        const url = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`;
+        setQrListTesting(true); setQrListResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
+            });
+            const result = await res.json();
+            setQrListResult(result); setQrListResultOpen(true);
+            if (result.success) toast.success(`QR List — ${result.status}`);
+            else toast.error(`Failed: ${result.error || result.status}`);
+        } catch (err) { setQrListResult({ success: false, error: err.message }); toast.error('Network error'); }
+        finally { setQrListTesting(false); }
+    };
+
+    const handleUpdateQR = async () => {
+        if (!qrUpdateCodeId.trim()) { toast.error('QR Code ID required.'); return; }
+        if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
+        const url = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`;
+        setQrUpdateTesting(true); setQrUpdateResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url, method: 'POST',
+                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}`, 'Content-Type': 'application/json' },
+                    body: { code: qrUpdateCodeId.trim(), prefilled_message: qrUpdateMessage.trim(), generate_qr_image: qrUpdateFormat },
+                }),
+            });
+            const result = await res.json();
+            setQrUpdateResult(result); setQrUpdateResultOpen(true);
+            if (result.success) toast.success(`QR Updated — ${result.status}`);
+            else toast.error(`Failed: ${result.error || result.status}`);
+        } catch (err) { setQrUpdateResult({ success: false, error: err.message }); toast.error('Network error'); }
+        finally { setQrUpdateTesting(false); }
+    };
+
+    const handleDeleteQR = async () => {
+        if (!qrDeleteCodeId.trim()) { toast.error('QR Code ID required.'); return; }
+        if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
+        const url = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls/${qrDeleteCodeId.trim()}`;
+        setQrDeleteTesting(true); setQrDeleteResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, method: 'DELETE', headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
+            });
+            const result = await res.json();
+            setQrDeleteResult(result); setQrDeleteResultOpen(true);
+            if (result.success) toast.success(`QR Deleted — ${result.status}`);
+            else toast.error(`Failed: ${result.error || result.status}`);
+        } catch (err) { setQrDeleteResult({ success: false, error: err.message }); toast.error('Network error'); }
+        finally { setQrDeleteTesting(false); }
+    };
+
     useEffect(() => {
         fetchBrowserStatus();
         fetchCloudCreds();
         fetchTemplatesList();
+
+        // Pre-fill all Meta Cloud inputs from the default credential account
+        fetch('/api/wa/credentials/token')
+            .then(r => r.json())
+            .then(data => {
+                if (data?.accessToken) setMetaCloudAccessToken(data.accessToken);
+                if (data?.phoneNumberId) setDisplayNamesPhoneId(data.phoneNumberId);
+                if (data?.phoneNumberId) setObaPhoneId(data.phoneNumberId);
+                // Add more setters here as new cards are introduced
+            })
+            .catch(() => { /* silent - user can fill manually */ });
 
         const interval = setInterval(() => {
             if (method === 'browser') fetchBrowserStatus();
@@ -347,6 +594,7 @@ export default function SettingsPage() {
         }
         return () => clearInterval(interval);
     }, [fetchBrowserStatus, method]);
+
 
     const handleSaveMetadata = async (updates) => {
         const newMetadata = { ...metadata, ...updates };
@@ -436,9 +684,9 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Tabs Navigation */}
-                <Tabs defaultValue="status" className="flex-1 flex flex-col p-6 overflow-hidden">
+                <Tabs defaultValue="general" className="flex-1 flex flex-col p-2 overflow-hidden">
                     <TabsList className="bg-muted/5 w-full justify-start rounded-xl h-auto p-1.5 gap-2 mb-6 border border-border/20 backdrop-blur-sm">
-                        {['status', 'automation', 'webhooks', 'messaging', 'notifications', 'security', 'general', 'meta-cloud'].map((tab) => (
+                        {['general', 'automation', 'webhooks', 'messaging', 'notifications', 'security', 'meta-cloud'].map((tab) => (
                             <TabsTrigger
                                 key={tab}
                                 value={tab}
@@ -450,7 +698,7 @@ export default function SettingsPage() {
                     </TabsList>
 
                     {/* STATUS TAB */}
-                    <TabsContent value="status" className="flex-1 outline-none custom-scrollbar overflow-y-auto">
+                    <TabsContent value="general" className="flex-1 outline-none custom-scrollbar overflow-y-auto">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                             {/* Main Content (Left) */}
                             <div className="md:col-span-8 space-y-6">
@@ -1056,117 +1304,14 @@ export default function SettingsPage() {
                         </div>
                     </TabsContent>
 
-                    {/* GENERAL TAB */}
-                    <TabsContent value="general" className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
-                        <div className="max-w-3xl space-y-6">
-                            <Card className="glass-card border-none shadow-none">
-                                <CardHeader>
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
-                                            <Database className="w-4 h-4 text-primary" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <CardTitle className="text-base font-bold tracking-tight text-primary">Core Configuration</CardTitle>
-                                            <CardDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">System Preferences</CardDescription>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="grid gap-6">
-                                        <div className="space-y-3">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Instance Display Name</Label>
-                                            <Input
-                                                className="bg-background/40 backdrop-blur-sm h-11 text-xs font-bold border-border/20 rounded-xl shadow-inner px-4"
-                                                placeholder="e.g. Production Cluster A"
-                                                value={metadata.instanceName || ''}
-                                                onChange={(e) => setMetadata({ ...metadata, instanceName: e.target.value })}
-                                                onBlur={(e) => handleSaveMetadata({ instanceName: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">Region / Timezone</Label>
-                                                <Select
-                                                    value={metadata.timezone || 'UTC'}
-                                                    onValueChange={(v) => handleSaveMetadata({ timezone: v })}
-                                                >
-                                                    <SelectTrigger className="h-11 bg-background/40 backdrop-blur-sm text-xs font-bold border-border/20 rounded-xl shadow-inner px-4">
-                                                        <SelectValue placeholder="Select zone" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="glass-card border-border/20 rounded-xl">
-                                                        <SelectItem value="UTC" className="text-xs">UTC (Universal)</SelectItem>
-                                                        <SelectItem value="Asia/Kolkata" className="text-xs">IST (Kolkata)</SelectItem>
-                                                        <SelectItem value="America/New_York" className="text-xs">EST (New York)</SelectItem>
-                                                        <SelectItem value="Europe/London" className="text-xs">GMT (London)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">System Language</Label>
-                                                <Select
-                                                    value={metadata.language || 'en_US'}
-                                                    onValueChange={(v) => handleSaveMetadata({ language: v })}
-                                                >
-                                                    <SelectTrigger className="h-11 bg-background/40 backdrop-blur-sm text-xs font-bold border-border/20 rounded-xl shadow-inner px-4">
-                                                        <SelectValue placeholder="Select lang" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="glass-card border-border/20 rounded-xl">
-                                                        <SelectItem value="en_US" className="text-xs">English (US)</SelectItem>
-                                                        <SelectItem value="en_GB" className="text-xs">English (GB)</SelectItem>
-                                                        <SelectItem value="hi_IN" className="text-xs">Hindi (IN)</SelectItem>
-                                                        <SelectItem value="es_ES" className="text-xs">Spanish (ES)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <Separator className="bg-border/20" />
-
-                                    <div className="p-6 bg-background/40 backdrop-blur-sm rounded-2xl border border-border/20 shadow-sm space-y-5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-primary/10 rounded-lg">
-                                                <MessageSquare size={16} className="text-primary" />
-                                            </div>
-                                            <Label className="text-sm font-bold tracking-tight">Workspace Signature</Label>
-                                        </div>
-                                        <Textarea
-                                            className="min-h-[100px] text-xs font-medium bg-background/40 backdrop-blur-sm border-border/20 rounded-xl shadow-inner p-4 leading-relaxed"
-                                            placeholder="Sent via Devlomatix WA Engine..."
-                                            value={metadata.signature || ''}
-                                            onChange={(e) => setMetadata({ ...metadata, signature: e.target.value })}
-                                            onBlur={(e) => handleSaveMetadata({ signature: e.target.value })}
-                                        />
-                                        <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
-                                            <Switch
-                                                checked={metadata.appendSignature || false}
-                                                onCheckedChange={(c) => handleSaveMetadata({ appendSignature: c })}
-                                            />
-                                            <span className="text-[10px] text-primary font-black uppercase tracking-widest">Prepend to all outbound browser messages</span>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </TabsContent>
 
                     {/* META CLOUD API TAB */}
                     <TabsContent value="meta-cloud" className="flex-1 outline-none custom-scrollbar overflow-y-auto">
-                        <div className=" space-y-6">
+                        <ScrollArea className=" h-[72vh] space-y-6 p-4">
 
-                            {/* Header */}
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-green-500/10 rounded-xl border border-green-500/20">
-                                    <Globe className="w-5 h-5 text-green-500" />
-                                </div>
-                                <div>
-                                    <h2 className="text-base font-bold tracking-tight">Meta Cloud API</h2>
-                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest opacity-60">Configure your Meta Cloud API endpoint</p>
-                                </div>
-                            </div>
 
                             <div id='all-test-container' className='flex flex-col gap-2'>
-                                {/* Card 1 â€” Developer App Info */}
+                                {/* Card 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Developer App Info */}
                                 <Card className="glass-card border-none shadow-none w-full">
                                     <CardContent className="flex flex-col gap-4 pt-5">
 
@@ -1203,9 +1348,9 @@ export default function SettingsPage() {
 
                                         {/* Computed URL Preview */}
                                         <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
-                                            GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion || '<API_VERSION>'}</span>/debug_token?input_token=<span className="text-primary/80">{metaCloudAccessToken ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : '<ACCESS_TOKEN>'}</span>
+                                            GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion || '<API_VERSION>'}</span>/debug_token?input_token=<span className="text-primary/80">{metaCloudAccessToken ? 'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢' : '<ACCESS_TOKEN>'}</span>
                                             <br />
-                                            <span className="opacity-50">Authorization: Bearer {metaCloudAccessToken ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : '<ACCESS_TOKEN>'}</span>
+                                            <span className="opacity-50">Authorization: Bearer {metaCloudAccessToken ? 'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢' : '<ACCESS_TOKEN>'}</span>
                                         </div>
 
                                         {/* Get Info Button */}
@@ -1225,35 +1370,418 @@ export default function SettingsPage() {
 
                                         {/* Response Panel */}
                                         {metaCloudResult && (
-                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                <div className="flex items-center gap-2 mb-2">
+                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 border border-border/20 rounded-lg overflow-hidden">
+                                                {/* Collapsible Header */}
+                                                <button
+                                                    onClick={() => setMetaCloudResultOpen(v => !v)}
+                                                    className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors"
+                                                >
                                                     <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${metaCloudResult.success
                                                         ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                                         : 'bg-red-500/10 text-red-500 border-red-500/20'
-                                                    }`}>
-                                                        {metaCloudResult.success ? 'âœ“ Success' : 'âœ— Failed'}
+                                                        }`}>
+                                                        {metaCloudResult.success ? '&#x2713; Success' : '&#x2717; Failed'}
                                                     </span>
                                                     {metaCloudResult.status && (
                                                         <span className="text-[10px] font-mono text-muted-foreground">
                                                             {metaCloudResult.status} {metaCloudResult.statusText}
                                                         </span>
                                                     )}
-                                                </div>
-                                                <pre className="text-[10px] font-mono bg-muted/10 border border-border/20 rounded-lg p-3 overflow-x-auto max-h-64 text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
-                                                    {metaCloudResult.error
-                                                        ? metaCloudResult.error
-                                                        : JSON.stringify(metaCloudResult.data, null, 2)
-                                                    }
-                                                </pre>
+                                                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${metaCloudResultOpen ? 'rotate-90' : ''}`} />
+                                                </button>
+                                                {/* Collapsible Body */}
+                                                {metaCloudResultOpen && (
+                                                    <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-72 text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+                                                        {metaCloudResult.error
+                                                            ? metaCloudResult.error
+                                                            : JSON.stringify(metaCloudResult.data, null, 2)
+                                                        }
+                                                    </pre>
+                                                )}
                                             </div>
                                         )}
 
                                     </CardContent>
                                 </Card>
+
+                                {/* Card 2 — Get Display Names */}
+                                <Card className="glass-card border-none shadow-none w-full">
+                                    <CardContent className="flex flex-col gap-4 pt-5">
+
+                                        {/* Title */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            <Label className="text-sm font-bold tracking-tight">Get Display Names</Label>
+                                            <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">GET /{'{' + 'phone_id' + '}'}?fields=verified_name,name_status</span>
+                                        </div>
+
+                                        {/* Phone Number ID input */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Phone Number ID</Label>
+                                            <Input
+                                                placeholder="106540352242922"
+                                                value={displayNamesPhoneId ?? ''}
+                                                onChange={(e) => setDisplayNamesPhoneId(e.target.value)}
+                                                className="bg-background/40 text-xs font-mono font-medium border rounded-md px-3 shadow-inner"
+                                            />
+                                        </div>
+
+                                        {/* Shared token note */}
+                                        <p className="text-[10px] text-muted-foreground/40 ml-1">Uses <span className="text-primary/60 font-bold">Version</span> and <span className="text-primary/60 font-bold">Access Token</span> from card above.</p>
+
+                                        {/* URL Preview */}
+                                        <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                            GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion || '<version>'}</span>/<span className="text-primary/80">{displayNamesPhoneId || '<phone_number_id>'}</span>?fields=verified_name,name_status
+                                            <br />
+                                            <span className="opacity-50">Authorization: Bearer {metaCloudAccessToken ? '••••••••' : '<ACCESS_TOKEN>'}</span>
+                                        </div>
+
+                                        {/* Button */}
+                                        <div>
+                                            <Button
+                                                className="px-8 rounded-md text-xs gap-2"
+                                                onClick={handleGetDisplayNames}
+                                                disabled={displayNamesTesting || !displayNamesPhoneId.trim() || !metaCloudAccessToken.trim()}
+                                            >
+                                                {displayNamesTesting
+                                                    ? <RefreshCw className="w-4 h-4 animate-spin" />
+                                                    : <Zap className="w-4 h-4" />
+                                                }
+                                                {displayNamesTesting ? 'Fetching...' : 'Get Display Names'}
+                                            </Button>
+                                        </div>
+
+                                        {/* Collapsible Result */}
+                                        {displayNamesResult && (
+                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 border border-border/20 rounded-lg overflow-hidden">
+                                                <button
+                                                    onClick={() => setDisplayNamesResultOpen(v => !v)}
+                                                    className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors"
+                                                >
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${displayNamesResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                                        {displayNamesResult.success ? '✓ Success' : '✗ Failed'}
+                                                    </span>
+                                                    {displayNamesResult.status && (
+                                                        <span className="text-[10px] font-mono text-muted-foreground">
+                                                            {displayNamesResult.status} {displayNamesResult.statusText}
+                                                        </span>
+                                                    )}
+                                                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${displayNamesResultOpen ? 'rotate-90' : ''}`} />
+                                                </button>
+                                                {displayNamesResultOpen && (
+                                                    <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-72 text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+                                                        {displayNamesResult.error ? displayNamesResult.error : JSON.stringify(displayNamesResult.data, null, 2)}
+                                                    </pre>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    </CardContent>
+                                </Card>
+
+                                {/* Card 3 - OBA Status Check */}
+                                <Card className="glass-card border-none shadow-none w-full">
+                                    <CardContent className="flex flex-col gap-4 pt-5">
+
+                                        {/* Title */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            <Label className="text-sm font-bold tracking-tight">OBA Status</Label>
+                                            <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">GET /{'{' + 'phone_id' + '}'}?fields=name_status,code_verification_status</span>
+                                        </div>
+
+                                        {/* Shared inputs note */}
+                                        <p className="text-[10px] text-muted-foreground/40 ml-1">Uses <span className="text-primary/60 font-bold">Phone Number ID</span>, <span className="text-primary/60 font-bold">Version</span> and <span className="text-primary/60 font-bold">Access Token</span> from cards above.</p>
+
+                                        {/* URL Preview */}
+                                        <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                            GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion || '<version>'}</span>/<span className="text-primary/80">{obaPhoneId || '<phone_id>'}</span>?fields=name_status,code_verification_status
+                                            <br />
+                                            <span className="opacity-50">Authorization: Bearer {metaCloudAccessToken ? '••••••••' : '<ACCESS_TOKEN>'}</span>
+                                        </div>
+
+                                        {/* Button */}
+                                        <div>
+                                            <Button className="px-8 rounded-md text-xs gap-2" onClick={handleCheckObaStatus} disabled={obaStatusTesting || !obaPhoneId.trim() || !metaCloudAccessToken.trim()}>
+                                                {obaStatusTesting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                                                {obaStatusTesting ? 'Checking...' : 'Check OBA Status'}
+                                            </Button>
+                                        </div>
+
+                                        {/* Collapsible Result */}
+                                        {obaStatusResult && (
+                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 border border-border/20 rounded-lg overflow-hidden">
+                                                <button onClick={() => setObaStatusResultOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${obaStatusResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                                        {obaStatusResult.success ? '✓ Success' : '✗ Failed'}
+                                                    </span>
+                                                    {obaStatusResult.status && <span className="text-[10px] font-mono text-muted-foreground">{obaStatusResult.status} {obaStatusResult.statusText}</span>}
+                                                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${obaStatusResultOpen ? 'rotate-90' : ''}`} />
+                                                </button>
+                                                {obaStatusResultOpen && (
+                                                    <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-72 text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+                                                        {obaStatusResult.error ? obaStatusResult.error : JSON.stringify(obaStatusResult.data, null, 2)}
+                                                    </pre>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    </CardContent>
+                                </Card>
+
+                                {/* Card 3 - OBA Status */}
+                                <Card className="glass-card border-none shadow-none w-full">
+                                    <CardContent className="flex flex-col gap-4 pt-5">
+
+                                        {/* Title */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            <Label className="text-sm font-bold tracking-tight">OBA Status</Label>
+                                            <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">POST /{'{' + 'phone_id' + '}'}/official_business_account</span>
+                                        </div>
+
+                                        {/* Phone Number ID */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Phone Number ID</Label>
+                                            <Input placeholder="106540352242922" value={obaPhoneId ?? ''} onChange={(e) => setObaPhoneId(e.target.value)} className="bg-background/40 text-xs font-mono font-medium border rounded-md px-3 shadow-inner" />
+                                        </div>
+
+                                        {/* Business fields in 2-col grid */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Business Website URL</Label>
+                                                <Input placeholder="https://yourbusiness.com" value={obaWebsiteUrl ?? ''} onChange={(e) => setObaWebsiteUrl(e.target.value)} className="bg-background/40 text-xs font-mono font-medium border rounded-md px-3 shadow-inner" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Parent Business / Brand</Label>
+                                                <Input placeholder="Lucky Shrub LLC" value={obaParentBusiness ?? ''} onChange={(e) => setObaParentBusiness(e.target.value)} className="bg-background/40 text-xs font-medium border rounded-md px-3 shadow-inner" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Primary Country</Label>
+                                                <Input placeholder="United States of America" value={obaCountry ?? ''} onChange={(e) => setObaCountry(e.target.value)} className="bg-background/40 text-xs font-medium border rounded-md px-3 shadow-inner" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Primary Language</Label>
+                                                <Input placeholder="English" value={obaLanguage ?? ''} onChange={(e) => setObaLanguage(e.target.value)} className="bg-background/40 text-xs font-medium border rounded-md px-3 shadow-inner" />
+                                            </div>
+                                        </div>
+
+                                        {/* Additional Info */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Additional Supporting Information</Label>
+                                            <textarea
+                                                rows={2}
+                                                placeholder="We are also featured in..." 
+                                                value={obaAdditionalInfo ?? ''}
+                                                onChange={(e) => setObaAdditionalInfo(e.target.value)}
+                                                className="w-full bg-background/40 text-xs font-medium border border-input rounded-md px-3 py-2 shadow-inner resize-none outline-none focus:border-primary/20"
+                                            />
+                                        </div>
+
+                                        {/* Shared token note */}
+                                        <p className="text-[10px] text-muted-foreground/40 ml-1">Uses <span className="text-primary/60 font-bold">Version</span> and <span className="text-primary/60 font-bold">Access Token</span> from card above.</p>
+
+                                        {/* URL Preview */}
+                                        <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                            POST https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion || '<version>'}</span>/<span className="text-primary/80">{obaPhoneId || '<phone_id>'}</span>/official_business_account
+                                            <br />
+                                            <span className="opacity-50">Authorization: Bearer {metaCloudAccessToken ? '••••••••' : '<ACCESS_TOKEN>'}</span>
+                                        </div>
+
+                                        {/* Button */}
+                                        <div>
+                                            <Button className="px-8 rounded-md text-xs gap-2" onClick={handleObaStatus} disabled={obaTesting || !obaPhoneId.trim() || !metaCloudAccessToken.trim()}>
+                                                {obaTesting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                                                {obaTesting ? 'Submitting...' : 'Submit OBA Request'}
+                                            </Button>
+                                        </div>
+
+                                        {/* Collapsible Result */}
+                                        {obaResult && (
+                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 border border-border/20 rounded-lg overflow-hidden">
+                                                <button onClick={() => setObaResultOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${obaResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                                        {obaResult.success ? '✓ Success' : '✗ Failed'}
+                                                    </span>
+                                                    {obaResult.status && <span className="text-[10px] font-mono text-muted-foreground">{obaResult.status} {obaResult.statusText}</span>}
+                                                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${obaResultOpen ? 'rotate-90' : ''}`} />
+                                                </button>
+                                                {obaResultOpen && (
+                                                    <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-72 text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+                                                        {obaResult.error ? obaResult.error : JSON.stringify(obaResult.data, null, 2)}
+                                                    </pre>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    </CardContent>
+                                </Card>
+
+                                {/* Card 5 — QR Codes */}
+                                <Card className="glass-card border-none shadow-none w-full">
+                                    <CardContent className="flex flex-col gap-4 pt-5">
+
+                                        {/* Card Title */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            <Label className="text-sm font-bold tracking-tight">QR Codes</Label>
+                                            <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">/message_qrdls</span>
+                                        </div>
+
+                                        {/* Inner Tabs */}
+                                        <Tabs defaultValue="create" className="w-full">
+                                            <TabsList className="bg-muted/5 w-full justify-start rounded-lg h-auto p-1 gap-1 border border-border/20 mb-3">
+                                                {[
+                                                    { value: 'create', label: 'Create', method: 'POST' },
+                                                    { value: 'list',   label: 'Get List', method: 'GET' },
+                                                    { value: 'update', label: 'Update', method: 'POST' },
+                                                    { value: 'delete', label: 'Delete', method: 'DEL' },
+                                                ].map(({ value, label, method }) => (
+                                                    <TabsTrigger key={value} value={value} className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-md gap-1.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                                                        <span className={`text-[8px] font-black px-1 py-0.5 rounded ${method === 'GET' ? 'bg-blue-500/10 text-blue-400' : method === 'DEL' ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>{method}</span>
+                                                        {label}
+                                                    </TabsTrigger>
+                                                ))}
+                                            </TabsList>
+
+                                            {/* ── CREATE ── */}
+                                            <TabsContent value="create" className="space-y-3 mt-0">
+                                                <div className="flex gap-3">
+                                                    <div className="space-y-1.5 flex-1">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Prefilled Message</Label>
+                                                        <Input placeholder="e.g. Cyber Monday" value={qrMessage ?? ''} onChange={(e) => setQrMessage(e.target.value)} className="bg-background/40 text-xs font-medium border rounded-md px-3 shadow-inner" />
+                                                    </div>
+                                                    <div className="space-y-1.5 w-28 shrink-0">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Format</Label>
+                                                        <Select value={qrFormat} onValueChange={setQrFormat}>
+                                                            <SelectTrigger className="h-9 bg-background/40 text-xs font-bold border rounded-md px-3 shadow-inner"><SelectValue /></SelectTrigger>
+                                                            <SelectContent><SelectItem value="SVG" className="text-xs">SVG</SelectItem><SelectItem value="PNG" className="text-xs">PNG</SelectItem></SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                                <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                                    POST https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion}</span>/<span className="text-primary/80">{obaPhoneId || '<phone_id>'}</span>/message_qrdls
+                                                </div>
+                                                <Button className="px-6 rounded-md text-xs gap-2" onClick={handleCreateQR} disabled={qrTesting || !obaPhoneId.trim() || !qrMessage.trim() || !metaCloudAccessToken.trim()}>
+                                                    {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                                    {qrTesting ? 'Generating...' : 'Create QR Code'}
+                                                </Button>
+                                                {qrResult && (
+                                                    <div className="border border-border/20 rounded-lg overflow-hidden animate-in fade-in">
+                                                        <button onClick={() => setQrResultOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${qrResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>{qrResult.success ? '✓ Success' : '✗ Failed'}</span>
+                                                            {qrResult.status && <span className="text-[10px] font-mono text-muted-foreground">{qrResult.status} {qrResult.statusText}</span>}
+                                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${qrResultOpen ? 'rotate-90' : ''}`} />
+                                                        </button>
+                                                        {qrResultOpen && (
+                                                            <div className="p-3 space-y-3">
+                                                                {qrResult.data?.qr_image_url && (
+                                                                    <div className="flex flex-col items-center gap-2 p-3 bg-white rounded-lg">
+                                                                        <img src={qrResult.data.qr_image_url} alt="QR Code" className="w-40 h-40 object-contain" />
+                                                                        {qrResult.data?.deep_link_url && <a href={qrResult.data.deep_link_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary font-mono underline break-all">{qrResult.data.deep_link_url}</a>}
+                                                                    </div>
+                                                                )}
+                                                                <pre className="text-[10px] font-mono bg-muted/5 overflow-x-auto max-h-48 text-muted-foreground whitespace-pre-wrap break-all">{qrResult.error ? qrResult.error : JSON.stringify(qrResult.data, null, 2)}</pre>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </TabsContent>
+
+                                            {/* ── GET LIST ── */}
+                                            <TabsContent value="list" className="space-y-3 mt-0">
+                                                <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                                    GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion}</span>/<span className="text-primary/80">{obaPhoneId || '<phone_id>'}</span>/message_qrdls
+                                                </div>
+                                                <Button className="px-6 rounded-md text-xs gap-2" onClick={handleListQR} disabled={qrListTesting || !obaPhoneId.trim() || !metaCloudAccessToken.trim()}>
+                                                    {qrListTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                                    {qrListTesting ? 'Fetching...' : 'Get QR Codes'}
+                                                </Button>
+                                                {qrListResult && (
+                                                    <div className="border border-border/20 rounded-lg overflow-hidden animate-in fade-in">
+                                                        <button onClick={() => setQrListResultOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${qrListResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>{qrListResult.success ? '✓ Success' : '✗ Failed'}</span>
+                                                            {qrListResult.status && <span className="text-[10px] font-mono text-muted-foreground">{qrListResult.status} {qrListResult.statusText}</span>}
+                                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${qrListResultOpen ? 'rotate-90' : ''}`} />
+                                                        </button>
+                                                        {qrListResultOpen && <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-64 text-muted-foreground whitespace-pre-wrap break-all">{qrListResult.error ? qrListResult.error : JSON.stringify(qrListResult.data, null, 2)}</pre>}
+                                                    </div>
+                                                )}
+                                            </TabsContent>
+
+                                            {/* ── UPDATE ── */}
+                                            <TabsContent value="update" className="space-y-3 mt-0">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">QR Code ID</Label>
+                                                    <Input placeholder="e.g. 4O4YGZEG3" value={qrUpdateCodeId ?? ''} onChange={(e) => setQrUpdateCodeId(e.target.value)} className="bg-background/40 text-xs font-mono font-medium border rounded-md px-3 shadow-inner" />
+                                                </div>
+                                                <div className="flex gap-3">
+                                                    <div className="space-y-1.5 flex-1">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">New Prefilled Message</Label>
+                                                        <Input placeholder="e.g. Black Friday" value={qrUpdateMessage ?? ''} onChange={(e) => setQrUpdateMessage(e.target.value)} className="bg-background/40 text-xs font-medium border rounded-md px-3 shadow-inner" />
+                                                    </div>
+                                                    <div className="space-y-1.5 w-28 shrink-0">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Format</Label>
+                                                        <Select value={qrUpdateFormat} onValueChange={setQrUpdateFormat}>
+                                                            <SelectTrigger className="h-9 bg-background/40 text-xs font-bold border rounded-md px-3 shadow-inner"><SelectValue /></SelectTrigger>
+                                                            <SelectContent><SelectItem value="SVG" className="text-xs">SVG</SelectItem><SelectItem value="PNG" className="text-xs">PNG</SelectItem></SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                                <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                                    POST https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion}</span>/<span className="text-primary/80">{obaPhoneId || '<phone_id>'}</span>/message_qrdls
+                                                    <br /><span className="opacity-60">{'{'} code: "<span className="text-primary/80">{qrUpdateCodeId || '<code_id>'}</span>", prefilled_message: "..." {'}'}</span>
+                                                </div>
+                                                <Button className="px-6 rounded-md text-xs gap-2" onClick={handleUpdateQR} disabled={qrUpdateTesting || !qrUpdateCodeId.trim() || !metaCloudAccessToken.trim()}>
+                                                    {qrUpdateTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                                    {qrUpdateTesting ? 'Updating...' : 'Update QR Code'}
+                                                </Button>
+                                                {qrUpdateResult && (
+                                                    <div className="border border-border/20 rounded-lg overflow-hidden animate-in fade-in">
+                                                        <button onClick={() => setQrUpdateResultOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${qrUpdateResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>{qrUpdateResult.success ? '✓ Success' : '✗ Failed'}</span>
+                                                            {qrUpdateResult.status && <span className="text-[10px] font-mono text-muted-foreground">{qrUpdateResult.status} {qrUpdateResult.statusText}</span>}
+                                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${qrUpdateResultOpen ? 'rotate-90' : ''}`} />
+                                                        </button>
+                                                        {qrUpdateResultOpen && <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-48 text-muted-foreground whitespace-pre-wrap break-all">{qrUpdateResult.error ? qrUpdateResult.error : JSON.stringify(qrUpdateResult.data, null, 2)}</pre>}
+                                                    </div>
+                                                )}
+                                            </TabsContent>
+
+                                            {/* ── DELETE ── */}
+                                            <TabsContent value="delete" className="space-y-3 mt-0">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">QR Code ID</Label>
+                                                    <Input placeholder="e.g. 4O4YGZEG3" value={qrDeleteCodeId ?? ''} onChange={(e) => setQrDeleteCodeId(e.target.value)} className="bg-background/40 text-xs font-mono font-medium border rounded-md px-3 shadow-inner" />
+                                                </div>
+                                                <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                                    DELETE https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion}</span>/<span className="text-primary/80">{obaPhoneId || '<phone_id>'}</span>/message_qrdls/<span className="text-red-400">{qrDeleteCodeId || '<code_id>'}</span>
+                                                </div>
+                                                <Button variant="destructive" className="px-6 rounded-md text-xs gap-2" onClick={handleDeleteQR} disabled={qrDeleteTesting || !qrDeleteCodeId.trim() || !metaCloudAccessToken.trim()}>
+                                                    {qrDeleteTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                    {qrDeleteTesting ? 'Deleting...' : 'Delete QR Code'}
+                                                </Button>
+                                                {qrDeleteResult && (
+                                                    <div className="border border-border/20 rounded-lg overflow-hidden animate-in fade-in">
+                                                        <button onClick={() => setQrDeleteResultOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${qrDeleteResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>{qrDeleteResult.success ? '✓ Success' : '✗ Failed'}</span>
+                                                            {qrDeleteResult.status && <span className="text-[10px] font-mono text-muted-foreground">{qrDeleteResult.status} {qrDeleteResult.statusText}</span>}
+                                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${qrDeleteResultOpen ? 'rotate-90' : ''}`} />
+                                                        </button>
+                                                        {qrDeleteResultOpen && <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-48 text-muted-foreground whitespace-pre-wrap break-all">{qrDeleteResult.error ? qrDeleteResult.error : JSON.stringify(qrDeleteResult.data, null, 2)}</pre>}
+                                                    </div>
+                                                )}
+                                            </TabsContent>
+
+                                        </Tabs>
+
+                                    </CardContent>
+                                </Card>
+
                             </div>
 
 
-                        </div>
+                        </ScrollArea>
                     </TabsContent>
 
 
