@@ -9,9 +9,31 @@ const prismaClientSingleton = () => {
     return new PrismaClient({ adapter })
 }
 
-global.prismaGlobal = global.prismaGlobal || prismaClientSingleton();
+// Store the singleton on the global object to prevent multiple instances in dev
+const getBaseDb = () => {
+    if (!global.prismaGlobal) {
+        global.prismaGlobal = prismaClientSingleton();
+    }
+    
+    // Self-healing: If the client was initialized before the new models existed
+    if (!global.prismaGlobal.agentModel && process.env.NODE_ENV !== 'production') {
+        console.log("🔄 Stale Prisma Client detected (missing agentModel). Re-initializing...");
+        global.prismaGlobal = prismaClientSingleton();
+    }
+    
+    return global.prismaGlobal;
+};
 
-export const db = global.prismaGlobal;
+// Use a Proxy to ensure every access in dev mode checks for stale state
+export const db = new Proxy({}, {
+    get: (target, prop) => {
+        const currentDb = getBaseDb();
+        const value = currentDb[prop];
+        if (typeof value === 'function') {
+            return value.bind(currentDb);
+        }
+        return value;
+    }
+});
 
-if (process.env.APP_MODE !== 'prod') globalThis.prismaGlobal = db
-// Cache Busting: 2026-03-29T13:42:00
+if (process.env.APP_MODE !== 'prod') globalThis.prismaGlobal = getBaseDb();

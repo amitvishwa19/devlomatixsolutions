@@ -3,6 +3,9 @@ import { db as prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
+/**
+ * GET: Fetch all AI models for a specific workspace
+ */
 export async function GET(req, { params }) {
     try {
         const { workspaceId } = await params;
@@ -12,72 +15,126 @@ export async function GET(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const settings = await prisma.appSettings.findUnique({
-            where: { key: workspaceId }
+        const models = await prisma.agentModel.findMany({
+            where: { 
+                workspaceId,
+                isActive: true 
+            },
+            orderBy: { createdAt: 'desc' }
         });
 
-        const integrations = settings?.integrations || {};
-        const openclaw = integrations.openclaw || {};
-        const models = openclaw.models || [
-            { id: 'MOD-1', name: 'GPT-4o', provider: 'OpenAI', status: 'ready', default: true },
-            { id: 'MOD-2', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', status: 'ready', default: false },
-            { id: 'MOD-3', name: 'Llama 3 (Local)', provider: 'OpenClaw Mesh', status: 'offline', default: false }
-        ];
+        // Mask API keys for security
+        const maskedModels = models.map(m => ({
+            ...m,
+            apiKey: m.apiKey ? `sk-...${m.apiKey.slice(-4)}` : null
+        }));
 
-        return NextResponse.json(models);
+        return NextResponse.json(maskedModels);
 
     } catch (error) {
-        console.error("Model API Error:", error);
+        console.error("AgentModel GET Error:", error);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
 
+/**
+ * POST: Deploy a new AI Model to the workspace cluster
+ */
 export async function POST(req, { params }) {
     try {
         const { workspaceId } = await params;
         const session = await getServerSession(authOptions);
-        const { model } = await req.json();
+        const data = await req.json();
 
         if (!session?.user?.userId) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const currentSettings = await prisma.appSettings.findUnique({
-            where: { key: workspaceId }
-        });
+        // If this model is marked as default, unset others first
+        if (data.isDefault) {
+            await prisma.agentModel.updateMany({
+                where: { workspaceId, isDefault: true },
+                data: { isDefault: false }
+            });
+        }
 
-        const currentIntegrations = currentSettings?.integrations || {};
-        const currentModels = currentIntegrations.openclaw?.models || [];
-        
-        const newModel = { 
-            ...model, 
-            id: `MOD-${Date.now()}`,
-            status: 'ready'
-        };
-
-        const updatedIntegrations = {
-            ...currentIntegrations,
-            openclaw: {
-                ...(currentIntegrations.openclaw || {}),
-                models: [...currentModels, newModel]
-            }
-        };
-
-        await prisma.appSettings.upsert({
-            where: { key: workspaceId },
-            create: {
-                key: workspaceId,
-                integrations: updatedIntegrations
-            },
-            update: {
-                integrations: updatedIntegrations
+        const newModel = await prisma.agentModel.create({
+            data: {
+                workspaceId,
+                userId: session.user.userId,
+                provider: data.provider,
+                name: data.name,
+                apiKey: data.apiKey,
+                description: data.description,
+                isDefault: data.isDefault || false,
+                capability: data.capability || "Logic, Reasoning",
+                bestFor: data.bestFor || "General Intelligence",
             }
         });
 
         return NextResponse.json(newModel);
 
     } catch (error) {
-        console.error("Model Create Error:", error);
+        console.error("AgentModel POST Error:", error);
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+/**
+ * PATCH: Update model settings (like set default)
+ */
+export async function PATCH(req, { params }) {
+    try {
+        const { workspaceId } = await params;
+        const session = await getServerSession(authOptions);
+        const { modelId, ...updates } = await req.json();
+
+        if (!session?.user?.userId) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        // Handle singleton default logic
+        if (updates.isDefault) {
+            await prisma.agentModel.updateMany({
+                where: { workspaceId, isDefault: true },
+                data: { isDefault: false }
+            });
+        }
+
+        const updatedModel = await prisma.agentModel.update({
+            where: { id: modelId },
+            data: updates
+        });
+
+        return NextResponse.json(updatedModel);
+
+    } catch (error) {
+        console.error("AgentModel PATCH Error:", error);
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+/**
+ * DELETE: Remove a model from the cluster
+ */
+export async function DELETE(req, { params }) {
+    try {
+        const session = await getServerSession(authOptions);
+        const { searchParams } = new URL(req.url);
+        const modelId = searchParams.get('id');
+
+        if (!session?.user?.userId || !modelId) {
+            return NextResponse.json({ message: "Unauthorized or missing ID" }, { status: 401 });
+        }
+
+        await prisma.agentModel.delete({
+            where: { id: modelId }
+        });
+
+        return NextResponse.json({ message: "Model deleted successfully" });
+
+    } catch (error) {
+        console.error("AgentModel DELETE Error:", error);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }

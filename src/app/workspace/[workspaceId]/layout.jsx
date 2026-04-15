@@ -18,7 +18,7 @@ export default function WorkspaceLayout({ children }) {
                         <AppTopNav />
                     </div>
                     <div className='flex-1 min-h-0 relative pt-0 overflow-hidden '>
-                        <div className='h-full relative border border-border rounded-md bg-card/50 overflow-hidden shadow-soft'>
+                        <div className='h-full relative border border-border rounded-xl bg-card/50 overflow-hidden shadow-soft'>
                             <ScrollArea className="h-full overflow-hidden relative">
                                 {children}
                                 <ScrollBar orientation="horizontal" />

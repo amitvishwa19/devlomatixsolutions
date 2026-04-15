@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -148,6 +148,17 @@ export default function SettingsPage() {
     const [qrDeleteResult, setQrDeleteResult] = useState(null);
     const [qrDeleteResultOpen, setQrDeleteResultOpen] = useState(true);
 
+
+    // Analytics
+    const [analyticsWabaId, setAnalyticsWabaId] = useState('');
+    const [analyticsGranularity, setAnalyticsGranularity] = useState('DAY');
+    const [analyticsDateRange, setAnalyticsDateRange] = useState('30d');
+    const [analyticsMsgTesting, setAnalyticsMsgTesting] = useState(false);
+    const [analyticsMsgResult, setAnalyticsMsgResult] = useState(null);
+    const [analyticsMsgOpen, setAnalyticsMsgOpen] = useState(true);
+    const [analyticsConvTesting, setAnalyticsConvTesting] = useState(false);
+    const [analyticsConvResult, setAnalyticsConvResult] = useState(null);
+    const [analyticsConvOpen, setAnalyticsConvOpen] = useState(true);
 
     // Shared States
     const [webhookUrl, setWebhookUrl] = useState('');
@@ -581,6 +592,7 @@ export default function SettingsPage() {
                 if (data?.accessToken) setMetaCloudAccessToken(data.accessToken);
                 if (data?.phoneNumberId) setDisplayNamesPhoneId(data.phoneNumberId);
                 if (data?.phoneNumberId) setObaPhoneId(data.phoneNumberId);
+                if (data?.wabaId) setAnalyticsWabaId(data.wabaId);
                 // Add more setters here as new cards are introduced
             })
             .catch(() => { /* silent - user can fill manually */ });
@@ -610,6 +622,54 @@ export default function SettingsPage() {
             toast.error('Failed to save settings');
         }
     };
+
+    const getDateRangeTimestamps = (range) => {
+        const now = Math.floor(Date.now() / 1000);
+        const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
+        return { start: now - days * 86400, end: now };
+    };
+
+    const handleFetchMsgAnalytics = async () => {
+        if (!analyticsWabaId.trim()) { toast.error('WABA ID required.'); return; }
+        if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
+        const { start, end } = getDateRangeTimestamps(analyticsDateRange);
+        const phoneParam = encodeURIComponent('[]');
+        const url = `https://graph.facebook.com/${metaCloudVersion}/${analyticsWabaId.trim()}/analytics?start=${start}&end=${end}&granularity=${analyticsGranularity}&phone_numbers=${phoneParam}`;
+        setAnalyticsMsgTesting(true); setAnalyticsMsgResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
+            });
+            const result = await res.json();
+            setAnalyticsMsgResult(result); setAnalyticsMsgOpen(true);
+            if (result.success) toast.success('Message analytics loaded');
+            else toast.error(`Failed: ${result.error || result.status}`);
+        } catch (err) { setAnalyticsMsgResult({ success: false, error: err.message }); toast.error('Network error'); }
+        finally { setAnalyticsMsgTesting(false); }
+    };
+
+    const handleFetchConvAnalytics = async () => {
+        if (!analyticsWabaId.trim()) { toast.error('WABA ID required.'); return; }
+        if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
+        const { start, end } = getDateRangeTimestamps(analyticsDateRange);
+        const cats = encodeURIComponent('["MARKETING","UTILITY","AUTHENTICATION","SERVICE"]');
+        const dims = encodeURIComponent('["CONVERSATION_CATEGORY","CONVERSATION_TYPE"]');
+        const url = `https://graph.facebook.com/${metaCloudVersion}/${analyticsWabaId.trim()}/conversation_analytics?start=${start}&end=${end}&granularity=${analyticsGranularity}&phone_numbers=[]&conversation_categories=${cats}&dimensions=${dims}`;
+        setAnalyticsConvTesting(true); setAnalyticsConvResult(null);
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
+            });
+            const result = await res.json();
+            setAnalyticsConvResult(result); setAnalyticsConvOpen(true);
+            if (result.success) toast.success('Conversation analytics loaded');
+            else toast.error(`Failed: ${result.error || result.status}`);
+        } catch (err) { setAnalyticsConvResult({ success: false, error: err.message }); toast.error('Network error'); }
+        finally { setAnalyticsConvTesting(false); }
+    };
+
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
@@ -892,6 +952,171 @@ export default function SettingsPage() {
                                         System is running on a high-availability node for zero-latency delivery. Node: <span className="text-primary font-bold">AWS-MUM-01</span>
                                     </p>
                                 </Card>
+
+                        {/* Analytics Section — full width below the grid */}
+                        <div className="mt-6 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-xl border border-primary/20">
+                                    <LayoutDashboard className="w-4 h-4 text-primary" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold tracking-tight">Account Analytics</h3>
+                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest opacity-60">On-demand via Meta Graph API</p>
+                                </div>
+                            </div>
+
+                            <Card className="glass-card border-none shadow-none">
+                                <CardContent className="pt-5 space-y-4">
+
+                                    {/* Controls Row */}
+                                    <div className="flex flex-wrap gap-3 items-end">
+                                        <div className="space-y-1.5 flex-1 min-w-[160px]">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">WABA ID</Label>
+                                            <Input
+                                                placeholder="WhatsApp Business Account ID"
+                                                value={analyticsWabaId ?? ''}
+                                                onChange={(e) => setAnalyticsWabaId(e.target.value)}
+                                                className="bg-background/40 text-xs font-mono font-medium border rounded-md px-3 shadow-inner"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5 w-32">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Date Range</Label>
+                                            <Select value={analyticsDateRange} onValueChange={setAnalyticsDateRange}>
+                                                <SelectTrigger className="h-9 bg-background/40 text-xs font-bold border rounded-md px-3 shadow-inner"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="7d" className="text-xs">Last 7 days</SelectItem>
+                                                    <SelectItem value="30d" className="text-xs">Last 30 days</SelectItem>
+                                                    <SelectItem value="90d" className="text-xs">Last 90 days</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-1.5 w-28">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Granularity</Label>
+                                            <Select value={analyticsGranularity} onValueChange={setAnalyticsGranularity}>
+                                                <SelectTrigger className="h-9 bg-background/40 text-xs font-bold border rounded-md px-3 shadow-inner"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="DAY" className="text-xs">Day</SelectItem>
+                                                    <SelectItem value="WEEK" className="text-xs">Week</SelectItem>
+                                                    <SelectItem value="MONTH" className="text-xs">Month</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    {/* Analytics Tabs */}
+                                    <Tabs defaultValue="messages" className="w-full">
+                                        <TabsList className="bg-muted/5 w-full justify-start rounded-lg h-auto p-1 gap-1 border border-border/20 mb-3">
+                                            <TabsTrigger value="messages" className="text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-md data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                                                Messages
+                                            </TabsTrigger>
+                                            <TabsTrigger value="conversations" className="text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-md data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                                                Conversations
+                                            </TabsTrigger>
+                                        </TabsList>
+
+                                        {/* Messages Analytics */}
+                                        <TabsContent value="messages" className="space-y-3 mt-0">
+                                            <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                                GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion}</span>/<span className="text-primary/80">{analyticsWabaId || '<waba_id>'}</span>/analytics?granularity=<span className="text-primary/80">{analyticsGranularity}</span>&start=...&end=...
+                                            </div>
+                                            <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchMsgAnalytics} disabled={analyticsMsgTesting || !analyticsWabaId.trim()}>
+                                                {analyticsMsgTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                                {analyticsMsgTesting ? 'Fetching...' : 'Fetch Message Analytics'}
+                                            </Button>
+
+                                            {analyticsMsgResult && (
+                                                <div className="border border-border/20 rounded-lg overflow-hidden animate-in fade-in">
+                                                    {/* Summary metric cards */}
+                                                    {analyticsMsgResult.success && analyticsMsgResult.data?.data?.[0] && (() => {
+                                                        const d = analyticsMsgResult.data.data[0];
+                                                        const metrics = [
+                                                            { label: 'Sent', value: d.sent ?? '–', color: 'text-blue-400' },
+                                                            { label: 'Delivered', value: d.delivered ?? '–', color: 'text-green-400' },
+                                                            { label: 'Read', value: d.read ?? '–', color: 'text-primary' },
+                                                            { label: 'Failed', value: d.failed ?? '–', color: 'text-red-400' },
+                                                        ];
+                                                        return (
+                                                            <div className="grid grid-cols-4 gap-2 p-3 bg-muted/5 border-b border-border/20">
+                                                                {metrics.map(m => (
+                                                                    <div key={m.label} className="text-center space-y-1 p-2 bg-background/40 rounded-lg">
+                                                                        <div className={`text-lg font-black ${m.color}`}>{typeof m.value === 'number' ? m.value.toLocaleString() : m.value}</div>
+                                                                        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/60">{m.label}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                    <button onClick={() => setAnalyticsMsgOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${analyticsMsgResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                                            {analyticsMsgResult.success ? '✓ Success' : '✗ Failed'}
+                                                        </span>
+                                                        {analyticsMsgResult.status && <span className="text-[10px] font-mono text-muted-foreground">{analyticsMsgResult.status} {analyticsMsgResult.statusText}</span>}
+                                                        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${analyticsMsgOpen ? 'rotate-90' : ''}`} />
+                                                    </button>
+                                                    {analyticsMsgOpen && (
+                                                        <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-56 text-muted-foreground whitespace-pre-wrap break-all">
+                                                            {analyticsMsgResult.error ? analyticsMsgResult.error : JSON.stringify(analyticsMsgResult.data, null, 2)}
+                                                        </pre>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </TabsContent>
+
+                                        {/* Conversation Analytics */}
+                                        <TabsContent value="conversations" className="space-y-3 mt-0">
+                                            <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                                GET https://graph.facebook.com/<span className="text-primary/80">{metaCloudVersion}</span>/<span className="text-primary/80">{analyticsWabaId || '<waba_id>'}</span>/conversation_analytics?granularity=<span className="text-primary/80">{analyticsGranularity}</span>&...
+                                            </div>
+                                            <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchConvAnalytics} disabled={analyticsConvTesting || !analyticsWabaId.trim()}>
+                                                {analyticsConvTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                                {analyticsConvTesting ? 'Fetching...' : 'Fetch Conversation Analytics'}
+                                            </Button>
+
+                                            {analyticsConvResult && (
+                                                <div className="border border-border/20 rounded-lg overflow-hidden animate-in fade-in">
+                                                    {/* Conversation breakdown */}
+                                                    {analyticsConvResult.success && analyticsConvResult.data?.data && (() => {
+                                                        const cats = {};
+                                                        analyticsConvResult.data.data.forEach(item => {
+                                                            if (item.conversation_category) {
+                                                                cats[item.conversation_category] = (cats[item.conversation_category] || 0) + (item.conversation_count || 0);
+                                                            }
+                                                        });
+                                                        const catColors = { MARKETING: 'text-purple-400', UTILITY: 'text-blue-400', AUTHENTICATION: 'text-yellow-400', SERVICE: 'text-green-400' };
+                                                        const entries = Object.entries(cats);
+                                                        if (entries.length === 0) return null;
+                                                        return (
+                                                            <div className="grid grid-cols-2 gap-2 p-3 bg-muted/5 border-b border-border/20">
+                                                                {entries.map(([cat, count]) => (
+                                                                    <div key={cat} className="text-center space-y-1 p-2 bg-background/40 rounded-lg">
+                                                                        <div className={`text-base font-black ${catColors[cat] || 'text-primary'}`}>{count.toLocaleString()}</div>
+                                                                        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/60">{cat}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                    <button onClick={() => setAnalyticsConvOpen(v => !v)} className="w-full flex items-center gap-2 px-3 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${analyticsConvResult.success ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                                            {analyticsConvResult.success ? '✓ Success' : '✗ Failed'}
+                                                        </span>
+                                                        {analyticsConvResult.status && <span className="text-[10px] font-mono text-muted-foreground">{analyticsConvResult.status} {analyticsConvResult.statusText}</span>}
+                                                        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${analyticsConvOpen ? 'rotate-90' : ''}`} />
+                                                    </button>
+                                                    {analyticsConvOpen && (
+                                                        <pre className="text-[10px] font-mono bg-muted/5 p-3 overflow-x-auto max-h-56 text-muted-foreground whitespace-pre-wrap break-all">
+                                                            {analyticsConvResult.error ? analyticsConvResult.error : JSON.stringify(analyticsConvResult.data, null, 2)}
+                                                        </pre>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </TabsContent>
+                                    </Tabs>
+
+                                </CardContent>
+                            </Card>
+                        </div>
+
                             </div>
                         </div>
                     </TabsContent>

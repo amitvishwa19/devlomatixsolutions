@@ -62,6 +62,8 @@ model User {
   ecommerceAbandonedCarts   ECommerceAbandonedCart[]
   waJobs                    WhatsAppJob[]
   waDeliveryLogs            WhatsAppDeliveryLog[]
+  agentModels               AgentModel[]
+  aiAgents                  AIAgent[]
 
   @@index([email])
   @@index([phone])
@@ -1118,4 +1120,72 @@ model EmailAssignment {
 
   @@unique([workspaceId, event])
   @@index([workspaceId])
+}
+
+model AgentModel {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  provider     String
+  name         String
+  apiKey       String
+  description  String?
+  healthStatus String   @default("UNTESTED")
+  latency      String?
+  successRate  String?
+  capability   String?
+  bestFor      String?
+  baseUrl      String?
+  isDefault    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments  AgentModelAssignment[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model AIAgent {
+  id           String      @id @default(cuid())
+  workspaceId  String
+  name         String
+  role         String?
+  type         String      @default("OpenClaw")
+  status       String      @default("offline")
+  description  String?
+  isMain       Boolean     @default(false)
+  
+  // Hierarchy: Master -> Sub relationship
+  parentId     String?
+  parent       AIAgent?    @relation("AgentHierarchy", fields: [parentId], references: [id])
+  subAgents    AIAgent[]   @relation("AgentHierarchy")
+  
+  // Model Fallback Logic
+  strategy     String      @default("SEQUENTIAL") // SEQUENTIAL, PARALLEL
+  models       AgentModelAssignment[]
+  
+  config       Json? // Additional task-specific configuration
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model AgentModelAssignment {
+  id           String      @id @default(cuid())
+  agentId      String
+  modelId      String
+  priority     Int         @default(0) // 0 = Primary, 1+ = Fallbacks
+  agent        AIAgent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  model        AgentModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, modelId])
+  @@index([agentId])
+  @@index([modelId])
 }
