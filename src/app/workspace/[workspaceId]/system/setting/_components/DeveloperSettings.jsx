@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from'@/components/ui/tabs';
 import { Terminal, Key, Webhook, Plus, Copy, RefreshCw, Trash2, ShieldCheck, Zap, Globe, Info, Settings2, Check, AlertCircle, Loader2, Activity, ShieldAlert, Clock, Sparkles, Search, FileCode, ExternalLink } from'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from'sonner';
-import { useSettings } from'../_provider/SettingProvider';
+import { useSettings } from '@/providers/SettingProvider';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from"@/components/ui/dialog";
 import { Checkbox } from"@/components/ui/checkbox";
 import axios from'@/utils/axios';

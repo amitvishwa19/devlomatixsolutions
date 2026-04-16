@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SettingProvider } from './_provider/SettingProvider';
+import { SettingProvider } from '@/providers/SettingProvider';
 import { GeneralSettings } from './_components/GeneralSettings';
 import { SecuritySettings } from './_components/SecuritySettings';
 import { NotificationSettings } from './_components/NotificationSettings';

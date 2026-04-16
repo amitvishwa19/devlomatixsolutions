@@ -63,7 +63,7 @@ export default async function RootLayout({ children }) {
     }) : null;
 
     return (
-        <html lang="en">
+        <html lang="en" data-scroll-behavior="smooth">
             <body className={`${outfit.className} `} suppressHydrationWarning={true}>
                 <SessionWrapper>
                     {/* <SocketProvider> */}
