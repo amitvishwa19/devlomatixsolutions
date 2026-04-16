@@ -60,7 +60,13 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { id, modelIds, ...agentData } = data;
+        const { id, modelIds, systemPrompt, ...agentData } = data;
+
+        // Wrap systemPrompt into config if provided
+        const finalAgentData = {
+            ...agentData,
+            config: systemPrompt ? { systemPrompt } : agentData.config
+        };
 
         let agent;
 
@@ -68,7 +74,7 @@ export async function PATCH(req, { params }) {
             // Update existing agent
             agent = await prisma.aIAgent.update({
                 where: { id },
-                data: agentData
+                data: finalAgentData
             });
 
             // Update model assignments if provided
@@ -91,7 +97,7 @@ export async function PATCH(req, { params }) {
             // Create new agent
             agent = await prisma.aIAgent.create({
                 data: {
-                    ...agentData,
+                    ...finalAgentData,
                     workspaceId,
                     userId: session.user.userId,
                 }

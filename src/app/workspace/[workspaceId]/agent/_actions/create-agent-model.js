@@ -49,8 +49,8 @@ const handler = async (data) => {
                 healthStatus: healthStatus || "UNTESTED", 
                 successRate: "0%", // Starting metric
                 latency: "N/A", // Starting metric
-                capability: "Logic, Reasoning, Context", // Standard metadata
-                bestFor: "General Intelligence", // Standard metadata
+                capability: "Probing Hub...", // Will be updated by AMID on first handshake
+                bestFor: "Initializing Cluster...", // Will be updated by AMID on first handshake
             }
         });
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { OpenAI } from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { db } from "@/lib/db";
 
 const TestAgentModelConnection = z.object({
     id: z.optional(z.string()),
@@ -14,11 +15,16 @@ const TestAgentModelConnection = z.object({
 
 const handler = async (data) => {
     const { id, provider, name, apiKey, baseUrl } = data;
-    
+
     let isSuccessful = false;
     let feedback = "";
 
     try {
+        let discoveredMetadata = {
+            capability: "",
+            description: ""
+        };
+
         switch (provider.toLowerCase()) {
             case 'openai': {
                 const openai = new OpenAI({
@@ -26,7 +32,16 @@ const handler = async (data) => {
                     baseURL: baseUrl || undefined,
                 });
 
-                await openai.models.list();
+                const modelsList = await openai.models.list();
+                const modelInfo = modelsList.data.find(m => m.id === name);
+                
+                if (modelInfo) {
+                    discoveredMetadata.description = `Managed by ${modelInfo.owned_by}`;
+                    // OpenAI doesn't expose context length via /v1/models easily, 
+                    // so we'll just confirm existence for now.
+                    discoveredMetadata.capability = "Verified Node";
+                }
+
                 isSuccessful = true;
                 feedback = "Handshake successful with OpenAI gateway.";
                 break;
@@ -42,7 +57,19 @@ const handler = async (data) => {
                     }
                 });
 
-                await openai.models.list();
+                const modelsList = await openai.models.list();
+                // OpenRouter uses the format 'provider/model'
+                const modelInfo = modelsList.data.find(m => m.id === name);
+
+                if (modelInfo) {
+                    const ctx = modelInfo.context_length ? `${Math.floor(modelInfo.context_length / 1000)}k Context` : "";
+                    const modality = modelInfo.architecture?.modality || "";
+                    const isVision = modality.includes('image') ? "Vision" : "";
+                    
+                    discoveredMetadata.capability = [isVision, ctx].filter(Boolean).join(", ") || "General Logic";
+                    discoveredMetadata.description = modelInfo.description || "";
+                }
+
                 isSuccessful = true;
                 feedback = "Handshake successful with OpenRouter bridge.";
                 break;
@@ -51,19 +78,20 @@ const handler = async (data) => {
             case 'google': {
                 const genAI = new GoogleGenerativeAI(apiKey);
                 const model = genAI.getGenerativeModel({ model: name });
-                
+
                 await model.generateContent({
-                   contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
-                   generationConfig: { maxOutputTokens: 1 }
+                    contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+                    generationConfig: { maxOutputTokens: 1 }
                 });
                 isSuccessful = true;
                 feedback = "Handshake successful with Google AI cluster.";
+                discoveredMetadata.capability = "Google Multimodal";
                 break;
             }
 
             default: {
                 const endpoint = baseUrl || (provider === 'anthropic' ? 'https://api.anthropic.com/v1/messages' : null);
-                
+
                 if (!endpoint) {
                     return { error: "Base URL is required for custom or unrecognized providers." };
                 }
@@ -84,6 +112,7 @@ const handler = async (data) => {
                 if (response.ok) {
                     isSuccessful = true;
                     feedback = `Handshake successful via dynamic endpoint [${provider}].`;
+                    discoveredMetadata.capability = "Verified Dynamic Node";
                 } else {
                     const errData = await response.json().catch(() => ({}));
                     feedback = `Connection failed (${response.status}): ${errData.error?.message || response.statusText}`;
@@ -99,10 +128,12 @@ const handler = async (data) => {
                 where: { id },
                 data: {
                     healthStatus: isSuccessful ? "Excellent" : "Offline",
+                    capability: isSuccessful && discoveredMetadata.capability ? discoveredMetadata.capability : undefined,
+                    description: isSuccessful && discoveredMetadata.description ? discoveredMetadata.description : undefined,
                     updatedAt: new Date()
                 }
             });
-            feedback += " Health cluster status synced.";
+            feedback += " Health and Metadata cluster status synced.";
         }
 
         if (isSuccessful) {
@@ -113,7 +144,7 @@ const handler = async (data) => {
 
     } catch (error) {
         console.error("Connectivity Test Error:", error);
-        
+
         // Update to Offline if we have an ID even on caught error
         if (id) {
             try {

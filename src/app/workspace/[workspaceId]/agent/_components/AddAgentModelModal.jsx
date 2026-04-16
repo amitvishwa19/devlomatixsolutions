@@ -186,7 +186,7 @@ export const AddAgentModelModal = () => {
                             {editingModel ? <ShieldCheck className="w-5 h-5 text-indigo-500" /> : <Sparkles className="w-5 h-5 text-indigo-500" />}
                         </div>
                         <div>
-                            <DialogTitle className="text-xl  text-foreground">{editingModel ? "Update AI Node" : "Deploy AI Node"}</DialogTitle>
+                            <DialogTitle className="text-xl  text-foreground">{editingModel ? `Update ${editingModel.name.split('/').pop()}` : "Deploy AI Node"}</DialogTitle>
                             <p className="text-xs text-muted-foreground opacity-60  mt-0.5">{editingModel ? "Modify existing node configuration" : "Cluster Node Configuration"}</p>
                         </div>
                     </div>
