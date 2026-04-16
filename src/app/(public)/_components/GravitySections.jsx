@@ -6,43 +6,43 @@ import { LayoutGrid, Rocket, Shield, Zap, Check, ArrowRight, ArrowUpRight, Globe
 import { cn } from '@/lib/utils'
 
 export const GravityHero = ({ imgSrc }) => {
-  return (
-    <section className="relative pt-32 pb-20 overflow-hidden bg-background">
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-8">
-            Ship your mission <br/> <span className="text-[#0495ff]">10x faster</span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-            The ultimate SaaS mission control for high-performance agent deployment and multi-tenant workspace management. Built for scale.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register">
-                <Button size="lg" className="bg-[#0495ff] hover:bg-[#0495ff]/90 text-white font-bold h-14 px-10 rounded-full text-lg shadow-lg shadow-blue-500/10">
-                    Get Started <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="h-14 px-10 rounded-full text-lg border-border hover:bg-accent transition-all">
-              Live Demo
-            </Button>
-          </div>
-        </div>
+    return (
+        <section className="relative pt-32 pb-20 overflow-hidden bg-background">
+            <div className="container mx-auto px-6 relative z-10">
+                <div className="max-w-4xl mx-auto text-center mb-16">
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-8">
+                        Ship your mission <br /> <span className="text-[#0495ff]">10x faster</span>
+                    </h1>
+                    <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+                        The ultimate SaaS mission control for high-performance agent deployment and multi-tenant workspace management. Built for scale.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Link href="/register">
+                            <Button size="lg" className="bg-[#0495ff] hover:bg-[#0495ff]/90 text-white font-bold h-14 px-10 rounded-full text-lg shadow-lg shadow-blue-500/10">
+                                Get Started <ArrowRight className="ml-2 w-5 h-5" />
+                            </Button>
+                        </Link>
+                        <Button size="lg" variant="outline" className="h-14 px-10 rounded-full text-lg border-border hover:bg-accent transition-all">
+                            Live Demo
+                        </Button>
+                    </div>
+                </div>
 
-        <div className="relative max-w-6xl mx-auto">
-            <div className="absolute inset-x-0 -top-40 -bottom-40 bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 blur-3xl pointer-events-none" />
-            <div className="shimmer-border">
-                <div className="shimmer-container rounded-[2.2rem] border border-border bg-card shadow-2xl shadow-primary/5 p-3 overflow-hidden">
-                    <img 
-                        src={imgSrc} 
-                        alt="AI Dashboard Preview" 
-                        className="w-full h-auto rounded-[1.8rem] shadow-inner"
-                    />
+                <div className="relative max-w-6xl mx-auto">
+                    <div className="absolute inset-x-0 -top-40 -bottom-40 bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 blur-3xl pointer-events-none" />
+                    <div className=" border-border rounded-xl border-2">
+                        <div className="shimmer-container rounded-lg border border-border bg-card shadow-2xl shadow-primary/5 p-3 overflow-hidden">
+                            <img
+                                src={imgSrc}
+                                alt="AI Dashboard Preview"
+                                className="w-full h-auto rounded-[1.8rem] shadow-inner"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-      </div>
-    </section>
-  )
+        </section>
+    )
 }
 
 export const GravityFeatures = () => {
@@ -68,15 +68,15 @@ export const GravityFeatures = () => {
             icon: Shield,
         },
         {
-             title: "Global Scale",
-             desc: "Global mission deployment with high-performance low-latency architecture.",
-             icon: Globe,
+            title: "Global Scale",
+            desc: "Global mission deployment with high-performance low-latency architecture.",
+            icon: Globe,
         },
         {
             title: "Custom Missions",
             desc: "Build and deploy custom agent behaviors tailored to your specific frontend needs.",
             icon: Check,
-       }
+        }
     ]
 
     return (
@@ -88,8 +88,8 @@ export const GravityFeatures = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                     {features.map((f, i) => (
-                        <div key={i} className="shimmer-border !rounded-3xl">
-                             <div className="shimmer-container h-full p-8 rounded-[1.4rem] border border-border bg-card transition-all duration-500">
+                        <div key={i} className=" border-border rounded-xl borde">
+                            <div className="shimmer-container h-full p-8 rounded-xl border border-border bg-card transition-all duration-500">
                                 <div className="mb-6 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-[#0495ff]">
                                     <f.icon className="w-6 h-6" />
                                 </div>
@@ -108,20 +108,20 @@ export const GravityPricing = () => {
     const tiers = [
         {
             name: "Founder",
-            price: "49",
+            price: "599",
             desc: "Perfect for single branch missions.",
             features: ["1 Workspace", "3 Agents", "KonnectX Bridge", "Basic Telemetry"]
         },
         {
             name: "Agent Hub",
-            price: "149",
+            price: "999",
             featured: true,
             desc: "Our most popular mission engine.",
             features: ["5 Workspaces", "10 Agents", "Advanced Swarm Logic", "24/7 Monitoring"]
         },
         {
             name: "Enterprise",
-            price: "Custom",
+            price: "1,499",
             desc: "For massive multi-tenant scale.",
             features: ["Unlimited Workspaces", "Custom Agents", "Priority Node Support", "White-label Frontend"]
         }
@@ -149,10 +149,9 @@ export const GravityPricing = () => {
                             <p className="text-muted-foreground mb-8 text-sm">{tier.desc}</p>
                             <div className="mb-10">
                                 <span className="text-5xl font-bold text-foreground">
-                                    {tier.price !== "Custom" && "$"}
-                                    {tier.price}
+                                    ₹{tier.price}
                                 </span>
-                                {tier.price !== "Custom" && <span className="text-muted-foreground font-medium ml-2">/month</span>}
+                                <span className="text-muted-foreground font-medium ml-2">/month</span>
                             </div>
                             <ul className="space-y-4 mb-10">
                                 {tier.features.map((f, j) => (
