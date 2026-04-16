@@ -194,7 +194,7 @@ const Navbar = () => {
                                     <Button variant="outline" className="w-full rounded-full">Workspace</Button>
                                 </Link>
                             ) : !session ? (
-                                <Link href="/login" onClick={() => setIsOpen(false)} className="flex-1">
+                                <Link href="/" onClick={() => setIsOpen(false)} className="flex-1">
                                     <Button variant="outline" className="w-full rounded-full">Login</Button>
                                 </Link>
                             ) : null}

@@ -26,7 +26,7 @@ export default function Register() {
         onSuccess: (data) => {
             toast.success("Account created successfully! Please check your mailbox for activation link", { id: 'register' })
             SetLoading(false)
-            router.replace('/login')
+            router.replace('/')
 
         },
         onError: (error) => {
@@ -112,7 +112,7 @@ export default function Register() {
 
                     <div className='flex justify-center text-sm text-muted-foreground'>
                         Already have account ?
-                        <Link replace={true} href={'/login'}>
+                        <Link replace={true} href={'/'}>
                             <span className='ml-2  font-bold text-primary'>Sign In</span>
                         </Link>
                     </div>

@@ -35,11 +35,11 @@ export default function Verify({ params }) {
   const { execute } = useAction(verifyToken, {
     onSuccess: (data) => {
       toast.success('Email verified, Login to continue')
-      router.replace("/login");
+      router.replace("/");
     },
     onError: (error) => {
       toast.error('Invalid or Expired activation link, New activation lik sent')
-      router.replace({ pathname: "/login", query: { msg: 'invalid activation link' } });
+      router.replace({ pathname: "/", query: { msg: 'invalid activation link' } });
 
     }
   })
@@ -54,7 +54,7 @@ export default function Verify({ params }) {
         .then((data) => {
           console.log(data)
           toast.success('Email verified successfully, Login to continue')
-          router.replace('/login')
+          router.replace('/')
         })
 
     } catch (error) {
@@ -68,7 +68,7 @@ export default function Verify({ params }) {
 
   const resendLink = () => {
     toast.success('New activation link send to below email address')
-    router.push('/login')
+    router.push('/')
   }
 
 

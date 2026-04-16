@@ -53,14 +53,13 @@ export async function middleware(request) {
 
   const isPublicRoute =
     pathname === '/' ||
-    pathname === '/login' ||
     pathname === '/register' ||
     pathname === '/verify' ||
     pathname === '/reset'
 
   // Not logged in -> block protected routes
   if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   // Workspace Access Control (RBAC)
@@ -73,12 +72,13 @@ export async function middleware(request) {
 
     if (!hasWorkspaceAccess) {
       console.log(`[Middleware] Access denied for ${token.email} to ${pathname}`);
-      return NextResponse.redirect(new URL('/', request.url))
+      // Break the loop: Redirect to unauthorized instead of root
+      return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
   }
 
-  // Logged in -> block login page
-  if (pathname === '/login' && token) {
+  // Logged in -> block login page (which is now /)
+  if (pathname === '/' && token) {
     return NextResponse.redirect(new URL('/workspace', request.url))
   }
 
@@ -92,7 +92,6 @@ export const config = {
   matcher: [
     '/workspace/:path*',
     '/admin/:path*',
-    '/login',
     '/register',
     '/verify',
     '/reset',

@@ -174,7 +174,7 @@ export const authOptions = {
         }
     },
     pages: {
-        signIn: '/login',
+        signIn: '/',
         signOut: '/logout',
         error: '/error', // Error code passed in query string as ?error=
         verifyRequest: '/verify-request', // (used for check email message)
