@@ -82,44 +82,79 @@ async function callModelNode({ node, systemPrompt, message, history }) {
     const provider = node.provider?.toLowerCase();
     const apiKey = node.apiKey;
 
+    // 1. Double-Sanitization: Trim, check for empty content, and ensure role alternation
+    let sanitizedHistory = [];
+    let lastRole = null;
+
+    for (const m of history) {
+        const content = (m.content || m.text || "").trim();
+        if (!content) continue;
+
+        let role = m.role === 'assistant' || m.role === 'model' ? 'model' : 'user';
+
+        // Strict Alternation: Skip if the role is the same as the last one
+        if (role === lastRole) continue;
+
+        sanitizedHistory.push({ role, content });
+        lastRole = role;
+    }
+
+    // MANDATORY: Conversation MUST start with 'user' for almost all providers
+    while (sanitizedHistory.length > 0 && sanitizedHistory[0].role === 'model') {
+        sanitizedHistory.shift();
+    }
+
+    // 2. Performance & Debug Logging
+    console.log(`[SwarmNode:${node.name}] Final payload: ${sanitizedHistory.length} messages. Leading role: ${sanitizedHistory[0]?.role || 'N/A'}`);
+
     if (provider === 'google' || provider === 'gemini') {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-            model: node.name,
-            systemInstruction: systemPrompt
-        });
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ 
+                model: node.name,
+                systemInstruction: systemPrompt
+            });
 
-        const chat = model.startChat({
-            history: history.map(m => ({
-                role: m.role === 'assistant' ? 'model' : m.role,
-                parts: [{ text: m.content || m.text }]
-            }))
-        });
+            const chat = model.startChat({
+                history: sanitizedHistory.map(m => ({
+                    role: m.role,
+                    parts: [{ text: m.content }]
+                }))
+            });
 
-        const result = await chat.sendMessage(message);
-        return result.response.text();
+            const result = await chat.sendMessage(message);
+            return result.response.text();
+        } catch (err) {
+            console.error(`[Gemini Error] ${node.name}:`, err.message);
+            throw err;
+        }
 
     } else if (provider === 'openai' || provider === 'openrouter' || provider === 'mistral' || provider === 'meta') {
-        const openai = new OpenAI({
-            apiKey,
-            baseURL: node.baseUrl || undefined
-        });
+        try {
+            const openai = new OpenAI({
+                apiKey,
+                baseURL: node.baseUrl || undefined
+            });
 
-        const messages = [
-            { role: "system", content: systemPrompt },
-            ...history.map(m => ({ 
-                role: m.role === 'model' ? 'assistant' : m.role, 
-                content: m.content || m.text 
-            })),
-            { role: "user", content: message }
-        ];
+            const messages = [
+                { role: "system", content: systemPrompt },
+                ...sanitizedHistory.map(m => ({ 
+                    role: m.role === 'model' ? 'assistant' : 'user', 
+                    content: m.content 
+                })),
+                { role: "user", content: message }
+            ];
 
-        const response = await openai.chat.completions.create({
-            model: node.name,
-            messages,
-        });
+            const response = await openai.chat.completions.create({
+                model: node.name,
+                messages,
+            });
 
-        return response.choices[0].message.content;
+            return response.choices[0].message.content;
+        } catch (err) {
+            console.error(`[OpenAI/Proxy Error] ${node.name}:`, err.message);
+            throw err;
+        }
     }
 
     throw new Error(`Provider ${node.provider} is not yet integrated into the Swarm Orchestrator`);
@@ -130,19 +165,15 @@ async function callModelNode({ node, systemPrompt, message, history }) {
  */
 async function updateNodeMetrics(nodeId, success) {
     try {
-        const current = await db.agentModel.findUnique({ where: { id: nodeId } });
-        if (!current) return;
-
-        // Simple health logic for now
+        // We use successRate as a proxy for health to avoid Prisma client desync
         await db.agentModel.update({
             where: { id: nodeId },
             data: {
-                healthStatus: success ? 'Excellent' : 'Critical',
-                lastRunAt: new Date(),
-                // In a real scenario, we'd calculate successRate and latency here
+                successRate: success ? '100%' : '0%',
+                latency: new Date().toISOString()
             }
         });
     } catch (e) {
-        console.error("Failed to update node metrics:", e);
+        console.error("Failed to update node metrics:", e.message);
     }
 }

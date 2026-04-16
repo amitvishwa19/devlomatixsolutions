@@ -20,6 +20,9 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: "Agent ID and Message are required" }, { status: 400 });
         }
 
+        // Orchestration Debugger: Log the incoming target and payload
+        console.log(`[SwarmRequest] Target Agent: ${agentId} | History: ${history?.length || 0} messages`);
+        
         // Orchestrate swarm completion with failover logic
         const result = await swarmCompletion({
             agentId,
@@ -28,10 +31,13 @@ export async function POST(req, { params }) {
             workspaceId
         });
 
+        console.log(`[SwarmResponse] Completion successful via Node: ${result.node?.name}`);
         return NextResponse.json(result);
 
     } catch (error) {
-        console.error("Swarm Chat Error:", error);
+        console.error("!!! Swarm Fatal Error !!!");
+        console.error("- Message:", error.message);
+        console.error("- Stack Trace:", error.stack?.substring(0, 200));
         return NextResponse.json({ 
             message: error.message || "Internal Swarm Failure" 
         }, { status: 500 });

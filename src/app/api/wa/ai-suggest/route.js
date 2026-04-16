@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../auth/[...nextauth]/options';
+import { authOptions } from '@/app/api/auth/[...nextauth]/options';
 import { waAIService } from '@/app/workspace/[workspaceId]/wa/_lib/ai-service';
 
 export async function POST(req) {

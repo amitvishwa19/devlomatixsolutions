@@ -56,19 +56,19 @@ export default function AppSidebar() {
 
 
         // WHATSAPP
-        { type: 'parent', title: "WhatsApp Cloud API", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
-        { type: 'child', title: "Dashboard", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "WhatsApp Manager" },
-        { type: 'child', title: "Chats", url: `${baseWhathappPath}/chats`, icon: "message-square", category: "WhatsApp Manager" },
-        { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "WhatsApp Manager" },
-        { type: 'child', title: "Templates", url: `${baseWhathappPath}/template`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "Campaigns", url: `${baseWhathappPath}/campaigns`, icon: "megaphone", category: "WhatsApp Manager" },
+        { type: 'parent', title: "KonnectX", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "konnectx" },
+        { type: 'child', title: "Dashboard", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "konnectx" },
+        { type: 'child', title: "Chats", url: `${baseWhathappPath}/chats`, icon: "message-square", category: "konnectx" },
+        { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "konnectx" },
+        { type: 'child', title: "Templates", url: `${baseWhathappPath}/template`, icon: "zap", category: "konnectx" },
+        { type: 'child', title: "Campaigns", url: `${baseWhathappPath}/campaigns`, icon: "megaphone", category: "konnectx" },
         // { type: 'child', title: "Quick Message", url: `${baseWhathappPath}/quick-message`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "Analytics", url: `${baseWhathappPath}/analytics`, icon: "bar-chart-3", category: "WhatsApp Manager" },
+        { type: 'child', title: "Analytics", url: `${baseWhathappPath}/analytics`, icon: "bar-chart-3", category: "konnectx" },
         // { type: 'child', title: "Button & Quick Reply", url: `${baseWhathappPath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
-        { type: 'child', title: "Chatbot", url: `${baseWhathappPath}/chatbot`, icon: "zap", category: "WhatsApp Manager" },
-        { type: 'child', title: "eCommerce", url: `${baseWhathappPath}/ecommerce`, icon: "shopping-cart", category: "WhatsApp Manager" },
+        { type: 'child', title: "Chatbot", url: `${baseWhathappPath}/chatbot`, icon: "zap", category: "konnectx" },
+        { type: 'child', title: "eCommerce", url: `${baseWhathappPath}/ecommerce`, icon: "shopping-cart", category: "konnectx" },
         // { type: 'child', title: "AI Smart Reply", url: `${baseWhathappPath}/ai-smart-reply`, icon: "brain", category: "WhatsApp Manager" },
-        { type: 'child', title: "Settings", url: `${baseWhathappPath}/settings`, icon: "settings", category: "WhatsApp Manager" },
+        { type: 'child', title: "Settings", url: `${baseWhathappPath}/settings`, icon: "settings", category: "konnectx" },
 
         // Document Manager
         { type: 'parent', title: "Documents", url: `${basePath}`, icon: "file", category: "documents" },

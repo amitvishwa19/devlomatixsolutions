@@ -24,10 +24,16 @@ const getBaseDb = () => {
     return global.prismaGlobal;
 };
 
-// Use a Proxy to ensure every access in dev mode checks for stale state
+/**
+ * Typed Proxy for the Prisma Client
+ * Ensures self-healing in dev mode while providing full type support for TS/IDE
+ * @type {import('@prisma/client').PrismaClient}
+ */
 export const db = new Proxy({}, {
     get: (target, prop) => {
         const currentDb = getBaseDb();
+        if (prop === 'then') return undefined; // Avoid proxy being treated as a promise
+        
         const value = currentDb[prop];
         if (typeof value === 'function') {
             return value.bind(currentDb);
