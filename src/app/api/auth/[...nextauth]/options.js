@@ -65,7 +65,12 @@ export const authOptions = {
                     return Promise.reject(new Error("WRONG_PASSWORD"));
                 }
 
-                // 5. SUCCESS
+                // 5. CHECK VERIFICATION
+                if (!user.isVerified) {
+                    return Promise.reject(new Error("ACCOUNT_NOT_VERIFIED"));
+                }
+
+                // 6. SUCCESS
                 return user;
             }
 

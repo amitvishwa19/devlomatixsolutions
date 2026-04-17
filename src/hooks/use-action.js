@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 
 
@@ -9,6 +9,9 @@ export const useAction = (
     const [error, setError] = useState(undefined);
     const [data, setData] = useState(undefined);
     const [isLoading, setIsLoading] = useState(false);
+
+    const optionsRef = useRef(options);
+    optionsRef.current = options;
 
     const execute = useCallback(
         async (input) => {
@@ -26,19 +29,19 @@ export const useAction = (
 
                 if (result.error) {
                     setError(result.error);
-                    options.onError?.(result.error);
+                    optionsRef.current.onError?.(result.error);
                 }
 
                 if (result.data) {
                     setData(result.data);
-                    options.onSuccess?.(result.data);
+                    optionsRef.current.onSuccess?.(result.data);
                 }
             } finally {
                 setIsLoading(false);
-                options.onComplete?.();
+                optionsRef.current.onComplete?.();
             }
         },
-        [action, options]
+        [action]
     );
 
     return {

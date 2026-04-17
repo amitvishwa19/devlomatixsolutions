@@ -11,6 +11,8 @@ import { Mail } from "@/utils/Mail";
 import RegisterationMail from "@/emails/RegisterationMail";
 import { v4 as uuidv4 } from 'uuid'
 import { MemberRole, ROLE } from "@prisma/client";
+import { AppMailer } from "@/utils/AppMailer";
+import { render } from "@react-email/render";
 
 const UserRegister = z.object({
     email: z.string(),
@@ -85,17 +87,38 @@ const handler = async (data) => {
                 }
             }
 
-            //await sendEmail({ email, emailType: 'verify', userId: user.id, token: verifyToken })
-            //TODO: send email verification
-            // await Mail(
-            //     { to: user.email, subject: `Activate your ${process.env.APP_NAME} account` },
-            //     <RegisterationMail
-            //         mailData={
-            //             { to: user.email, token: verifyToken }
-            //         }
-            //     />
-            // )
-            // console.log('Send email verification')
+            if (server) {
+                // Seed the registration template for this new workspace
+                const templateHtml = await render(<RegisterationMail mailData={{ token: '{{mailData.token}}' }} />);
+                const decodedHtml = templateHtml.replace(/%7B%7B/g, '{{').replace(/%7D%7D/g, '}}');
+
+                await db.emailAssignment.upsert({
+                    where: {
+                        workspaceId_event: {
+                            workspaceId: server.id,
+                            event: 'USER_REGISTRATION'
+                        }
+                    },
+                    update: {},
+                    create: {
+                        workspaceId: server.id,
+                        event: 'USER_REGISTRATION',
+                        templateName: 'RegisterationMail.jsx',
+                        subject: `Welcome to ${process.env.APP_NAME}`,
+                        content: decodedHtml,
+                        isActive: true
+                    }
+                });
+
+                // Send the email using the custom AppMailer module
+                await AppMailer(server.id, {
+                    to: user.email,
+                    templateName: 'RegisterationMail.jsx',
+                    templateData: { mailData: { token: verifyToken } }
+                });
+
+                console.log(`[Registration] Verification email sent to ${user.email}`);
+            }
         }
 
 

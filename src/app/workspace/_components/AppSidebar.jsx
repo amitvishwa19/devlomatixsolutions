@@ -56,7 +56,7 @@ export default function AppSidebar() {
 
 
         // WHATSAPP
-        { type: 'parent', title: "KonnectX", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "konnectx" },
+        { type: 'parent', title: "KonnectX", url: `${baseWhathappPath}`, icon: "bot-message-square", category: "konnectx" },
         { type: 'child', title: "Dashboard", url: `${baseWhathappPath}`, icon: "bar-chart-3", category: "konnectx" },
         { type: 'child', title: "Chats", url: `${baseWhathappPath}/chats`, icon: "message-square", category: "konnectx" },
         { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "konnectx" },
@@ -112,9 +112,9 @@ export default function AppSidebar() {
         // { type:'child', title:"Access", url: `${baseAccessPath}/access`, icon:"bar-chart-3", category:"access-management"},
 
         // AI AGent
-        { type: 'parent', title: "AI Agent", url: `${baseAgentPath}`, icon: "monitor-cog", category: "agent" },
-        { type: 'child', title: "Dashboard", url: `${baseAgentPath}/`, icon: "bar-chart-3", category: "agent" },
-        { type: 'child', title: "Credentials", url: `${baseAgentPath}/credential`, icon: "bar-chart-3", category: "agent" },
+        { type: 'parent', title: "AI Agent", url: `${baseAgentPath}/`, icon: "brain", category: "agent" },
+        // { type: 'child', title: "Dashboard", url: `${baseAgentPath}/`, icon: "bar-chart-3", category: "agent" },
+        // { type: 'child', title: "Credentials", url: `${baseAgentPath}/credential`, icon: "bar-chart-3", category: "agent" },
 
         // Miscellaneous
         { type: 'parent', title: "Miscellaneous", url: `${baseMiscellaneousPath}`, icon: "blocks", category: "miscellaneous" },
@@ -217,6 +217,7 @@ export default function AppSidebar() {
                     size={150}
                     height={50}
                     width={150}
+                    border={false}
                     className="transition-all p-2 duration-300 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:scale-95 pointer-events-auto group-data-[collapsible=icon]:pointer-events-none"
                 />
 
@@ -235,6 +236,7 @@ export default function AppSidebar() {
             <SidebarContent className="bg-transparent px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0 overflow-x-hidden">
                 {Object.entries(groupedNavigation).map(([category, { parent, children }]) => {
                     const isOpen = openGroups[category]
+                    const hasChildren = children.length > 0
 
                     return (
                         <SidebarGroup key={category} className="p-0 group-data-[collapsible=icon]:p-0">
@@ -242,22 +244,38 @@ export default function AppSidebar() {
                                 <SidebarMenu className="px-3 group-data-[collapsible=icon]:px-0">
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
-                                            onClick={() => toggleGroup(category)}
+                                            asChild={!hasChildren}
+                                            onClick={hasChildren ? () => toggleGroup(category) : undefined}
                                             tooltip={parent.title}
                                             className="w-full flex items-center gap-3 rounded-xl text-sm font-medium text-foreground hover:bg-card/50 hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
                                         >
-                                            <DynamicIcon
-                                                name={parent.icon}
-                                                size={18}
-                                                className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
-                                            />
-                                            <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
-                                                {parent.title}
-                                            </span>
-                                            <ChevronRight
-                                                size={16}
-                                                className={`transition-transform text-muted-foreground group-data-[collapsible=icon]:hidden ${isOpen ? "rotate-90" : ""}`}
-                                            />
+                                            {!hasChildren ? (
+                                                <Link href={parent.url} className="flex items-center gap-3 w-full">
+                                                    <DynamicIcon
+                                                        name={parent.icon}
+                                                        size={18}
+                                                        className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
+                                                    />
+                                                    <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
+                                                        {parent.title}
+                                                    </span>
+                                                </Link>
+                                            ) : (
+                                                <>
+                                                    <DynamicIcon
+                                                        name={parent.icon}
+                                                        size={18}
+                                                        className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
+                                                    />
+                                                    <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
+                                                        {parent.title}
+                                                    </span>
+                                                    <ChevronRight
+                                                        size={16}
+                                                        className={`transition-transform text-muted-foreground group-data-[collapsible=icon]:hidden ${isOpen ? "rotate-90" : ""}`}
+                                                    />
+                                                </>
+                                            )}
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 </SidebarMenu>

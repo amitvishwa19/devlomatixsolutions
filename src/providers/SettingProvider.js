@@ -14,15 +14,21 @@ export const SettingProvider = ({ children }) => {
     const [saving, setSaving] = useState(false);
 
     const fetchSettings = useCallback(async () => {
-        if (!workspaceId) return;
-        
         setLoading(true);
         try {
-            const response = await axios.get(`/api/workspace/${workspaceId}/system/settings`);
-            setSettings(response.data);
+            if (workspaceId) {
+                // Fetch full workspace settings
+                const response = await axios.get(`/api/workspace/${workspaceId}/system/settings`);
+                setSettings(response.data);
+            } else {
+                // Fallback to global branding for non-workspace pages (Login, Verify, etc)
+                const response = await axios.get('/api/branding');
+                setSettings({
+                    branding: response.data
+                });
+            }
         } catch (error) {
             console.error('Fetch Settings Error:', error);
-            // Silent fail for branding if not loaded yet
         } finally {
             setLoading(false);
         }

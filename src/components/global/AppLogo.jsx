@@ -9,7 +9,7 @@ import { AppContext } from '@/providers/AppProvider'
 import { useSettings } from '@/providers/SettingProvider'
 
 
-export function AppLogo({ size = 130, height, width, link, className }) {
+export function AppLogo({ size = 130, height, width, link, className, border = true }) {
 
     const { theme } = useContext(AppContext)
     const { settings } = useSettings()
@@ -32,15 +32,15 @@ export function AppLogo({ size = 130, height, width, link, className }) {
 
     return (
         <Link href={link}>
-            <div 
+            <div
                 className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-1 rounded-md", className)}
-                style={primaryColor ? { border: `1px solid ${primaryColor}33`, backgroundColor: `${primaryColor}11` } : {}}
+                style={(primaryColor && border) ? { border: `1px solid ${primaryColor}33`, backgroundColor: `${primaryColor}11` } : {}}
             >
                 <Image
                     src={logo}
                     alt='logo'
-                    height={height}
-                    width={width}
+                    height={height || size}
+                    width={width || size}
                     className="object-contain"
                     style={{ height: 'auto' }}
                     priority={false}

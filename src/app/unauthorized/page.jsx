@@ -41,10 +41,6 @@ const Unauthorized = () => {
                 />
             </div>
 
-            {/* Header/Logo */}
-            <div className="absolute top-8 left-8 relative z-20">
-                <AppLogo link={'/'} size={40} height={40} width={120} />
-            </div>
 
             {/* Main Content */}
             <div className="relative z-10 w-full max-w-md mx-4">
@@ -53,6 +49,11 @@ const Unauthorized = () => {
                     <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-br from-[#00F0FF]/10 to-[#7B2CBF]/10 blur-xl opacity-50 pointer-events-none" />
 
                     <div className="relative z-10 text-center space-y-8">
+                        {/* Logo */}
+                        <div className="flex justify-center">
+                            <AppLogo link={'/'} size={60} height={60} width={180} />
+                        </div>
+
                         {/* Icon */}
                         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-[#00F0FF]/10 border border-[#00F0FF]/20 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
                             <Lock className="h-10 w-10 text-[#00F0FF]" />
@@ -60,11 +61,11 @@ const Unauthorized = () => {
 
                         {/* Title group */}
                         <div className="space-y-3">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-[10px] font-black tracking-widest uppercase border border-red-500/20">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-[10px]    border border-red-500/20">
                                 <ShieldAlert className="w-3 h-3" />
                                 Restricted Access
                             </div>
-                            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+                            <h1 className="text-xl font-bold text-white tracking-tight">
                                 Access Denied
                             </h1>
                             <p className="text-slate-400 text-sm leading-relaxed px-2">
@@ -82,7 +83,7 @@ const Unauthorized = () => {
                         <div className="space-y-3">
                             <Button
                                 size="lg"
-                                className="w-full gap-2 bg-gradient-to-r from-[#00F0FF] to-[#00D0FF] text-[#0f172a] hover:from-[#00D0FF] hover:to-[#00B0FF] font-black shadow-[0_0_20px_rgba(0,240,255,0.3)] transition-all ease-out h-12 rounded-xl"
+                                className="w-full gap-2 bg-gradient-to-r from-[#00F0FF] to-[#00D0FF] text-[#0f172a] hover:from-[#00D0FF] hover:to-[#00B0FF]  shadow-[0_0_20px_rgba(0,240,255,0.3)] transition-all ease-out h-12 rounded-xl"
                                 onClick={handleGoBack}
                             >
                                 <ArrowLeft className="h-4 w-4" />
@@ -92,7 +93,7 @@ const Unauthorized = () => {
 
                         {/* Support Info */}
                         <div className="pt-4 border-t border-white/5">
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                            <p className="text-[10px] text-slate-500  tracking-wider font-bold">
                                 Contact Fleet Commander at{" "}
                                 <span className="text-slate-300">support@devlomatix.com</span>
                             </p>
@@ -102,7 +103,7 @@ const Unauthorized = () => {
             </div>
 
             {/* Footer */}
-            <div className="absolute bottom-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] z-20">
+            <div className="absolute bottom-8 text-center text-[10px] text-slate-600 font-bold  tracking-[0.2em] z-20">
                 © {new Date().getFullYear()} Devlomatix Mission Control • All Systems Nominal
             </div>
         </div>
