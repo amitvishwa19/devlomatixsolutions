@@ -10,6 +10,7 @@ import OrgAuthBlock from './OrgAuthBlock'
 import { AppLogo } from '@/components/global/AppLogo'
 import logo from '@/assets/logo/logo.png'
 import Image from 'next/image'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 const OPEN_GROUPS_KEY = "wa-sidebar-open-groups"
 
@@ -233,82 +234,84 @@ export default function AppSidebar() {
                 </div>
             </SidebarHeader>
 
-            <SidebarContent className="bg-transparent px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0 overflow-x-hidden">
-                {Object.entries(groupedNavigation).map(([category, { parent, children }]) => {
-                    const isOpen = openGroups[category]
-                    const hasChildren = children.length > 0
+            <SidebarContent className="bg-transparent px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0 overflow-hidden">
+                <ScrollArea className='h-[87vh]'>
+                    {Object.entries(groupedNavigation).map(([category, { parent, children }]) => {
+                        const isOpen = openGroups[category]
+                        const hasChildren = children.length > 0
 
-                    return (
-                        <SidebarGroup key={category} className="p-0 group-data-[collapsible=icon]:p-0">
-                            {parent && (
-                                <SidebarMenu className="px-3 group-data-[collapsible=icon]:px-0">
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton
-                                            asChild={!hasChildren}
-                                            onClick={hasChildren ? () => toggleGroup(category) : undefined}
-                                            tooltip={parent.title}
-                                            className="w-full flex items-center gap-3 rounded-xl text-sm font-medium text-foreground hover:bg-card/50 hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
-                                        >
-                                            {!hasChildren ? (
-                                                <Link href={parent.url} className="flex items-center gap-3 w-full">
-                                                    <DynamicIcon
-                                                        name={parent.icon}
-                                                        size={18}
-                                                        className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
-                                                    />
-                                                    <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
-                                                        {parent.title}
-                                                    </span>
-                                                </Link>
-                                            ) : (
-                                                <>
-                                                    <DynamicIcon
-                                                        name={parent.icon}
-                                                        size={18}
-                                                        className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
-                                                    />
-                                                    <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
-                                                        {parent.title}
-                                                    </span>
-                                                    <ChevronRight
-                                                        size={16}
-                                                        className={`transition-transform text-muted-foreground group-data-[collapsible=icon]:hidden ${isOpen ? "rotate-90" : ""}`}
-                                                    />
-                                                </>
-                                            )}
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                </SidebarMenu>
-                            )}
-
-                            <div className={`overflow-hidden transition-all duration-300 group-data-[collapsible=icon]:hidden ${isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"}`}>
-                                <SidebarGroupContent>
-                                    <SidebarMenu className="pl-6 group-data-[collapsible=icon]:pl-0">
-                                        {children.map((item) => {
-                                            const isActive = pathname === item.url
-                                            return (
-                                                <SidebarMenuItem key={`${item.category}-${item.title}`}>
-                                                    <SidebarMenuButton
-                                                        asChild
-                                                        //isActive={isActive}
-                                                        tooltip={item.title}
-                                                        className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl hover:bg-card hover:text-primary transition-colors ${isActive ? "" : ""}`}
-                                                    >
-                                                        <Link href={item.url}>
-                                                            <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>
-                                                                {item.title}
-                                                            </span>
-                                                        </Link>
-                                                    </SidebarMenuButton>
-                                                </SidebarMenuItem>
-                                            )
-                                        })}
+                        return (
+                            <SidebarGroup key={category} className="p-0 group-data-[collapsible=icon]:p-0">
+                                {parent && (
+                                    <SidebarMenu className="px-3 group-data-[collapsible=icon]:px-0">
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton
+                                                asChild={!hasChildren}
+                                                onClick={hasChildren ? () => toggleGroup(category) : undefined}
+                                                tooltip={parent.title}
+                                                className="w-full flex items-center gap-3 rounded-xl text-sm font-medium text-foreground hover:bg-card/50 hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
+                                            >
+                                                {!hasChildren ? (
+                                                    <Link href={parent.url} className="flex items-center gap-3 w-full">
+                                                        <DynamicIcon
+                                                            name={parent.icon}
+                                                            size={18}
+                                                            className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
+                                                        />
+                                                        <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
+                                                            {parent.title}
+                                                        </span>
+                                                    </Link>
+                                                ) : (
+                                                    <>
+                                                        <DynamicIcon
+                                                            name={parent.icon}
+                                                            size={18}
+                                                            className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
+                                                        />
+                                                        <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
+                                                            {parent.title}
+                                                        </span>
+                                                        <ChevronRight
+                                                            size={16}
+                                                            className={`transition-transform text-muted-foreground group-data-[collapsible=icon]:hidden ${isOpen ? "rotate-90" : ""}`}
+                                                        />
+                                                    </>
+                                                )}
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
                                     </SidebarMenu>
-                                </SidebarGroupContent>
-                            </div>
-                        </SidebarGroup>
-                    )
-                })}
+                                )}
+
+                                <div className={`overflow-hidden transition-all duration-300 group-data-[collapsible=icon]:hidden ${isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"}`}>
+                                    <SidebarGroupContent>
+                                        <SidebarMenu className="pl-6 group-data-[collapsible=icon]:pl-0">
+                                            {children.map((item) => {
+                                                const isActive = pathname === item.url
+                                                return (
+                                                    <SidebarMenuItem key={`${item.category}-${item.title}`}>
+                                                        <SidebarMenuButton
+                                                            asChild
+                                                            //isActive={isActive}
+                                                            tooltip={item.title}
+                                                            className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl hover:bg-card hover:text-primary transition-colors ${isActive ? "" : ""}`}
+                                                        >
+                                                            <Link href={item.url}>
+                                                                <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                                                                    {item.title}
+                                                                </span>
+                                                            </Link>
+                                                        </SidebarMenuButton>
+                                                    </SidebarMenuItem>
+                                                )
+                                            })}
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </div>
+                            </SidebarGroup>
+                        )
+                    })}
+                </ScrollArea>
             </SidebarContent>
 
 
