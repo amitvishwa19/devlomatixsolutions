@@ -157,7 +157,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                     </TabsContent>
                                 </Tabs>
 
-                                <SheetFooter className="p-4 border-t bg-muted/5 flex-row justify-end items-center gap-4">
+                                <SheetFooter className="p-2 pt-4 border-t bg-muted/5 flex-row justify-end items-center gap-4">
                                     <Button
                                         type="button"
                                         variant="ghost"
