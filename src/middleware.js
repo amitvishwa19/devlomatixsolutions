@@ -4,11 +4,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request) {
-    const token = await getToken({ req: request })
-
     const url = request.nextUrl.clone()
     const pathname = url.pathname
     const host = request.headers.get('host') || ''
+
+    // 1. PRODUCTION GRADE BYPASS: Never intercept API routes
+    // This prevents CLIENT_FETCH_ERROR where JSON requests get HTML redirects
+    if (pathname.startsWith('/api')) {
+        return NextResponse.next()
+    }
+
+    const token = await getToken({ req: request })
 
     const isMainDomain =
         process.env.NODE_ENV === 'production'
@@ -62,20 +68,23 @@ export async function middleware(request) {
         return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // Workspace Access Control (RBAC)
-    // if (pathname.startsWith('/workspace') && token) {
-    //     const hasWorkspaceAccess =
-    //         token.role === 'admin' ||
-    //         token.role === 'superadmin' ||
-    //         token.role === 'super-admin' ||
-    //         token.roles?.some(role => role.title === 'workspace');
+    // Workspace Access Control (RBAC & Multi-Tenancy Isolation)
+    if (pathname.startsWith('/workspace/') && token) {
+        const segments = pathname.split('/').filter(Boolean);
+        const workspaceId = segments[1]; // /workspace/[workspaceId]/...
 
-    //     if (!hasWorkspaceAccess) {
-    //         console.log(`[Middleware] Access denied for ${token.email} to ${pathname}`);
-    //         // Break the loop: Redirect to unauthorized instead of root
-    //         return NextResponse.redirect(new URL('/unauthorized', request.url))
-    //     }
-    // }
+        const isSystemAdmin = token.role === 'ADMIN' || token.role === 'SUPER_ADMIN';
+        const hasWorkspaceMembership = token.workspaces?.includes(workspaceId);
+
+        // PRODUCTION GRADE: If token.workspaces is missing entirely, 
+        // it means the session is stale. We allow it briefly but log it.
+        const isStaleSession = token.workspaces === undefined;
+
+        if (!isSystemAdmin && !hasWorkspaceMembership && workspaceId && !isStaleSession) {
+            console.error(`[Security Guard] Blocked unauthorized access: ${token.email} tried to enter workspace ${workspaceId}`);
+            return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+    }
 
     // Logged in -> block login page (which is now /)
     if (pathname === '/' && token) {

@@ -159,23 +159,35 @@ export const authOptions = {
 
             // Production Grade: Fetch roles and extra info on sign-in or when an update is triggered
             if (!token.roles || trigger === "signIn" || trigger === "update") {
-                const usr = await db.user.findUnique({
-                    where: { email: token.email },
-                    include: {
-                        roles: {
-                            include: {
-                                permissions: true
+                try {
+                    const usr = await db.user.findUnique({
+                        where: { email: token.email },
+                        include: {
+                            members: {
+                                select: {
+                                    serverId: true,
+                                    role: true
+                                }
+                            },
+                            roles: {
+                                include: {
+                                    permissions: true
+                                }
                             }
                         }
+                    });
+                    
+                    if (usr) {
+                        token.userId = usr.id;
+                        token.displayName = usr.displayName;
+                        token.avatar = usr.avatar;
+                        token.role = usr.role;
+                        token.roles = usr.roles;
+                        token.workspaces = usr.members.map(m => m.serverId);
                     }
-                });
-
-                if (usr) {
-                    token.userId = usr.id;
-                    token.displayName = usr.displayName;
-                    token.avatar = usr.avatar;
-                    token.role = usr.role;
-                    token.roles = usr.roles;
+                } catch (error) {
+                    console.error("[NextAuth Security Layer] Failed to enrich session token:", error);
+                    // On error, we keep the original token to prevent a full lockout
                 }
             }
 

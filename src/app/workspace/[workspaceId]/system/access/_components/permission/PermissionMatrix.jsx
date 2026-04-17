@@ -213,7 +213,6 @@ export const PermissionMatrix = () => {
  toast.loading(`Syncing ${totalChanges} permission changes...`, { id:'update-permission'});
  
  await execute({ 
- userId: session?.user?.userId, 
  formData: [...newlyCreated, ...changed] 
  });
 

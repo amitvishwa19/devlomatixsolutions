@@ -24,10 +24,6 @@ const AuthLayout = ({ children }) => {
 
             {/* Left Section - Hero Content */}
             <div className="hidden lg:flex flex-col justify-center w-[50%] xl:w-[55%] px-12 xl:px-24 min-h-screen relative z-10">
-                {/* Header/Logo (Top Left) */}
-                <div className="absolute top-8 left-12 xl:left-24">
-                    <AppLogo link={'/'} size={100} height={100} width={150} />
-                </div>
 
                 {/* Main Hero Text */}
                 <div className="max-w-2xl mt-12">
@@ -37,7 +33,7 @@ const AuthLayout = ({ children }) => {
                     </div>
 
                     <h1 className="text-5xl xl:text-6xl font-extrabold text-white leading-[1.1] mb-6 tracking-tight">
-                        Deploy <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] to-[#7B2CBF]">Missions</span><br />
+                        Deploy <span className="text-transparent bg-clip-text bg-linear-to-r from-[#00F0FF] to-[#7B2CBF]">Missions</span><br />
                         From One Hub
                     </h1>
 
@@ -70,17 +66,18 @@ const AuthLayout = ({ children }) => {
             {/* Right Section - Form Container */}
             <div className="w-full lg:w-[50%] xl:w-[45%] flex items-center justify-center p-6 relative z-10">
                 <div className="w-full max-w-md relative">
+
                     {/* Glowing Accent behind the form */}
-                    <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#00F0FF]/20 to-[#7B2CBF]/20 blur-xl opacity-50 pointer-events-none" />
+                    <div className="absolute -inset-1 rounded-xl bg-linear-to-br from-[#00F0FF]/20 to-[#7B2CBF]/20 blur-xl opacity-50 pointer-events-none" />
 
                     {/* Form Card */}
-                    <div className="relative bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+                    <div className="relative bg-card/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
                         {/* Mobile Logo */}
-                        <div className="flex lg:hidden justify-center mb-8">
-                            <AppLogo link={'/'} />
+                        <div className="flex  justify-center mb-8">
+                            <AppLogo link={'/'} size={100} height={100} width={150} />
                         </div>
-
                         {children}
+
                     </div>
                 </div>
             </div>

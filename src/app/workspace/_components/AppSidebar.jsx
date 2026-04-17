@@ -53,8 +53,8 @@ export default function AppSidebar() {
             });
         }
 
-        // 3. Admin sees everything in their workspace
-        if (session?.user?.role === 'ADMIN') return rawNavigation;
+        // 3. Admin & Super Admin see everything in their workspace
+        if (session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN' || isSuperAdmin) return rawNavigation;
 
         // 4. Regular users see only items they have explicit permission for
         return rawNavigation.filter(item => {

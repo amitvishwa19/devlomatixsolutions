@@ -6,14 +6,16 @@ import { v4 as uuidv4 } from 'uuid'
 import { ROLE } from "@prisma/client";
 import { slug } from "@/utils/functions";
 
+import { ensureAdmin } from "@/lib/auth-utils";
+
 const UpsertUser = z.object({
-  userId: z.string(),
   formData: z.any(),
 });
 
 const handler = async (data) => {
-
-  const { userId, formData } = data
+  const session = await ensureAdmin();
+  const userId = session.user.userId;
+  const { formData } = data
   let user
 
 

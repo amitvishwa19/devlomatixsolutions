@@ -93,7 +93,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
         console.log('User data', data)
         setloading(true);
         toast.loading(user ? 'Updating user...' : 'Creating user...', { id: 'new-user' })
-        await execute({ userId: session?.user?.userId, formData: data })
+        await execute({ formData: data })
     };
 
     const handleOpenClose = () => {

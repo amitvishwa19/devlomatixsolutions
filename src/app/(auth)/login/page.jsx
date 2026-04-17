@@ -74,7 +74,7 @@ export default function Login() {
         <div className="w-full">
             <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
                 <div className="flex flex-col space-y-2 text-center mb-5">
-                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+                    <h1 className="text-3xl font-bold  text-white mb-2">
                         Sign In
                     </h1>
                     <p className="text-sm text-slate-400">
@@ -95,7 +95,7 @@ export default function Login() {
                                 disabled={loading}
                                 value={data.email}
                                 onChange={(e) => setData({ ...data, email: e.target.value })}
-                                className="bg-[#0B0F19]/50 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-[#00F0FF] focus-visible:ring-offset-0 focus-visible:border-[#00F0FF]"
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 
@@ -114,7 +114,7 @@ export default function Login() {
                                 disabled={loading}
                                 value={data.password}
                                 onChange={(e) => setData({ ...data, password: e.target.value })}
-                                className="bg-[#0B0F19]/50 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-[#00F0FF] focus-visible:ring-offset-0 focus-visible:border-[#00F0FF]"
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 
@@ -153,7 +153,7 @@ export default function Login() {
                             type="button"
                             disabled={false}
                             onClick={handleGoogleLogin}
-                            className='w-full flex items-center justify-center gap-2 py-2 cursor-pointer px-4 bg-transparent border border-white/10 hover:border-white/20 hover:bg-white/5 text-white transition-all h-11 rounded-lg'
+                            className='w-full flex items-center justify-center gap-2 py-2 cursor-pointer px-4 bg-transparent border  transition-all h-11 rounded-lg'
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

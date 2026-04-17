@@ -73,6 +73,7 @@ export default function Register() {
                                 disabled={loading}
                                 value={data.email}
                                 onChange={(e) => setData({ ...data, email: e.target.value })}
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 
@@ -86,6 +87,7 @@ export default function Register() {
                                 disabled={loading}
                                 value={data.password}
                                 onChange={(e) => setData({ ...data, password: e.target.value })}
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 
@@ -99,6 +101,7 @@ export default function Register() {
                                 disabled={loading}
                                 value={data.confirmPassword}
                                 onChange={(e) => setData({ ...data, confirmPassword: e.target.value })}
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 

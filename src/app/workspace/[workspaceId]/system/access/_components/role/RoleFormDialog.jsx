@@ -110,17 +110,15 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
 
 
     const handleSubmit = async (values) => {
-        console.log('values', values)
         setLoading(true);
-        toast.loading(`${role ? "Updating" : "Creating"} Role, please wait...`, { id: "role-data" });
+        toast.loading("Saving role...", { id: "role-data" });
 
         const payload = {
             ...values,
             parentId: values.parentId === "none" ? null : values.parentId
         };
 
-        await execute({ userId: session?.user?.userId, formData: payload });
-
+        await execute({ formData: payload });
     };
 
 
