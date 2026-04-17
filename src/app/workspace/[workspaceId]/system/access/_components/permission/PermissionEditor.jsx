@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Shield, X, Loader } from "lucide-react";
+import { Plus, Pencil, Shield, ShieldAlert, X, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
@@ -22,6 +22,7 @@ import { upsertPermission } from "../../_action/upsert-permission";
 import { useSession } from "next-auth/react";
 import { GeneralPermissionForm } from "./GeneralPermissionForm";
 import { NavigationPermissionForm } from "./NavigationPermissionForm";
+import { PermissionInfo } from "./PermissionInfo";
 
 const defaultActionOptions = [
     { id: "view", label: "View", description: "Read-only access" },
@@ -84,6 +85,7 @@ export default function PermissionEditor({
     const [customActions, setCustomActions] = useState([]);
     const [newActionName, setNewActionName] = useState("");
     const [newActionDescription, setNewActionDescription] = useState("");
+    const [selectedNavItems, setSelectedNavItems] = useState([]);
 
     const actionOptions = [...defaultActionOptions, ...customActions];
 
@@ -226,7 +228,7 @@ export default function PermissionEditor({
                 <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
                     <SheetHeader className="border-b p-6 bg-muted/5">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
+                            <div className="p-2 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
                                 {mode === "edit" ? (
                                     <Pencil className="w-6 h-6 text-primary" />
                                 ) : (
@@ -234,58 +236,112 @@ export default function PermissionEditor({
                                 )}
                             </div>
                             <div>
-                                <SheetTitle className="text-xl font-bold tracking-tight">
-                                    {mode === "edit" ? "Refine Permissions" : "Define New Module"}
+                                <SheetTitle className="text-xl font-bold ">
+                                    {mode === "edit" ? "Refine Permissions" : "Define New Permission"}
                                 </SheetTitle>
-                                <SheetDescription className="text-sm opacity-70">
+                                <SheetDescription className="text-xs opacity-60">
                                     {mode === "edit"
-                                        ? `Fine-tuning access for the"${category}"ecosystem`
+                                        ? `Fine-tuning access for the "${category}" ecosystem`
                                         : "Establish a new security perimeter within the app"}
                                 </SheetDescription>
                             </div>
                         </div>
                     </SheetHeader>
 
-                    <Tabs defaultValue="general" className="flex-1 flex flex-col overflow-hidden">
-                        <TabsList className="mx-6 mt-4 justify-start w-fit">
-                            <TabsTrigger value="general">General</TabsTrigger>
-                            <TabsTrigger value="navigation">Navigation</TabsTrigger>
-                        </TabsList>
+                    <ScrollArea className="h-[82vh]">
+                        <Accordion type="multiple" defaultValue={["permission-info"]} className="px-4 py-2 space-y-2">
 
-                        <TabsContent value="general" className="flex-1 overflow-hidden m-0 border-0">
-                            <GeneralPermissionForm
-                                moduleName={moduleName}
-                                setModuleName={setModuleName}
-                                categorySlug={categorySlug}
-                                selectedColor={selectedColor}
-                                setSelectedColor={setSelectedColor}
-                                selectedActions={selectedActions}
-                                handleSelectAll={handleSelectAll}
-                                actionOptions={actionOptions}
-                                handleActionToggle={handleActionToggle}
-                                setCustomActions={setCustomActions}
-                                setSelectedActions={setSelectedActions}
-                                newActionName={newActionName}
-                                setNewActionName={setNewActionName}
-                                newActionDescription={newActionDescription}
-                                setNewActionDescription={setNewActionDescription}
-                                handleAddCustomAction={handleAddCustomAction}
-                                description={description}
-                                setDescription={setDescription}
-                                formatCategoryName={formatCategoryName}
-                            />
-                        </TabsContent>
-                        <TabsContent value="navigation" className="flex-1 overflow-hidden m-0 border-0">
-                            <NavigationPermissionForm />
-                        </TabsContent>
-                    </Tabs>
+                            {/* Permission Info */}
+                            <AccordionItem value="permission-info" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors group-data-[state=open]/item:border-b border-primary/10 cursor-pointer">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <Shield className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">Permission Information</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">Identity and visual signature</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-0 pb-0 p-4">
+                                    <PermissionInfo
+                                        moduleName={moduleName}
+                                        setModuleName={setModuleName}
+                                        categorySlug={categorySlug}
+                                        selectedColor={selectedColor}
+                                        setSelectedColor={setSelectedColor}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
 
-                    <SheetFooter className="p-6 border-t bg-muted/5 flex-row justify-end items-center gap-4">
+
+                            {/* General Permissions */}
+                            <AccordionItem value="general" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10 bg-muted/40">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <ShieldAlert className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">General Permissions</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">Operation scopes and access levels</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="">
+                                    <GeneralPermissionForm
+                                        categorySlug={categorySlug}
+                                        selectedActions={selectedActions}
+                                        handleSelectAll={handleSelectAll}
+                                        actionOptions={actionOptions}
+                                        handleActionToggle={handleActionToggle}
+                                        setCustomActions={setCustomActions}
+                                        setSelectedActions={setSelectedActions}
+                                        newActionName={newActionName}
+                                        setNewActionName={setNewActionName}
+                                        newActionDescription={newActionDescription}
+                                        setNewActionDescription={setNewActionDescription}
+                                        handleAddCustomAction={handleAddCustomAction}
+                                        description={description}
+                                        setDescription={setDescription}
+                                        formatCategoryName={formatCategoryName}
+                                        moduleName={moduleName}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
+
+
+                            {/* Navigation Permissions */}
+                            <AccordionItem value="navigation" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10 bg-muted/40">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <Plus className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">Navigation Access</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">UI sidebar routes and menu assignment</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-0 pb-0">
+                                    <NavigationPermissionForm
+                                        selectedNavItems={selectedNavItems}
+                                        setSelectedNavItems={setSelectedNavItems}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
+
+                        </Accordion>
+                    </ScrollArea>
+
+                    <SheetFooter className="p-4 border-t bg-muted/5 flex-row justify-end items-center gap-4">
                         <Button
                             variant="outline"
                             onClick={handleOpenClose}
                             disabled={loading}
-                            className="rounded-md font-bold text-xs uppercase tracking-widest px-8"
+                            className="rounded-md font-bold text-xs uppercase tracking-wide px-8"
                         >
                             Discard
                         </Button>
@@ -302,6 +358,7 @@ export default function PermissionEditor({
                             {mode === "edit" ? "Update Permissions" : "Save Permissions"}
                         </Button>
                     </SheetFooter>
+
                 </div>
             </SheetContent >
         </Sheet >
