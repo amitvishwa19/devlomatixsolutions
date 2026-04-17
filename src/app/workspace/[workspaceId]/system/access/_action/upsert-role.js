@@ -8,7 +8,14 @@ import { slug } from "@/utils/functions";
 
 const UpsertRole = z.object({
   userId: z.string(),
-  formData: z.any(),
+  formData: z.object({
+    id: z.string().optional(),
+    title: z.string(),
+    description: z.string().optional(),
+    color: z.string().optional(),
+    permissions: z.array(z.any()).optional(),
+    parentId: z.string().optional().nullable(),
+  }),
 });
 
 const handler = async (data) => {
@@ -28,6 +35,7 @@ const handler = async (data) => {
         title: slug(formData?.title),
         description: formData?.description,
         color: formData?.color,
+        parentId: formData?.parentId,
         permissions: {
           connect: perms
         }
@@ -36,6 +44,7 @@ const handler = async (data) => {
         title: slug(formData?.title),
         description: formData?.description,
         color: formData?.color,
+        parentId: formData?.parentId,
         permissions: {
           set: perms
         }

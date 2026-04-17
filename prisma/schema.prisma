@@ -218,6 +218,11 @@ model Role {
   updatedAt   DateTime     @updatedAt
   permissions Permission[] @relation("PermissionToRole")
   users       User[]       @relation("RoleToUser")
+
+  // Inheritance
+  parentId    String?
+  parent      Role?        @relation("RoleInheritance", fields: [parentId], references: [id])
+  children    Role[]       @relation("RoleInheritance")
 }
 
 model Permission {

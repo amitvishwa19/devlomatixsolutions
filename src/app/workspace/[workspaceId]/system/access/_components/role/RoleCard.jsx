@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Users, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Users, Edit, Trash2, MonitorSmartphone } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { titleCaseLabel } from '@/utils/functions';
+import { useAccess } from '../../_provider/accessProvider';
 
 export function RoleCard({ role, onEdit, onDelete }) {
+  const { setPreviewRole } = useAccess();
   const permissionCount = role?.permissions?.length ?? 0;
   const userCount = role?.users?.length ?? 0;
 
@@ -33,13 +35,23 @@ export function RoleCard({ role, onEdit, onDelete }) {
             </p>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1 -mr-1 rounded-full opacity-60 group-hover:opacity-100 transition-opacity hover:bg-muted">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 p-1.5">
+          <div className="flex items-center gap-1">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setPreviewRole(role)}
+                className="h-8 w-8 -mt-1 rounded-full opacity-60 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
+                title="Simulate Role Perspective"
+            >
+              <MonitorSmartphone className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1 -mr-1 rounded-full opacity-60 group-hover:opacity-100 transition-opacity hover:bg-muted">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 p-1.5">
               <DropdownMenuItem 
                 onClick={() => onEdit(role)}
                 className="rounded-md gap-2"
@@ -57,6 +69,7 @@ export function RoleCard({ role, onEdit, onDelete }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
 
         {/* Permissions section - Badge row layout */}
         <div className="flex flex-wrap gap-1.5 overflow-hidden">

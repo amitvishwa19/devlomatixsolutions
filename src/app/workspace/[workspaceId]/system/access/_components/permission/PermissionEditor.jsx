@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Plus, Pencil, Shield, ShieldAlert, X, Loader } from "lucide-react";
+import { Plus, Pencil, Shield, ShieldAlert, X, Loader, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ import { useSession } from "next-auth/react";
 import { GeneralPermissionForm } from "./GeneralPermissionForm";
 import { NavigationPermissionForm } from "./NavigationPermissionForm";
 import { PermissionInfo } from "./PermissionInfo";
+import { SecurityFlow } from "../shared/SecurityFlow";
 import { getSidebarItems } from "@/constants/sidebar-items";
 
 const defaultActionOptions = [
@@ -187,21 +188,11 @@ export default function PermissionEditor({
         }
     });
 
-    const handleSubmit = async () => {
-        if (!moduleName.trim()) {
-            toast.error("Module name required");
-            return;
-        }
-        if (selectedActions.length === 0) {
-            toast.error("Select at least one action");
-            return;
-        }
-
+    const getPermissionsPayload = () => {
         const categorySlug = moduleName.toLowerCase().replace(/\s+/g, "_");
         const colorValue = colorOptions.find((c) => c.id === selectedColor)?.color || "#15803D";
 
         const actionPermissions = actionOptions.map((action) => ({
-            // If editing and permission exists, keep its ID
             id: mode === "edit" && editData?.permissions[action.id]?.id
                 ? editData.permissions[action.id].id
                 : `new-${categorySlug}-${action.id}-${Date.now()}`,
@@ -213,18 +204,12 @@ export default function PermissionEditor({
             status: selectedActions.includes(action.id),
         }));
 
-        // 2. Generate Navbar Permissions (ALL sidebar items)
         const sidebarItems = getSidebarItems(workspaceId);
         const navbarPermissions = [];
 
         sidebarItems.forEach((item) => {
-            // Logic to get the same ID used in UI checkboxes
-            const isParent = item.type === 'parent';
             const slug = item.url.split("/").pop();
-
-            // Skip items with no slug or current workspace id
             if (!slug || slug === workspaceId) return;
-
             const itemId = `${item.category}:${slug}`;
             const dbValue = `navbar:${item.category}:${slug}`;
 
@@ -241,7 +226,20 @@ export default function PermissionEditor({
             });
         });
 
-        const permissionsPayload = [...actionPermissions, ...navbarPermissions];
+        return [...actionPermissions, ...navbarPermissions];
+    };
+
+    const handleSubmit = async () => {
+        if (!moduleName.trim()) {
+            toast.error("Module name required");
+            return;
+        }
+        if (selectedActions.length === 0) {
+            toast.error("Select at least one action");
+            return;
+        }
+
+        const permissionsPayload = getPermissionsPayload();
 
         setLoading(true);
         toast.loading(mode === "edit" ? "Updating..." : "Creating...", { id: "permission-form" });
@@ -296,7 +294,7 @@ export default function PermissionEditor({
                     </SheetHeader>
 
                     <ScrollArea className="h-[82vh]">
-                        <Accordion type="multiple" defaultValue={["permission-info"]} className="px-4 py-2 space-y-2">
+                        <Accordion type="single" collapsible defaultValue="permission-info" className="px-4 py-2 space-y-2">
 
                             {/* Permission Info */}
                             <AccordionItem value="permission-info" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
@@ -376,6 +374,26 @@ export default function PermissionEditor({
                                     <NavigationPermissionForm
                                         selectedNavItems={selectedNavItems}
                                         setSelectedNavItems={setSelectedNavItems}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            {/* Structural Impact Analysis */}
+                            <AccordionItem value="flow" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10 bg-muted/40">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <Workflow className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">Structural Impact Analysis</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">Visualize system reach & perimeter impact</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-0 pb-0">
+                                    <SecurityFlow 
+                                        activePermissions={getPermissionsPayload().filter(p => p.status)}
                                     />
                                 </AccordionContent>
                             </AccordionItem>

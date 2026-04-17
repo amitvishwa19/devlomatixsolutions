@@ -47,7 +47,7 @@ const samplePermissions = [
 ];
 
 export const PermissionMatrix = () => {
- const { permissions, setPermissions } = useAccess()
+ const { permissions, setPermissions, roles, users } = useAccess()
  const [searchQuery, setSearchQuery] = useState("");
  const [loading, setLoading] = useState(false);
  const { data: session } = useSession()
@@ -64,18 +64,15 @@ export const PermissionMatrix = () => {
  module: null,
  });
 
- const [users] = useState([]);
- const [roles] = useState([]);
-
  const getUsersForPermission = (permissionId) => {
- const roleIds = roles?.filter(r => r.permissions?.includes(permissionId)) || [];
+ const assignedRoles = roles?.filter(r => r.permissions?.some(p => p.id === permissionId)) || [];
  const userIds = new Set();
- roleIds.forEach(role => role.users?.forEach(uid => userIds.add(uid)));
+ assignedRoles.forEach(role => role.users?.forEach(u => userIds.add(u.id)));
  return (users || []).filter(u => userIds.has(u.id));
  };
 
  const getRolesForPermission = (permissionId) => {
- return roles?.filter(r => r.permissions?.includes(permissionId)) || [];
+ return roles?.filter(r => r.permissions?.some(p => p.id === permissionId)) || [];
  };
 
  const originalPermissionsRef = useRef(null);

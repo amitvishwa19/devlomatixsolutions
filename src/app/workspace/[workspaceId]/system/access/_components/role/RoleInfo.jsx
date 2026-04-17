@@ -1,6 +1,9 @@
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Shield } from "lucide-react";
+import { useAccess } from "../../_provider/accessProvider";
 
 /* ------------------ Colors ------------------ */
 const colorPresets = [
@@ -15,6 +18,7 @@ const colorPresets = [
 ];
 
 export function RoleInfo({ form }) {
+    const { roles } = useAccess();
     return (
         <div className="p-6 space-y-8">
             <div className="space-y-4">
@@ -33,6 +37,39 @@ export function RoleInfo({ form }) {
                                 />
                             </FormControl>
                             <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                {/* Base Role Inheritance */}
+                <FormField
+                    control={form.control}
+                    name="parentId"
+                    render={({ field }) => (
+                        <FormItem className="grid gap-2 p-1">
+                            <FormLabel className="text-xs opacity-50 ml-1">Inherit From (Optional)</FormLabel>
+                            <FormControl>
+                                <Select onValueChange={field.onChange} defaultValue={field.value || "none"} value={field.value || "none"}>
+                                    <SelectTrigger className="bg-secondary/30 border border-primary/20 rounded-md focus:ring-primary/20 text-xs">
+                                        <SelectValue placeholder="Select a base role to inherit permissions" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card border-primary/20">
+                                        <SelectItem value="none" className="text-xs focus:bg-primary/10 text-muted-foreground italic">No Inheritance</SelectItem>
+                                        {roles?.filter(r => r.id !== form.getValues("id")).map((r) => (
+                                            <SelectItem key={r.id} value={r.id} className="text-xs focus:bg-primary/10">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: r.color || "#0d9488" }} />
+                                                    <span className="font-medium">{r.title}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormControl>
+                            <FormMessage />
+                            <p className="text-[10px] text-muted-foreground opacity-60 ml-1">
+                                Inheriting will automatically merge this role's permissions with the base role.
+                            </p>
                         </FormItem>
                     )}
                 />

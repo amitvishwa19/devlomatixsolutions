@@ -49,6 +49,9 @@ export default function Login() {
             if (res.error === "WRONG_PASSWORD") {
                 return toast.error("Invalid Credentials, please try again", { id: "login" });
             }
+            if (res.error === "ACCOUNT_NOT_VERIFIED") {
+                return toast.error("Email not verified", { id: "login" });
+            }
             return toast.error("Something went wrong", { id: "login" });
         }
 

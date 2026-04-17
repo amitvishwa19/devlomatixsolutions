@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Loader, Save, ShieldUser, ShieldPlus, Plus, Check } from "lucide-react";
+import { Loader, Save, ShieldUser, ShieldPlus, Plus, Check, Workflow } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -16,8 +16,9 @@ import { useAccess } from "../../_provider/accessProvider";
 import { upsertRole } from "../../_action/upsert-role";
 import { useSession } from "next-auth/react";
 import { useAction } from "@/hooks/use-action";
-import { GeneralRoleForm } from "./_components/GeneralRoleForm";
-import { RoleInfo } from "./_components/RoleInfo";
+import { SecurityFlow } from "../shared/SecurityFlow";
+import { GeneralRoleForm } from "./GeneralRoleForm";
+import { RoleInfo } from "./RoleInfo";
 
 /* ------------------ Schema ------------------ */
 
@@ -27,16 +28,16 @@ const roleSchema = z.object({
     description: z.string().min(10).max(200),
     color: z.string(),
     permissions: z.array(z.any()), // FULL permission objects
+    parentId: z.string().optional().nullable(),
 });
 
 
 /* ================== COMPONENT ================== */
 
 export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
-    const { permissions } = useAccess();
+    const { permissions, roles, resolveRolePermissions } = useAccess();
     const { data: session } = useSession();
     const [loading, setLoading] = useState(false);
-
 
     const form = useForm({
         resolver: zodResolver(roleSchema),
@@ -46,8 +47,12 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
             description: "",
             color: "#0d9488",
             permissions: [],
+            parentId: "none",
         },
     });
+
+    const currentFormPermissions = form.watch("permissions") || [];
+    const activePermissions = currentFormPermissions.filter(p => p.status);
 
     useEffect(() => {
         if (!permissions?.length) return;
@@ -67,6 +72,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                     ...p,
                     status: rolePermissionIds.has(p.id),
                 })),
+                parentId: role.parentId || "none",
             });
         } else {
             // ADD MODE (ALL UNCHECKED)
@@ -79,6 +85,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                     ...p,
                     status: false,
                 })),
+                parentId: "none",
             });
         }
     }, [role, permissions]);
@@ -103,7 +110,13 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
         console.log('values', values)
         setLoading(true);
         toast.loading(`${role ? "Updating" : "Creating"} Role, please wait...`, { id: "role-data" });
-        await execute({ userId: session?.user?.userId, formData: values });
+
+        const payload = {
+            ...values,
+            parentId: values.parentId === "none" ? null : values.parentId
+        };
+
+        await execute({ userId: session?.user?.userId, formData: payload });
 
     };
 
@@ -141,7 +154,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                 className="flex flex-col flex-1 overflow-hidden"
                             >
                                 <ScrollArea className="flex-1 h-[82vh]">
-                                    <Accordion type="multiple" defaultValue={["role-info"]} className="px-4 py-2 space-y-2">
+                                    <Accordion id='role-accordian' type="single" collapsible defaultValue="role-info" className="px-4 py-2 space-y-2">
 
                                         {/* Role Information */}
                                         <AccordionItem value="role-info" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
@@ -176,6 +189,27 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                             </AccordionTrigger>
                                             <AccordionContent className="px-0 pb-0">
                                                 <GeneralRoleForm form={form} />
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                        {/* Security Flow Analysis */}
+                                        <AccordionItem value="flow" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                            <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                                        <Workflow className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                    <div className="text-left py-1">
+                                                        <h4 className="text-sm font-bold tracking-tight">Security Impact Analysis</h4>
+                                                        <p className="text-[10px] text-muted-foreground opacity-60">Visualize structural reach & inheritance</p>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-0 pb-0">
+                                                <SecurityFlow
+                                                    role={form.getValues()}
+                                                    activePermissions={activePermissions}
+                                                />
                                             </AccordionContent>
                                         </AccordionItem>
 

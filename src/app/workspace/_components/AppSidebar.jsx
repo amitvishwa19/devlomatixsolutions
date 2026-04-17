@@ -13,6 +13,7 @@ import logo from '@/assets/logo/logo.png'
 import Image from 'next/image'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { getSidebarItems } from '@/constants/sidebar-items'
+import { useAccess } from '../[workspaceId]/system/access/_provider/accessProvider'
 
 
 const OPEN_GROUPS_KEY = "wa-sidebar-open-groups"
@@ -23,12 +24,28 @@ export default function AppSidebar() {
     const pathname = usePathname()
     const params = useParams()
     const { state, setOpen } = useSidebar()
+    const { activePermissions, previewRole } = useAccess() || {}
 
     const workspaceId = params?.workspaceId || "testid"
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
 
-    const navigation = getSidebarItems(workspaceId)
+    const rawNavigation = getSidebarItems(workspaceId)
+    
+    // Permission Filtering Logic
+    const navigation = React.useMemo(() => {
+        // If there are no active permissions and no preview role, we show everything (initial state/fallback)
+        if (!activePermissions?.length && !previewRole) return rawNavigation;
+
+        return rawNavigation.filter(item => {
+            const slug = item.url.split("/").pop();
+            if (!slug || slug === workspaceId) return true; // Always show home/parent
+            
+            const permissionValue = `navbar:${item.category}:${slug}`;
+            // Check if this navbar permission exists in the active permissions set
+            return activePermissions.some(p => p.value === permissionValue);
+        });
+    }, [rawNavigation, activePermissions, previewRole, workspaceId]);
 
     const groupedNavigation = navigation.reduce((acc, item) => {
         if (!acc[item.category]) {
