@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Plus, Pencil, Shield, ShieldAlert, X, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +24,13 @@ import { useSession } from "next-auth/react";
 import { GeneralPermissionForm } from "./GeneralPermissionForm";
 import { NavigationPermissionForm } from "./NavigationPermissionForm";
 import { PermissionInfo } from "./PermissionInfo";
+import { getSidebarItems } from "@/constants/sidebar-items";
 
 const defaultActionOptions = [
     { id: "view", label: "View", description: "Read-only access" },
     { id: "create", label: "Create", description: "Add new items" },
     { id: "edit", label: "Edit", description: "Modify existing items" },
     { id: "delete", label: "Delete", description: "Remove items" },
-    { id: "manage", label: "Manage", description: "Full control" },
-    { id: "export", label: "Export", description: "Export data" },
-    { id: "import", label: "Import", description: "Import data" },
 ];
 
 const colorOptions = [
@@ -63,6 +62,8 @@ export default function PermissionEditor({
     open: controlledOpen,
     onOpenChange: controlledOnOpenChange,
 }) {
+    const params = useParams();
+    const workspaceId = params.workspaceId;
     const [internalOpen, setInternalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -106,14 +107,29 @@ export default function PermissionEditor({
                 const colorId =
                     colorOptions.find((c) => c.color === editData.permissions?.view?.color)?.id || "emerald";
                 setSelectedColor(colorId);
+
+                // Load Navigation Permissions
+                const navItems = [];
+                Object.entries(editData.permissions).forEach(([actionId, perm]) => {
+                    if (perm?.value?.startsWith("navbar:") && perm?.status === true) {
+                        // value is "navbar:category:slug", we need "category:slug"
+                        const parts = perm.value.split(":");
+                        if (parts.length >= 3) {
+                            navItems.push(`${parts[1]}:${parts[2]}`);
+                        }
+                    }
+                });
+                setSelectedNavItems(navItems);
             } else {
                 setModuleName(category || "");
-                setSelectedActions([]);
+                // Pre-select core CRUD actions by default
+                setSelectedActions(['view', 'create', 'edit', 'delete']);
                 setDescription("");
                 setSelectedColor("emerald");
+                setSelectedNavItems([]);
             }
         }
-    }, [open, mode, category, editData]);
+    }, [open, mode, category, editData, workspaceId]);
 
     const handleActionToggle = (actionId) => {
         setSelectedActions((prev) =>
@@ -184,7 +200,7 @@ export default function PermissionEditor({
         const categorySlug = moduleName.toLowerCase().replace(/\s+/g, "_");
         const colorValue = colorOptions.find((c) => c.id === selectedColor)?.color || "#15803D";
 
-        const permissionsPayload = actionOptions.map((action) => ({
+        const actionPermissions = actionOptions.map((action) => ({
             // If editing and permission exists, keep its ID
             id: mode === "edit" && editData?.permissions[action.id]?.id
                 ? editData.permissions[action.id].id
@@ -196,6 +212,36 @@ export default function PermissionEditor({
             color: colorValue,
             status: selectedActions.includes(action.id),
         }));
+
+        // 2. Generate Navbar Permissions (ALL sidebar items)
+        const sidebarItems = getSidebarItems(workspaceId);
+        const navbarPermissions = [];
+
+        sidebarItems.forEach((item) => {
+            // Logic to get the same ID used in UI checkboxes
+            const isParent = item.type === 'parent';
+            const slug = item.url.split("/").pop();
+
+            // Skip items with no slug or current workspace id
+            if (!slug || slug === workspaceId) return;
+
+            const itemId = `${item.category}:${slug}`;
+            const dbValue = `navbar:${item.category}:${slug}`;
+
+            navbarPermissions.push({
+                id: mode === "edit" && editData?.permissions[dbValue]?.id
+                    ? editData.permissions[dbValue].id
+                    : `nav-${categorySlug}-${item.category}-${slug}-${Date.now()}`,
+                title: `Access ${item.title} (${item.category})`,
+                value: dbValue,
+                description: `UI access to ${item.title} in the ${item.category} group`,
+                category: categorySlug,
+                color: colorValue,
+                status: selectedNavItems.includes(itemId),
+            });
+        });
+
+        const permissionsPayload = [...actionPermissions, ...navbarPermissions];
 
         setLoading(true);
         toast.loading(mode === "edit" ? "Updating..." : "Creating...", { id: "permission-form" });
@@ -211,6 +257,7 @@ export default function PermissionEditor({
         setCustomActions([]);
         setNewActionName("");
         setNewActionDescription("");
+        setSelectedNavItems([]);
         setOpen(false);
         onClose?.();
     };

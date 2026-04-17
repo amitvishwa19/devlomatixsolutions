@@ -86,37 +86,56 @@ export function GeneralPermissionForm({
                         </div>
                     ))}
 
-                    <div className="col-span-2 p-5 rounded-md border border-dashed border-primary/20 bg-primary/[0.02] mt-2 relative overflow-hidden group">
-
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
-                                <Plus className="w-3 h-3 text-primary font-bold" />
+                    <div className="col-span-2 p-6 rounded-lg border border-dashed border-primary/30 bg-primary/5 mt-4 relative overflow-hidden group/extended transition-all hover:bg-primary/[0.08] hover:border-primary/50 text-left">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-md bg-primary/20 flex items-center justify-center border border-primary/20 shadow-inner group-hover/extended:scale-110 transition-transform">
+                                    <Plus className="w-4 h-4 text-primary font-bold" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <span className="text-xs font-bold text-primary block leading-none">Extended Action</span>
+                                    <span className="text-[10px] text-muted-foreground opacity-60 block leading-none">Append custom scoped operations</span>
+                                </div>
                             </div>
-                            <span className="text-xs text-primary/80">Extended Action</span>
                         </div>
-                        <div className="space-y-3 relative z-10">
-                            <Input
-                                value={newActionName}
-                                onChange={(e) => setNewActionName(e.target.value)}
-                                placeholder="Action identifier (e.g. Audit)"
-                                className="bg-background border-border/40 rounded-md text-xs"
-                            />
-                            <Input
-                                value={newActionDescription}
-                                onChange={(e) => setNewActionDescription(e.target.value)}
-                                placeholder="Contextual description"
-                                className="bg-background border-border/40 rounded-md text-xs"
-                            />
+                        
+                        <div className="space-y-4 relative z-10">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <Label className="text-[10px] opacity-50 ml-1">Action Name</Label>
+                                    <Input
+                                        value={newActionName}
+                                        onChange={(e) => setNewActionName(e.target.value)}
+                                        placeholder="e.g. Audit, Export"
+                                        className="bg-background/50 border-border/40 rounded-md text-xs h-9 focus:bg-background transition-colors"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[10px] opacity-50 ml-1">Context</Label>
+                                    <Input
+                                        value={newActionDescription}
+                                        onChange={(e) => setNewActionDescription(e.target.value)}
+                                        placeholder="Purpose of this action"
+                                        className="bg-background/50 border-border/40 rounded-md text-xs h-9 focus:bg-background transition-colors"
+                                    />
+                                </div>
+                            </div>
+                            
                             <Button
                                 type="button"
                                 size="sm"
                                 variant="primary"
                                 onClick={handleAddCustomAction}
                                 disabled={!newActionName.trim()}
-                                className="w-full rounded-md shadow-lg shadow-primary/10"
+                                className="w-full rounded-md shadow-xl shadow-primary/10 h-10 font-bold uppercase tracking-wider text-[10px]"
                             >
                                 Append Scoped Action
                             </Button>
+                        </div>
+
+                        {/* Decorative background element */}
+                        <div className="absolute -right-4 -bottom-4 opacity-5 pointer-events-none text-primary">
+                            <ShieldAlert className="w-24 h-24 rotate-12" />
                         </div>
                     </div>
                 </div>
