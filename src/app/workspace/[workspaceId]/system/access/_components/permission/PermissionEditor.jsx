@@ -21,6 +21,7 @@ import { useAction } from "@/hooks/use-action";
 import { upsertPermission } from "../../_action/upsert-permission";
 import { useSession } from "next-auth/react";
 import { GeneralPermissionForm } from "./GeneralPermissionForm";
+import { NavigationPermissionForm } from "./NavigationPermissionForm";
 
 const defaultActionOptions = [
     { id: "view", label: "View", description: "Read-only access" },
@@ -275,9 +276,7 @@ export default function PermissionEditor({
                             />
                         </TabsContent>
                         <TabsContent value="navigation" className="flex-1 overflow-hidden m-0 border-0">
-                            <div className="flex flex-col items-center justify-center h-[50vh] text-muted-foreground space-y-4">
-                                <p className="text-xs font-medium uppercase tracking-widest opacity-50">Navigation Permissions coming soon</p>
-                            </div>
+                            <NavigationPermissionForm />
                         </TabsContent>
                     </Tabs>
 
