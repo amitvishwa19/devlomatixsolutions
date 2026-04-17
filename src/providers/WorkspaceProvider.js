@@ -4,13 +4,24 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import axios from '@/utils/axios';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { useAccess as useGlobalAccess } from '@/providers/AccessProvider';
+import { useSession } from 'next-auth/react';
 
 const WorkspaceContext = createContext();
 
 export const WorkspaceProvider = ({ children }) => {
     const { workspaceId } = useParams();
-    const { permissions: globalPerms, isSuperAdmin } = useGlobalAccess() || {};
+    const { data: session } = useSession();
+    
+    // Derive isSuperAdmin from session roles
+    const sessionRoles = useMemo(() => session?.user?.roles || [], [session]);
+    const isSuperAdmin = useMemo(() => {
+        // Broad check for super admin across various naming conventions
+        return sessionRoles.some(r => 
+            r.title?.toLowerCase().replace(/\s/g, '-') === "super-admin" || 
+            r.title?.toLowerCase() === "super admin" ||
+            session?.user?.role === "SUPER_ADMIN"
+        );
+    }, [sessionRoles, session?.user?.role]);
 
     // --- Settings State (from legacy SettingProvider) ---
     const [settings, setSettings] = useState(null);
@@ -81,6 +92,7 @@ export const WorkspaceProvider = ({ children }) => {
         }
     };
 
+
     // --- Permission Resolution ---
     const resolveRolePermissions = useCallback((roleId) => {
         if (!roleId) return [];
@@ -106,10 +118,14 @@ export const WorkspaceProvider = ({ children }) => {
         if (previewRole) {
             return resolveRolePermissions(previewRole.id);
         }
-        // Fallback to real user roles logic
-        // We map global permissions (strings) to objects with a 'value' property for consistency
-        return globalPerms?.map(p => ({ value: p, status: true })) || [];
-    }, [previewRole, resolveRolePermissions, globalPerms]);
+        
+        // Fallback to real user roles from session
+        // Flatten all permissions from all roles in the session
+        const allSessionPerms = sessionRoles.flatMap(role => role.permissions || []);
+        
+        // Ensure we return the format expected by the system { value, ... }
+        return allSessionPerms;
+    }, [previewRole, resolveRolePermissions, sessionRoles]);
 
     useEffect(() => {
         fetchSettings();

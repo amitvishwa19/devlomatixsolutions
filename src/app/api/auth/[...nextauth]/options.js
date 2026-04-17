@@ -162,7 +162,11 @@ export const authOptions = {
                 const usr = await db.user.findUnique({
                     where: { email: token.email },
                     include: {
-                        roles: true
+                        roles: {
+                            include: {
+                                permissions: true
+                            }
+                        }
                     }
                 });
 
