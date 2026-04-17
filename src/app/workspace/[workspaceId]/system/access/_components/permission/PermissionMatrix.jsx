@@ -51,7 +51,7 @@ export const PermissionMatrix = () => {
  const { permissions, setPermissions, roles, users } = useAccess()
  const [searchQuery, setSearchQuery] = useState("");
  const [loading, setLoading] = useState(false);
- const { data: session } = useSession()
+ const { data: session, update } = useSession()
 
  const [editorModal, setEditorModal] = useState({
  isOpen: false,
@@ -171,6 +171,7 @@ export const PermissionMatrix = () => {
  onSuccess: (data) => {
  setLoading(false);
  toast.success('Permission updated successfully', { id:'update-permission'})
+ update(); // PRODUCTION GRADE: Refresh session data immediately
  },
  onError: (error) => {
  console.log(error)

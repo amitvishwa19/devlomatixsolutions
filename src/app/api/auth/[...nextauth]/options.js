@@ -157,8 +157,8 @@ export const authOptions = {
                 token.role = user.role;
             }
 
-            // Fetch roles and extra info if not in token or on sign in
-            if (!token.roles || trigger === "signIn") {
+            // Production Grade: Fetch roles and extra info on sign-in or when an update is triggered
+            if (!token.roles || trigger === "signIn" || trigger === "update") {
                 const usr = await db.user.findUnique({
                     where: { email: token.email },
                     include: {

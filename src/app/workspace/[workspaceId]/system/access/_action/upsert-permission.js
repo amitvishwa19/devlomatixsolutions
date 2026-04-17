@@ -24,7 +24,7 @@ const handler = async (data) => {
       // We only delete module-specific functional permissions. 
       // We NEVER delete shared 'navbar:' items during a module-specific save to avoid breaking other modules.
       const removeValues = toRemove
-        .filter(item => !item.value.startsWith('navbar:'))
+        .filter(item => !item.value.startsWith('navbar:') && !item.value.startsWith('navigation.'))
         .map(item => item.value);
 
       if (removeValues.length > 0) {

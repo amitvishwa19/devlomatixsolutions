@@ -123,7 +123,6 @@ export const WorkspaceProvider = ({ children }) => {
         // Flatten all permissions from all roles in the session
         const allSessionPerms = sessionRoles.flatMap(role => role.permissions || []);
         
-        console.log('[WorkspaceProvider] Resolved Permissions for Sidebar:', allSessionPerms.map(p => p.value));
         
         // Ensure we return the format expected by the system { value, ... }
         return allSessionPerms;

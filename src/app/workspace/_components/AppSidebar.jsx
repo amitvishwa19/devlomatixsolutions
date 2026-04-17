@@ -34,7 +34,6 @@ export default function AppSidebar() {
     const rawNavigation = getSidebarItems(workspaceId)
 
     const { data: session } = useSession()
-    console.log('session', session)
 
     const normalizePath = (url) => {
         if (!url) return null;
@@ -59,26 +58,33 @@ export default function AppSidebar() {
 
         // 4. Regular users see only items they have explicit permission for
         return rawNavigation.filter(item => {
-            const itemPath = normalizePath(item.url);
-            const slug = itemPath === '/' ? 'home' : itemPath.replace(/^\//, '').replace(/\//g, '.');
+            const relativeUrl = normalizePath(item.url);
+            const slug = relativeUrl === '/' ? 'home' : relativeUrl.replace(/^\//, '').replace(/\//g, '.');
             const navValue = `navigation.${slug}`;
+            const parentValue = `navigation.${item.category}.parent`;
 
             return activePermissions.some(p => 
                 p.status === true && 
-                (p.url === itemPath || p.value === navValue || p.value === item.permission || p.value?.startsWith(`navbar:`))
+                (p.url === relativeUrl || p.value === navValue || (item.type === 'parent' && p.value === parentValue) || p.value === item.permission || p.value?.startsWith(`navbar:`))
             );
         });
     }, [rawNavigation, activePermissions, previewRole, isSuperAdmin, session?.user?.role]);
 
     const groupedNavigation = navigation.reduce((acc, item) => {
+        // Skip the parent record in the reduced list if it somehow got through,
+        // we will look it up manually to ensure accuracy.
+        if (item.type === 'parent') return acc;
+
         if (!acc[item.category]) {
-            acc[item.category] = { parent: null, children: [] }
+            // Find the canonical header metadata from the full item list
+            const parentItem = rawNavigation.find(i => i.category === item.category && i.type === 'parent');
+            acc[item.category] = { 
+                parent: parentItem || { title: item.category, icon: 'layout-dashboard' }, 
+                children: [] 
+            }
         }
-        if (item.type === 'parent') {
-            acc[item.category].parent = item
-        } else {
-            acc[item.category].children.push(item)
-        }
+        
+        acc[item.category].children.push(item)
         return acc
     }, {})
 

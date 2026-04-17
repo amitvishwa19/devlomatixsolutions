@@ -29,7 +29,7 @@ const userFormSchema = z.object({
 });
 
 export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
-    const { data: session } = useSession()
+    const { data: session, update } = useSession()
     const [loading, setloading] = useState(false)
     const isEditing = !!user;
     const { departments } = useAccess()
@@ -79,6 +79,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
         onSuccess: (data) => {
             onSubmit(data.user)
             handleOpenClose()
+            update(); // PRODUCTION GRADE: Refresh session data immediately
             toast.success(`${user ? 'User updated successfully' : 'User created successfully'}`, { id: 'new-user' })
         },
         onError: (error) => {

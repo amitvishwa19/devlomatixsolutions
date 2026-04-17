@@ -37,7 +37,7 @@ const roleSchema = z.object({
 
 export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
     const { permissions, roles, resolveRolePermissions } = useAccess();
-    const { data: session } = useSession();
+    const { data: session, update } = useSession();
     const [loading, setLoading] = useState(false);
 
     const form = useForm({
@@ -97,6 +97,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
         onSuccess: (data) => {
             console.log('Role from server action', data.role)
             toast.success("Role saved", { id: "role-data" });
+            update(); // PRODUCTION GRADE: Refresh session data immediately
             onSubmit?.(data?.role);
             handleOpenChange()
         },
