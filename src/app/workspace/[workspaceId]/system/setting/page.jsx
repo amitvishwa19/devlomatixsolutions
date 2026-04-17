@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SettingProvider } from '@/providers/SettingProvider';
+import { WorkspaceProvider } from '@/providers/WorkspaceProvider';
 import { GeneralSettings } from './_components/GeneralSettings';
 import { SecuritySettings } from './_components/SecuritySettings';
 import { NotificationSettings } from './_components/NotificationSettings';
@@ -15,7 +15,7 @@ import { Settings, Shield, Bell, Palette, AlertTriangle, Puzzle, Cpu, ShieldChec
 
 export default function SettingPage() {
     return (
-        <SettingProvider>
+        <WorkspaceProvider>
             <div className="p-2 space-y-4 animate-fade-in">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/10 pb-8">
@@ -130,6 +130,6 @@ export default function SettingPage() {
 
 
             </div>
-        </SettingProvider>
+        </WorkspaceProvider>
     );
 }

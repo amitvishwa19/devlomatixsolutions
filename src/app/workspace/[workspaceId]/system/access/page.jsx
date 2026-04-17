@@ -13,7 +13,7 @@ import Permissions from'./_components/permission/Permissions'
 import { PermissionMatrix } from'./_components/permission/PermissionMatrix'
 import { authorize } from'@/lib/authorize'
 import ProtectedRoute from'@/components/global/ProtectedRoute'
-import { useAccess } from'./_provider/accessProvider'
+import { useAccess } from '@/providers/WorkspaceProvider'
 import { Loader2, MonitorSmartphone, X } from 'lucide-react'
 import AccessSkeleton from'./_components/AccessSkeleton'
 

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Users, Edit, Trash2, MonitorSmartphone } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { titleCaseLabel } from '@/utils/functions';
-import { useAccess } from '../../_provider/accessProvider';
+import { useAccess } from '@/providers/WorkspaceProvider';
 
 export function RoleCard({ role, onEdit, onDelete }) {
   const { setPreviewRole } = useAccess();

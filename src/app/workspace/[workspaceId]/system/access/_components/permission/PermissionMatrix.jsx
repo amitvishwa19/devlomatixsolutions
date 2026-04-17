@@ -7,7 +7,7 @@ import { StatsCard } from"./StatsCard.jsx";
 import { PermissionRow } from"./PermissionRow.jsx";
 import PermissionEditor from"./PermissionEditor.jsx";
 import { DeleteConfirmDialog } from"./DeleteConfirmDialog.jsx";
-import { useAccess } from"../../_provider/accessProvider.js";
+import { useAccess } from "@/providers/WorkspaceProvider";
 import { useAction } from"@/hooks/use-action.js";
 import { upsertPermission } from"../../_action/upsert-permission.js";
 import { useSession } from"next-auth/react";

@@ -1,5 +1,4 @@
 import React from'react'
-import { AccessProvider } from'./_provider/accessProvider'
 
 
 export const metadata = {
@@ -14,10 +13,8 @@ export const metadata = {
 
 export default async function AccessLayout({ children }) {
  return (
- <AccessProvider>
  <div>
  {children}
  </div>
- </AccessProvider>
  )
 }

@@ -13,7 +13,8 @@ import logo from '@/assets/logo/logo.png'
 import Image from 'next/image'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { getSidebarItems } from '@/constants/sidebar-items'
-import { useAccess } from '../[workspaceId]/system/access/_provider/accessProvider'
+import { useAccess } from '@/providers/WorkspaceProvider'
+import { useSession } from 'next-auth/react'
 
 
 const OPEN_GROUPS_KEY = "wa-sidebar-open-groups"
@@ -24,28 +25,29 @@ export default function AppSidebar() {
     const pathname = usePathname()
     const params = useParams()
     const { state, setOpen } = useSidebar()
-    const { activePermissions, previewRole } = useAccess() || {}
+    const { activePermissions, previewRole, isSuperAdmin } = useAccess() || {}
 
     const workspaceId = params?.workspaceId || "testid"
     const [openGroups, setOpenGroups] = useState({ Workspace: true })
     const [hydrated, setHydrated] = useState(false)
 
     const rawNavigation = getSidebarItems(workspaceId)
-    
+
+    const { data: session } = useSession()
+    console.log('session', session)
+
     // Permission Filtering Logic
     const navigation = React.useMemo(() => {
-        // If there are no active permissions and no preview role, we show everything (initial state/fallback)
-        if (!activePermissions?.length && !previewRole) return rawNavigation;
+        // 1. Super admins see everything
+        // 2. If no preview role and no permissions are loaded yet, show nothing (strict)
+        if (isSuperAdmin) return rawNavigation;
+        if (!activePermissions?.length && !previewRole) return [];
 
         return rawNavigation.filter(item => {
-            const slug = item.url.split("/").pop();
-            if (!slug || slug === workspaceId) return true; // Always show home/parent
-            
-            const permissionValue = `navbar:${item.category}:${slug}`;
-            // Check if this navbar permission exists in the active permissions set
-            return activePermissions.some(p => p.value === permissionValue);
+            // Strict filtering: User must have the explicit navbar permission
+            return activePermissions.some(p => p.value === item.permission);
         });
-    }, [rawNavigation, activePermissions, previewRole, workspaceId]);
+    }, [rawNavigation, activePermissions, previewRole, isSuperAdmin]);
 
     const groupedNavigation = navigation.reduce((acc, item) => {
         if (!acc[item.category]) {

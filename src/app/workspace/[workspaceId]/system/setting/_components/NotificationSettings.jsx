@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from'react';
-import { useSettings } from '@/providers/SettingProvider';
+import { useSettings } from '@/providers/WorkspaceProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from'@/components/ui/card';
 import { Switch } from'@/components/ui/switch';
 import { Label } from'@/components/ui/label';

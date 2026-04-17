@@ -12,13 +12,14 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
-import { useAccess } from "../../_provider/accessProvider";
+import { useAccess } from "@/providers/WorkspaceProvider";
 import { upsertRole } from "../../_action/upsert-role";
 import { useSession } from "next-auth/react";
 import { useAction } from "@/hooks/use-action";
 import { SecurityFlow } from "../shared/SecurityFlow";
 import { GeneralRoleForm } from "./GeneralRoleForm";
 import { RoleInfo } from "./RoleInfo";
+import { NavigationAccessForm } from "./NavigationAccessForm";
 
 /* ------------------ Schema ------------------ */
 
@@ -227,12 +228,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                 </div>
                                             </AccordionTrigger>
                                             <AccordionContent className="px-0 pb-0">
-                                                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground space-y-4">
-                                                    <div className="p-4 rounded-full bg-muted/20 border border-border/50 text-primary animate-pulse">
-                                                        <Check className="w-8 h-8 opacity-40" />
-                                                    </div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">Navigation Access coming soon</p>
-                                                </div>
+                                                <NavigationAccessForm form={form} />
                                             </AccordionContent>
                                         </AccordionItem>
 

@@ -15,7 +15,7 @@ import { useAction } from '@/hooks/use-action';
 import { upsertUser } from '../../_action/upsert-user';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
-import { useAccess } from '../../_provider/accessProvider';
+import { useAccess } from '@/providers/WorkspaceProvider';
 import { DepartmentMultiSelect } from './DepartmentMultiSelect';
 import { RoleSelect } from './RoleSelect';
 import { MultiSelectDropDown } from '@/components/global/MultiSelectDropDown';

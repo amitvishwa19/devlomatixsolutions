@@ -14,7 +14,7 @@ import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AccessProvider } from "@/providers/AccessProvider";
-import { SettingProvider } from "@/providers/SettingProvider";
+import { WorkspaceProvider } from "@/providers/WorkspaceProvider";
 import CookieConsent from "@/components/global/CookieConsent";
 
 
@@ -70,12 +70,12 @@ export default async function RootLayout({ children }) {
                     {/* <SocketProvider> */}
                     <QueryProvider>
                         <AppProvider>
-                            <SettingProvider>
                                 <AppThemeProvider>
                                     <ThemeProvider>
                                         <AuthProvider>
 
                                         <AccessProvider user={user}>
+                                            <WorkspaceProvider>
                                             <Providers>
                                                 {/* <OrgModalProvider /> */}
 
@@ -83,12 +83,12 @@ export default async function RootLayout({ children }) {
                                                 <CookieConsent />
 
                                             </Providers>
+                                            </WorkspaceProvider>
                                         </AccessProvider>
 
                                     </AuthProvider>
                                 </ThemeProvider>
                             </AppThemeProvider>
-                            </SettingProvider>
                         </AppProvider>
                     </QueryProvider>
                     {/* </SocketProvider> */}
