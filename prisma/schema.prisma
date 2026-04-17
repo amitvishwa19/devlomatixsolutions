@@ -232,6 +232,8 @@ model Permission {
   color       String?  @default("#FFFF")
   description String
   category    String?
+  type        String?  @default("ACTION")
+  url         String?
   status      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -19,7 +19,7 @@ import { useAction } from "@/hooks/use-action";
 import { SecurityFlow } from "../shared/SecurityFlow";
 import { GeneralRoleForm } from "./GeneralRoleForm";
 import { RoleInfo } from "./RoleInfo";
-import { NavigationAccessForm } from "./NavigationAccessForm";
+import { NavigationPermissionForm } from "../permission/NavigationPermissionForm";
 
 /* ------------------ Schema ------------------ */
 
@@ -100,8 +100,9 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
             onSubmit?.(data?.role);
             handleOpenChange()
         },
-        onError: () => {
-            toast.error("Failed to save role", { id: "role-data" });
+        onError: (error) => {
+            const errorMsg = typeof error === 'string' ? error : (error?.message || "Failed to save role");
+            toast.error(errorMsg, { id: "role-data" });
             setLoading(false);
         },
     });
@@ -228,7 +229,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                 </div>
                                             </AccordionTrigger>
                                             <AccordionContent className="px-0 pb-0">
-                                                <NavigationAccessForm form={form} />
+                                                <NavigationPermissionForm form={form} />
                                             </AccordionContent>
                                         </AccordionItem>
 

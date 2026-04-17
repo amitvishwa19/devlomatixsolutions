@@ -46,6 +46,8 @@ const handler = async (data) => {
             title: item?.title,
             description: item?.description,
             category: item?.category,
+            type: item?.type || "general",
+            url: item?.url || null,
             status: item.status,
             color: item.color
           },
@@ -54,6 +56,8 @@ const handler = async (data) => {
             value: permissionValue,
             description: item?.description,
             category: item?.category,
+            type: item?.type || "general",
+            url: item?.url || null,
             status: item.status,
             color: item.color
           }

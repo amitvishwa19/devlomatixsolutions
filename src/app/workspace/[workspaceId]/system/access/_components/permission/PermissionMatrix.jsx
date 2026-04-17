@@ -23,9 +23,10 @@ const formatCategoryName = (category) => {
 };
 
 const getActionFromValue = (value) => {
- if (typeof value !=="string") return null;
- if (!value.includes(".")) return null;
- return value.split(".")[1] || null;
+  if (typeof value !== "string") return null;
+  if (value.startsWith("navigation.")) return value; // Return full value for navigation
+  if (!value.includes(".")) return null;
+  return value.split(".")[1] || null;
 };
 
 // Sample data
@@ -112,7 +113,8 @@ export const PermissionMatrix = () => {
  const action = getActionFromValue(permission.value);
  if (!action) return;
 
- grouped[category].permissions[action] = permission;
+ const key = permission.value.startsWith("navigation.") ? permission.value : action;
+ grouped[category].permissions[key] = permission;
  });
 
  return Object.values(grouped);

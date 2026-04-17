@@ -65,6 +65,12 @@ export default function PermissionEditor({
 }) {
     const params = useParams();
     const workspaceId = params.workspaceId;
+
+    const normalizePath = (url) => {
+        if (!url) return null;
+        // Strip /workspace/[id] prefix
+        return url.replace(/^\/workspace\/[^/]+/, '') || '/';
+    };
     const [internalOpen, setInternalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -112,11 +118,16 @@ export default function PermissionEditor({
                 // Load Navigation Permissions
                 const navItems = [];
                 Object.entries(editData.permissions).forEach(([actionId, perm]) => {
-                    if (perm?.value?.startsWith("navbar:") && perm?.status === true) {
-                        // value is "navbar:category:slug", we need "category:slug"
-                        const parts = perm.value.split(":");
-                        if (parts.length >= 3) {
-                            navItems.push(`${parts[1]}:${parts[2]}`);
+                    const isNav = perm?.value?.startsWith("navbar:") || perm?.value?.startsWith("navigation.");
+                    if (isNav && perm?.status === true) {
+                        // Support both legacy "navbar:category:slug" and new "navigation.slug"
+                        if (perm.value.startsWith("navigation.")) {
+                            navItems.push(perm.value); // Use full value for matching
+                        } else {
+                            const parts = perm.value.split(":");
+                            if (parts.length >= 3) {
+                                navItems.push(`${parts[1]}:${parts[2]}`);
+                            }
                         }
                     }
                 });
@@ -201,6 +212,7 @@ export default function PermissionEditor({
             description: description || `${action.label} permission for ${formatCategoryName(categorySlug)}`,
             category: categorySlug,
             color: colorValue,
+            type: "general",
             status: selectedActions.includes(action.id),
         }));
 
@@ -208,21 +220,27 @@ export default function PermissionEditor({
         const navbarPermissions = [];
 
         sidebarItems.forEach((item) => {
-            const slug = item.url.split("/").pop();
-            if (!slug || slug === workspaceId) return;
-            const itemId = `${item.category}:${slug}`;
-            const dbValue = `navbar:${item.category}:${slug}`;
+            const relativeUrl = normalizePath(item.url);
+            const slug = relativeUrl === '/' ? 'home' : relativeUrl.replace(/^\//, '').replace(/\//g, '.');
+            const dbValue = `navigation.${slug}`;
 
             navbarPermissions.push({
                 id: mode === "edit" && editData?.permissions[dbValue]?.id
                     ? editData.permissions[dbValue].id
-                    : `nav-${categorySlug}-${item.category}-${slug}-${Date.now()}`,
-                title: `Access ${item.title} (${item.category})`,
+                    : `nav-${categorySlug}-${slug}-${Date.now()}`,
+                title: `Navigation ${item.title}`,
                 value: dbValue,
-                description: `UI access to ${item.title} in the ${item.category} group`,
+                description: `Access to ${item.title} in the ${item.category} group`,
                 category: categorySlug,
                 color: colorValue,
-                status: selectedNavItems.includes(itemId),
+                type: "navigation",
+                url: relativeUrl,
+                status: selectedNavItems.includes(dbValue) || selectedNavItems.some(id => {
+                    // Backwards compatibility check for old IDs like "Workspace:chats"
+                    if (typeof id !== 'string') return false;
+                    const parts = id.split(':');
+                    return parts.length >= 2 && parts[1] === slug;
+                }),
             });
         });
 
@@ -234,8 +252,8 @@ export default function PermissionEditor({
             toast.error("Module name required");
             return;
         }
-        if (selectedActions.length === 0) {
-            toast.error("Select at least one action");
+        if (selectedActions.length === 0 && selectedNavItems.length === 0) {
+            toast.error("Select at least one action or navigation item");
             return;
         }
 
@@ -260,7 +278,7 @@ export default function PermissionEditor({
         onClose?.();
     };
 
-    const isValid = moduleName.trim() && selectedActions.length > 0;
+    const isValid = moduleName.trim() && (selectedActions.length > 0 || selectedNavItems.length > 0);
     const categorySlug = moduleName.toLowerCase().replace(/\s+/g, "_");
 
     return (
@@ -392,7 +410,7 @@ export default function PermissionEditor({
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="px-0 pb-0">
-                                    <SecurityFlow 
+                                    <SecurityFlow
                                         activePermissions={getPermissionsPayload().filter(p => p.status)}
                                     />
                                 </AccordionContent>

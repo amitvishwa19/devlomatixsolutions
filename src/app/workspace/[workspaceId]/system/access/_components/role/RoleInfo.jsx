@@ -90,7 +90,7 @@ export function RoleInfo({ form }) {
                                             type="button"
                                             onClick={() => field.onChange(c)}
                                             className={`w-6 h-6 rounded-md transition-all duration-300 relative group ${selected
-                                                ? "ring-2 ring-primary ring-offset-4 ring-offset-background scale-110 shadow-lg"
+                                                ? "ring-2 ring-primary ring-offset-1 ring-offset-background scale-110 shadow-lg"
                                                 : "hover:scale-110 opacity-60 hover:opacity-100"
                                                 }`}
                                             style={{ backgroundColor: c }}

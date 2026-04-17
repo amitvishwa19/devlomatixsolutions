@@ -36,27 +36,39 @@ export default function AppSidebar() {
     const { data: session } = useSession()
     console.log('session', session)
 
+    const normalizePath = (url) => {
+        if (!url) return null;
+        // Strip /workspace/[id] prefix to get a stable path for matching
+        return url.replace(/^\/workspace\/[^/]+/, '') || '/';
+    };
+
     // Permission Filtering Logic
     const navigation = React.useMemo(() => {
         // 1. If we are in simulation mode (previewRole active), we ALWAYS filter strictly
-        // even if the user is a Super Admin. This allows previewing restrictions.
         if (previewRole) {
             return rawNavigation.filter(item => {
-                return activePermissions.some(p => p.value === item.permission);
+                return (previewRole?.permissions || []).some(p => 
+                    p.status === true && 
+                    (p.url === normalizePath(item.url) || p.value === item.permission)
+                );
             });
         }
 
-        // 2. Real Super admins see everything if NOT in simulator
-        if (isSuperAdmin) return rawNavigation;
-
-        // 3. Fallback: If no permissions are loaded yet and we aren't super admin, show nothing
-        if (!activePermissions?.length) return [];
+        // 3. Admin sees everything in their workspace
+        if (session?.user?.role === 'ADMIN') return rawNavigation;
 
         // 4. Regular users see only items they have explicit permission for
         return rawNavigation.filter(item => {
-            return activePermissions.some(p => p.value === item.permission);
+            const itemPath = normalizePath(item.url);
+            const slug = itemPath === '/' ? 'home' : itemPath.replace(/^\//, '').replace(/\//g, '.');
+            const navValue = `navigation.${slug}`;
+
+            return activePermissions.some(p => 
+                p.status === true && 
+                (p.url === itemPath || p.value === navValue || p.value === item.permission || p.value?.startsWith(`navbar:`))
+            );
         });
-    }, [rawNavigation, activePermissions, previewRole, isSuperAdmin]);
+    }, [rawNavigation, activePermissions, previewRole, isSuperAdmin, session?.user?.role]);
 
     const groupedNavigation = navigation.reduce((acc, item) => {
         if (!acc[item.category]) {
