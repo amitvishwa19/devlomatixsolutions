@@ -12,6 +12,7 @@ import logo from '@/assets/logo/logo.png'
 import Image from 'next/image'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
+
 const OPEN_GROUPS_KEY = "wa-sidebar-open-groups"
 
 
