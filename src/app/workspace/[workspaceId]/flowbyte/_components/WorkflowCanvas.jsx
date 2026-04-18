@@ -7,6 +7,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import WorkflowNode from "./WorkflowNode";
+import WorkflowEdge from "./WorkflowEdge";
 import NodePanel from "./NodePanel";
 import NodeDetailPanel from "./NodeDetailPanel";
 import TemplateGallery from "./TemplateGallery";
@@ -23,6 +24,7 @@ import { saveWorkflowAction, saveAsTemplateAction, updateScheduleAction } from "
 import { useParams } from "next/navigation";
 
 const nodeTypes = { workflowNode: WorkflowNode };
+const edgeTypes = { workflowEdge: WorkflowEdge };
 
 const initialNodes = [
   { id: "trigger-placeholder", type: "workflowNode", position: { x: 300, y: 250 }, data: { label: "Add Trigger", type: "trigger-placeholder", subtitle: "Click to select a trigger", status: "idle" } },
@@ -89,65 +91,42 @@ function WorkflowCanvasInner({ workflowId, workflowName: controlledName, initial
     const sourceStatus = (sourceNode?.data)?.status;
     const targetStatus = (targetNode?.data)?.status;
 
+    // Determine edge status for animation
+    let edgeStatus = 'idle';
+    if (sourceStatus === "success" && targetStatus === "running") edgeStatus = 'running';
+    else if (sourceStatus === "success" && targetStatus === "success") edgeStatus = 'success';
+    else if (sourceStatus === "error" || targetStatus === "error") edgeStatus = 'error';
+
     if (isWaitingForChat) {
       return {
         ...edge,
+        type: 'workflowEdge',
+        data: { status: 'running' },
         animated: true,
         style: {
-          stroke: "hsl(var(--chart-4))",
+          stroke: "var(--chart-4)",
           strokeWidth: 3,
           strokeDasharray: "6 6",
-          filter: "drop-shadow(0 0 4px hsl(var(--chart-4) / 0.5))",
+          filter: "drop-shadow(0 0 4px var(--chart-4))",
         },
       };
     }
-    if (sourceStatus === "success" && targetStatus === "running") {
-      return {
-        ...edge,
-        animated: true,
-        style: {
-          stroke: "hsl(var(--primary))",
+
+    return {
+      ...edge,
+      type: 'workflowEdge',
+      data: { status: edgeStatus },
+      selected: edge.id === selectedEdge,
+      // Pass standard styles for fallback or static states
+      style: {
+        ...edge.style,
+        ...(edge.id === selectedEdge ? {
+          stroke: "var(--destructive)",
           strokeWidth: 3,
-          strokeDasharray: "none",
-          filter: "drop-shadow(0 0 6px hsl(var(--primary) / 0.6))",
-        },
-      };
-    }
-    if (sourceStatus === "success" && targetStatus === "success") {
-      return {
-        ...edge,
-        animated: false,
-        style: {
-          stroke: "hsl(var(--chart-2))",
-          strokeWidth: 2.5,
-          strokeDasharray: "none",
-        },
-      };
-    }
-    if (sourceStatus === "error" || targetStatus === "error") {
-      return {
-        ...edge,
-        animated: false,
-        style: {
-          stroke: "hsl(var(--destructive))",
-          strokeWidth: 2.5,
-          strokeDasharray: "none",
-        },
-      };
-    }
-    // Highlight selected edge
-    if (edge.id === selectedEdge) {
-      return {
-        ...edge,
-        style: {
-          ...edge.style,
-          stroke: "hsl(var(--destructive))",
-          strokeWidth: 3,
-          filter: "drop-shadow(0 0 6px hsl(var(--destructive) / 0.5))",
-        },
-      };
-    }
-    return edge;
+          filter: "drop-shadow(0 0 6px var(--destructive))",
+        } : {})
+      }
+    };
   });
 
 
@@ -171,7 +150,7 @@ function WorkflowCanvasInner({ workflowId, workflowName: controlledName, initial
   }, [setNodes]);
 
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({ ...params, type: "smoothstep", animated: true }, eds)),
+    (params) => setEdges((eds) => addEdge({ ...params, type: "workflowEdge", animated: true }, eds)),
     [setEdges]
   );
 
@@ -491,9 +470,10 @@ function WorkflowCanvasInner({ workflowId, workflowName: controlledName, initial
           onDragOver={onDragOver}
           onDrop={onDrop}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           fitViewOptions={{ padding: 0.3 }}
-          defaultEdgeOptions={{ type: "smoothstep", animated: true, style: { stroke: "hsl(var(--n8n-connection))", strokeWidth: 2, strokeDasharray: "8 4" } }}
+          defaultEdgeOptions={{ type: "workflowEdge", animated: true, style: { stroke: "hsl(var(--n8n-connection))", strokeWidth: 2, strokeDasharray: "8 4" } }}
         >
           {/* Floating delete button for selected edge */}
           {selectedEdge && (() => {

@@ -176,7 +176,7 @@ html {
 }
 
 .react-flow__edge-path {
-  stroke: hsl(var(--n8n-connection)) !important;
+  stroke: hsl(var(--n8n-connection));
   stroke-width: 2.5;
   stroke-dasharray: 6 6;
   filter: drop-shadow(0 0 4px hsl(var(--n8n-connection) / 0.3));
