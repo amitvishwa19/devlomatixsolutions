@@ -291,24 +291,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
                 </div>
                 <div className="flex items-center gap-3">
 
-                    <div className="flex items-center bg-background rounded-md p-1 border border-border shadow-soft">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewMode('list')}
-                            className={`px-3 rounded-md transition-all  mr-1 ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                        >
-                            <List className="w-3.5 h-3.5 " /> List
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewMode('grid')}
-                            className={`px-3 rounded-md transition-all  ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                        >
-                            <LayoutGrid className="w-3.5 h-3.5 " /> Grid
-                        </Button>
-                    </div>
+
 
                     <Button
                         onClick={() => onOpen('addCredential', { workspaceId, onApply: fetchCredentials })}
@@ -332,7 +315,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
                                 onClick={() => handleTabChange(tab.id)}
                             >
                                 <div className="flex items-center gap-2">
-                                    <DynamicIcon name={tab.icon} className="w-4 h-4" />
+                                    <DynamicIcon name={tab.icon} className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-foreground' : 'text-primary'}`} />
                                     {tab.name}
                                 </div>
                             </Button>
@@ -482,18 +465,17 @@ export default function SystemCredentials({ params: paramsPromise }) {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
 
-                                                        <div className="flex flex-col">
-                                                            <CardTitle className="text-sm font-bold tracking-tight uppercase flex items-center gap-2 text-foreground">
-                                                                {cred.platform === 'GEMINI' ? <Activity className="w-4 h-4 text-purple-500" /> : <Server className="w-4 h-4 text-primary" />}
-                                                                {cred.platform}
-                                                                <Badge variant="outline" className={`ml-1 text-[8px] h-4 px-1 leading-none tracking-widest ${meta.env === 'PROD' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
-                                                                    {meta.env}
-                                                                </Badge>
-                                                            </CardTitle>
-                                                            <CardDescription className="text-[10px] mt-1 font-semibold truncate max-w-[200px]">
-                                                                {cred.profileName || cred.profile || "Core Credential"}
-                                                            </CardDescription>
+                                                        <div>
+                                                            <div className='flex items-center gap-2'>
+                                                                <div className="text-sm font-bold tracking-tight uppercase flex items-center gap-2 text-foreground">{cred.platform}</div>
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    ({cred.profileName || cred.profile})
+                                                                </div>
+                                                            </div>
+
                                                         </div>
+
+
                                                     </div>
                                                     {viewMode !== 'list' && (
                                                         <div className="flex flex-col items-end gap-2">
