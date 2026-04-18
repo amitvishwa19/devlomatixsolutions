@@ -890,6 +890,7 @@ model Workflow {
   updatedAt   DateTime            @updatedAt
   definition  Json?
   status      WorkflowStatus      @default(DRAFT)
+  viewport    Json?
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   executions  WorkflowExecution[]
   memories    WorkflowMemory[]

@@ -8,7 +8,7 @@ export default async function WorkflowIdPage({ params }) {
 
     if (workflowId === "new") {
         return (
-            <div className='flex h-[calc(100vh-145px)] w-full overflow-hidden bg-background relative'>
+            <div className='flex h-[calc(100vh-70px)] w-full overflow-hidden bg-background relative'>
                 <WorkflowCanvas
                     workflowId="new"
                     initialName="My Workflow"
@@ -36,6 +36,7 @@ export default async function WorkflowIdPage({ params }) {
                 initialName={workflow.name}
                 loadedNodes={workflow.nodes || []}
                 loadedEdges={workflow.edges || []}
+                initialViewport={workflow.viewport}
             />
         </div>
     )
