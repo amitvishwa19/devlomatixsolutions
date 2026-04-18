@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useRef, useEffect } from "react";
 import {
-  ReactFlow, addEdge, useNodesState, useEdgesState, Controls, MiniMap,
+  ReactFlow, addEdge, useNodesState, useEdgesState, Controls,
   Background, BackgroundVariant, Panel, useReactFlow, ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -499,7 +499,6 @@ function WorkflowCanvasInner({ workflowId, workflowName: controlledName, initial
           })()}
           <Background variant={BackgroundVariant.Dots} gap={16} size={1.5} color="hsl(var(--n8n-canvas-dot))" />
           <Controls position="bottom-right" showInteractive={false} />
-          <MiniMap position="top-right" style={{ background: 'hsl(var(--card))' }} maskColor="hsl(var(--muted) / 0.7)" nodeColor="hsl(var(--primary))" nodeBorderRadius={4} />
 
           <Panel position="bottom-left">
             <div className="flex items-center gap-2">

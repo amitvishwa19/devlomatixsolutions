@@ -9,7 +9,7 @@ export default async function WorkflowIdPage({ params }) {
     if (workflowId === "new") {
         return (
             <div className='flex h-[calc(100vh-145px)] w-full overflow-hidden bg-background relative'>
-                <WorkflowCanvas 
+                <WorkflowCanvas
                     workflowId="new"
                     initialName="My Workflow"
                     loadedNodes={[]}
@@ -30,8 +30,8 @@ export default async function WorkflowIdPage({ params }) {
     }
 
     return (
-        <div className='flex h-[calc(100vh-145px)] w-full overflow-hidden bg-background relative'>
-            <WorkflowCanvas 
+        <div className='flex h-[calc(100vh-70px)] w-full overflow-hidden bg-background relative'>
+            <WorkflowCanvas
                 workflowId={workflow.id}
                 initialName={workflow.name}
                 loadedNodes={workflow.nodes || []}
