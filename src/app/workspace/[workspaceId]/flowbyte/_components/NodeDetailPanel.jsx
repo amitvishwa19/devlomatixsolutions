@@ -6,6 +6,136 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import CredentialSelector from "./CredentialSelector";
 
+const CONFIG_PANELS = {
+    http: HttpConfig,
+    code: CodeConfig,
+    if: IfConfig,
+    switch: SwitchConfig,
+    set: SetConfig,
+    wait: WaitConfig,
+    slack: SlackConfig,
+    discord: SlackConfig,
+    telegram: SlackConfig,
+    email: EmailConfig,
+    "email-trigger": EmailConfig,
+    database: DatabaseConfig,
+    postgres: DatabaseConfig,
+    mysql: DatabaseConfig,
+    filter: FilterConfig,
+    loop: LoopConfig,
+    "error-trigger": ErrorTriggerConfig,
+    "google-sheets": GoogleSheetsConfig,
+    "ai-agent": AgentConfig,
+    webhook: WebhookConfig,
+};
+
+function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
+    const data = node.data;
+    const nodeType = data.type;
+    const [activeTab, setActiveTab] = useState(executionResult ? "output" : "params");
+    const [config, setConfig] = useState(data.config || {});
+
+    const handleConfigChange = useCallback((newConfig) => {
+        setConfig(newConfig);
+        onUpdateConfig(node.id, newConfig);
+    }, [node.id, onUpdateConfig]);
+
+    const ConfigPanel = CONFIG_PANELS[nodeType];
+
+    const tabs = [
+        { id: "params", label: "Parameters" },
+        { id: "input", label: "Input", hasData: !!executionResult },
+        { id: "output", label: "Output", hasData: !!executionResult },
+    ];
+
+    return (
+        <div className="absolute top-12 right-0 w-80 h-[calc(100%-3rem)] bg-card border-l border-border overflow-y-auto shadow-lg flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                    <h3 className="font-semibold text-sm truncate text-foreground">{data.label}</h3>
+                    {executionResult && (
+                        <span className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${executionResult.status === "success" ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
+                            }`}>
+                            {executionResult.status === "success" ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
+                            {executionResult.status === "success" ? "Success" : "Error"}
+                        </span>
+                    )}
+                </div>
+                <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">×</button>
+            </div>
+
+            {executionResult && (
+                <div className="px-4 py-2 border-b border-border flex items-center gap-4 text-[11px] text-muted-foreground bg-muted/30 shrink-0">
+                    <span>Duration: <strong className="text-foreground">{executionResult.duration}ms</strong></span>
+                    <span>Type: <strong className="text-foreground">{executionResult.nodeType}</strong></span>
+                </div>
+            )}
+
+            {/* Tabs */}
+            <div className="flex border-b border-border shrink-0">
+                {tabs.map((tab) => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors relative ${activeTab === tab.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                            }`}>
+                        <span className="flex items-center justify-center gap-1">
+                            {tab.label}
+                            {tab.hasData && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+                        </span>
+                        {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+                    </button>
+                ))}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {activeTab === "params" && (
+                    <div>
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Configuration</label>
+                        <div className="mt-2 space-y-3">
+                            {ConfigPanel ? (
+                                <ConfigPanel config={config} onChange={handleConfigChange} />
+                            ) : (
+                                <div className="p-3 bg-muted rounded-md text-foreground">
+                                    <p className="text-xs text-muted-foreground">No configuration needed for this node type.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === "input" && (
+                    executionResult ? <JsonBlock data={executionResult.input} label="Input Data" /> : (
+                        <div className="text-center py-8">
+                            <ArrowDownToLine className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                            <p className="text-xs text-muted-foreground">Execute workflow to see input data</p>
+                        </div>
+                    )
+                )}
+
+                {activeTab === "output" && (
+                    executionResult ? (
+                        <div className="space-y-3">
+                            {executionResult.error && (
+                                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                                    <p className="text-xs font-medium text-destructive mb-1">Error</p>
+                                    <p className="text-xs text-destructive/80 font-mono">{executionResult.error}</p>
+                                </div>
+                            )}
+                            {Object.keys(executionResult.output).length > 0 && <JsonBlock data={executionResult.output} label="Output Data" />}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <ArrowUpFromLine className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                            <p className="text-xs text-muted-foreground">Execute workflow to see output data</p>
+                        </div>
+                    )
+                )}
+            </div>
+        </div>
+    );
+}
+
 function JsonBlock({ data, label }) {
     const [expanded, setExpanded] = useState(true);
     const json = JSON.stringify(data, null, 2);
@@ -491,134 +621,6 @@ function WebhookConfig({ config, onChange }) {
     );
 }
 
-const CONFIG_PANELS = {
-    http: HttpConfig,
-    code: CodeConfig,
-    if: IfConfig,
-    switch: SwitchConfig,
-    set: SetConfig,
-    wait: WaitConfig,
-    slack: SlackConfig,
-    discord: SlackConfig,
-    telegram: SlackConfig,
-    email: EmailConfig,
-    "email-trigger": EmailConfig,
-    database: DatabaseConfig,
-    postgres: DatabaseConfig,
-    mysql: DatabaseConfig,
-    filter: FilterConfig,
-    loop: LoopConfig,
-    "error-trigger": ErrorTriggerConfig,
-    "google-sheets": GoogleSheetsConfig,
-    "ai-agent": AgentConfig,
-    webhook: WebhookConfig,
-};
 
-function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
-    const data = node.data;
-    const nodeType = data.type;
-    const [activeTab, setActiveTab] = useState(executionResult ? "output" : "params");
-    const [config, setConfig] = useState(data.config || {});
-
-    const handleConfigChange = useCallback((newConfig) => {
-        setConfig(newConfig);
-        onUpdateConfig(node.id, newConfig);
-    }, [node.id, onUpdateConfig]);
-
-    const ConfigPanel = CONFIG_PANELS[nodeType];
-
-    const tabs = [
-        { id: "params", label: "Parameters" },
-        { id: "input", label: "Input", hasData: !!executionResult },
-        { id: "output", label: "Output", hasData: !!executionResult },
-    ];
-
-    return (
-        <div className="absolute top-12 right-0 w-80 h-[calc(100%-3rem)] bg-card border-l border-border overflow-y-auto shadow-lg flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2 min-w-0">
-                    <h3 className="font-semibold text-sm truncate text-foreground">{data.label}</h3>
-                    {executionResult && (
-                        <span className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${executionResult.status === "success" ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
-                            }`}>
-                            {executionResult.status === "success" ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
-                            {executionResult.status === "success" ? "Success" : "Error"}
-                        </span>
-                    )}
-                </div>
-                <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">×</button>
-            </div>
-
-            {executionResult && (
-                <div className="px-4 py-2 border-b border-border flex items-center gap-4 text-[11px] text-muted-foreground bg-muted/30 shrink-0">
-                    <span>Duration: <strong className="text-foreground">{executionResult.duration}ms</strong></span>
-                    <span>Type: <strong className="text-foreground">{executionResult.nodeType}</strong></span>
-                </div>
-            )}
-
-            {/* Tabs */}
-            <div className="flex border-b border-border shrink-0">
-                {tabs.map((tab) => (
-                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors relative ${activeTab === tab.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                            }`}>
-                        <span className="flex items-center justify-center gap-1">
-                            {tab.label}
-                            {tab.hasData && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-                        </span>
-                        {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
-                    </button>
-                ))}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {activeTab === "params" && (
-                    <div>
-                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Configuration</label>
-                        <div className="mt-2 space-y-3">
-                            {ConfigPanel ? (
-                                <ConfigPanel config={config} onChange={handleConfigChange} />
-                            ) : (
-                                <div className="p-3 bg-muted rounded-md text-foreground">
-                                    <p className="text-xs text-muted-foreground">No configuration needed for this node type.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === "input" && (
-                    executionResult ? <JsonBlock data={executionResult.input} label="Input Data" /> : (
-                        <div className="text-center py-8">
-                            <ArrowDownToLine className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                            <p className="text-xs text-muted-foreground">Execute workflow to see input data</p>
-                        </div>
-                    )
-                )}
-
-                {activeTab === "output" && (
-                    executionResult ? (
-                        <div className="space-y-3">
-                            {executionResult.error && (
-                                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                                    <p className="text-xs font-medium text-destructive mb-1">Error</p>
-                                    <p className="text-xs text-destructive/80 font-mono">{executionResult.error}</p>
-                                </div>
-                            )}
-                            {Object.keys(executionResult.output).length > 0 && <JsonBlock data={executionResult.output} label="Output Data" />}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8">
-                            <ArrowUpFromLine className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                            <p className="text-xs text-muted-foreground">Execute workflow to see output data</p>
-                        </div>
-                    )
-                )}
-            </div>
-        </div>
-    );
-}
 
 export default memo(NodeDetailPanel);
