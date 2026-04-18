@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { Check, X, Copy, ChevronDown, ChevronRight, ArrowDownToLine, ArrowUpFromLine, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -49,7 +50,13 @@ function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
     ];
 
     return (
-        <div className="absolute top-12 right-0 w-80 h-[calc(100%-3rem)] bg-card border-l border-border overflow-y-auto shadow-lg flex flex-col">
+        <motion.div
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="absolute top-12 right-0 w-[540px] h-[calc(100%-3rem)] bg-card border-l border-border overflow-y-auto shadow-lg flex flex-col z-20"
+        >
             {/* Header */}
             <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
@@ -132,7 +139,7 @@ function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
                     )
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 }
 

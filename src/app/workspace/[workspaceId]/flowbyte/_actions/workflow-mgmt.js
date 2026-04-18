@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { revalidatePath } from "next/cache";
 
-export async function saveWorkflowAction({ id, name, nodes, edges, workspaceId }) {
+export async function saveWorkflowAction({ id, name, nodes, edges, workspaceId, viewport }) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.userId;
 
@@ -17,6 +17,7 @@ export async function saveWorkflowAction({ id, name, nodes, edges, workspaceId }
       name,
       nodes: nodes || [],
       edges: edges || [],
+      viewport: viewport || null,
       userId,
       workspaceId,
       status: "DRAFT",

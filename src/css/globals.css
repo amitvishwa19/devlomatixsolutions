@@ -57,7 +57,7 @@ html {
 }
 
 :root {
-  --radius: 0.45rem;
+  --radius: 0.75rem;
 }
 
 /* Dark theme (default) */
@@ -176,7 +176,7 @@ html {
 }
 
 .react-flow__edge-path {
-  stroke: hsl(var(--n8n-connection));
+  stroke: hsl(var(--n8n-connection)) !important;
   stroke-width: 2.5;
   stroke-dasharray: 6 6;
   filter: drop-shadow(0 0 4px hsl(var(--n8n-connection) / 0.3));
@@ -318,11 +318,8 @@ html {
     background: hsl(220 35% 10% / 0.6);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-width: 1px;
-    border-style: solid;
-    border-color: hsl(0 0% 100% / 0.06);
-    border-radius: 0.75rem;
-    overflow: hidden;
+    border: 1px solid hsl(0 0% 100% / 0.06);
+    border-radius: 0.5rem;
   }
 
   .light .glass-card {

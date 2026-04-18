@@ -50,6 +50,60 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DynamicIcon } from 'lucide-react/dynamic';
+
+export const credentialsTypes = [
+    {
+        id: 'all',
+        type: 'all',
+        platform: 'all',
+        name: 'All Credentials',
+        icon: 'settings-2',
+        description: 'All Credentials',
+        model: null,
+        provider: null,
+    },
+    {
+        id: 'llm',
+        type: 'llm',
+        platform: 'llm',
+        name: 'AI Models',
+        icon: 'brain',
+        description: 'Large Language Models',
+        model: null,
+        provider: null,
+    },
+    {
+        id: 'social',
+        type: 'social',
+        platform: 'social',
+        name: 'Social',
+        icon: 'scan-face',
+        description: 'Social Media Accounts',
+        model: null,
+        provider: null,
+    },
+    {
+        id: 'cloud',
+        type: 'cloud',
+        platform: 'cloud',
+        name: 'Cloud',
+        icon: 'cloud',
+        description: 'Cloud Services',
+        model: null,
+        provider: null,
+    },
+    {
+        id: 'other',
+        type: 'other',
+        platform: 'other',
+        name: 'Other',
+        icon: 'settings-2',
+        description: 'Other Credentials',
+        model: null,
+        provider: null,
+    }
+];
 
 export default function SystemCredentials({ params: paramsPromise }) {
     const params = use(paramsPromise);
@@ -59,10 +113,10 @@ export default function SystemCredentials({ params: paramsPromise }) {
     const [credentials, setCredentials] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('list');
+    const [activeTab, setActiveTab] = useState('all');
 
     // Enterprise Features State
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState('ALL');
     const [envFilter, setEnvFilter] = useState('ALL'); // ALL, PROD, DEV
     const [isPinging, setIsPinging] = useState(false);
     const [pingResults, setPingResults] = useState({});
@@ -316,22 +370,23 @@ export default function SystemCredentials({ params: paramsPromise }) {
 
             {/* Enterprise Control Bar (Search, Tabs, Ping, Bulk Actions) */}
             <div className="flex flex-col xl:flex-row items-center justify-between gap-4 bg-card/60 border border-border/60 p-2 rounded-md shadow-inner backdrop-blur-sm">
-                <div className="flex items-center w-full xl:w-auto overflow-x-auto scrollbar-hide space-x-1 p-1 bg-muted/40 rounded-sm border border-border/40">
-                    {tabs.map(tab => (
-                        <Button
-                            key={tab}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setActiveTab(tab); setSelectedKeys(new Set()); }}
-                            className={`px-4 text-[10px] font-bold tracking-tight rounded-sm transition-all ${activeTab === tab ? 'bg-background shadow-soft text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'}`}
-                        >
-                            {tab}
-                        </Button>
-                    ))}
-                    <div className="w-px h-6 bg-border/40 mx-2" />
-                    <Button variant="ghost" size="sm" onClick={() => setEnvFilter('ALL')} className={`px-3 text-[10px] font-bold rounded-sm ${envFilter === 'ALL' ? 'text-foreground bg-background border border-border/50' : 'text-muted-foreground'}`}>Any Env</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setEnvFilter('PROD')} className={`px-3 text-[10px] font-bold rounded-sm ${envFilter === 'PROD' ? 'text-indigo-500 bg-indigo-500/10 border border-indigo-500/20' : 'text-muted-foreground'}`}>PROD</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setEnvFilter('DEV')} className={`px-3 text-[10px] font-bold rounded-sm ${envFilter === 'DEV' ? 'text-amber-500 bg-amber-500/10 border border-amber-500/20' : 'text-muted-foreground'}`}>DEV</Button>
+                <div className="flex items-center w-full xl:w-auto overflow-x-auto scrollbar-hide space-x-1 p-1 bg-muted/40 rounded-sm border border-border/40 gap-2">
+                    {credentialsTypes?.map(tab => {
+
+                        return (
+                            <Button
+                                key={tab.id}
+                                variant={'ghost'}
+                                className={`w-40 dark:border-primary/10 ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <DynamicIcon name={tab.icon} className="w-4 h-4 mr-2" />
+                                    {tab.name}
+                                </div>
+                            </Button>
+                        )
+                    })}
+
                 </div>
 
                 <div className="flex items-center w-full xl:w-auto gap-3">
