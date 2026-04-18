@@ -7,7 +7,7 @@ import {
   getSmoothStepPath,
   useReactFlow,
 } from '@xyflow/react';
-import { X } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 export default function WorkflowEdge({
   id,
@@ -37,16 +37,16 @@ export default function WorkflowEdge({
   };
 
   // Determine the CSS class based on execution status
-  const statusClass = data?.status === 'running' ? 'edge-running' : 
-                      data?.status === 'success' ? 'edge-success' :
-                      data?.status === 'error' ? 'edge-error' : '';
+  const statusClass = data?.status === 'running' ? 'edge-running' :
+    data?.status === 'success' ? 'edge-success' :
+      data?.status === 'error' ? 'edge-error' : '';
 
   return (
     <>
-      <BaseEdge 
-        path={edgePath} 
-        markerEnd={markerEnd} 
-        style={style} 
+      <BaseEdge
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={style}
         interactionWidth={20}
         className={statusClass}
       />
@@ -59,8 +59,11 @@ export default function WorkflowEdge({
           }}
           className="nodrag nopan"
         >
-          <button className="edge-delete-button" onClick={onEdgeClick} title="Delete Connection">
-            <X />
+          <button
+            className="cursor-pointer"
+            onClick={onEdgeClick} title="Delete Connection"
+          >
+            <Trash2 className="h-3 w-3" />
           </button>
         </div>
       </EdgeLabelRenderer>
