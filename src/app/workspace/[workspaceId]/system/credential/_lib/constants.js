@@ -8,16 +8,18 @@ export const credentialsTypes = [
         description: 'All Credentials',
         model: null,
         provider: null,
+        plattforms: ['openai', 'gemini', 'anthropic', 'openrouter', 'groq', 'mistral', 'deepseek', 'cohere', 'facebook', 'instagram', 'twitter', 'x', 'linkedin', 'youtube', 'pinterest', 'tiktok', 'reddit', 'aws', 'gcp', 'azure', 'supabase', 'firebase', 'vercel', 'digitalocean', 'cloudflare', 'resend', 'gmail', 'google', 'google_places', 'whatsapp_cloud', 'whatsapp_browser', 'discord', 'slack', 'telegram', 'other']
     },
     {
         id: 'llm',
         type: 'llm',
         platform: 'llm',
-        name: 'AI Models',
+        name: 'LLM',
         icon: 'brain',
         description: 'Large Language Models',
         model: null,
         provider: null,
+        plattforms: ['openai', 'gemini', 'anthropic', 'openrouter', 'groq', 'mistral', 'deepseek', 'cohere', 'other']
     },
     {
         id: 'social',
@@ -28,6 +30,7 @@ export const credentialsTypes = [
         description: 'Social Media Accounts',
         model: null,
         provider: null,
+        plattforms: ['facebook', 'instagram', 'twitter', 'x', 'linkedin', 'youtube', 'pinterest', 'tiktok', 'reddit', 'other']
     },
     {
         id: 'cloud',
@@ -38,6 +41,7 @@ export const credentialsTypes = [
         description: 'Cloud Services',
         model: null,
         provider: null,
+        plattforms: ['aws', 'gcp', 'azure', 'supabase', 'firebase', 'vercel', 'digitalocean', 'cloudflare', 'other']
     },
     {
         id: 'other',
@@ -48,5 +52,6 @@ export const credentialsTypes = [
         description: 'Other Credentials',
         model: null,
         provider: null,
+        plattforms: ['resend', 'gmail', 'google', 'google_places', 'whatsapp_cloud', 'whatsapp_browser', 'discord', 'slack', 'telegram', 'other']
     }
 ];

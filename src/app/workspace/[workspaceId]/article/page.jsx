@@ -22,10 +22,10 @@ import { PostRow } from './_components/PostRow';
 import { PostStats } from './_components/PostStats';
 import { CalendarView } from './_components/CalendarView';
 import { AddPostModal } from './_components/AddPostModal';
-import { AddCredentialModal } from './_components/AddCredentialModal';
 import { MediaLibraryModal } from './_components/MediaLibraryModal';
 import { RecentLogsWidget } from './_components/RecentLogsWidget';
 import { cn } from '@/lib/utils';
+
 
 export default function ArticlePage() {
     const params = useParams();
@@ -57,7 +57,6 @@ export default function ArticlePage() {
         <div className="space-y-4 animate-fade-in p-2">
             {/* Local Modals */}
             <AddPostModal />
-            <AddCredentialModal />
             <MediaLibraryModal />
 
             {/* Header Section */}

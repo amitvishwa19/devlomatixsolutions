@@ -39,7 +39,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import axios from '@/utils/axios';
 
 import { useModal } from '@/hooks/useModal';
-import { AddCredentialModal } from '../../article/_components/AddCredentialModal';
+
 import { Badge } from '@/components/ui/badge';
 
 import {
@@ -54,6 +54,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { credentialsTypes } from './_lib/constants';
+import { AddCredentialModal } from './_Components/AddCredentialModal';
+
 
 
 export default function SystemCredentials({ params: paramsPromise }) {
@@ -472,17 +474,14 @@ export default function SystemCredentials({ params: paramsPromise }) {
                                     const isWarning = meta.expiresDays < 14;
 
                                     return (
-                                        <Card key={cred.id} className={`border-border/40 hover:border-primary/40 bg-card shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ${viewMode === 'list' ? 'flex flex-row items-center justify-between p-1' : ''}`}>
+                                        <Card key={cred.id} className={`border hover:border-primary/20 bg-card shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ${viewMode === 'list' ? 'flex flex-row items-center justify-between p-1' : ''}`}>
                                             {/* Environment Stripe Accent */}
                                             <div className={`absolute left-0 top-0 w-1 h-full ${meta.env === 'PROD' ? 'bg-indigo-500/70' : 'bg-amber-500/70'}`} />
 
                                             <CardHeader className={`pb-3 pl-6 ${viewMode === 'list' ? 'border-b-0 w-1/3 pt-3' : 'border-b border-border/10'}`}>
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
-                                                        <Checkbox
-                                                            checked={selectedKeys.has(cred.id)}
-                                                            onCheckedChange={() => toggleSelection(cred.id)}
-                                                        />
+
                                                         <div className="flex flex-col">
                                                             <CardTitle className="text-sm font-bold tracking-tight uppercase flex items-center gap-2 text-foreground">
                                                                 {cred.platform === 'GEMINI' ? <Activity className="w-4 h-4 text-purple-500" /> : <Server className="w-4 h-4 text-primary" />}
@@ -509,6 +508,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
                                                     )}
                                                 </div>
                                             </CardHeader>
+
                                             <CardContent className={`py-4 space-y-3 ${viewMode === 'list' ? 'flex-1 flex items-center gap-4 py-0 justify-center border-l border-border/10 mb-0' : ''}`}>
                                                 {viewMode === 'list' && (
                                                     <Badge variant={cred.status === 'connected' ? 'default' : 'secondary'} className={cred.status === 'connected' ? 'bg-emerald-500/10 text-emerald-500 shrink-0' : 'shrink-0'}>
@@ -563,6 +563,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
                                                     </div>
                                                 )}
                                             </CardContent>
+
                                             <CardFooter className={`pt-3 pb-4 px-4 bg-muted/10 border-t border-border/10 flex items-center justify-between ${viewMode === 'list' ? 'border-t-0 bg-transparent py-0 mt-0 pt-0 pb-0 border-l justify-end w-1/4 gap-1' : ''}`}>
                                                 <div className="flex items-center gap-1 w-full justify-between">
                                                     <div className="flex items-center gap-1">
@@ -601,6 +602,7 @@ export default function SystemCredentials({ params: paramsPromise }) {
                                                     </div>
                                                 </div>
                                             </CardFooter>
+
                                         </Card>
                                     );
                                 })}

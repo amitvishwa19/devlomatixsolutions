@@ -20,6 +20,7 @@ import {
 import { useModal } from "@/hooks/useModal";
 import axios from "@/utils/axios";
 import { toast } from "sonner";
+import { credentialsTypes } from "../_lib/constants";
 import {
     Loader2,
     Shield,
@@ -54,18 +55,6 @@ const PLATFORM_CONFIG = {
 };
 
 
-const CREDENTIAL_TYPES = [
-    'AI Models',
-    'Socials',
-    'Cloud',
-    'Email',
-    'Messaging',
-    'Database',
-    'Analytics',
-    'Advertising',
-    'Payments',
-    'Other'
-];
 
 export const AddCredentialModal = () => {
     const { isOpen, onClose, type, data, activeModals } = useModal();
@@ -85,7 +74,8 @@ export const AddCredentialModal = () => {
     const [fields, setFields] = useState([{ key: '', value: '' }]);
     const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
     const [openRouterModel, setOpenRouterModel] = useState('google/gemini-2.0-flash-exp:free');
-    const [credentialType, setCredentialType] = useState('Other');
+    const [credentialType, setCredentialType] = useState(undefined);
+    const [activePlatforms, setActivePlatforms] = useState([]);
 
     const isEdit = !!initialData?.id;
 
@@ -113,7 +103,7 @@ export const AddCredentialModal = () => {
                     setOpenRouterModel(initialData.details.model);
                 }
 
-                setCredentialType(initialData.type || 'Other');
+                setCredentialType(initialData.type || undefined);
                 const dynamicFields = Object.entries(initialData.details)
                     .filter(([key]) => key !== 'profileName' && key !== 'model')
                     .map(([key, value]) => ({ key, value }));
@@ -127,9 +117,25 @@ export const AddCredentialModal = () => {
             setStatus('disconnected');
             setFields([{ key: '', value: '' }]);
             setGeminiModel('gemini-2.0-flash');
-            setCredentialType('Other');
+            setCredentialType(undefined);
         }
     }, [isEdit, initialData, isModalOpen]);
+
+    // Handle dynamic platforms based on type
+    useEffect(() => {
+        const typeData = credentialsTypes.find(t => t.id === credentialType);
+        const platformsList = typeData?.plattforms || [];
+        setActivePlatforms(platformsList);
+
+        // Reset platform if it's not in the new list and not CUSTOM
+        // Only do this if it's not the initial load of an edit modal
+        if (platform && platform !== 'CUSTOM') {
+            const isPlatformInList = platformsList.some(p => p.toUpperCase() === platform.toUpperCase());
+            if (!isPlatformInList && !isEdit) {
+                setPlatform('');
+            }
+        }
+    }, [credentialType, isEdit]);
 
     // Update fields when platform changes (for new credentials)
     const handlePlatformChange = (val) => {
@@ -263,7 +269,7 @@ export const AddCredentialModal = () => {
             setFields([{ key: '', value: '' }]);
             setGeminiModel('gemini-2.0-flash');
             setOpenRouterModel('google/gemini-2.0-flash-exp:free');
-            setCredentialType('Other');
+            setCredentialType(undefined);
             setIsDeleting(false);
         }
         onClose("addCredential");
@@ -273,7 +279,7 @@ export const AddCredentialModal = () => {
         <Dialog open={isModalOpen} onOpenChange={handleClose}>
             <DialogContent className=" bg-background border border-border/100 rounded-md shadow-2xl p-2 ">
                 <form onSubmit={onSubmit} className="flex flex-col max-h-[85vh]">
-                    <DialogHeader className="p-8 pb-4">
+                    <DialogHeader className="p-2 pb-4">
                         <DialogTitle className="text-md font-bold text-foreground flex items-center gap-2">
                             <Database className="text-primary h-5 w-5" /> {isEdit ? "Edit Credentials" : "Add Credentials"}
                         </DialogTitle>
@@ -295,11 +301,11 @@ export const AddCredentialModal = () => {
                                 </label>
                                 <Select value={credentialType} onValueChange={setCredentialType} disabled={isLoading}>
                                     <SelectTrigger className="bg-muted/30 border border-primary/20 rounded-md  focus:ring-0.5 focus:ring-primary">
-                                        <SelectValue placeholder="Select Type" />
+                                        <SelectValue placeholder="Select Credential Type" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-md border-border/20 shadow-2xl">
-                                        {CREDENTIAL_TYPES.map(t => (
-                                            <SelectItem key={t} value={t} className="f  ">{t}</SelectItem>
+                                        {credentialsTypes.filter(t => t.id !== 'all').map(t => (
+                                            <SelectItem key={t.id} value={t.id} className="">{t.name}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -313,10 +319,14 @@ export const AddCredentialModal = () => {
                                         <SelectValue placeholder="Select Platform" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-md border-border/20 text-sm shadow-2xl">
-                                        {Object.keys(PLATFORM_CONFIG).map(p => (
-                                            <SelectItem key={p} value={p} className="  text-muted-foreground ">{p}</SelectItem>
-                                        ))}
-                                        <SelectItem value="CUSTOM" className=" text-muted-foreground italic">Custom / Other</SelectItem>
+                                        {activePlatforms.map(p => {
+                                            return (
+                                                <SelectItem key={p} value={p} className=" capitalize  d">
+                                                    {p}
+                                                </SelectItem>
+                                            );
+                                        })}
+                                        <SelectItem value="custom" className=" capitalize  d">Custom/Other</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -370,7 +380,7 @@ export const AddCredentialModal = () => {
                         {/* Gemini Model Selector */}
                         {platform === 'GEMINI' && (
                             <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
-                                <label className="text-[10px] font-bold text-purple-500 ml-1 flex items-center gap-2 uppercase tracking-wider opacity-80">
+                                <label className="text-[10px] font-bold text-purple-500 ml-1 flex items-center gap-2  tracking-wider opacity-80">
                                     <Sparkles className="w-3 h-3 text-purple-500" /> GEMINI AI MODEL
                                 </label>
                                 <Input
@@ -389,7 +399,7 @@ export const AddCredentialModal = () => {
                         {/* OpenRouter Model Selector */}
                         {platform === 'OPENROUTER' && (
                             <div className="space-y-2 text-left animate-in fade-in slide-in-from-top-2">
-                                <label className="text-[10px] font-bold text-blue-500 ml-1 flex items-center gap-2 uppercase tracking-wider opacity-80">
+                                <label className="text-[10px] font-bold text-blue-500 ml-1 flex items-center gap-2  tracking-wider opacity-80">
                                     <Bot className="w-3 h-3 text-blue-500" /> OPENROUTER AI MODEL
                                 </label>
                                 <Input
@@ -428,7 +438,7 @@ export const AddCredentialModal = () => {
                                     <label className="text-[10px] font-bold text-muted-foreground opacity-70 flex items-center gap-2">
                                         <Activity className="w-3 h-3" /> USAGE MONITOR
                                     </label>
-                                    <span className="text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full uppercase">
+                                    <span className="text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full ">
                                         Today
                                     </span>
                                 </div>
@@ -437,12 +447,12 @@ export const AddCredentialModal = () => {
                                     <div className="flex justify-between items-end">
                                         <div className="flex flex-col">
                                             <span className="text-xl font-black text-foreground">{initialData.details.usage.dailyCount || 0}</span>
-                                            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter">Requests Made Today</span>
+                                            <span className="text-[9px] text-muted-foreground font-bold  tracking-tighter">Requests Made Today</span>
                                         </div>
                                         {initialData.details.usage.quotaReached && (
                                             <div className="flex items-center gap-1.5 text-rose-500 animate-pulse">
                                                 <Zap className="w-3.5 h-3.5 fill-rose-500" />
-                                                <span className="text-[10px] font-black uppercase italic">Quota Reached</span>
+                                                <span className="text-[10px] font-black  italic">Quota Reached</span>
                                             </div>
                                         )}
                                     </div>
