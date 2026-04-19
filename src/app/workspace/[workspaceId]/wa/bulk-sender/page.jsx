@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from'react';
+import { useParams } from 'next/navigation';
 import {
  Users,
  Search,
@@ -35,8 +36,8 @@ import { getContacts } from "../contacts/_actions/get-contacts";
 import { getGroups } from "../contacts/_actions/get-groups";
 import { saveCampaign } from "../campaigns/_actions/save-campaign";
 
-export default function BulkSenderPage({ params: paramsPromise }) {
-    const params = use(paramsPromise);
+export default function BulkSenderPage() {
+    const params = useParams();
     const workspaceId = params.workspaceId;
     const { data: session } = useSession();
     const router = useRouter();

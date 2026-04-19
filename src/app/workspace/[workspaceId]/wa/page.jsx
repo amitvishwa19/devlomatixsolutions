@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CheckCircle2, MessageCircleDashed, Users, MessageSquare, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,8 +30,8 @@ const mapApiCampaignToUI = (campaign) => ({
 
 // Removed hardcoded activities constant
 
-export default function DashboardPage({ params: paramsPromise }) {
-    const params = use(paramsPromise);
+export default function DashboardPage() {
+    const params = useParams();
     const workspaceId = params.workspaceId;
     const [campaigns, setCampaigns] = useState([]);
     const [activities, setActivities] = useState([]);
@@ -39,6 +39,12 @@ export default function DashboardPage({ params: paramsPromise }) {
     const [editCampaign, setEditCampaign] = useState(null);
     const [waConnectionOpen, setWaConnectionOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [activityPage, setActivityPage] = useState(1);
+    const [activityPagination, setActivityPagination] = useState({
+        currentPage: 1,
+        hasMore: false,
+        totalOnPage: 0
+    });
     const [error, setError] = useState(null);
     const [whatsappSettingOpen, setWhatsappSettingOpen] = useState({
         open: false,
@@ -80,6 +86,9 @@ export default function DashboardPage({ params: paramsPromise }) {
                     bg: act.type === 'success' ? 'bg-emerald-400/10' : act.type === 'message' ? 'bg-blue-400/10' : 'bg-amber-400/10'
                 }));
                 setActivities(mapped);
+                if (data.pagination) {
+                    setActivityPagination(data.pagination);
+                }
             }
         },
         onError: (error) => {
@@ -87,18 +96,18 @@ export default function DashboardPage({ params: paramsPromise }) {
         }
     });
 
-    const fetchActivities = () => {
+    const fetchActivities = (page = 1) => {
         if (workspaceId) {
-            executeGetActivities({ workspaceId });
+            executeGetActivities({ workspaceId, page, pageSize: 5 });
         }
     };
 
     useEffect(() => {
         if (workspaceId) {
             fetchCampaigns();
-            fetchActivities();
+            fetchActivities(activityPage);
         }
-    }, [workspaceId]);
+    }, [workspaceId, activityPage]);
 
     const refresh = () => fetchCampaigns();
 
@@ -234,7 +243,12 @@ export default function DashboardPage({ params: paramsPromise }) {
                             Recent Activity <span className="text-sm text-muted-foreground">({activities.length})</span>
                         </h3>
                     </div>
-                    <RecentActivity activities={activities} />
+                    <RecentActivity 
+                        activities={activities} 
+                        currentPage={activityPage}
+                        hasMore={activityPagination.hasMore}
+                        onPageChange={setActivityPage}
+                    />
                 </div>
             </div>
 

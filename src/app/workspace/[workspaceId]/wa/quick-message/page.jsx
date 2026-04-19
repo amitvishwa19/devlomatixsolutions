@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from'react';
+import { useState, useEffect } from'react';
+import { useParams } from 'next/navigation';
 import { useSession } from'next-auth/react';
 import { Input } from"@/components/ui/input";
 import { Textarea } from"@/components/ui/textarea";
@@ -12,8 +13,8 @@ import { getStatus } from "../_actions/get-status";
 import { getMessages } from "../_actions/get-messages";
 import { sendBrowserMessage } from "../_actions/send-browser-message";
 
-export default function QuickMessage({ params: paramsPromise }) {
- const params = use(paramsPromise);
+export default function QuickMessage() {
+ const params = useParams();
  const workspaceId = params.workspaceId;
 
  const { data: session } = useSession();

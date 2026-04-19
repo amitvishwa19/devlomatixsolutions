@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -23,8 +24,8 @@ import { toast } from "sonner";
 
 const COLORS = ['#10b981', '#3b82f6', '#94a3b8', '#ef4444', '#8b5cf6'];
 
-export default function AnalyticsPage({ params: paramsPromise }) {
-    const params = use(paramsPromise);
+export default function AnalyticsPage() {
+    const params = useParams();
     const workspaceId = params.workspaceId;
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);

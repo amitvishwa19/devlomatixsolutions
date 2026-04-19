@@ -61,11 +61,10 @@ import { deleteCampaign } from "./_actions/delete-campaign";
 import { triggerCampaign } from "./_actions/trigger-campaign";
 import { getTemplates } from "../template/_actions/get-templates";
 import { getContacts } from "../contacts/_actions/get-contacts";
-import { getGroups } from "../contacts/_actions/get-groups";
-import { use } from "react";
+import { useParams } from "next/navigation";
 
-export default function CampaignsPage({ params: paramsPromise }) {
-    const params = use(paramsPromise);
+export default function CampaignsPage() {
+    const params = useParams();
     const workspaceId = params.workspaceId;
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;

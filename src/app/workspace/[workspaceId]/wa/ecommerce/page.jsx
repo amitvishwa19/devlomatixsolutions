@@ -31,10 +31,10 @@ const stats = [
     { label: "Recovery Rate", value: "64.2%", change: "+2.4%", icon: ShoppingBag, color: "text-purple-500", bg: "bg-purple-500/10" }
 ];
 
-import { use } from "react";
+import { useParams } from "next/navigation";
 
-export default function ECommercePage({ params: paramsPromise }) {
-    const params = use(paramsPromise);
+export default function ECommercePage() {
+    const params = useParams();
     const workspaceId = params.workspaceId;
     const [isLoading, setIsLoading] = useState(true);
     const [stores, setStores] = useState([]);

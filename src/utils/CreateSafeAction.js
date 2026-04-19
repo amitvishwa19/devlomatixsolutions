@@ -16,7 +16,15 @@ export const createSafeAction = (schema, handler) => {
                 fieldErrors: validationResult.error.flatten().fieldErrors,
             };
         }
-        return handler(validationResult.data);
+        const result = await handler(validationResult.data);
+
+        // If the handler already returns a standard action state, return it
+        if (result && (result.data || result.error || result.fieldErrors)) {
+            return result;
+        }
+
+        // Otherwise, wrap the result in data to satisfy the useAction hook
+        return { data: result };
     };
 };
 
