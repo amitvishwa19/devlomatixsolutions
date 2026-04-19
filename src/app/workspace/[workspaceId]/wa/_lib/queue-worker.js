@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import * as cloudApi from './whatsapp-cloud-api';
 
 /**
  * WhatsAppQueueWorker: Enterprise-grade background job processor.
@@ -37,10 +38,6 @@ export class WhatsAppQueueWorker {
         if (this.isProcessing) return;
         this.isProcessing = true;
 
-        // Note: For circular dependency reasons, we import waManager lazily or pass it in.
-        // Importing it here inside the method is fine because it's only executed at runtime.
-        const { waManager } = await import('./whatsapp-v2');
-
         try {
             const job = await db.whatsAppJob.findFirst({
                 where: {
@@ -66,9 +63,9 @@ export class WhatsAppQueueWorker {
             });
 
             if (job.type === 'CAMPAIGN') {
-                await this.handleCampaignJob(job, waManager);
+                await this.handleCampaignJob(job);
             } else if (job.type === 'SINGLE') {
-                await this.handleSingleMessage(job, waManager);
+                await this.handleSingleMessage(job);
             }
 
         } catch (error) {
@@ -78,7 +75,7 @@ export class WhatsAppQueueWorker {
         }
     }
 
-    async handleCampaignJob(job, waManager) {
+    async handleCampaignJob(job) {
         const { campaignId, userId } = job.payload;
 
         try {
@@ -114,15 +111,30 @@ export class WhatsAppQueueWorker {
                     if (campaign.messageTemplate?.image) payload.image = campaign.messageTemplate['image'];
                     if (campaign.messageTemplate?.video) payload.video = campaign.messageTemplate['video'];
 
-                    const jid = recipient.phone.includes('@') ? recipient.phone : `${recipient.phone.replace(/\D/g, '')}@s.whatsapp.net`;
-                    const result = await waManager.sendMessage(jid, payload);
+                    const phone = recipient.phone.replace(/\D/g, '');
+                    
+                    // Get Credential (assuming one per workspace for simplicity here, or store in job)
+                    const credential = await db.whatsAppCredential.findFirst({
+                        where: { workspaceId: job.workspaceId || campaign.workspaceId, isActive: true }
+                    });
+
+                    if (!credential) throw new Error("No active Cloud API credential");
+
+                    let result;
+                    if (campaign.templateId) {
+                        result = await cloudApi.sendTemplateMessage(credential, phone, campaign.template.templateName);
+                    } else {
+                        result = await cloudApi.sendTextMessage(credential, phone, messageText);
+                    }
+
+                    if (!result.success) throw new Error(result.error);
 
                     await db.whatsAppDeliveryLog.create({
                         data: {
                             jobId: job.id,
                             userId: userId,
-                            jid: jid,
-                            waId: result?.key?.id,
+                            jid: phone,
+                            waId: result.data?.messages?.[0]?.id,
                             status: 'SENT',
                             sentAt: new Date()
                         }
@@ -163,10 +175,18 @@ export class WhatsAppQueueWorker {
         }
     }
 
-    async handleSingleMessage(job, waManager) {
-        const { jid, payload, userId } = job.payload;
+    async handleSingleMessage(job) {
+        const { phone, payload, userId, workspaceId } = job.payload;
         try {
-            const result = await waManager.sendMessage(jid, payload);
+            const credential = await db.whatsAppCredential.findFirst({
+                where: { workspaceId, isActive: true }
+            });
+
+            if (!credential) throw new Error("No active Cloud API credential");
+
+            const result = await cloudApi.sendTextMessage(credential, phone.replace(/\D/g, ''), payload.text);
+            if (!result.success) throw new Error(result.error);
+            
             await db.whatsAppJob.update({
                 where: { id: job.id },
                 data: { status: 'COMPLETED', completedAt: new Date() }
@@ -176,8 +196,8 @@ export class WhatsAppQueueWorker {
                 data: {
                     jobId: job.id,
                     userId,
-                    jid,
-                    waId: result?.key?.id,
+                    jid: phone,
+                    waId: result.data?.messages?.[0]?.id,
                     status: 'SENT',
                     sentAt: new Date()
                 }

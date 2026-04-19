@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { waQueueWorker } from './queue-worker';
-import { waManager } from './whatsapp-v2';
+import * as cloudApi from './whatsapp-cloud-api';
 
 export class CampaignEngine {
     static instance;
@@ -78,21 +78,28 @@ export class CampaignEngine {
                         messageText = messageText.replace(new RegExp(placeholder, 'g'), variables[key]);
                     });
 
-                    const payload = { text: messageText };
-                    if (campaign.messageTemplate?.image) payload.image = campaign.messageTemplate['image'];
-                    if (campaign.messageTemplate?.video) payload.video = campaign.messageTemplate['video'];
-                    if (campaign.messageTemplate?.interactive) {
-                        payload.interactive = JSON.parse(JSON.stringify(campaign.messageTemplate['interactive']));
-                        if (payload.interactive.body) {
-                            Object.keys(variables).forEach(key => {
-                                const placeholder = `{{${key}}}`;
-                                payload.interactive.body.text = payload.interactive.body.text.replace(new RegExp(placeholder, 'g'), variables[key]);
-                            });
-                        }
+                    // Get Default Cloud Credential
+                    const credential = await db.whatsAppCredential.findFirst({
+                        where: { workspaceId: campaign.workspaceId, isActive: true }
+                    });
+
+                    if (!credential) {
+                        throw new Error("No active Cloud API credential found for this workspace");
                     }
 
-                    const jid = recipient.phone.includes('@') ? recipient.phone : `${recipient.phone.replace(/\D/g, '')}@s.whatsapp.net`;
-                    await waManager.sendMessage(jid, payload);
+                    const phone = recipient.phone.replace(/\D/g, '');
+                    
+                    let result;
+                    if (campaign.templateId) {
+                        // Send Template
+                        const components = []; // Logic to build components from variables would go here if needed
+                        result = await cloudApi.sendTemplateMessage(credential, phone, campaign.template.templateName);
+                    } else {
+                        // Send Text
+                        result = await cloudApi.sendTextMessage(credential, phone, messageText);
+                    }
+
+                    if (!result.success) throw new Error(result.error);
 
                     await db.campaignRecipient.update({
                         where: { id: recipient.id },

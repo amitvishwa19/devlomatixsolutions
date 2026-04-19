@@ -1,21 +1,27 @@
-import { makeWASocket, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
+import { makeWASocket, DisconnectReason, Browsers, fetchLatestBaileysVersion, generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
 import pino from 'pino';
+import { Boom } from '@hapi/boom';
 import * as fs from 'fs';
 import { usePrismaAuthState } from './whatsapp-auth';
 import { db } from '@/lib/db';
 
+export interface WAMessageHistory {
+    id: string;
+    jid: string;
+    text: string;
+    fromMe: boolean;
+    timestamp: number;
+}
+
 class WhatsAppManager {
-    constructor() {
-        console.log('[WA] NEW WhatsAppManager Instance Created (V15) BINGO');
-    }
-    
-    sock = null;
-    state = 'welcome';
-    qrString = null;
-    messages = [];
-    contacts = [];
-    currentSessionId = null;
-    userId = null;
+    constructor() { }
+    private sock: ReturnType<typeof makeWASocket> | null = null;
+    private state: 'welcome' | 'connecting' | 'qr' | 'open' | 'close' = 'welcome';
+    private qrString: string | null = null;
+    private messages: WAMessageHistory[] = [];
+    private contacts: any[] = [];
+    private currentSessionId: string | null = null;
+    private userId: string | null = null;
 
     getState() {
         return this.state;
@@ -33,14 +39,14 @@ class WhatsAppManager {
         return this.contacts;
     }
 
-    connect(sessionId = 'default') {
+    connect(sessionId: string = 'default') {
         console.log('wa manager connect for session:', sessionId)
         if (this.state === 'open' || this.state === 'connecting' || this.state === 'qr') return;
         this.currentSessionId = sessionId;
         this.init(sessionId);
     }
 
-    async init(sessionId) {
+    private async init(sessionId: string) {
         this.state = 'connecting';
         this.qrString = null;
         this.currentSessionId = sessionId;
@@ -48,7 +54,7 @@ class WhatsAppManager {
         console.log('wa manager init for session:', sessionId)
 
         try {
-            const { state, saveCreds } = await usePrismaAuthState(sessionId);
+            const { state, saveCreds } = await usePrismaAuthState(sessionId) as any;
             const { version } = await fetchLatestBaileysVersion();
 
             // Fetch userId associated with this session
@@ -60,14 +66,14 @@ class WhatsAppManager {
 
             this.sock = makeWASocket({
                 version,
-                auth: state,
+                auth: state as any,
                 printQRInTerminal: false,
                 logger: pino({ level: 'silent' }),
                 browser: ['Devlomatix', 'Chrome', '118.0.5993.88'],
                 syncFullHistory: false
             });
 
-            this.sock.ev.on('connection.update', (update) => {
+            this.sock.ev.on('connection.update', (update: any) => {
                 const { connection, lastDisconnect, qr } = update;
                 console.log(`[WA] Connection Update: ${connection || 'no status'}, state: ${this.state}`);
 
@@ -78,11 +84,12 @@ class WhatsAppManager {
                 }
 
                 if (connection === 'close') {
-                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
                     const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                     console.log(`[WA] Connection Closed. Reason: ${statusCode}, Reconnecting: ${shouldReconnect} in 5s`);
 
                     if (shouldReconnect) {
+                        // Add a delay to prevent infinite immediate reconnect loops
                         setTimeout(() => this.init(sessionId), 5000);
                     } else {
                         console.log(`[WA] Session logged out. Clearing DB for ${sessionId}...`);
@@ -93,7 +100,7 @@ class WhatsAppManager {
 
                         db.whatsAppAuth.deleteMany({
                             where: { sessionId }
-                        }).catch((e) => console.error('[WA] DB clear error:', e));
+                        }).catch((e: any) => console.error('[WA] DB clear error:', e));
                     }
                 } else if (connection === 'open') {
                     console.log('[WA] Connection successfully opened!');
@@ -102,11 +109,11 @@ class WhatsAppManager {
                 }
             });
 
-            this.sock.ev.on('messages.upsert', async (m) => {
+            this.sock.ev.on('messages.upsert', async (m: any) => {
                 const msgs = m.messages;
                 if (!msgs || msgs.length === 0) return;
 
-                const dbActions = [];
+                const dbActions: any[] = [];
 
                 for (const msg of msgs) {
                     if (!msg.message) continue;
@@ -114,13 +121,14 @@ class WhatsAppManager {
                     const jid = msg.key.remoteJid || '';
                     const fromMe = msg.key.fromMe || false;
                     const id = msg.key.id || '';
-                    const timestamp = msg.messageTimestamp ? (typeof msg.messageTimestamp === 'number' ? msg.messageTimestamp : msg.messageTimestamp.low) : Math.floor(Date.now() / 1000);
+                    const timestamp = msg.messageTimestamp ? (typeof msg.messageTimestamp === 'number' ? msg.messageTimestamp : (msg.messageTimestamp as any).low) : Math.floor(Date.now() / 1000);
 
                     const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
 
                     if (text && jid) {
                         this.pushToHistory(id, jid, text, fromMe);
 
+                        // Save to Database
                         if (this.userId) {
                             dbActions.push(
                                 db.whatsAppMessage.upsert({
@@ -145,11 +153,11 @@ class WhatsAppManager {
                 }
             });
 
-            this.sock.ev.on('contacts.upsert', (contacts) => {
+            this.sock.ev.on('contacts.upsert', (contacts: any[]) => {
                 this.contacts = [...this.contacts, ...contacts];
             });
 
-            this.sock.ev.on('contacts.update', (updates) => {
+            this.sock.ev.on('contacts.update', (updates: any[]) => {
                 for (const update of updates) {
                     const index = this.contacts.findIndex(c => c.id === update.id);
                     if (index !== -1) {
@@ -168,7 +176,7 @@ class WhatsAppManager {
         }
     }
 
-    pushToHistory(id, jid, text, fromMe) {
+    private pushToHistory(id: string, jid: string, text: string, fromMe: boolean) {
         if (!this.messages.some(m => m.id === id)) {
             this.messages.push({
                 id,
@@ -183,9 +191,10 @@ class WhatsAppManager {
         }
     }
 
-    async sendMessage(jid, data) {
+    async sendMessage(jid: string, data: any) {
         if (!this.sock || this.state !== 'open') throw new Error('WhatsApp not connected');
 
+        // File-based debug logging
         try {
             const logEntry = `[${new Date().toISOString()}] Sending to ${jid}:\n${JSON.stringify(data, null, 2)}\n\n`;
             fs.appendFileSync('d:/Dev/React/devlomatix/devlomatixv2/wa_debug.log', logEntry);
@@ -193,16 +202,18 @@ class WhatsAppManager {
             console.error('[WA] Debug log write failed', e);
         }
 
-        const getCleanText = (input) => {
+        // Extract clean text from potential object/string
+        const getCleanText = (input: any) => {
             if (!input) return '';
             if (typeof input === 'string') return input;
             if (input.text) return input.text;
             return String(input);
         };
 
-        let result;
+        let result: any;
         let finalBody = '';
 
+        // Handle Media & Location Native Types
         if (data.image) {
             finalBody = getCleanText(data.caption || data.text || 'Image');
             result = await this.sock.sendMessage(jid, { image: data.image, caption: finalBody });
@@ -219,20 +230,26 @@ class WhatsAppManager {
             finalBody = `Location: ${data.location.name || 'Shared Location'}`;
             result = await this.sock.sendMessage(jid, { location: data.location });
         } else if (data.interactive) {
+            console.log('[WA] Sending Interactive Message. Type:', data.interactive.type);
+            console.log('[WA] Interactive Data:', JSON.stringify(data.interactive, null, 2));
+
+            // Check if it's a List Message (WhatsApp Business style or Flat Baileys style)
             const isList = data.interactive.type === 'list' ||
                 !!data.interactive.sections ||
                 !!data.interactive.action?.sections ||
                 !!data.interactive.buttonText;
 
             if (isList) {
+                console.log('[WA] Detected List Message - Attempting Native Delivery');
                 const bodyText = getCleanText(data.interactive.body?.text || data.interactive.text || data.text || data.interactive.body);
                 const footerText = getCleanText(data.interactive.footer?.text || data.interactive.footer);
                 const buttonText = data.interactive.action?.button || data.interactive.buttonText || 'Options';
                 const sections = data.interactive.action?.sections || data.interactive.sections || [];
 
-                const formattedSections = sections.map((section) => ({
+                // Map sections to Baileys format (ensure rowId is present)
+                const formattedSections = sections.map((section: any) => ({
                     title: section.title,
-                    rows: (section.rows || []).map((row) => ({
+                    rows: (section.rows || []).map((row: any) => ({
                         title: row.title,
                         rowId: row.id || row.rowId || row.title.toLowerCase().replace(/\s+/g, '_'),
                         description: row.description
@@ -240,14 +257,22 @@ class WhatsAppManager {
                 }));
 
                 finalBody = bodyText;
-                result = await this.sock.sendMessage(jid, {
-                    text: bodyText,
-                    footer: footerText,
-                    title: data.interactive.header?.title || data.interactive.header || '',
-                    buttonText: buttonText,
-                    sections: formattedSections
-                });
+                try {
+                    result = await this.sock.sendMessage(jid, {
+                        text: bodyText,
+                        footer: footerText,
+                        title: data.interactive.header?.title || data.interactive.header || '',
+                        buttonText: buttonText,
+                        sections: formattedSections
+                    } as any);
+                    console.log('[WA] Native List Sent Successfully');
+                } catch (sendErr) {
+                    console.error('[WA] Native List Delivery Failed, falling back to simulation:', sendErr);
+                    throw sendErr; // For now throw to see it in terminal
+                }
             } else {
+                console.log('[WA] No List detected, falling back to simulation logic');
+                // Fallback simulation for other interactive types or legacy format
                 let simulatedText = '';
                 if (data.interactive.header) {
                     const headerText = getCleanText(data.interactive.header);
@@ -256,7 +281,7 @@ class WhatsAppManager {
                 const bodyText = getCleanText(data.interactive.body);
                 simulatedText += `${bodyText}\n\n`;
 
-                const sections = data.interactive.sections || data.interactive.action?.sections || [];
+                const sections: any[] = data.interactive.sections || data.interactive.action?.sections || [];
                 if (sections.length > 0) {
                     simulatedText += `_*Reply with the number of your choice:*_\n\n`;
                     let optionCounter = 1;
@@ -285,8 +310,10 @@ class WhatsAppManager {
         if (result && this.userId) {
             const id = result.key?.id || Date.now().toString();
             const timestamp = Math.floor(Date.now() / 1000);
+
             this.pushToHistory(id, jid, finalBody, true);
 
+            // Save to Database
             db.whatsAppMessage.create({
                 data: {
                     waId: id,
@@ -297,7 +324,7 @@ class WhatsAppManager {
                     timestamp: BigInt(timestamp),
                     metadata: data.metadata || null
                 }
-            }).catch((e) => console.error('[WA] DB Save Error (Send):', e));
+            }).catch((e: Error) => console.error('[WA] DB Save Error (Send):', e));
         }
 
         return result;
@@ -306,6 +333,7 @@ class WhatsAppManager {
     async disconnect() {
         if (this.sock) {
             try {
+                // If it's open, log out to invalidate session
                 if (this.state === 'open') {
                     await this.sock.logout('user initialized disconnect');
                 }
@@ -321,7 +349,26 @@ class WhatsAppManager {
     }
 }
 
-const globalForWA = global;
+// Global scope to prevent re-instantiation in Next.js HMR (dev environment)
+const globalForWA = global as unknown as {
+    waManagerV14: any;
+    waManagerV15: WhatsAppManager
+};
+
+// Cleanup legacy managers if they exist
+const gwa = globalForWA as any;
+if (gwa.waManagerV12 || gwa.waManagerV13 || gwa.waManagerV14) {
+    console.log('[WA] Detected legacy waManager instances. Shutting down...');
+    try {
+        if (gwa.waManagerV12) gwa.waManagerV12.disconnect?.();
+        if (gwa.waManagerV13) gwa.waManagerV13.disconnect?.();
+        if (gwa.waManagerV14) gwa.waManagerV14.disconnect?.();
+    } catch (e) { }
+    delete gwa.waManagerV12;
+    delete gwa.waManagerV13;
+    delete gwa.waManagerV14;
+}
+
 export const waManager = globalForWA.waManagerV15 || new WhatsAppManager();
 
 if (process.env.NODE_ENV !== 'production') {

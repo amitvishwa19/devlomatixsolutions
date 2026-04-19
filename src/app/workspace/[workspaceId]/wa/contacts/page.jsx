@@ -43,10 +43,8 @@ import { bulkDeleteContacts } from './_actions/bulk-delete-contacts';
 import { bulkTagContacts } from './_actions/bulk-tag-contacts';
 import { bulkCategoryContacts } from './_actions/bulk-category-contacts';
 import { bulkFormatContacts } from './_actions/bulk-format';
-import { syncWAContacts } from './_actions/sync-contacts';
 import { importContacts } from './_actions/import-contacts';
 import { sendMessage } from './_actions/send-message';
-import { getStatus as getWAStatus } from '../_actions/get-status';
 
 // Modular Components
 import ManageCategoriesDialog from './_components/ManageCategoriesDialog';
@@ -82,7 +80,6 @@ export default function ContactsPage() {
 
     // Sidebar/Filter State
     const [activeSegment, setActiveSegment] = useState('all'); // all, group:[id], category:[id], tag:[name]
-    const [waStatus, setWaStatus] = useState('loading');
 
     // Modals & Sheets
     const [isAddContactOpen, setIsAddContactOpen] = useState(false);
@@ -240,18 +237,6 @@ export default function ContactsPage() {
         }
     });
 
-    const { execute: executeSync } = useAction(syncWAContacts, {
-        onSuccess: (data) => {
-            toast.success(data.message, { id: 'sync-contacts' });
-            setIsBulkProcessing(false);
-            fetchInitialData();
-        },
-        onError: (err) => {
-            const errorMsg = typeof err === 'string' ? err : (err?.message || "Sync failed");
-            toast.error(errorMsg, { id: 'sync-contacts' });
-            setIsBulkProcessing(false);
-        }
-    });
 
     const { execute: executeImport } = useAction(importContacts, {
         onSuccess: (data) => {
@@ -283,10 +268,6 @@ export default function ContactsPage() {
         }
     });
 
-    const { execute: executeCheckWAStatus } = useAction(getWAStatus, {
-        onSuccess: (data) => setWaStatus(data.status),
-        onError: () => setWaStatus('disconnected')
-    });
 
     const [isFormatting, setIsFormatting] = useState(false);
     const { execute: executeBulkFormat } = useAction(bulkFormatContacts, {
@@ -307,9 +288,6 @@ export default function ContactsPage() {
     useEffect(() => {
         if (userId && workspaceId) {
             fetchInitialData();
-            checkWAStatus();
-            const interval = setInterval(checkWAStatus, 30000);
-            return () => clearInterval(interval);
         }
     }, [userId, workspaceId]);
 
@@ -321,11 +299,6 @@ export default function ContactsPage() {
         executeGetTags({ workspaceId, type: 'TAG' });
     };
 
-    const checkWAStatus = () => {
-        if (workspaceId) {
-            executeCheckWAStatus({ workspaceId });
-        }
-    };
 
     // --- Actions (Handlers) ---
     const handleSaveContact = async (data) => {
@@ -398,10 +371,6 @@ export default function ContactsPage() {
         executeBulkCategory({ ids: selectedContacts, categoryId, workspaceId }, previousSnapshot);
     };
 
-    const handleSync = () => {
-        setIsBulkProcessing(true);
-        executeSync({ userId, workspaceId });
-    };
 
     const runImport = () => {
         setIsImporting(true);
@@ -521,12 +490,6 @@ export default function ContactsPage() {
             <div className="flex items-center justify-between py-2 px-4 border-b bg-card/30">
                 <div className="flex items-center gap-4">
                     <h1 className="text-xl font-bold tracking-tight">CRM Audience</h1>
-                    <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10">
-                        <div className={`w-1.5 h-1.5 rounded-full ${waStatus === 'open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500'}`} />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                            WA: {waStatus === 'open' ? 'Connected' : 'Disconnected'}
-                        </span>
-                    </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -568,10 +531,6 @@ export default function ContactsPage() {
                         <span className="hidden sm:inline">Template</span>
                     </Button>
                     <Separator orientation="vertical" className="h-4 mx-1" />
-                    <Button variant="outline" size="sm" onClick={handleSync} className="h-9 gap-2">
-                        <RefreshCw className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Sync WA</span>
-                    </Button>
                     <Separator orientation="vertical" className="h-4 mx-1" />
                     <Button size="sm" onClick={() => setIsAddContactOpen(true)} className="h-9 gap-2 shadow-sm">
                         <UserPlus className="w-3.5 h-3.5" />

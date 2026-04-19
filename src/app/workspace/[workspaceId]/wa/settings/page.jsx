@@ -75,9 +75,6 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import { useAction } from "@/hooks/use-action";
-import { getStatus } from "../_actions/get-status";
-import { connectWa } from "../_actions/connect-wa";
-import { disconnectWa } from "../_actions/disconnect-wa";
 import { updateTestNumbers } from "../_actions/update-test-numbers";
 import { getCredentials } from "../_actions/get-credentials";
 import { saveCloudCredentials } from "../_actions/save-cloud-credentials";
@@ -90,17 +87,11 @@ import { testMetaApi } from "../_actions/test-meta-api";
 import { updateWaMetadata } from "../_actions/update-wa-metadata";
 import { getDecryptedCredentials } from "../_actions/get-decrypted-credentials";
 import { useParams } from 'next/navigation';
+import { getWaMetadata } from "../_actions/get-wa-metadata";
 
 export default function SettingsPage() {
-    // Connection Method State
-    const [method, setMethod] = useState('cloud'); // 'cloud' | 'browser'
-
-    // Baileys / Browser States
-    const [status, setStatus] = useState('welcome');
     const [metadata, setMetadata] = useState({});
     const [newNumber, setNewNumber] = useState('');
-    const [qrCode, setQrCode] = useState(null);
-    const [qrDataUrl, setQrDataUrl] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [waUser, setWaUser] = useState(null);
@@ -217,19 +208,10 @@ export default function SettingsPage() {
         }
     });
 
-    // Server Action Hooks
-    const { execute: executeGetStatus } = useAction(getStatus, {
+
+    const { execute: executeGetMetadata } = useAction(getWaMetadata, {
         onSuccess: (data) => {
-            setStatus(data.status);
-            if (data.qr && data.qr !== qrCode) {
-                setQrCode(data.qr);
-                QRCode.toDataURL(data.qr).then(setQrDataUrl);
-            } else if (!data.qr) {
-                setQrCode(null);
-                setQrDataUrl(null);
-            }
-            if (data.metadata) setMetadata(data.metadata);
-            if (data.user) setWaUser(data.user);
+            setMetadata(data.metadata || {});
             setLoading(false);
         },
         onError: () => setLoading(false)
@@ -372,10 +354,6 @@ export default function SettingsPage() {
         }
     });
 
-    // Fetchers
-    const fetchBrowserStatus = useCallback(() => {
-        if (workspaceId) executeGetStatus({ workspaceId });
-    }, [workspaceId, executeGetStatus]);
 
     const fetchCloudCreds = () => {
         setCloudLoading(true);
@@ -386,15 +364,18 @@ export default function SettingsPage() {
         executeGetTemplates({ workspaceId });
     };
 
+    const fetchMetadata = () => {
+        setLoading(true);
+        executeGetMetadata({ workspaceId });
+    };
+
     useEffect(() => {
         if (workspaceId) {
-            fetchBrowserStatus();
+            fetchMetadata();
             fetchCloudCreds();
             fetchTemplatesList();
-            const interval = setInterval(fetchBrowserStatus, 10000);
-            return () => clearInterval(interval);
         }
-    }, [workspaceId, fetchBrowserStatus]);
+    }, [workspaceId]);
 
     const handleSyncTemplates = (id) => {
         setSyncingTemplates(prev => ({ ...prev, [id]: true }));
@@ -553,7 +534,7 @@ export default function SettingsPage() {
     };
 
     useEffect(() => {
-        fetchBrowserStatus();
+        fetchMetadata();
         fetchCloudCreds();
         fetchTemplatesList();
 
@@ -561,15 +542,10 @@ export default function SettingsPage() {
         // Pre-fill Meta Cloud inputs
         executeGetDecrypted({ workspaceId });
 
-        const interval = setInterval(() => {
-            if (method === 'browser') fetchBrowserStatus();
-        }, 10000);
-
         if (typeof window !== 'undefined') {
             setWebhookUrl(`${window.location.origin}/api/wa/webhook`);
         }
-        return () => clearInterval(interval);
-    }, [fetchBrowserStatus, method, workspaceId]);
+    }, [workspaceId]);
 
 
     const handleSaveMetadata = (updates) => {
@@ -643,15 +619,6 @@ export default function SettingsPage() {
         handleSaveMetadata({ testNumbers: currentTestNumbers.filter(n => n !== num) });
     };
 
-    const statusConfig = {
-        welcome: { label: 'Not Connected', color: 'bg-zinc-500', icon: AlertCircle },
-        connecting: { label: 'Connecting...', color: 'bg-yellow-500 animate-pulse', icon: RefreshCcw },
-        qr: { label: 'Scan Required', color: 'bg-blue-500', icon: QrCode },
-        open: { label: 'Connected', color: 'bg-green-500', icon: CheckCircle2 },
-        close: { label: 'Disconnected', color: 'bg-red-500', icon: LogOut }
-    };
-
-    const currentStatus = statusConfig[status] || statusConfig.welcome;
 
     return (
         <TooltipProvider>
@@ -1325,16 +1292,6 @@ export default function SettingsPage() {
                                                 onCheckedChange={(c) => handleSaveMetadata({ autoSyncTemplates: c })}
                                             />
                                         </div>
-                                        <div className="flex items-center justify-between p-4 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm">
-                                            <div className="space-y-0.5">
-                                                <Label className="text-xs font-bold tracking-tight">Legacy Read Receipts</Label>
-                                                <p className="text-[10px] text-muted-foreground font-medium">Simulate blue ticks for incoming browser messages.</p>
-                                            </div>
-                                            <Switch
-                                                checked={metadata.readReceipts || false}
-                                                onCheckedChange={(c) => handleSaveMetadata({ readReceipts: c })}
-                                            />
-                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -1432,10 +1389,10 @@ export default function SettingsPage() {
                                         </div>
                                         <div className="p-5 bg-background/40 backdrop-blur-sm border border-border/20 rounded-xl shadow-sm space-y-3">
                                             <div className="flex items-center gap-3 text-[10px] font-black uppercase text-primary tracking-widest">
-                                                <Key size={13} className="text-primary/60" /> Key Rotation
+                                                <Shield size={13} className="text-primary/60" /> Security Node
                                             </div>
-                                            <p className="text-xs font-black font-mono tracking-tight text-primary">AUTOMATED</p>
-                                            <p className="text-[9px] text-muted-foreground font-medium leading-tight opacity-70">Rotating 128-bit challenges periodically for browser sessions.</p>
+                                            <p className="text-xs font-black font-mono tracking-tight text-primary">AUTHORIZED</p>
+                                            <p className="text-[9px] text-muted-foreground font-medium leading-tight opacity-70">Cloud API sessions are monitored for suspicious activity.</p>
                                         </div>
                                     </div>
 

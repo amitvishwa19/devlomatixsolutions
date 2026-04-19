@@ -8,13 +8,11 @@ import { useAction } from "@/hooks/use-action";
 import CampaignList from "./_components/CampaignList";
 import DashboardStats from "./_components/DashboardStats";
 import RecentActivity from "./_components/RecentActivity";
-import { getStatus } from "./_actions/get-status";
 import { getActivities } from "./_actions/get-activities";
 import { getCampaigns } from "./campaigns/_actions/get-campaigns";
 import { saveCampaign } from "./campaigns/_actions/save-campaign";
 import { deleteCampaign as deleteCampaignAction } from "./campaigns/_actions/delete-campaign";
 import { toggleCampaignStatus as toggleCampaignStatusAction } from "./campaigns/_actions/toggle-campaign-status";
-import WhatsAppConnectionModal from "./_components/WhatsAppConnectionModal";
 import WhatsAppSettingModal from "./_components/WhatsAppSettingModal";
 
 
@@ -40,7 +38,6 @@ export default function DashboardPage({ params: paramsPromise }) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editCampaign, setEditCampaign] = useState(null);
     const [waConnectionOpen, setWaConnectionOpen] = useState(false);
-    const [waStatus, setWaStatus] = useState('welcome');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [whatsappSettingOpen, setWhatsappSettingOpen] = useState({
@@ -68,20 +65,6 @@ export default function DashboardPage({ params: paramsPromise }) {
         }
     };
 
-    const { execute: executeGetStatus } = useAction(getStatus, {
-        onSuccess: (data) => {
-            setWaStatus(data.status || 'welcome');
-        },
-        onError: (error) => {
-            console.error('Failed to fetch WA status:', error);
-        }
-    });
-
-    const fetchWaStatus = () => {
-        if (workspaceId) {
-            executeGetStatus({ workspaceId });
-        }
-    };
 
     const { execute: executeGetActivities } = useAction(getActivities, {
         onSuccess: (data) => {
@@ -113,7 +96,6 @@ export default function DashboardPage({ params: paramsPromise }) {
     useEffect(() => {
         if (workspaceId) {
             fetchCampaigns();
-            fetchWaStatus();
             fetchActivities();
         }
     }, [workspaceId]);
@@ -185,22 +167,11 @@ export default function DashboardPage({ params: paramsPromise }) {
                     {/* WhatsApp Connection Status Badge */}
                     <Button
                         variant=""
-                        className={`gap-2 cursor-pointer brder ${waStatus === 'open' ? 'border' : 'border'}`}
-                        // onClick={() => setWaConnectionOpen(true)}
+                        className="gap-2 cursor-pointer border"
                         onClick={() => setWhatsappSettingOpen({ open: true, onClose: () => setWhatsappSettingOpen({ open: false }) })}
                     >
-
-                        {waStatus === 'open' ?
-                            <>
-                                <CheckCircle2 className="w-4 h-4 text-green-850" />
-                                <span className="hidden sm:inline text-green-850">Connected</span>
-                            </> :
-
-                            <>
-                                <MessageCircleDashed className="w-4 h-4" />
-                                <span className="hidden sm:inline">Connect WA</span>
-                            </>
-                        }
+                        <MessageCircleDashed className="w-4 h-4" />
+                        <span className="hidden sm:inline">Connect WA</span>
                     </Button>
 
 
@@ -268,7 +239,6 @@ export default function DashboardPage({ params: paramsPromise }) {
             </div>
 
 
-            <WhatsAppConnectionModal open={waConnectionOpen} onOpenChange={setWaConnectionOpen} />
             <WhatsAppSettingModal
                 open={whatsappSettingOpen.open}
                 onClose={whatsappSettingOpen.onClose}

@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid'
 export async function POST(req) {
     try {
 
-
+        console.log("register api called")
 
         const payload = await req.json();
         const { email, password, location, deviceToken } = payload;

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { waManager } from "../../_lib/whatsapp-v2";
+import * as cloudApi from "../../_lib/whatsapp-cloud-api";
 
 const SendMessageSchema = z.object({
     workspaceId: z.string(),
@@ -18,15 +18,18 @@ const handler = async (data) => {
     try {
         await ensureWorkspaceAccess(workspaceId);
 
-        // Format phone number to JID
-        let jid = phone.replace(/\D/g, '');
-        if (!jid.endsWith('@s.whatsapp.net')) {
-            jid = `${jid}@s.whatsapp.net`;
-        }
+        const credential = await db.whatsAppCredential.findFirst({
+            where: { workspaceId, isActive: true }
+        });
 
-        const result = await waManager.sendMessage(jid, { text: message });
+        if (!credential) throw new Error("No active Cloud API credential found");
 
-        return { success: true, result };
+        const phoneNum = phone.replace(/\D/g, '');
+        const result = await cloudApi.sendTextMessage(credential, phoneNum, message);
+
+        if (!result.success) throw new Error(result.error);
+
+        return { success: true, result: result.data };
     } catch (error) {
         console.error('Action Error (sendMessage):', error);
         return { error: error.message || 'Internal Server Error' };

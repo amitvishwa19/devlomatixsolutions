@@ -26,7 +26,6 @@ import { useAction } from "@/hooks/use-action";
 import { getConversations } from "./_actions/get-conversations";
 import { sendMessage } from "./_actions/send-message";
 import { getAiSuggestions } from "./_actions/get-ai-suggestions";
-import { getStatus as getWAStatus } from "../_actions/get-status";
 import { getContacts } from "../contacts/_actions/get-contacts";
 import { getTemplates } from "../template/_actions/get-templates";
 import { formatDistanceToNow } from "date-fns";
@@ -83,7 +82,6 @@ export default function WhatsAppChatsPage() {
     const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState(false);
     const [selectedTemplateForSend, setSelectedTemplateForSend] = useState(null);
     const [templateVars, setTemplateVars] = useState({});
-    const [waStatus, setWaStatus] = useState('disconnected');
 
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
@@ -176,25 +174,15 @@ export default function WhatsAppChatsPage() {
         onSettled: () => setIsAiLoading(false)
     });
 
-    const { execute: executeCheckWAStatus } = useAction(getWAStatus, {
-        onSuccess: (data) => setWaStatus(data.status),
-        onError: () => setWaStatus('disconnected')
-    });
 
     const fetchConversations = () => executeConversations({ workspaceId });
     const fetchContacts = () => { setIsFetchingContacts(true); executeGetContacts({ workspaceId }); };
     const fetchTemplates = () => executeGetTemplates({ workspaceId });
-    const checkWAStatus = () => {
-        if (workspaceId) {
-            executeCheckWAStatus({ workspaceId });
-        }
-    };
 
     useEffect(() => {
         fetchConversations();
         fetchTemplates();
         fetchContacts();
-        checkWAStatus();
         const interval = setInterval(fetchConversations, 5000);
         return () => clearInterval(interval);
     }, [workspaceId]);

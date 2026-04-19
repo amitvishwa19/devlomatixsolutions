@@ -1,13 +1,11 @@
-import { makeWASocket, DisconnectReason, fetchLatestBaileysVersion, prepareWAMessageMedia } from '@whiskeysockets/baileys';
+import { makeWASocket, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import pino from 'pino';
+import * as fs from 'fs';
 import { usePrismaAuthState } from './whatsapp-auth';
 import { db } from '@/lib/db';
-import * as fs from 'fs';
 
 class WhatsAppManager {
-    constructor() {
-        console.log('[WA] NEW WhatsAppManager Instance Created (JS Version)');
-    }
+    constructor() { }
     
     sock = null;
     state = 'welcome';
@@ -26,29 +24,15 @@ class WhatsAppManager {
     }
 
     getMessages() {
-        return this.messages.map(m => ({
-            id: m.id,
-            jid: m.jid,
-            text: m.text,
-            fromMe: m.fromMe,
-            timestamp: typeof m.timestamp === 'bigint' ? Number(m.timestamp) : m.timestamp
-        }));
+        return this.messages;
     }
 
     getContacts() {
         return this.contacts;
     }
 
-    getUser() {
-        if (!this.sock?.user) return null;
-        return {
-            id: this.sock.user.id,
-            name: this.sock.user.name,
-            imgUrl: this.sock.user.imgUrl
-        };
-    }
-
     connect(sessionId = 'default') {
+        console.log('wa manager connect for session:', sessionId)
         if (this.state === 'open' || this.state === 'connecting' || this.state === 'qr') return;
         this.currentSessionId = sessionId;
         this.init(sessionId);
@@ -59,14 +43,18 @@ class WhatsAppManager {
         this.qrString = null;
         this.currentSessionId = sessionId;
 
+        console.log('wa manager init for session:', sessionId)
+
         try {
             const { state, saveCreds } = await usePrismaAuthState(sessionId);
             const { version } = await fetchLatestBaileysVersion();
 
+            // Fetch userId associated with this session
             const authRecord = await db.whatsAppAuth.findUnique({
                 where: { sessionId }
             });
             this.userId = authRecord?.userId || null;
+            console.log(`[WA] Session ${sessionId} linked to User: ${this.userId}`);
 
             this.sock = makeWASocket({
                 version,
@@ -79,29 +67,34 @@ class WhatsAppManager {
 
             this.sock.ev.on('connection.update', (update) => {
                 const { connection, lastDisconnect, qr } = update;
-                
+                console.log(`[WA] Connection Update: ${connection || 'no status'}, state: ${this.state}`);
+
                 if (qr) {
                     this.state = 'qr';
                     this.qrString = qr;
+                    console.log('[WA] New QR Code generated');
                 }
 
                 if (connection === 'close') {
                     const statusCode = lastDisconnect?.error?.output?.statusCode;
                     const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-                    
+                    console.log(`[WA] Connection Closed. Reason: ${statusCode}, Reconnecting: ${shouldReconnect} in 5s`);
+
                     if (shouldReconnect) {
                         setTimeout(() => this.init(sessionId), 5000);
                     } else {
+                        console.log(`[WA] Session logged out. Clearing DB for ${sessionId}...`);
                         this.state = 'welcome';
                         this.sock = null;
                         this.qrString = null;
                         this.userId = null;
-                        
+
                         db.whatsAppAuth.deleteMany({
                             where: { sessionId }
                         }).catch((e) => console.error('[WA] DB clear error:', e));
                     }
                 } else if (connection === 'open') {
+                    console.log('[WA] Connection successfully opened!');
                     this.state = 'open';
                     this.qrString = null;
                 }
@@ -112,6 +105,7 @@ class WhatsAppManager {
                 if (!msgs || msgs.length === 0) return;
 
                 const dbActions = [];
+
                 for (const msg of msgs) {
                     if (!msg.message) continue;
 
@@ -119,10 +113,12 @@ class WhatsAppManager {
                     const fromMe = msg.key.fromMe || false;
                     const id = msg.key.id || '';
                     const timestamp = msg.messageTimestamp ? (typeof msg.messageTimestamp === 'number' ? msg.messageTimestamp : msg.messageTimestamp.low) : Math.floor(Date.now() / 1000);
+
                     const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
 
                     if (text && jid) {
                         this.pushToHistory(id, jid, text, fromMe);
+
                         if (this.userId) {
                             dbActions.push(
                                 db.whatsAppMessage.upsert({
@@ -188,62 +184,99 @@ class WhatsAppManager {
     async sendMessage(jid, data) {
         if (!this.sock || this.state !== 'open') throw new Error('WhatsApp not connected');
 
+        try {
+            const logEntry = `[${new Date().toISOString()}] Sending to ${jid}:\n${JSON.stringify(data, null, 2)}\n\n`;
+            fs.appendFileSync('d:/Dev/React/devlomatix/devlomatixv2/wa_debug.log', logEntry);
+        } catch (e) {
+            console.error('[WA] Debug log write failed', e);
+        }
+
         const getCleanText = (input) => {
             if (!input) return '';
             if (typeof input === 'string') return input;
-            if (input.text !== undefined && input.text !== null) return String(input.text);
+            if (input.text) return input.text;
             return String(input);
         };
 
-        const type = (data.type || '').toLowerCase();
         let result;
         let finalBody = '';
 
-        try {
-            if (data.image || type === 'image') {
-                finalBody = getCleanText(data.caption || data.text || 'Image');
-                result = await this.sock.sendMessage(jid, { image: data.image || { url: data.metadata?.mediaUrl }, caption: finalBody });
-            } else if (data.video || type === 'video') {
-                finalBody = getCleanText(data.caption || data.text || 'Video');
-                result = await this.sock.sendMessage(jid, { video: data.video || { url: data.metadata?.mediaUrl }, caption: finalBody });
-            } else if (data.audio || type === 'audio') {
-                finalBody = 'Audio Message';
-                result = await this.sock.sendMessage(jid, { audio: data.audio || { url: data.metadata?.mediaUrl }, mimetype: 'audio/mp4' });
-            } else if (data.document || type === 'document') {
-                finalBody = getCleanText(data.caption || data.text || 'Document');
-                result = await this.sock.sendMessage(jid, { document: data.document || { url: data.metadata?.mediaUrl }, caption: finalBody, mimetype: 'application/pdf' });
-            } else if (data.location || type === 'location') {
-                const loc = data.location || {
-                    degreesLatitude: parseFloat(data.metadata?.latitude),
-                    degreesLongitude: parseFloat(data.metadata?.longitude),
-                    name: data.metadata?.locationName
-                };
-                finalBody = `Location: ${loc.name || 'Shared Location'}`;
-                result = await this.sock.sendMessage(jid, { location: loc });
-            } else if (data.interactive || type === 'interactive' || data.carousel || type === 'carousel') {
-                const interactiveData = data.interactive || data;
-                finalBody = getCleanText(interactiveData.body || interactiveData.text || 'Interactive Message');
-                const msgContent = interactiveData.interactiveMessage || interactiveData;
+        if (data.image) {
+            finalBody = getCleanText(data.caption || data.text || 'Image');
+            result = await this.sock.sendMessage(jid, { image: data.image, caption: finalBody });
+        } else if (data.video) {
+            finalBody = getCleanText(data.caption || data.text || 'Video');
+            result = await this.sock.sendMessage(jid, { video: data.video, caption: finalBody });
+        } else if (data.audio) {
+            finalBody = 'Audio Message';
+            result = await this.sock.sendMessage(jid, { audio: data.audio, mimetype: 'audio/mp4' });
+        } else if (data.document) {
+            finalBody = getCleanText(data.caption || data.text || 'Document');
+            result = await this.sock.sendMessage(jid, { document: data.document, caption: finalBody, mimetype: 'application/pdf' });
+        } else if (data.location) {
+            finalBody = `Location: ${data.location.name || 'Shared Location'}`;
+            result = await this.sock.sendMessage(jid, { location: data.location });
+        } else if (data.interactive) {
+            const isList = data.interactive.type === 'list' ||
+                !!data.interactive.sections ||
+                !!data.interactive.action?.sections ||
+                !!data.interactive.buttonText;
 
-                if (msgContent.carouselMessage?.cards) {
-                    for (const card of msgContent.carouselMessage.cards) {
-                        if (card.header?.imageMessage?.url && !card.header.imageMessage.mimetype) {
-                            const media = await prepareWAMessageMedia(
-                                { image: { url: card.header.imageMessage.url } },
-                                { upload: this.sock.waUploadToServer }
-                            );
-                            card.header.imageMessage = media.imageMessage;
+            if (isList) {
+                const bodyText = getCleanText(data.interactive.body?.text || data.interactive.text || data.text || data.interactive.body);
+                const footerText = getCleanText(data.interactive.footer?.text || data.interactive.footer);
+                const buttonText = data.interactive.action?.button || data.interactive.buttonText || 'Options';
+                const sections = data.interactive.action?.sections || data.interactive.sections || [];
+
+                const formattedSections = sections.map((section) => ({
+                    title: section.title,
+                    rows: (section.rows || []).map((row) => ({
+                        title: row.title,
+                        rowId: row.id || row.rowId || row.title.toLowerCase().replace(/\s+/g, '_'),
+                        description: row.description
+                    }))
+                }));
+
+                finalBody = bodyText;
+                result = await this.sock.sendMessage(jid, {
+                    text: bodyText,
+                    footer: footerText,
+                    title: data.interactive.header?.title || data.interactive.header || '',
+                    buttonText: buttonText,
+                    sections: formattedSections
+                });
+            } else {
+                let simulatedText = '';
+                if (data.interactive.header) {
+                    const headerText = getCleanText(data.interactive.header);
+                    if (headerText) simulatedText += `*${headerText}*\n\n`;
+                }
+                const bodyText = getCleanText(data.interactive.body);
+                simulatedText += `${bodyText}\n\n`;
+
+                const sections = data.interactive.sections || data.interactive.action?.sections || [];
+                if (sections.length > 0) {
+                    simulatedText += `_*Reply with the number of your choice:*_\n\n`;
+                    let optionCounter = 1;
+                    for (const section of sections) {
+                        if (section.title) simulatedText += `*--- ${section.title} ---*\n`;
+                        for (const row of section.rows || []) {
+                            simulatedText += `*[ ${optionCounter} ]* ${row.title}\n`;
+                            if (row.description) simulatedText += `      _${row.description}_\n`;
+                            optionCounter++;
                         }
+                        simulatedText += '\n';
                     }
                 }
-                result = await this.sock.sendMessage(jid, { interactiveMessage: msgContent });
-            } else {
-                finalBody = getCleanText(data.text || data.body || '');
+                const footerText = getCleanText(data.interactive.footer);
+                if (footerText) simulatedText += `_${footerText}_`;
+
+                finalBody = simulatedText.trim();
                 result = await this.sock.sendMessage(jid, { text: finalBody });
             }
-        } catch (err) {
-            console.error('[WA] Send Message Failed:', err);
-            finalBody = getCleanText(data.text || data.body || 'Error sending content');
+        }
+        else {
+            finalBody = getCleanText(data.text);
             result = await this.sock.sendMessage(jid, { text: finalBody });
         }
 
@@ -251,6 +284,7 @@ class WhatsAppManager {
             const id = result.key?.id || Date.now().toString();
             const timestamp = Math.floor(Date.now() / 1000);
             this.pushToHistory(id, jid, finalBody, true);
+
             db.whatsAppMessage.create({
                 data: {
                     waId: id,
@@ -286,8 +320,8 @@ class WhatsAppManager {
 }
 
 const globalForWA = global;
-export const waManager = globalForWA.waManagerV2_Standard || new WhatsAppManager();
+export const waManager = globalForWA.waManagerV15 || new WhatsAppManager();
 
 if (process.env.NODE_ENV !== 'production') {
-    globalForWA.waManagerV2_Standard = waManager;
+    globalForWA.waManagerV15 = waManager;
 }
