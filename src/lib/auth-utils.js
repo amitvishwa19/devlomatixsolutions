@@ -50,7 +50,7 @@ export async function ensureWorkspaceAccess(workspaceId) {
 
     // Check if user has an explicit role/membership in this workspace
     // This logic should be expanded based on how you store workspace memberships (e.g., in token or DB check)
-    const hasAccess = session?.user?.roles?.some(role => role.workspaceId === workspaceId) || 
+    const hasAccess = session?.user?.workspaces?.includes(workspaceId) || 
                       session?.user?.role === "ADMIN";
 
     if (!hasAccess && workspaceId) {

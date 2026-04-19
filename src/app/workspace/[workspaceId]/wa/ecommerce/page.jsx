@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAction } from "@/hooks/use-action";
+import { getStores } from "./_actions/get-stores";
 import { toast } from "sonner";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { ShopifyConnectModal } from "./_components/ShopifyConnectModal";
@@ -29,28 +31,34 @@ const stats = [
     { label: "Recovery Rate", value: "64.2%", change: "+2.4%", icon: ShoppingBag, color: "text-purple-500", bg: "bg-purple-500/10" }
 ];
 
-export default function ECommercePage() {
+import { use } from "react";
+
+export default function ECommercePage({ params: paramsPromise }) {
+    const params = use(paramsPromise);
+    const workspaceId = params.workspaceId;
     const [isLoading, setIsLoading] = useState(true);
     const [stores, setStores] = useState([]);
     const [isShopifyModalOpen, setIsShopifyModalOpen] = useState(false);
     const [isWooModalOpen, setIsWooModalOpen] = useState(false);
 
-    const fetchStores = async () => {
-        setIsLoading(true);
-        try {
-            const res = await fetch('/api/wa/ecommerce');
-            const json = await res.json();
-            if (json.success) {
-                setStores(json.data);
-            }
-        } catch (error) {
-            toast.error("Failed to load stores");
-        } finally {
+    const { execute: executeGetStores } = useAction(getStores, {
+        onSuccess: (data) => {
+            setStores(data.stores || []);
+            setIsLoading(false);
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to load stores");
             setIsLoading(false);
         }
+    });
+
+    const fetchStores = () => {
+        setIsLoading(true);
+        executeGetStores({ workspaceId });
     };
 
     useEffect(() => {
+        // We'll need workspaceId here ideally, but for now matching legacy behavior
         fetchStores();
     }, []);
 
@@ -249,11 +257,13 @@ export default function ECommercePage() {
 
             <ShopifyConnectModal
                 isOpen={isShopifyModalOpen}
+                workspaceId={workspaceId}
                 onClose={() => setIsShopifyModalOpen(false)}
                 onConnected={fetchStores}
             />
             <WooCommerceConnectModal
                 isOpen={isWooModalOpen}
+                workspaceId={workspaceId}
                 onClose={() => setIsWooModalOpen(false)}
                 onConnected={fetchStores}
             />

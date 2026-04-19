@@ -7,6 +7,10 @@ import { Textarea } from"@/components/ui/textarea";
 import { Plus, Trash2, Smartphone, Send, ExternalLink, MessageCircleDashed } from'lucide-react';
 import Link from'next/link';
 import { Button } from'@/components/ui/button';
+import { useAction } from "@/hooks/use-action";
+import { getStatus } from "../_actions/get-status";
+import { getMessages } from "../_actions/get-messages";
+import { sendBrowserMessage } from "../_actions/send-browser-message";
 
 export default function QuickMessage({ params: paramsPromise }) {
  const params = use(paramsPromise);
@@ -38,91 +42,67 @@ export default function QuickMessage({ params: paramsPromise }) {
  }]
  );
 
- const [sendLoading, setSendLoading] = useState(false);
  const [feedback, setFeedback] = useState(null);
 
- useEffect(() => {
- const fetchStatusAndHistory = async () => {
- try {
- // Fetch Connection Status
- const authRes = await fetch('/api/wa/auth');
- if (authRes.ok) {
- const authData = await authRes.json();
- setStatus(authData.status ||'welcome');
- } else {
- setStatus('welcome');
- }
+ // Server Action Hooks
+ const { execute: executeGetStatus } = useAction(getStatus, {
+     onSuccess: (data) => setStatus(data.status || 'welcome')
+ });
 
- // Fetch Persistent History
- if (userId) {
- const historyRes = await fetch(`/api/wa/messages?userId=${userId}&limit=20`);
- if (historyRes.ok) {
- const historyData = await historyRes.json();
- setMessages(historyData);
- }
- }
- } catch (err) {
- console.error('Fetch error:', err);
- setStatus('welcome');
- }
+ const { execute: executeGetMessages } = useAction(getMessages, {
+     onSuccess: (data) => setMessages(data.messages || [])
+ });
+
+ const { execute: executeSend, isLoading: sendLoading } = useAction(sendBrowserMessage, {
+     onSuccess: () => {
+         setFeedback({ type: 'success', msg: 'Message sent successfully!' });
+         if (msgType === 'text') setMessageText('');
+         executeGetMessages({ workspaceId });
+     },
+     onError: (err) => setFeedback({ type: 'error', msg: err || "Failed to send" })
+ });
+
+ const fetchStatusAndHistory = () => {
+     executeGetStatus({ workspaceId });
+     executeGetMessages({ workspaceId });
  };
 
- fetchStatusAndHistory();
- const interval = setInterval(fetchStatusAndHistory, 5000); // Poll for new messages
- return () => clearInterval(interval);
- }, [userId]);
+ useEffect(() => {
+     fetchStatusAndHistory();
+     const interval = setInterval(fetchStatusAndHistory, 5000);
+     return () => clearInterval(interval);
+ }, [workspaceId]);
 
  // Send Message Handler
- const handleSendMessage = async (e) => {
- e.preventDefault();
- setSendLoading(true);
- setFeedback(null);
+ const handleSendMessage = (e) => {
+     e.preventDefault();
+     setFeedback(null);
 
- try {
- let payload = { to: toNumber };
+     let payload = { workspaceId, to: toNumber };
 
- if (msgType ==='text') {
- payload.text = messageText;
- } else if (msgType ==='interactive') {
- payload.text = intBody; // Required fallback text
- payload.interactive = {
- type:"list",
- body: { text: intBody },
- footer: intFooter ? { text: intFooter } : undefined,
- action: {
- button: intButton ||"Options",
- sections: intSections.map((sec) => ({
- title: sec.title,
- rows: sec.rows.map((r) => ({
- id: r.id || Math.random().toString(36).substr(2, 9),
- title: r.title,
- description: r.description || undefined
- }))
- }))
- }
- };
- }
+     if (msgType === 'text') {
+         payload.text = messageText;
+     } else if (msgType === 'interactive') {
+         payload.text = intBody;
+         payload.interactive = {
+             type: "list",
+             body: { text: intBody },
+             footer: intFooter ? { text: intFooter } : undefined,
+             action: {
+                 button: intButton || "Options",
+                 sections: intSections.map((sec) => ({
+                     title: sec.title,
+                     rows: sec.rows.map((r) => ({
+                         id: r.id || Math.random().toString(36).substr(2, 9),
+                         title: r.title,
+                         description: r.description || undefined
+                     }))
+                 }))
+             }
+         };
+     }
 
- const res = await fetch('/api/wa/send-browser', {
- method:'POST',
- headers: {'Content-Type':'application/json'},
- body: JSON.stringify(payload)
- });
- const data = await res.json();
-
- if (res.ok && data.success) {
- setFeedback({ type:'success', msg:'Message sent successfully!'});
- if (msgType ==='text') setMessageText('');
- } else {
- throw new Error(data.error ||'Failed to send');
- }
- } catch (error) {
- const message = error instanceof Error ? error.message : String(error);
- setFeedback({ type:'error', msg: message });
- } finally {
- setSendLoading(false);
- setTimeout(() => setFeedback(null), 5000); // clear feedback automatically
- }
+     executeSend(payload);
  };
 
  // Interactive Form Helpers

@@ -28,6 +28,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
+import { useAction } from "@/hooks/use-action";
+import { getBotDetails } from "../../chatbot/_actions/get-bot-details";
+import { saveBot } from "../../chatbot/_actions/save-bot";
 
 import '@xyflow/react/dist/style.css';
 
@@ -55,41 +58,41 @@ export const FlowCanvas = ({ flowId }) => {
     const [flowData, setFlowData] = useState(null);
 
     const [selectedNode, setSelectedNode] = useState(null);
-    const [isSaving, setIsSaving] = useState(false);
+
+    const { execute: executeGetDetails } = useAction(getBotDetails, {
+        onSuccess: (data) => {
+            setFlowData(data.bot);
+            const savedNodes = data.bot.nodes;
+            const savedEdges = data.bot.edges;
+            setNodes(savedNodes && Array.isArray(savedNodes) && savedNodes.length > 0 ? savedNodes : initialNodes);
+            setEdges(savedEdges || []);
+            setTimeout(() => fitView({ padding: 0.2 }), 100);
+            setIsLoading(false);
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to load workflow data");
+            setIsLoading(false);
+        }
+    });
+
+    const { execute: executeSaveBot, isLoading: isSaving } = useAction(saveBot, {
+        onSuccess: () => {
+            toast.success("Workflow saved successfully");
+        },
+        onError: (err) => toast.error(err || "Save failed")
+    });
 
     // Load Flow Data
     useEffect(() => {
-        const fetchFlow = async () => {
-            if (!flowId) {
-                setNodes(initialNodes);
-                setIsLoading(false);
-                return;
-            }
+        if (!flowId) {
+            setNodes(initialNodes);
+            setIsLoading(false);
+            return;
+        }
 
-            try {
-                setIsLoading(true);
-                const res = await fetch(`/api/wa/bot-flow/${flowId}`);
-                const json = await res.json();
-                if (json.success && json.data) {
-                    setFlowData(json.data);
-                    
-                    // Use nodes/edges from DB if they exist, otherwise initial
-                    const savedNodes = json.data.nodes;
-                    const savedEdges = json.data.edges;
-                    
-                    setNodes(savedNodes && Array.isArray(savedNodes) && savedNodes.length > 0 ? savedNodes : initialNodes);
-                    setEdges(savedEdges || []);
-                    
-                    setTimeout(() => fitView({ padding: 0.2 }), 100);
-                }
-            } catch (err) {
-                toast.error("Failed to load workflow data");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchFlow();
-    }, [flowId, setNodes, setEdges, fitView]);
+        setIsLoading(true);
+        executeGetDetails({ workspaceId, id: flowId });
+    }, [flowId, workspaceId]);
 
     const onConnect = useCallback(
         (params) => setEdges((eds) => addEdge({
@@ -165,30 +168,9 @@ export const FlowCanvas = ({ flowId }) => {
         );
     };
 
-    const handleSave = async () => {
+    const handleSave = () => {
         if (!flowId) return;
-        
-        setIsSaving(true);
-        const toastId = toast.loading("Saving workflow...");
-        
-        try {
-            const res = await fetch(`/api/wa/bot-flow/${flowId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nodes, edges }),
-            });
-            
-            const json = await res.json();
-            if (json.success) {
-                toast.success("Workflow saved successfully", { id: toastId });
-            } else {
-                toast.error(json.error || "Save failed", { id: toastId });
-            }
-        } catch (e) {
-            toast.error("Network error", { id: toastId });
-        } finally {
-            setIsSaving(false);
-        }
+        executeSaveBot({ workspaceId, id: flowId, nodes, edges });
     };
 
     if (isLoading) {

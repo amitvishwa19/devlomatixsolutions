@@ -4,9 +4,16 @@ import { use } from "react";
 import { useEffect, useState } from "react";
 import { CheckCircle2, MessageCircleDashed, Users, MessageSquare, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAction } from "@/hooks/use-action";
 import CampaignList from "./_components/CampaignList";
 import DashboardStats from "./_components/DashboardStats";
 import RecentActivity from "./_components/RecentActivity";
+import { getStatus } from "./_actions/get-status";
+import { getActivities } from "./_actions/get-activities";
+import { getCampaigns } from "./campaigns/_actions/get-campaigns";
+import { saveCampaign } from "./campaigns/_actions/save-campaign";
+import { deleteCampaign as deleteCampaignAction } from "./campaigns/_actions/delete-campaign";
+import { toggleCampaignStatus as toggleCampaignStatusAction } from "./campaigns/_actions/toggle-campaign-status";
 import WhatsAppConnectionModal from "./_components/WhatsAppConnectionModal";
 import WhatsAppSettingModal from "./_components/WhatsAppSettingModal";
 
@@ -41,40 +48,44 @@ export default function DashboardPage({ params: paramsPromise }) {
         onClose: () => setWhatsappSettingOpen({ open: false })
     });
 
-    const fetchCampaigns = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch("/api/wa/campaigns", { cache: 'no-store' });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || "Failed to fetch campaigns");
-            }
+    const { execute: executeGetCampaigns } = useAction(getCampaigns, {
+        onSuccess: (data) => {
             const incoming = (data.campaigns || []).map(mapApiCampaignToUI);
-            console.debug("Fetched campaigns:", incoming.length, incoming.map((c) => c.id));
             setCampaigns(incoming);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : String(err));
-        } finally {
+            setLoading(false);
+        },
+        onError: (error) => {
+            setError(error);
             setLoading(false);
         }
-    };
+    });
 
-    const fetchWaStatus = async () => {
-        try {
-            const res = await fetch('/api/wa/auth');
-            const data = await res.json();
-            setWaStatus(data.status || 'welcome');
-        } catch (err) {
-            console.error('Failed to fetch WA status:', err);
+    const fetchCampaigns = () => {
+        setLoading(true);
+        setError(null);
+        if (workspaceId) {
+            executeGetCampaigns({ workspaceId });
         }
     };
 
-    const fetchActivities = async () => {
-        try {
-            const res = await fetch('/api/wa/activities');
-            const data = await res.json();
-            if (data.success) {
+    const { execute: executeGetStatus } = useAction(getStatus, {
+        onSuccess: (data) => {
+            setWaStatus(data.status || 'welcome');
+        },
+        onError: (error) => {
+            console.error('Failed to fetch WA status:', error);
+        }
+    });
+
+    const fetchWaStatus = () => {
+        if (workspaceId) {
+            executeGetStatus({ workspaceId });
+        }
+    };
+
+    const { execute: executeGetActivities } = useAction(getActivities, {
+        onSuccess: (data) => {
+            if (data.activities) {
                 // Map API activities to UI format
                 const mapped = data.activities.map(act => ({
                     id: act.id,
@@ -87,77 +98,67 @@ export default function DashboardPage({ params: paramsPromise }) {
                 }));
                 setActivities(mapped);
             }
-        } catch (err) {
-            console.error('Failed to fetch WA activities:', err);
+        },
+        onError: (error) => {
+            console.error('Failed to fetch WA activities:', error);
+        }
+    });
+
+    const fetchActivities = () => {
+        if (workspaceId) {
+            executeGetActivities({ workspaceId });
         }
     };
 
     useEffect(() => {
-        fetchCampaigns();
-        fetchWaStatus();
-        fetchActivities();
-    }, []);
+        if (workspaceId) {
+            fetchCampaigns();
+            fetchWaStatus();
+            fetchActivities();
+        }
+    }, [workspaceId]);
 
     const refresh = () => fetchCampaigns();
 
-    const toggleCampaignStatus = async (campaign) => {
+    const { execute: executeToggleStatus } = useAction(toggleCampaignStatusAction, {
+        onSuccess: () => refresh()
+    });
+
+    const toggleCampaignStatus = (campaign) => {
         const nextStatus = campaign.status === "active" ? "paused" : "active";
-        try {
-            await fetch(`/api/wa/campaigns/${campaign.id}`, {
-                method: "PATCH",
-                cache: 'no-store',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: nextStatus })
-            });
-            await refresh();
-        } catch (err) {
-            console.error("Failed to toggle campaign status", err);
-        }
+        executeToggleStatus({
+            workspaceId,
+            id: campaign.id,
+            status: nextStatus
+        });
     };
 
-    const deleteCampaign = async (id) => {
-        try {
-            const res = await fetch(`/api/wa/campaigns/${id}`, { method: "DELETE", cache: 'no-store' });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data?.error || "Failed to delete campaign");
-            }
-            await refresh();
-        } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            console.error("Failed to delete campaign", message);
-            setError(message);
-        }
+    const { execute: executeDeleteCampaign } = useAction(deleteCampaignAction, {
+        onSuccess: () => refresh(),
+        onError: (error) => setError(error)
+    });
+
+    const deleteCampaign = (id) => {
+        executeDeleteCampaign({ workspaceId, id });
     };
 
-    const handleSaveCampaign = async (data) => {
-        try {
-            const body = {
-                name: data.name,
-                messageTemplate: data.template,
-                status: data.status
-            };
-
-            if (editCampaign) {
-                await fetch(`/api/wa/campaigns/${editCampaign.id}`, {
-                    method: "PATCH",
-                    cache: 'no-store',
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
-                });
-            } else {
-                await fetch("/api/wa/campaigns", {
-                    method: "POST",
-                    cache: 'no-store',
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ...body, recipients: [] })
-                });
-            }
-
-            await refresh();
-        } catch (err) {
-            console.error("Failed to save campaign", err);
+    const { execute: executeSaveCampaign } = useAction(saveCampaign, {
+        onSuccess: () => {
+            setDialogOpen(false);
+            setEditCampaign(null);
+            refresh();
         }
+    });
+
+    const handleSaveCampaign = (data) => {
+        executeSaveCampaign({
+            workspaceId,
+            id: editCampaign?.id,
+            name: data.name,
+            messageTemplate: data.template,
+            status: data.status,
+            description: "" // Add description if needed
+        });
     };
 
     return (

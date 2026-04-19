@@ -14,6 +14,12 @@ import {
  Save } from
 "lucide-react";
 import { toast } from"sonner";
+import { useParams } from "next/navigation";
+import { useAction } from "@/hooks/use-action";
+import { getStatus } from "../_actions/get-status";
+import { connectWa } from "../_actions/connect-wa";
+import { disconnectWa } from "../_actions/disconnect-wa";
+import { updateAuthRecord } from "../_actions/update-auth-record";
 import QRCode from"qrcode";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from"@/components/ui/dialog";
 import { Button } from"@/components/ui/button";
@@ -57,7 +63,9 @@ const saveCachedStatus = (data) => {
 };
 
 export default function WhatsAppConnectionModal({ open, onOpenChange }) {
- const [status, setStatus] = useState('welcome');
+    const params = useParams();
+    const workspaceId = params?.workspaceId;
+    const [status, setStatus] = useState('welcome');
  const [qrCode, setQrCode] = useState(null);
  const [qrDataUrl, setQrDataUrl] = useState(null);
  const [loading, setLoading] = useState(true);
@@ -80,47 +88,66 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  }
  }, []);
 
- const fetchStatus = useCallback(async () => {
- try {
- const res = await fetch('/api/wa/auth');
- if (!res.ok) return;
- const data = await res.json();
+    // Server Action Hooks
+    const { execute: executeGetStatus } = useAction(getStatus, {
+        onSuccess: (data) => {
+            if (data.status) setStatus(data.status);
+            if (data.qr && (data.qr !== qrCode || !qrDataUrl)) {
+                setQrCode(data.qr);
+                QRCode.toDataURL(data.qr).then(setQrDataUrl);
+            } else if (!data.qr) {
+                setQrCode(null);
+                setQrDataUrl(null);
+            }
+            if (data.deviceInfo) {
+                const info = {
+                    phoneNumber: data.deviceInfo.phoneNumber,
+                    deviceName: data.deviceInfo.deviceName,
+                    platform: data.deviceInfo.platform,
+                    connectedAt: data.deviceInfo.connectedAt ? new Date(data.deviceInfo.connectedAt).toISOString() : undefined
+                };
+                setDeviceInfo(info);
+                saveCachedStatus({ status: data.status, ...info });
+            }
+        },
+        onFinish: () => setLoading(false)
+    });
 
- if (data.status) setStatus(data.status);
+    const { execute: executeConnect } = useAction(connectWa, {
+        onSuccess: (data) => {
+            if (data.status) setStatus(data.status);
+            if (data.qr) {
+                setQrCode(data.qr);
+                QRCode.toDataURL(data.qr).then(setQrDataUrl);
+            }
+            toast.success('Connection process started');
+            executeGetStatus({ workspaceId });
+        },
+        onError: (err) => {
+            toast.error(err || 'Failed to start connection');
+            setStatus('welcome');
+        },
+        onFinish: () => setActionLoading(false)
+    });
 
- // Handle device info from API response
- if (data.deviceInfo) {
- const info = {
- phoneNumber: data.deviceInfo.phoneNumber,
- deviceName: data.deviceInfo.deviceName,
- platform: data.deviceInfo.platform,
- connectedAt: data.deviceInfo.connectedAt ? new Date(data.deviceInfo.connectedAt).toISOString() : undefined
- };
- setDeviceInfo(info);
+    const { execute: executeDisconnect } = useAction(disconnectWa, {
+        onSuccess: () => {
+            toast.success('Disconnected successfully');
+            executeGetStatus({ workspaceId });
+        },
+        onError: (err) => toast.error(err || 'Failed to disconnect'),
+        onFinish: () => setActionLoading(false)
+    });
 
- // Save to localStorage
- saveCachedStatus({
- status: data.status,
- ...info
- });
- }
+    const { execute: executeSaveToServer } = useAction(updateAuthRecord, {
+        onSuccess: () => toast.success('Connection info saved to server'),
+        onError: (err) => toast.error(err || 'Failed to save to server'),
+        onFinish: () => setActionLoading(false)
+    });
 
- if (data.qr) {
- if (data.qr !== qrCode || !qrDataUrl) {
- setQrCode(data.qr);
- const dataUrl = await QRCode.toDataURL(data.qr);
- setQrDataUrl(dataUrl);
- }
- } else if (!data.qr) {
- setQrCode(null);
- setQrDataUrl(null);
- }
- } catch (error) {
- console.error('[WA] Failed to fetch status:', error);
- } finally {
- setLoading(false);
- }
- }, [qrCode, qrDataUrl]);
+    const fetchStatus = useCallback(() => {
+        if (workspaceId) executeGetStatus({ workspaceId });
+    }, [workspaceId, executeGetStatus]);
 
  useEffect(() => {
  if (open) {
@@ -132,81 +159,24 @@ export default function WhatsAppConnectionModal({ open, onOpenChange }) {
  }
  }, [open, fetchStatus, status]);
 
- const handleConnect = async () => {
- setActionLoading(true);
- setStatus('connecting');
- setQrCode(null);
- setQrDataUrl(null);
+    const handleConnect = () => {
+        setActionLoading(true);
+        setStatus('connecting');
+        setQrCode(null);
+        setQrDataUrl(null);
+        executeConnect({ workspaceId });
+    };
 
- try {
- const res = await fetch('/api/wa/auth', {
- method:'POST'
- });
+    const handleDisconnect = () => {
+        if (!confirm('Are you sure you want to disconnect? Your session will be cleared.')) return;
+        setActionLoading(true);
+        executeDisconnect({ workspaceId });
+    };
 
- if (res.ok) {
- const data = await res.json();
- if (data.status) setStatus(data.status);
- if (data.qr) {
- setQrCode(data.qr);
- const dataUrl = await QRCode.toDataURL(data.qr);
- setQrDataUrl(dataUrl);
- }
- toast.success('Connection process started');
- fetchStatus();
- } else {
- let errorMsg ='Failed to start connection';
- try {
- const data = await res.json();
- if (data.error) errorMsg = data.error;
- } catch (e) {}
- toast.error(errorMsg);
- setStatus('welcome');
- }
- } catch (error) {
- toast.error('Connection error');
- setStatus('welcome');
- } finally {
- setActionLoading(false);
- }
- };
-
- const handleDisconnect = async () => {
- if (!confirm('Are you sure you want to disconnect? Your session will be cleared.')) return;
- setActionLoading(true);
- try {
- const res = await fetch('/api/wa/auth', { method:'DELETE'});
- if (res.ok) {
- toast.success('Disconnected successfully');
- fetchStatus();
- } else {
- toast.error('Failed to disconnect');
- }
- } catch (error) {
- toast.error('Disconnect error');
- } finally {
- setActionLoading(false);
- }
- };
-
- const handleSaveToServer = async () => {
- setActionLoading(true);
- try {
- const res = await fetch('/api/wa/auth', {
- method:'PUT',
- headers: {'Content-Type':'application/json'},
- body: JSON.stringify({ deviceInfo })
- });
- if (res.ok) {
- toast.success('Connection info saved to server');
- } else {
- toast.error('Failed to save to server');
- }
- } catch (error) {
- toast.error('Save error');
- } finally {
- setActionLoading(false);
- }
- };
+    const handleSaveToServer = () => {
+        setActionLoading(true);
+        executeSaveToServer({ workspaceId, deviceInfo });
+    };
 
  const statusConfig = {
  welcome: { label:'Not Connected', color:'bg-zinc-500', icon: AlertCircle },

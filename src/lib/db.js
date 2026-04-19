@@ -16,8 +16,8 @@ const getBaseDb = () => {
     }
     
     // Self-healing: If the client was initialized before the new models existed
-    if (!global.prismaGlobal.agentModel && process.env.NODE_ENV !== 'production') {
-        console.log("🔄 Stale Prisma Client detected (missing agentModel). Re-initializing...");
+    if ((!global.prismaGlobal.agentModel || !global.prismaGlobal.contactGroup) && process.env.NODE_ENV !== 'production') {
+        console.log("🔄 Stale Prisma Client detected (missing agentModel or contactGroup). Re-initializing...");
         global.prismaGlobal = prismaClientSingleton();
     }
     

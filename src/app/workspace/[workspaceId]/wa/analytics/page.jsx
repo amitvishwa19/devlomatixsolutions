@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAction } from "@/hooks/use-action";
+import { getAnalytics } from "./_actions/get-analytics";
 import { toast } from "sonner";
 
 const COLORS = ['#10b981', '#3b82f6', '#94a3b8', '#ef4444', '#8b5cf6'];
@@ -29,20 +31,22 @@ export default function AnalyticsPage({ params: paramsPromise }) {
     const [range, setRange] = useState('30');
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const fetchAnalytics = async () => {
-        setIsRefreshing(true);
-        try {
-            const res = await fetch(`/api/wa/analytics?range=${range}`);
-            const result = await res.json();
-            if (result.success) {
-                setData(result);
-            }
-        } catch (error) {
-            toast.error("Failed to fetch analytics data");
-        } finally {
+    const { execute: executeGetAnalytics } = useAction(getAnalytics, {
+        onSuccess: (result) => {
+            setData(result);
+            setIsLoading(false);
+            setIsRefreshing(false);
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to fetch analytics data");
             setIsLoading(false);
             setIsRefreshing(false);
         }
+    });
+
+    const fetchAnalytics = () => {
+        setIsRefreshing(true);
+        executeGetAnalytics({ workspaceId, range });
     };
 
     useEffect(() => {

@@ -12,44 +12,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { useAction } from "@/hooks/use-action";
+import { saveStore } from "../_actions/save-store";
 import { toast } from "sonner";
 
-export const ShopifyConnectModal = ({ isOpen, onClose, onConnected }) => {
-    const [loading, setLoading] = useState(false);
+export const ShopifyConnectModal = ({ isOpen, onClose, onConnected, workspaceId }) => {
     const [formData, setFormData] = useState({
         name: '',
         storeUrl: '',
         accessToken: ''
     });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        
-        try {
-            const res = await fetch('/api/wa/ecommerce', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    platform: 'shopify'
-                })
-            });
-            
-            const json = await res.json();
-            if (json.success) {
-                toast.success("Shopify store connected successfully!");
-                onConnected();
-                onClose();
-            } else {
-                toast.error("Failed to connect store");
-            }
-        } catch (err) {
-            toast.error("Network error");
-        } finally {
-            setLoading(false);
+    const { execute, isLoading: loading } = useAction(saveStore, {
+        onSuccess: () => {
+            toast.success("Shopify store connected successfully!");
+            onConnected();
+            onClose();
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to connect store");
         }
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        execute({ ...formData, platform: 'shopify', workspaceId });
     };
 
     return (

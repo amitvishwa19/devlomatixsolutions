@@ -5,47 +5,67 @@ import { useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 import {
-    Trash2, UserPlus, Users, Phone, Mail, Pencil, X, Search,
+    Trash2, UserPlus, Users, Pencil, X, Search,
     ArrowUpDown, Download, Upload, RefreshCw, Tag, FileText,
-    Send, History, Filter, LayoutGrid, List, MoreVertical,
+    Filter, LayoutGrid, List, MoreVertical,
     Plus, Check, Star, ShieldCheck, Zap, Globe, MessageSquare,
-    ChevronRight, Layers, Bookmark, Settings2, ExternalLink
+    ChevronRight, Bookmark, Settings2, ExternalLink, Layers
 } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-    DropdownMenuLabel
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
+
+import { useAction } from '@/hooks/use-action';
+import { getContacts } from './_actions/get-contacts';
+import { getGroups } from './_actions/get-groups';
+import { getCategories } from './_actions/get-categories';
+import { deleteCategory } from './_actions/delete-category';
+import { saveContact } from './_actions/save-contact';
+import { deleteGroup } from './_actions/delete-group';
+import { bulkDeleteContacts } from './_actions/bulk-delete-contacts';
+import { bulkTagContacts } from './_actions/bulk-tag-contacts';
+import { bulkCategoryContacts } from './_actions/bulk-category-contacts';
+import { bulkFormatContacts } from './_actions/bulk-format';
+import { syncWAContacts } from './_actions/sync-contacts';
+import { importContacts } from './_actions/import-contacts';
+import { sendMessage } from './_actions/send-message';
+import { getStatus as getWAStatus } from '../_actions/get-status';
 
 // Modular Components
 import ManageCategoriesDialog from './_components/ManageCategoriesDialog';
 import ManageTagsDialog from './_components/ManageTagsDialog';
+import ManageGroupsDialog from './_components/ManageGroupsDialog';
 import ContactSheet from './_components/ContactSheet';
 import ReviewImportDialog from './_components/ReviewImportDialog';
 import BulkDeleteDialog from './_components/BulkDeleteDialog';
 import BulkTagDialog from './_components/BulkTagDialog';
 import BulkCategoryDialog from './_components/BulkCategoryDialog';
 import MessageDialog from './_components/MessageDialog';
+import ContactCard from './_components/ContactCard';
 
 export default function ContactsPage() {
     const params = useParams();
     const workspaceId = params.workspaceId;
     const { data: session } = useSession();
     const userId = session?.user?.userId || '';
-    const { toast } = useToast();
+    const { toast: shadToast } = useToast();
 
     // Core Data State
     const [contacts, setContacts] = useState([]);
@@ -69,14 +89,18 @@ export default function ContactsPage() {
     const [isEditContactOpen, setIsEditContactOpen] = useState(false);
     const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
     const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
+    const [isManageGroupsOpen, setIsManageGroupsOpen] = useState(false);
     const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
     const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isDeleteCategoryOpen, setIsDeleteCategoryOpen] = useState(false);
+    const [isDeleteGroupOpen, setIsDeleteGroupOpen] = useState(false);
     const [isMessageOpen, setIsMessageOpen] = useState(false);
 
     // Active Entity State (for editing/messing)
     const [activeContact, setActiveContact] = useState(null);
+    const [pendingDeleteEntity, setPendingDeleteEntity] = useState(null);
     const [historyMessages, setHistoryMessages] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
@@ -121,7 +145,165 @@ export default function ContactsPage() {
         return Array.from(tags).sort();
     }, [contacts]);
 
-    // Initial Load
+    // --- Server Actions ---
+    const { execute: executeGetContacts } = useAction(getContacts, {
+        onSuccess: (data) => setContacts(data || []),
+        onError: (err) => shadToast({ title: "Error", description: err, variant: "destructive" }),
+        onComplete: () => setLoading(false)
+    });
+
+    const { execute: executeGetGroups } = useAction(getGroups, {
+        onSuccess: (data) => setGroups(data || [])
+    });
+
+    const { execute: executeGetCategories } = useAction(getCategories, {
+        onSuccess: (data) => setCategories(data || [])
+    });
+
+    const { execute: executeGetTags } = useAction(getCategories, {
+        onSuccess: (data) => setTagDefinitions(data || [])
+    });
+
+    const { execute: executeSaveContact } = useAction(saveContact, {
+        onSuccess: () => {
+            shadToast({ title: "Success", description: "Contact saved successfully" });
+            fetchInitialData(true);
+        },
+        onError: (err, previousContacts) => {
+            if (previousContacts) setContacts(previousContacts);
+            shadToast({ title: "Error", description: err, variant: "destructive" });
+        },
+        onComplete: () => setIsBulkProcessing(false)
+    });
+
+    const { execute: executeBulkDelete } = useAction(bulkDeleteContacts, {
+        onSuccess: () => {
+            shadToast({ title: "Success", description: "Contacts deleted" });
+            setSelectedContacts([]);
+            fetchInitialData(true);
+        },
+        onError: (err, previousContacts) => {
+            if (previousContacts) setContacts(previousContacts);
+            shadToast({ title: "Error", description: err, variant: "destructive" });
+        },
+        onComplete: () => setIsBulkProcessing(false)
+    });
+
+    const { execute: executeBulkTag } = useAction(bulkTagContacts, {
+        onSuccess: () => {
+            shadToast({ title: "Success", description: "Contacts tagged" });
+            setSelectedContacts([]);
+            fetchInitialData(true);
+        },
+        onError: (err, previousContacts) => {
+            if (previousContacts) setContacts(previousContacts);
+            shadToast({ title: "Error", description: err, variant: "destructive" });
+        },
+        onComplete: () => setIsBulkProcessing(false)
+    });
+
+    const { execute: executeBulkCategory } = useAction(bulkCategoryContacts, {
+        onSuccess: () => {
+            toast.success("Category updated", { id: 'bulk-ops' });
+            setSelectedContacts([]);
+            fetchInitialData(true);
+        },
+        onError: (err, previousContacts) => {
+            if (previousContacts) setContacts(previousContacts);
+            const errorMsg = typeof err === 'string' ? err : (err?.message || "Category update failed");
+            toast.error(errorMsg, { id: 'bulk-ops' });
+            setIsBulkProcessing(false);
+        }
+    });
+
+    const { execute: executeDeleteCategory, isLoading: isDeletingCategory } = useAction(deleteCategory, {
+        onSuccess: () => {
+            toast.success("Category removed from library", { id: 'segment-ops' });
+            setPendingDeleteEntity(null);
+            fetchInitialData(true);
+        },
+        onError: (err, previousCategories) => {
+            if (previousCategories) setCategories(previousCategories);
+            toast.error(typeof err === 'string' ? err : (err?.message || "Failed to remove category"), { id: 'segment-ops' });
+        }
+    });
+
+    const { execute: executeDeleteGroup, isLoading: isDeletingGroup } = useAction(deleteGroup, {
+        onSuccess: () => {
+            toast.success("Broadcast group removed", { id: 'segment-ops' });
+            setPendingDeleteEntity(null);
+            fetchInitialData(true);
+        },
+        onError: (err, previousGroups) => {
+            if (previousGroups) setGroups(previousGroups);
+            toast.error(typeof err === 'string' ? err : (err?.message || "Failed to remove group"), { id: 'segment-ops' });
+        }
+    });
+
+    const { execute: executeSync } = useAction(syncWAContacts, {
+        onSuccess: (data) => {
+            toast.success(data.message, { id: 'sync-contacts' });
+            setIsBulkProcessing(false);
+            fetchInitialData();
+        },
+        onError: (err) => {
+            const errorMsg = typeof err === 'string' ? err : (err?.message || "Sync failed");
+            toast.error(errorMsg, { id: 'sync-contacts' });
+            setIsBulkProcessing(false);
+        }
+    });
+
+    const { execute: executeImport } = useAction(importContacts, {
+        onSuccess: (data) => {
+            toast.success(data.message, { id: 'import-contacts' });
+            setIsReviewOpen(false);
+            setIsImporting(false);
+            setImportReviewData([]);
+            fetchInitialData();
+        },
+        onError: (err) => {
+            const errorMsg = typeof err === 'string' ? err : (err?.message || "Import failed");
+            toast.error(errorMsg, { id: 'import-contacts' });
+            setIsImporting(false);
+        }
+    });
+
+    const [isSendingMessage, setIsSendingMessage] = useState(false);
+    const { execute: executeSendMessage } = useAction(sendMessage, {
+        onSuccess: () => {
+            toast.success("Message delivery initiated", { id: 'send-message' });
+            setIsSendingMessage(false);
+            setIsMessageOpen(false);
+            setMessageText('');
+        },
+        onError: (err) => {
+            const errorMsg = typeof err === 'string' ? err : (err?.message || "Failed to send message");
+            toast.error(errorMsg, { id: 'send-message' });
+            setIsSendingMessage(false);
+        }
+    });
+
+    const { execute: executeCheckWAStatus } = useAction(getWAStatus, {
+        onSuccess: (data) => setWaStatus(data.status),
+        onError: () => setWaStatus('disconnected')
+    });
+
+    const [isFormatting, setIsFormatting] = useState(false);
+    const { execute: executeBulkFormat } = useAction(bulkFormatContacts, {
+        onSuccess: (data) => {
+            toast.success(data.message, { id: 'bulk-format' });
+            setIsFormatting(false);
+            fetchInitialData();
+            setSelectedContacts([]);
+        },
+        onError: (err) => {
+            const errorMsg = typeof err === 'string' ? err : (err?.message || "Format failed");
+            toast.error(errorMsg, { id: 'bulk-format' });
+            setIsFormatting(false);
+        }
+    });
+
+    // --- Loading Logic ---
     useEffect(() => {
         if (userId && workspaceId) {
             fetchInitialData();
@@ -131,197 +313,127 @@ export default function ContactsPage() {
         }
     }, [userId, workspaceId]);
 
-    const fetchInitialData = async () => {
-        setLoading(true);
-        try {
-            await Promise.all([
-                fetchContacts(),
-                fetchGroups(),
-                fetchCategories(),
-                fetchTagLibrary()
-            ]);
-        } finally {
-            setLoading(false);
+    const fetchInitialData = async (silent = false) => {
+        if (!silent) setLoading(true);
+        executeGetContacts({ userId, workspaceId });
+        executeGetGroups({ userId, workspaceId });
+        executeGetCategories({ workspaceId, type: 'CONTACT' });
+        executeGetTags({ workspaceId, type: 'TAG' });
+    };
+
+    const checkWAStatus = () => {
+        if (workspaceId) {
+            executeCheckWAStatus({ workspaceId });
         }
     };
 
-    // --- API Handlers ---
-
-    const fetchContacts = async () => {
-        const res = await fetch(`/api/wa/contacts?userId=${userId}&workspaceId=${workspaceId}`);
-        if (res.ok) setContacts(await res.json());
-    };
-
-    const fetchGroups = async () => {
-        const res = await fetch(`/api/wa/groups?userId=${userId}&workspaceId=${workspaceId}`);
-        if (res.ok) setGroups(await res.json());
-    };
-
-    const fetchCategories = async () => {
-        const res = await fetch(`/api/wa/categories?workspaceId=${workspaceId}&type=CONTACT`);
-        if (res.ok) setCategories(await res.json());
-    };
-
-    const fetchTagLibrary = async () => {
-        const res = await fetch(`/api/wa/categories?workspaceId=${workspaceId}&type=TAG`);
-        if (res.ok) setTagDefinitions(await res.json());
-    };
-
-    const checkWAStatus = async () => {
-        const res = await fetch('/api/wa/auth');
-        if (res.ok) {
-            const data = await res.json();
-            setWaStatus(data.status);
-        }
-    };
-
-    const handleSaveContact = async (e) => {
-        e.preventDefault();
-        const method = activeContact ? 'PATCH' : 'POST';
-        const url = activeContact ? `/api/wa/contacts/${activeContact.id}` : '/api/wa/contacts';
-
-        try {
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...contactForm, userId, workspaceId })
-            });
-
-            if (res.ok) {
-                toast({ title: activeContact ? "Updated" : "Created", description: "Contact saved successfully." });
-                fetchContacts();
-                setIsAddContactOpen(false);
-                setIsEditContactOpen(false);
-                setActiveContact(null);
-                setContactForm({ name: '', phone: '', email: '', categoryId: '', tags: [], info: '' });
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Operation failed.", variant: "destructive" });
-        }
-    };
-
-    const handleBulkDelete = async () => {
+    // --- Actions (Handlers) ---
+    const handleSaveContact = async (data) => {
         setIsBulkProcessing(true);
-        try {
-            const res = await fetch('/api/wa/contacts/bulk-delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: selectedContacts })
-            });
-            if (res.ok) {
-                toast({ title: "Deleted", description: "Selected contacts removed." });
-                fetchContacts();
-                setSelectedContacts([]);
-                setIsDeleteConfirmOpen(false);
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Bulk delete failed.", variant: "destructive" });
-        } finally {
-            setIsBulkProcessing(false);
+        setIsAddContactOpen(false);
+        setIsEditContactOpen(false);
+        const previousSnapshot = [...contacts];
+
+        // Optimistic Update
+        if (data.id) {
+            // Update
+            setContacts(curr => curr.map(c => c.id === data.id ? { ...c, ...data } : c));
+        } else {
+            // Add
+            const newOptimisticContact = {
+                ...data,
+                id: 'temp-' + Date.now(),
+                createdAt: new Date().toISOString(),
+                groups: [],
+                tags: []
+            };
+            setContacts(curr => [newOptimisticContact, ...curr]);
         }
+
+        executeSaveContact({
+            ...data,
+            userId,
+            workspaceId
+        }, previousSnapshot);
     };
 
-    const handleBulkTag = async () => {
-        if (!tagInput) return;
+    const handleBulkDelete = () => {
         setIsBulkProcessing(true);
-        try {
-            const res = await fetch('/api/wa/contacts/bulk-tag', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: selectedContacts, tag: tagInput })
-            });
-            if (res.ok) {
-                toast({ title: "Tagged", description: `Added tag to ${selectedContacts.length} contacts.` });
-                fetchContacts();
-                setIsBulkTagOpen(false);
-                setTagInput('');
-                setSelectedContacts([]);
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Bulk tagging failed.", variant: "destructive" });
-        } finally {
-            setIsBulkProcessing(false);
-        }
+        setIsDeleteConfirmOpen(false);
+        const previousSnapshot = [...contacts];
+
+        // Optimistic Delete
+        setContacts(curr => curr.filter(c => !selectedContacts.includes(c.id)));
+
+        executeBulkDelete({ ids: selectedContacts, workspaceId }, previousSnapshot);
     };
 
-    const handleBulkCategory = async (categoryId) => {
+    const handleBulkTag = (tag) => {
         setIsBulkProcessing(true);
-        try {
-            const res = await fetch('/api/wa/contacts/bulk-category', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: selectedContacts, categoryId })
-            });
-            if (res.ok) {
-                toast({ title: "Updated", description: `Moved ${selectedContacts.length} contacts to new category.` });
-                fetchContacts();
-                setIsBulkCategoryOpen(false);
-                setSelectedContacts([]);
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Bulk move failed.", variant: "destructive" });
-        } finally {
-            setIsBulkProcessing(false);
-        }
+        setIsBulkTagOpen(false);
+        const previousSnapshot = [...contacts];
+
+        // Optimistic Tag Update
+        setContacts(curr => curr.map(c =>
+            selectedContacts.includes(c.id)
+                ? { ...c, tags: [...new Set([...(c.tags || []), tag])] }
+                : c
+        ));
+
+        executeBulkTag({ ids: selectedContacts, tag, workspaceId }, previousSnapshot);
     };
 
-    const handleSendMessage = async () => {
+    const handleBulkCategory = (categoryId) => {
+        setIsBulkProcessing(true);
+        setIsBulkCategoryOpen(false);
+        const previousSnapshot = [...contacts];
+
+        // Optimistic Category Update
+        setContacts(curr => curr.map(c =>
+            selectedContacts.includes(c.id)
+                ? { ...c, categoryId }
+                : c
+        ));
+
+        executeBulkCategory({ ids: selectedContacts, categoryId, workspaceId }, previousSnapshot);
+    };
+
+    const handleSync = () => {
+        setIsBulkProcessing(true);
+        executeSync({ userId, workspaceId });
+    };
+
+    const runImport = () => {
+        setIsImporting(true);
+        executeImport({ contactsData: importReviewData, workspaceId, userId });
+    };
+
+    const handleExport = () => {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `contacts-export-${timestamp}.json`;
+        const blob = new Blob([JSON.stringify(contacts, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Export Started", description: `Exporting ${contacts.length} contacts.` });
+    };
+
+    const handleSendMessage = () => {
         if (!activeContact || !messageText) return;
-        try {
-            const res = await fetch('/api/wa/send-browser', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ to: activeContact.phone, text: messageText })
-            });
-            if (res.ok) {
-                toast({ title: "Sent", description: "Message delivery initiated." });
-                setIsMessageOpen(false);
-                setMessageText('');
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Delivery failed.", variant: "destructive" });
-        }
+        setIsSendingMessage(true);
+        toast.loading("Sending message...", { id: 'send-message' });
+        executeSendMessage({ workspaceId, phone: activeContact.phone, message: messageText });
     };
 
-    const handleSync = async () => {
-        toast({ title: "Sync Started", description: "Pulling contacts from WhatsApp..." });
-        try {
-            const res = await fetch('/api/wa/contacts/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, workspaceId })
-            });
-            if (res.ok) {
-                toast({ title: "Sync Complete", description: "Audience updated." });
-                fetchContacts();
-            }
-        } catch (error) {
-            toast({ title: "Sync Failed", description: "Connectivity issue.", variant: "destructive" });
-        }
-    };
-
-    const handleExport = async () => {
-        setIsExporting(true);
-        try {
-            const res = await fetch(`/api/wa/contacts/export?workspaceId=${workspaceId}`);
-            if (!res.ok) throw new Error('Export failed');
-
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `contacts-${workspaceId}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            toast({ title: "Export Success", description: "CSV file downloaded." });
-        } catch (error) {
-            toast({ title: "Export Failed", description: "Could not generate CSV.", variant: "destructive" });
-        } finally {
-            setIsExporting(false);
-        }
+    const handleBulkFormat = () => {
+        if (selectedContacts.length === 0) return;
+        setIsFormatting(true);
+        toast.loading("Formatting numbers...", { id: 'bulk-format' });
+        executeBulkFormat({ ids: selectedContacts, workspaceId });
     };
 
     const handleImportFile = (e) => {
@@ -363,38 +475,6 @@ export default function ContactsPage() {
         };
         reader.readAsText(file);
         e.target.value = '';
-    };
-
-    const runImport = async (finalData) => {
-        setIsImporting(true);
-        toast({ title: "Importing...", description: "Finalizing audience data." });
-        try {
-            const res = await fetch('/api/wa/contacts/import', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contactsData: finalData,
-                    workspaceId,
-                    userId
-                })
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                toast({
-                    title: "Import Complete",
-                    description: `Successfully added ${data.stats.success} contacts.`
-                });
-                setIsReviewOpen(false);
-                fetchContacts();
-            } else {
-                throw new Error('Import failed');
-            }
-        } catch (error) {
-            toast({ title: "Import Failed", description: "Submission failed.", variant: "destructive" });
-        } finally {
-            setIsImporting(false);
-        }
     };
 
     const handleDownloadTemplate = () => {
@@ -506,6 +586,8 @@ export default function ContactsPage() {
                 <div className="w-64 border-r bg-card/20 flex flex-col">
                     <ScrollArea className="flex-1">
                         <div className="p-4 space-y-6">
+
+
                             <div className="space-y-2">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-2">Core Segments</span>
                                 <Button
@@ -519,7 +601,7 @@ export default function ContactsPage() {
                                 </Button>
                             </div>
 
-                            <div className="space-y-2">
+                            <div id="categories" className="space-y-2">
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Categories</span>
                                     <Button variant="ghost" size="icon" className="h-5 w-5 opacity-40 hover:opacity-100" onClick={() => setIsManageCategoriesOpen(true)}>
@@ -528,40 +610,84 @@ export default function ContactsPage() {
                                 </div>
                                 <div className="space-y-1">
                                     {categories.map(cat => (
-                                        <Button
-                                            key={cat.id}
-                                            variant={activeSegment === `category:${cat.id}` ? 'secondary' : 'ghost'}
-                                            className="w-full justify-start h-8 text-xs gap-3 px-3"
-                                            onClick={() => setActiveSegment(`category:${cat.id}`)}
-                                        >
-                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                                            {cat.name}
-                                            <Badge variant="ghost" className="ml-auto text-[10px] opacity-60 font-mono">{contacts.filter(c => c.categoryId === cat.id).length}</Badge>
-                                        </Button>
+                                        <div key={cat.id} className="relative group flex items-center pr-2">
+                                            <div
+                                                variant={activeSegment === `category:${cat.id}` ? 'secondary' : 'ghost'}
+                                                className={`w-full flex items-center justify-between transition-all cursor-pointer p-2 border border-transparent rounded-md ${activeSegment === `category:${cat.id}` ? 'bg-card' : 'hover:bg-card'}`}
+                                                onClick={() => setActiveSegment(`category:${cat.id}`)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                                                    <span className="flex items-center truncate max-w-[120px] text-xs gap-2">
+                                                        {cat.name}
+                                                        <span className="text-xs opacity-60">
+                                                            ({contacts.filter(c => c.categoryId === cat.id).length})
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {isDeletingCategory && pendingDeleteEntity?.id === cat.id ? (
+                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
+                                                    ) : (
+                                                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-opacity"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPendingDeleteEntity({ id: cat.id, name: cat.name });
+                                                                setIsDeleteCategoryOpen(true);
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
                                     {categories.length === 0 && <p className="text-[10px] text-muted-foreground italic px-2">No categories defined.</p>}
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
+                            <div id="groups" className="space-y-2">
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Broadcast Groups</span>
+                                    <Button variant="ghost" size="icon" className="h-5 w-5 opacity-40 hover:opacity-100" onClick={() => setIsManageGroupsOpen(true)}>
+                                        <Plus className="w-3 h-3" />
+                                    </Button>
                                 </div>
                                 <div className="space-y-1">
                                     {groups.map(group => (
-                                        <Button
-                                            key={group.id}
-                                            variant={activeSegment === `group:${group.id}` ? 'secondary' : 'ghost'}
-                                            className="w-full justify-start h-8 text-xs gap-3 px-3"
-                                            onClick={() => setActiveSegment(`group:${group.id}`)}
-                                        >
-                                            <Layers className="w-3.5 h-3.5 opacity-40" />
-                                            {group.name}
-                                            <Badge variant="ghost" className="ml-auto text-[10px] opacity-60 font-mono">{group._count?.contacts || 0}</Badge>
-                                        </Button>
+                                        <div key={group.id} className="relative group flex items-center pr-2">
+                                            <div
+                                                variant={activeSegment === `group:${group.id}` ? 'secondary' : 'ghost'}
+                                                className={`w-full flex items-center justify-between transition-all cursor-pointer p-2 border border-transparent rounded-md ${activeSegment === `group:${group.id}` ? 'bg-card' : 'hover:bg-card'}`}
+                                                onClick={() => setActiveSegment(`group:${group.id}`)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Layers className="w-3.5 h-3.5 opacity-40" />
+                                                    <span className="flex items-center truncate max-w-[120px] text-xs gap-2">
+                                                        {group.name}
+                                                        <span className="text-xs opacity-60">
+                                                            ({group._count?.contacts || 0})
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {isDeletingGroup && pendingDeleteEntity?.id === group.id ? (
+                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
+                                                    ) : (
+                                                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-opacity"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPendingDeleteEntity({ id: group.id, name: group.name });
+                                                                setIsDeleteGroupOpen(true);
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
+
                         </div>
                     </ScrollArea>
 
@@ -651,6 +777,15 @@ export default function ContactsPage() {
                                     <Trash2 className="w-3.5 h-3.5" /> Delete
                                 </Button>
                                 <Separator orientation="vertical" className="h-4 mx-2" />
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleBulkFormat}
+                                    className="h-8 gap-2 text-primary hover:bg-primary/5"
+                                    disabled={isFormatting}
+                                >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${isFormatting ? 'animate-spin' : ''}`} /> Clean
+                                </Button>
                                 <Button variant="ghost" size="sm" className="h-8" onClick={() => setSelectedContacts([])}>Cancel</Button>
                             </div>
                         </div>
@@ -674,112 +809,36 @@ export default function ContactsPage() {
                             </div>
                         ) : (
                             <ScrollArea className="h-full p-2">
-                                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-1'}>
+                                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-2'}>
                                     {filteredContacts.map((contact) => (
-                                        <Card
+                                        <ContactCard
                                             key={contact.id}
-                                            className={`group p-0 transition-all hover:border-primary/40 shadow-none bg-card/60 ${selectedContacts.includes(contact.id) ? 'border-border bg-primary/5' : 'border-border/0'}`}
-                                        >
-                                            <CardContent className="py-0.5 px-4 flex items-center gap-4 border border-border/90 rounded-md">
-                                                <div className="shrink-0 flex items-center gap-3">
-                                                    <Checkbox
-                                                        checked={selectedContacts.includes(contact.id)}
-                                                        onCheckedChange={(checked) => {
-                                                            if (checked) setSelectedContacts([...selectedContacts, contact.id]);
-                                                            else setSelectedContacts(selectedContacts.filter(id => id !== contact.id));
-                                                        }}
-                                                    />
-                                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold border">
-                                                        {contact.name[0].toUpperCase()}
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex-1 min-w-0 space-y-0.5 flex flex-row items-center justify-between">
-                                                    <div>
-                                                        <div className="flex items-center justify-between ">
-                                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                                <h3 className="text-sm font-bold truncate tracking-tight">{contact.name}</h3>
-                                                                {contact.categoryId && (
-                                                                    <Badge variant="outline" className="h-4 text-[9px] font-bold px-1.5 border-none" style={{ backgroundColor: `${getCategoryColor(contact.categoryId)}20`, color: getCategoryColor(contact.categoryId) }}>
-                                                                        {categories.find(c => c.id === contact.categoryId)?.name || 'Cat'}
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-[11px] text-muted-foreground">
-                                                            <div className="flex items-center gap-1 font-mono">
-                                                                <Phone className="w-3 h-3 opacity-40 shrink-0" />
-                                                                {contact.phone}
-                                                            </div>
-                                                            {contact.email && (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Mail className="w-3 h-3 opacity-40 shrink-0" />
-                                                                    {contact.email}
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="flex flex-wrap gap-1 pt-0.5">
-                                                            {contact.tags?.map(tag => (
-                                                                <Badge key={tag} variant="secondary" className="text-[9px] h-4 px-1 opacity-70 border-none" style={{ backgroundColor: `${getTagColor(tag)}30`, color: getTagColor(tag) }}>
-                                                                    {tag}
-                                                                </Badge>
-                                                            ))}
-                                                            {contact.groups?.map(group => (
-                                                                <Badge key={group.id} variant="outline" className="text-[9px] h-4 px-1 opacity-50 border-blue-500/20 text-blue-400">
-                                                                    <Layers className="w-2 h-2 mr-1" />
-                                                                    {group.name}
-                                                                </Badge>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8  group-hover:opacity-0 transition-opacity">
-                                                                <MoreVertical className="w-6 h-6" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className='mt-4'>
-                                                            <DropdownMenuItem onClick={() => {
-                                                                setActiveContact(contact);
-                                                                setContactForm({
-                                                                    name: contact.name,
-                                                                    phone: contact.phone,
-                                                                    email: contact.email || '',
-                                                                    categoryId: contact.categoryId || '',
-                                                                    tags: contact.tags || [],
-                                                                    info: contact.info || ''
-                                                                });
-                                                                setIsEditContactOpen(true);
-                                                            }}>
-                                                                <Pencil className="w-3.5 h-3.5 mr-2" /> Edit Details
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => {
-                                                                setActiveContact(contact);
-                                                                setIsMessageOpen(true);
-                                                            }}>
-                                                                <Send className="w-3.5 h-3.5 mr-2 text-green-500" /> Send Message
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => {
-                                                                setActiveContact(contact);
-                                                                setIsHistoryOpen(true);
-                                                            }}>
-                                                                <History className="w-3.5 h-3.5 mr-2 text-blue-500" /> Interaction History
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem className="text-destructive" onClick={() => {
-                                                                setSelectedContacts([contact.id]);
-                                                                setIsDeleteConfirmOpen(true);
-                                                            }}>
-                                                                <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete Contact
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                            contact={contact}
+                                            isSelected={selectedContacts.includes(contact.id)}
+                                            onSelectChange={(checked) => {
+                                                if (checked) setSelectedContacts([...selectedContacts, contact.id]);
+                                                else setSelectedContacts(selectedContacts.filter(id => id !== contact.id));
+                                            }}
+                                            categories={categories}
+                                            getCategoryColor={getCategoryColor}
+                                            getTagColor={getTagColor}
+                                            onEdit={(c) => {
+                                                setActiveContact(c);
+                                                setIsEditContactOpen(true);
+                                            }}
+                                            onMessage={(c) => {
+                                                setActiveContact(c);
+                                                setIsMessageOpen(true);
+                                            }}
+                                            onHistory={(c) => {
+                                                setActiveContact(c);
+                                                setIsHistoryOpen(true);
+                                            }}
+                                            onDelete={() => {
+                                                setSelectedContacts([contact.id]);
+                                                setIsDeleteConfirmOpen(true);
+                                            }}
+                                        />
                                     ))}
                                 </div>
                             </ScrollArea>
@@ -787,74 +846,141 @@ export default function ContactsPage() {
                     </div>
                 </div>
 
-            {/* --- Modals & Sheets (Relocated to _components) --- */}
-            
-            <ManageCategoriesDialog 
-                isOpen={isManageCategoriesOpen} 
-                onOpenChange={setIsManageCategoriesOpen} 
-                workspaceId={workspaceId} 
-                categories={categories} 
-                onUpdate={fetchCategories} 
-            />
+                {/* --- Modals & Sheets (Relocated to _components) --- */}
 
-            <ManageTagsDialog 
-                isOpen={isManageTagsOpen} 
-                onOpenChange={setIsManageTagsOpen} 
-                workspaceId={workspaceId} 
-                categories={tagDefinitions} 
-                onUpdate={fetchTagLibrary} 
-            />
+                <ManageCategoriesDialog
+                    isOpen={isManageCategoriesOpen}
+                    onOpenChange={setIsManageCategoriesOpen}
+                    workspaceId={workspaceId}
+                    categories={categories}
+                    onUpdate={() => { fetchInitialData(); setIsManageCategoriesOpen(false); }}
+                />
 
-            <ContactSheet 
-                isOpen={isAddContactOpen || isEditContactOpen}
-                onOpenChange={(open) => {
-                    if (!open) { setIsAddContactOpen(false); setIsEditContactOpen(false); setActiveContact(null); }
-                }}
-                activeContact={activeContact}
-                categories={categories}
-                userId={userId}
-                workspaceId={workspaceId}
-                onSave={fetchContacts}
-            />
+                <ManageGroupsDialog
+                    isOpen={isManageGroupsOpen}
+                    onOpenChange={setIsManageGroupsOpen}
+                    workspaceId={workspaceId}
+                    groups={groups}
+                    onUpdate={() => { fetchInitialData(); setIsManageGroupsOpen(false); }}
+                />
 
-            <MessageDialog 
-                isOpen={isMessageOpen} 
-                onOpenChange={setIsMessageOpen} 
-                onSend={handleSendMessage} 
-                contactName={activeContact?.name} 
-            />
+                <ManageTagsDialog
+                    isOpen={isManageTagsOpen}
+                    onOpenChange={setIsManageTagsOpen}
+                    workspaceId={workspaceId}
+                    categories={tagDefinitions}
+                    onUpdate={() => { fetchInitialData(); setIsManageTagsOpen(false); }}
+                />
 
-            <BulkDeleteDialog 
-                isOpen={isDeleteConfirmOpen} 
-                onOpenChange={setIsDeleteConfirmOpen} 
-                count={selectedContacts.length} 
-                onConfirm={handleBulkDelete} 
-                isProcessing={isBulkProcessing} 
-            />
+                {/* Individual Deletion Confirmations */}
+                <AlertDialog open={isDeleteCategoryOpen} onOpenChange={setIsDeleteCategoryOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete the category <strong>"{pendingDeleteEntity?.name}"</strong>? This will remove the category from all associated contacts.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDeletingCategory}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    const previousSnapshot = [...categories];
+                                    setCategories(curr => curr.filter(cat => cat.id !== pendingDeleteEntity?.id));
+                                    setIsDeleteCategoryOpen(false);
+                                    executeDeleteCategory({ id: pendingDeleteEntity?.id }, previousSnapshot);
+                                }}
+                                disabled={isDeletingCategory}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+                            >
+                                {isDeletingCategory ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                {isDeletingCategory ? 'Deleting...' : 'Delete Category'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
-            <BulkTagDialog 
-                isOpen={isBulkTagOpen} 
-                onOpenChange={setIsBulkTagOpen} 
-                onConfirm={handleBulkTag} 
-                isProcessing={isBulkProcessing} 
-            />
+                <AlertDialog open={isDeleteGroupOpen} onOpenChange={setIsDeleteGroupOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Broadcast Group?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete <strong>"{pendingDeleteEntity?.name}"</strong>? This action will permanently remove the group.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDeletingGroup}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    const previousSnapshot = [...groups];
+                                    setGroups(curr => curr.filter(g => g.id !== pendingDeleteEntity?.id));
+                                    setIsDeleteGroupOpen(false);
+                                    executeDeleteGroup({ id: pendingDeleteEntity?.id, userId }, previousSnapshot);
+                                }}
+                                disabled={isDeletingGroup}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+                            >
+                                {isDeletingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                {isDeletingGroup ? 'Deleting...' : 'Delete Group'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
-            <BulkCategoryDialog 
-                isOpen={isBulkCategoryOpen} 
-                onOpenChange={setIsBulkCategoryOpen} 
-                categories={categories} 
-                onConfirm={handleBulkCategory} 
-            />
+                <ContactSheet
+                    isOpen={isAddContactOpen || isEditContactOpen}
+                    onOpenChange={(open) => {
+                        if (!open) { setIsAddContactOpen(false); setIsEditContactOpen(false); setActiveContact(null); }
+                    }}
+                    activeContact={activeContact}
+                    categories={categories}
+                    userId={userId}
+                    workspaceId={workspaceId}
+                    onSave={fetchInitialData}
+                />
 
-            <ReviewImportDialog 
-                isOpen={isReviewOpen} 
-                onOpenChange={setIsReviewOpen} 
-                data={importReviewData} 
-                setData={setImportReviewData} 
-                onImport={runImport} 
-                isImporting={isImporting} 
-            />
+                <MessageDialog
+                    isOpen={isMessageOpen}
+                    onOpenChange={setIsMessageOpen}
+                    onSend={handleSendMessage}
+                    contactName={activeContact?.name}
+                    isSending={isSendingMessage}
+                />
+
+                <BulkDeleteDialog
+                    isOpen={isDeleteConfirmOpen}
+                    onOpenChange={setIsDeleteConfirmOpen}
+                    count={selectedContacts.length}
+                    onConfirm={handleBulkDelete}
+                    isProcessing={isBulkProcessing}
+                />
+
+                <BulkTagDialog
+                    isOpen={isBulkTagOpen}
+                    onOpenChange={setIsBulkTagOpen}
+                    onConfirm={handleBulkTag}
+                    isProcessing={isBulkProcessing}
+                />
+
+                <BulkCategoryDialog
+                    isOpen={isBulkCategoryOpen}
+                    onOpenChange={setIsBulkCategoryOpen}
+                    categories={categories}
+                    onConfirm={handleBulkCategory}
+                    isProcessing={isBulkProcessing}
+                />
+
+                <ReviewImportDialog
+                    isOpen={isReviewOpen}
+                    onOpenChange={setIsReviewOpen}
+                    data={importReviewData}
+                    setData={setImportReviewData}
+                    onImport={runImport}
+                    isImporting={isImporting}
+                />
+            </div>
         </div>
-    </div>
     );
 }

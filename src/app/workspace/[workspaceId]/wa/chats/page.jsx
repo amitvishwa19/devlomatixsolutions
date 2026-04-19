@@ -14,28 +14,31 @@ import {
     CheckCheck,
     AlertCircle,
     User,
-    MessageSquare,
-    Loader2,
-    ArrowLeft,
-    Eye,
-    Sparkles,
+    Users,
     Layout,
-    StickyNote
+    StickyNote,
+    ArrowLeft,
+    Loader2,
+    Sparkles,
+    MessageSquare
 } from "lucide-react";
+import { useAction } from "@/hooks/use-action";
+import { getConversations } from "./_actions/get-conversations";
+import { sendMessage } from "./_actions/send-message";
+import { getAiSuggestions } from "./_actions/get-ai-suggestions";
+import { getStatus as getWAStatus } from "../_actions/get-status";
+import { getContacts } from "../contacts/_actions/get-contacts";
+import { getTemplates } from "../template/_actions/get-templates";
 import { formatDistanceToNow } from "date-fns";
-import { toast } from "react-hot-toast";
-
-import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ChatTemplatePreview from "./_components/ChatTemplatePreview";
-import TemplateMessage from "./_components/TemplateMessage";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import MediaBubble from "./_components/MediaBubble";
-import { Users } from "lucide-react";
+import TemplateMessage from "./_components/TemplateMessage";
 
 // Helper: replace {{N}} placeholders in a template body string
 function fillTemplatePreview(body, vars) {
@@ -80,6 +83,7 @@ export default function WhatsAppChatsPage() {
     const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState(false);
     const [selectedTemplateForSend, setSelectedTemplateForSend] = useState(null);
     const [templateVars, setTemplateVars] = useState({});
+    const [waStatus, setWaStatus] = useState('disconnected');
 
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
@@ -94,84 +98,95 @@ export default function WhatsAppChatsPage() {
     // Display name for the header
     const activeName = selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0];
 
-    // Fetch conversations and history
-    const fetchConversations = async () => {
-        try {
-            const res = await fetch(`/api/wa/conversations`);
-            const data = await res.json();
-            if (data.success) {
+    // Server Action Hooks
+    const { execute: executeConversations } = useAction(getConversations, {
+        onSuccess: (data) => {
+            if (data.conversations) {
                 setConversations(prevConversations => {
-                    // Merge logic: keep local "temp_" messages that aren't yet on server
                     const incomingConvMap = new Map(data.conversations.map(c => [c.jid, c]));
-                    
                     const mergedResults = data.conversations.map(newConv => {
                         const prevConv = prevConversations.find(p => p.jid === newConv.jid);
                         if (!prevConv) return newConv;
-
-                        // Filter for temp messages in local state
                         const localTempMsgs = prevConv.messages.filter(m => 
                             String(m.id).startsWith('temp_') && 
-                            // Optimization: If server now has a message with same text sent recently, 
-                            // we assume it's the same message confirmed and hide the temp one
                             !newConv.messages.some(nm => nm.text === m.text && Math.abs(nm.timestamp - m.timestamp) < 30)
                         );
-
-                        return {
-                            ...newConv,
-                            messages: [...localTempMsgs, ...newConv.messages]
-                        };
+                        return { ...newConv, messages: [...localTempMsgs, ...newConv.messages] };
                     });
-
-                    // Handle entirely new chats created locally that aren't on server yet
                     prevConversations.forEach(prevConv => {
                         if (!incomingConvMap.has(prevConv.jid)) {
-                            const hasTemp = prevConv.messages.some(m => String(m.id).startsWith('temp_'));
-                            if (hasTemp) mergedResults.push(prevConv);
+                            if (prevConv.messages.some(m => String(m.id).startsWith('temp_'))) mergedResults.push(prevConv);
                         }
                     });
-
-                    // Sort by timestamp if we added local-only chats
                     return mergedResults.sort((a, b) => b.timestamp - a.timestamp);
                 });
 
-                // Functional update to avoid stale closure in setInterval
                 setSelectedJid(currentJid => {
-                    // Auto-select first chat ONLY if nothing is selected yet
-                    if (!currentJid && data.conversations.length > 0) {
-                        return data.conversations[0].jid;
-                    }
+                    if (!currentJid && data.conversations.length > 0) return data.conversations[0].jid;
                     return currentJid;
                 });
             }
-        } catch (error) {
-            console.error("Failed to fetch conversations:", error);
-        } finally {
+            setIsLoading(false);
+        },
+        onError: (err) => {
+            console.error("Conversations error:", err);
             setIsLoading(false);
         }
-    };
+    });
 
-    const fetchContacts = async () => {
-        setIsFetchingContacts(true);
-        try {
-            const res = await fetch(`/api/wa/contacts?workspaceId=${workspaceId}`);
-            const data = await res.json();
+    const { execute: executeGetContacts } = useAction(getContacts, {
+        onSuccess: (data) => {
             setAllContacts(Array.isArray(data) ? data : []);
-        } catch (error) {
-            console.error("Failed to fetch contacts:", error);
-        } finally {
             setIsFetchingContacts(false);
-        }
-    };
+        },
+        onError: () => setIsFetchingContacts(false)
+    });
 
-    const fetchTemplates = async () => {
-        try {
-            const res = await fetch(`/api/wa/templates`);
-            const data = await res.json();
-            if (data.success) {
-                setTemplates(data.templates || []);
-            }
-        } catch (error) {
-            console.error("Failed to fetch templates:", error);
+    const { execute: executeGetTemplates } = useAction(getTemplates, {
+        onSuccess: (data) => setTemplates(data.templates || []),
+    });
+
+    const { execute: executeSendMessage } = useAction(sendMessage, {
+        onSuccess: (data, context) => {
+            setConversations(prev => prev.map(conv => {
+                if (conv.jid === context.to) {
+                    return {
+                        ...conv,
+                        messages: conv.messages.map(m => m.id === context.tempId ? { ...m, status: 'SENT' } : m)
+                    };
+                }
+                return conv;
+            }));
+            toast.success('Message sent!');
+        },
+        onError: (err, context) => {
+            toast.error(err || "Failed to send message");
+            setConversations(prev => prev.map(conv => {
+                if (conv.jid === context.to) {
+                    return { ...conv, messages: conv.messages.filter(m => m.id !== context.tempId) };
+                }
+                return conv;
+            }));
+        },
+        onSettled: () => setIsSending(false)
+    });
+
+    const { execute: executeAiSuggestions } = useAction(getAiSuggestions, {
+        onSuccess: (data) => setAiSuggestions(data.suggestions || []),
+        onSettled: () => setIsAiLoading(false)
+    });
+
+    const { execute: executeCheckWAStatus } = useAction(getWAStatus, {
+        onSuccess: (data) => setWaStatus(data.status),
+        onError: () => setWaStatus('disconnected')
+    });
+
+    const fetchConversations = () => executeConversations({ workspaceId });
+    const fetchContacts = () => { setIsFetchingContacts(true); executeGetContacts({ workspaceId }); };
+    const fetchTemplates = () => executeGetTemplates({ workspaceId });
+    const checkWAStatus = () => {
+        if (workspaceId) {
+            executeCheckWAStatus({ workspaceId });
         }
     };
 
@@ -179,10 +194,10 @@ export default function WhatsAppChatsPage() {
         fetchConversations();
         fetchTemplates();
         fetchContacts();
-        // Polling every 5 seconds for real-time status updates
+        checkWAStatus();
         const interval = setInterval(fetchConversations, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [workspaceId]);
 
     useEffect(() => {
         // Scroll to bottom when selectedChat or messages change
@@ -222,81 +237,13 @@ export default function WhatsAppChatsPage() {
 
         setNewMessage("");
         setIsSending(true);
-
-        try {
-            const res = await fetch(`/api/wa/send-cloud-api`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: selectedJid,
-                    type: 'text',
-                    body: textToSend
-                })
-            });
-
-            if (res.ok) {
-                // Success - Update status to SENT locally
-                setConversations(prev => prev.map(conv => {
-                    if (conv.jid === selectedJid) {
-                        return {
-                            ...conv,
-                            messages: conv.messages.map(m => 
-                                m.id === tempId ? { ...m, status: 'SENT' } : m
-                            )
-                        };
-                    }
-                    return conv;
-                }));
-            } else {
-                toast.error("Failed to send message");
-                // Rollback
-                setConversations(prev => prev.map(conv => {
-                    if (conv.jid === selectedJid) {
-                        return {
-                            ...conv,
-                            messages: conv.messages.filter(m => m.id !== tempId)
-                        };
-                    }
-                    return conv;
-                }));
-            }
-        } catch (error) {
-            toast.error("Error sending message");
-            // Rollback
-            setConversations(prev => prev.map(conv => {
-                if (conv.jid === selectedJid) {
-                    return {
-                        ...conv,
-                        messages: conv.messages.filter(m => m.id !== tempId)
-                    };
-                }
-                return conv;
-            }));
-        } finally {
-            setIsSending(false);
-        }
+        executeSendMessage({ workspaceId, to: selectedJid, type: 'text', body: textToSend }, { to: selectedJid, tempId, type: 'text' });
     };
 
-    const handleGetAiSuggestions = async () => {
+    const handleGetAiSuggestions = () => {
         if (!selectedChat || selectedChat.messages.length === 0) return;
         setIsAiLoading(true);
-        try {
-            const res = await fetch('/api/wa/ai-suggest', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: selectedChat.messages.slice(-10) })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setAiSuggestions(data.suggestions);
-            } else {
-                toast.error("Failed to get AI suggestions");
-            }
-        } catch (error) {
-            console.error("AI Suggest Error:", error);
-        } finally {
-            setIsAiLoading(false);
-        }
+        executeAiSuggestions({ workspaceId, messages: selectedChat.messages.slice(-10) });
     };
 
     const handleApplySuggestion = (text) => {
@@ -360,42 +307,16 @@ export default function WhatsAppChatsPage() {
         setTemplateVars({});
         setIsSending(true);
 
-        try {
-            const res = await fetch('/api/wa/send-cloud-api', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: selectedJid,
-                    type: 'template',
-                    template: {
-                        name: templateName,
-                        language: { code: selectedTemplateForSend.language || 'en_US' },
-                        components
-                    }
-                })
-            });
-            if (res.ok) {
-                setConversations(prev => prev.map(conv => {
-                    if (conv.jid === selectedJid) {
-                        return { ...conv, messages: conv.messages.map(m => m.id === tempId ? { ...m, status: 'SENT' } : m) };
-                    }
-                    return conv;
-                }));
-                toast.success('Template sent!');
-            } else {
-                toast.error('Failed to send template');
-                setConversations(prev => prev.map(conv => {
-                    if (conv.jid === selectedJid) {
-                        return { ...conv, messages: conv.messages.filter(m => m.id !== tempId) };
-                    }
-                    return conv;
-                }));
+        executeSendMessage({
+            workspaceId,
+            to: selectedJid,
+            type: 'template',
+            template: {
+                name: templateName,
+                language: { code: selectedTemplateForSend.language || 'en_US' },
+                components
             }
-        } catch (err) {
-            toast.error('Error sending template');
-        } finally {
-            setIsSending(false);
-        }
+        }, { to: selectedJid, tempId, type: 'template' });
     };
 
     const handleTemplateClick = (msg) => {

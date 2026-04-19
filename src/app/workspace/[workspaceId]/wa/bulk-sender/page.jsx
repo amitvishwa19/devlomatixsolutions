@@ -28,12 +28,18 @@ import { Checkbox } from"@/components/ui/checkbox";
 import { Badge } from"@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from"@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from"@/components/ui/dialog";
-import { useRouter } from'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useAction } from "@/hooks/use-action";
+import { getTemplates } from "../template/_actions/get-templates";
+import { getContacts } from "../contacts/_actions/get-contacts";
+import { getGroups } from "../contacts/_actions/get-groups";
+import { saveCampaign } from "../campaigns/_actions/save-campaign";
 
-export default function BulkSenderPage() {
- const { data: session } = useSession();
- const userId = session?.user?.userId || session?.user?.id;
- const router = useRouter();
+export default function BulkSenderPage({ params: paramsPromise }) {
+    const params = use(paramsPromise);
+    const workspaceId = params.workspaceId;
+    const { data: session } = useSession();
+    const router = useRouter();
 
  const [templates, setTemplates] = useState([]);
  const [contacts, setContacts] = useState([]);
@@ -61,155 +67,93 @@ export default function BulkSenderPage() {
  const [selectedGroupIds, setSelectedGroupIds] = useState([]);
  const [recipientType, setRecipientType] = useState('contacts');
  const [searchTerm, setSearchTerm] = useState('');
- const [isSending, setIsSending] = useState(false);
 
- const fetchTemplates = useCallback(async () => {
- try {
- const res = await fetch('/api/wa/templates');
- const data = await res.json();
- if (res.ok) setTemplates(data.templates || []);
- } catch (err) {
- console.error('Failed to load templates', err);
- }
- }, []);
+    const { execute: executeGetTemplates } = useAction(getTemplates, {
+        onSuccess: (data) => setTemplates(data.templates || []),
+    });
 
- const fetchContacts = useCallback(async () => {
- if (!userId) return;
- try {
- const res = await fetch(`/api/wa/contacts?userId=${userId}`);
- const data = await res.json();
- if (res.ok) setContacts(data || []);
- } catch (err) {
- console.error('Failed to load contacts', err);
- }
- }, [userId]);
+    const { execute: executeGetContacts } = useAction(getContacts, {
+        onSuccess: (data) => setContacts(data || []),
+    });
 
- const fetchGroups = useCallback(async () => {
- if (!userId) return;
- try {
- const res = await fetch(`/api/wa/groups?userId=${userId}`);
- if (res.ok) {
- const data = await res.json();
- setGroups(data);
- }
- } catch (error) {
- console.error('Error fetching groups:', error);
- }
- }, [userId]);
+    const { execute: executeGetGroups } = useAction(getGroups, {
+        onSuccess: (data) => setGroups(data || []),
+    });
 
- useEffect(() => {
- fetchTemplates();
- fetchContacts();
- fetchGroups();
- }, [fetchTemplates, fetchContacts, fetchGroups]);
+    const fetchTemplates = useCallback(() => executeGetTemplates({ workspaceId }), [workspaceId]);
+    const fetchContacts = useCallback(() => executeGetContacts({ workspaceId }), [workspaceId]);
+    const fetchGroups = useCallback(() => executeGetGroups({ workspaceId }), [workspaceId]);
 
- const handleSend = async () => {
- if (!editForm.name.trim()) {
- toast.error('Broadcast name is required');
- return;
- }
+    useEffect(() => {
+        fetchTemplates();
+        fetchContacts();
+        fetchGroups();
+    }, [workspaceId]);
 
- if (editForm.messageType ==='interactive') {
- if (!editForm.intBody.trim()) {
- toast.error('Message body is required');
- return;
- }
- } else if (editForm.messageType ==='text') {
- if (!editForm.template.trim()) {
- toast.error('Message content is required');
- return;
- }
- } else if (editForm.messageType ==='image'|| editForm.messageType ==='document') {
- if (!editForm.mediaUrl.trim()) {
- toast.error(`${editForm.messageType ==='image'?'Image':'Document'} URL is required`);
- return;
- }
- }
+    const { execute: executeSaveCampaign, isLoading: isSending } = useAction(saveCampaign, {
+        onSuccess: () => {
+            toast.success(editForm.scheduledAt ? 'Broadcast Scheduled Successfully' : 'Broadcast Sent Successfully');
+            setTimeout(() => {
+                router.push(`/workspace/${workspaceId}/wa/campaigns`);
+            }, 1000);
+        },
+        onError: (err) => toast.error(err || "Failed to send broadcast")
+    });
 
- if (editForm.scheduledAt) {
- const scheduledDate = new Date(editForm.scheduledAt);
- if (isNaN(scheduledDate.getTime())) {
- toast.error('Invalid scheduled time format');
- return;
- }
- }
+    const handleSend = () => {
+        if (!editForm.name.trim()) { toast.error('Broadcast name is required'); return; }
 
- const recipients = editForm.phone ?
- editForm.phone.
- split('\n').
- map((line) => {
- const parts = line.split(',').map((p) => p.trim()).filter(Boolean);
- if (parts.length === 0) return null;
- const phone = parts[0];
- const variables = {};
- for (let i = 1; i < parts.length; i++) {
- variables[`v${i}`] = parts[i];
- }
- return { phone, variables };
- }).
- filter(Boolean) :
- [];
+        if (editForm.messageType ==='interactive') {
+            if (!editForm.intBody.trim()) {
+            toast.error('Message body is required');
+            return;
+            }
+        } else if (editForm.messageType ==='text') {
+            if (!editForm.template.trim()) {
+            toast.error('Message content is required');
+            return;
+            }
+        } else if (editForm.messageType ==='image'|| editForm.messageType ==='document') {
+            if (!editForm.mediaUrl.trim()) {
+            toast.error(`${editForm.messageType ==='image'?'Image':'Document'} URL is required`);
+            return;
+            }
+        }
 
- if (recipients.length === 0 && selectedGroupIds.length === 0) {
- toast.error('Please select or enter at least one recipient');
- return;
- }
+        const recipients = editForm.phone ? editForm.phone.split('\n').map((line) => {
+            const parts = line.split(',').map((p) => p.trim()).filter(Boolean);
+            if (parts.length === 0) return null;
+            return { phone: parts[0], variables: parts.reduce((acc, p, i) => i === 0 ? acc : ({ ...acc, [`v${i}`]: p }), {}) };
+        }).filter(Boolean) : [];
 
- setIsSending(true);
- const toastId = toast.loading('Sending Broadcast...');
+        if (recipients.length === 0 && selectedGroupIds.length === 0) {
+            toast.error('Please select or enter at least one recipient');
+            return;
+        }
 
- try {
- const buildTemplate = () => {
- if (editForm.messageType ==='interactive') {
- let sections;
- try {sections = JSON.parse(editForm.intSections);} catch {sections = [];}
- return {
- text: editForm.intBody,
- interactive: { body: editForm.intBody, footer: editForm.intFooter, buttonText: editForm.intButton, sections }
- };
- }
- const t = { text: editForm.template };
- if (editForm.messageType ==='image') t.image = { url: editForm.mediaUrl };
- if (editForm.messageType ==='document') t.document = { url: editForm.mediaUrl };
- return t;
- };
+        const buildTemplate = () => {
+            if (editForm.messageType === 'interactive') {
+                let sections; try { sections = JSON.parse(editForm.intSections); } catch { sections = []; }
+                return { text: editForm.intBody, interactive: { body: editForm.intBody, footer: editForm.intFooter, buttonText: editForm.intButton, sections } };
+            }
+            const t = { text: editForm.template };
+            if (editForm.messageType === 'image') t.image = { url: editForm.mediaUrl };
+            if (editForm.messageType === 'document') t.document = { url: editForm.mediaUrl };
+            return t;
+        };
 
- const payload = {
- name: editForm.name,
- status: editForm.scheduledAt ?'SCHEDULED':'RUNNING',
- messageTemplate: buildTemplate(),
- templateId: editForm.templateId ==='custom'? null : editForm.templateId || null,
- messageType: editForm.messageType,
- scheduledAt: editForm.scheduledAt || null,
- recipients,
- groupIds: selectedGroupIds
- };
-
- const res = await fetch('/api/wa/campaigns', {
- method:'POST',
- headers: {'Content-Type':'application/json'},
- body: JSON.stringify(payload)
- });
-
- if (!res.ok) {
- const data = await res.json().catch(() => ({}));
- throw new Error(data.error ||'Failed to send broadcast');
- }
-
- toast.success(editForm.scheduledAt ?'Broadcast Scheduled Successfully':'Broadcast Sent Successfully', { id: toastId });
-
- // Navigate away to campaigns page to see the created broadcast
- setTimeout(() => {
- router.push(`/workspace/${session?.user?.id || session?.user?.userId ||''}/wa/campaigns`);
- }, 1000);
-
- } catch (err) {
- console.error('Failed to send broadcast', err);
- toast.error(err instanceof Error ? err.message :'Failed to send broadcast', { id: toastId });
- } finally {
- setIsSending(false);
- }
- };
+        executeSaveCampaign({
+            workspaceId,
+            name: editForm.name,
+            status: editForm.scheduledAt ? 'SCHEDULED' : 'RUNNING',
+            messageTemplate: buildTemplate(),
+            templateId: editForm.templateId === 'custom' ? null : editForm.templateId || null,
+            messageType: editForm.messageType,
+            scheduledAt: editForm.scheduledAt || null,
+            recipients,
+            groupIds: selectedGroupIds
+        });
+    };
 
 
  return (

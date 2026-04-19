@@ -11,7 +11,10 @@ import {
     SheetHeader,
     SheetTitle
 } from "@/components/ui/sheet";
-import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
+import { useAction } from '@/hooks/use-action';
+import { saveContact } from '../_actions/save-contact';
+import { toast } from 'sonner';
 
 export default function ContactSheet({ 
     isOpen, 
@@ -22,7 +25,6 @@ export default function ContactSheet({
     workspaceId, 
     onSave 
 }) {
-    const { toast } = useToast();
     const [contactForm, setContactForm] = useState({
         name: '',
         phone: '',
@@ -30,6 +32,22 @@ export default function ContactSheet({
         categoryId: '',
         tags: [],
         info: ''
+    });
+
+    const [isSaving, setIsSaving] = useState(false);
+
+    const { execute: executeSave } = useAction(saveContact, {
+        onSuccess: () => {
+            toast.success(activeContact ? "Contact updated" : "Contact created", { id: 'save-contact' });
+            setIsSaving(false);
+            onSave();
+            onOpenChange(false);
+        },
+        onError: (err) => {
+            const errorMsg = typeof err === 'string' ? err : (err?.message || "Failed to save contact");
+            toast.error(errorMsg, { id: 'save-contact' });
+            setIsSaving(false);
+        }
     });
 
     useEffect(() => {
@@ -56,24 +74,14 @@ export default function ContactSheet({
 
     const handleSave = async (e) => {
         e.preventDefault();
-        const method = activeContact ? 'PATCH' : 'POST';
-        const url = activeContact ? `/api/wa/contacts/${activeContact.id}` : '/api/wa/contacts';
-
-        try {
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...contactForm, userId, workspaceId })
-            });
-
-            if (res.ok) {
-                toast({ title: activeContact ? "Updated" : "Created", description: "Contact saved successfully." });
-                onSave();
-                onOpenChange(false);
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Operation failed.", variant: "destructive" });
-        }
+        setIsSaving(true);
+        toast.loading(activeContact ? "Updating contact..." : "Creating contact...", { id: 'save-contact' });
+        executeSave({ 
+            ...contactForm, 
+            id: activeContact?.id,
+            userId, 
+            workspaceId 
+        });
     };
 
     return (
@@ -134,8 +142,9 @@ export default function ContactSheet({
                             ))}
                         </div>
                     </div>
-                    <Button type="submit" className="px-8 shadow-lg shadow-primary/20">
-                        {activeContact ? 'Save Changes' : 'Initialize Contact'}
+                    <Button type="submit" disabled={isSaving} className="px-8 shadow-lg shadow-primary/20 gap-2">
+                        {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {activeContact ? (isSaving ? 'Updating...' : 'Save Changes') : (isSaving ? 'Initializing...' : 'Initialize Contact')}
                     </Button>
                 </form>
             </SheetContent>

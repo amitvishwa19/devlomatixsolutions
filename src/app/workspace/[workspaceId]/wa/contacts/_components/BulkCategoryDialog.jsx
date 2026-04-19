@@ -7,8 +7,9 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
-export default function BulkCategoryDialog({ isOpen, onOpenChange, categories, onConfirm }) {
+export default function BulkCategoryDialog({ isOpen, onOpenChange, categories, onConfirm, isProcessing }) {
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
@@ -22,6 +23,7 @@ export default function BulkCategoryDialog({ isOpen, onOpenChange, categories, o
                             onClick={() => onConfirm(cat.id)} 
                             variant="outline"
                             className="justify-start gap-2 h-10"
+                            disabled={isProcessing}
                         >
                             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
                             {cat.name}

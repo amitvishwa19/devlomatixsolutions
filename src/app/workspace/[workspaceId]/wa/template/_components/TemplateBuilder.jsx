@@ -11,6 +11,9 @@ import {
     Video,
     Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAction } from '@/hooks/use-action';
+import { getTemplateAiSuggestion } from '../_actions/get-template-ai-suggestion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,7 +48,28 @@ export default function TemplateBuilder({
 }) {
     const { onOpen } = useModal();
     const [aiPrompt, setAiPrompt] = useState('');
-    const [isAiGenerating, setIsAiGenerating] = useState(false);
+    
+    const { execute: executeGetAiSuggestion, isLoading: isAiGenerating } = useAction(getTemplateAiSuggestion, {
+        onSuccess: (data, context) => {
+            if (context.type === 'translate' && data.success) {
+                setFormData({ ...formData, body: data.translatedText });
+                toast.success(`Translated to ${formData.language}!`);
+            } else if (data.success && data.suggestion) {
+                const { suggestion } = data;
+                setFormData({
+                    ...formData,
+                    name: suggestion.displayName || formData.name,
+                    templateName: suggestion.name || formData.templateName,
+                    category: suggestion.category || formData.category,
+                    body: suggestion.body || formData.body,
+                    footer: suggestion.footer || formData.footer,
+                    buttons: suggestion.buttons || formData.buttons
+                });
+                toast.success("AI generated a template for you!");
+            }
+        },
+        onError: (err) => toast.error(err || "AI Assistance failed")
+    });
 
     const handleButtonChange = (index, value) => {
         const newButtons = [...formData.buttons];
@@ -99,34 +123,9 @@ export default function TemplateBuilder({
                                             size="sm" 
                                             variant="ghost" 
                                             className="h-7 text-[11px] font-bold text-primary hover:bg-primary/10"
-                                            onClick={async () => {
+                                            onClick={() => {
                                                 if (!aiPrompt) return;
-                                                setIsAiGenerating(true);
-                                                try {
-                                                    const res = await fetch('/api/wa/template/ai-suggest', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ prompt: aiPrompt })
-                                                    });
-                                                    const data = await res.json();
-                                                    if (data.success && data.suggestion) {
-                                                        const { suggestion } = data;
-                                                        setFormData({
-                                                            ...formData,
-                                                            name: suggestion.displayName || formData.name,
-                                                            templateName: suggestion.name || formData.templateName,
-                                                            category: suggestion.category || formData.category,
-                                                            body: suggestion.body || formData.body,
-                                                            footer: suggestion.footer || formData.footer,
-                                                            buttons: suggestion.buttons || formData.buttons
-                                                        });
-                                                        toast.success("AI generated a template for you!");
-                                                    }
-                                                } catch (e) {
-                                                    toast.error("AI Generation failed");
-                                                } finally {
-                                                    setIsAiGenerating(false);
-                                                }
+                                                executeGetAiSuggestion({ workspaceId, prompt: aiPrompt, type: 'generate' });
                                             }}
                                         >
                                             Generate
@@ -203,29 +202,14 @@ export default function TemplateBuilder({
                                                 variant="ghost" 
                                                 size="sm" 
                                                 className="h-5 px-1 text-[9px] text-primary hover:bg-primary/5 uppercase font-bold"
-                                                onClick={async () => {
+                                                onClick={() => {
                                                     if (!formData.body) return;
-                                                    setIsAiGenerating(true);
-                                                    try {
-                                                        const res = await fetch('/api/wa/template/ai-suggest', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ 
-                                                                type: 'translate', 
-                                                                text: formData.body, 
-                                                                targetLanguage: formData.language 
-                                                            })
-                                                        });
-                                                        const data = await res.json();
-                                                        if (data.success) {
-                                                            setFormData({ ...formData, body: data.translatedText });
-                                                            toast.success(`Translated to ${formData.language}!`);
-                                                        }
-                                                    } catch (e) {
-                                                        toast.error("Translation failed");
-                                                    } finally {
-                                                        setIsAiGenerating(false);
-                                                    }
+                                                    executeGetAiSuggestion({ 
+                                                        workspaceId,
+                                                        type: 'translate', 
+                                                        text: formData.body, 
+                                                        targetLanguage: formData.language 
+                                                    }, { type: 'translate' });
                                                 }}
                                             >
                                                 <Sparkles className="w-2.5 h-2.5 mr-1" /> Translate Content

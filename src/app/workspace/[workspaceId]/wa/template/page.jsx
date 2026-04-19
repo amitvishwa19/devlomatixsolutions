@@ -25,6 +25,15 @@ import TemplateBuilder from './_components/TemplateBuilder';
 import { TemplatePreviewCard, TemplateListRow } from './_components/TemplateItems';
 import TestTemplateDialog from './_components/TestTemplateDialog';
 import TemplatePreview from './_components/TemplatePreview';
+import { useAction } from "@/hooks/use-action";
+import { getTemplates } from "./_actions/get-templates";
+import { saveTemplate } from "./_actions/save-template";
+import { syncTemplates } from "./_actions/sync-templates";
+import { deleteTemplate } from "./_actions/delete-template";
+import { submitTemplate } from "./_actions/submit-template";
+import { checkTemplateStatus } from "./_actions/check-template-status";
+import { getContacts as getContactsAction } from "../contacts/_actions/get-contacts";
+import { sendMessage as sendMessageAction } from "../chats/_actions/send-message";
 
 export default function TemplatePage() {
     const params = useParams();
@@ -66,7 +75,6 @@ export default function TemplatePage() {
     });
 
     const [testRecipient, setTestRecipient] = useState('');
-    const [isTesting, setIsTesting] = useState(false);
     const [testingTemplate, setTestingTemplate] = useState(null);
     const [allContacts, setAllContacts] = useState([]);
     const [selectedContactIds, setSelectedContactIds] = useState([]);
@@ -77,59 +85,129 @@ export default function TemplatePage() {
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
 
-    // Fetch Templates directly from API
-    const fetchTemplates = async () => {
-        setIsLoading(true);
-        try {
-            const res = await fetch('/api/wa/templates');
-            if (!res.ok) throw new Error("Failed to fetch");
-            const data = await res.json();
-            if (data.success) {
-                const parsedTemplates = data.templates.map(t => {
-                    let newT = { ...t };
-                    if (typeof t.metadata === 'string' && t.metadata.trim().startsWith('{')) {
-                        try { newT.metadata = JSON.parse(t.metadata); } catch (e) { }
-                    }
-                    if (typeof t.buttons === 'string' && t.buttons.trim().startsWith('[')) {
-                        try { newT.buttons = JSON.parse(t.buttons); } catch (e) { }
-                    }
-                    return newT;
-                });
-                setTemplates(parsedTemplates);
-            }
-        } catch (error) {
+    // Server Action Hooks
+    const { execute: executeGetTemplates } = useAction(getTemplates, {
+        onSuccess: (data) => {
+            const parsedTemplates = (data.templates || []).map(t => {
+                let newT = { ...t };
+                if (typeof t.metadata === 'string' && t.metadata.trim().startsWith('{')) {
+                    try { newT.metadata = JSON.parse(t.metadata); } catch (e) { }
+                }
+                if (typeof t.buttons === 'string' && t.buttons.trim().startsWith('[')) {
+                    try { newT.buttons = JSON.parse(t.buttons); } catch (e) { }
+                }
+                return newT;
+            });
+            setTemplates(parsedTemplates);
+            setIsLoading(false);
+        },
+        onError: (error) => {
             console.error("Error fetching templates:", error);
             toast.error("Failed to load templates.");
-        } finally {
             setIsLoading(false);
+        }
+    });
+
+    const fetchTemplates = () => {
+        setIsLoading(true);
+        if (workspaceId) {
+            executeGetTemplates({ workspaceId });
         }
     };
 
     useEffect(() => {
-        if (userId) {
+        if (workspaceId) {
             fetchTemplates();
             fetchContacts();
         }
-    }, [userId, session]);
+    }, [workspaceId]);
 
-    // Sync from Cloud API
-    const handleSyncCloud = async () => {
-        setIsSyncing(true);
-        const toastId = toast.loading("Syncing all templates from Meta Cloud...");
-        try {
-            const res = await fetch('/api/wa/template/sync');
-            const data = await res.json();
-            if (res.ok && data.success) {
-                toast.success(data.message || "Template sync completed!", { id: toastId });
-                fetchTemplates();
-            } else {
-                throw new Error(data.error || "Sync failed");
-            }
-        } catch (error) {
-            toast.error(error.message || "Failed to sync templates", { id: toastId });
-        } finally {
+    const { execute: executeSync } = useAction(syncTemplates, {
+        onSuccess: (data) => {
+            toast.success(data.message || "Template sync completed!", { id: "sync-toast" });
+            fetchTemplates();
+            setIsSyncing(false);
+        },
+        onError: (error) => {
+            toast.error(error || "Failed to sync templates", { id: "sync-toast" });
             setIsSyncing(false);
         }
+    });
+
+    const handleSyncCloud = () => {
+        setIsSyncing(true);
+        toast.loading("Syncing all templates from Meta Cloud...", { id: "sync-toast" });
+        executeSync({ workspaceId });
+    };
+
+    const { execute: executeSaveTemplate } = useAction(saveTemplate, {
+        onSuccess: (data) => {
+            toast.success(editingId ? "Template updated!" : "Template created!");
+            setIsBuilderOpen(false);
+            executeGetTemplates({ workspaceId });
+            setIsSaving(false);
+        },
+        onError: (error) => {
+            toast.error(error);
+            setIsSaving(false);
+        }
+    });
+
+    const { execute: executeDeleteTemplate } = useAction(deleteTemplate, {
+        onSuccess: () => {
+            toast.success("Template deleted");
+            setIsDeletingId(null);
+            fetchTemplates();
+        },
+        onError: (error) => {
+            toast.error(error);
+            setIsDeletingId(null);
+        }
+    });
+
+    const { execute: executeSubmitTemplate } = useAction(submitTemplate, {
+        onSuccess: () => {
+            toast.success("Submitted for review!", { id: "submit-toast" });
+            fetchTemplates();
+            setIsSubmittingId(null);
+        },
+        onError: (error) => {
+            toast.error(error, { id: "submit-toast" });
+            setIsSubmittingId(null);
+        }
+    });
+
+    const { execute: executeCheckStatus } = useAction(checkTemplateStatus, {
+        onSuccess: (data) => {
+            toast.success(`Status updated: ${data.status}`, { id: "status-toast" });
+            fetchTemplates();
+            setIsSubmittingId(null);
+        },
+        onError: (error) => {
+            toast.error(error, { id: "status-toast" });
+            setIsSubmittingId(null);
+        }
+    });
+
+    const { execute: executeGetContacts } = useAction(getContactsAction, {
+        onSuccess: (data) => {
+            setAllContacts(Array.isArray(data.contacts) ? data.contacts : []);
+            setIsFetchingContacts(false);
+        },
+        onError: () => setIsFetchingContacts(false)
+    });
+
+    const { execute: executeSendTest, isLoading: isSendingTest } = useAction(sendMessageAction, {
+        onSuccess: () => {
+             // We need to track successes for multiple recipients
+        },
+        onError: (err) => toast.error(err || "Failed to send test message")
+    });
+
+    const fetchContacts = () => {
+        if (!workspaceId) return;
+        setIsFetchingContacts(true);
+        executeGetContacts({ workspaceId });
     };
 
     // UI Handlers
@@ -168,58 +246,19 @@ export default function TemplatePage() {
             return;
         }
         setIsSaving(true);
-        try {
-            // Sanitize content to prevent unnecessary "Read More" on devices
-            const sanitizedFormData = {
-                ...formData,
-                body: formData.body?.trim() || '',
-                footer: formData.footer?.trim() || '',
-                metadata: {
-                    ...formData.metadata,
-                    headerText: formData.metadata?.headerText?.trim() || ''
-                }
-            };
-
-            const res = await fetch('/api/wa/template', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    ...sanitizedFormData, 
-                    id: editingId, 
-                    platform: formData.platform || 'WHATSAPP_CLOUD',
-                    status: 'DRAFT'
-                })
-            });
-            const data = await res.json();
-            if (!res.ok || !data.success) throw new Error(data.error || "Failed to save");
-
-            toast.success(editingId ? "Template updated!" : "Template created!");
-            
-            if (shouldSubmit && data.template?.id) {
-                await handleSubmitToMeta(data.template.id);
-            }
-
-            setIsBuilderOpen(false);
-            fetchTemplates();
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setIsSaving(false);
-        }
+        
+        executeSaveTemplate({
+            workspaceId,
+            id: editingId,
+            ...formData,
+            status: 'DRAFT',
+            platform: formData.platform || 'WHATSAPP_CLOUD'
+        });
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = (id) => {
         setIsDeletingId(id);
-        try {
-            const res = await fetch(`/api/wa/template?id=${id}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error("Failed to delete");
-            toast.success("Template deleted");
-            setTemplates(prev => prev.filter(t => t.id !== id));
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setIsDeletingId(null);
-        }
+        executeDeleteTemplate({ workspaceId, id });
     };
 
     const handleClone = (template) => {
@@ -259,19 +298,6 @@ export default function TemplatePage() {
         setIsPreviewModalOpen(true);
     };
 
-    const fetchContacts = async () => {
-        if (!userId) return;
-        setIsFetchingContacts(true);
-        try {
-            const res = await fetch(`/api/wa/contacts?workspaceId=${workspaceId}`);
-            const data = await res.json();
-            setAllContacts(Array.isArray(data) ? data : []);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setIsFetchingContacts(false);
-        }
-    };
 
     const handleSendTest = async () => {
         const manualNumbers = testRecipient.split(',').map(n => n.trim()).filter(n => n);
@@ -283,7 +309,6 @@ export default function TemplatePage() {
             return;
         }
 
-        // Validate that all detected variables have mappings
         const headerText = testingTemplate.metadata?.headerText || '';
         const headerVars = [...headerText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
         const bodyVars = [...(testingTemplate.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
@@ -297,112 +322,52 @@ export default function TemplatePage() {
             }
         }
 
-        setIsTesting(true);
-        try {
-            // Prepare components based on where variables are located
-            const buildComponents = () => {
-                const components = [];
-                
-                // 1. Header Variables
-                const headerText = testingTemplate.metadata?.headerText || '';
-                const headerVars = [...headerText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
-                if (headerVars.length > 0) {
-                    components.push({
-                        type: 'HEADER',
-                        parameters: headerVars.map(v => ({
-                            type: 'TEXT',
-                            text: variableMappings[v] || ''
-                        }))
-                    });
-                }
-
-                // 2. Body Variables
-                const bodyVars = [...(testingTemplate.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
-                if (bodyVars.length > 0) {
-                    components.push({
-                        type: 'BODY',
-                        parameters: bodyVars.map(v => ({
-                            type: 'TEXT',
-                            text: variableMappings[v] || ''
-                        }))
-                    });
-                }
-
-                return components;
-            };
-
-            const components = buildComponents();
-
-            for (const to of recipients) {
-                const res = await fetch('/api/wa/send-cloud-api', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        to, 
-                        type: 'template',
-                        template: {
-                            name: testingTemplate.templateName || testingTemplate.name,
-                            language: { code: testingTemplate.language || 'en_US' },
-                            components
-                        }
-                    })
+        const buildComponents = () => {
+            const components = [];
+            if (headerVars.length > 0) {
+                components.push({
+                    type: 'HEADER',
+                    parameters: headerVars.map(v => ({ type: 'TEXT', text: variableMappings[v] || '' }))
                 });
-                
-                const data = await res.json();
-                if (!res.ok || !data.success) {
-                    throw new Error(data.error || "Failed to send to one or more recipients");
+            }
+            if (bodyVars.length > 0) {
+                components.push({
+                    type: 'BODY',
+                    parameters: bodyVars.map(v => ({ type: 'TEXT', text: variableMappings[v] || '' }))
+                });
+            }
+            return components;
+        };
+
+        const components = buildComponents();
+
+        for (const to of recipients) {
+            executeSendTest({
+                workspaceId,
+                to,
+                type: 'template',
+                template: {
+                    name: testingTemplate.templateName || testingTemplate.name,
+                    language: { code: testingTemplate.language || 'en_US' },
+                    components
                 }
-            }
-            toast.success(`Success! Sent to ${recipients.length} recipients`);
-            setIsTestModalOpen(false);
-        } catch (error) {
-            console.error("Test send error:", error);
-            toast.error(error.message || "Failed to send test message");
-        } finally {
-            setIsTesting(false);
-        }
-    };
-
-    const handleSubmitToMeta = async (templateId) => {
-        setIsSubmittingId(templateId);
-        const toastId = toast.loading("Submitting template to Meta for review...");
-        try {
-            const res = await fetch('/api/wa/template/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ templateId })
             });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                toast.success("Submitted for review!", { id: toastId });
-                fetchTemplates();
-            } else {
-                throw new Error(data.error || "Submission failed");
-            }
-        } catch (error) {
-            toast.error(error.message || "Failed to submit template", { id: toastId });
-        } finally {
-            setIsSubmittingId(null);
         }
+        
+        toast.success(`Success! Sent to ${recipients.length} recipients`);
+        setIsTestModalOpen(false);
     };
 
-    const handleCheckStatus = async (templateId) => {
+    const handleSubmitToMeta = (templateId) => {
         setIsSubmittingId(templateId);
-        const toastId = toast.loading("Fetching latest status from Meta...");
-        try {
-            const res = await fetch(`/api/wa/template/status?templateId=${templateId}`);
-            const data = await res.json();
-            if (res.ok && data.success) {
-                toast.success(`Status updated: ${data.status}`, { id: toastId });
-                fetchTemplates();
-            } else {
-                throw new Error(data.error || "Failed to fetch status");
-            }
-        } catch (error) {
-            toast.error(error.message || "Status check failed", { id: toastId });
-        } finally {
-            setIsSubmittingId(null);
-        }
+        toast.loading("Submitting template to Meta for review...", { id: "submit-toast" });
+        executeSubmitTemplate({ workspaceId, templateId });
+    };
+
+    const handleCheckStatus = (templateId) => {
+        setIsSubmittingId(templateId);
+        toast.loading("Fetching latest status from Meta...", { id: "status-toast" });
+        executeCheckStatus({ workspaceId, templateId });
     };
 
     const filteredTemplates = templates.filter((t) => {
@@ -514,7 +479,7 @@ export default function TemplatePage() {
                     onClose={() => setIsTestModalOpen(false)}
                     template={testingTemplate}
                     onSend={handleSendTest}
-                    isTesting={isTesting}
+                    isTesting={isSendingTest}
                     contacts={allContacts}
                     isFetchingContacts={isFetchingContacts}
                     testRecipient={testRecipient}

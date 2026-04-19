@@ -29,7 +29,14 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import axios from '@/utils/axios';
+import { useAction } from "@/hooks/use-action";
+import { updateTestNumbers } from "../_actions/update-test-numbers";
+import { saveCloudCredentials } from "../_actions/save-cloud-credentials";
+import { processOauthCode } from "../_actions/process-oauth-code";
+import { connectWa } from "../_actions/connect-wa";
+import { disconnectWa } from "../_actions/disconnect-wa";
+import { getStatus } from "../_actions/get-status";
+import { getCredentials } from "../_actions/get-credentials";
 
 export default function WhatsAppSettingModal({ open, onClose }) {
     const params = useParams();
@@ -57,16 +64,32 @@ export default function WhatsAppSettingModal({ open, onClose }) {
         accessToken: ''
     });
 
-    const fetchStatus = useCallback(async () => {
-        try {
-            const res = await fetch('/api/wa/auth');
-            const data = await res.json();
+    // Facebook SDK Initialization
+    useEffect(() => {
+        window.fbAsyncInit = function () {
+            window.FB.init({
+                appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+                cookie: true,
+                xfbml: true,
+                version: 'v17.0'
+            });
+        };
 
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    }, []);
+
+    const { execute: executeGetStatus } = useAction(getStatus, {
+        onSuccess: (data) => {
             setStatus(data.status);
             if (data.qr && data.qr !== qrCode) {
                 setQrCode(data.qr);
-                const dataUrl = await QRCode.toDataURL(data.qr);
-                setQrDataUrl(dataUrl);
+                QRCode.toDataURL(data.qr).then(setQrDataUrl);
             } else if (!data.qr) {
                 setQrCode(null);
                 setQrDataUrl(null);
@@ -75,33 +98,37 @@ export default function WhatsAppSettingModal({ open, onClose }) {
             if (data.metadata?.testNumbers) {
                 setTestNumbers(data.metadata.testNumbers);
             }
-        } catch (error) {
-            console.error('Failed to fetch WA status:', error);
-        } finally {
             setLoading(false);
-        }
-    }, [qrCode]);
+        },
+        onError: () => setLoading(false)
+    });
 
-    const fetchCloudCredentials = useCallback(async () => {
-        try {
-            const workspaceId = window.location.pathname.split('/')[2];
-            const res = await axios.get(`/api/workspace/${workspaceId}/social/accounts`);
-            const filtered = res.data.filter(acc => acc.platform === 'WHATSAPP_CLOUD' || acc.platform === 'WHATSAPP');
+    const { execute: executeGetCredentials } = useAction(getCredentials, {
+        onSuccess: (data) => {
+            const filtered = data.credentials || [];
             setCloudCredentials(filtered);
-
-            // Only auto-select ONCE during the initial fetch if nothing is selected
             if (filtered.length > 0 && selectedCloudId === 'new' && !hasAutoSelected) {
                 setSelectedCloudId(filtered[0].id);
                 setHasAutoSelected(true);
             }
-        } catch (error) {
-            console.error('Failed to fetch Cloud credentials:', error);
         }
-    }, [workspaceId, selectedCloudId, hasAutoSelected]);
+    });
+
+    const fetchCloudCredentials = useCallback(() => {
+        if (workspaceId) {
+            executeGetCredentials({ workspaceId });
+        }
+    }, [workspaceId, executeGetCredentials]);
+
+    const fetchStatus = useCallback(() => {
+        if (workspaceId) {
+            executeGetStatus({ workspaceId });
+        }
+    }, [workspaceId, executeGetStatus]);
 
     useEffect(() => {
         if (!open) {
-            setHasAutoSelected(false); // Reset when modal closes
+            setHasAutoSelected(false);
             return;
         }
 
@@ -111,39 +138,29 @@ export default function WhatsAppSettingModal({ open, onClose }) {
         return () => clearInterval(interval);
     }, [open, fetchStatus, fetchCloudCredentials]);
 
-    const handleConnect = async () => {
-        setActionLoading(true);
-        try {
-            const res = await fetch('/api/wa/auth', { method: 'POST' });
-            if (res.ok) {
-                toast.success('Connection process started');
-                fetchStatus();
-            } else {
-                toast.error('Failed to start connection');
-            }
-        } catch (error) {
-            toast.error('Connection error');
-        } finally {
-            setActionLoading(false);
-        }
+    const { execute: executeConnect } = useAction(connectWa, {
+        onSuccess: () => {
+            toast.success('Connection process started');
+            fetchStatus();
+        },
+        onError: () => toast.error('Failed to start connection')
+    });
+
+    const handleConnect = () => {
+        executeConnect({ workspaceId });
     };
 
-    const handleDisconnect = async () => {
+    const { execute: executeDisconnect } = useAction(disconnectWa, {
+        onSuccess: () => {
+            toast.success('Disconnected successfully');
+            fetchStatus();
+        },
+        onError: () => toast.error('Failed to disconnect')
+    });
+
+    const handleDisconnect = () => {
         if (!confirm('Are you sure you want to disconnect? Your session will be cleared.')) return;
-        setActionLoading(true);
-        try {
-            const res = await fetch('/api/wa/auth', { method: 'DELETE' });
-            if (res.ok) {
-                toast.success('Disconnected successfully');
-                fetchStatus();
-            } else {
-                toast.error('Failed to disconnect');
-            }
-        } catch (error) {
-            toast.error('Disconnect error');
-        } finally {
-            setActionLoading(false);
-        }
+        executeDisconnect({ workspaceId });
     };
 
     const handleAddNumber = () => {
@@ -176,80 +193,67 @@ export default function WhatsAppSettingModal({ open, onClose }) {
         saveTestNumbers(updated);
     };
 
-    const saveTestNumbers = async (numbers) => {
-        setIsSavingNumbers(true);
-        try {
-            const res = await fetch('/api/wa/auth', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ testNumbers: numbers })
-            });
-            if (!res.ok) throw new Error('Failed to save');
-            toast.success('Test numbers updated');
-        } catch (error) {
-            toast.error('Failed to save test numbers');
-            console.error(error);
-        } finally {
-            setIsSavingNumbers(false);
-        }
+    const { execute: executeUpdateNumbers } = useAction(updateTestNumbers, {
+        onSuccess: () => toast.success('Test numbers updated'),
+        onError: () => toast.error('Failed to update test numbers')
+    });
+
+    const saveTestNumbers = (numbers) => {
+        executeUpdateNumbers({ workspaceId, testNumbers: numbers });
     };
 
-    const handleTestCloudConnection = async () => {
-        setIsTestingCloud(true);
-        setCloudVerified(false);
-        const toastId = toast.loading('Testing Cloud API connection...');
-        try {
-            const workspaceId = window.location.pathname.split('/')[2];
-            const payload = {
-                platform: 'WHATSAPP_CLOUD',
-                credentials: {
-                    accessToken: cloudForm.accessToken,
-                    phoneNumberId: cloudForm.phoneNumberId,
-                    wabaId: cloudForm.wabaId
-                }
-            };
+    const { execute: executeProcessOauth } = useAction(processOauthCode, {
+        onSuccess: (data) => {
+            toast.success('WhatsApp Business account linked successfully!');
+            // fetchCloudCredentials();
+        },
+        onError: (error) => toast.error(error)
+    });
 
-            const res = await axios.post(`/api/workspace/${workspaceId}/social/accounts/undefined/test`, payload);
+    const launchWhatsAppSignup = () => {
+        if (!window.FB) {
+            toast.error("Facebook SDK not loaded yet.");
+            return;
+        }
 
-            if (res.data.success) {
-                toast.success('Connection Successful!', { id: toastId });
-                setCloudVerified(true);
+        window.FB.login((response) => {
+            if (response.authResponse) {
+                const code = response.authResponse.code;
+                executeProcessOauth({ workspaceId, code });
             } else {
-                toast.error(res.data.message || 'Connection failed', { id: toastId });
+                console.info('User cancelled login or did not fully authorize.');
             }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Connection error', { id: toastId });
-        } finally {
-            setIsTestingCloud(false);
-        }
+        }, {
+            config_id: process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID,
+            response_type: 'code',
+            override_default_response_type: true,
+            extras: {
+                setup: {
+                    // Option to pass extra setup info
+                }
+            }
+        });
     };
 
-    const handleSaveCloudCredential = async () => {
-        setIsSavingCloud(true);
-        const toastId = toast.loading('Saving to system vault...');
-        try {
-            const workspaceId = window.location.pathname.split('/')[2];
-            const payload = {
-                platform: 'WHATSAPP_CLOUD',
-                profile: cloudForm.profileName,
-                credentials: {
-                    accessToken: cloudForm.accessToken,
-                    phoneNumberId: cloudForm.phoneNumberId,
-                    wabaId: cloudForm.wabaId
-                },
-                status: 'connected'
-            };
+    const { execute: executeSaveCloud } = useAction(saveCloudCredentials, {
+        onSuccess: () => {
+            toast.success('Credential saved and verified');
+            setCloudVerified(false);
+            // fetchCloudCredentials();
+        },
+        onError: () => toast.error('Failed to save credential')
+    });
 
-            await axios.post(`/api/workspace/${workspaceId}/social/accounts`, payload);
-            toast.success('Credential saved and verified', { id: toastId });
-            setCloudVerified(false); // Reset to allow standard flow
-            fetchCloudCredentials();
-            // Automatically select the new one?
-        } catch (error) {
-            toast.error('Failed to save credential', { id: toastId });
-        } finally {
-            setIsSavingCloud(false);
-        }
+    const handleSaveCloudCredential = () => {
+        executeSaveCloud({
+            workspaceId,
+            profileName: cloudForm.profileName,
+            credentials: {
+                accessToken: cloudForm.accessToken,
+                phoneNumberId: cloudForm.phoneNumberId,
+                wabaId: cloudForm.wabaId
+            }
+        });
     };
 
     const statusConfig = {
@@ -524,28 +528,30 @@ export default function WhatsAppSettingModal({ open, onClose }) {
                                     )}
                                 </CardContent>
                                 <CardFooter className="bg-zinc-900/50 border-t border-border/10 p-6 flex flex-col gap-3">
+                                    <Button 
+                                        onClick={launchWhatsAppSignup} 
+                                        className="w-full gap-2 bg-[#1877F2] hover:bg-[#1877F2]/90 text-white font-bold"
+                                    >
+                                        <Globe className="w-4 h-4" />
+                                        Connect with Facebook
+                                    </Button>
+                                    
+                                    <div className="flex items-center gap-2 w-full my-1">
+                                        <div className="h-px bg-border/20 flex-1" />
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">or manual setup</span>
+                                        <div className="h-px bg-border/20 flex-1" />
+                                    </div>
+
                                     {selectedCloudId === 'new' ? (
                                         <div className="flex w-full gap-2">
                                             <Button
-                                                onClick={handleTestCloudConnection}
-                                                disabled={isTestingCloud || !cloudForm.accessToken}
-                                                className={`flex-1 gap-2 font-bold text-xs uppercase tracking-widest ${cloudVerified ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                                onClick={handleSaveCloudCredential}
+                                                disabled={isSavingCloud || !cloudForm.accessToken}
+                                                className={`flex-1 gap-2 border-emerald-500/20 text-emerald-500 font-bold text-xs uppercase tracking-widest`}
                                             >
-                                                {isTestingCloud ? <RefreshCcw className="w-4 h-4 animate-spin" /> : cloudVerified ? <CheckCircle2 className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
-                                                {cloudVerified ? 'Verified' : 'Test Connection'}
+                                                {isSavingCloud ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                                                Save to Vault
                                             </Button>
-
-                                            {cloudVerified && (
-                                                <Button
-                                                    onClick={handleSaveCloudCredential}
-                                                    disabled={isSavingCloud}
-                                                    variant="secondary"
-                                                    className="flex-1 gap-2 border-emerald-500/20 text-emerald-500 font-bold text-xs uppercase tracking-widest"
-                                                >
-                                                    {isSavingCloud ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-                                                    Save to Vault
-                                                </Button>
-                                            )}
                                         </div>
                                     ) : (
                                         <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-widest">

@@ -11,6 +11,8 @@ import {
     AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 
+import { Loader2 } from "lucide-react";
+
 export default function BulkDeleteDialog({ isOpen, onOpenChange, count, onConfirm, isProcessing }) {
     return (
         <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
@@ -26,9 +28,10 @@ export default function BulkDeleteDialog({ isOpen, onOpenChange, count, onConfir
                     <AlertDialogAction 
                         onClick={onConfirm} 
                         disabled={isProcessing} 
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
                     >
-                        Delete
+                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        {isProcessing ? 'Deleting...' : 'Delete'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

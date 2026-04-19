@@ -57,6 +57,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
     Dialog,
@@ -73,7 +74,22 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select";
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAction } from "@/hooks/use-action";
+import { getStatus } from "../_actions/get-status";
+import { connectWa } from "../_actions/connect-wa";
+import { disconnectWa } from "../_actions/disconnect-wa";
+import { updateTestNumbers } from "../_actions/update-test-numbers";
+import { getCredentials } from "../_actions/get-credentials";
+import { saveCloudCredentials } from "../_actions/save-cloud-credentials";
+import { deleteCredential } from "../_actions/delete-credential";
+import { setDefaultCredential } from "../_actions/set-default-credential";
+import { testCredential } from "../_actions/test-credential";
+import { getTemplates } from "../template/_actions/get-templates";
+import { syncTemplates } from "../template/_actions/sync-templates";
+import { testMetaApi } from "../_actions/test-meta-api";
+import { updateWaMetadata } from "../_actions/update-wa-metadata";
+import { getDecryptedCredentials } from "../_actions/get-decrypted-credentials";
+import { useParams } from 'next/navigation';
 
 export default function SettingsPage() {
     // Connection Method State
@@ -179,219 +195,261 @@ export default function SettingsPage() {
         accessToken: ''
     });
 
-    // Fetch Browser Status (Baileys)
-    const fetchBrowserStatus = useCallback(async () => {
-        try {
-            const res = await fetch('/api/wa/auth');
-            const data = await res.json();
+    const params = useParams();
+    const workspaceId = params?.workspaceId;
 
+    const { execute: executeUpdateMetadata } = useAction(updateWaMetadata, {
+        onSuccess: (data) => {
+            toast.success('Settings updated');
+            setMetadata(data.metadata);
+        },
+        onError: (err) => toast.error(err || 'Failed to save settings')
+    });
+
+    const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
+        onSuccess: (data) => {
+            if (data.data?.accessToken) setMetaCloudAccessToken(data.data.accessToken);
+            if (data.data?.phoneNumberId) {
+                setDisplayNamesPhoneId(data.data.phoneNumberId);
+                setObaPhoneId(data.data.phoneNumberId);
+            }
+            if (data.data?.wabaId) setAnalyticsWabaId(data.data.wabaId);
+        }
+    });
+
+    // Server Action Hooks
+    const { execute: executeGetStatus } = useAction(getStatus, {
+        onSuccess: (data) => {
             setStatus(data.status);
             if (data.qr && data.qr !== qrCode) {
                 setQrCode(data.qr);
-                const dataUrl = await QRCode.toDataURL(data.qr);
-                setQrDataUrl(dataUrl);
+                QRCode.toDataURL(data.qr).then(setQrDataUrl);
             } else if (!data.qr) {
                 setQrCode(null);
                 setQrDataUrl(null);
             }
-
-            if (data.metadata) {
-                setMetadata(data.metadata);
-            }
-            if (data.user) {
-                setWaUser(data.user);
-            }
-        } catch (error) {
-            console.error('Failed to fetch WA status:', error);
-        } finally {
+            if (data.metadata) setMetadata(data.metadata);
+            if (data.user) setWaUser(data.user);
             setLoading(false);
-        }
-    }, [qrCode]);
+        },
+        onError: () => setLoading(false)
+    });
 
-    // Fetch Cloud API Credentials
-    const fetchCloudCreds = async () => {
-        setCloudLoading(true);
-        try {
-            const res = await fetch('/api/wa/credentials');
-            const data = await res.json();
-            if (data?.data) {
-                setCloudCreds(data.data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch Cloud API creds:', error);
-            toast.error('Failed to load accounts');
-        } finally {
+    const { execute: executeGetCreds } = useAction(getCredentials, {
+        onSuccess: (data) => {
+            setCloudCreds(data.credentials || []);
             setCloudLoading(false);
-        }
-    };
+        },
+        onError: () => setCloudLoading(false)
+    });
 
-    const fetchTemplatesList = async () => {
-        try {
-            const res = await fetch('/api/wa/templates');
-            const data = await res.json();
-            if (data.success) {
-                setTemplates(data.templates);
-            }
-        } catch (error) {
-            console.error('Failed to fetch templates:', error);
-        }
-    };
+    const { execute: executeGetTemplates } = useAction(getTemplates, {
+        onSuccess: (data) => setTemplates(data.templates || []),
+    });
 
-    const handleSyncTemplates = async (id) => {
-        setSyncingTemplates(prev => ({ ...prev, [id]: true }));
-        try {
-            const res = await fetch('/api/wa/templates/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                toast.success(data.message || 'Templates synced!');
-                fetchTemplatesList();
-            } else {
-                toast.error(data.error || 'Sync failed');
-            }
-        } catch (error) {
-            toast.error('Network error during sync');
-        } finally {
+    const { execute: executeSyncTemplates } = useAction(syncTemplates, {
+        onSuccess: (data, id) => {
+            toast.success(data.message || 'Templates synced!');
+            executeGetTemplates({ workspaceId });
+            setSyncingTemplates(prev => ({ ...prev, [id]: false }));
+        },
+        onError: (error, id) => {
+            toast.error(error || 'Sync failed');
             setSyncingTemplates(prev => ({ ...prev, [id]: false }));
         }
+    });
+
+    const { execute: executeSaveCreds } = useAction(saveCloudCredentials, {
+        onSuccess: () => {
+            toast.success(tempCreds.id ? 'Account updated' : 'New account added');
+            setIsCredsModalOpen(false);
+            executeGetCreds({ workspaceId });
+            setCloudLoading(false);
+            setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
+        },
+        onError: (error) => {
+            toast.error(error);
+            setCloudLoading(false);
+        }
+    });
+
+    const { execute: executeSetDefault } = useAction(setDefaultCredential, {
+        onSuccess: () => {
+            toast.success('Default account updated');
+            executeGetCreds({ workspaceId });
+            setTimeout(() => setIsSwitchingAccount(false), 800);
+        },
+        onError: (error) => {
+            toast.error(error);
+            setIsSwitchingAccount(false);
+        }
+    });
+
+    const { execute: executeRemoveCred } = useAction(deleteCredential, {
+        onSuccess: () => {
+            toast.success('Account removed successfully');
+            setIsDeleteModalOpen(false);
+            setAccountToDelete(null);
+            executeGetCreds({ workspaceId });
+            setCloudLoading(false);
+        },
+        onError: () => setCloudLoading(false)
+    });
+
+    const { execute: executeTestCred } = useAction(testCredential, {
+        onSuccess: (data, id) => {
+            toast.success('Connection verified!');
+            setTestState(prev => ({ ...prev, [id]: 'success' }));
+            executeGetCreds({ workspaceId });
+        },
+        onError: (error, id) => {
+            toast.error(error);
+            setTestState(prev => ({ ...prev, [id]: 'error' }));
+        }
+    });
+
+    const { execute: executeTestApi } = useAction(testMetaApi, {
+        onSuccess: (data, context) => {
+            if (context.type === 'meta_test') {
+                setMetaCloudResult(data.apiData);
+                setMetaCloudResultOpen(true);
+            } else if (context.type === 'display_names') {
+                setDisplayNamesResult(data.apiData);
+                setDisplayNamesResultOpen(true);
+            } else if (context.type === 'oba_apply') {
+                setObaResult(data.apiData);
+                setObaResultOpen(true);
+            } else if (context.type === 'oba_status') {
+                setObaStatusResult(data.apiData);
+                setObaStatusResultOpen(true);
+            } else if (context.type === 'qr_create') {
+                setQrResult(data.apiData);
+                setQrResultOpen(true);
+            } else if (context.type === 'qr_list') {
+                setQrListResult(data.apiData);
+                setQrListResultOpen(true);
+            } else if (context.type === 'qr_update') {
+                setQrUpdateResult(data.apiData);
+                setQrUpdateResultOpen(true);
+            } else if (context.type === 'qr_delete') {
+                setQrDeleteResult(data.apiData);
+                setQrDeleteResultOpen(true);
+            } else if (context.type === 'meta_analytics_msg') {
+                setAnalyticsMsgResult(data.apiData);
+                setAnalyticsMsgOpen(true);
+            } else if (context.type === 'meta_analytics_conv') {
+                setAnalyticsConvResult(data.apiData);
+                setAnalyticsConvOpen(true);
+            }
+            
+            if (data.success) toast.success("Operation successful");
+            else toast.error(data.error || "Operation failed");
+            
+            // Stop relevant loading states
+            if (context.type === 'meta_test') setMetaCloudTesting(false);
+            else if (context.type === 'display_names') setDisplayNamesTesting(false);
+            else if (context.type === 'oba_apply') setObaTesting(false);
+            else if (context.type === 'oba_status') setObaStatusTesting(false);
+            else if (context.type === 'qr_create') setQrTesting(false);
+            else if (context.type === 'qr_list') setQrListTesting(false);
+            else if (context.type === 'qr_update') setQrUpdateTesting(false);
+            else if (context.type === 'qr_delete') setQrDeleteTesting(false);
+            else if (context.type === 'meta_analytics_msg') setAnalyticsMsgTesting(false);
+            else if (context.type === 'meta_analytics_conv') setAnalyticsConvTesting(false);
+        },
+        onError: (error, context) => {
+            toast.error(error);
+            if (context.type === 'meta_test') setMetaCloudTesting(false);
+            else if (context.type === 'display_names') setDisplayNamesTesting(false);
+            else if (context.type === 'oba_apply') setObaTesting(false);
+            else if (context.type === 'oba_status') setObaStatusTesting(false);
+            else if (context.type === 'qr_create') setQrTesting(false);
+            else if (context.type === 'qr_list') setQrListTesting(false);
+            else if (context.type === 'qr_update') setQrUpdateTesting(false);
+            else if (context.type === 'qr_delete') setQrDeleteTesting(false);
+            else if (context.type === 'meta_analytics_msg') setAnalyticsMsgTesting(false);
+            else if (context.type === 'meta_analytics_conv') setAnalyticsConvTesting(false);
+        }
+    });
+
+    // Fetchers
+    const fetchBrowserStatus = useCallback(() => {
+        if (workspaceId) executeGetStatus({ workspaceId });
+    }, [workspaceId, executeGetStatus]);
+
+    const fetchCloudCreds = () => {
+        setCloudLoading(true);
+        executeGetCreds({ workspaceId });
     };
 
-    const handleSaveCloudCreds = async () => {
+    const fetchTemplatesList = () => {
+        executeGetTemplates({ workspaceId });
+    };
+
+    useEffect(() => {
+        if (workspaceId) {
+            fetchBrowserStatus();
+            fetchCloudCreds();
+            fetchTemplatesList();
+            const interval = setInterval(fetchBrowserStatus, 10000);
+            return () => clearInterval(interval);
+        }
+    }, [workspaceId, fetchBrowserStatus]);
+
+    const handleSyncTemplates = (id) => {
+        setSyncingTemplates(prev => ({ ...prev, [id]: true }));
+        executeSyncTemplates({ workspaceId, id }, id);
+    };
+
+    const handleSaveCloudCreds = () => {
         if (!tempCreds.phoneNumberId || !tempCreds.wabaId || !tempCreds.accessToken) {
             toast.error('Required fields: Phone ID, WABA ID, and Access Token');
             return;
         }
-
         setCloudLoading(true);
-        try {
-            const res = await fetch('/api/wa/credentials', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(tempCreds)
-            });
-
-            if (res.ok) {
-                toast.success(tempCreds.id ? 'Account updated' : 'New account added');
-                setIsCredsModalOpen(false);
-                fetchCloudCreds();
-                setTempCreds({ id: null, profile: '', phoneNumberId: '', wabaId: '', accessToken: '' });
-            } else {
-                const data = await res.json();
-                toast.error(data.error || 'Failed to update credentials');
+        executeSaveCreds({
+            workspaceId,
+            profileName: tempCreds.profile || 'New Account',
+            credentials: {
+                accessToken: tempCreds.accessToken,
+                phoneNumberId: tempCreds.phoneNumberId,
+                wabaId: tempCreds.wabaId
             }
-        } catch (error) {
-            toast.error('Network error updating credentials');
-        } finally {
-            setCloudLoading(false);
-        }
+        });
     };
 
-    const handleSetDefaultAccount = async (id) => {
+    const handleSetDefaultAccount = (id) => {
         setIsSwitchingAccount(true);
-        try {
-            const res = await fetch('/api/wa/credentials/default', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                toast.success(data.message || 'Default account updated');
-                await fetchCloudCreds();
-            } else {
-                toast.error(data.error || 'Failed to set default');
-            }
-        } catch (error) {
-            toast.error('Network error');
-        } finally {
-            // Small delay for visual impact of the premium loader
-            setTimeout(() => setIsSwitchingAccount(false), 800);
-        }
+        executeSetDefault({ workspaceId, id });
     };
 
-    const handleTestConnection = async (id) => {
+    const handleTestConnection = (id) => {
         setTestState(prev => ({ ...prev, [id]: 'loading' }));
         const testNumber = metadata.testNumbers?.[0];
-
-        try {
-            const res = await fetch('/api/wa/credentials/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, testNumber })
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                toast.success(testNumber ? `Request accepted! Note: Message only delivers if ${testNumber} has messaged you in the last 24h.` : 'Connection verified!');
-                setTestState(prev => ({ ...prev, [id]: 'success' }));
-                fetchCloudCreds();
-            } else {
-                toast.error(data.error || 'Connection failed');
-                setTestState(prev => ({ ...prev, [id]: 'error' }));
-            }
-        } catch (error) {
-            toast.error('Network error during test');
-            setTestState(prev => ({ ...prev, [id]: 'error' }));
-        }
+        executeTestCred({ workspaceId, id, testNumber }, id);
     };
 
-    const handleDeleteCloudCred = async () => {
+    const handleDeleteCloudCred = () => {
         if (!accountToDelete) return;
         setCloudLoading(true);
-        try {
-            const res = await fetch(`/api/wa/credentials?id=${accountToDelete.id}`, { method: 'DELETE' });
-            if (res.ok) {
-                toast.success('Account removed successfully');
-                setIsDeleteModalOpen(false);
-                setAccountToDelete(null);
-                fetchCloudCreds();
-            } else {
-                toast.error('Failed to remove account');
-            }
-        } catch (error) {
-            toast.error('Error deleting account');
-        } finally {
-            setCloudLoading(false);
-        }
+        executeRemoveCred({ workspaceId, id: accountToDelete.id });
     };
 
-    const handleTestMetaCloud = async () => {
+    const handleTestMetaCloud = () => {
         if (!metaCloudAccessToken.trim()) {
             toast.error('Please enter an Access Token.');
             return;
         }
         const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/debug_token?input_token=${metaCloudAccessToken.trim()}`;
         setMetaCloudTesting(true);
-        setMetaCloudResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url: builtUrl,
-                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
-                }),
-            });
-            const result = await res.json();
-            setMetaCloudResult(result);
-            setMetaCloudResultOpen(true);
-            if (result.success) {
-                toast.success(`App Info ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${result.status} ${result.statusText}`);
-            } else {
-                toast.error(`Failed: ${result.error || result.status}`);
-            }
-        } catch (err) {
-            setMetaCloudResult({ success: false, error: err.message });
-            toast.error('Network error');
-        } finally {
-            setMetaCloudTesting(false);
-        }
+        executeTestApi({
+            workspaceId,
+            url: builtUrl,
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+        }, { type: 'meta_test' });
     };
 
-    const handleGetDisplayNames = async () => {
+    const handleGetDisplayNames = () => {
         if (!displayNamesPhoneId.trim()) {
             toast.error('Please enter a Phone Number ID.');
             return;
@@ -402,182 +460,96 @@ export default function SettingsPage() {
         }
         const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${displayNamesPhoneId.trim()}?fields=verified_name,name_status`;
         setDisplayNamesTesting(true);
-        setDisplayNamesResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url: builtUrl,
-                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
-                }),
-            });
-            const result = await res.json();
-            setDisplayNamesResult(result);
-            setDisplayNamesResultOpen(true);
-            if (result.success) {
-                toast.success(`Display Names â€” ${result.status} ${result.statusText}`);
-            } else {
-                toast.error(`Failed: ${result.error || result.status}`);
-            }
-        } catch (err) {
-            setDisplayNamesResult({ success: false, error: err.message });
-            toast.error('Network error');
-        } finally {
-            setDisplayNamesTesting(false);
-        }
+        executeTestApi({
+            workspaceId,
+            url: builtUrl,
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+        }, { type: 'display_names' });
     };
 
-    const handleObaStatus = async () => {
+    const handleObaStatus = () => {
         if (!obaPhoneId.trim()) { toast.error('Please enter a Phone Number ID.'); return; }
         if (!metaCloudAccessToken.trim()) { toast.error('Please enter an Access Token.'); return; }
         const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/official_business_account`;
         setObaTesting(true);
-        setObaResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url: builtUrl,
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}`, 'Content-Type': 'application/json' },
-                    body: {
-                        additional_supporting_information: obaAdditionalInfo,
-                        business_website_url: obaWebsiteUrl,
-                        parent_business_or_brand: obaParentBusiness,
-                        primary_country_of_operation: obaCountry,
-                        primary_language: obaLanguage,
-                    },
-                }),
-            });
-            const result = await res.json();
-            setObaResult(result);
-            setObaResultOpen(true);
-            if (result.success) { toast.success(`OBA Status - ${result.status} ${result.statusText}`); }
-            else { toast.error(`Failed: ${result.error || result.status}`); }
-        } catch (err) {
-            setObaResult({ success: false, error: err.message });
-            toast.error('Network error');
-        } finally {
-            setObaTesting(false);
-        }
+        executeTestApi({
+            workspaceId,
+            url: builtUrl,
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+            body: {
+                additional_supporting_information: obaAdditionalInfo,
+                business_website_url: obaWebsiteUrl,
+                parent_business_or_brand: obaParentBusiness,
+                primary_country_of_operation: obaCountry,
+                primary_language: obaLanguage,
+            }
+        }, { type: 'oba_apply' });
     };
 
-    const handleCheckObaStatus = async () => {
+    const handleCheckObaStatus = () => {
         if (!obaPhoneId.trim()) { toast.error('Please enter a Phone Number ID.'); return; }
         if (!metaCloudAccessToken.trim()) { toast.error('Please enter an Access Token.'); return; }
         const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}?fields=name_status,code_verification_status`;
         setObaStatusTesting(true);
-        setObaStatusResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url: builtUrl,
-                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
-                }),
-            });
-            const result = await res.json();
-            setObaStatusResult(result);
-            setObaStatusResultOpen(true);
-            if (result.success) { toast.success(`OBA Status - ${result.status} ${result.statusText}`); }
-            else { toast.error(`Failed: ${result.error || result.status}`); }
-        } catch (err) {
-            setObaStatusResult({ success: false, error: err.message });
-            toast.error('Network error');
-        } finally {
-            setObaStatusTesting(false);
-        }
+        executeTestApi({
+            workspaceId,
+            url: builtUrl,
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+        }, { type: 'oba_status' });
     };
 
-    const handleCreateQR = async () => {
+    const handleCreateQR = () => {
         if (!obaPhoneId.trim()) { toast.error('Please enter a Phone Number ID.'); return; }
         if (!qrMessage.trim()) { toast.error('Please enter a prefilled message.'); return; }
         if (!metaCloudAccessToken.trim()) { toast.error('Please enter an Access Token.'); return; }
         const builtUrl = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`;
         setQrTesting(true);
-        setQrResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url: builtUrl,
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}`, 'Content-Type': 'application/json' },
-                    body: { prefilled_message: qrMessage.trim(), generate_qr_image: qrFormat },
-                }),
-            });
-            const result = await res.json();
-            setQrResult(result);
-            setQrResultOpen(true);
-            if (result.success) { toast.success(`QR Code Created — ${result.status} ${result.statusText}`); }
-            else { toast.error(`Failed: ${result.error || result.status}`); }
-        } catch (err) {
-            setQrResult({ success: false, error: err.message });
-            toast.error('Network error');
-        } finally {
-            setQrTesting(false);
-        }
+        executeTestApi({
+            workspaceId,
+            url: builtUrl,
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+            body: { prefilled_message: qrMessage.trim(), generate_qr_image: qrFormat }
+        }, { type: 'qr_create' });
     };
 
-    const handleListQR = async () => {
+    const handleListQR = () => {
         if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
         const url = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`;
-        setQrListTesting(true); setQrListResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
-            });
-            const result = await res.json();
-            setQrListResult(result); setQrListResultOpen(true);
-            if (result.success) toast.success(`QR List — ${result.status}`);
-            else toast.error(`Failed: ${result.error || result.status}`);
-        } catch (err) { setQrListResult({ success: false, error: err.message }); toast.error('Network error'); }
-        finally { setQrListTesting(false); }
+        setQrListTesting(true);
+        executeTestApi({
+            workspaceId,
+            url,
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
+        }, { type: 'qr_list' });
     };
 
-    const handleUpdateQR = async () => {
+    const handleUpdateQR = () => {
         if (!qrUpdateCodeId.trim()) { toast.error('QR Code ID required.'); return; }
         if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
         const url = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`;
-        setQrUpdateTesting(true); setQrUpdateResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url, method: 'POST',
-                    headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}`, 'Content-Type': 'application/json' },
-                    body: { code: qrUpdateCodeId.trim(), prefilled_message: qrUpdateMessage.trim(), generate_qr_image: qrUpdateFormat },
-                }),
-            });
-            const result = await res.json();
-            setQrUpdateResult(result); setQrUpdateResultOpen(true);
-            if (result.success) toast.success(`QR Updated — ${result.status}`);
-            else toast.error(`Failed: ${result.error || result.status}`);
-        } catch (err) { setQrUpdateResult({ success: false, error: err.message }); toast.error('Network error'); }
-        finally { setQrUpdateTesting(false); }
+        setQrUpdateTesting(true);
+        executeTestApi({
+            workspaceId,
+            url,
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+            body: { code: qrUpdateCodeId.trim(), prefilled_message: qrUpdateMessage.trim(), generate_qr_image: qrUpdateFormat }
+        }, { type: 'qr_update' });
     };
 
-    const handleDeleteQR = async () => {
+    const handleDeleteQR = () => {
         if (!qrDeleteCodeId.trim()) { toast.error('QR Code ID required.'); return; }
         if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
         const url = `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls/${qrDeleteCodeId.trim()}`;
-        setQrDeleteTesting(true); setQrDeleteResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, method: 'DELETE', headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
-            });
-            const result = await res.json();
-            setQrDeleteResult(result); setQrDeleteResultOpen(true);
-            if (result.success) toast.success(`QR Deleted — ${result.status}`);
-            else toast.error(`Failed: ${result.error || result.status}`);
-        } catch (err) { setQrDeleteResult({ success: false, error: err.message }); toast.error('Network error'); }
-        finally { setQrDeleteTesting(false); }
+        setQrDeleteTesting(true);
+        executeTestApi({
+            workspaceId,
+            url,
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
+        }, { type: 'qr_delete' });
     };
 
     useEffect(() => {
@@ -586,16 +558,8 @@ export default function SettingsPage() {
         fetchTemplatesList();
 
         // Pre-fill all Meta Cloud inputs from the default credential account
-        fetch('/api/wa/credentials/token')
-            .then(r => r.json())
-            .then(data => {
-                if (data?.accessToken) setMetaCloudAccessToken(data.accessToken);
-                if (data?.phoneNumberId) setDisplayNamesPhoneId(data.phoneNumberId);
-                if (data?.phoneNumberId) setObaPhoneId(data.phoneNumberId);
-                if (data?.wabaId) setAnalyticsWabaId(data.wabaId);
-                // Add more setters here as new cards are introduced
-            })
-            .catch(() => { /* silent - user can fill manually */ });
+        // Pre-fill Meta Cloud inputs
+        executeGetDecrypted({ workspaceId });
 
         const interval = setInterval(() => {
             if (method === 'browser') fetchBrowserStatus();
@@ -605,22 +569,11 @@ export default function SettingsPage() {
             setWebhookUrl(`${window.location.origin}/api/wa/webhook`);
         }
         return () => clearInterval(interval);
-    }, [fetchBrowserStatus, method]);
+    }, [fetchBrowserStatus, method, workspaceId]);
 
 
-    const handleSaveMetadata = async (updates) => {
-        const newMetadata = { ...metadata, ...updates };
-        setMetadata(newMetadata);
-        try {
-            const res = await fetch('/api/wa/auth', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ metadata: newMetadata })
-            });
-            if (res.ok) toast.success('Settings updated');
-        } catch (error) {
-            toast.error('Failed to save settings');
-        }
+    const handleSaveMetadata = (updates) => {
+        executeUpdateMetadata({ workspaceId, metadata: updates });
     };
 
     const getDateRangeTimestamps = (range) => {
@@ -629,45 +582,32 @@ export default function SettingsPage() {
         return { start: now - days * 86400, end: now };
     };
 
-    const handleFetchMsgAnalytics = async () => {
+    const handleFetchMsgAnalytics = () => {
         if (!analyticsWabaId.trim()) { toast.error('WABA ID required.'); return; }
         if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
         const { start, end } = getDateRangeTimestamps(analyticsDateRange);
-        const phoneParam = encodeURIComponent('[]');
-        const url = `https://graph.facebook.com/${metaCloudVersion}/${analyticsWabaId.trim()}/analytics?start=${start}&end=${end}&granularity=${analyticsGranularity}&phone_numbers=${phoneParam}`;
-        setAnalyticsMsgTesting(true); setAnalyticsMsgResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
-            });
-            const result = await res.json();
-            setAnalyticsMsgResult(result); setAnalyticsMsgOpen(true);
-            if (result.success) toast.success('Message analytics loaded');
-            else toast.error(`Failed: ${result.error || result.status}`);
-        } catch (err) { setAnalyticsMsgResult({ success: false, error: err.message }); toast.error('Network error'); }
-        finally { setAnalyticsMsgTesting(false); }
+        const url = `https://graph.facebook.com/${metaCloudVersion}/${analyticsWabaId.trim()}/analytics?start=${start}&end=${end}&granularity=${analyticsGranularity}&phone_numbers=[]`;
+        setAnalyticsMsgTesting(true);
+        executeTestApi({
+            workspaceId,
+            url,
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+        }, { type: 'meta_analytics_msg' });
     };
 
-    const handleFetchConvAnalytics = async () => {
+    const handleFetchConvAnalytics = () => {
         if (!analyticsWabaId.trim()) { toast.error('WABA ID required.'); return; }
         if (!metaCloudAccessToken.trim()) { toast.error('Access Token required.'); return; }
         const { start, end } = getDateRangeTimestamps(analyticsDateRange);
         const cats = encodeURIComponent('["MARKETING","UTILITY","AUTHENTICATION","SERVICE"]');
         const dims = encodeURIComponent('["CONVERSATION_CATEGORY","CONVERSATION_TYPE"]');
         const url = `https://graph.facebook.com/${metaCloudVersion}/${analyticsWabaId.trim()}/conversation_analytics?start=${start}&end=${end}&granularity=${analyticsGranularity}&phone_numbers=[]&conversation_categories=${cats}&dimensions=${dims}`;
-        setAnalyticsConvTesting(true); setAnalyticsConvResult(null);
-        try {
-            const res = await fetch('/api/webhooks/test', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` } }),
-            });
-            const result = await res.json();
-            setAnalyticsConvResult(result); setAnalyticsConvOpen(true);
-            if (result.success) toast.success('Conversation analytics loaded');
-            else toast.error(`Failed: ${result.error || result.status}`);
-        } catch (err) { setAnalyticsConvResult({ success: false, error: err.message }); toast.error('Network error'); }
-        finally { setAnalyticsConvTesting(false); }
+        setAnalyticsConvTesting(true);
+        executeTestApi({
+            workspaceId,
+            url,
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+        }, { type: 'meta_analytics_conv' });
     };
 
 

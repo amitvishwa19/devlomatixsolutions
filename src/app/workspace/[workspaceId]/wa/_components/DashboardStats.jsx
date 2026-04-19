@@ -1,28 +1,36 @@
-// @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { useAction } from "@/hooks/use-action";
+import { getStats } from "../_actions/get-stats";
+import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, MessageSquare, Users, TrendingUp, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Send, MessageSquare, Users, TrendingUp } from "lucide-react";
+
+
 
 export default function DashboardStats() {
+    const params = useParams();
+    const workspaceId = params.workspaceId;
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await fetch('/api/wa/stats');
-                const data = await res.json();
-                if (data.success) {
-                    setStats(data.stats);
-                }
-            } catch (err) {
-                console.error("Failed to fetch dashboard stats:", err);
-            } finally {
-                setIsLoading(false);
+    const { execute } = useAction(getStats, {
+        onSuccess: (data) => {
+            if (data.stats) {
+                setStats(data.stats);
             }
-        };
-        fetchStats();
-    }, []);
+            setIsLoading(false);
+        },
+        onError: (error) => {
+            console.error("Failed to fetch dashboard stats:", error);
+            setIsLoading(false);
+        }
+    });
+
+    useEffect(() => {
+        if (workspaceId) {
+            execute({ workspaceId });
+        }
+    }, [workspaceId, execute]);
 
     if (isLoading) {
         return (

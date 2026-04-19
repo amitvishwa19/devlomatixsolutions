@@ -147,6 +147,7 @@ export const authOptions = {
                 session.user.avatar = token.avatar;
                 session.user.role = token.role;
                 session.user.roles = token.roles;
+                session.user.workspaces = token.workspaces;
             }
             return session
         },

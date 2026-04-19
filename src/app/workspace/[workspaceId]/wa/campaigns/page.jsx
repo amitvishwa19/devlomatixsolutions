@@ -53,9 +53,22 @@ import { Badge } from"@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from"@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from"@/components/ui/dialog";
 
-export default function CampaignsPage() {
- const { data: session } = useSession();
- const userId = session?.user?.userId || session?.user?.id;
+import { useAction } from "@/hooks/use-action";
+import { getCampaigns } from "./_actions/get-campaigns";
+import { getCampaignDetails } from "./_actions/get-campaign-details";
+import { saveCampaign } from "./_actions/save-campaign";
+import { deleteCampaign } from "./_actions/delete-campaign";
+import { triggerCampaign } from "./_actions/trigger-campaign";
+import { getTemplates } from "../template/_actions/get-templates";
+import { getContacts } from "../contacts/_actions/get-contacts";
+import { getGroups } from "../contacts/_actions/get-groups";
+import { use } from "react";
+
+export default function CampaignsPage({ params: paramsPromise }) {
+    const params = use(paramsPromise);
+    const workspaceId = params.workspaceId;
+    const { data: session } = useSession();
+    const userId = session?.user?.userId || session?.user?.id;
  const [campaigns, setCampaigns] = useState([]);
  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
  const [searchTerm, setSearchTerm] = useState('');
@@ -67,63 +80,84 @@ export default function CampaignsPage() {
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState(null);
 
- const fetchCampaigns = React.useCallback(async () => {
- setLoading(true);
- setError(null);
- try {
- const res = await fetch('/api/wa/campaigns', { cache:'no-store'});
- const data = await res.json();
- if (!res.ok) throw new Error(data.error ||'Failed to load campaigns');
- setCampaigns(data.campaigns || []);
- } catch (err) {
- if (err.name !=='AbortError') {
- setError(err instanceof Error ? err.message : String(err));
- }
- } finally {
- setLoading(false);
- }
- }, []);
+    // Server Action Hooks
+    const { execute: executeGetCampaigns } = useAction(getCampaigns, {
+        onSuccess: (data) => {
+            setCampaigns(data.campaigns || []);
+            setLoading(false);
+        },
+        onError: (err) => {
+            setError(err || "Failed to load campaigns");
+            setLoading(false);
+        }
+    });
 
- const fetchTemplates = React.useCallback(async () => {
- try {
- const res = await fetch('/api/wa/templates');
- const data = await res.json();
- if (res.ok) setTemplates(data.templates || []);
- } catch (err) {
- console.error('Failed to load templates', err);
- }
- }, []);
+    const { execute: executeGetTemplates } = useAction(getTemplates, {
+        onSuccess: (data) => setTemplates(data.templates || []),
+    });
 
- const fetchContacts = React.useCallback(async () => {
- if (!userId) return;
- try {
- const res = await fetch(`/api/wa/contacts?userId=${userId}`);
- const data = await res.json();
- if (res.ok) setContacts(data || []);
- } catch (err) {
- console.error('Failed to load contacts', err);
- }
- }, [userId]);
+    const { execute: executeGetContacts } = useAction(getContacts, {
+        onSuccess: (data) => setContacts(data.contacts || []),
+    });
 
- const fetchGroups = React.useCallback(async () => {
- if (!userId) return;
- try {
- const res = await fetch(`/api/wa/groups?userId=${userId}`);
- if (res.ok) {
- const data = await res.json();
- setGroups(data);
- }
- } catch (error) {
- console.error('Error fetching groups:', error);
- }
- }, [userId]);
+    const { execute: executeGetGroups } = useAction(getGroups, {
+        onSuccess: (data) => setGroups(data.groups || []),
+    });
 
- React.useEffect(() => {
- fetchCampaigns();
- fetchTemplates();
- fetchContacts();
- fetchGroups();
- }, []);
+    const { execute: executeGetDetails } = useAction(getCampaignDetails, {
+        onSuccess: (data) => {
+            const phonesData = (data.campaign.recipients || []).map((r) => {
+                if (r.variables && Object.keys(r.variables).length > 0) {
+                    return `${r.phone}, ${Object.values(r.variables).join(',')}`;
+                }
+                return r.phone;
+            }).filter(Boolean).join('\n');
+
+            setEditForm((prev) => ({ ...prev, phone: phonesData }));
+        }
+    });
+
+    const { execute: executeSaveCampaign } = useAction(saveCampaign, {
+        onSuccess: async () => {
+            await fetchCampaigns();
+            setEditDialogOpen(false);
+            setActiveCampaign(null);
+            setSelectedGroupIds([]);
+            toast.success(activeCampaign ? 'Campaign updated successfully' : 'Campaign created successfully');
+        },
+        onError: (err) => toast.error(err || "Failed to save campaign")
+    });
+
+    const { execute: executeTriggerCampaign } = useAction(triggerCampaign, {
+        onSuccess: async (data) => {
+            toast.success(data.message || "Campaign triggered");
+            await fetchCampaigns();
+        },
+        onError: (err) => toast.error(err || "Failed to trigger campaign")
+    });
+
+    const { execute: executeDeleteCampaign } = useAction(deleteCampaign, {
+        onSuccess: async () => {
+            await fetchCampaigns();
+            setDeleteDialogOpen(false);
+            setActiveCampaign(null);
+            toast.success("Campaign deleted");
+        },
+        onError: (err) => toast.error(err || "Failed to delete campaign"),
+        onSettled: () => setIsDeleting(false)
+    });
+
+    const fetchCampaigns = () => { setLoading(true); executeGetCampaigns({ workspaceId }); };
+    const fetchTemplates = () => executeGetTemplates({ workspaceId });
+    const fetchContacts = () => executeGetContacts({ workspaceId });
+    const fetchGroups = () => executeGetGroups({ workspaceId });
+
+    React.useEffect(() => {
+        fetchCampaigns();
+        fetchTemplates();
+        fetchContacts();
+        fetchGroups();
+    }, [workspaceId]);
 
  const [editDialogOpen, setEditDialogOpen] = useState(false);
  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -168,210 +202,56 @@ export default function CampaignsPage() {
  intSections: JSON.stringify(mt?.interactive?.sections || [{ title:'Options', rows: [{ title:'Option 1', id:'opt1'}] }], null, 2)
  });
 
- try {
- const res = await fetch(`/api/wa/campaigns/${campaign.id}`, { cache:'no-store'});
- const data = await res.json();
- if (!res.ok) throw new Error(data.error ||'Failed to load campaign details');
-
- const phonesData = (data.campaign.recipients || []).
- map((r) => {
- if (r.variables && Object.keys(r.variables).length > 0) {
- return `${r.phone}, ${Object.values(r.variables).join(',')}`;
- }
- return r.phone;
- }).
- filter(Boolean).
- join('\n');
-
- setEditForm((prev) => ({ ...prev, phone: phonesData }));
- } catch (err) {
- console.error('Failed to load campaign details', err);
- }
+        executeGetDetails({ workspaceId, id: campaign.id });
  };
 
- const saveEdit = async () => {
- // Form validation
- if (!editForm.name.trim()) {
- toast.error('Campaign name is required');
- return;
- }
+    const saveEdit = () => {
+        if (!editForm.name.trim()) { toast.error('Campaign name is required'); return; }
+        
+        const recipients = editForm.phone ? editForm.phone.split('\n').map((line) => {
+            const parts = line.split(',').map((p) => p.trim()).filter(Boolean);
+            if (parts.length === 0) return null;
+            return { phone: parts[0], variables: parts.reduce((acc, p, i) => i === 0 ? acc : ({ ...acc, [`v${i}`]: p }), {}) };
+        }).filter(Boolean) : [];
 
- // Validate template based on message type (only for new campaigns, edit may have existing template)
- const isEditing = !!activeCampaign;
- if (!isEditing) {
- if (editForm.messageType ==='interactive') {
- if (!editForm.intBody.trim()) {
- toast.error('Message body is required');
- return;
- }
- } else if (editForm.messageType ==='text') {
- if (!editForm.template.trim()) {
- toast.error('Message template is required');
- return;
- }
- } else if (editForm.messageType ==='image'|| editForm.messageType ==='document') {
- if (!editForm.mediaUrl.trim()) {
- toast.error(`${editForm.messageType ==='image'?'Image':'Document'} URL is required`);
- return;
- }
- }
- }
+        const buildTemplate = () => {
+            if (editForm.messageType === 'interactive') {
+                let sections; try { sections = JSON.parse(editForm.intSections); } catch { sections = []; }
+                return { text: editForm.intBody, interactive: { body: editForm.intBody, footer: editForm.intFooter, buttonText: editForm.intButton, sections } };
+            }
+            const t = { text: editForm.template };
+            if (editForm.messageType === 'image') t.image = { url: editForm.mediaUrl };
+            if (editForm.messageType === 'document') t.document = { url: editForm.mediaUrl };
+            return t;
+        };
 
- // Validate scheduled time format if provided
- if (editForm.scheduledAt) {
- const scheduledDate = new Date(editForm.scheduledAt);
- if (isNaN(scheduledDate.getTime())) {
- toast.error('Invalid scheduled time format');
- return;
- }
- }
+        executeSaveCampaign({
+            workspaceId,
+            id: activeCampaign?.id,
+            name: editForm.name,
+            status: editForm.status,
+            messageTemplate: buildTemplate(),
+            templateId: editForm.templateId === 'custom' ? null : editForm.templateId || null,
+            recipients,
+            groupIds: selectedGroupIds
+        });
+    };
 
- const toastId = toast.loading(isEditing ?'Updating campaign...':'Creating campaign...');
-
- // Parse phone numbers and variables from text area (one per line, comma separated)
- const recipients = editForm.phone ?
- editForm.phone.
- split('\n').
- map((line) => {
- const parts = line.split(',').map((p) => p.trim()).filter(Boolean);
- if (parts.length === 0) return null;
- const phone = parts[0];
- const variables = {};
- // Map remaining parts to variables (v1, v2, v3...)
- for (let i = 1; i < parts.length; i++) {
- variables[`v${i}`] = parts[i];
- }
- return { phone, variables };
- }).
- filter(Boolean) :
- [];
-
- try {
- const buildTemplate = () => {
- if (editForm.messageType ==='interactive') {
- let sections;
- try {sections = JSON.parse(editForm.intSections);} catch {sections = [];}
- return {
- text: editForm.intBody,
- interactive: { body: editForm.intBody, footer: editForm.intFooter, buttonText: editForm.intButton, sections }
- };
- }
- const t = { text: editForm.template };
- if (editForm.messageType ==='image') t.image = { url: editForm.mediaUrl };
- if (editForm.messageType ==='document') t.document = { url: editForm.mediaUrl };
- return t;
- };
-
- if (activeCampaign) {
- // Update existing campaign (always send recipients so they can be cleared)
- const payload = {
- name: editForm.name,
- status: editForm.status,
- messageTemplate: buildTemplate(),
- templateId: editForm.templateId ==='custom'? null : editForm.templateId || null,
- messageType: editForm.messageType,
- scheduledAt: editForm.scheduledAt || null,
- recipients,
- groupIds: selectedGroupIds
- };
-
- const res = await fetch(`/api/wa/campaigns/${activeCampaign.id}`, {
- method:'PATCH',
- cache:'no-store',
- headers: {'Content-Type':'application/json'},
- body: JSON.stringify(payload)
- });
- if (!res.ok) {
- const data = await res.json().catch(() => ({}));
- throw new Error(data.error ||'Failed to update campaign');
- }
- } else {
- // Create new campaign
- const payload = {
- name: editForm.name,
- status: editForm.status,
- messageTemplate: buildTemplate(),
- templateId: editForm.templateId ==='custom'? null : editForm.templateId || null,
- messageType: editForm.messageType,
- scheduledAt: editForm.scheduledAt || null,
- recipients,
- groupIds: selectedGroupIds
- };
-
- const res = await fetch('/api/wa/campaigns', {
- method:'POST',
- cache:'no-store',
- headers: {'Content-Type':'application/json'},
- body: JSON.stringify(payload)
- });
- if (!res.ok) {
- const data = await res.json().catch(() => ({}));
- throw new Error(data.error ||'Failed to create campaign');
- }
- }
-
- await fetchCampaigns();
- setEditDialogOpen(false);
- setActiveCampaign(null);
- setSelectedGroupIds([]);
- toast.success(isEditing ?'Campaign updated successfully':'Campaign created successfully', { id: toastId });
- } catch (err) {
- console.error('Failed to save campaign', err);
- toast.error(err instanceof Error ? err.message :'Failed to save campaign', { id: toastId });
- }
- };
-
- const handleToggleCampaign = async (campaign) => {
- if (campaign.total === 0) {
- toast.error('Cannot run campaign with no recipients');
- return;
- }
-
- const isRunning = campaign.status ==='RUNNING';
- const action = isRunning ?'stop':'start';
- const toastId = toast.loading(`${isRunning ?'Pausing':'Starting'} campaign"${campaign.name}"...`);
-
- try {
- const res = await fetch(`/api/wa/campaigns/${campaign.id}/${action}`, { method:'POST'});
- const data = await res.json();
- if (!res.ok) throw new Error(data.error || `Failed to ${action} campaign`);
-
- toast.success(data.message || `Campaign ${isRunning ?'paused':'started'}!`, { id: toastId });
- await fetchCampaigns();
- } catch (err) {
- toast.error(err.message, { id: toastId });
- }
- };
+    const handleToggleCampaign = (campaign) => {
+        if (campaign.total === 0) { toast.error('Cannot run campaign with no recipients'); return; }
+        const isRunning = campaign.status === 'RUNNING';
+        executeTriggerCampaign({ workspaceId, id: campaign.id, action: isRunning ? 'stop' : 'start' });
+    };
 
  const openDeleteDialog = (campaign) => {
  setActiveCampaign(campaign);
  setDeleteDialogOpen(true);
  };
- const confirmDelete = async () => {
- if (!activeCampaign) return;
- setIsDeleting(true);
-
- try {
- const res = await fetch(`/api/wa/campaigns/${activeCampaign.id}`, {
- method:'DELETE',
- cache:'no-store'
- });
-
- if (!res.ok) {
- const data = await res.json().catch(() => ({}));
- throw new Error(data.error ||'Failed to delete campaign');
- }
-
- // Refresh the list to stay in sync with the server
- await fetchCampaigns();
- } catch (err) {
- console.error('Failed to delete campaign', err);
- } finally {
- setIsDeleting(false);
- setDeleteDialogOpen(false);
- setActiveCampaign(null);
- }
- };
+    const confirmDelete = () => {
+        if (!activeCampaign) return;
+        setIsDeleting(true);
+        executeDeleteCampaign({ workspaceId, id: activeCampaign.id });
+    };
 
  const getStatusBadge = (status) => {
  const styles = {

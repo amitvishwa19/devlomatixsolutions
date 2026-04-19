@@ -13,12 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
+import { useAction } from "@/hooks/use-action";
+import { saveBot } from "../_actions/save-bot";
 import { toast } from "sonner";
 
-export function BotModal({ isOpen, onClose, onSave, bot = null }) {
+export function BotModal({ isOpen, onClose, onSave, workspaceId, bot = null }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (bot) {
@@ -30,38 +31,19 @@ export function BotModal({ isOpen, onClose, onSave, bot = null }) {
         }
     }, [bot, isOpen]);
 
-    const handleSave = async (e) => {
+    const { execute, isLoading: loading } = useAction(saveBot, {
+        onSuccess: (data) => {
+            toast.success(bot ? "Bot updated" : "Bot created");
+            onSave(data.bot);
+            onClose();
+        },
+        onError: (err) => toast.error(err || "Failed to save bot")
+    });
+
+    const handleSave = (e) => {
         e.preventDefault();
-        if (!name) {
-            toast.error("Bot name is required");
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const url = bot ? `/api/wa/bot-flow/${bot.id}` : '/api/wa/bot-flow';
-            const method = bot ? 'PATCH' : 'POST';
-
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, description }),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                toast.success(bot ? "Bot updated" : "Bot created");
-                onSave(result.data);
-                onClose();
-            } else {
-                toast.error(result.error || "Failed to save bot");
-            }
-        } catch (error) {
-            toast.error("Network error");
-        } finally {
-            setLoading(false);
-        }
+        if (!name) { toast.error("Bot name is required"); return; }
+        execute({ workspaceId, id: bot?.id, name, description });
     };
 
     return (

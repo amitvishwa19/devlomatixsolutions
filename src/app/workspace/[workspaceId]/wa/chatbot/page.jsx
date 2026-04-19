@@ -25,6 +25,10 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { useAction } from "@/hooks/use-action";
+import { getBots } from "./_actions/get-bots";
+import { deleteBot } from "./_actions/delete-bot";
+import { toggleBotStatus } from "./_actions/toggle-bot-status";
 import { toast } from "sonner";
 import { BotModal } from "./_components/BotModal";
 import { BotFlowBuilderModal } from "./_components/BotFlowBuilderModal";
@@ -41,53 +45,49 @@ export default function ChatbotPage() {
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [activeBotId, setActiveBotId] = useState(null);
 
-    const fetchBots = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/wa/bot-flow');
-            const json = await res.json();
-            if (json.success) {
-                setBots(json.data);
-            }
-        } catch (error) {
-            toast.error("Failed to load bots");
-        } finally {
+    const { execute: executeGetBots } = useAction(getBots, {
+        onSuccess: (data) => {
+            setBots(data.bots || []);
+            setLoading(false);
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to load bots");
             setLoading(false);
         }
+    });
+
+    const fetchBots = () => {
+        setLoading(true);
+        executeGetBots({ workspaceId });
     };
 
     useEffect(() => {
         fetchBots();
-    }, []);
+    }, [workspaceId]);
 
-    const handleDelete = async (id) => {
+    const { execute: executeDeleteBot } = useAction(deleteBot, {
+        onSuccess: () => {
+            toast.success("Bot deleted");
+            fetchBots();
+        },
+        onError: (err) => toast.error(err || "Delete failed")
+    });
+
+    const handleDelete = (id) => {
         if (!confirm("Are you sure you want to delete this bot?")) return;
-
-        try {
-            const res = await fetch(`/api/wa/bot-flow/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setBots(bots.filter(b => b.id !== id));
-                toast.success("Bot deleted");
-            }
-        } catch (error) {
-            toast.error("Delete failed");
-        }
+        executeDeleteBot({ workspaceId, id });
     };
 
-    const handleToggleStatus = async (bot) => {
-        try {
-            const res = await fetch(`/api/wa/bot-flow/${bot.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ active: !bot.active }),
-            });
-            if (res.ok) {
-                setBots(bots.map(b => b.id === bot.id ? { ...b, active: !b.active } : b));
-                toast.success(`Bot ${!bot.active ? 'activated' : 'paused'}`);
-            }
-        } catch (error) {
-            toast.error("Status update failed");
-        }
+    const { execute: executeToggleStatus } = useAction(toggleBotStatus, {
+        onSuccess: (data) => {
+            toast.success(`Bot ${data.bot.active ? 'activated' : 'paused'}`);
+            fetchBots();
+        },
+        onError: (err) => toast.error(err || "Status update failed")
+    });
+
+    const handleToggleStatus = (bot) => {
+        executeToggleStatus({ workspaceId, id: bot.id, active: !bot.active });
     };
 
     const columns = [
@@ -270,17 +270,12 @@ export default function ChatbotPage() {
             {/* Modals */}
             <BotModal
                 isOpen={isModalOpen}
+                workspaceId={workspaceId}
                 onClose={() => {
                     setIsModalOpen(false);
                     setEditingBot(null);
                 }}
-                onSave={(newBot) => {
-                    if (editingBot) {
-                        setBots(bots.map(b => b.id === newBot.id ? newBot : b));
-                    } else {
-                        setBots([newBot, ...bots]);
-                    }
-                }}
+                onSave={fetchBots}
                 bot={editingBot}
             />
             <BotFlowBuilderModal 

@@ -11,11 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Zap, Rocket } from 'lucide-react';
+import { useAction } from "@/hooks/use-action";
+import { saveStore } from "../_actions/save-store";
 import { toast } from "sonner";
 
-export const WooCommerceConnectModal = ({ isOpen, onClose, onConnected }) => {
-    const [loading, setLoading] = useState(false);
+export const WooCommerceConnectModal = ({ isOpen, onClose, onConnected, workspaceId }) => {
     const [formData, setFormData] = useState({
         name: '',
         storeUrl: '',
@@ -23,33 +23,20 @@ export const WooCommerceConnectModal = ({ isOpen, onClose, onConnected }) => {
         apiSecret: ''
     });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        
-        try {
-            const res = await fetch('/api/wa/ecommerce', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    platform: 'woocommerce'
-                })
-            });
-            
-            const json = await res.json();
-            if (json.success) {
-                toast.success("WooCommerce store connected successfully!");
-                onConnected();
-                onClose();
-            } else {
-                toast.error("Failed to connect WooCommerce store");
-            }
-        } catch (err) {
-            toast.error("Network error connecting WooCommerce");
-        } finally {
-            setLoading(false);
+    const { execute, isLoading: loading } = useAction(saveStore, {
+        onSuccess: () => {
+            toast.success("WooCommerce store connected successfully!");
+            onConnected();
+            onClose();
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to connect WooCommerce store");
         }
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        execute({ ...formData, platform: 'woocommerce', workspaceId });
     };
 
     return (

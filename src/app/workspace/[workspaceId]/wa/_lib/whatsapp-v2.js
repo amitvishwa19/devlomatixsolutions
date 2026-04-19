@@ -26,7 +26,13 @@ class WhatsAppManager {
     }
 
     getMessages() {
-        return this.messages;
+        return this.messages.map(m => ({
+            id: m.id,
+            jid: m.jid,
+            text: m.text,
+            fromMe: m.fromMe,
+            timestamp: typeof m.timestamp === 'bigint' ? Number(m.timestamp) : m.timestamp
+        }));
     }
 
     getContacts() {
@@ -34,7 +40,12 @@ class WhatsAppManager {
     }
 
     getUser() {
-        return this.sock?.user || null;
+        if (!this.sock?.user) return null;
+        return {
+            id: this.sock.user.id,
+            name: this.sock.user.name,
+            imgUrl: this.sock.user.imgUrl
+        };
     }
 
     connect(sessionId = 'default') {
