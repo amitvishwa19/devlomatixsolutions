@@ -52,7 +52,7 @@ const nextConfig = {
     return [
       {
         // matching all API routes
-        source: "/localhost:3000/api/v1/:path*",
+        source: "/api/v1/:path*",
         headers: [
           { key: "Access-Control-Allow-Credentials", value: "true" },
           { key: "Access-Control-Allow-Origin", value: "*" },

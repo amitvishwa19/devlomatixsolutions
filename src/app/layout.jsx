@@ -53,7 +53,7 @@ export default async function RootLayout({ children }) {
         include: {
             roles: {
                 include: {
-                    Permission: true,
+                    permissions: true,
                 },
             },
             profile: true,

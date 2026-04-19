@@ -3,13 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 model AppSettings {
-  id            String   @id @default(uuid())
+  id            String   @id @default(cuid())
   key           String   @unique
   general       Json?
   hospitalInfo  Json?
@@ -37,7 +35,7 @@ model AppSettings {
 }
 
 model Appointment {
-  id                               String            @id @default(uuid())
+  id                               String            @id @default(cuid())
   patientId                        String
   doctorId                         String
   uid                              String?
@@ -53,12 +51,12 @@ model Appointment {
   type                             APPIONTMENTTYPE   @default(OPD)
   createdAt                        DateTime          @default(now())
   updatedAt                        DateTime          @updatedAt
-  User_Appointment_doctorIdToUser  User              @relation("Appointment_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
-  User_Appointment_patientIdToUser User              @relation("Appointment_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor                           User              @relation("Appointment_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient                          User              @relation("Appointment_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
   orgId       String?
   action      String?
   entityId    String?
@@ -72,7 +70,7 @@ model AuditLog {
 }
 
 model Category {
-  id             String     @id @default(uuid())
+  id             String     @id @default(cuid())
   name           String
   slug           String
   description    String?
@@ -92,15 +90,15 @@ model Category {
 }
 
 model Channel {
-  id        String      @id @default(uuid())
+  id        String      @id @default(cuid())
   name      String
   type      ChannelType @default(TEXT)
   userId    String
   serverId  String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
-  Server    Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  User      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  server    Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   Message   Message[]
 
   @@index([serverId])
@@ -110,8 +108,8 @@ model Conversation {
   id                                      String          @id
   memberOneId                             String
   memberTwoId                             String
-  Member_Conversation_memberOneIdToMember Member          @relation("Conversation_memberOneIdToMember", fields: [memberOneId], references: [id], onDelete: Cascade)
-  Member_Conversation_memberTwoIdToMember Member          @relation("Conversation_memberTwoIdToMember", fields: [memberTwoId], references: [id], onDelete: Cascade)
+  memberOne       Member          @relation("Conversation_memberOneIdToMember", fields: [memberOneId], references: [id], onDelete: Cascade)
+  memberTwo       Member          @relation("Conversation_memberTwoIdToMember", fields: [memberTwoId], references: [id], onDelete: Cascade)
   DirectMessage                           DirectMessage[]
 
   @@unique([memberOneId, memberTwoId])
@@ -119,17 +117,17 @@ model Conversation {
 }
 
 model Credit {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   userId    String   @unique
   type      String   @default("virtual")
   value     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Department {
-  id           String    @id @default(uuid())
+  id           String    @id @default(cuid())
   name         String
   value        String    @unique
   code         String?
@@ -146,12 +144,12 @@ model Department {
   hospitalId   String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  Hospital     Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-  User         User[]
+  hospital     Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  users        User[]
 }
 
 model DirectMessage {
-  id             String       @id @default(uuid())
+  id             String       @id @default(cuid())
   content        String
   fileUrl        String?
   memberId       String
@@ -159,15 +157,15 @@ model DirectMessage {
   deleted        Boolean      @default(false)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  Conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  Member         Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  member         Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([memberId])
 }
 
 model Hospital {
-  id             String       @id @default(uuid())
+  id             String       @id @default(cuid())
   key            String       @unique
   name           String
   code           String       @unique
@@ -178,30 +176,30 @@ model Hospital {
   licenceNo      String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  Department     Department[]
-  User           User[]
+  departments     Department[]
+  users           User[]
 }
 
 model Member {
-  id                                            String          @id @default(uuid())
+  id                                            String          @id @default(cuid())
   role                                          MemberRole      @default(PATIENT)
   userId                                        String
   serverId                                      String
   createdAt                                     DateTime        @default(now())
   updatedAt                                     DateTime        @updatedAt
-  Conversation_Conversation_memberOneIdToMember Conversation[]  @relation("Conversation_memberOneIdToMember")
-  Conversation_Conversation_memberTwoIdToMember Conversation[]  @relation("Conversation_memberTwoIdToMember")
-  DirectMessage                                 DirectMessage[]
-  Server                                        Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  User                                          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Message                                       Message[]
+  conversationsAsMemberOne                      Conversation[]  @relation("Conversation_memberOneIdToMember")
+  conversationsAsMemberTwo                      Conversation[]  @relation("Conversation_memberTwoIdToMember")
+  directMessages                                DirectMessage[]
+  server                                        Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user                                          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages                                      Message[]
 
   @@index([serverId])
   @@index([userId])
 }
 
 model Message {
-  id         String   @id @default(uuid())
+  id         String   @id @default(cuid())
   content    String
   fileUrl    String?
   memberId   String
@@ -212,15 +210,15 @@ model Message {
   read       Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  Channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  Member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([channelId])
   @@index([memberId])
 }
 
 model Permission {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
   title       String
   value       String   @unique
   color       String?  @default("#FFFF")
@@ -229,34 +227,34 @@ model Permission {
   status      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  Role        Role[]
+  roles       Role[]   @relation("PermissionToRole")
 }
 
 model Profile {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   userId    String   @unique
   info      Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model Role {
-  id          String       @id @default(uuid())
+  id          String       @id @default(cuid())
   title       String       @unique
   description String?
   color       String?
   status      Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  permissions Permission[]
-  users       User[]
+  permissions Permission[] @relation("PermissionToRole")
+  users       User[]       @relation("RoleToUser")
 }
 
 model Server {
-  id          String    @id @default(uuid())
+  id          String    @id @default(cuid())
   userId      String
   name        String
   description String?
@@ -267,24 +265,24 @@ model Server {
   default     Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  Channel     Channel[]
-  Member      Member[]
-  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channels    Channel[]
+  members     Member[]
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model Setting {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   userId    String   @unique
   info      Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Tag {
-  id          String     @id @default(uuid())
+  id          String     @id @default(cuid())
   name        String     @unique
   slug        String     @unique
   description String?
@@ -298,7 +296,7 @@ model Tag {
 }
 
 model User {
-  id                                      String        @id @default(uuid())
+  id                                      String        @id @default(cuid())
   uuid                                    String?
   displayName                             String?
   username                                String?       @unique
@@ -325,17 +323,17 @@ model User {
   lastActive                              DateTime?
   createdAt                               DateTime      @default(now())
   updatedAt                               DateTime      @updatedAt
-  Appointment_Appointment_doctorIdToUser  Appointment[] @relation("Appointment_doctorIdToUser")
-  Appointment_Appointment_patientIdToUser Appointment[] @relation("Appointment_patientIdToUser")
+  appointmentsAsDoctor                    Appointment[] @relation("Appointment_doctorIdToUser")
+  appointmentsAsPatient                   Appointment[] @relation("Appointment_patientIdToUser")
   channels                                Channel[]
   credit                                  Credit?
   members                                 Member[]
   profile                                 Profile?
   servers                                 Server[]
   setting                                 Setting?
-  Department                              Department?   @relation(fields: [departmentId], references: [id])
-  Hospital                                Hospital?     @relation(fields: [hospitalId], references: [id])
-  roles                                   Role[]
+  department                              Department?   @relation(fields: [departmentId], references: [id])
+  hospital                                Hospital?     @relation(fields: [hospitalId], references: [id])
+  roles                                   Role[]                   @relation("RoleToUser")
 
   @@index([email])
   @@index([phone])

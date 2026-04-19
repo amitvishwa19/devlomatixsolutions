@@ -79,7 +79,7 @@ export async function getWorkspaceData(userId) {
 
     const hospital = await db.hospital.findMany({
         where: {
-            members: {
+            users: {
                 some: { id: userId },
             }
         },

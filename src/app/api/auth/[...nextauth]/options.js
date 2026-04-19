@@ -42,8 +42,11 @@ export const authOptions = {
                     }
                 })
 
-                const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+                if (!user || !user.password) {
+                    return null;
+                }
 
+                const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
 
                 console.log('isPasswordValid', isPasswordValid)
 
@@ -51,7 +54,6 @@ export const authOptions = {
                     return user
                 } else {
                     return null
-                    throw new Error('Incorrect credentials')
                 }
 
 
@@ -132,17 +134,19 @@ export const authOptions = {
                 include: {
                     roles: {
                         include: {
-                            Permission: true,
+                            permissions: true,
                         },
                     },
                 },
             });
 
-            session.user.userId = usr.id;
-            session.user.displayName = usr.displayName;
-            session.user.avatar = usr.avatar;
-            session.user.role = usr.role;
-            session.user.roles = usr.roles;
+            if (usr) {
+                session.user.userId = usr.id;
+                session.user.displayName = usr.displayName;
+                session.user.avatar = usr.avatar;
+                session.user.role = usr.role;
+                session.user.roles = usr.roles;
+            }
 
 
 

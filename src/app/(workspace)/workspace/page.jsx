@@ -11,6 +11,9 @@ export default async function WorkspacePage() {
         redirect("/login");
     }
 
+
+    console.log(session);
+
     let server;
     let hospitals
     try {
@@ -22,14 +25,15 @@ export default async function WorkspacePage() {
             select: { id: true },
         });
 
+        console.log(server);
 
-        hospitals = await db.hospital.findMany({
-            where: {
-                members: {
-                    some: { id: session.user.userId },
-                }
-            },
-        })
+        // hospitals = await db.hospital.findMany({
+        //     where: {
+        //         members: {
+        //             some: { id: session.user.userId },
+        //         }
+        //     },
+        // })
 
 
 
@@ -38,9 +42,9 @@ export default async function WorkspacePage() {
         <WorkspaceLoader redirectTo="/unauthorized" />
     }
 
-    if (hospitals.length !== 0) {
-        return <WorkspaceLoader setup={true} />
-    }
+    // if (hospitals.length !== 0) {
+    //     return <WorkspaceLoader setup={true} />
+    // }
 
     if (!server) {
         return <WorkspaceLoader redirectTo="/unauthorized" />
