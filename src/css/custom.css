@@ -44,7 +44,7 @@ body {
 
 }
 
-.ql-toolbar .ql-formats:not("last-child") {
+.ql-toolbar .ql-formats:not(:last-child) {
     border-right: 1px solid #dcdcdc !important;
     padding-right: 12px !important;
 
