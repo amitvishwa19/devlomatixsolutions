@@ -207,18 +207,19 @@ const slides = [
 ];
 
 const Layout = ({ children, currentSlide, totalSlides, onNext, onPrev, onSelect }) => (
-    <div className="h-screen w-screen bg-[#020617] overflow-hidden relative font-sans text-slate-100">
-
-
-        {/* Background Gradients */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-600/10 blur-[120px] rounded-full" />
+    <div className="h-screen w-screen bg-background overflow-hidden relative font-sans text-foreground">
+        {/* Soft Background Mesh - Matches Public Hero */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[100px]" />
+            <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[100px]" />
+            <div className="absolute inset-0 opacity-[0.03] grid-pattern" />
+        </div>
 
         <div className="absolute top-6 left-8 flex items-center gap-2 z-20">
-            <div className="p-1.5 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
+            <div className="p-1 px-3 bg-white shadow-sm border border-border rounded-xl flex items-center gap-2">
                 <img src={curexaLogo.src} alt="Curexa" className="h-6 md:h-8" />
+                <span className="text-xl font-bold hero-gradient-text">Curexa</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Curexa</span>
         </div>
 
         <AnimatePresence mode="wait">
@@ -238,11 +239,11 @@ const Layout = ({ children, currentSlide, totalSlides, onNext, onPrev, onSelect 
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 z-20">
             <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={onPrev}
                 disabled={currentSlide === 0}
-                className="rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 disabled:opacity-20 transition-all"
+                className="rounded-full bg-background border-border text-foreground hover:bg-accent disabled:opacity-20 transition-all shadow-sm"
             >
                 <ChevronLeft className="h-6 w-6" />
             </Button>
@@ -252,23 +253,23 @@ const Layout = ({ children, currentSlide, totalSlides, onNext, onPrev, onSelect 
                     <button
                         key={i}
                         onClick={() => onSelect(i)}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? "w-8 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" : "w-1.5 bg-white/20 hover:bg-white/40"}`}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? "w-8 bg-primary shadow-glow" : "w-1.5 bg-muted hover:bg-muted-foreground/30"}`}
                     />
                 ))}
             </div>
 
             <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={onNext}
                 disabled={currentSlide === totalSlides - 1}
-                className="rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 disabled:opacity-20 transition-all"
+                className="rounded-full bg-background border-border text-foreground hover:bg-accent disabled:opacity-20 transition-all shadow-sm"
             >
                 <ChevronRight className="h-6 w-6" />
             </Button>
         </div>
 
-        <div className="absolute bottom-8 right-8 text-sm text-slate-500 font-medium">
+        <div className="absolute bottom-8 right-8 text-sm text-muted-foreground font-medium bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-border/50">
             {currentSlide + 1} / {totalSlides}
         </div>
     </div>
@@ -276,8 +277,8 @@ const Layout = ({ children, currentSlide, totalSlides, onNext, onPrev, onSelect 
 
 const SectionTitle = ({ title, subtitle, centered = true }) => (
     <div className={`mb-12 ${centered ? 'text-center' : ''}`}>
-        <h2 className="text-3xl md:text-6xl font-black text-white mb-4 tracking-tight">{title}</h2>
-        {subtitle && <p className="text-lg md:text-2xl text-slate-400 font-medium">{subtitle}</p>}
+        <h2 className="text-4xl md:text-6xl font-black text-foreground mb-4 tracking-tighter leading-tight">{title}</h2>
+        {subtitle && <p className="text-lg md:text-2xl text-muted-foreground font-medium">{subtitle}</p>}
     </div>
 );
 
@@ -309,18 +310,19 @@ export default function Page() {
             {slide.type === "cover" && (
                 <div className="flex flex-col items-center text-center py-8">
                     <motion.div
-                        className="bg-blue-500/10 p-8 rounded-[2.5rem] mb-8 border border-blue-500/20 backdrop-blur-xl shadow-[0_0_50px_rgba(59,130,246,0.1)]"
+                        className="bg-primary/5 p-8 rounded-[2.5rem] mb-8 border border-primary/10 shadow-sm"
                         initial={{ scale: 0.8, rotate: -5 }}
                         animate={{ scale: 1, rotate: 0 }}
                     >
-                        <Hospital className="h-20 w-20 text-blue-400" />
+                        <Hospital className="h-20 w-20 text-primary" />
                     </motion.div>
-                    <h1 className="text-6xl sm:text-8xl md:text-[10rem] font-black tracking-tighter text-white mb-4 leading-none">
-                        <span className="bg-gradient-to-b from-white to-slate-500 bg-clip-text text-transparent">{slide.title}</span>
+                    <h1 className="text-6xl sm:text-8xl md:text-[8rem] font-black tracking-tighter text-foreground mb-4 leading-none">
+                        <span className="bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-transparent">{slide.title}</span>
                     </h1>
-                    <p className="text-xl sm:text-3xl md:text-4xl font-semibold text-slate-400 mb-6">{slide.subtitle}</p>
-                    <div className="px-6 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full">
-                        <p className="text-xs sm:text-sm md:text-base font-black text-blue-400 tracking-[0.2em] uppercase">{slide.tagline}</p>
+                    <p className="text-xl sm:text-3xl md:text-4xl font-semibold text-muted-foreground mb-6">{slide.subtitle}</p>
+                    <div className="module-badge">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        {slide.tagline}
                     </div>
                 </div>
             )}
@@ -332,15 +334,15 @@ export default function Page() {
                         {slide.points.map((p, i) => (
                             <motion.div
                                 key={i}
-                                className="flex items-center gap-4 bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-all hover:translate-x-2"
+                                className="flex items-center gap-4 bg-card p-6 rounded-2xl border border-border hover:border-primary/50 hover:shadow-lg transition-all"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.1 }}
                             >
-                                <div className="p-3 bg-rose-500/10 rounded-2xl text-rose-400 border border-rose-500/20">
+                                <div className="p-3 bg-destructive/10 rounded-xl text-destructive border border-destructive/20">
                                     <p.icon className="h-6 w-6" />
                                 </div>
-                                <p className="text-xl font-semibold text-slate-200">{p.text}</p>
+                                <p className="text-xl font-semibold text-foreground">{p.text}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -354,16 +356,16 @@ export default function Page() {
                         {slide.impacts.map((imp, i) => (
                             <motion.div
                                 key={i}
-                                className="bg-white/5 backdrop-blur-xl p-8 rounded-[2rem] border-t-4 border-rose-500 text-center hover:bg-white/10 transition-all"
+                                className="bg-card p-8 rounded-2xl border border-border border-t-4 border-t-destructive text-center hover:shadow-xl transition-all"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
                             >
-                                <div className={`mb-4 mx-auto w-fit px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-widest ${imp.severity === 'urgent' ? 'bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.4)]' : 'bg-rose-500/20 text-rose-400'}`}>
+                                <div className={`mb-4 mx-auto w-fit px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest ${imp.severity === 'urgent' ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/10 text-destructive'}`}>
                                     {imp.severity}
                                 </div>
-                                <h3 className="text-2xl font-bold mb-3 text-white">{imp.label}</h3>
-                                <p className="text-slate-400 font-medium">{imp.desc}</p>
+                                <h3 className="text-2xl font-bold mb-3 text-foreground">{imp.label}</h3>
+                                <p className="text-muted-foreground font-medium">{imp.desc}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -373,16 +375,16 @@ export default function Page() {
             {slide.type === "intro" && (
                 <div className="max-w-4xl w-full">
                     <div className="mb-12">
-                        <span className="text-blue-600 font-bold uppercase tracking-wider mb-2 block">{slide.headline}</span>
-                        <h2 className="text-5xl md:text-7xl font-bold text-slate-900">{slide.title}</h2>
+                        <span className="text-primary font-bold uppercase tracking-wider mb-2 block">{slide.headline}</span>
+                        <h2 className="text-5xl md:text-7xl font-bold text-foreground tracking-tighter">{slide.title}</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {slide.points.map((p, i) => (
                             <div key={i} className="flex items-start gap-4">
-                                <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400 border border-blue-500/20">
+                                <div className="p-3 bg-primary/10 rounded-xl text-primary border border-primary/20">
                                     <p.icon className="h-7 w-7" />
                                 </div>
-                                <p className="text-2xl text-slate-300 leading-relaxed font-semibold italic">{p.text}</p>
+                                <p className="text-2xl text-foreground font-semibold italic">{p.text}</p>
                             </div>
                         ))}
                     </div>
@@ -394,12 +396,12 @@ export default function Page() {
                     <SectionTitle title={slide.title} subtitle={slide.subtitle} />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {slide.benefits.map((b, i) => (
-                            <div key={i} className="bg-white/5 backdrop-blur-xl p-8 rounded-[2rem] border border-white/5 hover:border-blue-500/30 transition-all hover:-translate-y-2">
-                                <div className="p-4 bg-blue-500/10 rounded-2xl text-blue-400 w-fit mb-6 border border-blue-500/20">
+                            <div key={i} className="bg-card p-8 rounded-2xl border border-border hover:border-primary/50 transition-all hover:-translate-y-2 shadow-sm hover:shadow-md">
+                                <div className="p-4 bg-primary/10 rounded-xl text-primary w-fit mb-6 border border-primary/20">
                                     <b.icon className="h-8 w-8" />
                                 </div>
-                                <h3 className="text-2xl font-bold mb-3 text-white">{b.title}</h3>
-                                <p className="text-slate-400 font-medium text-sm leading-relaxed">{b.desc}</p>
+                                <h3 className="text-2xl font-bold mb-3 text-foreground">{b.title}</h3>
+                                <p className="text-muted-foreground font-medium text-sm leading-relaxed">{b.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -412,16 +414,16 @@ export default function Page() {
                     <div className="flex flex-wrap justify-center items-center gap-4">
                         {slide.steps.map((s, i) => (
                             <div key={i} className="flex items-center gap-4">
-                                <div className="bg-white/5 backdrop-blur-md px-8 py-5 rounded-2xl border border-white/10 flex items-center gap-4 shadow-xl">
-                                    <div className="h-8 w-8 rounded-full bg-blue-500 text-white text-sm flex items-center justify-center font-black shadow-[0_0_15px_rgba(59,130,246,0.5)]">{s.id}</div>
-                                    <span className="font-bold text-slate-100 text-lg">{s.label}</span>
+                                <div className="bg-card px-8 py-5 rounded-xl border border-border flex items-center gap-4 shadow-sm">
+                                    <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-black shadow-glow">{s.id}</div>
+                                    <span className="font-bold text-foreground text-lg">{s.label}</span>
                                 </div>
-                                {i < slide.steps.length - 1 && <ArrowRight className="text-slate-600 h-6 w-6" />}
+                                {i < slide.steps.length - 1 && <ArrowRight className="text-muted-foreground h-6 w-6" />}
                             </div>
                         ))}
                     </div>
                     <div className="mt-12 text-center">
-                        <span className="px-8 py-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full font-black tracking-widest uppercase italic">“All in one system”</span>
+                        <span className="module-badge italic">“All in one system”</span>
                     </div>
                 </div>
             )}
@@ -431,44 +433,45 @@ export default function Page() {
                     <div>
                         <SectionTitle title={slide.title} subtitle={slide.message} centered={false} />
                         <ul className="space-y-6">
-                            <li className="flex items-center gap-4 text-2xl text-slate-300 font-medium">
-                                <CheckCircle2 className="text-emerald-400 h-8 w-8" /> Fast Registration
+                            <li className="flex items-center gap-4 text-2xl text-foreground font-medium">
+                                <CheckCircle2 className="text-primary h-8 w-8" /> Fast Registration
                             </li>
-                            <li className="flex items-center gap-4 text-2xl text-slate-300 font-medium">
-                                <CheckCircle2 className="text-emerald-400 h-8 w-8" /> Appointment Calendar
+                            <li className="flex items-center gap-4 text-2xl text-foreground font-medium">
+                                <CheckCircle2 className="text-primary h-8 w-8" /> Appointment Calendar
                             </li>
-                            <li className="flex items-center gap-4 text-2xl text-slate-300 font-medium">
-                                <CheckCircle2 className="text-emerald-400 h-8 w-8" /> Live Queue Status
+                            <li className="flex items-center gap-4 text-2xl text-foreground font-medium">
+                                <CheckCircle2 className="text-primary h-8 w-8" /> Live Queue Status
                             </li>
                         </ul>
                     </div>
-                    <div className="bg-white/5 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/10 shadow-3xl">
-                        <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-                            <h4 className="font-black text-slate-500 uppercase text-xs tracking-widest">{slide.mockup.title}</h4>
+                    <div className="bg-card p-10 rounded-3xl border border-border shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl -mr-16 -mt-16" />
+                        <div className="flex items-center justify-between mb-8 border-b border-border pb-4">
+                            <h4 className="font-black text-muted-foreground uppercase text-xs tracking-widest">{slide.mockup.title}</h4>
                             <div className="flex gap-2">
-                                <div className="h-2 w-2 rounded-full bg-rose-400" />
-                                <div className="h-2 w-2 rounded-full bg-amber-400" />
-                                <div className="h-2 w-2 rounded-full bg-emerald-400" />
+                                <div className="h-2 w-2 rounded-full bg-destructive/50" />
+                                <div className="h-2 w-2 rounded-full bg-amber-400/50" />
+                                <div className="h-2 w-2 rounded-full bg-primary/50" />
                             </div>
                         </div>
                         <div className="space-y-4 mb-8">
                             {slide.mockup.fields.map((f, idx) => (
-                                <div key={idx} className="bg-white/5 p-5 rounded-2xl font-bold text-slate-200 border border-white/5">{f}</div>
+                                <div key={idx} className="bg-muted/50 p-5 rounded-xl font-bold text-foreground border border-border/50">{f}</div>
                             ))}
                         </div>
-                        <Button className="w-full bg-blue-600 hover:bg-blue-500 h-14 rounded-2xl text-xl font-black shadow-[0_10px_30px_rgba(37,99,235,0.3)]">{slide.mockup.action}</Button>
+                        <Button className="w-full hero-gradient text-primary-foreground h-14 rounded-xl text-xl font-black shadow-glow">{slide.mockup.action}</Button>
                     </div>
                 </div>
             )}
 
             {slide.type === "doctor" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-6xl w-full">
-                    <div className="bg-slate-900 shadow-2xl aspect-video relative overflow-hidden rounded-[2.5rem] border border-white/10 group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    <div className="bg-slate-900 shadow-2xl aspect-video relative overflow-hidden rounded-3xl border border-border group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5 opacity-50 group-hover:opacity-100 transition-opacity" />
                         <div className="absolute top-4 left-4 flex gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-rose-500/50" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-destructive/50" />
                             <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-primary/50" />
                         </div>
                         <div className="h-full flex flex-col justify-center px-10">
                             <div className="bg-white/5 w-full h-8 rounded-lg mb-4 border border-white/5" />
@@ -476,7 +479,7 @@ export default function Page() {
                             <div className="bg-white/5 w-1/2 h-8 rounded-lg border border-white/5" />
                         </div>
                         <div className="absolute bottom-8 right-8">
-                            <div className="bg-blue-500 px-6 py-2 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] text-xs font-black text-white uppercase tracking-widest italic">Digital Prescription</div>
+                            <div className="bg-primary px-6 py-2 rounded-lg shadow-glow text-xs font-black text-primary-foreground uppercase tracking-widest italic">Digital Prescription</div>
                         </div>
                     </div>
                     <div>
@@ -484,10 +487,10 @@ export default function Page() {
                         <div className="space-y-8">
                             {slide.features.map((f, i) => (
                                 <div key={i} className="flex items-center gap-6 group">
-                                    <div className="p-4 bg-white/5 rounded-2xl text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all border border-white/10 group-hover:scale-110">
+                                    <div className="p-4 bg-primary/10 rounded-xl text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all border border-primary/20 group-hover:scale-110">
                                         <f.icon className="h-7 w-7" />
                                     </div>
-                                    <span className="text-2xl font-bold text-slate-100">{f.text}</span>
+                                    <span className="text-2xl font-bold text-foreground">{f.text}</span>
                                 </div>
                             ))}
                         </div>
@@ -500,11 +503,11 @@ export default function Page() {
                     <SectionTitle title={slide.title} subtitle={slide.message} />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {slide.features.map((f, i) => (
-                            <div key={i} className="group">
-                                <div className="mx-auto w-24 h-24 bg-emerald-500/10 rounded-[2.5rem] border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-8 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                            <div key={i} className="group flex flex-col items-center">
+                                <div className="w-24 h-24 bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform shadow-sm">
                                     <f.icon className="h-10 w-10" />
                                 </div>
-                                <h3 className="text-xl font-black text-slate-100 text-center tracking-tight">{f.text}</h3>
+                                <h3 className="text-xl font-black text-foreground text-center tracking-tight">{f.text}</h3>
                             </div>
                         ))}
                     </div>
@@ -517,16 +520,16 @@ export default function Page() {
                         <SectionTitle title={slide.title} subtitle={slide.subtitle} centered={false} />
                         <div className="space-y-6">
                             {slide.automations.map((a, i) => (
-                                <div key={i} className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border-l-4 border-emerald-500 border-r border-t border-b border-white/10 shadow-xl">
-                                    <h4 className="font-black text-emerald-400 mb-2 uppercase tracking-widest text-xs">{a.type}</h4>
-                                    <p className="text-xl font-semibold text-slate-200">{a.desc}</p>
+                                <div key={i} className="bg-card p-6 rounded-2xl border-l-4 border-l-primary border border-border shadow-sm">
+                                    <h4 className="font-black text-primary mb-2 uppercase tracking-widest text-xs">{a.type}</h4>
+                                    <p className="text-xl font-semibold text-foreground">{a.desc}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
-                    <div className="w-full md:w-80 bg-slate-900 rounded-[3rem] p-5 shadow-3xl border-[10px] border-slate-800 relative ring-1 ring-white/10">
+                    <div className="w-full md:w-80 bg-slate-900 rounded-[3rem] p-5 shadow-2xl border-[10px] border-slate-800 relative ring-1 ring-white/10">
                         <div className="bg-slate-800 w-32 h-6 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20" />
-                        <div className="bg-emerald-600 -mx-5 -mt-5 h-20 flex items-center px-8 gap-4 mb-6 rounded-t-[2.3rem]">
+                        <div className="bg-[#075e54] -mx-5 -mt-5 h-20 flex items-center px-8 gap-4 mb-6 rounded-t-[2.3rem]">
                             <div className="h-10 w-10 rounded-full bg-slate-200/20 backdrop-blur-md border border-white/10" />
                             <div className="text-white">
                                 <p className="text-xs font-black tracking-tight">Curexa Health</p>
@@ -537,7 +540,7 @@ export default function Page() {
                             <div className="bg-white/5 border border-white/5 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm mr-8 text-slate-300">
                                 Hello Priya, your prescription for today's visit is ready!
                             </div>
-                            <div className="bg-emerald-500/20 border border-emerald-500/30 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm mr-4 font-black text-emerald-400 underline decoration-emerald-400">
+                            <div className="bg-emerald-500/20 border border-emerald-500/30 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm mr-4 font-black text-emerald-400 underline decoration-emerald-400 cursor-pointer">
                                 Download_RX.pdf
                             </div>
                             <div className="bg-white/10 border border-white/10 p-4 rounded-2xl rounded-tr-none shadow-sm text-sm ml-12 text-right text-slate-100 italic">
@@ -553,12 +556,12 @@ export default function Page() {
                     <SectionTitle title={slide.title} subtitle={slide.message} />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                         {slide.stats.map((s, i) => (
-                            <div key={i} className="bg-white/5 backdrop-blur-xl p-10 rounded-[2.5rem] border border-white/5 flex flex-col items-center hover:bg-white/10 transition-all shadow-2xl">
-                                <div className="p-5 bg-blue-500/10 rounded-2xl text-blue-400 mb-6 border border-blue-500/20">
+                            <div key={i} className="bg-card p-10 rounded-3xl border border-border flex flex-col items-center hover:shadow-xl transition-all">
+                                <div className="p-5 bg-primary/10 rounded-2xl text-primary mb-6 border border-primary/20">
                                     <s.icon className="h-10 w-10" />
                                 </div>
-                                <span className="text-slate-500 text-xs mb-2 uppercase font-black tracking-[0.2em]">{s.label}</span>
-                                <span className="text-5xl font-black text-white">{s.value}</span>
+                                <span className="text-muted-foreground text-xs mb-2 uppercase font-black tracking-[0.2em]">{s.label}</span>
+                                <span className="text-5xl font-black text-foreground tracking-tighter">{s.value}</span>
                             </div>
                         ))}
                     </div>
@@ -570,11 +573,11 @@ export default function Page() {
                     <SectionTitle title={slide.title} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {slide.reasons.map((r, i) => (
-                            <div key={i} className="flex items-center gap-8 bg-emerald-500/5 backdrop-blur-md p-8 rounded-[2.5rem] border border-emerald-500/20 hover:bg-emerald-500/10 transition-all group">
-                                <div className="p-5 bg-emerald-500 rounded-3xl text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] group-hover:scale-110 transition-transform">
+                            <div key={i} className="flex items-center gap-8 bg-primary/5 p-8 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-all group">
+                                <div className="p-5 bg-primary rounded-2xl text-primary-foreground shadow-glow group-hover:scale-110 transition-transform">
                                     <r.icon className="h-9 w-9" />
                                 </div>
-                                <span className="text-2xl font-black text-slate-100 leading-tight italic tracking-tight">{r.text}</span>
+                                <span className="text-2xl font-black text-foreground leading-tight italic tracking-tight">{r.text}</span>
                             </div>
                         ))}
                     </div>
@@ -584,22 +587,22 @@ export default function Page() {
             {slide.type === "pricing" && (
                 <div className="max-w-6xl w-full">
                     <SectionTitle title={slide.title} subtitle="Affordable monthly plans" />
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
                         {slide.plans.map((p, i) => (
-                            <div key={i} className={`bg-white/5 backdrop-blur-3xl p-12 rounded-[3rem] border-t-[12px] flex flex-col h-full ring-1 ring-white/10 ${p.popular ? 'border-blue-500 scale-105 shadow-[0_20px_80px_rgba(59,130,246,0.2)]' : 'border-slate-800 shadow-3xl overflow-hidden'}`}>
-                                <h3 className="text-3xl font-black mb-2 text-white italic">{p.name}</h3>
-                                <p className="text-slate-500 font-black text-xs uppercase tracking-[0.3em] mb-8">{p.target}</p>
-                                <div className="text-5xl font-black text-white mb-10 tracking-tighter">
+                            <div key={i} className={`bg-card p-10 rounded-3xl border-t-[12px] flex flex-col h-full shadow-sm ring-1 ring-border ${p.popular ? 'border-primary scale-105 shadow-xl relative z-10' : 'border-muted'}`}>
+                                <h3 className="text-3xl font-black mb-2 text-foreground italic">{p.name}</h3>
+                                <p className="text-muted-foreground font-black text-xs uppercase tracking-[0.3em] mb-8">{p.target}</p>
+                                <div className="text-5xl font-black text-foreground mb-8 tracking-tighter">
                                     {p.price}
                                 </div>
-                                <ul className="space-y-6 mb-12 flex-1">
+                                <ul className="space-y-4 mb-10 flex-1">
                                     {p.features.map((f, idx) => (
-                                        <li key={idx} className="flex items-center gap-4 text-slate-300 font-bold italic group">
-                                            <CheckCircle2 className="h-6 w-6 text-emerald-400 flex-shrink-0" /> {f}
+                                        <li key={idx} className="flex items-center gap-3 text-foreground font-semibold italic text-sm">
+                                            <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" /> {f}
                                         </li>
                                     ))}
                                 </ul>
-                                <Button className={`w-full h-16 rounded-[1.5rem] text-xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95 ${p.popular ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>Get Started</Button>
+                                <Button className={`w-full h-14 rounded-xl text-lg font-black transition-all hover:scale-105 active:scale-95 ${p.popular ? 'hero-gradient text-primary-foreground shadow-glow' : 'bg-muted hover:bg-muted/80 text-foreground'}`}>Get Started</Button>
                             </div>
                         ))}
                     </div>
@@ -609,13 +612,13 @@ export default function Page() {
             {slide.type === "riskfree" && (
                 <div className="max-w-4xl w-full">
                     <SectionTitle title={slide.title} subtitle={slide.subtitle} />
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
                         {slide.points.map((p, i) => (
-                            <div key={i} className="text-center group">
-                                <div className="mx-auto w-28 h-28 bg-blue-500/10 rounded-[3rem] border border-blue-500/20 flex items-center justify-center text-blue-400 mb-8 group-hover:bg-blue-500 group-hover:text-white transition-all duration-700 shadow-[0_0_40px_rgba(59,130,246,0.1)]">
-                                    <p.icon className="h-12 w-12" />
+                            <div key={i} className="group">
+                                <div className="mx-auto w-24 h-24 bg-primary/10 rounded-3xl border border-primary/20 flex items-center justify-center text-primary mb-8 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-sm">
+                                    <p.icon className="h-10 w-10" />
                                 </div>
-                                <h3 className="text-3xl font-black text-white italic tracking-tight">{p.text}</h3>
+                                <h3 className="text-2xl font-black text-foreground italic tracking-tight">{p.text}</h3>
                             </div>
                         ))}
                     </div>
@@ -626,22 +629,19 @@ export default function Page() {
                 <div className="text-center max-w-4xl w-full py-10">
                     <SectionTitle title={slide.title} subtitle={slide.subtext} />
                     <ContactFormModal title="Book Your Demo">
-                        <Button className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white px-16 py-10 text-3xl font-black rounded-[2.5rem] shadow-[0_20px_50px_rgba(37,99,235,0.4)] flex items-center gap-6 mx-auto transition-all hover:scale-105 active:scale-95 group">
-                            {slide.cta} <ArrowRight className="h-10 w-10 group-hover:translate-x-2 transition-transform" />
+                        <Button className="hero-gradient text-primary-foreground px-12 py-8 text-2xl font-black rounded-2xl shadow-glow flex items-center gap-4 mx-auto transition-all hover:scale-105 active:scale-95 group">
+                            {slide.cta} <ArrowRight className="h-8 w-8 group-hover:translate-x-2 transition-transform" />
                         </Button>
                     </ContactFormModal>
-                    <div className="mt-20 flex flex-wrap justify-center gap-16 text-slate-500 font-black uppercase tracking-[0.4em] text-xs md:text-sm italic">
-                        <span className="flex items-center gap-3"><Zap className="h-4 w-4 text-amber-500" /> Save Time</span>
-                        <span className="flex items-center gap-3"><TrendingUp className="h-4 w-4 text-emerald-500" /> Increase Revenue</span>
-                        <span className="flex items-center gap-3"><HeartPulse className="h-4 w-4 text-rose-500" /> Improve Care</span>
+                    <div className="mt-16 flex flex-wrap justify-center gap-10 text-muted-foreground font-black uppercase tracking-[0.3em] text-xs italic">
+                        <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Save Time</span>
+                        <span className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Increase Revenue</span>
+                        <span className="flex items-center gap-2"><HeartPulse className="h-4 w-4 text-primary" /> Improve Care</span>
                     </div>
                 </div>
             )}
         </Layout>
     );
 };
-
-
-
 
 

@@ -102,9 +102,9 @@ export default function Register() {
                             />
                         </div>
 
-                        <Button className='h-10' disabled={loading} onClick={() => { handelUserRegistration() }}>
+                        <Button className='h-10 cursor-pointer' disabled={loading} onClick={() => { handelUserRegistration() }}>
                             {loading && (
-                                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader className="mr-2 h-4 w-4 animate-spin " />
                             )}
                             Sign Up
                         </Button>

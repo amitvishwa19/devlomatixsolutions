@@ -44,7 +44,11 @@ const handler = async (data) => {
 
         user = await db.user.create({
             data: {
-                email, password: hashedPassword, displayName, name: displayName
+                id: uuidv4(),
+                email,
+                password: hashedPassword,
+                displayName,
+                updatedAt: new Date()
             }
         })
 
@@ -99,9 +103,9 @@ const handler = async (data) => {
 
 
     } catch (error) {
-        console.log(error)
+        console.log("REGISTRATION ERROR:", error)
         return {
-            error: "Failed to create user"
+            error: error.message || "Failed to create user"
         }
     }
 

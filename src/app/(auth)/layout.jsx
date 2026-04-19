@@ -84,39 +84,16 @@ const AuthLayout = ({ children, title, subtitle }) => {
             <NetworkBackground />
 
 
-            {/* Left Section - Loader Content (70%) */}
-            <div className="hidden md:block md:w-[70%] min-h-screen relative overflow-hidden bg-gradient-to-br from-primary/40 via-primary to-primary/60">
-                {/* Animated Network Background */}
-                <div className="absolute inset-0">
-                    <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-                                <stop offset="0%" stopColor="white" stopOpacity="0.6" />
-                                <stop offset="100%" stopColor="white" stopOpacity="0" />
-                            </radialGradient>
-                        </defs>
+            {/* Left Section - Presentation (70%) */}
+            <div className="hidden md:flex md:w-[70%] min-h-screen relative overflow-hidden bg-linear-to-br from-primary/20 via-primary/5 to-background items-center justify-center">
 
-                    </svg>
-                </div>
+                {/* Decorative mesh blobs for depth - pointer-events-none is CRITICAL */}
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[150px] pointer-events-none" />
 
-                {/* Floating particles animation */}
-                {/* <div className="absolute inset-0 overflow-hidden">
-                    {particles.map((particle, i) => (
-                        <div
-                            key={`particle-${i}`}
-                            className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
-                            style={{
-                                left: `${particle.left}%`,
-                                top: `${particle.top}%`,
-                                animationDelay: `${particle.delay}s`,
-                                animationDuration: `${particle.duration}s`,
-                            }}
-                        />
-                    ))}
-                </div> */}
+                {/* Content with Glass Effect */}
+                <div id="loader-content" className="relative z-10 flex flex-col items-center justify-center max-w-3xl w-full mx-8 px-12 py-16 bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] ring-1 ring-white/5">
 
-                {/* Content */}
-                <div className="relative z-10 flex flex-col items-center justify-center w-full px-8 py-12">
                     {/* Healthcare Icons */}
                     <div className="flex justify-center gap-6 mb-8">
                         <Activity
@@ -213,15 +190,10 @@ const AuthLayout = ({ children, title, subtitle }) => {
 
                 </div>
 
-                {/* Corner accents */}
-                <div className="absolute top-0 left-0 w-24 h-24 border-l-1 border-t-1 border-white/20" />
-                <div className="absolute top-0 right-0 w-24 h-24 border-r-1 border-t-1 border-white/20" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 border-l-1 border-b-1 border-white/20" />
-                <div className="absolute bottom-0 right-0 w-24 h-24 border-r-1 border-b-1 border-white/20" />
             </div>
 
             {/* Right Section - Form (30%) */}
-            <div className="w-full md:w-[30%] flex flex-col items-center justify-center p-8 bg-background min-h-screen overflow-y-auto">
+            <div className="w-full md:w-[30%] flex flex-col items-center justify-center p-8 bg-background min-h-screen overflow-y-auto relative z-20">
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex justify-center mb-8">
@@ -239,10 +211,9 @@ const AuthLayout = ({ children, title, subtitle }) => {
                     )}
 
                     {/* Form Content */}
-                    {children}
-
-                    {/* Divider */}
-
+                    <div className="relative z-30">
+                        {children}
+                    </div>
 
                 </div>
             </div>

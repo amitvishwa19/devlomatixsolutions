@@ -113,6 +113,12 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
+  button, 
+  [role="button"],
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
+
   h1,
   h2,
   h3,

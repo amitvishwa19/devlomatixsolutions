@@ -132,7 +132,7 @@ export const authOptions = {
                 include: {
                     roles: {
                         include: {
-                            permissions: true,
+                            Permission: true,
                         },
                     },
                 },

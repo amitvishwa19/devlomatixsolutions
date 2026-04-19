@@ -25,15 +25,19 @@ function switchEnv() {
     if (!branch) return;
 
     const branchEnvFile = path.join(rootDir, `.env.${branch}`);
-    const targetEnvFile = path.join(rootDir, '.env.local');
+    const targetEnvFileLocal = path.join(rootDir, '.env.local');
+    const targetEnvFileRoot = path.join(rootDir, '.env');
 
     if (fs.existsSync(branchEnvFile)) {
         console.log(`\n🔄 Branch-Specific Env: Found .env.${branch}`);
         try {
-            fs.copyFileSync(branchEnvFile, targetEnvFile);
-            console.log(`✅ Successfully updated .env.local from .env.${branch}\n`);
+            // Copy to .env.local (standard Next.js)
+            fs.copyFileSync(branchEnvFile, targetEnvFileLocal);
+            // Copy to root .env (for Prisma and other tools)
+            fs.copyFileSync(branchEnvFile, targetEnvFileRoot);
+            console.log(`✅ Successfully updated .env and .env.local from .env.${branch}\n`);
         } catch (error) {
-            console.error(`❌ Failed to copy .env.${branch} to .env.local:`, error.message);
+            console.error(`❌ Failed to sync environment files:`, error.message);
         }
     } else {
         // Silent on branches without specific config
