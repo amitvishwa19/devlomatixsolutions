@@ -464,9 +464,9 @@ const Page = () => {
                     <div className="bg-slate-900 shadow-2xl aspect-video relative overflow-hidden rounded-[2.5rem] border border-white/10 group">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 opacity-50 group-hover:opacity-100 transition-opacity" />
                         <div className="absolute top-4 left-4 flex gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-rose-500/50" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
+                             <div className="w-2.5 h-2.5 rounded-full bg-rose-500/50" />
+                             <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
+                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
                         </div>
                         <div className="h-full flex flex-col justify-center px-10">
                             <div className="bg-white/5 w-full h-8 rounded-lg mb-4 border border-white/5" />
@@ -523,15 +523,15 @@ const Page = () => {
                         </div>
                     </div>
                     <div className="w-full md:w-80 bg-slate-900 rounded-[3rem] p-5 shadow-3xl border-[10px] border-slate-800 relative ring-1 ring-white/10">
-                        <div className="bg-slate-800 w-32 h-6 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20" />
-                        <div className="bg-emerald-600 -mx-5 -mt-5 h-20 flex items-center px-8 gap-4 mb-6 rounded-t-[2.3rem]">
+                         <div className="bg-slate-800 w-32 h-6 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20" />
+                         <div className="bg-emerald-600 -mx-5 -mt-5 h-20 flex items-center px-8 gap-4 mb-6 rounded-t-[2.3rem]">
                             <div className="h-10 w-10 rounded-full bg-slate-200/20 backdrop-blur-md border border-white/10" />
                             <div className="text-white">
                                 <p className="text-xs font-black tracking-tight">Curexa Health</p>
                                 <p className="text-[10px] opacity-70">Online</p>
                             </div>
-                        </div>
-                        <div className="space-y-4">
+                         </div>
+                         <div className="space-y-4">
                             <div className="bg-white/5 border border-white/5 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm mr-8 text-slate-300">
                                 Hello Priya, your prescription for today's visit is ready!
                             </div>
@@ -541,7 +541,7 @@ const Page = () => {
                             <div className="bg-white/10 border border-white/10 p-4 rounded-2xl rounded-tr-none shadow-sm text-sm ml-12 text-right text-slate-100 italic">
                                 Thank you! That was fast and easy. 🚀
                             </div>
-                        </div>
+                         </div>
                     </div>
                 </div>
             )}
