@@ -10,7 +10,9 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "email": "email dev --dir src/emails",
-    "fast": "next dev --turbo"
+    "fast": "next dev --turbo",
+    "env:setup": "node scripts/manage-env.cjs --install",
+    "env:switch": "node scripts/manage-env.cjs --switch"
   },
   "dependencies": {
     "@faker-js/faker": "^10.1.0",
