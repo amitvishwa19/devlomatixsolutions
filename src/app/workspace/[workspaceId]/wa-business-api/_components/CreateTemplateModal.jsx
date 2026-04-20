@@ -115,21 +115,19 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
 
 
-            <DialogContent className="min-w-[80vw] max-h-[90vh] p-0 border-none shadow-2xl overflow-hidden bg-card">
+            <DialogContent className="min-w-[80vw] min-h-[90vh] p-0 border-none shadow-2xl overflow-hidden bg-card">
                 <div className="flex flex-col md:flex-row h-full max-h-[90vh] overflow-hidden">
                     {/* Left Info Panel (Mirroring ContactSheet) */}
                     <div className="hidden md:flex flex-col w-[300px] bg-muted/20 border-r border-border/40 relative overflow-hidden shrink-0">
                         <ScrollArea className="h-full">
-                            <div className="p-8 space-y-8 h-full flex flex-col justify-between">
+                            <div className="p-4 space-y-4 h-full flex flex-col justify-between">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none" />
 
                                 <div className="relative z-10 space-y-4">
                                     <div>
                                         <div className="flex items-center justify-center gap-2">
-                                            <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center mb-6 border border-primary/20 shadow-inner">
-                                                <LayoutTemplate className="w-6 h-6 text-primary" />
-                                            </div>
-                                            <span className="text-xl text-foreground">Template Protocol</span>
+                                            <LayoutTemplate className="w-6 h-6 text-primary" />
+                                            <span className="text-xl text-foreground">Template Template</span>
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-3 leading-relaxed opacity-80">
                                             Define reusable message structures with dynamic variables for automated CRM workflows.
@@ -150,15 +148,15 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                                 <Zap className="w-4 h-4 text-amber-500" />
                                                 <span className="text-[11px]  tracking-wider">Instant Recall</span>
                                             </div>
-                                            <p className=" text-muted-foreground leading-relaxed">Templates saved here are instantly accessible across all protocol channels.</p>
+                                            <p className=" text-muted-foreground leading-relaxed">Templates saved here are instantly accessible across all Template channels.</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="relative z-10 pt-10">
-                                    <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                    <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
                                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,184,129,0.4)]" />
-                                        <span className=" text-primary  tracking-widest leading-none">Protocol Library Sync</span>
+                                        <span className=" text-primary  tracking-widest leading-none">Template Library Sync</span>
                                     </div>
                                 </div>
                             </div>
@@ -167,16 +165,16 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
 
                     {/* Right Content/Form Panel */}
                     <div className="flex-1 flex flex-col min-h-0 bg-background/50 overflow-hidden">
-                        <DialogHeader className="p-4 pb-`4` border-b shrink-0">
+                        <DialogHeader className="p-4  border-b shrink-0">
                             <DialogTitle className="text-xl tracking-tight text-foreground">
-                                {initialData ? 'Refine Protocol' : 'Initialize Protocol'}
+                                {initialData ? 'Refine Template' : 'Initialize Template'}
                             </DialogTitle>
                             <DialogDescription className="text-xs font-medium text-muted-foreground">
                                 {initialData ? 'Update the existing template configuration.' : 'Create a new reusable message interaction node.'}
                             </DialogDescription>
                         </DialogHeader>
 
-                        <ScrollArea className="h-[80vh]">
+                        <ScrollArea className="h-[75vh]">
                             <div className="p-8 space-y-10 pb-10">
                                 {/* Type Grid */}
                                 <div className="space-y-4">
@@ -212,7 +210,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2.5">
-                                        <Label className="   text-muted-foreground/70">Protocol Name</Label>
+                                        <Label className="   text-muted-foreground/70">Template Name</Label>
                                         <Input
                                             placeholder="e.g. Welcome_Series_v1"
                                             value={formData.name}
@@ -260,24 +258,25 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                                         key={v}
                                                         variant="outline"
                                                         size="sm"
-                                                        className="h-7 text-[9px] px-2 gap-1 border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 rounded-full"
+                                                        className=" text-xs px-2 gap-1 border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 rounded-lg"
                                                         onClick={() => insertVariable(v)}
                                                     >
                                                         <Plus className="w-2.5 h-2.5" /> {v}
                                                     </Button>
                                                 ))}
-                                                <Separator orientation="vertical" className="h-6 mx-1" />
-                                                <Button variant="outline" size="sm" className="h-7 text-[9px] px-2 gap-1 border-border/40 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 rounded-full" onClick={() => insertVariable('random')}>
+
+                                                <Button variant="outline" size="sm" className="text-xs px-2 gap-1 border-border/40 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 rounded-lg" onClick={() => insertVariable('random')}>
                                                     <Zap className="w-2.5 h-2.5" /> Random
                                                 </Button>
                                             </div>
                                         </div>
                                         <div className="relative group">
                                             <Textarea
+                                                rows={6}
                                                 placeholder="Initialize message body here..."
                                                 value={formData.content}
                                                 onChange={e => setFormData({ ...formData, content: e.target.value })}
-                                                className="min-h-[160px] p-5 text-sm bg-muted/5 border-border/40 focus:border-primary focus:ring-primary/10 transition-all resize-none leading-relaxed font-medium rounded-2xl"
+                                                className=" p-5 text-sm bg-muted/5 border focus:border-primary/20  transition-all  leading-relaxed font-medium rounded-lg"
                                             />
                                             <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity">
                                                 <Info className="w-3.5 h-3.5" />
@@ -299,13 +298,13 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                             </div>
                         </ScrollArea>
 
-                        <div className="p-8 border-t bg-card/60 backdrop-blur-md flex items-center justify-between">
-                            <Button variant="ghost" className="text-muted-foreground hover:text-foreground text-xs" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                                <X className="w-4 h-4 mr-2" /> Discard Protocol
+                        <div className="p-4 border-t backdrop-blur-md flex items-center justify-end gap-4">
+                            <Button variant="outline" className="text-muted-foreground hover:text-foreground text-xs" onClick={() => onOpenChange(false)} disabled={isLoading}>
+                                <X className="w-4 h-4 mr-2" /> Discard Template
                             </Button>
                             <Button
-                                size="lg"
-                                className="px-10 shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all gap-3 bg-primary rounded-xl"
+
+                                className="shadow-sm shadow-primary/20 hover:shadow-primary/30 transition-all gap-3 bg-primary rounded-md"
                                 onClick={handleSave}
                                 disabled={isLoading}
                             >
@@ -314,9 +313,10 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                 ) : (
                                     <Sparkles className="w-4 h-4" />
                                 )}
-                                {initialData ? 'Update Protocol' : 'Finalize Protocol'}
+                                {initialData ? 'Update Template' : 'Save Template'}
                             </Button>
                         </div>
+
                     </div>
                 </div>
             </DialogContent>
