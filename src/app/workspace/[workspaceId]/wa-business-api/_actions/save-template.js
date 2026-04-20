@@ -13,6 +13,7 @@ const SaveTemplateSchema = z.object({
     language: z.string().optional().nullable(),
     type: z.string().optional().nullable(),
     body: z.string(),
+    header: z.string().optional().nullable(),
     footer: z.string().optional().nullable(),
     buttons: z.array(z.any()).optional().nullable(),
     metadata: z.any().optional().nullable(),
@@ -22,7 +23,7 @@ const SaveTemplateSchema = z.object({
 const handler = async (data) => {
     const { 
         workspaceId, id, name, category, language, 
-        type, body, footer, buttons, metadata, status 
+        type, body, header, footer, buttons, metadata, status 
     } = data;
 
     try {
@@ -36,6 +37,7 @@ const handler = async (data) => {
             language: language || "en_US",
             type: type || "TEXT",
             body,
+            header: header || null,
             footer: footer || null,
             buttons: buttons || [],
             metadata: metadata || null,

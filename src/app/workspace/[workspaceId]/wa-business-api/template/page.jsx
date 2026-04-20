@@ -331,38 +331,50 @@ export default function TemplatesPage() {
                                             </div>
 
                                             {/* Content Section */}
-                                            <div className="flex-1 p-5 flex flex-col min-w-0">
-                                                <div className="flex items-start justify-between gap-4 mb-2">
-                                                    <div className="min-w-0 flex-1">
-                                                        <h3 className="text-sm font-bold truncate group-hover:text-primary transition-colors">{template.name}</h3>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `hsl(${getStringColor(template.category)})` }} />
-                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">{template.category || 'General'}</span>
+                                                <div className="flex-1 p-5 flex flex-col min-w-0">
+                                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <h3 className="text-sm truncate group-hover:text-primary transition-colors">{template.name}</h3>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `hsl(${getStringColor(template.category)})` }} />
+                                                                <span className="text-[10px] text-muted-foreground opacity-70">{template.category || 'General'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-primary/10 hover:text-primary" onClick={() => { setActiveTemplate(template); setIsCreateModalOpen(true); }}>
+                                                                <Edit2 className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-rose-50 hover:text-rose-600" onClick={() => handleDelete(template.id)}>
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </Button>
                                                         </div>
                                                     </div>
-                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-primary/10 hover:text-primary" onClick={() => { setActiveTemplate(template); setIsCreateModalOpen(true); }}>
-                                                            <Edit2 className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-rose-50 hover:text-rose-600" onClick={() => handleDelete(template.id)}>
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </Button>
+
+                                                    <div className="mt-auto bg-muted/20 p-4 rounded-xl border border-border/30 space-y-2">
+                                                        {template.header && (
+                                                            <p className="text-[10px] font-bold text-foreground/80 leading-tight border-b border-border/20 pb-1 mb-1">
+                                                                {template.header}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                                                            {template.body}
+                                                        </p>
+                                                        {template.footer && (
+                                                            <p className="text-[9px] text-muted-foreground/60 leading-tight pt-1 border-t border-border/10">
+                                                                {template.footer}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between mt-4 border-t border-border/30 pt-3 opacity-60">
+                                                        <div className="flex items-center gap-1 text-[10px] tracking-tighter">
+                                                            <Clock className="w-3 h-3" /> {new Date(template.createdAt).toLocaleDateString()}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 text-[10px] text-emerald-500">
+                                                            <CheckCircle2 className="w-3 h-3" /> Ready
+                                                        </div>
                                                     </div>
                                                 </div>
-
-                                                <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed font-medium mt-auto bg-muted/20 p-3 rounded-xl border border-border/30 italic">
-                                                    "{template.body}"
-                                                </p>
-
-                                                <div className="flex items-center justify-between mt-4 border-t border-border/30 pt-3 opacity-60">
-                                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-tighter">
-                                                        <Clock className="w-3 h-3" /> {new Date(template.createdAt).toLocaleDateString()}
-                                                    </div>
-                                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-tighter text-emerald-500">
-                                                        <CheckCircle2 className="w-3 h-3" /> Ready
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     ))}
                                 </div>

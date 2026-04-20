@@ -65,6 +65,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
     const [formData, setFormData] = useState({
         name: '',
         category: 'Utility',
+        header: '',
         content: '',
         footer: '',
     });
@@ -74,6 +75,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
             setFormData({
                 name: initialData.name || '',
                 category: initialData.category || 'Utility',
+                header: initialData.header || '',
                 content: initialData.body || '',
                 footer: initialData.footer || '',
             });
@@ -82,6 +84,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
             setFormData({
                 name: '',
                 category: 'Utility',
+                header: '',
                 content: '',
                 footer: '',
             });
@@ -110,6 +113,8 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
+
+
             <DialogContent className="min-w-[80vw] max-h-[90vh] p-0 border-none shadow-2xl overflow-hidden bg-card">
                 <div className="flex flex-col md:flex-row h-full max-h-[90vh] overflow-hidden">
                     {/* Left Info Panel (Mirroring ContactSheet) */}
@@ -118,12 +123,14 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                             <div className="p-8 space-y-8 h-full flex flex-col justify-between">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none" />
 
-                                <div className="relative z-10 space-y-8">
+                                <div className="relative z-10 space-y-4">
                                     <div>
-                                        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 border border-primary/20 shadow-inner">
-                                            <LayoutTemplate className="w-6 h-6 text-primary" />
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center mb-6 border border-primary/20 shadow-inner">
+                                                <LayoutTemplate className="w-6 h-6 text-primary" />
+                                            </div>
+                                            <span className="text-xl text-foreground">Template Protocol</span>
                                         </div>
-                                        <h3 className="text-xl text-foreground">Template Protocol</h3>
                                         <p className="text-xs text-muted-foreground mt-3 leading-relaxed opacity-80">
                                             Define reusable message structures with dynamic variables for automated CRM workflows.
                                         </p>
@@ -232,39 +239,61 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                     </div>
                                 </div>
 
-                                {/* Content Editor */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="   text-muted-foreground/70">Message Pulse Body</Label>
-                                        <div className="flex gap-2">
-                                            {['name', 'date', 'location'].map(v => (
-                                                <Button
-                                                    key={v}
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-7 text-[9px] px-2 gap-1 border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 rounded-full"
-                                                    onClick={() => insertVariable(v)}
-                                                >
-                                                    <Plus className="w-2.5 h-2.5" /> {v}
+                                {/* Header & Body Editor */}
+                                <div className="space-y-6">
+                                    <div className="space-y-2.5">
+                                        <Label className="text-muted-foreground/70">Message Header (Optional)</Label>
+                                        <Input
+                                            placeholder="Enter header text or media URL..."
+                                            value={formData.header}
+                                            onChange={e => setFormData({ ...formData, header: e.target.value })}
+                                            className="bg-muted/10 border focus-visible:ring-primary/20 transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-muted-foreground/70">Message Body</Label>
+                                            <div className="flex gap-2">
+                                                {['name', 'date', 'location'].map(v => (
+                                                    <Button
+                                                        key={v}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-7 text-[9px] px-2 gap-1 border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 rounded-full"
+                                                        onClick={() => insertVariable(v)}
+                                                    >
+                                                        <Plus className="w-2.5 h-2.5" /> {v}
+                                                    </Button>
+                                                ))}
+                                                <Separator orientation="vertical" className="h-6 mx-1" />
+                                                <Button variant="outline" size="sm" className="h-7 text-[9px] px-2 gap-1 border-border/40 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 rounded-full" onClick={() => insertVariable('random')}>
+                                                    <Zap className="w-2.5 h-2.5" /> Random
                                                 </Button>
-                                            ))}
-                                            <Separator orientation="vertical" className="h-6 mx-1" />
-                                            <Button variant="outline" size="sm" className="h-7 text-[9px] px-2 gap-1 border-border/40 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 rounded-full" onClick={() => insertVariable('random')}>
-                                                <Zap className="w-2.5 h-2.5" /> Random
-                                            </Button>
+                                            </div>
+                                        </div>
+                                        <div className="relative group">
+                                            <Textarea
+                                                placeholder="Initialize message body here..."
+                                                value={formData.content}
+                                                onChange={e => setFormData({ ...formData, content: e.target.value })}
+                                                className="min-h-[160px] p-5 text-sm bg-muted/5 border-border/40 focus:border-primary focus:ring-primary/10 transition-all resize-none leading-relaxed font-medium rounded-2xl"
+                                            />
+                                            <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity">
+                                                <Info className="w-3.5 h-3.5" />
+                                                <span className="text-[9px]  tracking-tighter">Markdown Enabled</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="relative group">
-                                        <Textarea
-                                            placeholder="Initialize message body here..."
-                                            value={formData.content}
-                                            onChange={e => setFormData({ ...formData, content: e.target.value })}
-                                            className="min-h-[160px] p-5 text-sm bg-muted/5 border-border/40 focus:border-primary focus:ring-primary/10 transition-all resize-none leading-relaxed font-medium rounded-2xl"
+
+                                    <div className="space-y-2.5">
+                                        <Label className="text-muted-foreground/70">Message Footer (Optional)</Label>
+                                        <Input
+                                            placeholder="Enter footer text (e.g. Reply STOP to unsubscribe)"
+                                            value={formData.footer}
+                                            onChange={e => setFormData({ ...formData, footer: e.target.value })}
+                                            className="bg-muted/10 border focus-visible:ring-primary/20 transition-all text-xs"
                                         />
-                                        <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity">
-                                            <Info className="w-3.5 h-3.5" />
-                                            <span className="text-[9px]  tracking-tighter">Markdown Enabled</span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

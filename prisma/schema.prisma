@@ -338,6 +338,7 @@ model MessageTemplate {
   language     String     @default("en_US")
   type         String     @default("TEXT")
   body         String
+  header       String?
   footer       String?
   buttons      Json?
   metadata     Json?
