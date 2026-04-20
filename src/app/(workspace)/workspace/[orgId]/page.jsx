@@ -39,7 +39,7 @@ export default function Dashboard() {
             />
 
 
-            <ScrollArea className='h-[85vh] flex flex-grow rounded-md '>
+            <ScrollArea className='h-[85vh] flex grow rounded-md '>
                 <div className="space-y-2 animate-fade-in">
 
 
@@ -108,41 +108,35 @@ export default function Dashboard() {
                     </div>
 
                     {/* Main Content Grid */}
-                    <div className="grid gap-2 lg:grid-cols-2">
-                        {/* Left Column */}
+                    <div className="grid gap-2 lg:grid-cols-3">
+                        <QuickActions />
+                        <RecentAppointments />
+                        <EmergencyAlerts />
+                    </div>
+
+                    {/* Main Content Grid */}
+                    <div className="grid gap-2 lg:grid-cols-12">
+                        {/* Left Column - Operational Focus */}
                         <div className="lg:col-span-8 space-y-2">
-                            <RecentAppointments />
+
+                            <BedOccupancy />
                             <ActivityFeed />
                         </div>
 
-                        {/* Right Column */}
+                        {/* Right Column - Actions & Awareness */}
                         <div className="lg:col-span-4 space-y-2">
-                            <QuickActions />
+
                             <MiniCalendar />
-                            <EmergencyAlerts />
-                            <LiveStats />
                         </div>
                     </div>
 
-                    {/* Middle Grid */}
+                    {/* Secondary Insights Grid */}
                     <div className="grid gap-2 lg:grid-cols-3">
-                        <DoctorsList />
-                        <StaffSchedule />
+
                         <InventoryStatus />
                     </div>
 
-                    {/* Bottom Grid */}
-                    <div className="grid gap-2 lg:grid-cols-3">
-                        <DepartmentStats />
-                        <BedOccupancy />
-                        <PatientDemographics />
-                    </div>
 
-                    {/* Bottom Section */}
-                    <div className="grid gap-2 lg:grid-cols-2">
-
-                        <PerformanceMetrics />
-                    </div>
 
                     {/* Activity Feed */}
 

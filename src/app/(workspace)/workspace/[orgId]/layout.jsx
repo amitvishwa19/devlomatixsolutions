@@ -46,7 +46,7 @@ export default async function layout({ params, children }) {
                 <DataProvider >
 
                     <div className={`flex h-screen max-w-screen ${font.className} overflow-hidden dark:bg-darkbackground`}>
-                        <div className='h-screen flex-grow hidden xl:flex '>
+                        <div className='h-screen grow hidden xl:flex '>
                             <OrgSidebar />
                         </div>
                         <div className='flex  flex-col w-full h-screen transition-all'>

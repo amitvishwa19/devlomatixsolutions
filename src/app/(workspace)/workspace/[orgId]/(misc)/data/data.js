@@ -25,9 +25,4 @@ export const navigationItems = [
     { title: "Billing", url: "billing", icon: "receipt-indian-rupee", category: "Administration" },
     { title: "Access Management", url: "access", icon: "shield-user", category: "Administration" },
 
-
-
-    // SYSTEM
-    { title: "Development", url: "dev", icon: "combine", category: "System" },
-
 ];
