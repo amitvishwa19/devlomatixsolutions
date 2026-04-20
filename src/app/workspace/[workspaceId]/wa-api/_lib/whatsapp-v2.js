@@ -287,6 +287,45 @@ class WhatsAppManager {
         return result;
     }
 
+    async checkNumber(phone) {
+        if (!this.sock || this.state !== 'open') throw new Error('WhatsApp not connected');
+        
+        const cleanPhone = phone.replace(/[^\d]/g, '');
+        const jid = `${cleanPhone}@s.whatsapp.net`;
+        
+        const results = await this.sock.onWhatsApp(jid);
+        if (results && results[0] && results[0].exists) {
+            const foundJid = results[0].jid;
+            
+            // 1. Try local cache first
+            let contact = this.contacts.find(c => c.id === foundJid);
+            let name = contact?.name || contact?.notify || contact?.verifiedName;
+
+            // 2. Try fetching business profile if name is still missing
+            if (!name) {
+                try {
+                    const biz = await this.sock.getBusinessProfile(foundJid);
+                    if (biz) name = biz.description || null; // Often the desc or name is in biz
+                } catch (e) {
+                    // ignore biz fetch errors
+                }
+            }
+
+            // 3. Last resort: check if socket has a cached name we haven't seen in contacts.upsert
+            if (!name && this.sock.contacts && this.sock.contacts[foundJid]) {
+                name = this.sock.contacts[foundJid].name || this.sock.contacts[foundJid].notify;
+            }
+            
+            return {
+                exists: true,
+                jid: foundJid,
+                name: name || null
+            };
+        }
+        
+        return { exists: false };
+    }
+
     async disconnect() {
         if (this.sock) {
             try {
@@ -307,8 +346,18 @@ class WhatsAppManager {
 }
 
 const globalForWA = global;
-export const waManager = globalForWA.waManagerV2_Standard || new WhatsAppManager();
+const waManager = globalForWA.waManagerV2_Standard || new WhatsAppManager();
 
 if (process.env.NODE_ENV !== 'production') {
     globalForWA.waManagerV2_Standard = waManager;
+    // Development hack: if methods are missing on the cached global instance, attach them from the prototype
+    const proto = WhatsAppManager.prototype;
+    Object.getOwnPropertyNames(proto).forEach(name => {
+        if (name !== 'constructor' && typeof proto[name] === 'function' && !waManager[name]) {
+            console.log(`[WA Manager] Patching missing method: ${name}`);
+            waManager[name] = proto[name].bind(waManager);
+        }
+    });
 }
+
+export { waManager };

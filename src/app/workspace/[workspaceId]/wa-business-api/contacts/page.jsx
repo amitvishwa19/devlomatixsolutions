@@ -5,12 +5,10 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import {
-    Trash2, UserPlus, Users, Pencil, X, Search,
-    Download, Upload, RefreshCw, Tag, FileText,
-    Filter, LayoutGrid, List, MoreVertical, Layers, ChevronRight, Plus
+    UserPlus, Users, Search,
+    Download, Upload, RefreshCw, Filter, LayoutGrid, List, Tag, Folder
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -20,14 +18,24 @@ import { Input } from '@/components/ui/input';
 import { useAction } from '@/hooks/use-action';
 import { getContacts } from '../_actions/get-contacts';
 import { getCategories } from '../_actions/get-categories';
-import { bulkDeleteContacts } from '../_actions/bulk-delete-contacts';
 import { importContacts } from '../_actions/import-contacts';
 
 // Local Components
 import ContactSheet from '../_components/ContactSheet';
 import ReviewImportDialog from '../_components/ReviewImportDialog';
-import BulkDeleteDialog from '../_components/BulkDeleteDialog';
 import ContactCard from '../_components/ContactCard';
+
+const getStringColor = (str) => {
+    if (!str) return '215, 15%, 45%'; // slate
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+    }
+    // Multiply by 137 (prime) to spread out short strings better
+    const h = Math.abs(hash * 137) % 360;
+    return `${h}, 70%, 45%`; 
+};
 
 export default function ContactsPage() {
     const params = useParams();
@@ -40,22 +48,19 @@ export default function ContactsPage() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // UI/Selection State
-    const [selectedContacts, setSelectedContacts] = useState([]);
+    // UI State
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('newest');
-    const [viewMode, setViewMode] = useState('list'); // list, grid
-    const [activeSegment, setActiveSegment] = useState('all'); // all, category:[id]
+    const [viewMode, setViewMode] = useState('list');
+    const [activeSegment, setActiveSegment] = useState('all');
 
     // Modals & Sheets
     const [isAddContactOpen, setIsAddContactOpen] = useState(false);
     const [isEditContactOpen, setIsEditContactOpen] = useState(false);
     const [activeContact, setActiveContact] = useState(null);
-    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [importReviewData, setImportReviewData] = useState([]);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
-    const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
     // --- Server Actions ---
     const { execute: executeGetContacts } = useAction(getContacts, {
@@ -66,16 +71,6 @@ export default function ContactsPage() {
 
     const { execute: executeGetCategories } = useAction(getCategories, {
         onSuccess: (data) => setCategories(data || [])
-    });
-
-    const { execute: executeBulkDelete } = useAction(bulkDeleteContacts, {
-        onSuccess: () => {
-            toast.success("Contacts deleted", { id: 'bulk-ops' });
-            setSelectedContacts([]);
-            fetchInitialData(true);
-        },
-        onError: (err) => toast.error(err),
-        onComplete: () => setIsBulkProcessing(false)
     });
 
     const { execute: executeImport } = useAction(importContacts, {
@@ -105,6 +100,32 @@ export default function ContactsPage() {
         fetchInitialData();
     }, [fetchInitialData]);
 
+    // Computed Aggregations for Sidebar
+    const textCategories = useMemo(() => {
+        const counts = {};
+        contacts.forEach(c => {
+            if (c.category && c.category.trim()) {
+                const cat = c.category.trim();
+                counts[cat] = (counts[cat] || 0) + 1;
+            }
+        });
+        return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }, [contacts]);
+
+    const allTags = useMemo(() => {
+        const counts = {};
+        contacts.forEach(c => {
+            if (c.tags && Array.isArray(c.tags)) {
+                c.tags.forEach(t => {
+                    const tag = t.trim();
+                    if (tag) counts[tag] = (counts[tag] || 0) + 1;
+                });
+            }
+        });
+        return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }, [contacts]);
+
+
     // Computed: Filtered Contacts
     const filteredContacts = useMemo(() => {
         return contacts.filter(contact => {
@@ -114,9 +135,15 @@ export default function ContactsPage() {
                 contact.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
             let matchesSegment = true;
-            if (activeSegment.startsWith('category:')) {
-                const catId = activeSegment.split(':')[1];
-                matchesSegment = contact.categoryId === catId;
+            if (activeSegment !== 'all') {
+                const [type, value] = activeSegment.split('::');
+                if (type === 'vcat') {
+                    matchesSegment = contact.categoryId === value;
+                } else if (type === 'tcat') {
+                    matchesSegment = contact.category?.trim() === value;
+                } else if (type === 'tag') {
+                    matchesSegment = contact.tags && contact.tags.map(t => t.trim()).includes(value);
+                }
             }
 
             return matchesSearch && matchesSegment;
@@ -130,12 +157,6 @@ export default function ContactsPage() {
     }, [contacts, searchQuery, activeSegment, sortBy]);
 
     // --- Actions (Handlers) ---
-    const handleBulkDelete = () => {
-        setIsBulkProcessing(true);
-        executeBulkDelete({ ids: selectedContacts, workspaceId });
-        setIsDeleteConfirmOpen(false);
-    };
-
     const handleImportFile = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -201,8 +222,6 @@ export default function ContactsPage() {
 
     return (
         <div className="flex flex-col h-[calc(100vh-70px)] overflow-hidden bg-background">
-
-
             {/* Upper Action Bar */}
             <div className="flex items-center justify-between py-2 px-4 border-b bg-card/30">
                 <div className="flex items-center gap-4">
@@ -220,58 +239,117 @@ export default function ContactsPage() {
                         <span className="hidden sm:inline">Import</span>
                     </Button>
                     <Separator orientation="vertical" className="h-4 mx-1" />
-                    <Button size="sm" onClick={() => setIsAddContactOpen(true)} className="gap-2 shadow-sm">
-                        <UserPlus className="w-3.5 h-3.5" />
-                        <span>Add Contact</span>
+                    <Button size="sm" onClick={() => setIsAddContactOpen(true)} className="gap-2 shadow-sm font-semibold">
+                        <UserPlus className="w-4 h-4" />
+                        <span>Add Contact Node</span>
                     </Button>
                 </div>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
                 {/* CRM Sidebar */}
-                <div className="w-64 border-r bg-card/20 flex flex-col">
+                <div className="w-64 border-r bg-card/20 flex flex-col hide-scrollbar">
                     <ScrollArea className="flex-1">
-                        <div className="p-4 space-y-6">
+                        <div className="p-4 space-y-8 pb-12">
+                            {/* Segment: All */}
                             <div className="space-y-2">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-2">Core Segments</span>
                                 <Button
                                     variant={activeSegment === 'all' ? 'secondary' : 'ghost'}
-                                    className="w-full justify-start h-9 text-sm gap-3 px-3"
+                                    className="w-full justify-start h-9 text-sm gap-3 px-3 shadow-none transition-colors"
                                     onClick={() => setActiveSegment('all')}
                                 >
-                                    <Users className="w-4 h-4" />
-                                    All Contacts
-                                    <Badge variant="ghost" className="ml-auto text-[10px] opacity-60">{contacts.length}</Badge>
+                                    <Users className="w-4 h-4 text-primary" />
+                                    <span className="font-semibold">All Contacts</span>
+                                    <Badge variant="secondary" className="ml-auto text-[10px] bg-background">{contacts.length}</Badge>
                                 </Button>
                             </div>
 
+                            {/* Segment: Text Categories */}
+                            {textCategories.length > 0 && (
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between px-2">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Categories</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1"><Folder className="w-3 h-3" /> Categories</span>
                                 </div>
-                                <div className="space-y-1">
-                                    {categories.map(cat => (
+                                <div className="space-y-0.5">
+                                    {textCategories.map(([cat, count]) => (
                                         <div
-                                            key={cat.id}
-                                            className={`w-full flex items-center justify-between transition-all cursor-pointer p-2 border border-transparent rounded-md ${activeSegment === `category:${cat.id}` ? 'bg-card' : 'hover:bg-card'}`}
-                                            onClick={() => setActiveSegment(`category:${cat.id}`)}
+                                            key={cat}
+                                            className={`w-full flex items-center justify-between transition-all cursor-pointer py-1.5 px-3 rounded-md text-sm ${activeSegment === `tcat::${cat}` ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground'}`}
+                                            onClick={() => setActiveSegment(`tcat::${cat}`)}
                                         >
                                             <div className="flex items-center gap-2">
-                                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                                                <span className="text-xs truncate">{cat.name}</span>
+                                                <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: `hsl(${getStringColor(cat)})` }} />
+                                                <span className="truncate">{cat}</span>
                                             </div>
-                                            <Badge variant="ghost" className="text-[10px] opacity-60">
-                                                {contacts.filter(c => c.categoryId === cat.id).length}
-                                            </Badge>
+                                            <span className="text-[10px] opacity-60 font-mono">{count}</span>
                                         </div>
                                     ))}
-                                    {categories.length === 0 && <p className="text-[10px] text-muted-foreground italic px-2">No categories defined.</p>}
                                 </div>
                             </div>
+                            )}
+
+                            {/* Segment: Tags */}
+                            {allTags.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between px-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1"><Tag className="w-3 h-3" /> Labels & Tags</span>
+                                </div>
+                                <div className="space-y-0.5">
+                                    {allTags.map(([tag, count]) => {
+                                        const c = getStringColor(tag);
+                                        return (
+                                        <div
+                                            key={tag}
+                                            className={`w-full flex items-center justify-between transition-all cursor-pointer py-1.5 px-3 rounded-md text-sm ${activeSegment === `tag::${tag}` ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground'}`}
+                                            onClick={() => setActiveSegment(`tag::${tag}`)}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: `hsl(${c})` }} />
+                                                <span className="truncate">{tag}</span>
+                                            </div>
+                                            <span className="text-[10px] opacity-60 font-mono">{count}</span>
+                                        </div>
+                                    )})}
+                                </div>
+                            </div>
+                            )}
+
+                            {/* Segment: Visual Categories */}
+                            {categories.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between px-2 pt-2 border-t border-border/40">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Visual Boards</span>
+                                </div>
+                                <div className="space-y-0.5">
+                                    {categories.map(cat => {
+                                        const count = contacts.filter(c => c.categoryId === cat.id).length;
+                                        return (
+                                            <div
+                                                key={cat.id}
+                                                className={`w-full flex items-center justify-between transition-all cursor-pointer py-1.5 px-3 rounded-md ${activeSegment === `vcat::${cat.id}` ? 'bg-card shadow-sm border border-border/50' : 'border border-transparent hover:bg-muted/50'}`}
+                                                onClick={() => setActiveSegment(`vcat::${cat.id}`)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: cat.color }} />
+                                                    <span className="text-xs font-medium truncate text-foreground/80">{cat.name}</span>
+                                                </div>
+                                                <span className="text-[10px] text-muted-foreground font-mono opacity-60">
+                                                    {count}
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                            )}
+
                         </div>
                     </ScrollArea>
-                    <div className="p-4 border-t bg-muted/10 text-center">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Library Mirror Active</p>
+                    <div className="p-3 border-t bg-muted/10 text-center flex-shrink-0">
+                        <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest flex items-center justify-center gap-1 opacity-50">
+                            <RefreshCw className="w-2.5 h-2.5" /> Library Sync Active
+                        </p>
                     </div>
                 </div>
 
@@ -279,11 +357,11 @@ export default function ContactsPage() {
                 <div className="flex-1 flex flex-col bg-muted/10">
                     {/* Search Bar */}
                     <div className="flex items-center gap-4 py-2 px-4 border-b bg-card/40">
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                        <div className="relative flex-1 max-w-md group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
                             <Input
-                                placeholder="Search by name, phone or email..."
-                                className="pl-9 bg-background h-10 border-border/40"
+                                placeholder="Search Audience Logs..."
+                                className="pl-9 bg-background h-10 border-border/40 shadow-sm focus-visible:ring-primary/20"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -291,9 +369,9 @@ export default function ContactsPage() {
                         <div className="flex items-center gap-2">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-10 gap-2 border-border/40">
+                                    <Button variant="outline" size="sm" className="h-10 gap-2 border-border/40 shadow-sm">
                                         <Filter className="w-3.5 h-3.5" />
-                                        <span className="text-xs">Sort: {sortBy.replace('-', ' ')}</span>
+                                        <span className="text-xs font-medium">Sort: {sortBy.replace('-', ' ')}</span>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -304,53 +382,37 @@ export default function ContactsPage() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <div className="flex items-center border rounded-md overflow-hidden h-10">
-                                <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
+                            <div className="flex items-center border border-border/40 shadow-sm rounded-md overflow-hidden h-10 bg-background">
+                                <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10 text-foreground/70" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
                                 <Separator orientation="vertical" className="h-6" />
-                                <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
+                                <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10 text-foreground/70" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
                             </div>
                         </div>
                     </div>
 
-                    {selectedContacts.length > 0 && (
-                        <div className="flex items-center justify-between px-6 py-2 bg-primary/10 border-b border-primary/20 animate-in slide-in-from-top duration-300">
-                            <span className="text-sm font-bold text-primary">{selectedContacts.length} Selected</span>
-                            <div className="flex items-center gap-3">
-                                <Button variant="ghost" size="sm" onClick={() => setIsDeleteConfirmOpen(true)} className="h-8 gap-2 text-destructive hover:bg-destructive/5">
-                                    <Trash2 className="w-3.5 h-3.5" /> Delete
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => setSelectedContacts([])}>Cancel</Button>
-                            </div>
-                        </div>
-                    )}
-
                     <div className="flex-1 overflow-hidden">
                         {loading ? (
-                            <div className="h-full flex flex-col items-center justify-center gap-4">
+                            <div className="h-full flex flex-col items-center justify-center gap-4 opacity-70">
                                 <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-                                <p className="text-sm text-muted-foreground">Syncing library...</p>
+                                <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px]">Processing Vault...</p>
                             </div>
                         ) : filteredContacts.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center">
-                                <Users className="w-16 h-16 mb-4" />
-                                <p className="text-lg">No contacts found</p>
+                            <div className="h-full flex flex-col items-center justify-center opacity-50">
+                                <Users className="w-12 h-12 mb-4 text-muted-foreground/50" />
+                                <p className="text-sm font-semibold tracking-wide">No audience nodes found.</p>
                             </div>
                         ) : (
-                            <ScrollArea className="h-full p-2">
-                                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-2'}>
+                            <ScrollArea className="h-full p-4">
+                                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3' : 'space-y-2'}>
                                     {filteredContacts.map(contact => (
                                         <ContactCard
                                             key={contact.id}
                                             contact={contact}
-                                            isSelected={selectedContacts.includes(contact.id)}
-                                            onSelectChange={(checked) => {
-                                                if (checked) setSelectedContacts([...selectedContacts, contact.id]);
-                                                else setSelectedContacts(selectedContacts.filter(id => id !== contact.id));
-                                            }}
                                             categories={categories}
                                             getCategoryColor={getCategoryColor}
+                                            getStringColor={getStringColor}
                                             onEdit={(c) => { setActiveContact(c); setIsEditContactOpen(true); }}
-                                            onDelete={() => { setSelectedContacts([contact.id]); setIsDeleteConfirmOpen(true); }}
+                                            onDelete={() => { toast.info("Single delete via API coming soon"); }}
                                             onMessage={(c) => window.location.href = `/workspace/${workspaceId}/wa-business-api/chats?jid=${c.phone}@s.whatsapp.net`}
                                         />
                                     ))}
@@ -374,7 +436,6 @@ export default function ContactsPage() {
             />
 
             <ReviewImportDialog isOpen={isReviewOpen} onOpenChange={setIsReviewOpen} data={importReviewData} setData={setImportReviewData} onImport={runImport} isImporting={isImporting} />
-            <BulkDeleteDialog isOpen={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen} count={selectedContacts.length} onDelete={handleBulkDelete} isDeleting={isBulkProcessing} />
         </div>
     );
 }

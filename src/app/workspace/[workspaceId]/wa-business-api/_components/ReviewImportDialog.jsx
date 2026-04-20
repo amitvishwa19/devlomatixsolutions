@@ -24,12 +24,20 @@ export default function ReviewImportDialog({
     isImporting
 }) {
     const [bulkTags, setBulkTags] = useState('');
+    const [bulkCategory, setBulkCategory] = useState('');
 
     const applyBulkTags = () => {
         if (!bulkTags) return;
         const newData = data.map(item => ({ ...item, tags: bulkTags }));
         setData(newData);
         setBulkTags('');
+    };
+
+    const applyBulkCategory = () => {
+        if (!bulkCategory) return;
+        const newData = data.map(item => ({ ...item, category: bulkCategory }));
+        setData(newData);
+        setBulkCategory('');
     };
 
     return (
@@ -51,18 +59,31 @@ export default function ReviewImportDialog({
                     </div>
                 </DialogHeader>
 
-                <div className="flex justify-between items-center gap-4 px-6 py-4">
-                    <div className="flex items-center justify-between gap-2 p-1.5 bg-background/50 border rounded-lg w-full">
-                        <div className="flex items-center gap-2">
-                            <Tag className="w-3.5 h-3.5 text-muted-foreground ml-2" />
+                <div className="flex flex-col md:flex-row items-center gap-4 px-6 py-4 bg-muted/10 border-b">
+                    <div className="flex-1 flex items-center justify-between gap-2 p-1.5 bg-background border rounded-xl shadow-sm">
+                        <div className="flex items-center gap-2 flex-1">
+                            <Tag className="w-3.5 h-3.5 text-primary ml-2" />
                             <Input
                                 placeholder="Bulk Tags (tag1,tag2)..."
                                 value={bulkTags}
                                 onChange={e => setBulkTags(e.target.value)}
-                                className="h-8 w-40 text-xs border-none rounded-md focus-visible:ring-0 bg-transparent"
+                                className="h-8 flex-1 text-xs border-none rounded-md focus-visible:ring-0 bg-transparent"
                             />
                         </div>
-                        <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold px-2 hover:bg-primary/10 text-primary" onClick={applyBulkTags}>Apply</Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold px-3 hover:bg-primary/10 text-primary transition-all" onClick={applyBulkTags}>Apply Tags</Button>
+                    </div>
+
+                    <div className="flex-1 flex items-center justify-between gap-2 p-1.5 bg-background border rounded-xl shadow-sm">
+                        <div className="flex items-center gap-2 flex-1">
+                            <RefreshCw className="w-3.5 h-3.5 text-emerald-500 ml-2" />
+                            <Input
+                                placeholder="Bulk Category (Lead, VIP)..."
+                                value={bulkCategory}
+                                onChange={e => setBulkCategory(e.target.value)}
+                                className="h-8 flex-1 text-xs border-none rounded-md focus-visible:ring-0 bg-transparent"
+                            />
+                        </div>
+                        <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold px-3 hover:bg-emerald-500/10 text-emerald-600 transition-all" onClick={applyBulkCategory}>Apply Category</Button>
                     </div>
                 </div>
 

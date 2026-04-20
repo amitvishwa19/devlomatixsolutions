@@ -4,13 +4,13 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { logActivity } from "./log-activity";
+import { waManager } from "../../wa-api/_lib/whatsapp-v2";
 
 const SaveContactSchema = z.object({
     id: z.string().optional(),
     name: z.string(),
     phone: z.string(),
     email: z.string().optional().nullable(),
-    categoryId: z.string().optional().nullable(),
     category: z.string().optional().nullable(),
     tags: z.array(z.string()).optional(),
     color: z.string().optional().nullable(),
@@ -20,29 +20,44 @@ const SaveContactSchema = z.object({
 });
 
 const handler = async (data) => {
-    const { id, name, phone, email, categoryId, category, tags, color, info, userId, workspaceId } = data;
+    const { id, name, phone, email, category, tags, color, info, userId, workspaceId } = data;
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
 
     try {
+        // Auto-verify on save
+        let isVerified = false;
+        let whatsappName = null;
+        try {
+            const check = await waManager.checkNumber(cleanPhone);
+            if (check.exists) {
+                isVerified = true;
+                whatsappName = check.name;
+            }
+        } catch (e) {
+            console.error('[WA_BUSINESS_AUTO_VERIFY_ERROR]', e);
+        }
+
         if (id) {
             // Update
             const contact = await db.contact.update({
                 where: { id },
                 data: {
                     name,
-                    phone: phone.replace(/[^\d+]/g, ''),
+                    phone: cleanPhone,
                     email,
-                    categoryId,
                     category,
                     tags: tags || [],
                     color,
                     info,
+                    verified: isVerified,
+                    whatsappName: whatsappName
                 }
             });
 
             await logActivity({
                 workspaceId,
                 userId,
-                message: `Updated contact: ${name}`,
+                message: `Updated contact: ${name} (Verified: ${isVerified})`,
                 type: "CONTACT_UPDATE",
                 level: "info",
                 details: { contactId: contact.id }
@@ -54,22 +69,23 @@ const handler = async (data) => {
             const contact = await db.contact.create({
                 data: {
                     name,
-                    phone: phone.replace(/[^\d+]/g, ''),
+                    phone: cleanPhone,
                     email,
-                    categoryId,
                     category,
                     tags: tags || [],
                     color,
                     info,
                     userId,
                     workspaceId,
+                    verified: isVerified,
+                    whatsappName: whatsappName
                 }
             });
 
             await logActivity({
                 workspaceId,
                 userId,
-                message: `Created new contact: ${name}`,
+                message: `Created new contact: ${name} (Verified: ${isVerified})`,
                 type: "CONTACT_CREATE",
                 level: "info",
                 details: { contactId: contact.id }

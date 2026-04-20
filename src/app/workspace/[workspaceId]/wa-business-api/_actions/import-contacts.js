@@ -45,35 +45,12 @@ const handler = async (data) => {
                 continue;
             }
 
-            // Find or create category if name provided
-            let categoryId = null;
-            if (item.category) {
-                const category = await db.category.findFirst({
-                    where: { 
-                        name: item.category,
-                        workspaceId
-                    }
-                });
-                if (category) {
-                    categoryId = category.id;
-                } else {
-                    const newCat = await db.category.create({
-                        data: {
-                            name: item.category,
-                            workspaceId,
-                            color: '#94a3b8' // Default grey
-                        }
-                    });
-                    categoryId = newCat.id;
-                }
-            }
-
             await db.contact.create({
                 data: {
                     name: item.name || formattedPhone,
                     phone: formattedPhone,
                     email: item.email || null,
-                    categoryId,
+                    category: item.category || null,
                     tags: item.tags ? item.tags.split(',').map(t => t.trim()) : [],
                     userId,
                     workspaceId
