@@ -1,18 +1,24 @@
-import * as React from 'react';
-import { toast } from 'sonner';
-import { isSameDay } from 'date-fns';
-import { useLocalStorage } from './useLocalStorage';
-import { 
-  generateInitialData, 
-  generateMockWaitlist, 
-  generateMockReservations 
-} from '../utils/mockData';
 import { filterRooms, getUpcomingDischarges, getHousekeepingAlerts, calculateOccupancyStats } from '../utils/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { getAccommodation } from '../_action/get-accommodation';
+import { manageAccommodation } from '../_action/manage-accommodation';
+import { useAction } from '@/hooks/use-action';
 
 export function useAccommodation() {
+  const { orgId } = useParams();
+  const queryClient = useQueryClient();
   
-  // Core state
-  const [rooms, setRooms] = useLocalStorage('carewell-rooms', () => generateInitialData());
+  // Core state from DB
+  const { data: roomsData, isLoading } = useQuery({
+    queryKey: ['accommodation', orgId],
+    queryFn: async () => {
+      const response = await getAccommodation({ serverId: orgId });
+      return response.data?.rooms || [];
+    }
+  });
+
+  const rooms = roomsData || [];
   const [waitlist, setWaitlist] = useLocalStorage('carewell-waitlist', () => generateMockWaitlist());
   const [reservations, setReservations] = useLocalStorage('carewell-reservations', () => generateMockReservations());
   
@@ -52,130 +58,58 @@ export function useAccommodation() {
     ).length;
   }, [reservations]);
 
+  const { execute: executeManage } = useAction(manageAccommodation, {
+    onSuccess: () => queryClient.invalidateQueries(['accommodation', orgId])
+  });
+
   // Bed operations
   const admitPatient = React.useCallback((data) => {
-    setRooms(prevRooms => prevRooms.map(room => {
-      if (room.id === data.room.id) {
-        return {
-          ...room,
-          beds: room.beds.map(bed => {
-            if (bed.id === data.bed.id) {
-              return {
-                ...bed,
-                status: 'occupied',
-                patient: data.patient,
-                admission: { ...data.admission, id: `adm_${Date.now()}` },
-                expectedDischarge: data.expectedDischarge,
-                patientCondition: 'stable',
-              };
-            }
-            return bed;
-          }),
-        };
-      }
-      return room;
-    }));
-    toast.success(`Patient ${data.patient.name} admitted to ${data.bed.bedNumber}`);
-  }, [setRooms]);
+    executeManage({
+      type: "ADMIT",
+      serverId: orgId,
+      patientId: data.patient?.id,
+      bedId: data.bed?.id,
+      notes: data.notes,
+      reason: data.reason || data.admission?.reason,
+    });
+    toast.success(`Patient admitted to ${data.bed?.bedNumber}`);
+  }, [executeManage, orgId]);
 
   const transferPatient = React.useCallback((data) => {
-    setRooms(prevRooms => {
-      return prevRooms.map(room => {
-        if (room.id === data.fromRoom.id) {
-          return {
-            ...room,
-            beds: room.beds.map(bed => {
-              if (bed.id === data.fromBed.id) {
-                return {
-                  ...bed,
-                  status: 'cleaning',
-                  patient: null,
-                  admission: null,
-                  expectedDischarge: null,
-                  housekeeping: 'needs_cleaning',
-                  patientCondition: null,
-                };
-              }
-              return bed;
-            }),
-          };
-        }
-        if (room.id === data.toRoom.id) {
-          return {
-            ...room,
-            beds: room.beds.map(bed => {
-              if (bed.id === data.toBed.id) {
-                return {
-                  ...bed,
-                  status: 'occupied',
-                  patient: data.fromBed.patient,
-                  admission: data.fromBed.admission,
-                  expectedDischarge: data.fromBed.expectedDischarge,
-                  patientCondition: data.fromBed.patientCondition,
-                };
-              }
-              return bed;
-            }),
-          };
-        }
-        return room;
-      });
+    executeManage({
+      type: "TRANSFER",
+      serverId: orgId,
+      patientId: data.fromBed?.patient?.id,
+      bedId: data.fromBed?.id,
+      targetBedId: data.toBed?.id,
     });
-    toast.success(`Patient transferred from ${data.fromBed.bedNumber} to ${data.toBed.bedNumber}`);
-  }, [setRooms]);
+    toast.success(`Patient transferred from ${data.fromBed?.bedNumber} to ${data.toBed?.bedNumber}`);
+  }, [executeManage, orgId]);
 
   const dischargePatient = React.useCallback((data) => {
-    setRooms(prevRooms => prevRooms.map(room => ({
-      ...room,
-      beds: room.beds.map(bed => {
-        if (bed.id === data.bed.id) {
-          return {
-            ...bed,
-            status: data.scheduleCleanup ? 'cleaning' : 'available',
-            patient: null,
-            admission: null,
-            expectedDischarge: null,
-            housekeeping: data.scheduleCleanup ? 'needs_cleaning' : 'clean',
-            patientCondition: null,
-          };
-        }
-        return bed;
-      }),
-    })));
-    toast.success(`Patient discharged from ${data.bed.bedNumber}`);
-  }, [setRooms]);
+    executeManage({
+      type: "DISCHARGE",
+      serverId: orgId,
+      bedId: data.bed?.id,
+      notes: data.notes,
+    });
+    toast.success(`Patient discharged from ${data.bed?.bedNumber}`);
+  }, [executeManage, orgId]);
 
   const initiateDischarge = React.useCallback((data) => {
-    setRooms(prevRooms => prevRooms.map(room => ({
-      ...room,
-      beds: room.beds.map(bed => {
-        if (bed.id === data.bed.id) {
-          return { ...bed, status: 'discharge_pending' };
-        }
-        return bed;
-      }),
-    })));
+    // For now, we'll just treat it as discharge or update a status
     toast.info(`Discharge initiated for ${data.bed.patient?.name}`);
-  }, [setRooms]);
+  }, []);
 
   // Housekeeping
   const updateHousekeeping = React.useCallback((bedId, newStatus) => {
-    setRooms(prevRooms => prevRooms.map(room => ({
-      ...room,
-      beds: room.beds.map(bed => {
-        if (bed.id === bedId) {
-          const updates = { housekeeping: newStatus };
-          if (newStatus === 'clean') {
-            updates.status = 'available';
-            updates.lastCleaned = new Date();
-          }
-          return { ...bed, ...updates };
-        }
-        return bed;
-      }),
-    })));
+    executeManage({
+      type: "CLEAN",
+      serverId: orgId,
+      bedId: bedId,
+    });
     toast.success(newStatus === 'clean' ? 'Bed marked as clean' : 'Cleaning started');
-  }, [setRooms]);
+  }, [executeManage, orgId]);
 
   // Room CRUD
   const addRoom = React.useCallback((newRoom) => {
@@ -262,6 +196,7 @@ export function useAccommodation() {
     setFilters,
     viewMode,
     setViewMode,
+    isLoading,
     
     // Actions
     admitPatient,

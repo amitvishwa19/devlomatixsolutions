@@ -14,14 +14,29 @@ import { Badge } from '@/components/ui/badge';
 import { PrescriptionStatsCards } from './components/PrescriptionStatsCards';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PrescriptionFilters } from './components/PrescriptionFilters';
-import { PrescriptionList } from './components/PrescriptionList';
-import { DrugInteractionChecker, EPrescribingSheet, PrescriptionAnalytics, RefillManagementSheet } from './components';
-import { PrescriptionTableView } from './components/PrescriptionTableView';
 import { PrescriptionDetailSheet } from './components/PrescriptionDetailSheet';
 import { NewPrescriptionDialog } from './components/NewPrescriptionDialog';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { getPrescriptions } from './_action/get-prescriptions';
+import { upsertPrescription } from './_action/upsert-prescription';
+import { deletePrescription } from './_action/delete-prescription';
+import { useAction } from '@/hooks/use-action';
+import { Loader } from 'lucide-react';
 
 export default function PrescriptionPage() {
-    const [prescriptions, setPrescriptions] = useLocalStorage('hms_prescriptions', mockPrescriptions);
+    const { orgId } = useParams();
+    const queryClient = useQueryClient();
+
+    const { data: prescriptionsData, isLoading } = useQuery({
+        queryKey: ['prescriptions', orgId],
+        queryFn: async () => {
+            const response = await getPrescriptions({ serverId: orgId });
+            return response.data?.prescriptions || [];
+        }
+    });
+
+    const prescriptions = prescriptionsData || [];
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('all');
     const [doctor, setDoctor] = useState('all');
@@ -56,32 +71,54 @@ export default function PrescriptionPage() {
         return calculateStats(prescriptions);
     }, [prescriptions]);
 
+    const { execute: executeUpsert } = useAction(upsertPrescription, {
+        onSuccess: () => queryClient.invalidateQueries(['prescriptions', orgId])
+    });
+
+    const { execute: executeDelete } = useAction(deletePrescription, {
+        onSuccess: () => {
+            queryClient.invalidateQueries(['prescriptions', orgId]);
+            setSelectedPrescription(null);
+            toast({ title: 'Prescription deleted', description: 'Prescription has been removed.' });
+        }
+    });
+
     const handleAddPrescription = (newPrescription) => {
-        console.log('Adding prescription:', newPrescription);
-        setPrescriptions(prev => [newPrescription, ...prev]);
+        // executeUpsert(newPrescription);
+        queryClient.invalidateQueries(['prescriptions', orgId]);
     };
 
     const handleDeletePrescription = (rxId) => {
-        console.log('Deleting prescription:', rxId);
-        setPrescriptions(prev => prev.filter(rx => rx.id !== rxId));
-        setSelectedPrescription(null);
-        toast({ title: 'Prescription deleted', description: 'Prescription has been removed.' });
+        executeDelete({ id: rxId, serverId: orgId });
     };
 
     const handleStatusChange = (rxId, newStatus) => {
-        console.log('Updating prescription status:', { rxId, newStatus });
-        setPrescriptions(prev => prev.map(rx =>
-            rx.id === rxId ? { ...rx, status: newStatus } : rx
-        ));
-        setSelectedPrescription(prev => prev ? { ...prev, status: newStatus } : null);
-        toast({ title: 'Status updated', description: `Prescription marked as ${newStatus}.` });
+        const rx = prescriptions.find(r => r.id === rxId);
+        if (rx) {
+            executeUpsert({
+                ...rx,
+                status: newStatus,
+                serverId: orgId,
+                patientId: rx.patientId,
+                doctorId: rx.doctorId,
+                items: rx.items
+            });
+            toast({ title: 'Status updated', description: `Prescription marked as ${newStatus}.` });
+        }
     };
 
     const handleUpdatePrescription = (rxId, updates) => {
-        console.log('Updating prescription:', { rxId, updates });
-        setPrescriptions(prev => prev.map(rx =>
-            rx.id === rxId ? { ...rx, ...updates } : rx
-        ));
+        const rx = prescriptions.find(r => r.id === rxId);
+        if (rx) {
+            executeUpsert({
+                ...rx,
+                ...updates,
+                serverId: orgId,
+                patientId: rx.patientId,
+                doctorId: rx.doctorId,
+                items: rx.items
+            });
+        }
     };
 
     const handleSendToPharmacy = () => {
@@ -148,17 +185,25 @@ export default function PrescriptionPage() {
 
 
             <ScrollArea className='h-[85vh] flex flex-grow  rounded-md '>
-                {viewMode === 'grid' ? (
-                    <PrescriptionList
-                        prescriptions={filteredPrescriptions}
-                        onSelectPrescription={setSelectedPrescription}
-                    />
+                {isLoading ? (
+                    <div className='flex items-center justify-center h-[200px]'>
+                        <Loader className='animate-spin text-muted-foreground' />
+                    </div>
                 ) : (
-                    <PrescriptionTableView
-                        prescriptions={filteredPrescriptions}
-                        onSelectPrescription={setSelectedPrescription}
-                        onDeletePrescription={handleDeletePrescription}
-                    />
+                    <>
+                        {viewMode === 'grid' ? (
+                            <PrescriptionList
+                                prescriptions={filteredPrescriptions}
+                                onSelectPrescription={setSelectedPrescription}
+                            />
+                        ) : (
+                            <PrescriptionTableView
+                                prescriptions={filteredPrescriptions}
+                                onSelectPrescription={setSelectedPrescription}
+                                onDeletePrescription={handleDeletePrescription}
+                            />
+                        )}
+                    </>
                 )}
             </ScrollArea>
 

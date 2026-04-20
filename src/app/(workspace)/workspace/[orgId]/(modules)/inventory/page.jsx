@@ -31,14 +31,29 @@ import {
     getOutOfStockItems
 } from './utils';
 import { format } from 'date-fns';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { getInventory } from './_action/get-inventory';
+import { manageInventory } from './_action/manage-inventory';
+import { useAction } from '@/hooks/use-action';
+import { Loader } from 'lucide-react';
 
 
 export default function InventoryPage() {
+    const { orgId } = useParams();
+    const queryClient = useQueryClient();
 
-    const [inventory, setInventory] = useLocalStorage('hms_inventory', mockInventoryItems);
-    const [movements, setMovements] = useLocalStorage('hms_inventory_movements', mockStockMovements);
-    const [purchaseOrders, setPurchaseOrders] = useLocalStorage('hms_purchase_orders', []);
+    const { data: inventoryData, isLoading } = useQuery({
+        queryKey: ['inventory', orgId],
+        queryFn: async () => {
+            const response = await getInventory({ serverId: orgId });
+            return response.data?.items || [];
+        }
+    });
+
+    const inventory = inventoryData || [];
+    const [movements, setMovements] = React.useState([]); // Movements are now part of inventory item include
+    const [purchaseOrders, setPurchaseOrders] = React.useState([]);
 
     // UI State
     const [activeTab, setActiveTab] = React.useState('inventory');
@@ -130,14 +145,17 @@ export default function InventoryPage() {
         setInventory(prev => prev.filter(i => i.id !== itemId));
     };
 
+    const { execute: executeManage } = useAction(manageInventory, {
+        onSuccess: () => queryClient.invalidateQueries(['inventory', orgId])
+    });
+
     const handleSaveItem = (itemData) => {
-        if (editItem) {
-            setInventory(prev => prev.map(i =>
-                i.id === editItem.id ? { ...i, ...itemData } : i
-            ));
-        } else {
-            setInventory(prev => [...prev, itemData]);
-        }
+        executeManage({
+            id: editItem?.id,
+            serverId: orgId,
+            type: "UPSERT",
+            itemData: itemData,
+        });
         setEditItem(null);
     };
 
@@ -147,10 +165,17 @@ export default function InventoryPage() {
     };
 
     const handleStockAdjustment = (itemId, newQuantity, movement) => {
-        setInventory(prev => prev.map(i =>
-            i.id === itemId ? { ...i, quantity: newQuantity, lastRestocked: new Date() } : i
-        ));
-        setMovements(prev => [movement, ...prev]);
+        executeManage({
+            id: itemId,
+            serverId: orgId,
+            type: "STOCK_ADJUSTMENT",
+            adjustment: {
+                type: movement.type.toUpperCase(),
+                quantity: movement.quantity,
+                notes: movement.notes,
+                performedBy: movement.performedBy,
+            }
+        });
     };
 
     const handleReceiveStock = (itemId, quantity, details) => {
@@ -289,38 +314,46 @@ export default function InventoryPage() {
                         />
 
                         {/* Content */}
-                        {filteredInventory.length === 0 ? (
-                            <div className="text-center py-12">
-                                <p className="text-muted-foreground">No items found matching your criteria</p>
-                                <Button
-                                    variant="outline"
-                                    className="mt-4"
-                                    onClick={() => { setEditItem(null); setIsNewItemOpen(true); }}
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Add First Item
-                                </Button>
+                        {isLoading ? (
+                            <div className='flex items-center justify-center h-[200px]'>
+                                <Loader className='animate-spin text-muted-foreground' />
                             </div>
-                        ) : viewMode === 'table' ? (
-                            <InventoryTableView
-                                items={filteredInventory}
-                                onItemClick={handleItemClick}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                onAdjustStock={handleAdjustStock}
-                                sortField={sortField}
-                                sortDirection={sortDirection}
-                                onSort={handleSort}
-                            />
                         ) : (
-                            <InventoryList
-                                items={filteredInventory}
-                                viewMode={viewMode}
-                                onItemClick={handleItemClick}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                onAdjustStock={handleAdjustStock}
-                            />
+                            <>
+                                {filteredInventory.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-muted-foreground">No items found matching your criteria</p>
+                                        <Button
+                                            variant="outline"
+                                            className="mt-4"
+                                            onClick={() => { setEditItem(null); setIsNewItemOpen(true); }}
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Add First Item
+                                        </Button>
+                                    </div>
+                                ) : viewMode === 'table' ? (
+                                    <InventoryTableView
+                                        items={filteredInventory}
+                                        onItemClick={handleItemClick}
+                                        onEdit={handleEdit}
+                                        onDelete={handleDelete}
+                                        onAdjustStock={handleAdjustStock}
+                                        sortField={sortField}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                ) : (
+                                    <InventoryList
+                                        items={filteredInventory}
+                                        viewMode={viewMode}
+                                        onItemClick={handleItemClick}
+                                        onEdit={handleEdit}
+                                        onDelete={handleDelete}
+                                        onAdjustStock={handleAdjustStock}
+                                    />
+                                )}
+                            </>
                         )}
                     </TabsContent>
 

@@ -18,6 +18,9 @@ import { cn } from '@/lib/utils';
 import { BLOOD_GROUPS, GENDERS, INSURANCE_PROVIDERS, RELATIONSHIPS } from '../utils/types';
 import { useToast } from '@/hooks/use-toast';
 import { useFormValidationToast } from '../../hooks/useFormValidationToast';
+import { useAction } from '@/hooks/use-action';
+import { upsertpatient } from '../_action/upsert-patient';
+import { Loader2 } from 'lucide-react';
 
 
 // Zod schema for new patient form
@@ -61,54 +64,32 @@ export function NewPatientDialog({ onAddPatient }) {
         },
     });
 
+    const { execute, isLoading: isSubmitting } = useAction(upsertpatient, {
+        onSuccess: (data) => {
+            toast({ title: 'Patient registered', description: `${data.user.name} has been registered successfully.` });
+            onAddPatient?.(data.user);
+            form.reset();
+            setOpen(false);
+        },
+        onError: (error) => {
+            toast({ variant: 'destructive', title: 'Error', description: error || 'Failed to register patient' });
+        }
+    });
+
     const onSubmit = (data) => {
         console.log('New Patient Form Data:', data);
 
-        const now = new Date();
-        const age = data.dateOfBirth
-            ? Math.floor((now - new Date(data.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
-            : 0;
-
-        const newPatient = {
-            id: `p-${Date.now()}`,
-            mrn: `MRN-${now.getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            fullName: `${data.firstName} ${data.lastName}`,
-            email: data.email,
-            phone: data.phone,
-            dateOfBirth: data.dateOfBirth,
-            age,
-            gender: data.gender,
-            bloodGroup: data.bloodGroup,
-            status: 'active',
-            address: data.address,
-            emergencyContact: {
-                name: data.emergencyContactName,
-                phone: data.emergencyContactPhone,
-                relationship: data.emergencyContactRelationship,
-            },
-            insurance: {
-                provider: data.insuranceProvider,
-                policyNumber: data.policyNumber,
-                validUntil: null,
-            },
-            allergies: [],
-            vitals: [],
-            medicalHistory: [],
-            prescriptions: [],
-            documents: [],
-            tags: [],
-            categories: [],
-            registeredAt: now,
-            lastVisit: now,
+        // Prepare full name for the server action
+        const fullName = `${data.firstName} ${data.lastName}`;
+        const submissionData = {
+            ...data,
+            fullName,
         };
 
-        onAddPatient?.(newPatient);
-        toast({ title: 'Patient registered', description: `${newPatient.fullName} has been registered successfully.` });
-
-        form.reset();
-        setOpen(false);
+        execute({
+            formData: submissionData,
+            type: 'demographic'
+        });
     };
 
     const insuranceProvider = form.watch('insuranceProvider');
@@ -407,12 +388,16 @@ export function NewPatientDialog({ onAddPatient }) {
 
                             <SheetFooter className="p-4 border-t border-border shrink-0">
                                 <div className="flex justify-end gap-3 w-full">
-                                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                                    <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
                                         Cancel
                                     </Button>
-                                    <Button type="submit" className="gap-2">
-                                        <Save className="w-4 h-4" />
-                                        Register Patient
+                                    <Button type="submit" className="gap-2" disabled={isSubmitting}>
+                                        {isSubmitting ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Save className="w-4 h-4" />
+                                        )}
+                                        {isSubmitting ? 'Registering...' : 'Register Patient'}
                                     </Button>
                                 </div>
                             </SheetFooter>

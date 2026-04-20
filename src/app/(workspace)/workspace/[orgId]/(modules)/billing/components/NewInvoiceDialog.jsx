@@ -26,14 +26,15 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Trash2, FileText, X } from 'lucide-react';
 import { servicesCatalog } from '../utils/mockInvoices';
-import { INVOICE_STATUS, GST_RATES, INSURANCE_PROVIDERS } from '../utils/types';
 import { generateInvoiceId, calculateInvoiceTotals, formatCurrency } from '../utils/utils';
 import { useFormValidationToast } from '../../hooks/useFormValidationToast';
+import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { getPatients } from '../../patient/_action/get-patients';
+import { Loader } from 'lucide-react';
 
 const invoiceSchema = z.object({
-    patientName: z.string().min(1, 'Patient name is required'),
-    patientId: z.string().min(1, 'Patient ID is required'),
-    patientPhone: z.string().min(10, 'Valid phone number required'),
+    patientId: z.string().min(1, 'Patient selection is required'),
     dueDate: z.string().min(1, 'Due date is required'),
     gstRate: z.string().optional(),
     items: z.array(z.object({
@@ -49,15 +50,25 @@ const invoiceSchema = z.object({
 });
 
 export function NewInvoiceDialog({ onAddInvoice, existingInvoices }) {
+    const { orgId } = useParams();
     const [open, setOpen] = useState(false);
     const { showValidationErrors } = useFormValidationToast();
+
+    const { data: patientsData, isLoading: isLoadingPatients } = useQuery({
+        queryKey: ['patients', orgId],
+        queryFn: async () => {
+            const response = await getPatients({ serverId: orgId });
+            return response.data?.patients || [];
+        },
+        enabled: open,
+    });
+
+    const patients = patientsData || [];
 
     const form = useForm({
         resolver: zodResolver(invoiceSchema),
         defaultValues: {
-            patientName: '',
             patientId: '',
-            patientPhone: '',
             dueDate: '',
             gstRate: 'gst18',
             items: [{ description: '', quantity: 1, unitPrice: 0, hsn: '9993' }],
@@ -94,37 +105,27 @@ export function NewInvoiceDialog({ onAddInvoice, existingInvoices }) {
     };
 
     const onSubmit = (data) => {
-        console.log('New invoice data:', data);
-
         const items = data.items.map((item) => ({
             ...item,
             total: item.quantity * item.unitPrice,
         }));
 
         const calculatedTotals = calculateInvoiceTotals(items, selectedGstRate, data.discount || 0);
+        const selectedPatient = patients.find(p => p.id === data.patientId);
 
         const newInvoice = {
-            id: generateInvoiceId(existingInvoices),
             patientId: data.patientId,
-            patientName: data.patientName,
-            patientPhone: data.patientPhone,
+            serverId: orgId,
             appointmentId: null,
-            dateIssued: new Date().toISOString().split('T')[0],
             dueDate: data.dueDate,
-            status: INVOICE_STATUS.DRAFT,
+            status: 'DRAFT',
             items,
             ...calculatedTotals,
             amountPaid: 0,
             balance: calculatedTotals.total,
-            payments: [],
             notes: data.notes || '',
-            insuranceClaim: data.insuranceProvider ? {
-                provider: INSURANCE_PROVIDERS.find(p => p.id === data.insuranceProvider)?.name || data.insuranceProvider,
-                claimNumber: data.insuranceClaimNumber || '',
-                status: 'pending',
-                amount: 0,
-            } : null,
-            gstNumber: null,
+            insuranceProviderId: data.insuranceProvider || null,
+            insuranceClaimNumber: data.insuranceClaimNumber || '',
         };
 
         onAddInvoice(newInvoice);
@@ -174,42 +175,33 @@ export function NewInvoiceDialog({ onAddInvoice, existingInvoices }) {
                                     className="space-y-6"
                                 >
                                     {/* Patient Info */}
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="patientName"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Patient Name</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="Enter patient name" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                                    <div className="grid grid-cols-1 gap-4">
                                         <FormField
                                             control={form.control}
                                             name="patientId"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Patient ID</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="P001" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="patientPhone"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Phone Number</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="9876543210" {...field} />
-                                                    </FormControl>
+                                                    <FormLabel>Select Patient *</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Search patient" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {isLoadingPatients ? (
+                                                                <div className="flex items-center justify-center p-4">
+                                                                    <Loader className="w-4 h-4 animate-spin text-muted-foreground" />
+                                                                </div>
+                                                            ) : (
+                                                                patients.map((p) => (
+                                                                    <SelectItem key={p.id} value={p.id}>
+                                                                        {p.name} ({p.mrn})
+                                                                    </SelectItem>
+                                                                ))
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

@@ -13,31 +13,44 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, X, FlaskConical, Search } from 'lucide-react';
-import { COMMON_TESTS, TEST_CATEGORIES, PRIORITY_LEVELS } from '../utils/types';
 import { formatCurrency } from '../utils/utils';
 import { useFormValidationToast } from '../../hooks/useFormValidationToast';
+import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { getPatients } from '../../patient/_action/get-patients';
+import { Loader } from 'lucide-react';
 
 
 const schema = z.object({
-  patientName: z.string().min(1, 'Patient name is required'),
-  patientMrn: z.string().min(1, 'MRN is required'),
-  patientAge: z.string().min(1, 'Age is required'),
-  patientGender: z.string().min(1, 'Gender is required'),
+  patientId: z.string().min(1, 'Patient selection is required'),
   doctorName: z.string().min(1, 'Ordering doctor is required'),
   priority: z.string().min(1, 'Priority is required'),
   notes: z.string().optional(),
 });
 
 export function NewTestOrderDialog({ open, onOpenChange, onSubmit }) {
+  const { orgId } = useParams();
   const { toast } = useToast();
   const [selectedTests, setSelectedTests] = useState([]);
   const [testSearch, setTestSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { data: patientsData, isLoading: isLoadingPatients } = useQuery({
+    queryKey: ['patients', orgId],
+    queryFn: async () => {
+      const response = await getPatients({ serverId: orgId });
+      return response.data?.patients || [];
+    },
+    enabled: open,
+  });
+
+  const patients = patientsData || [];
+
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       priority: 'routine',
+      patientId: '',
     },
   });
 
@@ -83,32 +96,15 @@ export function NewTestOrderDialog({ open, onOpenChange, onSubmit }) {
       return;
     }
 
+    const selectedPatient = patients.find(p => p.id === data.patientId);
+
     const newOrder = {
-      id: `lab-${Date.now()}`,
-      orderNumber: `LAB-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
-      patient: {
-        id: `p-${Date.now()}`,
-        name: data.patientName,
-        mrn: data.patientMrn,
-        age: parseInt(data.patientAge),
-        gender: data.patientGender,
-      },
-      orderedBy: {
-        id: `d-${Date.now()}`,
-        name: data.doctorName,
-        department: 'General',
-      },
-      tests: selectedTests.map((t) => ({ ...t, results: null })),
-      status: 'ordered',
+      patientId: data.patientId,
+      serverId: orgId,
+      tests: selectedTests.map((t) => ({ ...t })),
+      status: 'ORDERED',
       priority: data.priority,
-      orderedAt: new Date(),
-      sampleCollectedAt: null,
-      completedAt: null,
-      collectedBy: null,
-      verifiedBy: null,
       notes: data.notes || '',
-      tags: [],
-      categories: [],
     };
 
     onSubmit?.(newOrder);
@@ -139,31 +135,26 @@ export function NewTestOrderDialog({ open, onOpenChange, onSubmit }) {
                     Patient Information
                   </h3>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <Label htmlFor="patientName">Patient Name *</Label>
-                      <Input id="patientName" {...register('patientName')} placeholder="Enter patient name" />
-                    </div>
+                  <div className="grid grid-cols-1 gap-3">
                     <div>
-                      <Label htmlFor="patientMrn">MRN *</Label>
-                      <Input id="patientMrn" {...register('patientMrn')} placeholder="MRN-XXXX-XXXX" />
-                    </div>
-                    <div>
-                      <Label htmlFor="patientAge">Age *</Label>
-                      <Input id="patientAge" type="number" {...register('patientAge')} placeholder="Age" />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor="patientGender">Gender *</Label>
-                      <Select onValueChange={(v) => register('patientGender').onChange({ target: { value: v } })}>
+                      <Label htmlFor="patientId">Select Patient *</Label>
+                      <Select onValueChange={(v) => setValue('patientId', v)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder="Select patient" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          {isLoadingPatients ? (
+                            <div className='flex items-center justify-center p-4'>
+                              <Loader className='w-4 h-4 animate-spin text-muted-foreground' />
+                            </div>
+                          ) : (
+                            patients.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>{p.name} ({p.mrn})</SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
+                      {errors.patientId && <p className="text-xs text-destructive mt-1">{errors.patientId.message}</p>}
                     </div>
                   </div>
 

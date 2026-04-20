@@ -14,12 +14,27 @@ import { PatientList } from './components/PatientList'
 import { PatientTableView } from './components/PatientTableView'
 import { PatientDetailSheet } from './components/PatientDetailSheet'
 import { NewPatientDialog } from './components/NewPatientDialog'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getPatients } from './_action/get-patients'
+import { upsertpatient } from './_action/upsert-patient'
+import { useParams } from 'next/navigation'
+import { Loader } from 'lucide-react'
 
 
 
 export default function PatientPage() {
+    const { orgId } = useParams();
+    const queryClient = useQueryClient();
 
-    const [patients, setPatients] = useLocalStorage('hms_patients', mockPatients);
+    const { data: patientsData, isLoading } = useQuery({
+        queryKey: ['patients', orgId],
+        queryFn: async () => {
+            const response = await getPatients({ serverId: orgId });
+            return response.data?.patients || [];
+        }
+    });
+
+    const patients = patientsData || [];
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [genderFilter, setGenderFilter] = useState('all');
@@ -54,16 +69,16 @@ export default function PatientPage() {
         setDetailSheetOpen(true);
     };
 
-    const handleAddPatient = (newPatient) => {
+    const handleAddPatient = async (newPatient) => {
         console.log('Adding patient:', newPatient);
-        setPatients((prev) => [newPatient, ...prev]);
+        // The NewPatientDialog should ideally use the useAction hook, 
+        // but for now we'll trigger a re-fetch after add.
+        queryClient.invalidateQueries(['patients', orgId]);
     };
 
-    const handleUpdatePatient = (updatedPatient) => {
+    const handleUpdatePatient = async (updatedPatient) => {
         console.log('Updating patient:', updatedPatient);
-        setPatients((prev) =>
-            prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
-        );
+        queryClient.invalidateQueries(['patients', orgId]);
         setSelectedPatient(updatedPatient);
     };
 
@@ -106,17 +121,25 @@ export default function PatientPage() {
             <ScrollArea className='h-[85vh] w-full'>
                 {/* Patient View */}
                 <div className="flex-1 overflow-y-auto pb-4">
-                    {viewMode === 'list' && (
-                        <PatientList
-                            patients={filteredPatients}
-                            onPatientClick={handlePatientClick}
-                        />
-                    )}
-                    {viewMode === 'table' && (
-                        <PatientTableView
-                            patients={filteredPatients}
-                            onPatientClick={handlePatientClick}
-                        />
+                    {isLoading ? (
+                        <div className='flex items-center justify-center h-[200px]'>
+                            <Loader className='animate-spin text-muted-foreground' />
+                        </div>
+                    ) : (
+                        <>
+                            {viewMode === 'list' && (
+                                <PatientList
+                                    patients={filteredPatients}
+                                    onPatientClick={handlePatientClick}
+                                />
+                            )}
+                            {viewMode === 'table' && (
+                                <PatientTableView
+                                    patients={filteredPatients}
+                                    onPatientClick={handlePatientClick}
+                                />
+                            )}
+                        </>
                     )}
                 </div>
 

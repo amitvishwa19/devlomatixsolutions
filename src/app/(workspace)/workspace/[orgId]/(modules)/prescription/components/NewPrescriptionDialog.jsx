@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { DOSAGE_FREQUENCIES, DURATION_OPTIONS, MEDICINE_ROUTES, COMMON_MEDICINES } from '../utils/types';
-import { mockDoctors, mockPatientsList } from '../utils/mockPrescriptions';
-import { generatePrescriptionId } from '../utils/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFormValidationToast } from '../../hooks/useFormValidationToast';
+import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { getPatients } from '../../patient/_action/get-patients';
+import { Loader } from 'lucide-react';
 
 
 // Zod schema for medicine
@@ -39,8 +41,24 @@ const prescriptionSchema = z.object({
 });
 
 export function NewPrescriptionDialog({ open, onOpenChange, onSave }) {
+  const { orgId } = useParams();
   const { toast } = useToast();
   const { showValidationErrors } = useFormValidationToast();
+
+  const { data: patientsData, isLoading: isLoadingPatients } = useQuery({
+    queryKey: ['patients', orgId],
+    queryFn: async () => {
+      const response = await getPatients({ serverId: orgId });
+      return response.data?.patients || [];
+    },
+    enabled: open,
+  });
+
+  const patients = patientsData || [];
+  const mockDoctors = [
+    { id: 'doc1', name: 'Dr. Sarah Wilson', specialty: 'General Medicine' },
+    { id: 'doc2', name: 'Dr. James Chen', specialty: 'Pediatrics' },
+  ];
 
   const form = useForm({
     resolver: zodResolver(prescriptionSchema),
@@ -60,24 +78,17 @@ export function NewPrescriptionDialog({ open, onOpenChange, onSave }) {
   });
 
   const onSubmit = (data) => {
-    console.log('New Prescription Form Data:', data);
-
-    const selectedPatient = mockPatientsList.find(p => p.id === data.patientId);
+    const selectedPatient = patients.find(p => p.id === data.patientId);
 
     const prescription = {
-      id: generatePrescriptionId(),
       patientId: data.patientId,
-      patientName: selectedPatient?.name || '',
-      patientMrn: selectedPatient?.mrn || '',
-      doctor: data.doctor,
+      doctorId: "dummy-doctor-id", // Should come from a real doctor selection
       diagnosis: data.diagnosis || '',
-      prescribedDate: new Date(),
-      status: 'active',
+      status: 'ACTIVE',
       refillsRemaining: parseInt(data.refillsRemaining) || 0,
       notes: data.notes || '',
-      tags: [],
-      categories: [],
-      medicines: data.medicines.map(m => ({
+      serverId: orgId,
+      items: data.medicines.map(m => ({
         ...m,
         quantity: parseInt(m.quantity) || 0,
       })),
@@ -120,11 +131,17 @@ export function NewPrescriptionDialog({ open, onOpenChange, onSave }) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {mockPatientsList.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.name} ({patient.mrn})
-                          </SelectItem>
-                        ))}
+                        {isLoadingPatients ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader className="w-4 h-4 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          patients.map((patient) => (
+                            <SelectItem key={patient.id} value={patient.id}>
+                              {patient.name} ({patient.mrn})
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

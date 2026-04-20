@@ -2,44 +2,25 @@
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
-import { v4 as uuidv4 } from 'uuid'
-import { ROLE } from "@prisma/client";
-import { slug } from "@/utils/functions";
+import { revalidatePath } from "next/cache";
 
 const DeletePrescription = z.object({
-    prescriptionId: z.string()
+    id: z.string(),
+    serverId: z.string(),
 });
 
 const handler = async (data) => {
-
-
-
-    const { prescriptionId } = data
-    let prescription
-
-
-
-
+    const { id, serverId } = data;
     try {
-
-        prescription = await db.prescription.delete({
-            where: {
-                id: prescriptionId
-            }
-        })
-
-
+        await db.prescription.delete({
+            where: { id },
+        });
+        revalidatePath(`/workspace/${serverId}/prescription`);
+        return { data: { success: true } };
     } catch (error) {
-        console.log(error)
-        return {
-            message: "Oops!, something went wrong", error
-        }
+        console.error('Error deleting prescription:', error);
+        return { message: "Failed to delete prescription", error };
     }
-
-    //revalidatePath(`/org/${orgId}`)
-    return { data: { prescription } };
-
-}
-
+};
 
 export const deletePrescription = createSafeAction(DeletePrescription, handler);

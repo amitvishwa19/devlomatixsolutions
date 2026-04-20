@@ -36,8 +36,10 @@ model AppSettings {
 
 model Appointment {
   id                               String            @id @default(cuid())
+  serverId                          String?
   patientId                        String
   doctorId                         String
+  departmentId                     String?
   uid                              String?
   date                             String
   slot                             Json?
@@ -53,6 +55,7 @@ model Appointment {
   updatedAt                        DateTime          @updatedAt
   doctor                           User              @relation("Appointment_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
   patient                          User              @relation("Appointment_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  department                       Department?       @relation(fields: [departmentId], references: [id])
 }
 
 model AuditLog {
@@ -146,6 +149,7 @@ model Department {
   updatedAt    DateTime  @updatedAt
   hospital     Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   users        User[]
+  appointments Appointment[]
 }
 
 model DirectMessage {
@@ -297,6 +301,7 @@ model Tag {
 
 model User {
   id                                      String        @id @default(cuid())
+  sku                                     String?
   uuid                                    String?
   displayName                             String?
   username                                String?       @unique
@@ -311,6 +316,12 @@ model User {
   departmentId                            String?
   hospitalId                              String?
   role                                    ROLE          @default(GUEST)
+  demographic                             Json?
+  vitals                                  Json?
+  medicalHistory                          Json?
+  allergies                               Json?
+  insurance                               Json?
+  emergencyContact                        Json?
   webDeviceToken                          String?
   deviceToken                             String?
   expoPushToken                           String?
@@ -325,6 +336,12 @@ model User {
   updatedAt                               DateTime      @updatedAt
   appointmentsAsDoctor                    Appointment[] @relation("Appointment_doctorIdToUser")
   appointmentsAsPatient                   Appointment[] @relation("Appointment_patientIdToUser")
+  prescriptionsAsDoctor                   Prescription[] @relation("Prescription_doctorIdToUser")
+  prescriptionsAsPatient                  Prescription[] @relation("Prescription_patientIdToUser")
+  labOrdersAsRequester                    LabOrder[]    @relation("LabOrder_requesterIdToUser")
+  labOrdersAsPatient                      LabOrder[]    @relation("LabOrder_patientIdToUser")
+  invoices                                Invoice[]
+  admissions                              Admission[]
   channels                                Channel[]
   credit                                  Credit?
   members                                 Member[]
@@ -373,6 +390,250 @@ enum ROLE {
   DOCTOR
   PATIENT
   NURSE
+  PHARMACIST
+  LAB_TECHNICIAN
+  RECEPTIONIST
   SERVICE
   GUEST
+}
+
+model Prescription {
+  id              String             @id @default(cuid())
+  serverId        String?
+  patientId       String
+  doctorId        String
+  appointmentId   String?
+  diagnosis       String?
+  notes           String?
+  status          PRESCRIPTIONSTATUS @default(ACTIVE)
+  refillsRemaining Int               @default(0)
+  prescribedDate  DateTime           @default(now())
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  doctor          User               @relation("Prescription_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient         User               @relation("Prescription_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  items           PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  medicineId     String?
+  medicineName   String
+  dosage         String
+  frequency      String
+  duration       String
+  route          String?
+  instructions   String?
+  quantity       Int          @default(1)
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+}
+
+model LabOrder {
+  id               String          @id @default(cuid())
+  serverId         String?
+  patientId        String
+  requesterId      String
+  appointmentId    String?
+  priority         LABPRIORITY     @default(ROUTINE)
+  status           LABORDERSTATUS  @default(ORDERED)
+  notes            String?
+  sampleCollectedAt DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  patient          User            @relation("LabOrder_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  requester        User            @relation("LabOrder_requesterIdToUser", fields: [requesterId], references: [id], onDelete: Cascade)
+  results          LabResult[]
+}
+
+model LabResult {
+  id          String   @id @default(cuid())
+  orderId     String
+  testName    String
+  value       String
+  unit        String?
+  range       String?
+  status      String?
+  notes       String?
+  recordedAt  DateTime @default(now())
+  order       LabOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model InventoryItem {
+  id            String          @id @default(cuid())
+  serverId      String?
+  sku           String?         @unique
+  name          String
+  genericName   String?
+  category      String?
+  description   String?
+  quantity      Int             @default(0)
+  reorderLevel  Int             @default(10)
+  unit          String?
+  costPrice     Float?
+  sellingPrice  Float?
+  expiryDate    DateTime?
+  batchNumber   String?
+  location      String?
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  movements     StockMovement[]
+}
+
+model StockMovement {
+  id          String        @id @default(cuid())
+  itemId      String
+  type        MOVEMENTTYPE
+  quantity    Int
+  previousQty Int
+  newQty      Int
+  reference   String?
+  notes       String?
+  performedBy String?
+  createdAt   DateTime      @default(now())
+  item        InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+model Room {
+  id           String     @id @default(cuid())
+  serverId     String?
+  roomNumber   String     @unique
+  type         ROOMTYPE   @default(GENERAL)
+  floor        Int?
+  departmentId String?
+  beds         Bed[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Bed {
+  id           String        @id @default(cuid())
+  roomId       String
+  bedNumber    String
+  status       BEDSTATUS     @default(AVAILABLE)
+  housekeeping HOUSEKEEPINGSTATUS @default(CLEAN)
+  room         Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  admissions   Admission[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Admission {
+  id               String    @id @default(cuid())
+  serverId         String?
+  patientId        String
+  bedId            String
+  admittedAt       DateTime  @default(now())
+  dischargedAt     DateTime?
+  status           String    @default("admitted") // admitted, discharged, transferred
+  reason           String?
+  notes            String?
+  patient          User      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  bed              Bed       @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  serverId        String?
+  invoiceNumber   String        @unique
+  patientId       String
+  subtotal        Float         @default(0)
+  tax             Float         @default(0)
+  discount        Float         @default(0)
+  total           Float         @default(0)
+  amountPaid      Float         @default(0)
+  balance         Float         @default(0)
+  status          INVOICESTATUS @default(UNPAID)
+  dueDate         DateTime?
+  patient         User          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  items           InvoiceItem[]
+  payments        Payment[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Float
+  total       Float
+  source      String?  // appointment, pharmacy, lab, etc
+  sourceId    String?
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  amount        Float
+  method        String?  // cash, card, online
+  reference     String?
+  transactionId String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+enum PRESCRIPTIONSTATUS {
+  ACTIVE
+  ONHOLD
+  COMPLETED
+  DISCONTINUED
+}
+
+enum LABORDERSTATUS {
+  ORDERED
+  SAMPLE_COLLECTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum LABPRIORITY {
+  ROUTINE
+  URGENT
+  STAT
+}
+
+enum MOVEMENTTYPE {
+  IN
+  OUT
+  ADJUSTMENT
+  RETURN
+}
+
+enum ROOMTYPE {
+  GENERAL
+  SEMI_PRIVATE
+  PRIVATE
+  ICU
+  EMERGENCY
+}
+
+enum BEDSTATUS {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+  DISCHARGE_PENDING
+}
+
+enum HOUSEKEEPINGSTATUS {
+  CLEAN
+  NEEDS_CLEANING
+  CLEANING_IN_PROGRESS
+}
+
+enum INVOICESTATUS {
+  UNPAID
+  PARTIAL
+  PAID
+  CANCELLED
+  VOID
 }

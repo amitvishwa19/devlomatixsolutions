@@ -3,19 +3,13 @@ import React, { useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ContentTopbar } from '../../(misc)/_components/ContentTopbar'
 import { mockCategories, mockDispensing, mockInventory, mockPurchaseOrders, mockSalesData, mockSuppliers } from './utils/mockData';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { differenceInDays, format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Plus, Search, Package, AlertTriangle, TrendingDown, Pill,
-    Truck, Users, BarChart3, ShoppingCart, RefreshCcw, Filter,
-    ArrowUpRight, ArrowDownRight, Clock, CheckCircle, XCircle,
-    Building2, Phone, Mail, Star, Eye, Edit, Trash2
-} from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { getInventory } from '../inventory/_action/get-inventory';
+import { manageInventory } from '../inventory/_action/manage-inventory';
+import { useAction } from '@/hooks/use-action';
+import { Loader } from 'lucide-react';
 import { BarcodeScanner, BatchExpiryTracker, DispensingPanel, DrugInteractionChecker, InventoryTable, PharmacyAnalytics, PurchaseOrders, ReturnAdjustmentManager, SupplierManagement } from './components';
 
 
@@ -23,10 +17,21 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3
 
 
 export default function PharmacyPage() {
-    const [inventory, setInventory] = useLocalStorage('hms_pharmacy_inventory', mockInventory);
-    const [dispensing, setDispensing] = useLocalStorage('hms_pharmacy_dispensing', mockDispensing);
-    const [suppliers] = useLocalStorage('hms_pharmacy_suppliers', mockSuppliers);
-    const [purchaseOrders, setPurchaseOrders] = useLocalStorage('hms_pharmacy_orders', mockPurchaseOrders);
+    const { orgId } = useParams();
+    const queryClient = useQueryClient();
+
+    const { data: medicinesData, isLoading } = useQuery({
+        queryKey: ['inventory', orgId],
+        queryFn: async () => {
+            const response = await getInventory({ serverId: orgId });
+            return response.data?.items || [];
+        }
+    });
+
+    const inventory = medicinesData || [];
+    const [dispensing, setDispensing] = React.useState([]); // Dispensing records should also come from DB
+    const [suppliers] = React.useState(mockSuppliers);
+    const [purchaseOrders, setPurchaseOrders] = React.useState(mockPurchaseOrders);
     const [searchQuery, setSearchQuery] = React.useState('');
     const [categoryFilter, setCategoryFilter] = React.useState('all');
     const [activeTab, setActiveTab] = React.useState('overview');
@@ -80,29 +85,31 @@ export default function PharmacyPage() {
         }));
     }, []);
 
-    const handleDispense = (dispenseData) => {
-        const newDispense = {
-            id: `disp-${Date.now()}`,
-            ...dispenseData,
-            dispensedAt: new Date(),
-        };
-        setDispensing(prev => [newDispense, ...prev]);
+    const { execute: executeManage } = useAction(manageInventory, {
+        onSuccess: () => queryClient.invalidateQueries(['inventory', orgId])
+    });
 
-        // Update inventory
-        setInventory(prev => prev.map(item =>
-            item.id === dispenseData.medicineId
-                ? { ...item, quantity: item.quantity - dispenseData.quantity }
-                : item
-        ));
+    const handleDispense = (dispenseData) => {
+        executeManage({
+            id: dispenseData.medicineId,
+            serverId: orgId,
+            type: "STOCK_ADJUSTMENT",
+            adjustment: {
+                type: "DISPENSE",
+                quantity: dispenseData.quantity,
+                notes: `Dispensed to ${dispenseData.patientName}`,
+                performedBy: "Pharmacist",
+            }
+        });
         setShowDispense(false);
     };
 
     const handleAddMedicine = (medicine) => {
-        const newMedicine = {
-            id: `med-${Date.now()}`,
-            ...medicine,
-        };
-        setInventory(prev => [...prev, newMedicine]);
+        executeManage({
+            serverId: orgId,
+            type: "UPSERT",
+            itemData: medicine,
+        });
         setShowAddMedicine(false);
     };
 
@@ -154,8 +161,14 @@ export default function PharmacyPage() {
                 </TabsList>
 
 
-                <ScrollArea className='h-[65vh] flex flex-grow rounded-md'>
-                    {/* Overview Tab */}
+            <ScrollArea className='h-[65vh] flex flex-grow rounded-md'>
+                {isLoading ? (
+                    <div className='flex items-center justify-center h-[200px]'>
+                        <Loader className='animate-spin text-muted-foreground' />
+                    </div>
+                ) : (
+                    <>
+                        {/* Overview Tab */}
                     <TabsContent value="overview" className="space-y-4">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             {/* Sales Trend Chart */}
@@ -414,7 +427,9 @@ export default function PharmacyPage() {
                             onUpdateInventory={setInventory}
                         />
                     </TabsContent>
-                </ScrollArea>
+                </>
+                )}
+            </ScrollArea>
             </Tabs>
 
 

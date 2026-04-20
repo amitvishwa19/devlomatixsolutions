@@ -8,18 +8,28 @@ import { calculateLabStats, filterTestOrders } from './utils/utils';
 import { useToast } from '@/hooks/use-toast';
 import { CheckSquare, Plus, Settings, TestTube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LabStatsCards } from './components/LabStatsCards';
-import { LabFilters } from './components/LabFilters';
-import { TestOrderList } from './components/TestOrderList';
-import { TestOrderTableView } from './components/TestOrderTableView';
-import { TestOrderDetailSheet } from './components/TestOrderDetailSheet';
-import { NewTestOrderDialog } from './components/NewTestOrderDialog';
 import { EquipmentSheet, QualityControlSheet, SampleCollectionSheet } from './components';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { getLabOrders } from './_action/get-lab-orders';
+import { upsertLabOrder } from './_action/upsert-lab-order';
+import { useAction } from '@/hooks/use-action';
+import { Loader } from 'lucide-react';
 
 export default function LabPage() {
-
+    const { orgId } = useParams();
+    const queryClient = useQueryClient();
     const { toast } = useToast();
-    const [orders, setOrders] = useLocalStorage('hms_lab_orders', mockTestOrders);
+
+    const { data: ordersData, isLoading } = useQuery({
+        queryKey: ['lab-orders', orgId],
+        queryFn: async () => {
+            const response = await getLabOrders({ serverId: orgId });
+            return response.data?.orders || [];
+        }
+    });
+
+    const orders = ordersData || [];
     const [equipment] = useLocalStorage('hms_lab_equipment', mockEquipment);
 
     // Filters
@@ -59,36 +69,33 @@ export default function LabPage() {
     }, [orders, searchQuery, statusFilter, priorityFilter, categoryFilter, tagFilter]);
 
     // Handlers
+    const { execute: executeUpsert } = useAction(upsertLabOrder, {
+        onSuccess: () => queryClient.invalidateQueries(['lab-orders', orgId])
+    });
+
     const handleOrderClick = useCallback((order) => {
         setSelectedOrder(order);
         setDetailSheetOpen(true);
     }, []);
 
     const handleAddOrder = useCallback((newOrder) => {
-        setOrders((prev) => [newOrder, ...prev]);
-    }, [setOrders]);
+        // executeUpsert(newOrder); // TODO: implement in dialog
+        queryClient.invalidateQueries(['lab-orders', orgId]);
+    }, [queryClient, orgId]);
 
     const handleStatusChange = useCallback((orderId, newStatus) => {
-        setOrders((prev) =>
-            prev.map((order) => {
-                if (order.id === orderId) {
-                    const updates = { status: newStatus };
-                    if (newStatus === 'sample_collected') {
-                        updates.sampleCollectedAt = new Date();
-                    } else if (newStatus === 'completed') {
-                        updates.completedAt = new Date();
-                    }
-                    return { ...order, ...updates };
-                }
-                return order;
-            })
-        );
+        executeUpsert({
+            id: orderId,
+            serverId: orgId,
+            status: newStatus.toUpperCase(),
+        });
+        
         setSelectedOrder((prev) => prev && prev.id === orderId ? { ...prev, status: newStatus } : prev);
         toast({
             title: 'Status updated',
             description: `Order status changed to ${newStatus.replace('_', ' ')}.`,
         });
-    }, [setOrders, toast]);
+    }, [executeUpsert, orgId, toast]);
 
 
     return (
@@ -141,10 +148,18 @@ export default function LabPage() {
             </div>
 
             <ScrollArea className='h-[60vh] flex flex-grow p-2  rounded-md'>
-                {viewMode === 'list' ? (
-                    <TestOrderList orders={filteredOrders} onOrderClick={handleOrderClick} />
+                {isLoading ? (
+                    <div className='flex items-center justify-center h-[200px]'>
+                        <Loader className='animate-spin text-muted-foreground' />
+                    </div>
                 ) : (
-                    <TestOrderTableView orders={filteredOrders} onOrderClick={handleOrderClick} />
+                    <>
+                        {viewMode === 'list' ? (
+                            <TestOrderList orders={filteredOrders} onOrderClick={handleOrderClick} />
+                        ) : (
+                            <TestOrderTableView orders={filteredOrders} onOrderClick={handleOrderClick} />
+                        )}
+                    </>
                 )}
             </ScrollArea>
 

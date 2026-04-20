@@ -16,15 +16,37 @@ import { AppointmentCalendarView } from './components/AppointmentCalendarView';
 import { DraggableCalendarView } from './components/DraggableCalendarView';
 import { AppointmentAnalytics } from './components/AppointmentAnalytics';
 import { AppointmentDetailSheet } from './components/AppointmentDetailSheet';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { getAppointments } from './_actions/get-appointments';
+import { useAction } from '@/hooks/use-action';
+import { updateAppointmentStatus } from './_actions/update-appointment-status';
+import { deleteAppointment } from './_actions/delete-appointment';
+import { Loader } from 'lucide-react';
 
 
 
 
 
 export default function Appointments() {
-    const [appointments, setAppointments] = useLocalStorage('hms_appointments', mockAppointments);
-    const [waitlist, setWaitlist] = useLocalStorage('hms_waitlist', []);
-    const [doctorSchedules, setDoctorSchedules] = useLocalStorage('hms_doctor_schedules', DOCTOR_SCHEDULES);
+    const { orgId } = useParams();
+    const queryClient = useQueryClient();
+
+    const { data: appointmentsData, isLoading } = useQuery({
+        queryKey: ['appointments', orgId],
+        queryFn: async () => {
+            const response = await getAppointments({ 
+                serverId: orgId,
+                userId: 'dummy-user-id', // TODO: Get from session
+                role: 'ADMIN' // TODO: Get from session
+            });
+            return response.data?.appointments || [];
+        }
+    });
+
+    const appointments = appointmentsData || [];
+    const [waitlist, setWaitlist] = useState([]); // Placeholder for waitlist persistence
+    const [doctorSchedules, setDoctorSchedules] = useState(DOCTOR_SCHEDULES); // Placeholder for schedules persistence
 
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -53,34 +75,33 @@ export default function Appointments() {
         setDetailSheetOpen(true);
     };
 
+    const { execute: executeStatusUpdate } = useAction(updateAppointmentStatus, {
+        onSuccess: () => queryClient.invalidateQueries(['appointments', orgId])
+    });
+
+    const { execute: executeDelete } = useAction(deleteAppointment, {
+        onSuccess: () => {
+            queryClient.invalidateQueries(['appointments', orgId]);
+            setSelectedAppointment(null);
+            setDetailSheetOpen(false);
+        }
+    });
+
     const handleStatusChange = (appointmentId, newStatus) => {
-        console.log('Updating appointment status:', { appointmentId, newStatus });
-        setAppointments((prev) =>
-            prev.map((apt) =>
-                apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-            )
-        );
+        executeStatusUpdate({ id: appointmentId, status: newStatus });
     };
 
-    const handleAddAppointment = (newAppointment) => {
-        console.log('Adding appointment:', newAppointment);
-        setAppointments((prev) => [newAppointment, ...prev]);
+    const handleAddAppointment = () => {
+        queryClient.invalidateQueries(['appointments', orgId]);
     };
 
     const handleReschedule = (appointmentId, newDate, newTime) => {
-        console.log('Rescheduling appointment:', { appointmentId, newDate, newTime });
-        setAppointments((prev) =>
-            prev.map((apt) =>
-                apt.id === appointmentId ? { ...apt, date: newDate, time: newTime } : apt
-            )
-        );
+        // executeReschedule({ id: appointmentId, date: newDate, time: newTime });
+        queryClient.invalidateQueries(['appointments', orgId]);
     };
 
     const handleDeleteAppointment = (appointmentId) => {
-        console.log('Deleting appointment:', appointmentId);
-        setAppointments((prev) => prev.filter((apt) => apt.id !== appointmentId));
-        setSelectedAppointment(null);
-        setDetailSheetOpen(false);
+        executeDelete({ id: appointmentId });
     };
 
     const handleScheduleFromWaitlist = (entry) => {
@@ -137,36 +158,44 @@ export default function Appointments() {
 
             {/* Appointments View */}
             <div className="flex-1 overflow-y-auto p-2">
-                {viewMode === 'list' && (
-                    <AppointmentList
-                        appointments={filteredAppointments}
-                        onAppointmentClick={handleAppointmentClick}
-                        onStatusChange={handleStatusChange}
-                    />
-                )}
-                {viewMode === 'table' && (
-                    <AppointmentTableView
-                        appointments={filteredAppointments}
-                        onAppointmentClick={handleAppointmentClick}
-                        onStatusChange={handleStatusChange}
-                    />
-                )}
-                {viewMode === 'calendar' && (
-                    <AppointmentCalendarView
-                        appointments={filteredAppointments}
-                        onAppointmentClick={handleAppointmentClick}
-                        onStatusChange={handleStatusChange}
-                    />
-                )}
-                {viewMode === 'scheduler' && (
-                    <DraggableCalendarView
-                        appointments={filteredAppointments}
-                        onAppointmentClick={handleAppointmentClick}
-                        onReschedule={handleReschedule}
-                    />
-                )}
-                {viewMode === 'analytics' && (
-                    <AppointmentAnalytics appointments={appointments} />
+                {isLoading ? (
+                    <div className='flex items-center justify-center h-[200px]'>
+                        <Loader className='animate-spin text-muted-foreground' />
+                    </div>
+                ) : (
+                    <>
+                        {viewMode === 'list' && (
+                            <AppointmentList
+                                appointments={filteredAppointments}
+                                onAppointmentClick={handleAppointmentClick}
+                                onStatusChange={handleStatusChange}
+                            />
+                        )}
+                        {viewMode === 'table' && (
+                            <AppointmentTableView
+                                appointments={filteredAppointments}
+                                onAppointmentClick={handleAppointmentClick}
+                                onStatusChange={handleStatusChange}
+                            />
+                        )}
+                        {viewMode === 'calendar' && (
+                            <AppointmentCalendarView
+                                appointments={filteredAppointments}
+                                onAppointmentClick={handleAppointmentClick}
+                                onStatusChange={handleStatusChange}
+                            />
+                        )}
+                        {viewMode === 'scheduler' && (
+                            <DraggableCalendarView
+                                appointments={filteredAppointments}
+                                onAppointmentClick={handleAppointmentClick}
+                                onReschedule={handleReschedule}
+                            />
+                        )}
+                        {viewMode === 'analytics' && (
+                            <AppointmentAnalytics appointments={appointments} />
+                        )}
+                    </>
                 )}
             </div>
 
