@@ -19,7 +19,7 @@ const handler = async (data) => {
         const templates = await db.messageTemplate.findMany({
             where: { 
                 userId,
-                // We show all templates for the user, potentially filtered by a 'WA_BUSINESS' platform if needed
+                platform: "WHATSAPP_BUSINESS"
             },
             orderBy: { createdAt: 'desc' }
         });

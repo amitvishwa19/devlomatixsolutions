@@ -175,7 +175,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                         </DialogHeader>
 
                         <ScrollArea className="h-[75vh]">
-                            <div className="p-8 space-y-10 pb-10">
+                            <div className="p-8 space-y-4 pb-10">
                                 {/* Type Grid */}
                                 <div className="space-y-4">
                                     <Label className="   text-muted-foreground/70 flex items-center gap-2">
@@ -187,16 +187,18 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                                 key={type.id}
                                                 onClick={() => setSelectedType(type.id)}
                                                 className={`group flex flex-col items-start p-4 rounded-lg border transition-all cursor-pointer relative overflow-hidden ${selectedType === type.id
-                                                    ? 'border-primary bg-primary/5 shadow-md shadow-primary/5'
-                                                    : 'bg-card border-border/40 hover:border-primary/30 hover:bg-muted/30 opacity-70 hover:opacity-100'
+                                                    ? 'border-primary/30 bg-primary/5 shadow-md shadow-primary/5'
+                                                    : 'bg-card border hover:border-primary/30 hover:bg-muted/30 opacity-70 hover:opacity-100'
                                                     }`}
                                             >
-                                                <div className={`p-2 rounded-xl transition-all ${selectedType === type.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-muted group-hover:bg-primary/10 group-hover:text-primary'}`}>
-                                                    <type.icon className="w-4 h-4" />
-                                                </div>
-                                                <div className="mt-3">
-                                                    <p className={`text-[11px] leading-tight ${selectedType === type.id ? 'text-primary' : 'text-foreground'}`}>{type.label}</p>
-                                                    <p className="text-[9px] text-muted-foreground/60 mt-1 line-clamp-1">{type.description}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`p-2 rounded-xl transition-all ${selectedType === type.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-muted group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                                                        <type.icon className="w-4 h-4" />
+                                                    </div>
+                                                    <div className="mt-3">
+                                                        <p className={`text-[11px] leading-tight ${selectedType === type.id ? 'text-primary' : 'text-foreground'}`}>{type.label}</p>
+                                                        <p className="text-[9px] text-muted-foreground/60 mt-1 line-clamp-1">{type.description}</p>
+                                                    </div>
                                                 </div>
                                                 {selectedType === type.id && (
                                                     <div className="absolute -bottom-2 -right-2 transform rotate-12 opacity-10">
@@ -208,7 +210,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2.5">
                                         <Label className="   text-muted-foreground/70">Template Name</Label>
                                         <Input
@@ -238,7 +240,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                 </div>
 
                                 {/* Header & Body Editor */}
-                                <div className="space-y-6">
+                                <div className="space-y-4 border border-border/50 p-2 rounded-lg">
                                     <div className="space-y-2.5">
                                         <Label className="text-muted-foreground/70">Message Header (Optional)</Label>
                                         <Input
