@@ -108,12 +108,11 @@ export default function Dashboard() {
                     </div>
 
                     {/* Main Content Grid */}
-                    <div className="grid gap-2 lg:grid-cols-12">
+                    <div className="grid gap-2 lg:grid-cols-2">
                         {/* Left Column */}
                         <div className="lg:col-span-8 space-y-2">
-                            <RevenueChart />
-                            <PatientOverview />
-                            <UpcomingSurgeries />
+                            <RecentAppointments />
+                            <ActivityFeed />
                         </div>
 
                         {/* Right Column */}
@@ -141,12 +140,12 @@ export default function Dashboard() {
 
                     {/* Bottom Section */}
                     <div className="grid gap-2 lg:grid-cols-2">
-                        <RecentAppointments />
+
                         <PerformanceMetrics />
                     </div>
 
                     {/* Activity Feed */}
-                    <ActivityFeed />
+
                 </div>
             </ScrollArea>
 

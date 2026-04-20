@@ -40,8 +40,13 @@ const newPatientSchema = z.object({
     policyNumber: z.string().max(50, 'Policy number too long').optional(),
 });
 
-export function NewPatientDialog({ onAddPatient }) {
-    const [open, setOpen] = useState(false);
+export function NewPatientDialog({ onAddPatient, open: controlledOpen, onOpenChange: setControlledOpen }) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+    const setOpen = (val) => {
+        if (setControlledOpen) setControlledOpen(val);
+        else setInternalOpen(val);
+    };
     const { toast } = useToast();
     const { showValidationErrors } = useFormValidationToast();
 
@@ -96,12 +101,7 @@ export function NewPatientDialog({ onAddPatient }) {
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-                <Button className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    New Patient
-                </Button>
-            </SheetTrigger>
+
             <SheetContent className="sm:max-w-[550px] min-w-[620px] flex flex-col h-full bg-transparent border-0 p-2">
                 <div className='border rounded-lg h-full overflow-hidden bg-card p-2'>
                     <SheetHeader className="p-6 pb-4 border-b border-border shrink-0">
