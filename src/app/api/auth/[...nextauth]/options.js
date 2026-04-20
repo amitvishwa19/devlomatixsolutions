@@ -7,7 +7,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { MemberRole } from "@prisma/client";
 import { uuid } from "@/utils/functions";
 
-
+const Google = GoogleProvider.default || GoogleProvider;
+const Credentials = CredentialsProvider.default || CredentialsProvider;
+const GitHub = GitHubProvider.default || GitHubProvider;
 
 
 export const authOptions = {
@@ -15,17 +17,17 @@ export const authOptions = {
 
     providers: [
 
-        GoogleProvider({
+        Google({
             clientId: process.env.GOOGLE_ID,
             clientSecret: process.env.GOOGLE_SECRET,
         }),
 
-        GitHubProvider({
+        GitHub({
             clientId: process.env.GITHUB_ID,
             clientSecret: process.env.GITHUB_SECRET
         }),
 
-        CredentialsProvider({
+        Credentials({
 
             name: "Credentials",
             credentials: {

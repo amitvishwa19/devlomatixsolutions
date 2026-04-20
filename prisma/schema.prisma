@@ -6,6 +6,122 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id                        String         @id @default(cuid())
+  sku                       String?
+  uuid                      String?
+  displayName               String?
+  username                  String?        @unique
+  email                     String?        @unique
+  phone                     String?        @unique
+  avatar                    String?
+  isVerified                Boolean        @default(false)
+  isActive                  Boolean        @default(false)
+  password                  String?
+  uid                       String?
+  provider                  String?
+  departmentId              String?
+  hospitalId                String?
+  role                      ROLE           @default(GUEST)
+  demographic               Json?
+  vitals                    Json?
+  medicalHistory            Json?
+  allergies                 Json?
+  insurance                 Json?
+  emergencyContact          Json?
+  webDeviceToken            String?
+  deviceToken               String?
+  expoPushToken             String?
+  refreshToken              String?
+  accessToken               String?
+  forgotPasswordToken       String?
+  forgotPasswordTokenExpiry DateTime?
+  verifyToken               String?
+  verifyTokenExpiry         DateTime?
+  lastActive                DateTime?
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  appointmentsAsDoctor      Appointment[]  @relation("Appointment_doctorIdToUser")
+  appointmentsAsPatient     Appointment[]  @relation("Appointment_patientIdToUser")
+  prescriptionsAsDoctor     Prescription[] @relation("Prescription_doctorIdToUser")
+  prescriptionsAsPatient    Prescription[] @relation("Prescription_patientIdToUser")
+  labOrdersAsRequester      LabOrder[]     @relation("LabOrder_requesterIdToUser")
+  labOrdersAsPatient        LabOrder[]     @relation("LabOrder_patientIdToUser")
+  invoices                  Invoice[]
+  admissions                Admission[]
+  channels                  Channel[]
+  credit                    Credit?
+  members                   Member[]
+  profile                   Profile?
+  servers                   Server[]
+  setting                   Setting?
+  department                Department?    @relation(fields: [departmentId], references: [id])
+  hospital                  Hospital?      @relation(fields: [hospitalId], references: [id])
+  roles                     Role[]         @relation("RoleToUser")
+  workspaces                Workspace[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model Server {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  imageUrl    String?
+  inviteCode  String    @unique
+  selected    Boolean   @default(false)
+  type        String    @default("default")
+  default     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  channels    Channel[]
+  members     Member[]
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Workspace {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  imageUrl    String?
+  inviteCode  String    @unique
+  selected    Boolean   @default(false)
+  type        String    @default("default")
+  default     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  channels    Channel[]
+  members     Member[]
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  info      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  info      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model AppSettings {
   id            String   @id @default(cuid())
   key           String   @unique
@@ -35,27 +151,27 @@ model AppSettings {
 }
 
 model Appointment {
-  id                               String            @id @default(cuid())
-  serverId                          String?
-  patientId                        String
-  doctorId                         String
-  departmentId                     String?
-  uid                              String?
-  date                             String
-  slot                             Json?
-  time                             String?
-  note                             String?
-  additionalNote                   String?
-  doctorNote                       String?
-  mode                             Json?
-  visitType                        String?           @default("consultation")
-  status                           APPOINTMENTSTATUS @default(SCHEDULED)
-  type                             APPIONTMENTTYPE   @default(OPD)
-  createdAt                        DateTime          @default(now())
-  updatedAt                        DateTime          @updatedAt
-  doctor                           User              @relation("Appointment_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
-  patient                          User              @relation("Appointment_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
-  department                       Department?       @relation(fields: [departmentId], references: [id])
+  id             String            @id @default(cuid())
+  serverId       String?
+  patientId      String
+  doctorId       String
+  departmentId   String?
+  uid            String?
+  date           String
+  slot           Json?
+  time           String?
+  note           String?
+  additionalNote String?
+  doctorNote     String?
+  mode           Json?
+  visitType      String?           @default("consultation")
+  status         APPOINTMENTSTATUS @default(SCHEDULED)
+  type           APPIONTMENTTYPE   @default(OPD)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  doctor         User              @relation("Appointment_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient        User              @relation("Appointment_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  department     Department?       @relation(fields: [departmentId], references: [id])
 }
 
 model AuditLog {
@@ -93,27 +209,29 @@ model Category {
 }
 
 model Channel {
-  id        String      @id @default(cuid())
-  name      String
-  type      ChannelType @default(TEXT)
-  userId    String
-  serverId  String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  server    Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Message   Message[]
+  id          String      @id @default(cuid())
+  name        String
+  type        ChannelType @default(TEXT)
+  userId      String
+  serverId    String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  server      Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Message     Message[]
+  workspace   Workspace?  @relation(fields: [workspaceId], references: [id])
+  workspaceId String?
 
   @@index([serverId])
 }
 
 model Conversation {
-  id                                      String          @id
-  memberOneId                             String
-  memberTwoId                             String
-  memberOne       Member          @relation("Conversation_memberOneIdToMember", fields: [memberOneId], references: [id], onDelete: Cascade)
-  memberTwo       Member          @relation("Conversation_memberTwoIdToMember", fields: [memberTwoId], references: [id], onDelete: Cascade)
-  DirectMessage                           DirectMessage[]
+  id            String          @id
+  memberOneId   String
+  memberTwoId   String
+  memberOne     Member          @relation("Conversation_memberOneIdToMember", fields: [memberOneId], references: [id], onDelete: Cascade)
+  memberTwo     Member          @relation("Conversation_memberTwoIdToMember", fields: [memberTwoId], references: [id], onDelete: Cascade)
+  DirectMessage DirectMessage[]
 
   @@unique([memberOneId, memberTwoId])
   @@index([memberTwoId])
@@ -130,9 +248,9 @@ model Credit {
 }
 
 model Department {
-  id           String    @id @default(cuid())
+  id           String        @id @default(cuid())
   name         String
-  value        String    @unique
+  value        String        @unique
   code         String?
   category     String
   image        String
@@ -141,13 +259,13 @@ model Department {
   description  String?
   headDoctorId String?
   floorNumber  Int?
-  roomCount    Int?      @default(0)
-  bedCount     Int?      @default(0)
-  isActive     Boolean   @default(true)
+  roomCount    Int?          @default(0)
+  bedCount     Int?          @default(0)
+  isActive     Boolean       @default(true)
   hospitalId   String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  hospital     Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  hospital     Hospital?     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   users        User[]
   appointments Appointment[]
 }
@@ -180,23 +298,25 @@ model Hospital {
   licenceNo      String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  departments     Department[]
-  users           User[]
+  departments    Department[]
+  users          User[]
 }
 
 model Member {
-  id                                            String          @id @default(cuid())
-  role                                          MemberRole      @default(PATIENT)
-  userId                                        String
-  serverId                                      String
-  createdAt                                     DateTime        @default(now())
-  updatedAt                                     DateTime        @updatedAt
-  conversationsAsMemberOne                      Conversation[]  @relation("Conversation_memberOneIdToMember")
-  conversationsAsMemberTwo                      Conversation[]  @relation("Conversation_memberTwoIdToMember")
-  directMessages                                DirectMessage[]
-  server                                        Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  user                                          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages                                      Message[]
+  id                       String          @id @default(cuid())
+  role                     MemberRole      @default(PATIENT)
+  userId                   String
+  serverId                 String
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  conversationsAsMemberOne Conversation[]  @relation("Conversation_memberOneIdToMember")
+  conversationsAsMemberTwo Conversation[]  @relation("Conversation_memberTwoIdToMember")
+  directMessages           DirectMessage[]
+  server                   Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages                 Message[]
+  workspace                Workspace?      @relation(fields: [workspaceId], references: [id])
+  workspaceId              String?
 
   @@index([serverId])
   @@index([userId])
@@ -234,17 +354,6 @@ model Permission {
   roles       Role[]   @relation("PermissionToRole")
 }
 
-model Profile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  info      Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
 model Role {
   id          String       @id @default(cuid())
   title       String       @unique
@@ -255,34 +364,6 @@ model Role {
   updatedAt   DateTime     @updatedAt
   permissions Permission[] @relation("PermissionToRole")
   users       User[]       @relation("RoleToUser")
-}
-
-model Server {
-  id          String    @id @default(cuid())
-  userId      String
-  name        String
-  description String?
-  imageUrl    String?
-  inviteCode  String    @unique
-  selected    Boolean   @default(false)
-  type        String    @default("default")
-  default     Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  channels    Channel[]
-  members     Member[]
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model Setting {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  info      Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Tag {
@@ -297,63 +378,6 @@ model Tag {
   Category    Category[]
 
   @@index([slug])
-}
-
-model User {
-  id                                      String        @id @default(cuid())
-  sku                                     String?
-  uuid                                    String?
-  displayName                             String?
-  username                                String?       @unique
-  email                                   String?       @unique
-  phone                                   String?       @unique
-  avatar                                  String?
-  isVerified                              Boolean       @default(false)
-  isActive                                Boolean       @default(false)
-  password                                String?
-  uid                                     String?
-  provider                                String?
-  departmentId                            String?
-  hospitalId                              String?
-  role                                    ROLE          @default(GUEST)
-  demographic                             Json?
-  vitals                                  Json?
-  medicalHistory                          Json?
-  allergies                               Json?
-  insurance                               Json?
-  emergencyContact                        Json?
-  webDeviceToken                          String?
-  deviceToken                             String?
-  expoPushToken                           String?
-  refreshToken                            String?
-  accessToken                             String?
-  forgotPasswordToken                     String?
-  forgotPasswordTokenExpiry               DateTime?
-  verifyToken                             String?
-  verifyTokenExpiry                       DateTime?
-  lastActive                              DateTime?
-  createdAt                               DateTime      @default(now())
-  updatedAt                               DateTime      @updatedAt
-  appointmentsAsDoctor                    Appointment[] @relation("Appointment_doctorIdToUser")
-  appointmentsAsPatient                   Appointment[] @relation("Appointment_patientIdToUser")
-  prescriptionsAsDoctor                   Prescription[] @relation("Prescription_doctorIdToUser")
-  prescriptionsAsPatient                  Prescription[] @relation("Prescription_patientIdToUser")
-  labOrdersAsRequester                    LabOrder[]    @relation("LabOrder_requesterIdToUser")
-  labOrdersAsPatient                      LabOrder[]    @relation("LabOrder_patientIdToUser")
-  invoices                                Invoice[]
-  admissions                              Admission[]
-  channels                                Channel[]
-  credit                                  Credit?
-  members                                 Member[]
-  profile                                 Profile?
-  servers                                 Server[]
-  setting                                 Setting?
-  department                              Department?   @relation(fields: [departmentId], references: [id])
-  hospital                                Hospital?     @relation(fields: [hospitalId], references: [id])
-  roles                                   Role[]                   @relation("RoleToUser")
-
-  @@index([email])
-  @@index([phone])
 }
 
 enum APPIONTMENTTYPE {
@@ -398,21 +422,21 @@ enum ROLE {
 }
 
 model Prescription {
-  id              String             @id @default(cuid())
-  serverId        String?
-  patientId       String
-  doctorId        String
-  appointmentId   String?
-  diagnosis       String?
-  notes           String?
-  status          PRESCRIPTIONSTATUS @default(ACTIVE)
-  refillsRemaining Int               @default(0)
-  prescribedDate  DateTime           @default(now())
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  doctor          User               @relation("Prescription_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
-  patient         User               @relation("Prescription_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
-  items           PrescriptionItem[]
+  id               String             @id @default(cuid())
+  serverId         String?
+  patientId        String
+  doctorId         String
+  appointmentId    String?
+  diagnosis        String?
+  notes            String?
+  status           PRESCRIPTIONSTATUS @default(ACTIVE)
+  refillsRemaining Int                @default(0)
+  prescribedDate   DateTime           @default(now())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  doctor           User               @relation("Prescription_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient          User               @relation("Prescription_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  items            PrescriptionItem[]
 }
 
 model PrescriptionItem {
@@ -430,56 +454,56 @@ model PrescriptionItem {
 }
 
 model LabOrder {
-  id               String          @id @default(cuid())
-  serverId         String?
-  patientId        String
-  requesterId      String
-  appointmentId    String?
-  priority         LABPRIORITY     @default(ROUTINE)
-  status           LABORDERSTATUS  @default(ORDERED)
-  notes            String?
+  id                String         @id @default(cuid())
+  serverId          String?
+  patientId         String
+  requesterId       String
+  appointmentId     String?
+  priority          LABPRIORITY    @default(ROUTINE)
+  status            LABORDERSTATUS @default(ORDERED)
+  notes             String?
   sampleCollectedAt DateTime?
-  completedAt      DateTime?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  patient          User            @relation("LabOrder_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
-  requester        User            @relation("LabOrder_requesterIdToUser", fields: [requesterId], references: [id], onDelete: Cascade)
-  results          LabResult[]
+  completedAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  patient           User           @relation("LabOrder_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  requester         User           @relation("LabOrder_requesterIdToUser", fields: [requesterId], references: [id], onDelete: Cascade)
+  results           LabResult[]
 }
 
 model LabResult {
-  id          String   @id @default(cuid())
-  orderId     String
-  testName    String
-  value       String
-  unit        String?
-  range       String?
-  status      String?
-  notes       String?
-  recordedAt  DateTime @default(now())
-  order       LabOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  orderId    String
+  testName   String
+  value      String
+  unit       String?
+  range      String?
+  status     String?
+  notes      String?
+  recordedAt DateTime @default(now())
+  order      LabOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model InventoryItem {
-  id            String          @id @default(cuid())
-  serverId      String?
-  sku           String?         @unique
-  name          String
-  genericName   String?
-  category      String?
-  description   String?
-  quantity      Int             @default(0)
-  reorderLevel  Int             @default(10)
-  unit          String?
-  costPrice     Float?
-  sellingPrice  Float?
-  expiryDate    DateTime?
-  batchNumber   String?
-  location      String?
-  isActive      Boolean         @default(true)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  movements     StockMovement[]
+  id           String          @id @default(cuid())
+  serverId     String?
+  sku          String?         @unique
+  name         String
+  genericName  String?
+  category     String?
+  description  String?
+  quantity     Int             @default(0)
+  reorderLevel Int             @default(10)
+  unit         String?
+  costPrice    Float?
+  sellingPrice Float?
+  expiryDate   DateTime?
+  batchNumber  String?
+  location     String?
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  movements    StockMovement[]
 }
 
 model StockMovement {
@@ -497,82 +521,82 @@ model StockMovement {
 }
 
 model Room {
-  id           String     @id @default(cuid())
+  id           String   @id @default(cuid())
   serverId     String?
-  roomNumber   String     @unique
-  type         ROOMTYPE   @default(GENERAL)
+  roomNumber   String   @unique
+  type         ROOMTYPE @default(GENERAL)
   floor        Int?
   departmentId String?
   beds         Bed[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Bed {
-  id           String        @id @default(cuid())
+  id           String             @id @default(cuid())
   roomId       String
   bedNumber    String
-  status       BEDSTATUS     @default(AVAILABLE)
+  status       BEDSTATUS          @default(AVAILABLE)
   housekeeping HOUSEKEEPINGSTATUS @default(CLEAN)
-  room         Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room         Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
   admissions   Admission[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 model Admission {
-  id               String    @id @default(cuid())
-  serverId         String?
-  patientId        String
-  bedId            String
-  admittedAt       DateTime  @default(now())
-  dischargedAt     DateTime?
-  status           String    @default("admitted") // admitted, discharged, transferred
-  reason           String?
-  notes            String?
-  patient          User      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  bed              Bed       @relation(fields: [bedId], references: [id], onDelete: Cascade)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  serverId     String?
+  patientId    String
+  bedId        String
+  admittedAt   DateTime  @default(now())
+  dischargedAt DateTime?
+  status       String    @default("admitted") // admitted, discharged, transferred
+  reason       String?
+  notes        String?
+  patient      User      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  bed          Bed       @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Invoice {
-  id              String        @id @default(cuid())
-  serverId        String?
-  invoiceNumber   String        @unique
-  patientId       String
-  subtotal        Float         @default(0)
-  tax             Float         @default(0)
-  discount        Float         @default(0)
-  total           Float         @default(0)
-  amountPaid      Float         @default(0)
-  balance         Float         @default(0)
-  status          INVOICESTATUS @default(UNPAID)
-  dueDate         DateTime?
-  patient         User          @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  items           InvoiceItem[]
-  payments        Payment[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id            String        @id @default(cuid())
+  serverId      String?
+  invoiceNumber String        @unique
+  patientId     String
+  subtotal      Float         @default(0)
+  tax           Float         @default(0)
+  discount      Float         @default(0)
+  total         Float         @default(0)
+  amountPaid    Float         @default(0)
+  balance       Float         @default(0)
+  status        INVOICESTATUS @default(UNPAID)
+  dueDate       DateTime?
+  patient       User          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  items         InvoiceItem[]
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model InvoiceItem {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   invoiceId   String
   description String
-  quantity    Int      @default(1)
+  quantity    Int     @default(1)
   unitPrice   Float
   total       Float
-  source      String?  // appointment, pharmacy, lab, etc
+  source      String? // appointment, pharmacy, lab, etc
   sourceId    String?
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
   id            String   @id @default(cuid())
   invoiceId     String
   amount        Float
-  method        String?  // cash, card, online
+  method        String? // cash, card, online
   reference     String?
   transactionId String?
   notes         String?
