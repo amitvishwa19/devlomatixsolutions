@@ -14,6 +14,8 @@ class WhatsAppManager {
     contacts = [];
     currentSessionId = null;
     userId = null;
+    workspaceId = null;
+    connectedAt = null;
 
     getState() {
         return this.state;
@@ -42,7 +44,8 @@ class WhatsAppManager {
         return {
             id: this.sock.user.id,
             name: this.sock.user.name,
-            imgUrl: this.sock.user.imgUrl
+            imgUrl: this.sock.user.imgUrl,
+            connectedAt: this.connectedAt
         };
     }
 
@@ -65,6 +68,8 @@ class WhatsAppManager {
                 where: { sessionId }
             });
             this.userId = authRecord?.userId || null;
+            // Attempt to get metadata from authRecord if workspaceId was stored there
+            this.workspaceId = authRecord?.metadata?.workspaceId || null;
 
             this.sock = makeWASocket({
                 version,
@@ -102,6 +107,7 @@ class WhatsAppManager {
                 } else if (connection === 'open') {
                     this.state = 'open';
                     this.qrString = null;
+                    if (!this.connectedAt) this.connectedAt = Date.now();
                 }
             });
 
@@ -136,6 +142,22 @@ class WhatsAppManager {
                                     }
                                 })
                             );
+
+                            if (this.workspaceId) {
+                                dbActions.push(
+                                    db.systemLog.create({
+                                        data: {
+                                            workspaceId: this.workspaceId,
+                                            userId: this.userId,
+                                            message: `${fromMe ? 'Outgoing' : 'Incoming'} message ${fromMe ? 'to' : 'from'} ${jid.split('@')[0]}`,
+                                            type: fromMe ? 'MESSAGE_OUT' : 'MESSAGE_IN',
+                                            level: 'info',
+                                            provider: 'wa-business-api',
+                                            details: { jid, text }
+                                        }
+                                    })
+                                );
+                            }
                         }
                     }
                 }
@@ -280,6 +302,7 @@ class WhatsAppManager {
         this.qrString = null;
         this.messages = [];
         this.userId = null;
+        this.connectedAt = null;
     }
 }
 

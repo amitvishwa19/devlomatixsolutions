@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import * as cloudApi from "@/app/workspace/[workspaceId]/wa/_lib/whatsapp-cloud-api";
+import * as cloudApi from "@/app/workspace/[workspaceId]/wa-cloud-api/_lib/whatsapp-cloud-api";
 import { symmetricDecrypt } from "@/lib/encryption";
 
 const SyncTemplatesSchema = z.object({
@@ -109,10 +109,10 @@ const handler = async (data) => {
             }
         }
 
-        return { 
-            success: true, 
+        return {
+            success: true,
             count: metaTemplates.length,
-            synced: syncResults.length 
+            synced: syncResults.length
         };
 
     } catch (error) {

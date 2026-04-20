@@ -3,9 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 model User {
@@ -222,9 +220,9 @@ model Role {
   users       User[]       @relation("RoleToUser")
 
   // Inheritance
-  parentId    String?
-  parent      Role?        @relation("RoleInheritance", fields: [parentId], references: [id])
-  children    Role[]       @relation("RoleInheritance")
+  parentId String?
+  parent   Role?   @relation("RoleInheritance", fields: [parentId], references: [id])
+  children Role[]  @relation("RoleInheritance")
 }
 
 model Permission {
@@ -398,7 +396,9 @@ model Contact {
   email           String?
   type            String?          @default("CONTACT") // CONTACT, CLIENT, LEAD
   platform        String?          @default("WHATSAPP")
+  color           String?
   info            Json?
+  category        String?
   tags            String[]         @default([])
   whatsappName    String?
   lastMessage     String?
@@ -408,9 +408,8 @@ model Contact {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
-  category        Category?        @relation(fields: [categoryId], references: [id])
-  categoryId      String?
   subscribed      Boolean          @default(true)
+  verified        Boolean          @default(false)
 
   @@unique([workspaceId, phone])
   @@index([userId])
@@ -584,7 +583,6 @@ model Category {
   children    Category[] @relation("CategoryHierarchy")
   posts       Post[]
   jobs        Job[]
-  contacts    Contact[]
 
   @@unique([workspaceId, name])
   @@unique([workspaceId, slug])
@@ -650,6 +648,7 @@ model SystemLog {
   message     String?
   details     Json?
   userId      String?
+  provider    String?
   createdAt   DateTime @default(now())
 
   @@index([workspaceId])
@@ -1133,25 +1132,25 @@ model EmailAssignment {
 }
 
 model AgentModel {
-  id           String   @id @default(cuid())
+  id           String                 @id @default(cuid())
   workspaceId  String
   provider     String
   name         String
   apiKey       String
   description  String?
-  healthStatus String   @default("UNTESTED")
+  healthStatus String                 @default("UNTESTED")
   latency      String?
   successRate  String?
   capability   String?
   bestFor      String?
   baseUrl      String?
-  isDefault    Boolean  @default(false)
-  isActive     Boolean  @default(true)
+  isDefault    Boolean                @default(false)
+  isActive     Boolean                @default(true)
   metadata     Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignments  AgentModelAssignment[]
 
   @@index([workspaceId])
@@ -1159,41 +1158,41 @@ model AgentModel {
 }
 
 model AIAgent {
-  id           String      @id @default(cuid())
-  workspaceId  String
-  name         String
-  role         String?
-  type         String      @default("OpenClaw")
-  status       String      @default("offline")
-  description  String?
-  isMain       Boolean     @default(false)
-  
+  id          String  @id @default(cuid())
+  workspaceId String
+  name        String
+  role        String?
+  type        String  @default("OpenClaw")
+  status      String  @default("offline")
+  description String?
+  isMain      Boolean @default(false)
+
   // Hierarchy: Master -> Sub relationship
-  parentId     String?
-  parent       AIAgent?    @relation("AgentHierarchy", fields: [parentId], references: [id])
-  subAgents    AIAgent[]   @relation("AgentHierarchy")
-  
+  parentId  String?
+  parent    AIAgent?  @relation("AgentHierarchy", fields: [parentId], references: [id])
+  subAgents AIAgent[] @relation("AgentHierarchy")
+
   // Model Fallback Logic
-  strategy     String      @default("SEQUENTIAL") // SEQUENTIAL, PARALLEL
-  models       AgentModelAssignment[]
-  
-  config       Json? // Additional task-specific configuration
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  userId       String
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  strategy String                 @default("SEQUENTIAL") // SEQUENTIAL, PARALLEL
+  models   AgentModelAssignment[]
+
+  config    Json? // Additional task-specific configuration
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([userId])
 }
 
 model AgentModelAssignment {
-  id           String      @id @default(cuid())
-  agentId      String
-  modelId      String
-  priority     Int         @default(0) // 0 = Primary, 1+ = Fallbacks
-  agent        AIAgent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  model        AgentModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  id       String     @id @default(cuid())
+  agentId  String
+  modelId  String
+  priority Int        @default(0) // 0 = Primary, 1+ = Fallbacks
+  agent    AIAgent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  model    AgentModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
 
   @@unique([agentId, modelId])
   @@index([agentId])

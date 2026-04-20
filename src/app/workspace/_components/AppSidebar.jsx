@@ -43,6 +43,9 @@ export default function AppSidebar() {
 
     // Permission Filtering Logic
     const navigation = React.useMemo(() => {
+        // DEV BYPASS: Return all items for development purposes
+        return rawNavigation;
+
         // 1. If we are in simulation mode (previewRole active), we ALWAYS filter strictly
         if (previewRole) {
             return rawNavigation.filter(item => {

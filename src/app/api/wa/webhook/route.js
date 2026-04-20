@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
-import { getMediaUrl } from "@/app/workspace/[workspaceId]/wa/_lib/whatsapp-cloud-api";
+import { getMediaUrl } from "@/app/workspace/[workspaceId]/wa-cloud-api/_lib/whatsapp-cloud-api";
 
 // The VERIFY_TOKEN is now strictly tied to the ENCRYPTION_KEY environment variable
 const VERIFY_TOKEN = process.env.ENCRYPTION_KEY;
@@ -105,16 +105,16 @@ export async function POST(req) {
                         try {
                             const decryptedStr = symmetricDecrypt(stored);
                             cloudCreds = JSON.parse(decryptedStr);
-                        } catch (e) {}
+                        } catch (e) { }
                     } else if (typeof stored === 'string') {
-                        try { cloudCreds = JSON.parse(stored); } catch (e) {}
+                        try { cloudCreds = JSON.parse(stored); } catch (e) { }
                     } else { cloudCreds = stored; }
 
                     if (cloudCreds?.enc) {
                         try {
                             const decryptedStr = symmetricDecrypt(cloudCreds.enc);
                             cloudCreds = JSON.parse(decryptedStr);
-                        } catch (e) {}
+                        } catch (e) { }
                     }
 
                     const credPhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
@@ -137,7 +137,7 @@ export async function POST(req) {
                     // Normalize JID: Ensure no '+' or spaces, and append @s.whatsapp.net
                     const cleanPhone = from.replace(/\D/g, '');
                     const contactJid = `${cleanPhone}@s.whatsapp.net`;
-                    
+
                     const msgId = message.id;
                     const timestamp = message.timestamp;
 
@@ -169,7 +169,7 @@ export async function POST(req) {
                                     } else if (typeof stored === 'string') {
                                         cloudCreds = JSON.parse(stored);
                                     } else { cloudCreds = stored; }
-                                    
+
                                     if (cloudCreds?.enc) {
                                         cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
                                     }
@@ -232,7 +232,7 @@ export async function POST(req) {
                     // Phase 2: Trigger Bot Engine
                     try {
                         const workspaceId = targetCred.workspaceId || "cmnbhifag000458ikwhv1zso2";
-                        const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa/_lib/bot-engine");
+                        const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa-cloud-api/_lib/bot-engine");
                         waBotEngine.processIncomingMessage(userId, workspaceId, from, textBody).catch(e => console.error('[Webhook] Bot Error:', e));
                     } catch (botErr) {
                         console.error('[Webhook] Bot Engine Trigger Error:', botErr);

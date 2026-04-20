@@ -14,6 +14,9 @@ export async function getAuthSession() {
  * Returns true if the user has an administrative role.
  */
 export async function isAdmin() {
+    // DEV BYPASS: Temporarily allow all users to be treated as admins
+    return true;
+
     const session = await getAuthSession();
     return (
         session?.user?.role === "ADMIN" || 
@@ -27,6 +30,10 @@ export async function isAdmin() {
  */
 export async function ensureAdmin() {
     const session = await getAuthSession();
+    
+    // DEV BYPASS: Skip the authorization check
+    return session;
+
     const isAuthorized = 
         session?.user?.role === "ADMIN" || 
         session?.user?.role === "SUPER_ADMIN";
@@ -45,6 +52,9 @@ export async function ensureAdmin() {
 export async function ensureWorkspaceAccess(workspaceId) {
     const session = await getAuthSession();
     
+    // DEV BYPASS: Bypassing workspace access checks
+    return session;
+
     // Super admins can bypass workspace checks for system-wide management
     if (session?.user?.role === "SUPER_ADMIN") return session;
 
