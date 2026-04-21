@@ -1,439 +1,449 @@
-import { useState, useEffect } from"react";
-import { Plus, Pencil, Shield, X, Loader } from"lucide-react";
-import { Button } from"@/components/ui/button";
-import { Input } from"@/components/ui/input";
-import { Label } from"@/components/ui/label";
-import { Textarea } from"@/components/ui/textarea";
-import { Checkbox } from"@/components/ui/checkbox";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Plus, Pencil, Shield, ShieldAlert, X, Loader, Workflow } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
- Sheet,
- SheetContent,
- SheetDescription,
- SheetFooter,
- SheetHeader,
- SheetTitle,
- SheetTrigger,
-} from"@/components/ui/sheet";
-import { ScrollArea } from"@/components/ui/scroll-area";
-import { toast } from"sonner";
-import { useAction } from"@/hooks/use-action";
-import { upsertPermission } from"../../_action/upsert-permission";
-import { useSession } from"next-auth/react";
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import { useAction } from "@/hooks/use-action";
+import { upsertPermission } from "../../_action/upsert-permission";
+import { useSession } from "next-auth/react";
+import { GeneralPermissionForm } from "./GeneralPermissionForm";
+import { NavigationPermissionForm } from "./NavigationPermissionForm";
+import { PermissionInfo } from "./PermissionInfo";
+import { SecurityFlow } from "../shared/SecurityFlow";
+import { getSidebarItems } from "@/constants/sidebar-items";
 
 const defaultActionOptions = [
- { id:"view", label:"View", description:"Read-only access"},
- { id:"create", label:"Create", description:"Add new items"},
- { id:"edit", label:"Edit", description:"Modify existing items"},
- { id:"delete", label:"Delete", description:"Remove items"},
- { id:"manage", label:"Manage", description:"Full control"},
- { id:"export", label:"Export", description:"Export data"},
- { id:"import", label:"Import", description:"Import data"},
+    { id: "view", label: "View", description: "Read-only access" },
+    { id: "create", label: "Create", description: "Add new items" },
+    { id: "edit", label: "Edit", description: "Modify existing items" },
+    { id: "delete", label: "Delete", description: "Remove items" },
 ];
 
 const colorOptions = [
- { id:"emerald", label:"Emerald", color:"#15803D"},
- { id:"blue", label:"Blue", color:"#2563EB"},
- { id:"purple", label:"Purple", color:"#9333EA"},
- { id:"amber", label:"Amber", color:"#F59E0B"},
- { id:"rose", label:"Rose", color:"#F43F5E"},
- { id:"cyan", label:"Cyan", color:"#06B6D4"},
- { id:"orange", label:"Orange", color:"#F97316"},
- { id:"teal", label:"Teal", color:"#14B8A6"},
+    { id: "emerald", label: "Emerald", color: "#15803D" },
+    { id: "blue", label: "Blue", color: "#2563EB" },
+    { id: "purple", label: "Purple", color: "#9333EA" },
+    { id: "amber", label: "Amber", color: "#F59E0B" },
+    { id: "rose", label: "Rose", color: "#F43F5E" },
+    { id: "cyan", label: "Cyan", color: "#06B6D4" },
+    { id: "orange", label: "Orange", color: "#F97316" },
+    { id: "teal", label: "Teal", color: "#14B8A6" },
 ];
 
 const formatCategoryName = (category) => {
- return category
- .split("_")
- .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
- .join("");
+    return category
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join("");
 };
 
 export default function PermissionEditor({
- isOpen,
- onClose,
- mode ="add",
- category,
- editData,
- onSubmit,
- trigger,
- open: controlledOpen,
- onOpenChange: controlledOnOpenChange,
+    isOpen,
+    onClose,
+    mode = "add",
+    category,
+    editData,
+    onSubmit,
+    trigger,
+    open: controlledOpen,
+    onOpenChange: controlledOnOpenChange,
 }) {
- const [internalOpen, setInternalOpen] = useState(false);
- const [loading, setLoading] = useState(false);
+    const params = useParams();
+    const workspaceId = params.workspaceId;
 
- const { data: session } = useSession()
+    const normalizePath = (url) => {
+        if (!url) return null;
+        // Strip /workspace/[id] prefix
+        return url.replace(/^\/workspace\/[^/]+/, '') || '/';
+    };
+    const [internalOpen, setInternalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
- const isControlled = controlledOpen !== undefined;
- const open = isControlled ? controlledOpen : internalOpen;
- const setOpen = (value) => {
- if (isControlled) {
- controlledOnOpenChange?.(value);
- } else {
- setInternalOpen(value);
- }
- };
+    const { data: session } = useSession()
 
- const [moduleName, setModuleName] = useState("");
- const [selectedActions, setSelectedActions] = useState([]);
- const [description, setDescription] = useState("");
- const [selectedColor, setSelectedColor] = useState("emerald");
- const [customActions, setCustomActions] = useState([]);
- const [newActionName, setNewActionName] = useState("");
- const [newActionDescription, setNewActionDescription] = useState("");
+    const isControlled = controlledOpen !== undefined;
+    const open = isControlled ? controlledOpen : internalOpen;
+    const setOpen = (value) => {
+        if (isControlled) {
+            controlledOnOpenChange?.(value);
+        } else {
+            setInternalOpen(value);
+        }
+    };
 
- const actionOptions = [...defaultActionOptions, ...customActions];
+    const [moduleName, setModuleName] = useState("");
+    const [selectedActions, setSelectedActions] = useState([]);
+    const [description, setDescription] = useState("");
+    const [selectedColor, setSelectedColor] = useState("emerald");
+    const [customActions, setCustomActions] = useState([]);
+    const [newActionName, setNewActionName] = useState("");
+    const [newActionDescription, setNewActionDescription] = useState("");
+    const [selectedNavItems, setSelectedNavItems] = useState([]);
 
- useEffect(() => {
- if (open && category) {
- setModuleName(category);
+    const actionOptions = [...defaultActionOptions, ...customActions];
 
- if (mode ==="edit"&& editData?.permissions) {
- const activeActions = [];
- Object.entries(editData.permissions).forEach(([actionId, perm]) => {
- if (perm?.status === true) {
- activeActions.push(actionId);
- }
- });
- setSelectedActions(activeActions);
- setDescription(editData.displayName ||"");
+    useEffect(() => {
+        if (open && category) {
+            setModuleName(category);
 
- const colorId =
- colorOptions.find((c) => c.color === editData.permissions?.view?.color)?.id ||"emerald";
- setSelectedColor(colorId);
- } else {
- setModuleName(category ||"");
- setSelectedActions([]);
- setDescription("");
- setSelectedColor("emerald");
- }
- }
- }, [open, mode, category, editData]);
+            if (mode === "edit" && editData?.permissions) {
+                const activeActions = [];
+                Object.entries(editData.permissions).forEach(([actionId, perm]) => {
+                    if (perm?.status === true) {
+                        activeActions.push(actionId);
+                    }
+                });
+                setSelectedActions(activeActions);
+                setDescription(editData.displayName || "");
 
- const handleActionToggle = (actionId) => {
- setSelectedActions((prev) =>
- prev.includes(actionId) ? prev.filter((a) => a !== actionId) : [...prev, actionId]
- );
- };
+                const colorId =
+                    colorOptions.find((c) => c.color === editData.permissions?.view?.color)?.id || "emerald";
+                setSelectedColor(colorId);
 
- const handleSelectAll = () => {
- if (selectedActions.length === actionOptions.length) {
- setSelectedActions([]);
- } else {
- setSelectedActions(actionOptions.map((a) => a.id));
- }
- };
+                // Load Navigation Permissions
+                const navItems = [];
+                Object.entries(editData.permissions).forEach(([actionId, perm]) => {
+                    const isNav = perm?.value?.startsWith("navbar:") || perm?.value?.startsWith("navigation.");
+                    if (isNav && perm?.status === true) {
+                        // Support both legacy "navbar:category:slug" and new "navigation.slug"
+                        if (perm.value.startsWith("navigation.")) {
+                            navItems.push(perm.value); // Use full value for matching
+                        } else {
+                            const parts = perm.value.split(":");
+                            if (parts.length >= 3) {
+                                navItems.push(`${parts[1]}:${parts[2]}`);
+                            }
+                        }
+                    }
+                });
+                setSelectedNavItems(navItems);
+            } else {
+                setModuleName(category || "");
+                // Pre-select core CRUD actions by default
+                setSelectedActions(['view', 'create', 'edit', 'delete']);
+                setDescription("");
+                setSelectedColor("emerald");
+                setSelectedNavItems([]);
+            }
+        }
+    }, [open, mode, category, editData, workspaceId]);
 
- const handleAddCustomAction = () => {
- const trimmedName = newActionName.trim();
- if (!trimmedName) {
- toast.error("Action name is required");
- return;
- }
+    const handleActionToggle = (actionId) => {
+        setSelectedActions((prev) =>
+            prev.includes(actionId) ? prev.filter((a) => a !== actionId) : [...prev, actionId]
+        );
+    };
 
- const actionId = trimmedName.toLowerCase().replace(/\s+/g,"_");
+    const handleSelectAll = () => {
+        if (selectedActions.length === actionOptions.length) {
+            setSelectedActions([]);
+        } else {
+            setSelectedActions(actionOptions.map((a) => a.id));
+        }
+    };
 
- if (actionOptions.some((a) => a.id === actionId)) {
- toast.error("Action already exists");
- return;
- }
+    const handleAddCustomAction = () => {
+        const trimmedName = newActionName.trim();
+        if (!trimmedName) {
+            toast.error("Action name is required");
+            return;
+        }
 
- const newAction = {
- id: actionId,
- label: trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1),
- description: newActionDescription.trim() || `${trimmedName} permission`,
- isCustom: true,
- };
+        const actionId = trimmedName.toLowerCase().replace(/\s+/g, "_");
 
- setCustomActions((prev) => [...prev, newAction]);
- setSelectedActions((prev) => [...prev, actionId]);
- setNewActionName("");
- setNewActionDescription("");
- toast.success(`Added"${newAction.label}"action`);
- };
+        if (actionOptions.some((a) => a.id === actionId)) {
+            toast.error("Action already exists");
+            return;
+        }
 
- const { execute } = useAction(upsertPermission, {
- onSuccess: (data) => {
- setLoading(false);
- toast.success(mode ==="edit"?"Permissions updated":"Permissions created", { id:"permission-form"});
- onSubmit?.(data.permissions);
- handleOpenClose();
- },
- onError: (error) => {
- console.error(error);
- toast.error("Failed to save permissions. Please try again.", { id:"permission-form"});
- setLoading(false);
- }
- });
+        const newAction = {
+            id: actionId,
+            label: trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1),
+            description: newActionDescription.trim() || `${trimmedName} permission`,
+            isCustom: true,
+        };
 
- const handleSubmit = async () => {
- if (!moduleName.trim()) {
- toast.error("Module name required");
- return;
- }
- if (selectedActions.length === 0) {
- toast.error("Select at least one action");
- return;
- }
+        setCustomActions((prev) => [...prev, newAction]);
+        setSelectedActions((prev) => [...prev, actionId]);
+        setNewActionName("");
+        setNewActionDescription("");
+        toast.success(`Added"${newAction.label}"action`);
+    };
 
- const categorySlug = moduleName.toLowerCase().replace(/\s+/g,"_");
- const colorValue = colorOptions.find((c) => c.id === selectedColor)?.color ||"#15803D";
+    const { execute } = useAction(upsertPermission, {
+        onSuccess: (data) => {
+            setLoading(false);
+            toast.success(mode === "edit" ? "Permissions updated" : "Permissions created", { id: "permission-form" });
+            onSubmit?.(data.permissions);
+            handleOpenClose();
+        },
+        onError: (error) => {
+            console.error(error);
+            toast.error("Failed to save permissions. Please try again.", { id: "permission-form" });
+            setLoading(false);
+        }
+    });
 
- const permissionsPayload = actionOptions.map((action) => ({
- // If editing and permission exists, keep its ID
- id: mode ==="edit"&& editData?.permissions[action.id]?.id
- ? editData.permissions[action.id].id
- : `new-${categorySlug}-${action.id}-${Date.now()}`,
- title: `${action.label} ${formatCategoryName(categorySlug)}`,
- value: `${categorySlug}.${action.id}`,
- description: description || `${action.label} permission for ${formatCategoryName(categorySlug)}`,
- category: categorySlug,
- color: colorValue,
- status: selectedActions.includes(action.id),
- }));
+    const getPermissionsPayload = () => {
+        const categorySlug = moduleName.toLowerCase().replace(/\s+/g, "_");
+        const colorValue = colorOptions.find((c) => c.id === selectedColor)?.color || "#15803D";
 
- setLoading(true);
- toast.loading(mode ==="edit"?"Updating...":"Creating...", { id:"permission-form"});
- await execute({ userId: session.user?.userId || session.user?.id, formData: permissionsPayload });
- };
+        const actionPermissions = actionOptions.map((action) => ({
+            id: mode === "edit" && editData?.permissions[action.id]?.id
+                ? editData.permissions[action.id].id
+                : `new-${categorySlug}-${action.id}-${Date.now()}`,
+            title: `${action.label} ${formatCategoryName(categorySlug)}`,
+            value: `${categorySlug}.${action.id}`,
+            description: description || `${action.label} permission for ${formatCategoryName(categorySlug)}`,
+            category: categorySlug,
+            color: colorValue,
+            type: "general",
+            status: selectedActions.includes(action.id),
+        }));
 
- const handleOpenClose = () => {
- setLoading(false);
- setModuleName("");
- setSelectedActions([]);
- setDescription("");
- setSelectedColor("emerald");
- setCustomActions([]);
- setNewActionName("");
- setNewActionDescription("");
- setOpen(false);
- onClose?.();
- };
+        const sidebarItems = getSidebarItems(workspaceId);
+        const navbarPermissions = [];
 
- const isValid = moduleName.trim() && selectedActions.length > 0;
- const categorySlug = moduleName.toLowerCase().replace(/\s+/g,"_");
+        sidebarItems.forEach((item) => {
+            const relativeUrl = normalizePath(item.url);
+            const slug = relativeUrl === '/' ? 'home' : relativeUrl.replace(/^\//, '').replace(/\//g, '.');
+            const dbValue = `navigation.${slug}`;
 
- return (
- <Sheet open={open} onOpenChange={(val) => {
- if (!val) handleOpenClose();
- else setOpen(true);
- }}>
- {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
- <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
- <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
- <SheetHeader className="border-b p-6 bg-muted/5">
- <div className="flex items-center gap-4">
- <div className="p-3 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
- {mode ==="edit"? (
- <Pencil className="w-6 h-6 text-primary"/>
- ) : (
- <Shield className="w-6 h-6 text-primary animate-pulse-slow"/>
- )}
- </div>
- <div>
- <SheetTitle className="text-xl font-bold tracking-tight">
- {mode ==="edit"?"Refine Permissions":"Define New Module"}
- </SheetTitle>
- <SheetDescription className="text-sm opacity-70">
- {mode ==="edit"
- ? `Fine-tuning access for the"${category}"ecosystem`
- :"Establish a new security perimeter within the app"}
- </SheetDescription>
- </div>
- </div>
- </SheetHeader>
+            navbarPermissions.push({
+                id: mode === "edit" && editData?.permissions[dbValue]?.id
+                    ? editData.permissions[dbValue].id
+                    : `nav-${categorySlug}-${slug}-${Date.now()}`,
+                title: `Navigation ${item.title}`,
+                value: dbValue,
+                description: `Access to ${item.title} in the ${item.category} group`,
+                category: categorySlug,
+                color: colorValue,
+                type: "navigation",
+                url: relativeUrl,
+                status: selectedNavItems.includes(dbValue) || selectedNavItems.some(id => {
+                    // Backwards compatibility check for old IDs like "Workspace:chats"
+                    if (typeof id !== 'string') return false;
+                    const parts = id.split(':');
+                    return parts.length >= 2 && parts[1] === slug;
+                }),
+            });
+        });
 
- <ScrollArea className="flex-1 h-[80vh] p-6">
- <div className="space-y-8 pb-10">
- <div className="space-y-4">
- <div className="grid gap-2 p-1">
- <Label htmlFor="moduleName"className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Module Identity</Label>
- <Input
- id="moduleName"
- value={moduleName}
- onChange={(e) => setModuleName(e.target.value)}
- className="bg-secondary/30 border-border/40 h-12 rounded-md text-lg font-medium focus:ring-primary/20"
- placeholder="e.g. Content Analytics"
- />
- {moduleName && (
- <div className="flex items-center gap-2 ml-1">
- <div className="w-1 h-1 rounded-full bg-primary"/>
- <p className="text-[10px] text-muted-foreground font-mono opacity-60">
- System Slug: <span className="text-primary">{categorySlug}</span>
- </p>
- </div>
- )}
- </div>
+        return [...actionPermissions, ...navbarPermissions];
+    };
 
- <div className="grid gap-3">
- <Label className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Visual Signature</Label>
- <div className="flex flex-wrap gap-2.5 p-3 rounded-md bg-secondary/20 border border-border/30">
- {colorOptions.map((color) => (
- <button
- key={color.id}
- type="button"
- onClick={() => setSelectedColor(color.id)}
- className={`w-6 h-6 rounded-md transition-all duration-300 relative group ${selectedColor === color.id
- ?"ring-2 ring-primary ring-offset-4 ring-offset-background scale-110 shadow-lg"
- :"hover:scale-110 opacity-60 hover:opacity-100"
- }`}
- style={{ backgroundColor: color.color }}
- title={color.label}
- >
- {selectedColor === color.id && <div className="absolute inset-0 rounded-md bg-white/20 animate-pulse"/>}
- </button>
- ))}
- </div>
- </div>
- </div>
+    const handleSubmit = async () => {
+        if (!moduleName.trim()) {
+            toast.error("Module name required");
+            return;
+        }
+        if (selectedActions.length === 0 && selectedNavItems.length === 0) {
+            toast.error("Select at least one action or navigation item");
+            return;
+        }
 
- <div className="space-y-4">
- <div className="flex items-center justify-between mx-1">
- <Label className="text-xs font-black uppercase tracking-widest opacity-50">Operation Scopes ({selectedActions.length})</Label>
- <Button type="button"variant="ghost"size="xs"onClick={handleSelectAll} className="h-7 text-[10px] font-bold uppercase tracking-tighter">
- {selectedActions.length === actionOptions.length ?"Clear All":"Select Global"}
- </Button>
- </div>
- <div className="grid grid-cols-2 gap-3">
- {actionOptions.map((action) => (
- <label
- key={action.id}
- onClick={(e) => {
- handleActionToggle(action.id);
- e.stopPropagation();
- }}
- className={`flex items-start gap-3 p-4 rounded-md border transition-all duration-500 cursor-pointer group ${selectedActions.includes(action.id)
- ?"border-primary/50 bg-primary/5 shadow-md shadow-primary/5"
- :"border-border/40 bg-muted/10 hover:border-primary/30 hover:bg-muted/30"
- }`}
- >
- <Checkbox
- checked={selectedActions.includes(action.id)}
- onCheckedChange={() => handleActionToggle(action.id)}
- className="mt-1 transition-transform group-hover:scale-110"
- onClick={(e) => e.stopPropagation()}
- />
+        const permissionsPayload = getPermissionsPayload();
 
- <div className="flex-1 min-w-0">
- <span className="text-xs font-bold block mb-0.5">
- {action.label}
- {action.isCustom && (
- <span className="ml-1.5 text-[8px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full uppercase tracking-tighter leading-none align-middle">custom</span>
- )}
- </span>
- <p className="text-[10px] text-muted-foreground opacity-60 line-clamp-1">{action.description}</p>
- </div>
- {action.isCustom && (
- <button
- type="button"
- onClick={(e) => {
- e.stopPropagation();
- setCustomActions((prev) => prev.filter((a) => a.id !== action.id));
- setSelectedActions((prev) => prev.filter((a) => a !== action.id));
- }}
- className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive transition-colors shrink-0"
- >
- <X className="w-3 h-3"/>
- </button>
- )}
- </label>
- ))}
+        setLoading(true);
+        toast.loading(mode === "edit" ? "Updating..." : "Creating...", { id: "permission-form" });
+        await execute({ userId: session.user?.userId || session.user?.id, formData: permissionsPayload });
+    };
 
- <div className="col-span-2 p-5 rounded-md border border-dashed border-primary/20 bg-primary/[0.02] mt-2 relative overflow-hidden group">
- <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
- <Plus className="w-20 h-20 -mr-6 -mt-6 rotate-12"/>
- </div>
- <div className="flex items-center gap-2 mb-4">
- <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
- <Plus className="w-3 h-3 text-primary font-bold"/>
- </div>
- <span className="text-xs font-black uppercase tracking-widest text-primary/80">Extended Action</span>
- </div>
- <div className="space-y-3 relative z-10">
- <Input
- value={newActionName}
- onChange={(e) => setNewActionName(e.target.value)}
- placeholder="Action identifier (e.g. Audit)"
- className="bg-background border-border/40 rounded-md text-xs"
- />
- <Input
- value={newActionDescription}
- onChange={(e) => setNewActionDescription(e.target.value)}
- placeholder="Contextual description"
- className="bg-background border-border/40 rounded-md text-xs"
- />
- <Button
- type="button"
- size="sm"
- variant="primary"
- onClick={handleAddCustomAction}
- disabled={!newActionName.trim()}
- className="w-full rounded-md shadow-lg shadow-primary/10"
- >
- Append Scoped Action
- </Button>
- </div>
- </div>
- </div>
- </div>
+    const handleOpenClose = () => {
+        setLoading(false);
+        setModuleName("");
+        setSelectedActions([]);
+        setDescription("");
+        setSelectedColor("emerald");
+        setCustomActions([]);
+        setNewActionName("");
+        setNewActionDescription("");
+        setSelectedNavItems([]);
+        setOpen(false);
+        onClose?.();
+    };
 
- <div className="space-y-3">
- <Label htmlFor="description"className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Module Context</Label>
- <Textarea
- id="description"
- rows='6'
- value={description}
- onChange={(e) => setDescription(e.target.value)}
- className="bg-secondary/30 border-border/40 rounded-md resize-none min-h-[100px] p-4 text-xs"
- placeholder={`High-level overview of the ${formatCategoryName(categorySlug ||"module")} scope...`}
- />
- </div>
+    const isValid = moduleName.trim() && (selectedActions.length > 0 || selectedNavItems.length > 0);
+    const categorySlug = moduleName.toLowerCase().replace(/\s+/g, "_");
 
- {moduleName && selectedActions.length > 0 && (
- <div className="p-6 rounded-md bg-primary/[0.03] border border-primary/10 space-y-4 shadow-inner">
- <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase opacity-60">Security Manifest Preview</p>
- <div className="grid grid-cols-2 gap-3">
- {selectedActions.map((action) => (
- <div key={action} className="text-[11px] p-3 rounded-md bg-background/80 border border-border/30 shadow-sm flex flex-col gap-1">
- <span className="font-bold text-foreground">
- {action.charAt(0).toUpperCase() + action.slice(1)}{""}
- {formatCategoryName(categorySlug)}
- </span>
- <span className="font-mono text-[9px] text-primary/70">
- {categorySlug}.{action}
- </span>
- </div>
- ))}
- </div>
- </div>
- )}
- </div>
- </ScrollArea>
+    return (
+        <Sheet open={open} onOpenChange={(val) => {
+            if (!val) handleOpenClose();
+            else setOpen(true);
+        }}>
+            {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
+            <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
+                <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
+                    <SheetHeader className="border-b p-6 bg-muted/5">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
+                                {mode === "edit" ? (
+                                    <Pencil className="w-6 h-6 text-primary" />
+                                ) : (
+                                    <Shield className="w-6 h-6 text-primary animate-pulse-slow" />
+                                )}
+                            </div>
+                            <div>
+                                <SheetTitle className="text-xl font-bold ">
+                                    {mode === "edit" ? "Refine Permissions" : "Define New Permission"}
+                                </SheetTitle>
+                                <SheetDescription className="text-xs opacity-60">
+                                    {mode === "edit"
+                                        ? `Fine-tuning access for the "${category}" ecosystem`
+                                        : "Establish a new security perimeter within the app"}
+                                </SheetDescription>
+                            </div>
+                        </div>
+                    </SheetHeader>
 
- <SheetFooter className="p-6 border-t bg-muted/5 flex-row justify-end items-center gap-4">
- <Button
- variant="ghost"
- onClick={handleOpenClose}
- disabled={loading}
- className="rounded-md font-bold text-xs uppercase tracking-widest px-8"
- >
- Discard
- </Button>
- <Button
- onClick={handleSubmit}
- disabled={!isValid || loading}
- className="rounded-md font-black text-xs uppercase tracking-widest px-8 shadow-xl shadow-primary/20"
- >
- {loading ? (
- <Loader className="w-5 h-5 animate-spin mr-2"/>
- ) : (
- mode ==="edit"? <Pencil className="w-4 h-4 mr-2"/> : <Plus className="w-4 h-4 mr-2"/>
- )}
- {mode ==="edit"?"Commit Changes":"Deploy Permissions"}
- </Button>
- </SheetFooter>
- </div>
- </SheetContent >
- </Sheet >
- );
+                    <ScrollArea className="h-[82vh]">
+                        <Accordion type="single" collapsible defaultValue="permission-info" className="px-4 py-2 space-y-2">
+
+                            {/* Permission Info */}
+                            <AccordionItem value="permission-info" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors group-data-[state=open]/item:border-b border-primary/10 cursor-pointer">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <Shield className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">Permission Information</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">Identity and visual signature</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-0 pb-0 p-4">
+                                    <PermissionInfo
+                                        moduleName={moduleName}
+                                        setModuleName={setModuleName}
+                                        categorySlug={categorySlug}
+                                        selectedColor={selectedColor}
+                                        setSelectedColor={setSelectedColor}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
+
+
+                            {/* General Permissions */}
+                            <AccordionItem value="general" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10 bg-muted/40">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <ShieldAlert className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">General Permissions</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">Operation scopes and access levels</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="">
+                                    <GeneralPermissionForm
+                                        categorySlug={categorySlug}
+                                        selectedActions={selectedActions}
+                                        handleSelectAll={handleSelectAll}
+                                        actionOptions={actionOptions}
+                                        handleActionToggle={handleActionToggle}
+                                        setCustomActions={setCustomActions}
+                                        setSelectedActions={setSelectedActions}
+                                        newActionName={newActionName}
+                                        setNewActionName={setNewActionName}
+                                        newActionDescription={newActionDescription}
+                                        setNewActionDescription={setNewActionDescription}
+                                        handleAddCustomAction={handleAddCustomAction}
+                                        description={description}
+                                        setDescription={setDescription}
+                                        formatCategoryName={formatCategoryName}
+                                        moduleName={moduleName}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
+
+
+                            {/* Navigation Permissions */}
+                            <AccordionItem value="navigation" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10 bg-muted/40">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <Plus className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">Navigation Access</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">UI sidebar routes and menu assignment</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-0 pb-0">
+                                    <NavigationPermissionForm
+                                        selectedNavItems={selectedNavItems}
+                                        setSelectedNavItems={setSelectedNavItems}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            {/* Structural Impact Analysis */}
+                            <AccordionItem value="flow" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                <AccordionTrigger className="px-4 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10 bg-muted/40">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                            <Workflow className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left py-1">
+                                            <h4 className="text-sm font-bold tracking-tight">Structural Impact Analysis</h4>
+                                            <p className="text-[10px] text-muted-foreground opacity-60">Visualize system reach & perimeter impact</p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-0 pb-0">
+                                    <SecurityFlow
+                                        activePermissions={getPermissionsPayload().filter(p => p.status)}
+                                    />
+                                </AccordionContent>
+                            </AccordionItem>
+
+                        </Accordion>
+                    </ScrollArea>
+
+                    <SheetFooter className="p-4 border-t bg-muted/5 flex-row justify-end items-center gap-4">
+                        <Button
+                            variant="outline"
+                            onClick={handleOpenClose}
+                            disabled={loading}
+                            className="rounded-md font-bold text-xs uppercase tracking-wide px-8"
+                        >
+                            Discard
+                        </Button>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={!isValid || loading}
+                            className="rounded-md px-8 shadow-xl shadow-primary/20"
+                        >
+                            {loading ? (
+                                <Loader className="w-5 h-5 animate-spin mr-2" />
+                            ) : (
+                                mode === "edit" ? <Pencil className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />
+                            )}
+                            {mode === "edit" ? "Update Permissions" : "Save Permissions"}
+                        </Button>
+                    </SheetFooter>
+
+                </div>
+            </SheetContent >
+        </Sheet >
+    );
 }

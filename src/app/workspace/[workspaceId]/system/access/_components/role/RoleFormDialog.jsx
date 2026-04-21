@@ -1,374 +1,271 @@
-import { useEffect, useMemo, useState } from"react";
-import { useForm } from"react-hook-form";
-import { zodResolver } from"@hookform/resolvers/zod";
-import { z } from"zod";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, } from"@/components/ui/sheet";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from"@/components/ui/form";
-import { Input } from"@/components/ui/input";
-import { Textarea } from"@/components/ui/textarea";
-import { Button } from"@/components/ui/button";
-import { Checkbox } from"@/components/ui/checkbox";
-import { ScrollArea } from"@/components/ui/scroll-area";
-import { Switch } from"@/components/ui/switch";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, } from "@/components/ui/sheet";
+import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Loader, Save, ShieldUser, Check } from"lucide-react";
-import { toast } from"sonner";
+import { Loader, Save, ShieldUser, ShieldPlus, Plus, Check, Workflow } from "lucide-react";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
-import { useAccess } from"../../_provider/accessProvider";
-import { upsertRole } from"../../_action/upsert-role";
-import { useSession } from"next-auth/react";
-import { useAction } from"@/hooks/use-action";
+import { useAccess } from "@/providers/WorkspaceProvider";
+import { upsertRole } from "../../_action/upsert-role";
+import { useSession } from "next-auth/react";
+import { useAction } from "@/hooks/use-action";
+import { SecurityFlow } from "../shared/SecurityFlow";
+import { GeneralRoleForm } from "./GeneralRoleForm";
+import { RoleInfo } from "./RoleInfo";
+import { NavigationPermissionForm } from "../permission/NavigationPermissionForm";
 
 /* ------------------ Schema ------------------ */
 
 const roleSchema = z.object({
- id: z.string().optional(),
- title: z.string().min(2).max(50),
- description: z.string().min(10).max(200),
- color: z.string(),
- permissions: z.array(z.any()), // FULL permission objects
+    id: z.string().optional(),
+    title: z.string().min(2).max(50),
+    description: z.string().min(10).max(200),
+    color: z.string(),
+    permissions: z.array(z.any()), // FULL permission objects
+    parentId: z.string().optional().nullable(),
 });
 
-/* ------------------ Colors ------------------ */
-
-const colorPresets = [
-"#0d9488",
-"#3b82f6",
-"#8b5cf6",
-"#f59e0b",
-"#10b981",
-"#ec4899",
-"#6366f1",
-"#ef4444",
-];
 
 /* ================== COMPONENT ================== */
 
 export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
- const { permissions } = useAccess();
- const { data: session } = useSession();
- const [loading, setLoading] = useState(false);
+    const { permissions, roles, resolveRolePermissions } = useAccess();
+    const { data: session, update } = useSession();
+    const [loading, setLoading] = useState(false);
+
+    const form = useForm({
+        resolver: zodResolver(roleSchema),
+        defaultValues: {
+            id: "",
+            title: "",
+            description: "",
+            color: "#0d9488",
+            permissions: [],
+            parentId: "none",
+        },
+    });
+
+    const currentFormPermissions = form.watch("permissions") || [];
+    const activePermissions = currentFormPermissions.filter(p => p.status);
+
+    useEffect(() => {
+        if (!permissions?.length) return;
+
+        if (role) {
+            // EDIT MODE
+            const rolePermissionIds = new Set(
+                role.permissions.map((p) => (typeof p === "string" ? p : p.id))
+            );
+
+            form.reset({
+                id: role.id,
+                title: role.title,
+                description: role.description,
+                color: role.color,
+                permissions: permissions.map((p) => ({
+                    ...p,
+                    status: rolePermissionIds.has(p.id),
+                })),
+                parentId: role.parentId || "none",
+            });
+        } else {
+            // ADD MODE (ALL UNCHECKED)
+            form.reset({
+                id: "",
+                title: "",
+                description: "",
+                color: "#0d9488",
+                permissions: permissions.map((p) => ({
+                    ...p,
+                    status: false,
+                })),
+                parentId: "none",
+            });
+        }
+    }, [role, permissions]);
 
 
- const form = useForm({
- resolver: zodResolver(roleSchema),
- defaultValues: {
- id:"",
- title:"",
- description:"",
- color:"#0d9488",
- permissions: [],
- },
- });
 
- useEffect(() => {
- if (!permissions?.length) return;
-
- if (role) {
- // EDIT MODE
- const rolePermissionIds = new Set(
- role.permissions.map((p) => (typeof p ==="string"? p : p.id))
- );
-
- form.reset({
- id: role.id,
- title: role.title,
- description: role.description,
- color: role.color,
- permissions: permissions.map((p) => ({
- ...p,
- status: rolePermissionIds.has(p.id),
- })),
- });
- } else {
- // ADD MODE (ALL UNCHECKED)
- form.reset({
- id:"",
- title:"",
- description:"",
- color:"#0d9488",
- permissions: permissions.map((p) => ({
- ...p,
- status: false,
- })),
- });
- }
- }, [role, permissions]);
+    const { execute } = useAction(upsertRole, {
+        onSuccess: (data) => {
+            console.log('Role from server action', data.role)
+            toast.success("Role saved", { id: "role-data" });
+            update(); // PRODUCTION GRADE: Refresh session data immediately
+            onSubmit?.(data?.role);
+            handleOpenChange()
+        },
+        onError: (error) => {
+            const errorMsg = typeof error === 'string' ? error : (error?.message || "Failed to save role");
+            toast.error(errorMsg, { id: "role-data" });
+            setLoading(false);
+        },
+    });
 
 
- const permissionCategories = useMemo(() => {
- const groups = {};
- form.getValues("permissions")?.forEach((p) => {
- if (!groups[p.category]) groups[p.category] = [];
- groups[p.category].push(p);
- });
- return groups;
- }, [form.watch("permissions")]);
+    const handleSubmit = async (values) => {
+        setLoading(true);
+        toast.loading("Saving role...", { id: "role-data" });
+
+        const payload = {
+            ...values,
+            parentId: values.parentId === "none" ? null : values.parentId
+        };
+
+        await execute({ formData: payload });
+    };
 
 
- const togglePermission = (id) => {
- const current = form.getValues("permissions");
- form.setValue(
-"permissions",
- current.map((p) =>
- p.id === id ? { ...p, status: !p.status } : p
- )
- );
- };
+    const handleOpenChange = () => {
+        onClose()
+        setLoading(false)
+        form.reset()
+    }
 
- const toggleCategory = (perms) => {
- const current = form.getValues("permissions");
- const allActive = perms.every(
- (perm) => current.find((p) => p.id === perm.id)?.status
- );
+    return (
+        <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+            <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
+                <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
+                    <SheetHeader className="border-b p-6 bg-muted/5">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
+                                <ShieldUser className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                                <SheetTitle className="text-xl font-bold tracking-tight">
+                                    {role ? "Edit Role" : "Create Role"}
+                                </SheetTitle>
+                                <SheetDescription className="text-sm opacity-70">
+                                    Define role details and structural permissions
+                                </SheetDescription>
+                            </div>
+                        </div>
+                    </SheetHeader>
 
- form.setValue(
-"permissions",
- current.map((p) =>
- perms.some((perm) => perm.id === p.id)
- ? { ...p, status: !allActive }
- : p
- )
- );
- };
+                    <div id='tabbed-content' className="flex-1 flex flex-col overflow-hidden">
+                        <Form {...form}>
+                            <form
+                                onSubmit={form.handleSubmit(handleSubmit)}
+                                className="flex flex-col flex-1 overflow-hidden"
+                            >
+                                <ScrollArea className="flex-1 h-[82vh]">
+                                    <Accordion id='role-accordian' type="single" collapsible defaultValue="role-info" className="px-4 py-2 space-y-2">
 
- const toggleAll = () => {
- const current = form.getValues("permissions");
- const allActive = current.every((p) => p.status);
+                                        {/* Role Information */}
+                                        <AccordionItem value="role-info" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                            <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors group-data-[state=open]/item:border-b border-primary/10 cursor-pointer">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                                        <ShieldUser className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                    <div className="text-left py-1">
+                                                        <h4 className="text-sm font-bold tracking-tight">Role Information</h4>
+                                                        <p className="text-[10px] text-muted-foreground opacity-60">Identity and visual signature</p>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-0 pb-0">
+                                                <RoleInfo form={form} />
+                                            </AccordionContent>
+                                        </AccordionItem>
 
- form.setValue(
-"permissions",
- current.map((p) => ({ ...p, status: !allActive }))
- );
- };
+                                        {/* Permissions Assignment */}
+                                        <AccordionItem value="role-permissions" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                            <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                                        <ShieldPlus className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                    <div className="text-left py-1">
+                                                        <h4 className="text-sm font-bold tracking-tight">Permissions Assignment</h4>
+                                                        <p className="text-[10px] text-muted-foreground opacity-60">Operation scopes and access levels</p>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-0 pb-0">
+                                                <GeneralRoleForm form={form} />
+                                            </AccordionContent>
+                                        </AccordionItem>
 
- const { execute } = useAction(upsertRole, {
- onSuccess: (data) => {
- console.log('Role from server action', data.role)
- toast.success("Role saved", { id:"role-data"});
- onSubmit?.(data?.role);
- handleOpenChange()
- },
- onError: () => {
- toast.error("Failed to save role", { id:"role-data"});
- setLoading(false);
- },
- });
+                                        {/* Security Flow Analysis */}
+                                        <AccordionItem value="flow" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                            <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                                        <Workflow className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                    <div className="text-left py-1">
+                                                        <h4 className="text-sm font-bold tracking-tight">Security Impact Analysis</h4>
+                                                        <p className="text-[10px] text-muted-foreground opacity-60">Visualize structural reach & inheritance</p>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-0 pb-0">
+                                                <SecurityFlow
+                                                    role={form.getValues()}
+                                                    activePermissions={activePermissions}
+                                                />
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                        {/* Navigation Access */}
+                                        <AccordionItem value="role-navigation" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                            <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                                        <Plus className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                    <div className="text-left py-1">
+                                                        <h4 className="text-sm font-bold tracking-tight">Navigation Access</h4>
+                                                        <p className="text-[10px] text-muted-foreground opacity-60">UI sidebar routes and menu assignment</p>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-0 pb-0">
+                                                <NavigationPermissionForm form={form} />
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                    </Accordion>
+                                </ScrollArea>
+
+                                <SheetFooter className="p-2 pt-4 border-t bg-muted/5 flex-row justify-end items-center gap-4">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => handleOpenChange()}
+                                        disabled={loading}
+                                        className="rounded-md font-bold text-xs uppercase tracking-widest px-8"
+                                    >
+                                        Discard
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="rounded-md   px-8 shadow-xl shadow-primary/20"
+                                    >
+                                        {loading ? (
+                                            <Loader className="w-5 h-5 animate-spin mr-2" />
+                                        ) : (
+                                            <Save className="w-4 h-4 mr-2" />
+                                        )}
+                                        {role ? "Update Role" : "Save Role"}
+                                    </Button>
+                                </SheetFooter>
+                            </form>
+                        </Form>
+                    </div>
 
 
- const handleSubmit = async (values) => {
- console.log('values', values)
- setLoading(true);
- toast.loading(`${role ?"Updating":"Creating"} Role, please wait...`, { id:"role-data"});
- await execute({ userId: session?.user?.userId, formData: values });
 
- };
-
-
- const handleOpenChange = () => {
- onClose()
- setLoading(false)
- form.reset()
- }
-
- return (
- <Sheet open={isOpen} onOpenChange={handleOpenChange}>
- <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
- <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
- <SheetHeader className="border-b p-6 bg-muted/5">
- <div className="flex items-center gap-4">
- <div className="p-3 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
- <ShieldUser className="w-6 h-6 text-primary"/>
- </div>
- <div>
- <SheetTitle className="text-xl font-bold tracking-tight">
- {role ?"Edit Role":"Create Role"}
- </SheetTitle>
- <SheetDescription className="text-sm opacity-70">
- Define role details and structural permissions
- </SheetDescription>
- </div>
- </div>
- </SheetHeader>
-
- <Form {...form}>
- <form
- onSubmit={form.handleSubmit(handleSubmit)}
- className="flex flex-col flex-1 overflow-hidden"
- >
- <ScrollArea className="flex-1 h-[80vh] p-6">
- <div className="space-y-8 pb-10">
- <div className="space-y-4">
- {/* Role Name */}
- <FormField
- control={form.control}
- name="title"
- render={({ field }) => (
- <FormItem className="grid gap-2 p-1">
- <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Role Identity</FormLabel>
- <FormControl>
- <Input 
- {...field} 
- className="bg-secondary/30 border-border/40 h-12 rounded-md text-lg font-medium focus:ring-primary/20"
- placeholder="e.g. System Administrator"
- />
- </FormControl>
- <FormMessage />
- </FormItem>
- )}
- />
-
- {/* Color Picker */}
- <FormField
- control={form.control}
- name="color"
- render={({ field }) => (
- <FormItem className="grid gap-3">
- <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Visual Signature</FormLabel>
- <div className="flex flex-wrap gap-2.5 p-3 rounded-md bg-secondary/20 border border-border/30">
- {colorPresets.map((c) => {
- const selected = field.value === c;
- return (
- <button
- key={c}
- type="button"
- onClick={() => field.onChange(c)}
- className={`w-6 h-6 rounded-md transition-all duration-300 relative group ${selected
- ?"ring-2 ring-primary ring-offset-4 ring-offset-background scale-110 shadow-lg"
- :"hover:scale-110 opacity-60 hover:opacity-100"
- }`}
- style={{ backgroundColor: c }}
- title={c}
- >
- {selected && <div className="absolute inset-0 rounded-md bg-white/20 animate-pulse"/>}
- </button>
- );
- })}
- </div>
- <FormMessage />
- </FormItem>
- )}
- />
- </div>
-
- {/* Permissions */}
- <FormItem className="space-y-4">
- <div className="flex items-center justify-between mx-1">
- <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50">Operation Scopes</FormLabel>
- <Button type="button"variant="ghost"size="sm"onClick={toggleAll} className="h-7 text-[10px] font-bold uppercase tracking-tighter">
- {form.getValues("permissions")?.every(p => p.status) ?"Clear All":"Select Global"}
- </Button>
- </div>
-
- <div className="grid gap-4 sm:grid-cols-1">
- {Object.entries(permissionCategories).map(
- ([category, perms]) => {
- const allActive = perms.every((p) => p.status);
- return (
- <div
- key={category}
- className={`border rounded-md p-4 transition-all duration-500 ${allActive ?"border-primary/50 bg-primary/5 shadow-md shadow-primary/5":"border-border/40 bg-muted/5 hover:border-primary/30 hover:bg-muted/30"}`}
- >
- <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/40">
- <div>
- <h3 className="text-sm font-bold capitalize">
- {category.replace(/_/g,"")}
- </h3>
- <p className="text-[10px] font-mono text-primary/70 mt-0.5">
- {perms.filter((p) => p.status).length}/
- {perms.length} enabled
- </p>
- </div>
-
- <Switch
- checked={allActive}
- onCheckedChange={() =>
- toggleCategory(perms)
- }
- className='data-[state=unchecked]:bg-muted-foreground/30'
- />
- </div>
-
- <div className="grid grid-cols-2 gap-3 mt-4">
- {perms.map((p) => (
- <label
- key={p.id}
- className="flex items-start gap-3 p-2 rounded-md hover:bg-background/80 transition-colors cursor-pointer"
- >
- <Checkbox
- checked={p.status}
- onCheckedChange={() =>
- togglePermission(p.id)
- }
- className="mt-0.5 transition-transform hover:scale-110"
- />
- <div className="flex flex-col min-w-0 flex-1">
-                          <span className="text-xs font-bold leading-tight truncate">
-                            {p.title}
-                          </span>
- <span className="text-[9px] text-muted-foreground opacity-60 font-mono truncate">
- {p.value}
- </span>
- </div>
- </label>
- ))}
- </div>
- </div>
- )
- }
- )}
- </div>
- </FormItem>
-
- {/* Description */}
- <FormField
- control={form.control}
- name="description"
- render={({ field }) => (
- <FormItem className="space-y-3">
- <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Role Context</FormLabel>
- <FormControl>
- <Textarea 
- rows={4} 
- {...field} 
- className="bg-secondary/30 border-border/40 rounded-md resize-none min-h-[100px] p-4 text-xs"
- placeholder="High-level overview of the role scope..."
- />
- </FormControl>
- <FormMessage />
- </FormItem>
- )}
- />
- </div>
- </ScrollArea>
-
- <SheetFooter className="p-6 border-t bg-muted/5 flex-row justify-end items-center gap-4">
- <Button
- type="button"
- variant="ghost"
- onClick={() => handleOpenChange()}
- disabled={loading}
- className="rounded-md font-bold text-xs uppercase tracking-widest px-8"
- >
- Discard
- </Button>
- <Button 
- type="submit"
- disabled={loading}
- className="rounded-md font-black text-xs uppercase tracking-widest px-8 shadow-xl shadow-primary/20"
- >
- {loading ? (
- <Loader className="w-5 h-5 animate-spin mr-2"/>
- ) : (
- <Save className="w-4 h-4 mr-2"/>
- )}
- {role ?"Commit Changes":"Deploy Role"}
- </Button>
- </SheetFooter>
- </form>
- </Form>
- </div>
- </SheetContent>
- </Sheet>
- );
+                </div>
+            </SheetContent>
+        </Sheet>
+    );
 }

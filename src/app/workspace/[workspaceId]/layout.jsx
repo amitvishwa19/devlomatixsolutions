@@ -6,11 +6,13 @@ import { Inter } from "next/font/google";
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import AppTopNav from '../_components/AppTopNav';
 import AppSidebar from '../_components/AppSidebar';
+import { WorkspaceProvider } from '@/providers/WorkspaceProvider';
 const font = Inter({ subsets: ["latin"] });
 
 export default function WorkspaceLayout({ children }) {
     return (
-        <div className={`flex h-dvh max-w-[100vw] ${font.className} overflow-hidden bg-background`}>
+        <WorkspaceProvider>
+            <div className={`flex h-dvh max-w-[100vw] ${font.className} overflow-hidden bg-background`}>
             <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset className='flex flex-col w-full h-full transition-all p-2'>
@@ -18,8 +20,8 @@ export default function WorkspaceLayout({ children }) {
                         <AppTopNav />
                     </div>
                     <div className='flex-1 min-h-0 relative pt-0 overflow-hidden '>
-                        <div className='h-full relative border border-border rounded-md bg-card/50 overflow-hidden shadow-soft'>
-                            <ScrollArea className="h-full overflow-hidden ">
+                        <div className='h-full relative border border-border rounded-xl bg-card/50 overflow-hidden shadow-soft'>
+                            <ScrollArea className="h-full overflow-hidden relative">
                                 {children}
                                 <ScrollBar orientation="horizontal" />
                             </ScrollArea>
@@ -28,5 +30,6 @@ export default function WorkspaceLayout({ children }) {
                 </SidebarInset>
             </SidebarProvider>
         </div>
+        </WorkspaceProvider>
     )
 }

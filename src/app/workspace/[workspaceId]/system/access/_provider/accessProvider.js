@@ -14,6 +14,7 @@ export const AccessProvider = ({ children }) => {
  const [permissions, setPermissions] = useState([])
  const [departments, setDepartments] = useState([])
  const [loading, setLoading] = useState(true)
+ const [previewRole, setPreviewRole] = useState(null)
 
  const fetchAccessData = useCallback(async () => {
  try {
@@ -40,8 +41,46 @@ export const AccessProvider = ({ children }) => {
  }
  }, [workspaceId, fetchAccessData])
 
+  const resolveRolePermissions = useCallback((roleId) => {
+    if (!roleId) return [];
+    const role = roles.find(r => r.id === roleId);
+    if (!role) return [];
+
+    let allPermissions = [...(role.permissions || [])];
+    
+    // Recursive inheritance
+    if (role.parentId) {
+      const parentPermissions = resolveRolePermissions(role.parentId);
+      // Merge unique permissions
+      parentPermissions.forEach(pp => {
+        if (!allPermissions.find(p => p.id === pp.id)) {
+          allPermissions.push(pp);
+        }
+      });
+    }
+    
+    return allPermissions;
+  }, [roles]);
+
+  const activePermissions = useMemo(() => {
+    if (previewRole) {
+      return resolveRolePermissions(previewRole.id);
+    }
+    // Fallback to real user roles logic (needs user integration)
+    return [];
+  }, [previewRole, resolveRolePermissions]);
+
  return (
- <AccessContext.Provider value={{ users, setUsers, permissions, setPermissions, roles, setRoles, departments, setDepartments, loading }}>
+ <AccessContext.Provider value={{ 
+      users, setUsers, 
+      permissions, setPermissions, 
+      roles, setRoles, 
+      departments, setDepartments, 
+      loading, 
+      previewRole, setPreviewRole,
+      resolveRolePermissions,
+      activePermissions
+    }}>
  {children}
  </AccessContext.Provider>
  )

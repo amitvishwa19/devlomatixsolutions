@@ -7,7 +7,7 @@ import { StatsCard } from"./StatsCard.jsx";
 import { PermissionRow } from"./PermissionRow.jsx";
 import PermissionEditor from"./PermissionEditor.jsx";
 import { DeleteConfirmDialog } from"./DeleteConfirmDialog.jsx";
-import { useAccess } from"../../_provider/accessProvider.js";
+import { useAccess } from "@/providers/WorkspaceProvider";
 import { useAction } from"@/hooks/use-action.js";
 import { upsertPermission } from"../../_action/upsert-permission.js";
 import { useSession } from"next-auth/react";
@@ -23,9 +23,10 @@ const formatCategoryName = (category) => {
 };
 
 const getActionFromValue = (value) => {
- if (typeof value !=="string") return null;
- if (!value.includes(".")) return null;
- return value.split(".")[1] || null;
+  if (typeof value !== "string") return null;
+  if (value.startsWith("navigation.")) return value; // Return full value for navigation
+  if (!value.includes(".")) return null;
+  return value.split(".")[1] || null;
 };
 
 // Sample data
@@ -47,10 +48,10 @@ const samplePermissions = [
 ];
 
 export const PermissionMatrix = () => {
- const { permissions, setPermissions } = useAccess()
+ const { permissions, setPermissions, roles, users } = useAccess()
  const [searchQuery, setSearchQuery] = useState("");
  const [loading, setLoading] = useState(false);
- const { data: session } = useSession()
+ const { data: session, update } = useSession()
 
  const [editorModal, setEditorModal] = useState({
  isOpen: false,
@@ -64,18 +65,15 @@ export const PermissionMatrix = () => {
  module: null,
  });
 
- const [users] = useState([]);
- const [roles] = useState([]);
-
  const getUsersForPermission = (permissionId) => {
- const roleIds = roles?.filter(r => r.permissions?.includes(permissionId)) || [];
+ const assignedRoles = roles?.filter(r => r.permissions?.some(p => p.id === permissionId)) || [];
  const userIds = new Set();
- roleIds.forEach(role => role.users?.forEach(uid => userIds.add(uid)));
+ assignedRoles.forEach(role => role.users?.forEach(u => userIds.add(u.id)));
  return (users || []).filter(u => userIds.has(u.id));
  };
 
  const getRolesForPermission = (permissionId) => {
- return roles?.filter(r => r.permissions?.includes(permissionId)) || [];
+ return roles?.filter(r => r.permissions?.some(p => p.id === permissionId)) || [];
  };
 
  const originalPermissionsRef = useRef(null);
@@ -115,7 +113,8 @@ export const PermissionMatrix = () => {
  const action = getActionFromValue(permission.value);
  if (!action) return;
 
- grouped[category].permissions[action] = permission;
+ const key = permission.value.startsWith("navigation.") ? permission.value : action;
+ grouped[category].permissions[key] = permission;
  });
 
  return Object.values(grouped);
@@ -172,6 +171,7 @@ export const PermissionMatrix = () => {
  onSuccess: (data) => {
  setLoading(false);
  toast.success('Permission updated successfully', { id:'update-permission'})
+ update(); // PRODUCTION GRADE: Refresh session data immediately
  },
  onError: (error) => {
  console.log(error)
@@ -213,7 +213,6 @@ export const PermissionMatrix = () => {
  toast.loading(`Syncing ${totalChanges} permission changes...`, { id:'update-permission'});
  
  await execute({ 
- userId: session?.user?.userId, 
  formData: [...newlyCreated, ...changed] 
  });
 

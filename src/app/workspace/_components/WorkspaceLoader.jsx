@@ -53,7 +53,7 @@ export default function WorkspaceLoader({ redirectTo, setup = false, onSetupComp
                     {/* App Title */}
                     <div className="text-center space-y-2">
                         <h1 className="text-3xl font-bold text-primary max-w-4xl mx-auto">
-                            Engineering the Future. Scalable Code, Intelligent Solutions
+                            The ultimate SaaS mission control for high-performance agent deployment and multi-tenant workspace management. Built for scale.
                         </h1>
                         <div className='flex items-center justify-center'>
                             <div className='w-[80%] md:w-[60%]'>

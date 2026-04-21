@@ -60,7 +60,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
                             <div className='flex flex-row items-center gap-2'>
                                 <Avatar className='w-10 rounded-md border border-border/50'>
-                                    <AvatarImage src={session?.user?.image} alt="@shadcn" className='' />
+                                    <AvatarImage src={session?.user?.image || "https://lh3.googleusercontent.com/a/ACg8ocKFKuVVmRRA0xuXy97X6b9NOS1zP6n-xV8g-MLOtyE0AZswtH1K=s96-c"} alt="@shadcn" className='' />
                                     <AvatarFallback className='rounded-md capitalize font-bold text-xl border'>{getInitials(session?.user?.displayName)}</AvatarFallback>
                                 </Avatar>
                                 {!collapsed && (
@@ -92,7 +92,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-md border border-border/50">
-                                    <AvatarImage src={session?.user?.image || session?.user?.image} alt="@shadcn" className='' />
+                                    <AvatarImage src={session?.user?.image || "https://lh3.googleusercontent.com/a/ACg8ocKFKuVVmRRA0xuXy97X6b9NOS1zP6n-xV8g-MLOtyE0AZswtH1K=s96-c"} alt="@shadcn" className='' />
                                     <AvatarFallback className='rounded-xl'>{session?.user?.displayName?.substring(0, 1)}</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">

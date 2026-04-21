@@ -1,5 +1,5 @@
 import React, { useState } from'react'
-import { useAccess } from'../../_provider/accessProvider'
+import { useAccess } from '@/providers/WorkspaceProvider'
 import { Plus, Search, ShieldOff } from'lucide-react'
 import { Input } from'@/components/ui/input'
 import { Button } from'@/components/ui/button'

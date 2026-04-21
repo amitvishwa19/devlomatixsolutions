@@ -4,7 +4,7 @@ import { Activity, Key, Shield, ShieldOff, Users } from'lucide-react'
 import { Button } from'@/components/ui/button'
 import { useSession } from'next-auth/react'
 import { StatCard } from'./dashboard/StatCard'
-import { useAccess } from'../_provider/accessProvider'
+import { useAccess } from '@/providers/WorkspaceProvider'
 import { RoleCard } from'./role/RoleCard'
 
 

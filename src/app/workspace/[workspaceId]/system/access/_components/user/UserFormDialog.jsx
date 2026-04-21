@@ -15,7 +15,7 @@ import { useAction } from '@/hooks/use-action';
 import { upsertUser } from '../../_action/upsert-user';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
-import { useAccess } from '../../_provider/accessProvider';
+import { useAccess } from '@/providers/WorkspaceProvider';
 import { DepartmentMultiSelect } from './DepartmentMultiSelect';
 import { RoleSelect } from './RoleSelect';
 import { MultiSelectDropDown } from '@/components/global/MultiSelectDropDown';
@@ -29,7 +29,7 @@ const userFormSchema = z.object({
 });
 
 export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
-    const { data: session } = useSession()
+    const { data: session, update } = useSession()
     const [loading, setloading] = useState(false)
     const isEditing = !!user;
     const { departments } = useAccess()
@@ -79,6 +79,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
         onSuccess: (data) => {
             onSubmit(data.user)
             handleOpenClose()
+            update(); // PRODUCTION GRADE: Refresh session data immediately
             toast.success(`${user ? 'User updated successfully' : 'User created successfully'}`, { id: 'new-user' })
         },
         onError: (error) => {
@@ -92,7 +93,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
         console.log('User data', data)
         setloading(true);
         toast.loading(user ? 'Updating user...' : 'Creating user...', { id: 'new-user' })
-        await execute({ userId: session?.user?.userId, formData: data })
+        await execute({ formData: data })
     };
 
     const handleOpenClose = () => {

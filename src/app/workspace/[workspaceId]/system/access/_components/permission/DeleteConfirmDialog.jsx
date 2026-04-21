@@ -3,7 +3,7 @@ import { useAction } from"@/hooks/use-action";
 import { Loader } from"lucide-react";
 import { useState } from"react";
 import { deletePermission } from"../../_action/delete-permission";
-import { useAccess } from"../../_provider/accessProvider";
+import { useAccess } from "@/providers/WorkspaceProvider";
 import { useSession } from"next-auth/react";
 import { toast } from"sonner";
 import { Button } from"@/components/ui/button";

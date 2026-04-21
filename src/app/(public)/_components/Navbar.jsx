@@ -165,8 +165,9 @@ const Navbar = () => {
                         {/* <ThemeSwitcher /> */}
 
                         {session && (
-                            session.user.role === 'ADMIN' ||
-                            session.user.role === 'SUPERADMIN' ||
+                            session.user.role === 'admin' ||
+                            session.user.role === 'superadmin' ||
+                            session.user.role === 'super-admin' ||
                             session.user.roles?.some(role => role.title === 'workspace')
                         ) ? (
                             <Link href="/workspace">
@@ -258,6 +259,8 @@ const Navbar = () => {
                                 </Link>
                             )
                         )}
+
+
                         <div className="flex gap-2 mt-3">
                             {session && (
                                 session.user.role === 'admin' ||

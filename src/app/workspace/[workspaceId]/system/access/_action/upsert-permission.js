@@ -4,50 +4,72 @@ import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { slug } from "@/utils/functions";
 
+import { ensureAdmin } from "@/lib/auth-utils";
+
 const UpsertPermission = z.object({
-  userId: z.string(),
   formData: z.any(),
 });
 
 const handler = async (data) => {
-  const { userId, formData } = data
+  const session = await ensureAdmin();
+  const userId = session.user.userId;
+  const { formData } = data
   let permissions
 
   try {
-    // We use an Interactive Transaction to properly handle bulk operations
+    // Use an Interactive Transaction with a high timeout to handle the large manifest reliably
     permissions = await db.$transaction(async (tx) => {
-      return await Promise.all(formData.map(async (item) => {
-        const isNew = String(item.id).startsWith("new-");
+      // 1. Separate items by status
+      const toUpsert = formData.filter(item => item.status === true);
+      const toRemove = formData.filter(item => item.status === false);
+
+      // 2. Perform Clean-up (Selected Only Model)
+      // We only delete module-specific functional permissions. 
+      // We NEVER delete shared 'navbar:' items during a module-specific save to avoid breaking other modules.
+      const removeValues = toRemove
+        .filter(item => !item.value.startsWith('navbar:') && !item.value.startsWith('navigation.'))
+        .map(item => item.value);
+
+      if (removeValues.length > 0) {
+        await tx.permission.deleteMany({
+          where: {
+            value: { in: removeValues }
+          }
+        });
+      }
+
+      // 3. Perform Upserts for active grants
+      const results = [];
+      for (const item of toUpsert) {
+        const permissionValue = item?.value || slug(item?.title);
         
-        return tx.permission.upsert({
-          where: { id: isNew ? '000' : item.id },
+        const result = await tx.permission.upsert({
+          where: { value: permissionValue },
           update: {
             title: item?.title,
-            value: slug(item?.value || item?.title), // Normalize value to slug
             description: item?.description,
             category: item?.category,
+            type: item?.type || "general",
+            url: item?.url || null,
             status: item.status,
             color: item.color
           },
           create: {
             title: item?.title,
-            value: slug(item?.value || item?.title), // Normalize value to slug
+            value: permissionValue,
             description: item?.description,
             category: item?.category,
+            type: item?.type || "general",
+            url: item?.url || null,
             status: item.status,
             color: item.color
-          },
-          include: {
-            roles: {
-              include: {
-                users: true
-              }
-            }
-          },
+          }
         });
-      }));
+        results.push(result);
+      }
+      return results;
     }, {
-      timeout: 30000 // 30 seconds for bulk operations
+      timeout: 60000 // 60 seconds
     });
 
   } catch (error) {
