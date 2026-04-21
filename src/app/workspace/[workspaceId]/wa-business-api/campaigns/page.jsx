@@ -56,6 +56,7 @@ export default function CampaignsPage() {
     // Modals
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [triggeringId, setTriggeringId] = useState(null);
     const [activeCampaign, setActiveCampaign] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
@@ -112,10 +113,14 @@ export default function CampaignsPage() {
 
     const { execute: executeTrigger } = useAction(triggerCampaign, {
         onSuccess: () => {
-            toast.success("Campaign deployment synchronized");
+            toast.success("Campaign broadcast started.");
+            setTriggeringId(null);
             fetchInitialData(true);
         },
-        onError: (err) => toast.error(err)
+        onError: (err) => {
+            toast.error(err);
+            setTriggeringId(null);
+        }
     });
 
     const fetchInitialData = useCallback((silent = false) => {
@@ -221,7 +226,8 @@ export default function CampaignsPage() {
     };
 
     const handleTrigger = (id) => {
-        executeTrigger({ workspaceId, campaignId: id });
+        setTriggeringId(id);
+        executeTrigger({ workspaceId, id, action: 'start' });
     };
 
     const getStatusBadge = (status) => {
@@ -446,9 +452,19 @@ export default function CampaignsPage() {
                                                     </td>
                                                     <td className="px-4 py-3.5">
                                                         <div className="flex items-center justify-end gap-1">
-                                                            <Button size="sm" variant="outline" className="h-7 px-3 text-[11px] font-semibold gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/50 transition-all" onClick={() => handleTrigger(c.id)}>
-                                                                <Play className="w-3 h-3" />
-                                                                Run
+                                                            <Button 
+                                                                size="sm" 
+                                                                variant="outline" 
+                                                                disabled={triggeringId === c.id}
+                                                                className="h-7 px-3 text-[11px] font-semibold gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/50 transition-all" 
+                                                                onClick={() => handleTrigger(c.id)}
+                                                            >
+                                                                {triggeringId === c.id ? (
+                                                                    <RefreshCw className="w-3 h-3 animate-spin" />
+                                                                ) : (
+                                                                    <Play className="w-3 h-3" />
+                                                                )}
+                                                                {triggeringId === c.id ? 'Starting...' : 'Run'}
                                                             </Button>
                                                             <Button variant="ghost" size="icon" className="w-7 h-7 rounded-md hover:bg-primary/10 hover:text-primary transition-all text-muted-foreground/60 hover:text-primary" onClick={() => handleEdit(c)} title="Edit Campaign">
                                                                 <Edit2 className="w-3 h-3" />

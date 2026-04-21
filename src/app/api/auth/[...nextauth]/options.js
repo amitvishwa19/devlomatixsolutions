@@ -65,7 +65,12 @@ export const authOptions = {
                     return Promise.reject(new Error("WRONG_PASSWORD"));
                 }
 
-                // 5. SUCCESS
+                // 5. CHECK VERIFICATION
+                if (!user.isVerified) {
+                    return Promise.reject(new Error("ACCOUNT_NOT_VERIFIED"));
+                }
+
+                // 6. SUCCESS
                 return user;
             }
 
@@ -142,6 +147,7 @@ export const authOptions = {
                 session.user.avatar = token.avatar;
                 session.user.role = token.role;
                 session.user.roles = token.roles;
+                session.user.workspaces = token.workspaces;
             }
             return session
         },
@@ -152,21 +158,37 @@ export const authOptions = {
                 token.role = user.role;
             }
 
-            // Fetch roles and extra info if not in token or on sign in
-            if (!token.roles || trigger === "signIn") {
-                const usr = await db.user.findUnique({
-                    where: { email: token.email },
-                    include: {
-                        roles: true
+            // Production Grade: Fetch roles and extra info on sign-in or when an update is triggered
+            if (!token.roles || trigger === "signIn" || trigger === "update") {
+                try {
+                    const usr = await db.user.findUnique({
+                        where: { email: token.email },
+                        include: {
+                            members: {
+                                select: {
+                                    serverId: true,
+                                    role: true
+                                }
+                            },
+                            roles: {
+                                include: {
+                                    permissions: true
+                                }
+                            }
+                        }
+                    });
+                    
+                    if (usr) {
+                        token.userId = usr.id;
+                        token.displayName = usr.displayName;
+                        token.avatar = usr.avatar;
+                        token.role = usr.role;
+                        token.roles = usr.roles;
+                        token.workspaces = usr.members.map(m => m.serverId);
                     }
-                });
-
-                if (usr) {
-                    token.userId = usr.id;
-                    token.displayName = usr.displayName;
-                    token.avatar = usr.avatar;
-                    token.role = usr.role;
-                    token.roles = usr.roles;
+                } catch (error) {
+                    console.error("[NextAuth Security Layer] Failed to enrich session token:", error);
+                    // On error, we keep the original token to prevent a full lockout
                 }
             }
 
@@ -174,7 +196,7 @@ export const authOptions = {
         }
     },
     pages: {
-        signIn: '/login',
+        signIn: '/',
         signOut: '/logout',
         error: '/error', // Error code passed in query string as ?error=
         verifyRequest: '/verify-request', // (used for check email message)

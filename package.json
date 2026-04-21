@@ -10,7 +10,9 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "email": "email dev --dir src/emails",
-    "fast": "next dev --turbo"
+    "fast": "next dev --turbo",
+    "env:setup": "node scripts/manage-env.cjs --install",
+    "env:switch": "node scripts/manage-env.cjs --switch"
   },
   "dependencies": {
     "@faker-js/faker": "^10.1.0",
@@ -154,6 +156,7 @@
     "react-is": "^19.2.4",
     "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
+    "react-qr-code": "^2.0.18",
     "react-redux": "^9.2.0",
     "react-resizable-panels": "^4.9.0",
     "react-speech-recognition": "^4.0.1",
@@ -171,6 +174,7 @@
     "uploadthing": "^7.7.4",
     "use-debounce": "^10.0.6",
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },

@@ -1,88 +1,109 @@
-
 'use client'
-import { ShieldOff, ArrowLeft, Hospital, Heart } from "lucide-react";
+import React from 'react';
+import { ShieldAlert, ArrowLeft, Rocket, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { AppLogo } from "@/components/global/AppLogo";
 
 const Unauthorized = () => {
     const router = useRouter();
 
     const handleGoBack = () => {
-        if (window.history.length > 1) {
-            router.push(-1);
-        } else {
-            router.push("/");
-        }
+        router.push("/");
     };
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
-            {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,25%)] via-[hsl(200,70%,35%)] to-[hsl(180,60%,40%)]" />
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0B0F19] text-white">
 
-            {/* Decorative circles */}
-            <div className="absolute top-[-10%] right-[-5%] h-[500px] w-[500px] rounded-full bg-white/5 blur-3xl" />
-            <div className="absolute bottom-[-15%] left-[-10%] h-[600px] w-[600px] rounded-full bg-white/5 blur-3xl" />
-            <div className="absolute top-[20%] left-[10%] h-[200px] w-[200px] rounded-full bg-white/10 blur-2xl" />
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#00F0FF]/5 blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#00F0FF]/5 blur-[120px]" />
+                <div
+                    className="absolute inset-0 opacity-[0.03]"
+                    style={{
+                        backgroundImage: `linear-gradient(to right, #00F0FF 1px, transparent 1px), linear-gradient(to bottom, #00F0FF 1px, transparent 1px)`,
+                        backgroundSize: '40px 40px'
+                    }}
+                />
+            </div>
+            {/* Ambient Background Glows - Mirroring AuthLayout */}
+            <div className="fixed inset-0 pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#00F0FF]/5 blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#00F0FF]/5 blur-[120px]" />
 
-            {/* Floating medical icons */}
-            <Heart className="absolute top-[15%] right-[15%] h-8 w-8 text-white/10 animate-pulse" />
-            <Heart className="absolute bottom-[25%] left-[20%] h-6 w-6 text-white/10 animate-pulse" />
-
-            {/* Hospital branding header */}
-            <div className="absolute top-6 left-6 flex items-center gap-2 text-white/90">
-                <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
-                    <Hospital className="h-6 w-6" />
-                </div>
-                <span className="font-semibold text-lg">MediCare HMS</span>
+                {/* Subtle Grid Pattern */}
+                <div
+                    className="absolute inset-0 opacity-[0.03]"
+                    style={{
+                        backgroundImage: `linear-gradient(to right, #00F0FF 1px, transparent 1px), linear-gradient(to bottom, #00F0FF 1px, transparent 1px)`,
+                        backgroundSize: '40px 40px'
+                    }}
+                />
             </div>
 
-            {/* Main Card */}
+            {/* Header/Logo */}
+            <div className="absolute top-8 left-8 relative z-20">
+                <AppLogo link={'/'} size={40} height={40} width={120} />
+            </div>
+
+            {/* Main Content */}
             <div className="relative z-10 w-full max-w-md mx-4">
-                <div className="backdrop-blur-xl bg-white/10 rounded-3xl p-8 shadow-2xl border border-white/20">
-                    <div className="text-center space-y-6">
+                <div className="backdrop-blur-xl bg-[#0f172a]/80 rounded-[2rem] p-10 shadow-3xl border border-white/10 relative overflow-hidden">
+                    {/* Glowing Accent */}
+                    <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-br from-[#00F0FF]/10 to-[#7B2CBF]/10 blur-xl opacity-50 pointer-events-none" />
+
+                    <div className="relative z-10 text-center space-y-8">
                         {/* Icon */}
-                        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm ring-4 ring-white/30 shadow-lg">
-                            <ShieldOff className="h-12 w-12 text-white" />
+                        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-[#00F0FF]/10 border border-[#00F0FF]/20 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+                            <Lock className="h-10 w-10 text-[#00F0FF]" />
                         </div>
 
-                        {/* Title */}
-                        <div className="space-y-2">
-                            <h1 className="text-3xl font-bold text-white">
+                        {/* Title group */}
+                        <div className="space-y-3">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-[10px] font-black tracking-widest uppercase border border-red-500/20">
+                                <ShieldAlert className="w-3 h-3" />
+                                Restricted Access
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-white tracking-tight">
                                 Access Denied
                             </h1>
-                            <p className="text-white/70 leading-relaxed">
-                                You don't have permission to access this section of the Hospital Management System.
+                            <p className="text-slate-400 text-sm leading-relaxed px-2">
+                                Your current authorization level does not permit access to this sector of the Mission Control.
                             </p>
                         </div>
 
-                        {/* Error Code */}
-                        <div className="inline-block px-4 py-2 rounded-full bg-white/10 border border-white/20">
-                            <span className="text-sm font-mono text-white/80">Error Code: 403</span>
+                        {/* Status block */}
+                        <div className="px-5 py-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs font-mono text-slate-400">
+                            <span>Error Code:</span>
+                            <span className="text-[#00F0FF] font-bold">403_RESTRICTED</span>
                         </div>
 
-                        {/* Go Back Button */}
-                        <Button
-                            size="lg"
-                            className="w-full gap-2 bg-white text-[hsl(210,80%,25%)] hover:bg-white/90 font-semibold shadow-lg transition-all hover:scale-[1.02]"
-                            onClick={handleGoBack}
-                        >
-                            <ArrowLeft className="h-5 w-5" />
-                            Go Back
-                        </Button>
+                        {/* Action buttons */}
+                        <div className="space-y-3">
+                            <Button
+                                size="lg"
+                                className="w-full gap-2 bg-linear-to-r from-[#00F0FF] to-[#00D0FF] text-[#0f172a] hover:from-[#00D0FF] hover:to-[#00B0FF] font-black shadow-[0_0_20px_rgba(0,240,255,0.3)] transition-all ease-out h-12 rounded-xl"
+                                onClick={handleGoBack}
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                Return to Command
+                            </Button>
+                        </div>
 
                         {/* Support Info */}
-                        <p className="text-sm text-white/60 pt-2">
-                            Need help? Contact IT at{" "}
-                            <span className="font-medium text-white/80 underline underline-offset-2">support@healthyfine.com</span>
-                        </p>
+                        <div className="pt-4 border-t border-white/5">
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                                Contact Fleet Commander at{" "}
+                                <span className="text-slate-300">support@devlomatix.com</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="absolute bottom-6 text-center text-sm text-white/50">
-                © 2024 Healthyfine Hospital Management System
+            <div className="absolute bottom-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] z-20">
+                © {new Date().getFullYear()} Devlomatix Mission Control • All Systems Nominal
             </div>
         </div>
     );

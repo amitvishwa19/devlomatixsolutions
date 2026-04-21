@@ -24,7 +24,7 @@ const handler = async (data) => {
 
         const user = await prisma.user.update({
             where: { id: auth.id },
-            data: { emailVerified: true }
+            data: { isVerified: true, isActive: true }
         })
 
 

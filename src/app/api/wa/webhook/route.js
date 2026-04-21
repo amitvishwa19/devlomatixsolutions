@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
+import { getMediaUrl } from "@/app/workspace/[workspaceId]/wa-cloud-api/_lib/whatsapp-cloud-api";
 
-// This is the token you will enter in the Meta Developer Dashboard
-const VERIFY_TOKEN = "HEALTHYFINE_WA_WEBHOOK_SECRET";
+// The VERIFY_TOKEN is now strictly tied to the ENCRYPTION_KEY environment variable
+const VERIFY_TOKEN = process.env.ENCRYPTION_KEY;
 
 /**
  * GET Handler: Handshake for Meta Webhook Verification
@@ -15,10 +16,10 @@ export async function GET(req) {
         const token = searchParams.get("hub.verify_token");
         const challenge = searchParams.get("hub.challenge");
 
-        console.log(`🔍 [Webhook] Verification Handshake:`, { mode, token, challenge });
+        console.log(`🔍 [Webhook] Handshake Request:`, { mode, token });
 
         if (mode === "subscribe" && token === VERIFY_TOKEN) {
-            console.log("✅ [Webhook] Token Match! Responding with challenge...");
+            console.log("✅ [Webhook] Token verified! Responding with challenge.");
             return new Response(challenge, {
                 status: 200,
                 headers: { 'Content-Type': 'text/plain' }
@@ -104,16 +105,16 @@ export async function POST(req) {
                         try {
                             const decryptedStr = symmetricDecrypt(stored);
                             cloudCreds = JSON.parse(decryptedStr);
-                        } catch (e) {}
+                        } catch (e) { }
                     } else if (typeof stored === 'string') {
-                        try { cloudCreds = JSON.parse(stored); } catch (e) {}
+                        try { cloudCreds = JSON.parse(stored); } catch (e) { }
                     } else { cloudCreds = stored; }
 
                     if (cloudCreds?.enc) {
                         try {
                             const decryptedStr = symmetricDecrypt(cloudCreds.enc);
                             cloudCreds = JSON.parse(decryptedStr);
-                        } catch (e) {}
+                        } catch (e) { }
                     }
 
                     const credPhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
@@ -133,6 +134,10 @@ export async function POST(req) {
                 // 2. Loop through all messages in the payload
                 for (const message of messages) {
                     const from = message.from;
+                    // Normalize JID: Ensure no '+' or spaces, and append @s.whatsapp.net
+                    const cleanPhone = from.replace(/\D/g, '');
+                    const contactJid = `${cleanPhone}@s.whatsapp.net`;
+
                     const msgId = message.id;
                     const timestamp = message.timestamp;
 
@@ -152,6 +157,31 @@ export async function POST(req) {
                         case "audio":
                         case "document":
                             textBody = `[${message.type.toUpperCase()}] ${message[message.type]?.caption || ""}`;
+                            // Try to get actual media URL from Meta
+                            try {
+                                const mediaId = message[message.type]?.id;
+                                if (mediaId) {
+                                    // Extract credentials from targetCred for getMediaUrl
+                                    let cloudCreds = null;
+                                    const stored = targetCred.credentials;
+                                    if (typeof stored === 'string' && stored.includes(':')) {
+                                        cloudCreds = JSON.parse(symmetricDecrypt(stored));
+                                    } else if (typeof stored === 'string') {
+                                        cloudCreds = JSON.parse(stored);
+                                    } else { cloudCreds = stored; }
+
+                                    if (cloudCreds?.enc) {
+                                        cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
+                                    }
+
+                                    const urlRes = await getMediaUrl(cloudCreds, mediaId);
+                                    if (urlRes.success) {
+                                        message[message.type].url = urlRes.data;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('[Webhook] Media URL fetch error:', e);
+                            }
                             break;
                         case "location":
                             textBody = `📍 [Location Shared] ${message.location?.name || `${message.location?.latitude}, ${message.location?.longitude}`}`;
@@ -202,7 +232,7 @@ export async function POST(req) {
                     // Phase 2: Trigger Bot Engine
                     try {
                         const workspaceId = targetCred.workspaceId || "cmnbhifag000458ikwhv1zso2";
-                        const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa/_lib/bot-engine");
+                        const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa-cloud-api/_lib/bot-engine");
                         waBotEngine.processIncomingMessage(userId, workspaceId, from, textBody).catch(e => console.error('[Webhook] Bot Error:', e));
                     } catch (botErr) {
                         console.error('[Webhook] Bot Engine Trigger Error:', botErr);
@@ -213,12 +243,17 @@ export async function POST(req) {
                         data: {
                             userId,
                             waId: msgId,
-                            jid: from,
+                            jid: contactJid,
                             text: textBody,
                             fromMe: false,
                             timestamp: BigInt(timestamp),
                             status: "RECEIVED",
                             metadata: {
+                                type: message.type,
+                                mediaUrl: message[message.type]?.url,
+                                caption: message[message.type]?.caption,
+                                fileName: message[message.type]?.filename,
+                                mimetype: message[message.type]?.mime_type,
                                 raw: message,
                                 phone_number_id: phoneNumberId
                             }

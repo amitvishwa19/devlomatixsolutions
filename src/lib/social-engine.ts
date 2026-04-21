@@ -43,12 +43,11 @@ export class SocialEngine {
     private async checkAndPublishScheduledPosts() {
         try {
             const now = new Date();
-            const postsToPublish = await db.socialPost.findMany({
+            const postsToPublish = await db.post.findMany({
                 where: {
                     status: 'SCHEDULED',
                     scheduledAt: { lte: now }
-                },
-                include: { accounts: true }
+                }
             });
 
             if (postsToPublish.length > 0) {
@@ -72,16 +71,20 @@ export class SocialEngine {
         console.log(`[SocialEngine] Publishing post ${postId}...`);
 
         try {
-            const post = await db.socialPost.findUnique({
+            const post = await db.post.findUnique({
                 where: { id: postId },
-                include: { accounts: true }
             });
 
             if (!post) throw new Error("Post not found");
 
-            await db.socialPost.update({
+            await db.post.update({
                 where: { id: postId },
                 data: { status: 'PUBLISHED', publishedAt: new Date() } // Optimistic update, will revert if all fail
+            });
+
+            // Fetch linked credentials for this user
+            const credentials = await db.credentials.findMany({
+                where: { userId: post.userId, status: 'connected' }
             });
 
             const results = [];
@@ -89,14 +92,20 @@ export class SocialEngine {
             // Process each platform/account
             for (const platform of post.platforms) {
                 try {
+                    const credential = credentials.find(c => c.platform?.toUpperCase() === platform.toUpperCase());
+                    
                     if (platform === 'WHATSAPP') {
                         // WhatsApp uses the existing waManager
-                        await this.publishToWhatsApp(post);
+                        await this.publishToWhatsApp(post, credential);
                         results.push({ platform, status: 'SUCCESS' });
-                    } else {
+                    } else if (credential) {
                         // Placeholder for other platforms (Facebook, LinkedIn, etc.)
-                        console.log(`[SocialEngine] Platform ${platform} is not yet fully implemented. Skipping.`);
+                        console.log(`[SocialEngine] Publishing to ${platform} via credential ${credential.id}...`);
+                        // Actual publish logic would go here using the credential
                         results.push({ platform, status: 'SKIPPED', message: 'Adapter coming soon' });
+                    } else {
+                        console.log(`[SocialEngine] No connected credential found for ${platform}. Skipping.`);
+                        results.push({ platform, status: 'FAILED', error: 'No connected account found' });
                     }
                 } catch (err: any) {
                     console.error(`[SocialEngine] Failed to publish to ${platform}:`, err.message);
@@ -107,7 +116,7 @@ export class SocialEngine {
             // If all platforms failed, mark as FAILED
             const allFailed = results.every(r => r.status === 'FAILED');
             if (allFailed) {
-                await db.socialPost.update({
+                await db.post.update({
                     where: { id: postId },
                     data: {
                         status: 'FAILED',
@@ -118,7 +127,7 @@ export class SocialEngine {
 
         } catch (error: any) {
             console.error(`[SocialEngine] Fatal error publishing post ${postId}:`, error.message);
-            await db.socialPost.update({
+            await db.post.update({
                 where: { id: postId },
                 data: { status: 'FAILED', errorLog: error.message }
             });
@@ -127,10 +136,10 @@ export class SocialEngine {
         }
     }
 
-    private async publishToWhatsApp(post: any) {
+    private async publishToWhatsApp(post: any, credential?: any) {
         // For WhatsApp, we assume the user has a connected session
-        // We might need to select a specific WhatsApp account if multiple exist
-        const whatsappAccount = post.accounts.find((acc: any) => acc.platform === 'WHATSAPP');
+        // If a credential was found, we can use it to target a specific session
+        const whatsappAccount = credential;
 
         // If no specific account linked, try to use the first active session found in WAAuth
         // (Simplified for now)

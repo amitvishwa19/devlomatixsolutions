@@ -62,6 +62,8 @@ model User {
   ecommerceAbandonedCarts   ECommerceAbandonedCart[]
   waJobs                    WhatsAppJob[]
   waDeliveryLogs            WhatsAppDeliveryLog[]
+  agentModels               AgentModel[]
+  aiAgents                  AIAgent[]
 
   @@index([email])
   @@index([phone])
@@ -216,6 +218,11 @@ model Role {
   updatedAt   DateTime     @updatedAt
   permissions Permission[] @relation("PermissionToRole")
   users       User[]       @relation("RoleToUser")
+
+  // Inheritance
+  parentId String?
+  parent   Role?   @relation("RoleInheritance", fields: [parentId], references: [id])
+  children Role[]  @relation("RoleInheritance")
 }
 
 model Permission {
@@ -225,6 +232,8 @@ model Permission {
   color       String?  @default("#FFFF")
   description String
   category    String?
+  type        String?  @default("ACTION")
+  url         String?
   status      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -265,6 +274,7 @@ model Campaign {
   templateId      String?
   scheduledAt     DateTime?
   userId          String
+  platform        String              @default("WHATSAPP_CLOUD")
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   template        MessageTemplate?    @relation(fields: [templateId], references: [id])
@@ -329,6 +339,7 @@ model MessageTemplate {
   language     String     @default("en_US")
   type         String     @default("TEXT")
   body         String
+  header       String?
   footer       String?
   buttons      Json?
   metadata     Json?
@@ -387,7 +398,9 @@ model Contact {
   email           String?
   type            String?          @default("CONTACT") // CONTACT, CLIENT, LEAD
   platform        String?          @default("WHATSAPP")
+  color           String?
   info            Json?
+  category        String?
   tags            String[]         @default([])
   whatsappName    String?
   lastMessage     String?
@@ -397,9 +410,8 @@ model Contact {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
-  category        Category?        @relation(fields: [categoryId], references: [id])
-  categoryId      String?
   subscribed      Boolean          @default(true)
+  verified        Boolean          @default(false)
 
   @@unique([workspaceId, phone])
   @@index([userId])
@@ -453,6 +465,7 @@ model WhatsAppJob {
   id          String                @id @default(cuid())
   userId      String
   type        String                @default("CAMPAIGN") // CAMPAIGN, TRANSACTIONAL, AUTOMATION
+  platform    String                @default("WHATSAPP_CLOUD") // WHATSAPP_CLOUD, WHATSAPP_BUSINESS
   status      String                @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED
   payload     Json
   priority    Int                   @default(0)
@@ -573,7 +586,6 @@ model Category {
   children    Category[] @relation("CategoryHierarchy")
   posts       Post[]
   jobs        Job[]
-  contacts    Contact[]
 
   @@unique([workspaceId, name])
   @@unique([workspaceId, slug])
@@ -639,6 +651,7 @@ model SystemLog {
   message     String?
   details     Json?
   userId      String?
+  provider    String?
   createdAt   DateTime @default(now())
 
   @@index([workspaceId])
@@ -881,6 +894,7 @@ model Workflow {
   updatedAt   DateTime            @updatedAt
   definition  Json?
   status      WorkflowStatus      @default(DRAFT)
+  viewport    Json?
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   executions  WorkflowExecution[]
   memories    WorkflowMemory[]
@@ -1118,4 +1132,72 @@ model EmailAssignment {
 
   @@unique([workspaceId, event])
   @@index([workspaceId])
+}
+
+model AgentModel {
+  id           String                 @id @default(cuid())
+  workspaceId  String
+  provider     String
+  name         String
+  apiKey       String
+  description  String?
+  healthStatus String                 @default("UNTESTED")
+  latency      String?
+  successRate  String?
+  capability   String?
+  bestFor      String?
+  baseUrl      String?
+  isDefault    Boolean                @default(false)
+  isActive     Boolean                @default(true)
+  metadata     Json?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  userId       String
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments  AgentModelAssignment[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model AIAgent {
+  id          String  @id @default(cuid())
+  workspaceId String
+  name        String
+  role        String?
+  type        String  @default("OpenClaw")
+  status      String  @default("offline")
+  description String?
+  isMain      Boolean @default(false)
+
+  // Hierarchy: Master -> Sub relationship
+  parentId  String?
+  parent    AIAgent?  @relation("AgentHierarchy", fields: [parentId], references: [id])
+  subAgents AIAgent[] @relation("AgentHierarchy")
+
+  // Model Fallback Logic
+  strategy String                 @default("SEQUENTIAL") // SEQUENTIAL, PARALLEL
+  models   AgentModelAssignment[]
+
+  config    Json? // Additional task-specific configuration
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model AgentModelAssignment {
+  id       String     @id @default(cuid())
+  agentId  String
+  modelId  String
+  priority Int        @default(0) // 0 = Primary, 1+ = Fallbacks
+  agent    AIAgent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  model    AgentModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, modelId])
+  @@index([agentId])
+  @@index([modelId])
 }

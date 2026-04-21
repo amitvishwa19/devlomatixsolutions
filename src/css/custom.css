@@ -308,3 +308,62 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted));
 }
+/* FlowByte Custom Edge Animations */
+@keyframes edge-flow {
+    from {
+        stroke-dashoffset: 24;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.edge-running {
+    stroke-dasharray: 12 !important;
+    animation: edge-flow 0.8s linear infinite !important;
+    stroke: var(--primary) !important;
+    stroke-width: 3 !important;
+}
+
+.edge-success {
+    stroke: var(--chart-2) !important;
+    stroke-width: 2.5 !important;
+    transition: stroke 0.3s ease;
+}
+
+.edge-error {
+    stroke: var(--destructive) !important;
+    stroke-width: 2.5 !important;
+    transition: stroke 0.3s ease;
+}
+
+.edge-delete-button {
+    width: 22px;
+    height: 22px;
+    background: hsl(var(--destructive));
+    border: 2px solid hsl(var(--background));
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease-out;
+    pointer-events: all !important;
+    z-index: 50;
+}
+
+.edge-delete-button:hover {
+    transform: scale(1.2);
+    background: white;
+    color: hsl(var(--destructive));
+    box-shadow: 0 0 15px hsl(var(--destructive) / 0.5);
+}
+
+.edge-delete-button svg {
+    width: 12px;
+    height: 12px;
+}

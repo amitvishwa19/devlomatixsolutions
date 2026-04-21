@@ -35,6 +35,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'aonetheme.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'cpjjmcqftkgnmrghgsfq.supabase.co'
       }
     ]
   }, headers: {

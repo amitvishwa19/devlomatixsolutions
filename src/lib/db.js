@@ -9,9 +9,46 @@ const prismaClientSingleton = () => {
     return new PrismaClient({ adapter })
 }
 
-global.prismaGlobal = global.prismaGlobal || prismaClientSingleton();
+// Store the singleton on the global object to prevent multiple instances in dev
+const getBaseDb = () => {
+    if (!global.prismaGlobal) {
+        global.prismaGlobal = prismaClientSingleton();
+    }
+    
+    // Self-healing: If the client was initialized before the new models or fields existed
+    // We check for some new models/fields to trigger re-initialization in development
+    const SCHEMA_VERSION = 25; // Increment this to force a re-init in dev
+    const isStale = process.env.NODE_ENV !== 'production' && (
+        !global.prismaGlobal.agentModel || 
+        !global.prismaGlobal.contactGroup ||
+        global.prismaGlobal._schemaVersion !== SCHEMA_VERSION
+    );
 
-export const db = global.prismaGlobal;
+    if (isStale) {
+        console.log(`🔄 Stale Prisma Client detected (ver ${global.prismaGlobal._schemaVersion || 0} vs ${SCHEMA_VERSION}). Re-initializing...`);
+        global.prismaGlobal = prismaClientSingleton();
+        global.prismaGlobal._schemaVersion = SCHEMA_VERSION;
+    }
+    
+    return global.prismaGlobal;
+};
 
-if (process.env.APP_MODE !== 'prod') globalThis.prismaGlobal = db
-// Cache Busting: 2026-03-29T13:42:00
+/**
+ * Typed Proxy for the Prisma Client
+ * Ensures self-healing in dev mode while providing full type support for TS/IDE
+ * @type {import('@prisma/client').PrismaClient}
+ */
+export const db = new Proxy({}, {
+    get: (target, prop) => {
+        const currentDb = getBaseDb();
+        if (prop === 'then') return undefined; // Avoid proxy being treated as a promise
+        
+        const value = currentDb[prop];
+        if (typeof value === 'function') {
+            return value.bind(currentDb);
+        }
+        return value;
+    }
+});
+
+if (process.env.APP_MODE !== 'prod') globalThis.prismaGlobal = getBaseDb();

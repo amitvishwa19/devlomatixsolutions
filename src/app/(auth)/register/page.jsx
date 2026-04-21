@@ -26,7 +26,7 @@ export default function Register() {
         onSuccess: (data) => {
             toast.success("Account created successfully! Please check your mailbox for activation link", { id: 'register' })
             SetLoading(false)
-            router.replace('/login')
+            router.replace('/')
 
         },
         onError: (error) => {
@@ -73,6 +73,7 @@ export default function Register() {
                                 disabled={loading}
                                 value={data.email}
                                 onChange={(e) => setData({ ...data, email: e.target.value })}
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 
@@ -86,6 +87,7 @@ export default function Register() {
                                 disabled={loading}
                                 value={data.password}
                                 onChange={(e) => setData({ ...data, password: e.target.value })}
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 
@@ -99,6 +101,7 @@ export default function Register() {
                                 disabled={loading}
                                 value={data.confirmPassword}
                                 onChange={(e) => setData({ ...data, confirmPassword: e.target.value })}
+                                className="bg-card border  placeholder:text-muted-foreground "
                             />
                         </div>
 
@@ -112,7 +115,7 @@ export default function Register() {
 
                     <div className='flex justify-center text-sm text-muted-foreground'>
                         Already have account ?
-                        <Link replace={true} href={'/login'}>
+                        <Link replace={true} href={'/'}>
                             <span className='ml-2  font-bold text-primary'>Sign In</span>
                         </Link>
                     </div>

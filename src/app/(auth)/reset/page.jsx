@@ -38,7 +38,7 @@ export default function Reset() {
                 .then(() => {
                     toast.success('Password changed successfully')
                     setData({ password: '', confirmPassword: '' })
-                    router.replace('/login')
+                    router.replace('/')
                 })
 
 
@@ -104,7 +104,7 @@ export default function Reset() {
 
                         <div className='flex justify-center text-sm text-muted-foreground'>
                             Already have account !
-                            <Link replace={true} href={'/login'} className='font-bold'>
+                            <Link replace={true} href={'/'} className='font-bold'>
                                 <span className='ml-2'>Log In</span>
                             </Link>
                         </div>

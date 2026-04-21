@@ -26,6 +26,8 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
+        console.log(`[SAVE_CAMPAIGN] Processing campaign save for Workspace: ${workspaceId}, User: ${userId}`);
+
         const campaignData = {
             name,
             description,
@@ -48,6 +50,7 @@ const handler = async (data) => {
                 select: { phone: true, name: true }
             });
 
+            console.log(`[SAVE_CAMPAIGN] Found ${groupContacts.length} contacts for groups ${groupIds.join(',')}`);
             const existingPhones = new Set(allRecipients.map(r => typeof r === 'string' ? r : r.phone));
             groupContacts.forEach(gc => {
                 if (!existingPhones.has(gc.phone)) {
@@ -67,6 +70,7 @@ const handler = async (data) => {
                 select: { phone: true, name: true }
             });
 
+            console.log(`[SAVE_CAMPAIGN] Found ${categoryContacts.length} contacts for categories ${categoryIds.join(',')}`);
             const existingPhones = new Set(allRecipients.map(r => typeof r === 'string' ? r : r.phone));
             categoryContacts.forEach(cc => {
                 if (!existingPhones.has(cc.phone)) {
@@ -86,6 +90,7 @@ const handler = async (data) => {
                 select: { phone: true, name: true }
             });
 
+            console.log(`[SAVE_CAMPAIGN] Found ${taggedContacts.length} contacts for tags ${tags.join(',')}`);
             const existingPhones = new Set(allRecipients.map(r => typeof r === 'string' ? r : r.phone));
             taggedContacts.forEach(tc => {
                 if (!existingPhones.has(tc.phone)) {
@@ -94,6 +99,8 @@ const handler = async (data) => {
                 }
             });
         }
+
+        console.log(`[SAVE_CAMPAIGN] Total unique recipients to enqueue: ${allRecipients.length}`);
 
         if (id) {
             // Update existing
@@ -131,12 +138,15 @@ const handler = async (data) => {
         } else {
             // Create new
             if (allRecipients.length > 0) {
+                console.log(`[SAVE_CAMPAIGN] Enqueuing ${allRecipients.length} recipients for new campaign`);
                 campaignData.recipients = {
                     create: allRecipients.map(r => ({
                         phone: typeof r === 'string' ? r : r.phone,
                         variables: typeof r === 'string' ? {} : (r.variables || {})
                     }))
                 };
+            } else {
+                console.warn(`[SAVE_CAMPAIGN] WARNING: Creating campaign with 0 recipients!`);
             }
 
             const campaign = await db.campaign.create({

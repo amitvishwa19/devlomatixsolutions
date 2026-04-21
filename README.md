@@ -153,7 +153,6 @@ To maintain a secure and scalable multi-tenant environment, all developers must 
 - **📄 Descriptive Logging:** Every significant action should be logged using the global `logger` utility to ensure full observability through the Telemetry Console.
 
 ---
-
 ## 🛠️ Technical Foundation
 
 ### Tech Stack
