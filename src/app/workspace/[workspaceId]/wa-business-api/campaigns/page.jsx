@@ -171,11 +171,37 @@ export default function CampaignsPage() {
         setEditDialogOpen(true);
     };
 
-    const saveEdit = () => {
+    const saveEdit = (data) => {
+        // Parse CSV recipients string into array of objects
+        let parsedRecipients = [];
+        if (data?.recipients) {
+            parsedRecipients = data.recipients
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .map(line => {
+                    const parts = line.split(',').map(p => p.trim());
+                    // Basic format: phone, name, var1, var2...
+                    return {
+                        phone: parts[0],
+                        name: parts[1] || '',
+                        variables: parts.slice(2).reduce((acc, v, i) => ({
+                            ...acc,
+                            [`var${i + 1}`]: v
+                        }), {})
+                    };
+                })
+                .filter(r => r.phone); // Ensure we have a phone number
+        }
+
         executeSave({
             workspaceId,
             id: activeCampaign?.id,
-            ...editForm
+            name: data.name,
+            templateId: data.templateId,
+            status: data.status,
+            recipients: parsedRecipients,
+            messageTemplate: { body: data.template } // Pass template body as structured object if needed
         });
     };
 
