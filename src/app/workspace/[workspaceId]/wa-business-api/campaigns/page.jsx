@@ -5,11 +5,10 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import {
-    Megaphone, Plus, Search, Filter, LayoutGrid, List,
-    MoreHorizontal, Play, Pause, Trash2, Edit2, 
-    CheckCircle2, Clock, AlertCircle, RefreshCw,
-    Users, MessageSquare, Target, Activity, Box, Tag,
-    BarChart3
+    Megaphone, Plus, Search, Filter,
+    Play, Pause, Trash2, Edit2,
+    CheckCircle2, RefreshCw,
+    Users, Activity, Box
 } from 'lucide-react';
 import { 
     DropdownMenu, 
@@ -24,24 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // Local Components
 import CampaignModal from '../_components/CampaignModal';
-import { 
-    AlertDialog, 
-    AlertDialogAction, 
-    AlertDialogCancel, 
-    AlertDialogContent, 
-    AlertDialogDescription, 
-    AlertDialogFooter, 
-    AlertDialogHeader, 
-    AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import DeleteCampaignModal from '../_components/DeleteCampaignModal';
 
 import { useAction } from '@/hooks/use-action';
 import { getCampaigns } from './_actions/get-campaigns';
@@ -49,6 +31,9 @@ import { saveCampaign } from './_actions/save-campaign';
 import { deleteCampaign } from './_actions/delete-campaign';
 import { triggerCampaign } from './_actions/trigger-campaign';
 import { getTemplates } from '../_actions/get-templates';
+import { getGroups } from '../_actions/get-groups';
+import { getTags } from '../_actions/get-tags';
+import { getCategories } from '../_actions/get-categories';
 
 export default function CampaignsPage() {
     const params = useParams();
@@ -58,12 +43,14 @@ export default function CampaignsPage() {
     // Core Data State
     const [campaigns, setCampaigns] = useState([]);
     const [templates, setTemplates] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('newest');
-    const [viewMode, setViewMode] = useState('list');
     const [activeSegment, setActiveSegment] = useState('all');
 
     // Modals
@@ -90,6 +77,21 @@ export default function CampaignsPage() {
         onError: (err) => toast.error(err)
     });
 
+    const { execute: executeGetGroups } = useAction(getGroups, {
+        onSuccess: (data) => setGroups(data || []),
+        onError: (err) => toast.error(err)
+    });
+
+    const { execute: executeGetTags } = useAction(getTags, {
+        onSuccess: (data) => setTags(data || []),
+        onError: (err) => toast.error(err)
+    });
+
+    const { execute: executeGetCategories } = useAction(getCategories, {
+        onSuccess: (data) => setCategories(data || []),
+        onError: (err) => toast.error(err)
+    });
+
     const { execute: executeSave, isLoading: isSaving } = useAction(saveCampaign, {
         onSuccess: () => {
             toast.success("Campaign configuration saved");
@@ -99,7 +101,7 @@ export default function CampaignsPage() {
         onError: (err) => toast.error(err)
     });
 
-    const { execute: executeDelete } = useAction(deleteCampaign, {
+    const { execute: executeDelete, isLoading: isDeleting } = useAction(deleteCampaign, {
         onSuccess: () => {
             toast.success("Campaign purged successfully");
             setDeleteDialogOpen(false);
@@ -121,8 +123,11 @@ export default function CampaignsPage() {
         if (workspaceId) {
             executeGetCampaigns({ workspaceId });
             executeGetTemplates({ workspaceId });
+            executeGetGroups({ workspaceId });
+            executeGetTags({ workspaceId });
+            executeGetCategories({ workspaceId });
         }
-    }, [workspaceId, executeGetCampaigns, executeGetTemplates]);
+    }, [workspaceId, executeGetCampaigns, executeGetTemplates, executeGetGroups, executeGetTags, executeGetCategories]);
 
     useEffect(() => {
         fetchInitialData();
@@ -201,11 +206,15 @@ export default function CampaignsPage() {
             templateId: data.templateId,
             status: data.status,
             recipients: parsedRecipients,
-            messageTemplate: { body: data.template } // Pass template body as structured object if needed
+            groupIds: data.groupIds || [],
+            categoryIds: data.categoryIds || [],
+            tags: data.tags || [],
+            messageTemplate: data.messageTemplate || { body: data.template }
         });
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = (e) => {
+        if (e) e.preventDefault();
         if (activeCampaign) {
             executeDelete({ workspaceId, id: activeCampaign.id });
         }
@@ -341,7 +350,7 @@ export default function CampaignsPage() {
                         <div className="relative flex-1 max-w-md group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
                             <Input
-                                placeholder="Search Campaigns..."
+                                placeholder="Search campaigns..."
                                 className="pl-9 bg-background h-10 border-border/40 shadow-sm focus-visible:ring-primary/20 rounded-full text-xs"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -350,102 +359,112 @@ export default function CampaignsPage() {
                         <div className="flex items-center gap-2">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-10 gap-2 border-border/40 shadow-sm px-4 rounded-full">
+                                    <Button variant="outline" size="sm" className="h-9 gap-2 border-border/40 text-xs font-semibold">
                                         <Filter className="w-3.5 h-3.5" />
-                                        <span className="text-xs font-semibold uppercase">Sort: {sortBy}</span>
+                                        Sort
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                                    <DropdownMenuItem onClick={() => setSortBy('newest')} className="text-xs font-bold">Newest First</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setSortBy('oldest')} className="text-xs font-bold">Oldest First</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setSortBy('name-asc')} className="text-xs font-bold">Name A-Z</DropdownMenuItem>
+                                <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                                    <DropdownMenuItem onClick={() => setSortBy('newest')} className="text-xs">Newest First</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSortBy('oldest')} className="text-xs">Oldest First</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSortBy('name-asc')} className="text-xs">Name A–Z</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-
-                            <div className="flex items-center border border-border/40 shadow-sm rounded-full overflow-hidden h-10 bg-background">
-                                <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10 text-foreground/70" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
-                                <Separator orientation="vertical" className="h-6" />
-                                <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10 text-foreground/70" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
-                            </div>
                         </div>
                     </div>
 
                     <div className="flex-1 overflow-hidden">
                         {loading ? (
-                            <div className="h-full flex flex-col items-center justify-center gap-4 opacity-70">
-                                <RefreshCw className="w-10 h-10 text-primary animate-spin" />
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Acquiring Stream...</p>
+                            <div className="h-full flex flex-col items-center justify-center gap-3 opacity-60">
+                                <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                                <p className="text-xs text-muted-foreground">Loading campaigns...</p>
                             </div>
                         ) : filteredCampaigns.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center opacity-50 p-12 text-center">
-                                <div className="p-6 bg-muted/20 rounded-full mb-6 border border-dashed border-border border-primary/20">
-                                    <Megaphone className="w-12 h-12 text-primary/30" />
+                            <div className="h-full flex flex-col items-center justify-center gap-4 p-12 text-center">
+                                <div className="p-5 bg-muted/30 rounded-2xl border border-dashed border-border">
+                                    <Megaphone className="w-10 h-10 text-muted-foreground/30" />
                                 </div>
-                                <h3 className="text-sm font-bold uppercase tracking-tight">No active campaigns</h3>
-                                <p className="text-xs text-muted-foreground mt-2 max-w-xs leading-relaxed font-semibold">Deploy your first message protocol to start broadcasting via the Business API.</p>
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground/70">No campaigns found</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Create your first campaign to get started.</p>
+                                </div>
                             </div>
                         ) : (
-                            <ScrollArea className="h-full p-6">
-                                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                                    {filteredCampaigns.map(c => (
-                                        <div 
-                                            key={c.id} 
-                                            className={`group bg-card border border-border/50 rounded-2xl overflow-hidden transition-all hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 ${viewMode === 'list' ? 'flex items-center p-3' : 'flex flex-col'}`}
-                                        >
-                                            {/* Preview Component */}
-                                            <div className={`${viewMode === 'list' ? 'w-20 h-20 shrink-0' : 'h-32'} bg-muted/30 relative flex items-center justify-center border-b border-border/20 group-hover:bg-primary/5 transition-colors p-4`}>
-                                                <Target className="w-8 h-8 text-primary/40 group-hover:scale-110 transition-transform" />
-                                                <div className="absolute top-3 right-3">
-                                                    {getStatusBadge(c.status)}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex-1 p-5 flex flex-col min-w-0">
-                                                <div className="flex items-start justify-between gap-4 mb-4">
-                                                    <div className="min-w-0 flex-1">
-                                                        <h3 className="text-sm font-bold truncate group-hover:text-primary transition-colors">{c.name}</h3>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
-                                                            <span className="text-[10px] text-muted-foreground font-bold">{new Date(c.createdAt).toLocaleDateString()}</span>
+                            <ScrollArea className="h-full">
+                                <table className="w-full">
+                                    <thead className="sticky top-0 z-10">
+                                        <tr className="border-b border-border/60 bg-card/80 backdrop-blur-sm">
+                                            <th className="text-left px-6 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-[30%]">Campaign</th>
+                                            <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Template</th>
+                                            <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
+                                            <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Recipients</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell w-36">Progress</th>
+                                            <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">Created</th>
+                                            <th className="px-6 py-3 w-28" />
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/30">
+                                        {filteredCampaigns.map(c => {
+                                            const progressPct = Math.round((c.success / (c.total || 1)) * 100);
+                                            const template = templates.find(t => t.id === c.templateId);
+                                            return (
+                                                <tr key={c.id} className="group hover:bg-muted/20 transition-colors duration-100">
+                                                    <td className="px-6 py-3.5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
+                                                                <Megaphone className="w-3.5 h-3.5 text-primary" />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="font-semibold text-sm text-foreground truncate">{c.name}</p>
+                                                                <p className="text-[10px] text-muted-foreground/50 mt-0.5 font-mono">{c.id.slice(0, 12)}…</p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <MoreHorizontal className="w-4 h-4" />
+                                                    </td>
+                                                    <td className="px-4 py-3.5 hidden md:table-cell">
+                                                        {template ? (
+                                                            <span className="text-xs text-muted-foreground font-medium truncate max-w-[160px] block">{template.name}</span>
+                                                        ) : (
+                                                            <span className="text-xs text-muted-foreground/30">—</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        {getStatusBadge(c.status)}
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right hidden lg:table-cell">
+                                                        <span className="text-sm font-semibold tabular-nums">{(c.total || 0).toLocaleString()}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 hidden lg:table-cell">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                                                <div className="h-full bg-primary rounded-full" style={{ width: `${progressPct}%` }} />
+                                                            </div>
+                                                            <span className="text-xs text-muted-foreground tabular-nums w-8 text-right">{progressPct}%</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right hidden xl:table-cell">
+                                                        <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            <Button size="sm" variant="outline" className="h-7 px-3 text-[11px] font-semibold gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/50 transition-all" onClick={() => handleTrigger(c.id)}>
+                                                                <Play className="w-3 h-3" />
+                                                                Run
                                                             </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="rounded-xl w-44 outline-none">
-                                                            <DropdownMenuItem onClick={() => handleTrigger(c.id)} className="text-xs font-bold gap-3">
-                                                                <Play className="w-4 h-4 text-emerald-500" /> Trigger Broadcast
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => handleEdit(c)} className="text-xs font-bold gap-3">
-                                                                <Edit2 className="w-4 h-4 text-primary" /> Edit Metadata
-                                                            </DropdownMenuItem>
-                                                            <Separator className="my-1" />
-                                                            <DropdownMenuItem onClick={() => { setActiveCampaign(c); setDeleteDialogOpen(true); }} className="text-xs font-bold gap-3 text-red-500">
-                                                                <Trash2 className="w-4 h-4" /> Delete Task
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4 mt-auto">
-                                                    <div className="bg-muted/30 p-3 rounded-xl border border-border/30">
-                                                        <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Users className="w-2.5 h-2.5" /> Recipients</p>
-                                                        <p className="text-lg font-bold">{c.total || 0}</p>
-                                                    </div>
-                                                    <div className="bg-muted/30 p-3 rounded-xl border border-border/30 relative overflow-hidden">
-                                                        <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><BarChart3 className="w-2.5 h-2.5" /> Progress</p>
-                                                        <p className="text-lg font-bold text-primary">{Math.round((c.success / (c.total || 1)) * 100)}%</p>
-                                                        <div className="absolute bottom-0 left-0 h-1 bg-primary/20 w-full">
-                                                            <div className="h-full bg-primary" style={{ width: `${(c.success / (c.total || 1)) * 100}%` }} />
+                                                            <Button variant="ghost" size="icon" className="w-7 h-7 rounded-md hover:bg-primary/10 hover:text-primary transition-all text-muted-foreground/60 hover:text-primary" onClick={() => handleEdit(c)} title="Edit Campaign">
+                                                                <Edit2 className="w-3 h-3" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="w-7 h-7 rounded-md hover:bg-red-500/10 hover:text-red-500 transition-all text-muted-foreground/60 hover:text-red-500" onClick={() => { setActiveCampaign(c); setDeleteDialogOpen(true); }} title="Delete Campaign">
+                                                                <Trash2 className="w-3 h-3" />
+                                                            </Button>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                                <div className="px-6 py-3 border-t border-border/30 bg-card/20">
+                                    <p className="text-xs text-muted-foreground">{filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''}</p>
                                 </div>
                             </ScrollArea>
                         )}
@@ -453,29 +472,28 @@ export default function CampaignsPage() {
                 </div>
             </div>
 
+
             {/* Campaign Deployment Modal */}
             <CampaignModal 
                 isOpen={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
                 activeCampaign={activeCampaign}
                 templates={templates}
+                groups={groups}
+                tags={tags}
+                categories={categories}
                 onSave={saveEdit}
                 isLoading={isSaving}
             />
 
             {/* Delete Alert */}
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogContent className="rounded-2xl border-border/40">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="font-bold text-2xl">Purge Object?</AlertDialogTitle>
-                        <AlertDialogDescription className="font-bold text-muted-foreground">This will permanently remove the broadcast metrics and queue data. This action is irreversible.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-xl font-bold border-border/40">ABORT</AlertDialogCancel>
-                        <AlertDialogAction className="rounded-xl font-bold bg-red-500 hover:bg-red-600 border-none" onClick={confirmDelete}>PURGE</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteCampaignModal 
+                isOpen={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                onConfirm={confirmDelete}
+                isLoading={isDeleting}
+                campaignName={activeCampaign?.name}
+            />
         </div>
     );
 }

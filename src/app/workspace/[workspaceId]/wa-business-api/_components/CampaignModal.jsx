@@ -19,6 +19,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
     Megaphone,
     Users,
@@ -31,7 +33,9 @@ import {
     CheckCircle2,
     Calendar,
     Send,
-    Eye
+    Eye,
+    Tag,
+    Layers
 } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +46,9 @@ export default function CampaignModal({
     onOpenChange,
     activeCampaign,
     templates = [],
+    groups = [],
+    tags = [],
+    categories = [],
     onSave,
     isLoading
 }) {
@@ -49,8 +56,12 @@ export default function CampaignModal({
         name: '',
         templateId: '',
         recipients: '',
+        groupIds: [],
+        categoryIds: [],
+        tags: [],
         status: 'PAUSED',
-        template: ''
+        template: '',
+        messageTemplate: null
     });
 
     useEffect(() => {
@@ -59,16 +70,24 @@ export default function CampaignModal({
                 name: activeCampaign.name || '',
                 templateId: activeCampaign.templateId || '',
                 recipients: activeCampaign.metadata?.recipients || '',
+                groupIds: activeCampaign.metadata?.groupIds || [],
+                categoryIds: activeCampaign.metadata?.categoryIds || [],
+                tags: activeCampaign.metadata?.tags || [],
                 status: activeCampaign.status || 'PAUSED',
-                template: activeCampaign.templateBody || ''
+                template: activeCampaign.templateBody || '',
+                messageTemplate: activeCampaign.messageTemplate || null
             });
         } else {
             setFormData({
                 name: '',
                 templateId: '',
                 recipients: '',
+                groupIds: [],
+                categoryIds: [],
+                tags: [],
                 status: 'PAUSED',
-                template: ''
+                template: '',
+                messageTemplate: null
             });
         }
     }, [activeCampaign, isOpen]);
@@ -78,7 +97,8 @@ export default function CampaignModal({
         setFormData({
             ...formData,
             templateId: val,
-            template: t?.body || t?.text || ''
+            template: t?.body || t?.text || '',
+            messageTemplate: t || null
         });
     };
 
@@ -111,15 +131,12 @@ export default function CampaignModal({
                         </DialogHeader>
 
                         <ScrollArea className="flex-1 px-2 mx-2">
-                            <div className="space-y-6 py-4 pb-10">
+                            <div className="space-y-6 py-2 pb-10 mx-1">
                                 {/* Section 1: Identity */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center font-bold gap-2 text-[10px] Template uppercase text-primary/70">
 
-                                        Protocol Identity
-                                    </div>
                                     <div className="space-y-2">
-                                        <label className="text-[11px] Template text-muted-foreground ml-1">Fleet Name</label>
+                                        <label className="text-[11px] Template text-muted-foreground ml-1">Campaign Name</label>
                                         <Input
                                             placeholder="e.g. Summer Outreach Alpha"
                                             className="border rounded-md bg-muted/30 focus-visible:ring-primary/20 font-medium"
@@ -131,12 +148,9 @@ export default function CampaignModal({
 
                                 {/* Section 2: Template Selection */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center font-bold gap-2 text-[10px] Template uppercase text-primary/70">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                        Message Logic
-                                    </div>
+
                                     <div className="space-y-2">
-                                        <label className="text-[11px] font-bold Template text-muted-foreground ml-1">Cloud API Template</label>
+                                        <label className="text-[11px] font-bold Template text-muted-foreground ml-1">Template</label>
                                         <Select value={formData.templateId} onValueChange={handleTemplateChange}>
                                             <SelectTrigger className="rounded-md bg-muted/30 border Template focus:ring-primary/20 transition-all hover:bg-muted/50">
                                                 <div className="flex items-center gap-2">
@@ -161,44 +175,87 @@ export default function CampaignModal({
 
                                 {/* Section 3: Audience */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center font-bold gap-2 text-[10px] Template uppercase text-primary/70">
-                                        <div className="w-1.5 h-1.5  rounded-full bg-primary" />
-                                        Campaign Reach
-                                    </div>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <label className="text-[11px] Template text-muted-foreground ml-1">Recipients (CSV List)</label>
-                                            <span className="text-[9px] Template text-muted-foreground/40 italic uppercase">Phone, Name, Variable1...</span>
-                                        </div>
-                                        <Textarea
-                                            rows={10}
-                                            placeholder="+123456789, John Doe, 20% Off&#10;+987654321, Jane Smith, Exclusive Access"
-                                            className="min-h-[120px] rounded-md bg-muted/30 border-border/40 p-4 font-mono text-xs leading-relaxed focus-visible:ring-primary/20 resize-none transition-all focus:bg-muted/10"
-                                            value={formData.recipients}
-                                            onChange={(e) => setFormData({ ...formData, recipients: e.target.value })}
-                                        />
-                                    </div>
+
+                                    <Tabs defaultValue="selection" className="w-full">
+                                        <TabsList className="grid w-full grid-cols-2 rounded-md bg-muted/50 p-1 h-9">
+                                            <TabsTrigger value="selection" className="text-xs Template">Core Targets</TabsTrigger>
+                                            <TabsTrigger value="manual" className="text-xs Template">Adhoc List</TabsTrigger>
+                                        </TabsList>
+
+                                        <TabsContent value="selection" className="space-y-4 pt-4 mt-0 border-none bg-transparent">
+                                            <div className="space-y-4 border rounded-xl p-4 bg-muted/20 border-border/40 transition-all">
+
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold Template text-muted-foreground/60 uppercase flex items-center gap-2">
+                                                        <Layers className="w-3 h-3" /> Audience Categories
+                                                    </label>
+                                                    <MultiSelect
+                                                        options={categories.map(c => ({ id: c, name: c, value: c }))}
+                                                        selected={formData.categoryIds.map(c => ({ id: c, name: c }))}
+                                                        onChange={(selected) => setFormData({ ...formData, categoryIds: selected.map(s => s.id) })}
+                                                        placeholder="Select categories..."
+                                                        className="rounded-md bg-muted/30 border Template focus:ring-primary/20 transition-all hover:bg-muted/50"
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold Template text-muted-foreground/60 uppercase flex items-center gap-2">
+                                                        <Tag className="w-3 h-3" /> Unique Tags
+                                                    </label>
+                                                    <MultiSelect
+                                                        options={tags.map(t => ({ id: t, name: t, value: t }))}
+                                                        selected={formData.tags.map(t => ({ id: t, name: t }))}
+                                                        onChange={(selected) => setFormData({ ...formData, tags: selected.map(s => s.id) })}
+                                                        placeholder="Target specific tags..."
+                                                        className="rounded-md bg-muted/30 border Template focus:ring-primary/20 transition-all hover:bg-muted/50"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+
+                                        <TabsContent value="manual" className="pt-4 mt-0 border-none bg-transparent">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="text-[11px] Template text-muted-foreground ml-1">Recipients (CSV List)</label>
+                                                    <span className="text-[9px] Template text-muted-foreground/40 italic uppercase">Phone, Name, Variable1...</span>
+                                                </div>
+                                                <Textarea
+                                                    rows={8}
+                                                    placeholder="+123456789, John Doe, 20% Off&#10;+987654321, Jane Smith, Exclusive Access"
+                                                    className="min-h-[160px] rounded-md bg-muted/30 border-border/40 p-4 font-mono text-xs leading-relaxed focus-visible:ring-primary/20 resize-none transition-all focus:bg-muted/10 shrink-0"
+                                                    value={formData.recipients}
+                                                    onChange={(e) => setFormData({ ...formData, recipients: e.target.value })}
+                                                />
+                                            </div>
+                                        </TabsContent>
+                                    </Tabs>
                                 </div>
 
                                 {/* Section 4: Schedule & Status */}
                                 <div className="space-y-4 pb-4 mx-1">
-                                    <div className="flex items-center gap-2 text-[10px] font-bold Template uppercase text-primary/70">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                        Fleet Operations
-                                    </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-xs Template text-muted-foreground ml-1">Operational State</label>
                                             <Select value={formData.status} onValueChange={(val) => setFormData({ ...formData, status: val })}>
-                                                <SelectTrigger className="rounded-md bg-muted/30 border-border/40 Template">
-                                                    <SelectValue />
+                                                <SelectTrigger className="rounded-md bg-muted/30 border Template focus:ring-primary/20 transition-all hover:bg-muted/50">
+                                                    <div className="flex items-center gap-2">
+                                                        <Activity className="w-4 h-4 text-muted-foreground" />
+                                                        <SelectValue />
+                                                    </div>
                                                 </SelectTrigger>
-                                                <SelectContent className="rounded-md  border">
-                                                    <SelectItem value="PAUSED" className="text-xs Template">
-                                                        <div className="flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-amber-500" /> PAUSED</div>
+                                                <SelectContent className="rounded-md border">
+                                                    <SelectItem value="PAUSED" className="text-xs Template py-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                                            PAUSED
+                                                        </div>
                                                     </SelectItem>
-                                                    <SelectItem value="RUNNING" className="text-xs Template">
-                                                        <div className="flex items-center gap-2"><Send className="w-3.5 h-3.5 text-primary" /> READY / SHIP</div>
+                                                    <SelectItem value="RUNNING" className="text-xs Template py-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                            READY / SHIP
+                                                        </div>
                                                     </SelectItem>
                                                 </SelectContent>
                                             </Select>
@@ -318,11 +375,14 @@ export default function CampaignModal({
                                 </div>
                                 <div className="space-y-1.5">
                                     <div className="flex items-center justify-between text-[9px] Template text-muted-foreground/80">
-                                        <span>Recipient Batch</span>
-                                        <span>{formData.recipients ? formData.recipients.split('\n').filter(Boolean).length : 0} nodes</span>
+                                        <span>Target Context</span>
+                                        <span>
+                                            {formData.categoryIds.length}C / {formData.tags.length}T
+                                            {formData.recipients && ` + ${formData.recipients.split('\n').filter(Boolean).length}L`}
+                                        </span>
                                     </div>
                                     <div className="w-full bg-primary/10 rounded-full h-1">
-                                        <div className="bg-primary h-full w-[40%] rounded-full shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+                                        <div className="bg-primary h-full w-[65%] rounded-full shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
                                     </div>
                                 </div>
                             </div>

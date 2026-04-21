@@ -63,6 +63,9 @@ export class CampaignEngine {
 
             if (!campaign) throw new Error('Campaign not found');
 
+            // Combined template data (DB template + campaign overrides)
+            const baseTemplate = campaign.template || campaign.messageTemplate || {};
+
             for (const recipient of campaign.recipients) {
                 const currentCampaign = await db.campaign.findUnique({ 
                     where: { id: campaignId }, 
@@ -75,22 +78,82 @@ export class CampaignEngine {
                 }
 
                 try {
-                    let messageBody = campaign.template?.body || campaign.messageTemplate['text'] || '';
                     const variables = recipient.variables || {};
-                    
-                    // Simple variable interpolation
-                    Object.keys(variables).forEach(key => {
-                        const placeholder = `{{${key}}}`;
-                        messageBody = messageBody.replace(new RegExp(placeholder, 'g'), variables[key]);
-                    });
+                    const interpolate = (text) => {
+                        if (!text || typeof text !== 'string') return text;
+                        let res = text;
+                        Object.keys(variables).forEach(key => {
+                            const placeholder = `{{${key}}}`;
+                            res = res.replace(new RegExp(placeholder, 'g'), variables[key]);
+                        });
+                        return res;
+                    };
 
                     const phone = recipient.phone.replace(/\D/g, '');
                     const jid = `${phone}@s.whatsapp.net`;
                     
-                    console.log(`[BusinessCampaign] Sending to ${jid}`);
+                    let messagePayload = {};
 
-                    // Use the browser-based manager as per the wa-business-api pattern
-                    await waManager.sendMessage(jid, messageBody);
+                    // Handle Interactive Messages (Buttons/Carousels)
+                    if (baseTemplate.type === 'CAROUSEL' || baseTemplate.carouselMessage) {
+                        messagePayload = {
+                            carousel: true,
+                            interactiveMessage: {
+                                body: { text: interpolate(baseTemplate.body || baseTemplate.text || 'Check this out!') },
+                                footer: { text: interpolate(baseTemplate.footer || 'Devlomatix Solutions') },
+                                carouselMessage: {
+                                    cards: (baseTemplate.buttons || baseTemplate.carouselMessage?.cards || []).map(card => ({
+                                        header: {
+                                            imageMessage: card.header?.imageMessage || { url: card.imageUrl || card.mediaUrl },
+                                            hasMediaAttachment: true
+                                        },
+                                        body: { text: interpolate(card.title || card.body || '') },
+                                        footer: { text: interpolate(card.description || card.footer || '') },
+                                        nativeFlowMessage: {
+                                            buttons: [{
+                                                name: "quick_reply",
+                                                buttonParamsJson: JSON.stringify({
+                                                    display_text: interpolate(card.buttonText || "View Details"),
+                                                    id: `card_${card.id || Math.random()}`
+                                                })
+                                            }]
+                                        }
+                                    }))
+                                }
+                            }
+                        };
+                    } else if (baseTemplate.buttons?.length > 0 || baseTemplate.type === 'BUTTON') {
+                        messagePayload = {
+                            interactive: true,
+                            interactiveMessage: {
+                                body: { text: interpolate(baseTemplate.body || baseTemplate.text || '') },
+                                footer: { text: interpolate(baseTemplate.footer || '') },
+                                nativeFlowMessage: {
+                                    buttons: baseTemplate.buttons.map((btn, idx) => ({
+                                        name: "quick_reply",
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: interpolate(typeof btn === 'string' ? btn : (btn.text || btn.label)),
+                                            id: `btn_${idx}`
+                                        })
+                                    }))
+                                }
+                            }
+                        };
+                    } else {
+                        // Standard Text/Media Message
+                        const body = interpolate(baseTemplate.body || baseTemplate.text || '');
+                        if (baseTemplate.imageUrl || baseTemplate.mediaUrl) {
+                            messagePayload = {
+                                image: { url: baseTemplate.imageUrl || baseTemplate.mediaUrl },
+                                caption: body
+                            };
+                        } else {
+                            messagePayload = { text: body };
+                        }
+                    }
+
+                    console.log(`[BusinessCampaign] Dispatching to ${jid}`);
+                    await waManager.sendMessage(jid, messagePayload);
 
                     await db.campaignRecipient.update({
                         where: { id: recipient.id },

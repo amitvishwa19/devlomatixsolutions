@@ -12,15 +12,19 @@ const handler = async (data) => {
     const { workspaceId } = data;
 
     try {
-        const categories = await db.category.findMany({
+        // In the WhatsApp module, categories are stored as a flat string field on the Contact model.
+        // We fetch unique categories used by contacts in this workspace.
+        const contacts = await db.contact.findMany({
             where: { workspaceId },
-            orderBy: { name: 'asc' }
+            select: { category: true }
         });
 
-        return { data: categories };
+        const uniqueCategories = [...new Set(contacts.map(c => c.category).filter(Boolean))].sort();
+
+        return { data: uniqueCategories };
     } catch (error) {
         console.error('[WA_BUSINESS_GET_CATEGORIES]', error);
-        return { error: "Failed to fetch categories" };
+        return { error: "Failed to fetch contact categories" };
     }
 };
 
