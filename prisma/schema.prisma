@@ -274,6 +274,7 @@ model Campaign {
   templateId      String?
   scheduledAt     DateTime?
   userId          String
+  platform        String              @default("WHATSAPP_CLOUD")
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   template        MessageTemplate?    @relation(fields: [templateId], references: [id])
@@ -464,6 +465,7 @@ model WhatsAppJob {
   id          String                @id @default(cuid())
   userId      String
   type        String                @default("CAMPAIGN") // CAMPAIGN, TRANSACTIONAL, AUTOMATION
+  platform    String                @default("WHATSAPP_CLOUD") // WHATSAPP_CLOUD, WHATSAPP_BUSINESS
   status      String                @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED
   payload     Json
   priority    Int                   @default(0)

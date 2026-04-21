@@ -332,7 +332,7 @@ export default function ContactSheet({
                             <div className="p-3 bg-background/50 backdrop-blur-sm rounded-xl border border-white/5 shadow-sm">
                                 <div className="flex items-center gap-2 mb-1.5">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                    <span className="text-[10px] font-bold  text-muted-foreground uppercase tracking-tighter">Sync Active</span>
+                                    <span className="text-[10px] font-bold  text-muted-foreground uppercase">Sync Active</span>
                                 </div>
                                 <p className="text-[10px] text-foreground/70 font-medium leading-tight">Data will instantly sync with active WhatsApp message routing.</p>
                             </div>
@@ -344,7 +344,7 @@ export default function ContactSheet({
                         {activeMode === 'form' ? (
                             <>
                                 <DialogHeader className="pb-6">
-                                    <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                                    <DialogTitle className="text-xl font-bold text-foreground">
                                         {activeContact ? 'Edit Identity' : 'New Identity'}
                                     </DialogTitle>
                                     <DialogDescription className="text-xs">
@@ -358,7 +358,7 @@ export default function ContactSheet({
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 pb-2 border-b border-border/40">
                                             <div className="p-1 rounded-md bg-primary/10"><User className="w-3.5 h-3.5 text-primary" /></div>
-                                            <h4 className="text-sm font-semibold tracking-tight text-foreground/90">Basic Information</h4>
+                                            <h4 className="text-sm font-semibold text-foreground/90">Basic Information</h4>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -425,7 +425,7 @@ export default function ContactSheet({
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 pb-2 border-b border-border/40">
                                             <div className="p-1 rounded-md bg-emerald-500/10"><Folder className="w-3.5 h-3.5 text-emerald-500" /></div>
-                                            <h4 className="text-sm font-semibold tracking-tight text-foreground/90">Meta & Classification</h4>
+                                            <h4 className="text-sm font-semibold text-foreground/90">Meta & Classification</h4>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -505,7 +505,7 @@ export default function ContactSheet({
                                     <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 mx-auto border border-primary/20 shadow-xl">
                                         <FileSpreadsheet className="w-8 h-8 text-primary" />
                                     </div>
-                                    <h2 className="text-2xl font-bold tracking-tight">Bulk Audience Onboarding</h2>
+                                    <h2 className="text-2xl font-bold">Bulk Audience Onboarding</h2>
                                     <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                                         Upload your spreadsheet to instantly initialize multiple contact nodes with full metadata support.
                                     </p>
@@ -541,7 +541,7 @@ export default function ContactSheet({
                                 <div className="w-full p-4 bg-muted/20 rounded-xl border flex items-start gap-3 text-left">
                                     <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                                     <div className="space-y-1">
-                                        <p className="text-xs font-bold uppercase tracking-tight">Import Guidelines</p>
+                                        <p className="text-xs font-bold uppercase">Import Guidelines</p>
                                         <p className="text-[11px] text-muted-foreground leading-relaxed">
                                             Ensure your file includes columns for <b>Full Name</b> and <b>Mobile Number</b> (with country code).
                                             Optional metadata like Emails, Categories, and Tags will be automatically mapped.
@@ -562,7 +562,7 @@ export default function ContactSheet({
                                         <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/20">
                                             <ClipboardList className="w-4 h-4 text-primary" />
                                         </div>
-                                        <h2 className="text-lg font-bold tracking-tight">Fast Entry Port</h2>
+                                        <h2 className="text-lg font-bold">Fast Entry Port</h2>
                                     </div>
                                     <p className="text-xs text-muted-foreground leading-relaxed">
                                         Paste raw data from any source. The engine will automatically isolate phone numbers and prepare them for your audience library.

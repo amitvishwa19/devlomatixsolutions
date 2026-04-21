@@ -35,7 +35,7 @@ export default function BulkTagDialog({
                     <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
                         <Tag className="w-8 h-8" />
                     </div>
-                    <DialogTitle className="text-xl font-black tracking-tight">Mass Annotation Protocol</DialogTitle>
+                    <DialogTitle className="text-xl font-black">Mass Annotation Protocol</DialogTitle>
                     <DialogDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2">
                         Apply a global tag to <span className="text-primary font-black underline">{count}</span> selected identities.
                     </DialogDescription>

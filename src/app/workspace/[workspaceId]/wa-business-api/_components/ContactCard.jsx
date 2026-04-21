@@ -59,7 +59,7 @@ export default function ContactCard({
                                         className="h-4 px-1 gap-0.5 border-none bg-blue-500/10 text-blue-500 font-bold"
                                     >
                                         <CheckCircle2 className="w-2.5 h-2.5" />
-                                        <span className="text-[8px] uppercase tracking-tighter">Verified</span>
+                                        <span className="text-[8px] uppercase">Verified</span>
                                     </Badge>
                                 )}
                                 {contact.categoryId && (

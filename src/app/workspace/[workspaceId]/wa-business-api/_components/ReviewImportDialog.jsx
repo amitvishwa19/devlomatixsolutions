@@ -136,7 +136,7 @@ export default function ReviewImportDialog({
                                                         newData[idx].category = e.target.value;
                                                         setData(newData);
                                                     }}
-                                                    className="h-8 text-[10px] font-bold uppercase tracking-tight bg-transparent border-transparent hover:border-border/60 focus:bg-background focus:border-primary transition-all"
+                                                    className="h-8 text-[10px] font-bold uppercase bg-transparent border-transparent hover:border-border/60 focus:bg-background focus:border-primary transition-all"
                                                 />
                                             </TableCell>
                                             <TableCell className="py-2">

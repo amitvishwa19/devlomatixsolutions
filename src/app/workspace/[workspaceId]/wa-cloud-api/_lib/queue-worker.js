@@ -42,6 +42,7 @@ export class WhatsAppQueueWorker {
             const job = await db.whatsAppJob.findFirst({
                 where: {
                     status: 'PENDING',
+                    platform: 'WHATSAPP_CLOUD',
                     scheduledAt: { lte: new Date() }
                 },
                 orderBy: [

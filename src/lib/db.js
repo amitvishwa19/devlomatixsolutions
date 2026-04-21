@@ -15,10 +15,19 @@ const getBaseDb = () => {
         global.prismaGlobal = prismaClientSingleton();
     }
     
-    // Self-healing: If the client was initialized before the new models existed
-    if ((!global.prismaGlobal.agentModel || !global.prismaGlobal.contactGroup) && process.env.NODE_ENV !== 'production') {
-        console.log("🔄 Stale Prisma Client detected (missing agentModel or contactGroup). Re-initializing...");
+    // Self-healing: If the client was initialized before the new models or fields existed
+    // We check for some new models/fields to trigger re-initialization in development
+    const SCHEMA_VERSION = 25; // Increment this to force a re-init in dev
+    const isStale = process.env.NODE_ENV !== 'production' && (
+        !global.prismaGlobal.agentModel || 
+        !global.prismaGlobal.contactGroup ||
+        global.prismaGlobal._schemaVersion !== SCHEMA_VERSION
+    );
+
+    if (isStale) {
+        console.log(`🔄 Stale Prisma Client detected (ver ${global.prismaGlobal._schemaVersion || 0} vs ${SCHEMA_VERSION}). Re-initializing...`);
         global.prismaGlobal = prismaClientSingleton();
+        global.prismaGlobal._schemaVersion = SCHEMA_VERSION;
     }
     
     return global.prismaGlobal;

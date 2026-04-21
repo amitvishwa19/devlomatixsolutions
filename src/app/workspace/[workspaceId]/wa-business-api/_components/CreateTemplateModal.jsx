@@ -322,7 +322,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                     {/* Right Content/Form Panel */}
                     <div className="flex-1 flex flex-col min-h-0 bg-background/50 overflow-hidden">
                         <DialogHeader className="p-4  border-b shrink-0">
-                            <DialogTitle className="text-xl tracking-tight text-foreground">
+                            <DialogTitle className="text-xl text-foreground">
                                 {initialData ? 'Refine Template' : 'Initialize Template'}
                             </DialogTitle>
                             <DialogDescription className="text-xs font-medium text-muted-foreground">
@@ -476,7 +476,7 @@ export default function CreateTemplateModal({ isOpen, onOpenChange, onSave, init
                                             />
                                             <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity">
                                                 <Info className="w-3.5 h-3.5" />
-                                                <span className="text-[9px] tracking-tighter">Markdown Enabled</span>
+                                                <span className="text-[9px]">Markdown Enabled</span>
                                             </div>
                                         </div>
                                     </div>

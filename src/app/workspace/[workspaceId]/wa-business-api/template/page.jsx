@@ -63,7 +63,7 @@ export default function TemplatesPage() {
 
     // --- Server Actions ---
     const { execute: executeGetTemplates } = useAction(getTemplates, {
-        onSuccess: (data) => setTemplates(data || []),
+        onSuccess: (data) => setTemplates(data.templates || []),
         onError: (err) => toast.error(err),
         onComplete: () => setLoading(false)
     });
@@ -121,7 +121,7 @@ export default function TemplatesPage() {
         return templates.filter(t => {
             const matchesSearch = 
                 t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                t.body.toLowerCase().includes(searchQuery.toLowerCase());
+                (t.body || '').toLowerCase().includes(searchQuery.toLowerCase());
 
             let matchesSegment = true;
             if (activeSegment !== 'all') {
@@ -166,7 +166,7 @@ export default function TemplatesPage() {
                     <div className="p-1.5 bg-primary/10 rounded-lg">
                         <LayoutTemplate className="w-5 h-5 text-primary" />
                     </div>
-                    <h1 className="text-xl font-bold tracking-tight text-foreground/90">Message Library</h1>
+                    <h1 className="text-xl font-bold text-foreground/90">Message Library</h1>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -289,92 +289,95 @@ export default function TemplatesPage() {
                                     <DropdownMenuItem onClick={() => setSortBy('name-asc')}>A - Z</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-
-                            <div className="flex items-center border border-border/40 shadow-sm rounded-full overflow-hidden h-10 bg-background">
-                                <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10 text-foreground/70" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
-                                <Separator orientation="vertical" className="h-6" />
-                                <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" className="rounded-none w-10 text-foreground/70" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
-                            </div>
                         </div>
                     </div>
 
                     <div className="flex-1 overflow-hidden">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center gap-4 opacity-70">
-                                <RefreshCw className="w-10 h-10 text-primary animate-spin" />
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Acquiring Signal...</p>
+                                <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acquiring Signal...</p>
                             </div>
                         ) : filteredTemplates.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center opacity-50 p-12 text-center">
-                                <div className="p-6 bg-muted/20 rounded-full mb-6 border border-dashed border-border">
-                                    <LayoutTemplate className="w-12 h-12 text-muted-foreground/50 text-primary/30" />
+                                <div className="p-6 bg-muted/20 rounded-full mb-6 border border-dashed border-border text-primary/30">
+                                    <LayoutTemplate className="w-12 h-12" />
                                 </div>
                                 <h3 className="text-sm font-bold uppercase tracking-widest">No protocols detected</h3>
                                 <p className="text-xs text-muted-foreground mt-2 max-w-xs leading-relaxed">Your message library is currently empty. Initialize a new template to start automation.</p>
                             </div>
                         ) : (
-                            <ScrollArea className="h-full p-6">
-                                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-3'}>
+                            <ScrollArea className="h-full">
+                                <div className="divide-y divide-border/40">
                                     {filteredTemplates.map(template => (
                                         <div 
                                             key={template.id} 
-                                            className={`group bg-card border border-border/50 rounded-2xl overflow-hidden transition-all hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 ${viewMode === 'list' ? 'flex items-center p-2' : 'flex flex-col'}`}
+                                            className="group flex items-center gap-4 p-3 px-6 transition-all hover:bg-muted/50 cursor-pointer"
+                                            onClick={() => { setActiveTemplate(template); setIsCreateModalOpen(true); }}
                                         >
-                                            {/* Preview/Icon Section */}
-                                            <div className={`${viewMode === 'list' ? 'w-16 h-16 shrink-0' : 'h-40'} bg-muted/30 relative flex items-center justify-center border-b border-border/20 group-hover:bg-primary/5 transition-colors p-4`}>
-                                                <div className="p-3 bg-background rounded-full shadow-sm text-primary group-hover:scale-110 transition-transform">
-                                                    <MessageSquare className="w-6 h-6" />
-                                                </div>
-                                                <div className="absolute top-3 right-3 flex items-center gap-1">
-                                                    <Badge variant="secondary" className="text-[9px] font-bold uppercase bg-background border-border/50 text-muted-foreground">{template.type}</Badge>
+                                            {/* Icon Section (Matches Contact Avatar style) */}
+                                            <div className="shrink-0 flex items-center justify-center">
+                                                <div className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center text-primary shadow-sm group-hover:scale-105 transition-transform">
+                                                    {template.type === 'IMAGE' ? <Eye className="w-5 h-5" /> : 
+                                                     template.type === 'DOCUMENT' ? <RefreshCw className="w-5 h-5" /> : 
+                                                     <MessageSquare className="w-5 h-5" />}
                                                 </div>
                                             </div>
 
-                                            {/* Content Section */}
-                                                <div className="flex-1 p-5 flex flex-col min-w-0">
-                                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                                        <div className="min-w-0 flex-1">
-                                                            <h3 className="text-sm truncate group-hover:text-primary transition-colors">{template.name}</h3>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `hsl(${getStringColor(template.category)})` }} />
-                                                                <span className="text-[10px] text-muted-foreground opacity-70">{template.category || 'General'}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-primary/10 hover:text-primary" onClick={() => { setActiveTemplate(template); setIsCreateModalOpen(true); }}>
-                                                                <Edit2 className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-rose-50 hover:text-rose-600" onClick={() => handleDelete(template.id)}>
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                        </div>
+                                            {/* Info Section */}
+                                            <div className="flex-1 min-w-0 flex items-center justify-between">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-sm font-bold truncate group-hover:text-primary transition-colors">{template.name}</h3>
+                                                        <Badge variant="outline" className="h-4 text-[9px] font-bold px-1.5 border-none uppercase tracking-wider" style={{ backgroundColor: `${getStringColor(template.category)}15`, color: `hsl(${getStringColor(template.category)})` }}>
+                                                            {template.category || 'General'}
+                                                        </Badge>
+                                                        <Badge variant="outline" className="h-4 text-[8px] px-1 gap-0.5 border-none bg-blue-500/10 text-blue-500 font-bold uppercase">
+                                                            {template.type}
+                                                        </Badge>
                                                     </div>
+                                                    <p className="text-[11px] text-muted-foreground line-clamp-1 max-w-2xl font-medium opacity-70">
+                                                        {template.body}
+                                                    </p>
+                                                </div>
 
-                                                    <div className="mt-auto bg-muted/20 p-4 rounded-xl border border-border/30 space-y-2">
-                                                        {template.header && (
-                                                            <p className="text-[10px] font-bold text-foreground/80 leading-tight border-b border-border/20 pb-1 mb-1">
-                                                                {template.header}
-                                                            </p>
-                                                        )}
-                                                        <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                                                            {template.body}
-                                                        </p>
-                                                        {template.footer && (
-                                                            <p className="text-[9px] text-muted-foreground/60 leading-tight pt-1 border-t border-border/10">
-                                                                {template.footer}
-                                                            </p>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex items-center justify-between mt-4 border-t border-border/30 pt-3 opacity-60">
-                                                        <div className="flex items-center gap-1 text-[10px] tracking-tighter">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="hidden md:flex flex-col items-end gap-1">
+                                                        <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground/60">
                                                             <Clock className="w-3 h-3" /> {new Date(template.createdAt).toLocaleDateString()}
                                                         </div>
-                                                        <div className="flex items-center gap-1 text-[10px] text-emerald-500">
-                                                            <CheckCircle2 className="w-3 h-3" /> Ready
+                                                        <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 uppercase">
+                                                            <CheckCircle2 className="w-3 h-3" /> Active
                                                         </div>
                                                     </div>
+
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-8 w-8 text-muted-foreground/30 hover:text-destructive transition-all"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDelete(template.id);
+                                                            }}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-8 w-8 text-muted-foreground/60"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setActiveTemplate(template);
+                                                                setIsCreateModalOpen(true);
+                                                            }}
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -394,3 +397,4 @@ export default function TemplatesPage() {
         </div>
     );
 }
+

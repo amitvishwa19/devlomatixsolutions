@@ -43,7 +43,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/60">Business Engine</h1>
+                            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/60">Business Engine</h1>
                             <Badge variant="outline" className="h-5 px-2 text-[9px] font-bold uppercase tracking-widest border-primary/20 text-primary bg-primary/5">
                                 Protocol v2.0
                             </Badge>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
                                             <Globe className="w-4 h-4 text-primary" />
                                         </div>
                                         <div>
-                                            <CardTitle className="text-base font-bold tracking-tight">Active Instance</CardTitle>
+                                            <CardTitle className="text-base font-bold">Active Instance</CardTitle>
                                             <CardDescription className="text-xs font-medium">Browser Automation Node Configuration</CardDescription>
                                         </div>
                                     </div>
@@ -101,7 +101,7 @@ export default function SettingsPage() {
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-bold tracking-tight">Linked Device</span>
+                                                        <span className="text-sm font-bold">Linked Device</span>
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/10" />
                                                     </div>
                                                     <p className="text-[10px] text-muted-foreground font-mono">ID: BAILEYS_SESSION_ID</p>
@@ -127,7 +127,7 @@ export default function SettingsPage() {
                                             <Zap className="w-4 h-4 text-amber-500" />
                                         </div>
                                         <div>
-                                            <CardTitle className="text-base font-bold tracking-tight">Handshake Preferences</CardTitle>
+                                            <CardTitle className="text-base font-bold">Handshake Preferences</CardTitle>
                                             <CardDescription className="text-xs font-medium">Fine-tune how the engine interacts with WhatsApp</CardDescription>
                                         </div>
                                     </div>

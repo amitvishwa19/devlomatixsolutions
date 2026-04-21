@@ -112,7 +112,7 @@ export default function WhatsAppWebChatsPage() {
                         <MessageSquare className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight">Business Messenger</h1>
+                        <h1 className="text-xl font-bold">Business Messenger</h1>
                         <p className="text-xs text-muted-foreground  font-bold ">Protocol Active</p>
                     </div>
                 </div>
@@ -182,7 +182,7 @@ export default function WhatsAppWebChatsPage() {
                                     </Avatar>
                                     <div>
                                         <h2 className="text-sm font-bold">{activeName}</h2>
-                                        <p className="text-[10px] text-emerald-500 font-bold  tracking-tight">Online</p>
+                                        <p className="text-[10px] text-emerald-500 font-bold">Online</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 opacity-40">

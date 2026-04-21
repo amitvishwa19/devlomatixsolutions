@@ -25,7 +25,7 @@ export default function BulkDeleteDialog({
                     <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
                         <AlertTriangle className="w-8 h-8 text-destructive animate-pulse" />
                     </div>
-                    <DialogTitle className="text-xl font-black tracking-tight">Mass Deletion Protocol</DialogTitle>
+                    <DialogTitle className="text-xl font-black">Mass Deletion Protocol</DialogTitle>
                     <DialogDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2">
                         This action will permanently erase <span className="text-destructive font-black underline">{count}</span> identity records.
                     </DialogDescription>

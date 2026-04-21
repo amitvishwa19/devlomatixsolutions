@@ -19,15 +19,24 @@ const handler = async (data) => {
         const templates = await db.messageTemplate.findMany({
             where: { 
                 userId,
-                platform: "WHATSAPP_BUSINESS"
+                // Allow templates from both platforms to show in the library for now
+                // to avoid empty library issues for existing users.
+                OR: [
+                    { platform: "WHATSAPP_BUSINESS" },
+                    { platform: "WHATSAPP_CLOUD" }
+                ]
             },
             orderBy: { createdAt: 'desc' }
         });
 
-        return { data: templates };
+        return { 
+            data: { 
+                templates: JSON.parse(JSON.stringify(templates))
+            } 
+        };
     } catch (error) {
         console.error('[WA_BUSINESS_GET_TEMPLATES]', error);
-        return { error: "Failed to fetch templates" };
+        return { error: error.message || "Failed to fetch templates" };
     }
 };
 

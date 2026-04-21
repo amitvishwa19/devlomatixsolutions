@@ -225,7 +225,7 @@ export default function ContactsPage() {
             {/* Upper Action Bar */}
             <div className="flex items-center justify-between py-2 px-4 border-b bg-card/30">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-bold tracking-tight">CRM Audience</h1>
+                    <h1 className="text-xl font-bold">CRM Audience</h1>
                 </div>
 
                 <div className="flex items-center gap-2">
