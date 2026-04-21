@@ -11,9 +11,7 @@ import { Toaster } from "sonner";
 import { AppThemeProvider } from "@/hooks/useTheme";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
-import { db } from "@/lib/db";
 import { QueryProvider } from "@/providers/QueryProvider";
-import { AccessProvider } from "@/providers/AccessProvider";
 import { WorkspaceProvider } from "@/providers/WorkspaceProvider";
 import CookieConsent from "@/components/global/CookieConsent";
 
@@ -51,17 +49,7 @@ export const metadata = {
 export default async function RootLayout({ children }) {
     const session = await getServerSession(authOptions);
 
-    const user = session?.user ? await db.user.findUnique({
-        where: { id: session.user.userId },
-        include: {
-            roles: {
-                include: {
-                    permissions: true,
-                },
-            },
-            profile: true,
-        },
-    }) : null;
+
 
     return (
         <html lang="en" data-scroll-behavior="smooth">
@@ -70,12 +58,12 @@ export default async function RootLayout({ children }) {
                     {/* <SocketProvider> */}
                     <QueryProvider>
                         <AppProvider>
-                                <AppThemeProvider>
-                                    <ThemeProvider>
-                                        <AuthProvider>
+                            <AppThemeProvider>
+                                <ThemeProvider>
+                                    <AuthProvider>
 
-                                        <AccessProvider user={user}>
-                                            <WorkspaceProvider>
+
+                                        <WorkspaceProvider>
                                             <Providers>
                                                 {/* <OrgModalProvider /> */}
 
@@ -83,8 +71,8 @@ export default async function RootLayout({ children }) {
                                                 <CookieConsent />
 
                                             </Providers>
-                                            </WorkspaceProvider>
-                                        </AccessProvider>
+                                        </WorkspaceProvider>
+
 
                                     </AuthProvider>
                                 </ThemeProvider>

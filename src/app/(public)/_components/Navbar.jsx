@@ -6,6 +6,8 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import ThemeToggle from "./ThemeToggle";
+import logo from '@/app/(public)/assets/acs_logo_1_nobg.png'
 import ThemeSwitcher from "@/components/global/ThemeSwitch";
 import { useSession } from "next-auth/react";
 import { AppLogo } from "@/components/global/AppLogo";
@@ -81,7 +83,80 @@ const Navbar = () => {
 
                     {/* Center: Nav Links */}
                     <div className="hidden md:flex items-center gap-0.5">
-
+                        {navLinks.map((link) =>
+                            link.hasDropdown ? (
+                                <div key={link.name} className="relative" ref={servicesRef}>
+                                    <button
+                                        onClick={() => setServicesOpen(!servicesOpen)}
+                                        className={cn(
+                                            "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 flex items-center gap-1",
+                                            isActive(link.href)
+                                                ? "text-primary"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        {isActive(link.href) && (
+                                            <motion.div
+                                                layoutId="activeTab"
+                                                className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10"
+                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                            />
+                                        )}
+                                        <span className="relative z-10">{link.name}</span>
+                                        <ChevronDown
+                                            className={cn(
+                                                "relative z-10 w-3.5 h-3.5 transition-transform duration-200",
+                                                servicesOpen && "rotate-180"
+                                            )}
+                                        />
+                                    </button>
+                                    <AnimatePresence>
+                                        {servicesOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                                className="absolute top-full left-0 mt-2 w-52 z-50 rounded-xl bg-popover border border-border shadow-lg shadow-black/10 overflow-hidden"
+                                            >
+                                                <div className="py-1.5">
+                                                    {serviceLinks.map((item) => (
+                                                        <Link
+                                                            key={item.name}
+                                                            href={item.href}
+                                                            onClick={() => setServicesOpen(false)}
+                                                            className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                                                        >
+                                                            {item.name}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            ) : (
+                                <Link
+                                    key={link.name}
+                                    href={link.href}
+                                    className={cn(
+                                        "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300",
+                                        isActive(link.href)
+                                            ? "text-primary"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    {isActive(link.href) && (
+                                        <motion.div
+                                            layoutId="activeTab"
+                                            className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10"
+                                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10">{link.name}</span>
+                                </Link>
+                            )
+                        )}
                     </div>
 
                     {/* Right: Actions */}
@@ -90,8 +165,9 @@ const Navbar = () => {
                         {/* <ThemeSwitcher /> */}
 
                         {session && (
-                            session.user.role === 'ADMIN' ||
-                            session.user.role === 'SUPERADMIN' ||
+                            session.user.role === 'admin' ||
+                            session.user.role === 'superadmin' ||
+                            session.user.role === 'super-admin' ||
                             session.user.roles?.some(role => role.title === 'workspace')
                         ) ? (
                             <Link href="/workspace">
@@ -183,6 +259,8 @@ const Navbar = () => {
                                 </Link>
                             )
                         )}
+
+
                         <div className="flex gap-2 mt-3">
                             {session && (
                                 session.user.role === 'admin' ||
@@ -194,7 +272,7 @@ const Navbar = () => {
                                     <Button variant="outline" className="w-full rounded-full">Workspace</Button>
                                 </Link>
                             ) : !session ? (
-                                <Link href="/" onClick={() => setIsOpen(false)} className="flex-1">
+                                <Link href="/login" onClick={() => setIsOpen(false)} className="flex-1">
                                     <Button variant="outline" className="w-full rounded-full">Login</Button>
                                 </Link>
                             ) : null}

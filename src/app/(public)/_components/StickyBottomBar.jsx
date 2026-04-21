@@ -21,10 +21,10 @@ const StickyBottomBar = () => {
                         © 2024 {process.env.NEXT_PUBLIC_APP_NAME}. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
-                        <Link href="https://devlomatix.com/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
+                        <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Privacy Policy
                         </Link>
-                        <Link href="https://devlomatix.com/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
+                        <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Terms of Service
                         </Link>
                     </div>

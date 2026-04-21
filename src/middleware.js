@@ -23,31 +23,6 @@ export async function middleware(request) {
 
     const isDev = process.env.NODE_ENV !== 'production'
 
-    // =========================
-    // PATH -> SUBDOMAIN
-    // =========================
-    if (isMainDomain) {
-        const segments = pathname.split('/').filter(Boolean)
-
-        const allowedApps = ['crystalaura', 'solarbright', 'bizconnect']
-        const appName = segments[0]
-
-        if (allowedApps.includes(appName)) {
-            const newUrl = new URL(request.url)
-
-            const restPath = segments.slice(1).join('/')
-
-            if (isDev) {
-                newUrl.host = `${appName}.localhost:3000`
-            } else {
-                newUrl.hostname = `${appName}.devlomatix.com`
-            }
-
-            newUrl.pathname = restPath ? `/${restPath}` : '/'
-
-            return NextResponse.redirect(newUrl)
-        }
-    }
 
     // =========================
     // AUTH PROTECTION
@@ -69,26 +44,26 @@ export async function middleware(request) {
     }
 
     // Workspace Access Control (RBAC & Multi-Tenancy Isolation)
-    if (pathname.startsWith('/workspace/') && token) {
-        const segments = pathname.split('/').filter(Boolean);
-        const workspaceId = segments[1]; // /workspace/[workspaceId]/...
+    // if (pathname.startsWith('/workspace/') && token) {
+    //     const segments = pathname.split('/').filter(Boolean);
+    //     const workspaceId = segments[1]; // /workspace/[workspaceId]/...
 
-        const isSystemAdmin = token.role === 'ADMIN' || token.role === 'SUPER_ADMIN';
-        const hasWorkspaceMembership = token.workspaces?.includes(workspaceId);
+    //     const isSystemAdmin = token.role === 'ADMIN' || token.role === 'SUPER_ADMIN';
+    //     const hasWorkspaceMembership = token.workspaces?.includes(workspaceId);
 
-        // PRODUCTION GRADE: If token.workspaces is missing entirely, 
-        // it means the session is stale. We allow it briefly but log it.
-        const isStaleSession = token.workspaces === undefined;
+    //     // PRODUCTION GRADE: If token.workspaces is missing entirely, 
+    //     // it means the session is stale. We allow it briefly but log it.
+    //     const isStaleSession = token.workspaces === undefined;
 
-        if (!isSystemAdmin && !hasWorkspaceMembership && workspaceId && !isStaleSession) {
-            console.error(`[Security Guard] Blocked unauthorized access: ${token.email} tried to enter workspace ${workspaceId}`);
-            return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-    }
+    //     if (!isSystemAdmin && !hasWorkspaceMembership && workspaceId && !isStaleSession) {
+    //         console.error(`[Security Guard] Blocked unauthorized access: ${token.email} tried to enter workspace ${workspaceId}`);
+    //         return NextResponse.redirect(new URL('/unauthorized', request.url));
+    //     }
+    // }
 
-    // Logged in -> block login page (which is now /)
+    // Logged in -> Allow viewing the home page/landing page
     if (pathname === '/' && token) {
-        return NextResponse.redirect(new URL('/workspace', request.url))
+        return NextResponse.next()
     }
 
     // =========================

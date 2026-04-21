@@ -61,7 +61,45 @@ export class CampaignEngine {
                 }
             });
 
-            if (!campaign) throw new Error('Campaign not found');
+            console.log(`[CampaignEngine] Processing campaign: ${campaignId}`);
+
+            if (!campaign) {
+                console.error(`[CampaignEngine] Campaign ${campaignId} not found`);
+                return;
+            }
+
+            // Check session state
+            if (waManager.getState() !== 'open') {
+                console.error(`[CampaignEngine] WhatsApp session is NOT connected. State: ${waManager.getState()}`);
+                await db.campaign.update({
+                    where: { id: campaignId },
+                    data: { status: 'ERROR', description: (campaign.description || '') + ' [System: WA session disconnected]' }
+                });
+
+                await db.systemLog.create({
+                    data: {
+                        workspaceId: campaign.workspaceId || null,
+                        userId: campaign.userId,
+                        message: `Campaign "${campaign.name}" failed: WhatsApp session is disconnected`,
+                        type: 'CAMPAIGN_ERROR',
+                        level: 'error',
+                        provider: 'wa-business-api',
+                        details: { campaignId, state: waManager.getState() }
+                    }
+                });
+                return;
+            }
+
+            if (!campaign.recipients || campaign.recipients.length === 0) {
+                console.log(`[CampaignEngine] No PENDING recipients found for campaign: ${campaignId}`);
+                await db.campaign.update({
+                    where: { id: campaignId },
+                    data: { status: 'COMPLETED' }
+                });
+                return;
+            }
+
+            console.log(`[CampaignEngine] Found ${campaign.recipients.length} recipients to process`);
 
             // Combined template data (DB template + campaign overrides)
             const baseTemplate = campaign.template || campaign.messageTemplate || {};
@@ -154,6 +192,7 @@ export class CampaignEngine {
 
                     console.log(`[BusinessCampaign] Dispatching to ${jid}`);
                     await waManager.sendMessage(jid, messagePayload);
+                    console.log(`[CampaignEngine] Message sent to ${recipient.phone}`);
 
                     await db.campaignRecipient.update({
                         where: { id: recipient.id },

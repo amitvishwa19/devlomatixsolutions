@@ -66,66 +66,16 @@ export class BusinessQueueWorker {
     }
 
     async handleCampaignJob(job) {
-        const { campaignId, userId } = job.payload;
+        const { campaignId } = job.payload;
 
         try {
-            const campaign = await db.campaign.findUnique({
-                where: { id: campaignId },
-                include: {
-                    recipients: { where: { status: 'PENDING' } }
-                }
-            });
-
-            if (!campaign) throw new Error('Campaign not found');
-
-            for (const recipient of campaign.recipients) {
-                const currentJob = await db.whatsAppJob.findUnique({ 
-                    where: { id: job.id }, 
-                    select: { status: true } 
-                });
-                
-                if (currentJob?.status !== 'PROCESSING') {
-                    console.log(`[BUSINESS_QUEUE] Job ${job.id} state changed to ${currentJob?.status}. Stopping campaign.`);
-                    return;
-                }
-
-                try {
-                    let messageText = campaign.messageTemplate['text'] || '';
-                    const variables = recipient.variables || {};
-                    Object.keys(variables).forEach(key => {
-                        messageText = messageText.replace(new RegExp(`{{${key}}}`, 'g'), variables[key]);
-                    });
-
-                    const phone = recipient.phone.replace(/\D/g, '');
-                    const jid = `${phone}@s.whatsapp.net`;
-                    
-                    // Use the browser-based manager
-                    await waManager.sendMessage(jid, messageText);
-
-                    await db.campaignRecipient.update({
-                        where: { id: recipient.id },
-                        data: { status: 'SENT', sentAt: new Date() }
-                    });
-
-                } catch (err) {
-                    console.error(`[BUSINESS_QUEUE] Failed to send to ${recipient.phone}:`, err);
-                    await db.campaignRecipient.update({
-                        where: { id: recipient.id },
-                        data: { status: 'FAILED', errorLog: err.message }
-                    });
-                }
-
-                await new Promise(r => setTimeout(r, 2000));
-            }
+            // Dynamic import to avoid circular dependency
+            const { campaignEngine } = await import('./campaign-engine');
+            await campaignEngine.processCampaign(campaignId);
 
             await db.whatsAppJob.update({
                 where: { id: job.id },
                 data: { status: 'COMPLETED', completedAt: new Date() }
-            });
-
-            await db.campaign.update({
-                where: { id: campaignId },
-                data: { status: 'COMPLETED' }
             });
 
         } catch (error) {
