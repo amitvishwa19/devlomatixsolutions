@@ -185,29 +185,18 @@ export class CampaignEngine {
                                 }
                             }
                         };
-                    } else if (baseTemplate.buttons?.length > 0 || baseTemplate.type === 'BUTTON') {
-                        messagePayload = {
-                            interactive: true,
-                            type: 'interactive',
-                            interactiveMessage: {
-                                header: {
-                                    title: interpolate(baseTemplate.title || baseTemplate.name || "Notification"),
-                                    hasProgressBar: false,
-                                    headerType: 1
-                                },
-                                body: { text: interpolate(baseTemplate.body || baseTemplate.text || '') },
-                                footer: { text: interpolate(baseTemplate.footer || '') },
-                                nativeFlowMessage: {
-                                    buttons: (baseTemplate.buttons || []).map((btn, idx) => ({
-                                        name: "quick_reply",
-                                        buttonParamsJson: JSON.stringify({
-                                            display_text: interpolate(typeof btn === 'string' ? btn : (btn.text || btn.label || '')),
-                                            id: `btn_${idx}`
-                                        })
-                                    })),
-                                    messageParamsJson: ''
-                                }
-                            }
+                    } else if (campaign.messageType === 'button') {
+                        // SMART FALLBACK: Convert buttons to emoji-numbered list because native buttons are restricted
+                        const bodyExt = interpolate(baseTemplate.body || baseTemplate.text || '');
+                        const footerExt = interpolate(baseTemplate.footer || '');
+                        const buttonList = (baseTemplate.buttons || []).map((btn, i) => {
+                            const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+                            const label = typeof btn === 'string' ? btn : (btn.text || btn.label || '');
+                            return `${emojis[i] || (i + 1)} *${label}*`;
+                        }).join('\n');
+
+                        messagePayload = { 
+                            text: `${bodyExt}\n\n*Reply with:*\n${buttonList}${footerExt ? `\n\n_${footerExt}_` : ''}` 
                         };
                     } else {
                         const body = interpolate(baseTemplate.body || baseTemplate.text || '');

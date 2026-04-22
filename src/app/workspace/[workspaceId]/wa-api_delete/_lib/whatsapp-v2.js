@@ -255,43 +255,20 @@ class WhatsAppManager {
                 };
                 finalBody = `Location: ${loc.name || 'Shared Location'}`;
                 result = await this.sock.sendMessage(jid, { location: loc });
-            } else if (data.interactive || type === 'interactive' || data.carousel || type === 'carousel') {
-                const interactiveData = data.interactive || data;
-                finalBody = getCleanText(interactiveData.body || interactiveData.text || 'Interactive Message');
-                const msgContent = interactiveData.interactiveMessage || interactiveData;
-
-                // Ensure type is set (native_flow is common for recent baileys buttons/carousels)
-                if (!msgContent.type && msgContent.nativeFlowMessage) {
-                    msgContent.type = 'native_flow';
-                }
-
-                console.log(`[WA] Sending FORCED interactive message of type: ${msgContent.type || 'unknown'} to ${jid}`);
-                
-                // FORCED BUTTON DELIVERY FIX for Baileys v7+
-                // We use relayMessage to inject the 'biz' node which is required for buttons to render on modern apps
-                const msg = {
-                    viewOnceMessage: {
-                        message: {
-                            interactiveMessage: msgContent
-                        }
-                    }
+            } else if (data.location || type === 'location') {
+                const loc = data.location || {
+                    degreesLatitude: parseFloat(data.metadata?.latitude),
+                    degreesLongitude: parseFloat(data.metadata?.longitude),
+                    name: data.metadata?.locationName
                 };
-
-                result = await this.sock.relayMessage(jid, msg, {
-                    messageId: this.sock.generateMessageID(),
-                    additionalNodes: [
-                        {
-                            tag: 'biz',
-                            attrs: {},
-                            content: [{
-                                tag: 'interactive',
-                                attrs: { type: 'native_flow', v: '1' },
-                                content: []
-                            }]
-                        }
-                    ]
-                });
+                finalBody = `Location: ${loc.name || 'Shared Location'}`;
+                result = await this.sock.sendMessage(jid, { location: loc });
+            } else if (data.carousel || type === 'carousel') {
+                // Keep carousel as a separate experimental path if needed
+                const carouselData = data.carousel || data;
+                result = await this.sock.sendMessage(jid, { carouselMessage: carouselData.carouselMessage || carouselData });
             } else {
+                // DEFAULT / TEXT / FALLBACK BUTTONS (Engine-formatted)
                 finalBody = getCleanText(data.text || data.body || '');
                 result = await this.sock.sendMessage(jid, { text: finalBody });
             }

@@ -24,33 +24,18 @@ async function runTest() {
         if (waManager.getState() === 'open') {
             console.log("Connection open. Sending test button...");
 
-            const buttonPayload = {
-                interactive: true,
-                interactiveMessage: {
-                    header: {
-                        title: "Campaign Test",
-                        hasProgressBar: false,
-                        headerType: 1
-                    },
-                    body: { text: "This is a FORCED button test using the new relayMessage logic." },
-                    footer: { text: "Devlomatix System" },
-                    nativeFlowMessage: {
-                        buttons: [
-                            {
-                                name: "quick_reply",
-                                buttonParamsJson: JSON.stringify({
-                                    display_text: "Test Success",
-                                    id: "id_test_success"
-                                })
-                            }
-                        ],
-                        messageParamsJson: ''
-                    }
-                }
+            const legacyButtonPayload = {
+                text: "Legacy Button Test: Can you see the buttons below?",
+                footer: "Legacy Protocol",
+                buttons: [
+                    { buttonId: 'id1', buttonText: { displayText: 'Legacy Yes' }, type: 1 },
+                    { buttonId: 'id2', buttonText: { displayText: 'Legacy No' }, type: 1 }
+                ],
+                headerType: 1
             };
 
-            await waManager.sendMessage(targetJid, buttonPayload);
-            console.log("✅ FORCED Button message sent.");
+            await waManager.sendMessage(targetJid, legacyButtonPayload);
+            console.log("✅ Legacy Button message sent.");
         }
     } catch (error) {
         console.error(error);
