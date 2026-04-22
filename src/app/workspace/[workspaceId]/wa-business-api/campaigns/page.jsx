@@ -58,6 +58,7 @@ export default function CampaignsPage() {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [triggeringId, setTriggeringId] = useState(null);
+    const [resettingId, setResettingId] = useState(null);
     const [activeCampaign, setActiveCampaign] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
@@ -249,12 +250,14 @@ export default function CampaignsPage() {
     const onReset = useAction(resetCampaign, {
         onSuccess: (data) => {
             toast.success("Campaign reset successfully. You can now re-run it.");
-            fetchData();
+            fetchInitialData(true);
         },
-        onError: (error) => toast.error(error)
+        onError: (error) => toast.error(error),
+        onComplete: () => setResettingId(null)
     });
 
     const handleReset = (id) => {
+        setResettingId(id);
         onReset.execute({ workspaceId, id });
     };
 
@@ -521,11 +524,12 @@ export default function CampaignsPage() {
                                                                 <Button 
                                                                     variant="ghost" 
                                                                     size="icon" 
-                                                                    className="w-8 h-8 rounded-lg hover:bg-amber-500/10 hover:text-amber-600 transition-all text-muted-foreground/40" 
+                                                                    className="w-8 h-8 rounded-lg hover:bg-amber-500/10 hover:text-amber-600 transition-all text-muted-foreground/40 disabled:opacity-50" 
                                                                     onClick={() => handleReset(c.id)}
+                                                                    disabled={resettingId === c.id}
                                                                     title="Reset & Re-run"
                                                                 >
-                                                                    <RotateCcw className="w-3.5 h-3.5" />
+                                                                    <RotateCcw className={`w-3.5 h-3.5 ${resettingId === c.id ? 'animate-spin' : ''}`} />
                                                                 </Button>
                                                             )}
 
