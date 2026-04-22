@@ -66,13 +66,14 @@ export default function CampaignModal({
 
     useEffect(() => {
         if (activeCampaign) {
+            const meta = activeCampaign.messageTemplate?.metadata || {};
             setFormData({
                 name: activeCampaign.name || '',
                 templateId: activeCampaign.templateId || '',
-                recipients: activeCampaign.metadata?.recipients || '',
-                groupIds: activeCampaign.metadata?.groupIds || [],
-                categoryIds: activeCampaign.metadata?.categoryIds || [],
-                tags: activeCampaign.metadata?.tags || [],
+                recipients: String(meta.recipientsRaw || ''),
+                groupIds: meta.groupIds || [],
+                categoryIds: meta.categoryIds || [],
+                tags: meta.tags || [],
                 status: activeCampaign.status || 'PAUSED',
                 template: activeCampaign.templateBody || '',
                 messageTemplate: activeCampaign.messageTemplate || null

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { waManager } from "./whatsapp-v2";
 import { waAIService } from "./ai-service";
+import { waManager } from "./whatsapp-v2";
 
 /**
  * WhatsAppBotEngine: Executes node-based chatbot flows.
@@ -8,7 +8,7 @@ import { waAIService } from "./ai-service";
 export class WhatsAppBotEngine {
     static instance;
 
-    constructor() {}
+    constructor() { }
 
     static getInstance() {
         if (!WhatsAppBotEngine.instance) {
@@ -28,13 +28,13 @@ export class WhatsAppBotEngine {
                 orderBy: { updatedAt: 'desc' }
             });
 
-            if (!flow) return; 
+            if (!flow) return;
 
             console.log(`[BotEngine] Triggering Flow: ${flow.name} for ${from}`);
 
             const nodes = flow.nodes || [];
             const edges = flow.edges || [];
-            
+
             const startNode = nodes.find(n => n.type === 'trigger' || n.type === 'start');
             if (!startNode) return;
 

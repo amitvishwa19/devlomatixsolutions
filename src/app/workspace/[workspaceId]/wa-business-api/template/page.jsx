@@ -5,16 +5,16 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import {
-    Search, Plus, Download, Upload, RefreshCw, 
-    Filter, LayoutGrid, List, MessageSquare, 
-    LayoutTemplate, Box, Eye, Edit2, Copy, Trash2, 
+    Search, Plus, Download, Upload, RefreshCw,
+    Filter, LayoutGrid, List, MessageSquare,
+    LayoutTemplate, Box, Eye, Edit2, Copy, Trash2,
     Folder, Tag, Clock, CheckCircle2
 } from 'lucide-react';
-import { 
-    DropdownMenu, 
-    DropdownMenuTrigger, 
-    DropdownMenuContent, 
-    DropdownMenuItem 
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +29,7 @@ import { deleteTemplate } from '../_actions/delete-template';
 
 // Local Components
 import CreateTemplateModal from '../_components/CreateTemplateModal';
+import DeleteTemplateModal from '../_components/DeleteTemplateModal';
 
 const getStringColor = (str) => {
     if (!str) return '215, 15%, 45%'; // slate
@@ -38,7 +39,7 @@ const getStringColor = (str) => {
         hash |= 0;
     }
     const h = Math.abs(hash * 137) % 360;
-    return `${h}, 70%, 45%`; 
+    return `${h}, 70%, 45%`;
 };
 
 export default function TemplatesPage() {
@@ -60,6 +61,8 @@ export default function TemplatesPage() {
     // Modals
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [activeTemplate, setActiveTemplate] = useState(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [templateToDelete, setTemplateToDelete] = useState(null);
 
     // --- Server Actions ---
     const { execute: executeGetTemplates } = useAction(getTemplates, {
@@ -77,9 +80,10 @@ export default function TemplatesPage() {
         onError: (err) => toast.error(err)
     });
 
-    const { execute: executeDelete } = useAction(deleteTemplate, {
+    const { execute: executeDelete, isLoading: isDeleting } = useAction(deleteTemplate, {
         onSuccess: () => {
             toast.success("Template deleted");
+            setDeleteDialogOpen(false);
             fetchInitialData(true);
         },
         onError: (err) => toast.error(err)
@@ -119,7 +123,7 @@ export default function TemplatesPage() {
     // Computed: Filtered Templates
     const filteredTemplates = useMemo(() => {
         return templates.filter(t => {
-            const matchesSearch = 
+            const matchesSearch =
                 t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (t.body || '').toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -152,9 +156,14 @@ export default function TemplatesPage() {
         });
     };
 
-    const handleDelete = (id) => {
-        if (confirm("Are you sure you want to delete this template?")) {
-            executeDelete({ workspaceId, id });
+    const handleDeleteRequest = (template) => {
+        setTemplateToDelete(template);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (templateToDelete && workspaceId) {
+            executeDelete({ workspaceId, id: templateToDelete.id });
         }
     };
 
@@ -183,6 +192,8 @@ export default function TemplatesPage() {
             </div>
 
             <div className="flex flex-1 overflow-hidden">
+
+
                 {/* Library Sidebar (Mirroring Contacts Sidebar) */}
                 <div className="w-64 border-r bg-card/20 flex flex-col hide-scrollbar">
                     <ScrollArea className="flex-1 transition-all">
@@ -203,64 +214,66 @@ export default function TemplatesPage() {
 
                             {/* Segment: Categories */}
                             {categories.length > 0 && (
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between px-2">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1"><Folder className="w-3 h-3" /> Categories</span>
-                                </div>
-                                <div className="space-y-0.5">
-                                    {categories.map(([cat, count]) => (
-                                        <div
-                                            key={cat}
-                                            className={`w-full flex items-center justify-between transition-all cursor-pointer py-2 px-3 rounded-md text-sm ${activeSegment === `cat::${cat}` ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground group'}`}
-                                            onClick={() => setActiveSegment(`cat::${cat}`)}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: `hsl(${getStringColor(cat)})` }} />
-                                                <span className="truncate max-w-[120px]">{cat}</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between px-2">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1"><Folder className="w-3 h-3" /> Categories</span>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        {categories.map(([cat, count]) => (
+                                            <div
+                                                key={cat}
+                                                className={`w-full flex items-center justify-between transition-all cursor-pointer py-2 px-3 rounded-md text-sm ${activeSegment === `cat::${cat}` ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground group'}`}
+                                                onClick={() => setActiveSegment(`cat::${cat}`)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: `hsl(${getStringColor(cat)})` }} />
+                                                    <span className="truncate max-w-[120px]">{cat}</span>
+                                                </div>
+                                                <span className="text-[10px] opacity-60 font-mono font-bold group-hover:opacity-100">{count}</span>
                                             </div>
-                                            <span className="text-[10px] opacity-60 font-mono font-bold group-hover:opacity-100">{count}</span>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
                             )}
 
                             {/* Segment: Types */}
                             {types.length > 0 && (
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between px-2">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1"><Tag className="w-3 h-3" /> Template Types</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between px-2">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1"><Tag className="w-3 h-3" /> Template Types</span>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        {types.map(([type, count]) => {
+                                            const c = getStringColor(type);
+                                            return (
+                                                <div
+                                                    key={type}
+                                                    className={`w-full flex items-center justify-between transition-all cursor-pointer py-2 px-3 rounded-md text-sm ${activeSegment === `type::${type}` ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground group'}`}
+                                                    onClick={() => setActiveSegment(`type::${type}`)}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-2.5 h-2.5 bg-muted rounded-full" style={{ backgroundColor: `hsl(${c})` }} />
+                                                        <span className="truncate text-[11px] font-bold uppercase tracking-tighter">{type}</span>
+                                                    </div>
+                                                    <span className="text-[10px] opacity-60 font-mono font-bold group-hover:opacity-100">{count}</span>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
-                                <div className="space-y-0.5">
-                                    {types.map(([type, count]) => {
-                                        const c = getStringColor(type);
-                                        return (
-                                        <div
-                                            key={type}
-                                            className={`w-full flex items-center justify-between transition-all cursor-pointer py-2 px-3 rounded-md text-sm ${activeSegment === `type::${type}` ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground group'}`}
-                                            onClick={() => setActiveSegment(`type::${type}`)}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-1.5 h-3 bg-muted rounded-full" style={{ backgroundColor: `hsl(${c})` }} />
-                                                <span className="truncate text-[11px] font-bold uppercase tracking-tighter">{type}</span>
-                                            </div>
-                                            <span className="text-[10px] opacity-60 font-mono font-bold group-hover:opacity-100">{count}</span>
-                                        </div>
-                                    )})}
-                                </div>
-                            </div>
                             )}
                         </div>
                     </ScrollArea>
                     <div className="p-4 border-t bg-muted/10">
-                         <div className="bg-primary/5 rounded-xl p-3 border border-primary/10">
+                        <div className="bg-primary/5 rounded-xl p-3 border border-primary/10">
                             <p className="text-[10px] font-bold text-primary flex items-center gap-2 uppercase tracking-widest">
                                 <CheckCircle2 className="w-3 h-3" /> System Synchronized
                             </p>
                             <p className="text-[9px] text-muted-foreground mt-1 leading-relaxed">Templates are stored in the global message protocol library.</p>
-                         </div>
+                        </div>
                     </div>
                 </div>
+
 
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col bg-muted/10">
@@ -308,19 +321,18 @@ export default function TemplatesPage() {
                             </div>
                         ) : (
                             <ScrollArea className="h-full">
-                                <div className="divide-y divide-border/40">
+                                <div className="">
                                     {filteredTemplates.map(template => (
-                                        <div 
-                                            key={template.id} 
-                                            className="group flex items-center gap-4 p-3 px-6 transition-all hover:bg-muted/50 cursor-pointer"
-                                            onClick={() => { setActiveTemplate(template); setIsCreateModalOpen(true); }}
+                                         <div
+                                            key={template.id}
+                                            className="group flex items-center gap-4 p-3 px-6 transition-all hover:bg-muted/50 border-b border-border/40"
                                         >
                                             {/* Icon Section (Matches Contact Avatar style) */}
                                             <div className="shrink-0 flex items-center justify-center">
                                                 <div className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center text-primary shadow-sm group-hover:scale-105 transition-transform">
-                                                    {template.type === 'IMAGE' ? <Eye className="w-5 h-5" /> : 
-                                                     template.type === 'DOCUMENT' ? <RefreshCw className="w-5 h-5" /> : 
-                                                     <MessageSquare className="w-5 h-5" />}
+                                                    {template.type === 'IMAGE' ? <Eye className="w-5 h-5" /> :
+                                                        template.type === 'DOCUMENT' ? <RefreshCw className="w-5 h-5" /> :
+                                                            <MessageSquare className="w-5 h-5" />}
                                                 </div>
                                             </div>
 
@@ -351,29 +363,29 @@ export default function TemplatesPage() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-8 w-8 text-muted-foreground/30 hover:text-destructive transition-all"
+                                                    <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-all">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-destructive transition-all"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleDelete(template.id);
+                                                                handleDeleteRequest(template);
                                                             }}
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5" />
                                                         </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-8 w-8 text-muted-foreground/60"
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-primary transition-all"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setActiveTemplate(template);
                                                                 setIsCreateModalOpen(true);
                                                             }}
                                                         >
-                                                            <Edit2 className="w-4 h-4" />
+                                                            <Edit2 className="w-3.5 h-3.5" />
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -393,6 +405,14 @@ export default function TemplatesPage() {
                 initialData={activeTemplate}
                 onSave={handleSaveTemplate}
                 isLoading={isSaving}
+            />
+
+            <DeleteTemplateModal 
+                isOpen={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                onConfirm={confirmDelete}
+                isLoading={isDeleting}
+                templateName={templateToDelete?.name}
             />
         </div>
     );

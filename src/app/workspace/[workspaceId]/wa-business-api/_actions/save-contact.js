@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { logActivity } from "./log-activity";
-import { waManager } from "../../wa-api/_lib/whatsapp-v2";
+import { waManager } from "../../wa-api_delete/_lib/whatsapp-v2";
 
 const SaveContactSchema = z.object({
     id: z.string().optional(),

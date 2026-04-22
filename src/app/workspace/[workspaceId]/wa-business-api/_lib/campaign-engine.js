@@ -1,12 +1,11 @@
-import { db } from '@/lib/db';
-import { businessQueueWorker } from './queue-worker';
-import { waManager } from '../../wa-api/_lib/whatsapp-v2';
+import { db } from '../../../../../../src/lib/db.js';
+import { waManager } from '../../wa-api_delete/_lib/whatsapp-v2.js';
 
 export class CampaignEngine {
     static instance;
     activeCampaigns = new Set();
 
-    constructor() {}
+    constructor() { }
 
     static getInstance() {
         if (!CampaignEngine.instance) {
@@ -17,37 +16,36 @@ export class CampaignEngine {
 
     async startCampaign(campaignId, userId) {
         try {
-            await db.campaign.update({
-                where: { id: campaignId },
-                data: { status: 'QUEUED' }
+            console.log(`[CampaignEngine] Triggering direct processing for Campaign: ${campaignId}`);
+
+            // Fire and forget background process
+            this.processCampaign(campaignId, userId).catch(err => {
+                console.error(`[CampaignEngine] Background process fatal error for ${campaignId}:`, err);
             });
 
-            // Ensure worker is running
-            businessQueueWorker.init();
-            // Use a separate task type for Business Campaigns if needed, or handle it in the worker
-            await businessQueueWorker.enqueue(userId, 'BUSINESS_CAMPAIGN', { campaignId, userId }, null, 'WHATSAPP_BUSINESS');
-            
-            console.log(`[BusinessCampaign] Enqueued Campaign ${campaignId} for User ${userId}`);
+            return { success: true };
 
         } catch (error) {
-            console.error(`[BusinessCampaign] Fatal error in campaign ${campaignId}:`, error);
+            console.error(`[CampaignEngine] Fatal error starting campaign ${campaignId}:`, error);
             await db.campaign.update({
                 where: { id: campaignId },
                 data: { status: 'ERROR' }
             });
+            throw error;
         }
     }
 
-    async processCampaign(campaignId) {
+    async processCampaign(campaignId, userId) {
         if (this.activeCampaigns.has(campaignId)) {
-            console.log(`[BusinessCampaign] Campaign ${campaignId} is already running.`);
+            console.log(`[CampaignEngine] Campaign ${campaignId} is already running. Skipping.`);
             return;
         }
 
         this.activeCampaigns.add(campaignId);
-        console.log(`[BusinessCampaign] Processing Campaign ${campaignId}`);
+        console.log(`[CAMPAIGN_DISPATCH] >>> STARTING CAMPAIGN: ${campaignId}`);
 
         try {
+            // Set status to RUNNING immediately
             await db.campaign.update({
                 where: { id: campaignId },
                 data: { status: 'RUNNING' }
@@ -56,42 +54,21 @@ export class CampaignEngine {
             const campaign = await db.campaign.findUnique({
                 where: { id: campaignId },
                 include: {
-                    recipients: { where: { status: 'PENDING' } },
+                    recipients: { where: { status: { in: ['PENDING', 'FAILED'] } } },
                     template: true
                 }
             });
 
-            console.log(`[CampaignEngine] Processing campaign: ${campaignId}`);
-
             if (!campaign) {
-                console.error(`[CampaignEngine] Campaign ${campaignId} not found`);
+                console.error(`[CAMPAIGN_DISPATCH] ERROR: Campaign ${campaignId} not found in database.`);
                 return;
             }
 
-            // Check session state
-            if (waManager.getState() !== 'open') {
-                console.error(`[CampaignEngine] WhatsApp session is NOT connected. State: ${waManager.getState()}`);
-                await db.campaign.update({
-                    where: { id: campaignId },
-                    data: { status: 'ERROR', description: (campaign.description || '') + ' [System: WA session disconnected]' }
-                });
+            const totalPending = campaign.recipients?.length || 0;
+            console.log(`[CAMPAIGN_DISPATCH] Total PENDING recipients found in DB: ${totalPending}`);
 
-                await db.systemLog.create({
-                    data: {
-                        workspaceId: campaign.workspaceId || null,
-                        userId: campaign.userId,
-                        message: `Campaign "${campaign.name}" failed: WhatsApp session is disconnected`,
-                        type: 'CAMPAIGN_ERROR',
-                        level: 'error',
-                        provider: 'wa-business-api',
-                        details: { campaignId, state: waManager.getState() }
-                    }
-                });
-                return;
-            }
-
-            if (!campaign.recipients || campaign.recipients.length === 0) {
-                console.log(`[CampaignEngine] No PENDING recipients found for campaign: ${campaignId}`);
+            if (totalPending === 0) {
+                console.log(`[CAMPAIGN_DISPATCH] FINISHED: No PENDING recipients found. Stopping.`);
                 await db.campaign.update({
                     where: { id: campaignId },
                     data: { status: 'COMPLETED' }
@@ -99,19 +76,52 @@ export class CampaignEngine {
                 return;
             }
 
-            console.log(`[CampaignEngine] Found ${campaign.recipients.length} recipients to process`);
+            // Connection Check & Auto-Connect
+            let waState = waManager.getState();
 
-            // Combined template data (DB template + campaign overrides)
+            if (waState !== 'open') {
+                console.log(`[CAMPAIGN_DISPATCH] Session is ${waState}. Attempting auto-connect for user ${userId}...`);
+                await waManager.connect(userId);
+
+                // Wait up to 10 seconds for connection
+                for (let i = 0; i < 10; i++) {
+                    waState = waManager.getState();
+                    if (waState === 'open') break;
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+
+            if (waState !== 'open') {
+                console.error(`[CAMPAIGN_DISPATCH] ABORTED: WhatsApp session remains in state: ${waState}`);
+                await db.campaign.update({
+                    where: { id: campaignId },
+                    data: { status: 'ERROR', description: (campaign.description || '') + ` [System: WA connection failed - ${waState}]` }
+                });
+                return;
+            }
+
+            if (!campaign.recipients || campaign.recipients.length === 0) {
+                console.log(`[CAMPAIGN_DISPATCH] FINISHED: No PENDING recipients found for campaign.`);
+                await db.campaign.update({
+                    where: { id: campaignId },
+                    data: { status: 'COMPLETED' }
+                });
+                return;
+            }
+
+            console.log(`[CAMPAIGN_DISPATCH] FOUND ${campaign.recipients.length} recipients to process.`);
+
             const baseTemplate = campaign.template || campaign.messageTemplate || {};
 
             for (const recipient of campaign.recipients) {
-                const currentCampaign = await db.campaign.findUnique({ 
-                    where: { id: campaignId }, 
-                    select: { status: true } 
+                // Check if campaign was stopped/paused externally
+                const currentCampaign = await db.campaign.findUnique({
+                    where: { id: campaignId },
+                    select: { status: true }
                 });
-                
+
                 if (currentCampaign?.status !== 'RUNNING') {
-                    console.log(`[BusinessCampaign] Campaign ${campaignId} was ${currentCampaign?.status}. Stopping engine.`);
+                    console.log(`[CAMPAIGN_DISPATCH] STOPPED: Campaign status is ${currentCampaign?.status}.`);
                     break;
                 }
 
@@ -122,21 +132,36 @@ export class CampaignEngine {
                         let res = text;
                         Object.keys(variables).forEach(key => {
                             const placeholder = `{{${key}}}`;
-                            res = res.split(placeholder).join(variables[key]);
+                            // Using split/join for safety against special regex characters in keys
+                            res = res.split(placeholder).join(variables[key] || '');
                         });
                         return res;
                     };
 
-                    const phone = recipient.phone.replace(/\D/g, '');
+                    let phone = recipient.phone.replace(/\D/g, '');
+                    // Remove leading zero if present
+                    if (phone.startsWith('0')) {
+                        phone = phone.substring(1);
+                    }
+
+                    // Smart Formatting: If exactly 10 digits, assume India (91)
+                    if (phone.length === 10) {
+                        phone = '91' + phone;
+                        console.log(`[CAMPAIGN_DISPATCH] Formatting 10-digit number to: ${phone}`);
+                    }
+
                     const jid = `${phone}@s.whatsapp.net`;
-                    
+                    console.log(`[CAMPAIGN_DISPATCH] [${recipient.phone}] -> State: ${waState} | JID: ${jid}`);
+
                     let messagePayload = {};
 
-                    // Handle Interactive Messages (Buttons/Carousels)
+                    // Payload Construction Logic
                     if (baseTemplate.type === 'CAROUSEL' || baseTemplate.carouselMessage) {
                         messagePayload = {
-                            carousel: true,
+                            interactive: true,
+                            type: 'carousel',
                             interactiveMessage: {
+                                header: { title: 'Carousel' },
                                 body: { text: interpolate(baseTemplate.body || baseTemplate.text || 'Check this out!') },
                                 footer: { text: interpolate(baseTemplate.footer || 'Devlomatix Solutions') },
                                 carouselMessage: {
@@ -163,14 +188,16 @@ export class CampaignEngine {
                     } else if (baseTemplate.buttons?.length > 0 || baseTemplate.type === 'BUTTON') {
                         messagePayload = {
                             interactive: true,
+                            type: 'interactive',
                             interactiveMessage: {
+                                type: 'native_flow',
                                 body: { text: interpolate(baseTemplate.body || baseTemplate.text || '') },
                                 footer: { text: interpolate(baseTemplate.footer || '') },
                                 nativeFlowMessage: {
-                                    buttons: baseTemplate.buttons.map((btn, idx) => ({
+                                    buttons: (baseTemplate.buttons || []).map((btn, idx) => ({
                                         name: "quick_reply",
                                         buttonParamsJson: JSON.stringify({
-                                            display_text: interpolate(typeof btn === 'string' ? btn : (btn.text || btn.label)),
+                                            display_text: interpolate(typeof btn === 'string' ? btn : (btn.text || btn.label || '')),
                                             id: `btn_${idx}`
                                         })
                                     }))
@@ -178,7 +205,6 @@ export class CampaignEngine {
                             }
                         };
                     } else {
-                        // Standard Text/Media Message
                         const body = interpolate(baseTemplate.body || baseTemplate.text || '');
                         if (baseTemplate.imageUrl || baseTemplate.mediaUrl) {
                             messagePayload = {
@@ -190,9 +216,24 @@ export class CampaignEngine {
                         }
                     }
 
-                    console.log(`[BusinessCampaign] Dispatching to ${jid}`);
+                    console.log(`[CAMPAIGN_DISPATCH] TO: ${jid} | PAYLOAD: ${JSON.stringify(messagePayload).slice(0, 50)}...`);
+
+                    // Update campaign messageTemplate with active phone so UI can track progress
+                    // Using messageTemplate instead of metadata to avoid Prisma client sync issues
+                    await db.campaign.update({
+                        where: { id: campaignId },
+                        data: { 
+                            messageTemplate: {
+                                ...(baseTemplate || {}),
+                                activePhone: recipient.phone,
+                                lastUpdate: new Date().toISOString()
+                            }
+                        }
+                    });
+
                     await waManager.sendMessage(jid, messagePayload);
-                    console.log(`[CampaignEngine] Message sent to ${recipient.phone}`);
+
+                    console.log(`[CAMPAIGN_DISPATCH] SUCCESS: ${recipient.phone}`);
 
                     await db.campaignRecipient.update({
                         where: { id: recipient.id },
@@ -200,29 +241,31 @@ export class CampaignEngine {
                     });
 
                 } catch (err) {
-                    console.error(`[BusinessCampaign] Error sending to ${recipient.phone}:`, err);
+                    console.error(`[CAMPAIGN_DISPATCH] FAILED: ${recipient.phone} | Error: ${err.message}`);
                     await db.campaignRecipient.update({
                         where: { id: recipient.id },
                         data: { status: 'FAILED', errorLog: err.message }
                     });
                 }
 
-                // Random delay between 1-3 seconds
+                // Random delay between 1-3 seconds to avoid spam filters
                 const delay = Math.floor(Math.random() * 2000) + 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
 
-            const remaining = await db.campaignRecipient.count({ 
-                where: { campaignId, status: 'PENDING' } 
+            const remaining = await db.campaignRecipient.count({
+                where: { campaignId, status: 'PENDING' }
             });
-            
+
             await db.campaign.update({
                 where: { id: campaignId },
                 data: { status: remaining === 0 ? 'COMPLETED' : 'PAUSED' }
             });
 
+            console.log(`[CAMPAIGN_DISPATCH] <<< CAMPAIGN FINISHED: ${campaignId} | Remaining: ${remaining}`);
+
         } catch (error) {
-            console.error(`[BusinessCampaign] Fatal error in campaign ${campaignId}:`, error);
+            console.error(`[CAMPAIGN_DISPATCH] FATAL: ${campaignId} | ${error.message}`);
             await db.campaign.update({
                 where: { id: campaignId },
                 data: { status: 'ERROR' }
@@ -233,6 +276,7 @@ export class CampaignEngine {
     }
 
     async stopCampaign(campaignId) {
+        console.log(`[CampaignEngine] Stopping Campaign: ${campaignId}`);
         await db.campaign.update({
             where: { id: campaignId },
             data: { status: 'PAUSED' }

@@ -23,6 +23,7 @@ export async function middleware(request) {
 
     const isDev = process.env.NODE_ENV !== 'production'
 
+
     // =========================
     // AUTH PROTECTION
     // =========================
@@ -39,26 +40,30 @@ export async function middleware(request) {
 
     // Not logged in -> block protected routes
     if (isProtectedRoute && !token) {
-        return NextResponse.redirect(new URL('/login', request.url))
+        return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // Workspace Access Control (RBAC)
-    // if (pathname.startsWith('/workspace') && token) {
-    //     const hasWorkspaceAccess =
-    //         token.role === 'admin' ||
-    //         token.role === 'superadmin' ||
-    //         token.role === 'super-admin' ||
-    //         token.roles?.some(role => role.title === 'workspace');
+    // Workspace Access Control (RBAC & Multi-Tenancy Isolation)
+    // if (pathname.startsWith('/workspace/') && token) {
+    //     const segments = pathname.split('/').filter(Boolean);
+    //     const workspaceId = segments[1]; // /workspace/[workspaceId]/...
 
-    //     if (!hasWorkspaceAccess) {
-    //         console.log(`[Middleware] Access denied for ${token.email} to ${pathname}`);
-    //         return NextResponse.redirect(new URL('/', request.url))
+    //     const isSystemAdmin = token.role === 'ADMIN' || token.role === 'SUPER_ADMIN';
+    //     const hasWorkspaceMembership = token.workspaces?.includes(workspaceId);
+
+    //     // PRODUCTION GRADE: If token.workspaces is missing entirely, 
+    //     // it means the session is stale. We allow it briefly but log it.
+    //     const isStaleSession = token.workspaces === undefined;
+
+    //     if (!isSystemAdmin && !hasWorkspaceMembership && workspaceId && !isStaleSession) {
+    //         console.error(`[Security Guard] Blocked unauthorized access: ${token.email} tried to enter workspace ${workspaceId}`);
+    //         return NextResponse.redirect(new URL('/unauthorized', request.url));
     //     }
     // }
 
-    // Logged in -> block login page
-    if (pathname === '/login' && token) {
-        return NextResponse.redirect(new URL('/workspace', request.url))
+    // Logged in -> Allow viewing the home page/landing page
+    if (pathname === '/' && token) {
+        return NextResponse.next()
     }
 
     // =========================

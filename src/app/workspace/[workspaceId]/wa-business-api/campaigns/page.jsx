@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import {
     Megaphone, Plus, Search, Filter,
     Play, Pause, Trash2, Edit2,
-    CheckCircle2, RefreshCw,
+    CheckCircle2, RefreshCw, RotateCcw,
     Users, Activity, Box
 } from 'lucide-react';
 import { 
@@ -30,6 +30,7 @@ import { getCampaigns } from './_actions/get-campaigns';
 import { saveCampaign } from './_actions/save-campaign';
 import { deleteCampaign } from './_actions/delete-campaign';
 import { triggerCampaign } from './_actions/trigger-campaign';
+import { resetCampaign } from './_actions/reset-campaign';
 import { getTemplates } from '../_actions/get-templates';
 import { getGroups } from '../_actions/get-groups';
 import { getTags } from '../_actions/get-tags';
@@ -138,6 +139,26 @@ export default function CampaignsPage() {
         fetchInitialData();
     }, [fetchInitialData]);
 
+    // --- Background Polling for Running Campaigns ---
+    useEffect(() => {
+        const hasRunningCampaign = campaigns.some(c => c.status === 'RUNNING');
+        let interval;
+
+        if (hasRunningCampaign) {
+            console.log("[POLLING] Starting background sync for active campaigns...");
+            interval = setInterval(() => {
+                fetchInitialData(true); // Silent refresh
+            }, 4000); // 4 second heartbeat
+        }
+
+        return () => {
+            if (interval) {
+                console.log("[POLLING] Stopping background sync.");
+                clearInterval(interval);
+            }
+        };
+    }, [campaigns, fetchInitialData]);
+
     // --- Computed Filters ---
     const filteredCampaigns = useMemo(() => {
         return campaigns.filter(c => {
@@ -225,6 +246,18 @@ export default function CampaignsPage() {
         }
     };
 
+    const onReset = useAction(resetCampaign, {
+        onSuccess: (data) => {
+            toast.success("Campaign reset successfully. You can now re-run it.");
+            fetchData();
+        },
+        onError: (error) => toast.error(error)
+    });
+
+    const handleReset = (id) => {
+        onReset.execute({ workspaceId, id });
+    };
+
     const handleTrigger = (id) => {
         setTriggeringId(id);
         executeTrigger({ workspaceId, id, action: 'start' });
@@ -232,7 +265,16 @@ export default function CampaignsPage() {
 
     const getStatusBadge = (status) => {
         switch (status) {
-            case 'RUNNING': return <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 flex items-center gap-1.5 px-3 py-1 rounded-full"><Activity className="w-3 h-3 animate-pulse" /> RUNNING</Badge>;
+            case 'RUNNING': return (
+                <div className="relative inline-flex items-center">
+                    <Badge className="bg-primary/20 text-primary border-primary/30 hover:bg-primary/30 flex items-center gap-1.5 px-3 py-1 rounded-full relative z-10 font-bold tracking-tight">
+                        <Activity className="w-3 h-3 animate-pulse" /> 
+                        RUNNING
+                    </Badge>
+                    <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-75"></span>
+                    <span className="absolute inset-0 rounded-full bg-primary/10 animate-pulse scale-150 opacity-20"></span>
+                </div>
+            );
             case 'COMPLETED': return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20 flex items-center gap-1.5 px-3 py-1 rounded-full"><CheckCircle2 className="w-3 h-3" /> COMPLETED</Badge>;
             case 'PAUSED': return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20 flex items-center gap-1.5 px-3 py-1 rounded-full"><Pause className="w-3 h-3" /> PAUSED</Badge>;
             default: return <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1 rounded-full">{status}</Badge>;
@@ -406,7 +448,7 @@ export default function CampaignsPage() {
                                             <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Recipients</th>
                                             <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell w-36">Progress</th>
                                             <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">Created</th>
-                                            <th className="px-6 py-3 w-28" />
+                                            <th className="px-6 py-3 w-28 text-right text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/30">
@@ -440,37 +482,58 @@ export default function CampaignsPage() {
                                                         <span className="text-sm font-semibold tabular-nums">{(c.total || 0).toLocaleString()}</span>
                                                     </td>
                                                     <td className="px-4 py-3.5 hidden lg:table-cell">
-                                                        <div className="flex items-center gap-2.5">
-                                                            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                                                                <div className="h-full bg-primary rounded-full" style={{ width: `${progressPct}%` }} />
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden border border-border/5">
+                                                                    <div className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.5)] transition-all duration-500" style={{ width: `${progressPct}%` }} />
+                                                                </div>
+                                                                <span className="text-xs text-muted-foreground tabular-nums w-8 text-right font-bold">{progressPct}%</span>
                                                             </div>
-                                                            <span className="text-xs text-muted-foreground tabular-nums w-8 text-right">{progressPct}%</span>
+                                                            {(c.status === 'RUNNING' && (c.metadata?.activePhone || c.messageTemplate?.activePhone)) && (
+                                                                <div className="flex items-center gap-1.5 text-[10px] text-primary/80 font-medium animate-in fade-in slide-in-from-left-1">
+                                                                    <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                                                                    <span>Dialing: {c.metadata?.activePhone || c.messageTemplate?.activePhone}</span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3.5 text-right hidden xl:table-cell">
                                                         <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                                     </td>
                                                     <td className="px-4 py-3.5">
-                                                        <div className="flex items-center justify-end gap-1">
+                                                        <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                                                             <Button 
                                                                 size="sm" 
                                                                 variant="outline" 
                                                                 disabled={triggeringId === c.id}
-                                                                className="h-7 px-3 text-[11px] font-semibold gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/50 transition-all" 
+                                                                className="h-7 px-3 text-[10px] font-bold gap-1.5 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/40 transition-all shadow-sm" 
                                                                 onClick={() => handleTrigger(c.id)}
                                                             >
                                                                 {triggeringId === c.id ? (
                                                                     <RefreshCw className="w-3 h-3 animate-spin" />
                                                                 ) : (
-                                                                    <Play className="w-3 h-3" />
+                                                                    <Play className="w-3 h-3 fill-current" />
                                                                 )}
-                                                                {triggeringId === c.id ? 'Starting...' : 'Run'}
+                                                                {triggeringId === c.id ? 'Starting...' : 'RUN'}
                                                             </Button>
-                                                            <Button variant="ghost" size="icon" className="w-7 h-7 rounded-md hover:bg-primary/10 hover:text-primary transition-all text-muted-foreground/60 hover:text-primary" onClick={() => handleEdit(c)} title="Edit Campaign">
-                                                                <Edit2 className="w-3 h-3" />
+
+                                                            {c.status === 'COMPLETED' && (
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    className="w-8 h-8 rounded-lg hover:bg-amber-500/10 hover:text-amber-600 transition-all text-muted-foreground/40" 
+                                                                    onClick={() => handleReset(c.id)}
+                                                                    title="Reset & Re-run"
+                                                                >
+                                                                    <RotateCcw className="w-3.5 h-3.5" />
+                                                                </Button>
+                                                            )}
+
+                                                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-all text-muted-foreground/40 hover:text-primary" onClick={() => handleEdit(c)} title="Edit Campaign">
+                                                                <Edit2 className="w-3.5 h-3.5" />
                                                             </Button>
-                                                            <Button variant="ghost" size="icon" className="w-7 h-7 rounded-md hover:bg-red-500/10 hover:text-red-500 transition-all text-muted-foreground/60 hover:text-red-500" onClick={() => { setActiveCampaign(c); setDeleteDialogOpen(true); }} title="Delete Campaign">
-                                                                <Trash2 className="w-3 h-3" />
+                                                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-red-500/10 hover:text-red-500 transition-all text-muted-foreground/40 hover:text-red-500" onClick={() => { setActiveCampaign(c); setDeleteDialogOpen(true); }} title="Delete Campaign">
+                                                                <Trash2 className="w-3.5 h-3.5" />
                                                             </Button>
                                                         </div>
                                                     </td>

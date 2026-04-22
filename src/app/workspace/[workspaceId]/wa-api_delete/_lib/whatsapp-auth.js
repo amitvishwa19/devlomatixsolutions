@@ -1,5 +1,5 @@
 import { BufferJSON, initAuthCreds } from '@whiskeysockets/baileys';
-import { db } from '@/lib/db';
+import { db } from '../../../../../../src/lib/db.js';
 
 /**
  * Custom auth state for Baileys that uses Prisma as the backend.

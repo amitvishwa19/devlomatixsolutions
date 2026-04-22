@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
-import { waManager } from "../../wa-api/_lib/whatsapp-v2";
+import { waManager } from "../../wa-api_delete/_lib/whatsapp-v2";
 import { db } from "@/lib/db";
 
 const CheckNumberSchema = z.object({

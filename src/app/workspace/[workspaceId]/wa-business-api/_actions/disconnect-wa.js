@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { waManager } from "../../wa-api/_lib/whatsapp-v2";
+import { waManager } from "../../wa-api_delete/_lib/whatsapp-v2";
 import { logActivity } from "./log-activity";
 
 const DisconnectSchema = z.object({
@@ -14,10 +14,10 @@ const handler = async (data) => {
     const { workspaceId } = data;
     try {
         await ensureWorkspaceAccess(workspaceId);
-        
+
         console.log("[WA Business Action] Terminating connection");
         waManager.disconnect();
-        
+
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 

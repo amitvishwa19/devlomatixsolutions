@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { waManager } from '../../wa-api/_lib/whatsapp-v2';
+import { waManager } from '../../wa-api_delete/_lib/whatsapp-v2';
 
 /**
  * BusinessQueueWorker: Standalone worker for Session-based Business campaigns.
@@ -10,7 +10,7 @@ export class BusinessQueueWorker {
     interval = null;
     pollInterval = 10000; // 10 seconds
 
-    constructor() {}
+    constructor() { }
 
     static getInstance() {
         if (!BusinessQueueWorker.instance) {

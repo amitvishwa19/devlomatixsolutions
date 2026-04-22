@@ -32,13 +32,33 @@ const handler = async (data) => {
             name,
             description,
             status: status || 'DRAFT',
-            messageTemplate: messageTemplate || {},
+            messageTemplate: {
+                ...(messageTemplate || {}),
+                metadata: {
+                    groupIds: groupIds || [],
+                    categoryIds: categoryIds || [],
+                    tags: tags || [],
+                    recipientsRaw: data.recipientsRaw || recipients?.map(r => `${r.phone}${r.name ? ',' + r.name : ''}`).join('\n') || ''
+                }
+            },
             templateId: templateId || null,
             userId: userId,
             platform: "WHATSAPP_BUSINESS" // Explicitly mark as Business API campaign
         };
 
+        const normalizePhone = (p) => {
+            if (!p) return '';
+            let clean = String(p).replace(/\D/g, '');
+            // Remove leading zero if present (e.g. 091... -> 91...)
+            if (clean.startsWith('0')) {
+                clean = clean.substring(1);
+            }
+            return clean;
+        };
+
         let allRecipients = recipients && Array.isArray(recipients) ? [...recipients] : [];
+
+        console.log(`[SAVE_CAMPAIGN] Debug Workspace ID: ${workspaceId} | Initial Recipients: ${allRecipients.length}`);
 
         // Fetch group contacts if groupIds provided
         if (groupIds && groupIds.length > 0) {
@@ -50,12 +70,13 @@ const handler = async (data) => {
                 select: { phone: true, name: true }
             });
 
-            console.log(`[SAVE_CAMPAIGN] Found ${groupContacts.length} contacts for groups ${groupIds.join(',')}`);
-            const existingPhones = new Set(allRecipients.map(r => typeof r === 'string' ? r : r.phone));
+            console.log(`[SAVE_CAMPAIGN] Found ${groupContacts.length} contacts for groups`);
+            const existingPhones = new Set(allRecipients.map(r => normalizePhone(r.phone)));
             groupContacts.forEach(gc => {
-                if (!existingPhones.has(gc.phone)) {
-                    allRecipients.push({ phone: gc.phone, name: gc.name });
-                    existingPhones.add(gc.phone);
+                const cleanPhone = normalizePhone(gc.phone);
+                if (!existingPhones.has(cleanPhone)) {
+                    allRecipients.push({ phone: cleanPhone, name: gc.name });
+                    existingPhones.add(cleanPhone);
                 }
             });
         }
@@ -70,12 +91,13 @@ const handler = async (data) => {
                 select: { phone: true, name: true }
             });
 
-            console.log(`[SAVE_CAMPAIGN] Found ${categoryContacts.length} contacts for categories ${categoryIds.join(',')}`);
-            const existingPhones = new Set(allRecipients.map(r => typeof r === 'string' ? r : r.phone));
+            console.log(`[SAVE_CAMPAIGN] Found ${categoryContacts.length} contacts for categories`);
+            const existingPhones = new Set(allRecipients.map(r => normalizePhone(r.phone)));
             categoryContacts.forEach(cc => {
-                if (!existingPhones.has(cc.phone)) {
-                    allRecipients.push({ phone: cc.phone, name: cc.name });
-                    existingPhones.add(cc.phone);
+                const cleanPhone = normalizePhone(cc.phone);
+                if (!existingPhones.has(cleanPhone)) {
+                    allRecipients.push({ phone: cleanPhone, name: cc.name });
+                    existingPhones.add(cleanPhone);
                 }
             });
         }
@@ -90,15 +112,38 @@ const handler = async (data) => {
                 select: { phone: true, name: true }
             });
 
-            console.log(`[SAVE_CAMPAIGN] Found ${taggedContacts.length} contacts for tags ${tags.join(',')}`);
-            const existingPhones = new Set(allRecipients.map(r => typeof r === 'string' ? r : r.phone));
+            console.log(`[SAVE_CAMPAIGN] Found ${taggedContacts.length} contacts for tags`);
+            const existingPhones = new Set(allRecipients.map(r => normalizePhone(r.phone)));
             taggedContacts.forEach(tc => {
-                if (!existingPhones.has(tc.phone)) {
-                    allRecipients.push({ phone: tc.phone, name: tc.name });
-                    existingPhones.add(tc.phone);
+                const cleanPhone = normalizePhone(tc.phone);
+                if (!existingPhones.has(cleanPhone)) {
+                    allRecipients.push({ phone: cleanPhone, name: tc.name });
+                    existingPhones.add(cleanPhone);
                 }
             });
         }
+
+        // --- Fallback Audience Logic ---
+        const filtersApplied = (groupIds?.length > 0) || (categoryIds?.length > 0) || (tags?.length > 0) || (recipients?.length > 0);
+        
+        if (!filtersApplied && allRecipients.length === 0) {
+            console.log(`[SAVE_CAMPAIGN] No filters applied. Falling back to all contacts for workspace: ${workspaceId}`);
+            const workspaceContacts = await db.contact.findMany({
+                where: { workspaceId },
+                select: { phone: true, name: true }
+            });
+            
+            workspaceContacts.forEach(wc => {
+                const cleanPhone = normalizePhone(wc.phone);
+                allRecipients.push({ phone: cleanPhone, name: wc.name });
+            });
+        }
+
+        // Final list cleanup & normalization
+        allRecipients = allRecipients.map(r => ({
+            ...r,
+            phone: normalizePhone(r.phone)
+        })).filter(r => r.phone.length >= 10);
 
         console.log(`[SAVE_CAMPAIGN] Total unique recipients to enqueue: ${allRecipients.length}`);
 
@@ -109,11 +154,6 @@ const handler = async (data) => {
             });
 
             if (!existing) return { error: "Campaign not found" };
-            
-            // Allow editing only in DRAFT mode
-            if (existing.status !== 'DRAFT' && (name || messageTemplate || templateId)) {
-                return { error: "Only DRAFT campaigns can be edited" };
-            }
 
             const updateData = {
                 ...campaignData,
@@ -124,8 +164,8 @@ const handler = async (data) => {
                 await db.campaignRecipient.deleteMany({ where: { campaignId: id } });
                 updateData.recipients = {
                     create: allRecipients.map(r => ({
-                        phone: typeof r === 'string' ? r : r.phone,
-                        variables: typeof r === 'string' ? {} : (r.variables || {})
+                        phone: r.phone,
+                        variables: r.variables || {}
                     }))
                 };
             }
@@ -141,12 +181,10 @@ const handler = async (data) => {
                 console.log(`[SAVE_CAMPAIGN] Enqueuing ${allRecipients.length} recipients for new campaign`);
                 campaignData.recipients = {
                     create: allRecipients.map(r => ({
-                        phone: typeof r === 'string' ? r : r.phone,
-                        variables: typeof r === 'string' ? {} : (r.variables || {})
+                        phone: r.phone,
+                        variables: r.variables || {}
                     }))
                 };
-            } else {
-                console.warn(`[SAVE_CAMPAIGN] WARNING: Creating campaign with 0 recipients!`);
             }
 
             const campaign = await db.campaign.create({

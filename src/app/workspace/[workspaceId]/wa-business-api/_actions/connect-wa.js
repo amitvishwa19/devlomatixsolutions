@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { waManager } from "../../wa-api/_lib/whatsapp-v2";
+import { waManager } from "../../wa-api_delete/_lib/whatsapp-v2";
 import { logActivity } from "./log-activity";
 
 const ConnectSchema = z.object({
@@ -16,9 +16,9 @@ const handler = async (data) => {
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
-        
+
         console.log("[WA Business Action] Initializing connection for user:", userId);
-        
+
         // Persist workspaceId in metadata for background activity logging
         const existing = await db.whatsAppAuth.findUnique({ where: { sessionId: userId } });
         const metadata = { ...(typeof existing?.metadata === 'object' ? existing.metadata : {}), workspaceId };
@@ -30,7 +30,7 @@ const handler = async (data) => {
         });
 
         waManager.connect(userId);
-        
+
         await logActivity({
             workspaceId,
             userId,

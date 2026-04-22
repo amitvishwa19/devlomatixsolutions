@@ -24,18 +24,32 @@ const handler = async (data) => {
             include: {
                 _count: {
                     select: { recipients: true }
+                },
+                recipients: {
+                    select: { status: true }
                 }
             },
             orderBy: { createdAt: 'desc' }
         });
 
         // Map counts for the UI logic
-        const formattedCampaigns = campaigns.map(c => ({
-            ...c,
-            total: c._count.recipients,
-            sent: 0, // Placeholder
-            successRate: 0 // Placeholder
-        }));
+        const formattedCampaigns = campaigns.map(c => {
+            const total = c._count.recipients;
+            const sent = c.recipients.filter(r => r.status === 'SENT').length;
+            const failed = c.recipients.filter(r => r.status === 'FAILED').length;
+            
+            // Remove recipients from the object to keep payload small
+            const { recipients, _count, ...rest } = c;
+            
+            return {
+                ...rest,
+                total,
+                success: sent,
+                failed,
+                sent,
+                successRate: total > 0 ? Math.round((sent / total) * 100) : 0
+            };
+        });
 
         return { data: { campaigns: formattedCampaigns } };
     } catch (error) {

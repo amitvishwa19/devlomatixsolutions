@@ -1,7 +1,7 @@
 import { makeWASocket, DisconnectReason, fetchLatestBaileysVersion, prepareWAMessageMedia } from '@whiskeysockets/baileys';
 import pino from 'pino';
-import { usePrismaAuthState } from './whatsapp-auth';
-import { db } from '@/lib/db';
+import { usePrismaAuthState } from './whatsapp-auth.js';
+import { db } from '../../../../../../src/lib/db.js';
 import * as fs from 'fs';
 
 class WhatsAppManager {
@@ -80,7 +80,7 @@ class WhatsAppManager {
                 syncFullHistory: false
             });
 
-            this.sock.ev.on('connection.update', (update) => {
+            this.sock.ev.on('connection.update', async (update) => {
                 const { connection, lastDisconnect, qr } = update;
                 
                 if (qr) {
@@ -92,6 +92,8 @@ class WhatsAppManager {
                     const statusCode = lastDisconnect?.error?.output?.statusCode;
                     const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                     
+                    console.log(`[WA] Connection closed for ${sessionId}. Should reconnect: ${shouldReconnect}`);
+                    
                     if (shouldReconnect) {
                         setTimeout(() => this.init(sessionId), 5000);
                     } else {
@@ -100,7 +102,12 @@ class WhatsAppManager {
                         this.qrString = null;
                         this.userId = null;
                         
-                        db.whatsAppAuth.deleteMany({
+                        await db.whatsAppAuth.updateMany({
+                            where: { sessionId },
+                            data: { status: 'DISCONNECTED', isActive: false }
+                        }).catch((e) => console.error('[WA] DB update error:', e));
+
+                        db.whatsAppSessionKey.deleteMany({
                             where: { sessionId }
                         }).catch((e) => console.error('[WA] DB clear error:', e));
                     }
@@ -108,6 +115,14 @@ class WhatsAppManager {
                     this.state = 'open';
                     this.qrString = null;
                     if (!this.connectedAt) this.connectedAt = Date.now();
+                    
+                    console.log(`[WA] Connection SUCCESS for session: ${sessionId}`);
+                    
+                    // Automatically update DB status to CONNECTED
+                    await db.whatsAppAuth.update({
+                        where: { sessionId },
+                        data: { status: 'CONNECTED', isActive: true }
+                    }).catch((e) => console.error('[WA] Failed to update DB status to CONNECTED:', e));
                 }
             });
 
@@ -245,17 +260,12 @@ class WhatsAppManager {
                 finalBody = getCleanText(interactiveData.body || interactiveData.text || 'Interactive Message');
                 const msgContent = interactiveData.interactiveMessage || interactiveData;
 
-                if (msgContent.carouselMessage?.cards) {
-                    for (const card of msgContent.carouselMessage.cards) {
-                        if (card.header?.imageMessage?.url && !card.header.imageMessage.mimetype) {
-                            const media = await prepareWAMessageMedia(
-                                { image: { url: card.header.imageMessage.url } },
-                                { upload: this.sock.waUploadToServer }
-                            );
-                            card.header.imageMessage = media.imageMessage;
-                        }
-                    }
+                // Ensure type is set (native_flow is common for recent baileys buttons/carousels)
+                if (!msgContent.type && msgContent.nativeFlowMessage) {
+                    msgContent.type = 'native_flow';
                 }
+
+                console.log(`[WA] Sending interactive message of type: ${msgContent.type || 'unknown'} to ${jid}`);
                 result = await this.sock.sendMessage(jid, { interactiveMessage: msgContent });
             } else {
                 finalBody = getCleanText(data.text || data.body || '');
@@ -263,8 +273,28 @@ class WhatsAppManager {
             }
         } catch (err) {
             console.error('[WA] Send Message Failed:', err);
-            finalBody = getCleanText(data.text || data.body || 'Error sending content');
-            result = await this.sock.sendMessage(jid, { text: finalBody });
+            
+            // Critical handle: If connection is actually dead or unauthorized, reset state
+            const errorMessage = err?.message || '';
+            const isConnectionError = errorMessage.includes('close') || 
+                                    errorMessage.includes('Unauthorized') || 
+                                    errorMessage.includes('Connection');
+
+            if (isConnectionError) {
+                console.warn('[WA] Critical connection error detected. Resetting socket state for reconnection.');
+                this.state = 'welcome';
+                this.sock = null;
+                throw err; // Re-throw so campaign engine knows it failed
+            }
+
+            // For other errors, attempt a simple text fallback
+            try {
+                finalBody = getCleanText(data.text || data.body || 'Error sending content');
+                result = await this.sock.sendMessage(jid, { text: finalBody });
+            } catch (fallbackErr) {
+                console.error('[WA] Fallback Send Failed:', fallbackErr);
+                throw fallbackErr;
+            }
         }
 
         if (result && this.userId) {
