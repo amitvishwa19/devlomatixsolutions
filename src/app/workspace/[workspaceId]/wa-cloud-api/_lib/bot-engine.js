@@ -1,9 +1,10 @@
 import { db } from "@/lib/db";
-import { waManager } from "./whatsapp-v2";
+import * as cloudApi from "./whatsapp-cloud-api";
 import { waAIService } from "./ai-service";
+import { symmetricDecrypt } from "@/lib/encryption";
 
 /**
- * WhatsAppBotEngine: Executes node-based chatbot flows.
+ * WhatsAppBotEngine: Executes node-based chatbot flows for Cloud API.
  */
 export class WhatsAppBotEngine {
     static instance;
@@ -15,6 +16,32 @@ export class WhatsAppBotEngine {
             WhatsAppBotEngine.instance = new WhatsAppBotEngine();
         }
         return WhatsAppBotEngine.instance;
+    }
+
+    /**
+     * Helper to get Cloud Credentials
+     */
+    async getCredentials(workspaceId) {
+        const credential = await db.credentials.findFirst({
+            where: { 
+                workspaceId, 
+                platform: 'WHATSAPP_CLOUD',
+                isDefault: true 
+            }
+        });
+
+        if (!credential) return null;
+
+        let cloudCreds = null;
+        const stored = credential.credentials;
+        if (typeof stored === 'string' && stored.includes(':')) {
+            cloudCreds = JSON.parse(symmetricDecrypt(stored));
+        } else if (typeof stored === 'string') {
+            cloudCreds = JSON.parse(stored);
+        } else {
+            cloudCreds = stored;
+        }
+        return cloudCreds;
     }
 
     /**
@@ -53,21 +80,22 @@ export class WhatsAppBotEngine {
         console.log(`[BotEngine] Executing Node: ${node.type} (${node.id})`);
 
         let nextNodeId = null;
+        const creds = await this.getCredentials(workspaceId);
 
         try {
             switch (node.type) {
                 case 'message':
                     const text = this.interpolate(node.data?.text || node.data?.message || "", context);
-                    await waManager.sendMessage(from, { text });
+                    if (creds) await cloudApi.sendTextMessage(creds, from, text);
                     break;
 
                 case 'aiAssistant':
                     const aiResponse = await waAIService.generateRAGResponse(workspaceId, messageText, node.data?.category || 'GENERAL');
-                    await waManager.sendMessage(from, { text: aiResponse });
+                    if (creds) await cloudApi.sendTextMessage(creds, from, aiResponse);
                     break;
 
                 case 'interactive':
-                    await waManager.sendMessage(from, node.data?.payload || node.data);
+                    if (creds) await cloudApi.sendInteractiveMessage(creds, from, node.data?.payload || node.data);
                     break;
 
                 case 'condition':

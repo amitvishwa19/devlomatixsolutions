@@ -165,7 +165,7 @@ export default function QuickMessage() {
  You need to link your WhatsApp account to send messages. Please go to the main Dashboard to connect your device.
  </p>
  <Button asChild className="px-6">
- <Link href={`/workspace/${workspaceId}/wa`}>
+ <Link href={`/workspace/${workspaceId}/wa-cloud-api`}>
  <ExternalLink className="w-4 h-4 mr-2"/>
  Go to Dashboard
  </Link>

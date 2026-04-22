@@ -167,7 +167,7 @@ export default function DashboardPage() {
                         className="gap-2"
                         asChild>
 
-                        <a href={`/workspace/${workspaceId}/wa/contacts`}>
+                        <a href={`/workspace/${workspaceId}/wa-cloud-api/contacts`}>
                             <Users className="w-4 h-4" />
                             <span className="hidden sm:inline">Contacts</span>
                         </a>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
                                         You haven't created any WhatsApp campaigns yet. Head to the Bulk Sender to start your first broadcast.
                                     </p>
                                     <Button variant="outline" className="mt-6" asChild>
-                                        <a href={`/workspace/${workspaceId}/wa/bulk-sender`}>Go to Bulk Sender</a>
+                                        <a href={`/workspace/${workspaceId}/wa-cloud-api/bulk-sender`}>Go to Bulk Sender</a>
                                     </Button>
                                 </div> :
                                 <CampaignList
