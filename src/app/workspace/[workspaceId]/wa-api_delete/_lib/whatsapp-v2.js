@@ -265,8 +265,32 @@ class WhatsAppManager {
                     msgContent.type = 'native_flow';
                 }
 
-                console.log(`[WA] Sending interactive message of type: ${msgContent.type || 'unknown'} to ${jid}`);
-                result = await this.sock.sendMessage(jid, { interactiveMessage: msgContent });
+                console.log(`[WA] Sending FORCED interactive message of type: ${msgContent.type || 'unknown'} to ${jid}`);
+                
+                // FORCED BUTTON DELIVERY FIX for Baileys v7+
+                // We use relayMessage to inject the 'biz' node which is required for buttons to render on modern apps
+                const msg = {
+                    viewOnceMessage: {
+                        message: {
+                            interactiveMessage: msgContent
+                        }
+                    }
+                };
+
+                result = await this.sock.relayMessage(jid, msg, {
+                    messageId: this.sock.generateMessageID(),
+                    additionalNodes: [
+                        {
+                            tag: 'biz',
+                            attrs: {},
+                            content: [{
+                                tag: 'interactive',
+                                attrs: { type: 'native_flow', v: '1' },
+                                content: []
+                            }]
+                        }
+                    ]
+                });
             } else {
                 finalBody = getCleanText(data.text || data.body || '');
                 result = await this.sock.sendMessage(jid, { text: finalBody });

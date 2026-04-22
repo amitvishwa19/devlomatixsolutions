@@ -190,7 +190,11 @@ export class CampaignEngine {
                             interactive: true,
                             type: 'interactive',
                             interactiveMessage: {
-                                type: 'native_flow',
+                                header: {
+                                    title: interpolate(baseTemplate.title || baseTemplate.name || "Notification"),
+                                    hasProgressBar: false,
+                                    headerType: 1
+                                },
                                 body: { text: interpolate(baseTemplate.body || baseTemplate.text || '') },
                                 footer: { text: interpolate(baseTemplate.footer || '') },
                                 nativeFlowMessage: {
@@ -200,7 +204,8 @@ export class CampaignEngine {
                                             display_text: interpolate(typeof btn === 'string' ? btn : (btn.text || btn.label || '')),
                                             id: `btn_${idx}`
                                         })
-                                    }))
+                                    })),
+                                    messageParamsJson: ''
                                 }
                             }
                         };
