@@ -517,7 +517,7 @@ export default function CampaignsPage() {
                                                                 {triggeringId === c.id ? 'Starting...' : 'RUN'}
                                                             </Button>
 
-                                                            {c.status === 'COMPLETED' && (
+                                                            {['COMPLETED', 'FAILED', 'PAUSED'].includes(c.status) && (
                                                                 <Button 
                                                                     variant="ghost" 
                                                                     size="icon" 
