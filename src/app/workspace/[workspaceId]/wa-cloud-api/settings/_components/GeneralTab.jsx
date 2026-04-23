@@ -382,7 +382,7 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
                                             <Separator orientation="vertical" className="h-6 mx-1 bg-border/20" />
 
                                             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all" onClick={() => {
-                                                setTempCreds({ ...cred, accessToken: '' });
+                                                setTempCreds({ ...cred });
                                                 setIsCredsModalOpen(true);
                                             }}>
                                                 <Settings size={15} />

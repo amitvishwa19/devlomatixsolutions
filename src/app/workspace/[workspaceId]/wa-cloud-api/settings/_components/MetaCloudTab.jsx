@@ -9,7 +9,8 @@ import {
     Trash2,
     Info,
     Plus,
-    List
+    List,
+    ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAction } from "@/hooks/use-action";
 import { testMetaApi } from "../_actions/test-meta-api";
 import { getDecryptedCredentials } from "../_actions/get-decrypted-credentials";
+import { Badge } from '@/components/ui/badge';
 
 export function MetaCloudTab({ workspaceId }) {
     const [metaCloudVersion, setMetaCloudVersion] = useState('v25.0');
@@ -453,10 +455,34 @@ export function MetaCloudTab({ workspaceId }) {
                                     </TabsContent>
                                 </Tabs>
                                 {(qrResult || qrListResult || qrUpdateResult || qrDeleteResult) && (
-                                    <div className="border border-border/40 rounded-xl p-4 bg-muted/5">
-                                        <pre className="text-[10px] font-mono text-muted-foreground/80 overflow-x-auto max-h-48 leading-relaxed">
-                                            {JSON.stringify(qrResult?.data || qrListResult?.data || qrUpdateResult?.data || qrDeleteResult?.data, null, 2)}
-                                        </pre>
+                                    <div className="border border-border/40 rounded-xl p-3 bg-muted/5 flex flex-col gap-3 overflow-hidden w-full">
+                                        {qrResult && (
+                                            <div className="flex flex-col gap-2 p-3 bg-background rounded-lg border border-border/40 shadow-sm overflow-hidden">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Deep Link</span>
+                                                    <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20">Active</Badge>
+                                                </div>
+                                                <a href={qrResult.deep_link_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline break-all font-mono leading-relaxed">
+                                                    {qrResult.deep_link_url}
+                                                </a>
+                                                <div className="mt-2 flex flex-col gap-1 overflow-hidden">
+                                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">QR Code ID</span>
+                                                    <span className="text-xs font-mono break-all">{qrResult.code}</span>
+                                                </div>
+                                                {qrResult.qr_image_url && (
+                                                    <div className="mt-2">
+                                                        <a href={qrResult.qr_image_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[10px] font-medium text-primary hover:underline break-all">
+                                                            <ExternalLink className="w-3 h-3 flex-shrink-0" /> <span className="truncate">View QR Image</span>
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        <div className="relative">
+                                            <pre className="text-[10px] font-mono text-muted-foreground/80 overflow-x-auto max-h-48 leading-relaxed p-2 bg-muted/5 rounded-md whitespace-pre-wrap break-all">
+                                                {JSON.stringify(qrResult || qrListResult?.data || qrUpdateResult?.data || qrDeleteResult?.data, null, 2)}
+                                            </pre>
+                                        </div>
                                     </div>
                                 )}
                             </CardContent>

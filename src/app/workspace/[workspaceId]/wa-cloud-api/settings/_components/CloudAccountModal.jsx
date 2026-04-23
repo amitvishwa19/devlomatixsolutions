@@ -69,7 +69,7 @@ export function CloudAccountModal({
                                 type="password"
                                 value={tempCreds.accessToken}
                                 onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })}
-                                placeholder="EAAG..."
+                                placeholder={tempCreds.id ? "•••••••• (Token is stored. Leave blank to keep existing.)" : "EAAG..."}
                             />
                         </div>
                     </div>
