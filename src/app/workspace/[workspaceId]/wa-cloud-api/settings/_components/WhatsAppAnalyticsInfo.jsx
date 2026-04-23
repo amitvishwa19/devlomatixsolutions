@@ -13,6 +13,7 @@ import { useAction } from "@/hooks/use-action";
 import { testMetaApi } from "../_actions/test-meta-api";
 import { getDecryptedCredentials } from "../_actions/get-decrypted-credentials";
 import { toast } from 'sonner';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Workspace-scoped cache for analytics settings
 const analyticsCache = new Map();
@@ -125,7 +126,8 @@ export function WhatsAppAnalyticsInfo({ workspaceId, metaCloudVersion = 'v25.0' 
     }, [workspaceId, granularity, since, until]);
 
     return (
-        <Card id="analytics-card" className="border shadow-sm p-4 m-4">
+        <ScrollArea className="h-full">
+            <Card id="analytics-card" className="border shadow-sm p-4 m-4">
             <CardHeader className="px-2 pb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-primary/5 rounded-xl border border-primary/10">
@@ -253,5 +255,6 @@ export function WhatsAppAnalyticsInfo({ workspaceId, metaCloudVersion = 'v25.0' 
                 </Tabs>
             </CardContent>
         </Card>
+        </ScrollArea>
     );
 }

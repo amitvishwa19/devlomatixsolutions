@@ -28,7 +28,8 @@ import {
     Mail,
     BellRing,
     History,
-    LayoutDashboard
+    LayoutDashboard,
+    QrCode
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -124,8 +125,8 @@ export default function SettingsPage() {
                             { id: 'analytics', label: 'Analytics', icon: LayoutDashboard },
                             { id: 'messaging', label: 'Messaging', icon: Smartphone },
                             { id: 'notifications', label: 'Notifications', icon: BellRing },
-                            { id: 'security', label: 'Security', icon: ShieldCheck },
-                            { id: 'meta-cloud', label: 'Meta Cloud', icon: Cpu }
+                            // { id: 'security', label: 'Security', icon: ShieldCheck },
+                            { id: 'qr-management', label: 'QR Management', icon: QrCode }
                         ].map((tab) => (
                             <TabsTrigger
                                 key={tab.id}
@@ -190,7 +191,7 @@ export default function SettingsPage() {
                         <SecurityTab />
                     </TabsContent>
 
-                    <TabsContent value="meta-cloud" className="flex-1 overflow-hidden flex flex-col outline-none">
+                    <TabsContent value="qr-management" className="flex-1 overflow-hidden flex flex-col outline-none">
                         <MetaCloudTab workspaceId={workspaceId} />
                     </TabsContent>
                 </Tabs>

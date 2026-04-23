@@ -11,7 +11,11 @@ import {
     Plus,
     List,
     ExternalLink,
-    Globe
+    Globe,
+    Printer,
+    Download,
+    QrCode,
+    Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,35 +30,38 @@ import { useAction } from "@/hooks/use-action";
 import { testMetaApi } from "../_actions/test-meta-api";
 import { getDecryptedCredentials } from "../_actions/get-decrypted-credentials";
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export function MetaCloudTab({ workspaceId }) {
     const [metaCloudVersion, setMetaCloudVersion] = useState('v25.0');
     const [metaCloudAccessToken, setMetaCloudAccessToken] = useState('');
-    const [displayNamesPhoneId, setDisplayNamesPhoneId] = useState('');
-    const [displayNamesTesting, setDisplayNamesTesting] = useState(false);
-    const [displayNamesResultOpen, setDisplayNamesResultOpen] = useState(true);
+    const [phoneId, setPhoneId] = useState('');
 
-    const [obaPhoneId, setObaPhoneId] = useState('');
-    const [obaWebsiteUrl, setObaWebsiteUrl] = useState('');
-    const [obaParentBusiness, setObaParentBusiness] = useState('');
-    const [obaCountry, setObaCountry] = useState('');
-    const [obaLanguage, setObaLanguage] = useState('English');
-    const [obaAdditionalInfo, setObaAdditionalInfo] = useState('');
-    const [obaTesting, setObaTesting] = useState(false);
-    const [obaResult, setObaResult] = useState(null);
-    const [obaResultOpen, setObaResultOpen] = useState(true);
-    const [obaStatusTesting, setObaStatusTesting] = useState(false);
-    const [obaStatusResult, setObaStatusResult] = useState(null);
-    const [obaStatusResultOpen, setObaStatusResultOpen] = useState(true);
+    const [qrMessage, setQrMessage] = useState('');
+    const [qrFormat, setQrFormat] = useState('PNG');
+    const [qrTesting, setQrTesting] = useState(false);
+    const [qrList, setQrList] = useState([]);
+    const [qrListTesting, setQrListTesting] = useState(false);
+
+    const [selectedQR, setSelectedQR] = useState(null);
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [deletingCode, setDeletingCode] = useState(null);
 
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
         onSuccess: (data) => {
             const token = data?.accessToken || data.data?.accessToken;
-            const phoneId = data?.phoneNumberId ? data.phoneNumberId.toString() : data.data?.phoneNumberId?.toString();
+            const pid = data?.phoneNumberId ? data.phoneNumberId.toString() : data.data?.phoneNumberId?.toString();
+
+            console.log("[QR Management] Decrypted credentials:", { hasToken: !!token, pid });
+
             if (token) setMetaCloudAccessToken(token);
-            if (phoneId) {
-                setDisplayNamesPhoneId(phoneId);
-                setObaPhoneId(phoneId);
+            if (pid) {
+                setPhoneId(pid);
+                // Trigger auto-fetch of QR list
+                fetchQrList(token, pid);
+            } else {
+                console.warn("[QR Management] No Phone Number ID found in credentials");
             }
         }
     });
@@ -65,277 +72,306 @@ export function MetaCloudTab({ workspaceId }) {
         }
     }, [workspaceId]);
 
-    const [qrMessage, setQrMessage] = useState('');
-    const [qrFormat, setQrFormat] = useState('SVG');
-    const [qrTesting, setQrTesting] = useState(false);
-    const [qrResult, setQrResult] = useState(null);
-    const [qrResultOpen, setQrResultOpen] = useState(true);
-
-    const [qrListTesting, setQrListTesting] = useState(false);
-    const [qrListResult, setQrListResult] = useState(null);
-    const [qrListResultOpen, setQrListResultOpen] = useState(true);
-
-    const [qrUpdateCodeId, setQrUpdateCodeId] = useState('');
-    const [qrUpdateMessage, setQrUpdateMessage] = useState('');
-    const [qrUpdateFormat, setQrUpdateFormat] = useState('SVG');
-    const [qrUpdateTesting, setQrUpdateTesting] = useState(false);
-    const [qrUpdateResult, setQrUpdateResult] = useState(null);
-    const [qrUpdateResultOpen, setQrUpdateResultOpen] = useState(true);
-
-    const [qrDeleteCodeId, setQrDeleteCodeId] = useState('');
-    const [qrDeleteTesting, setQrDeleteTesting] = useState(false);
-    const [qrDeleteResult, setQrDeleteResult] = useState(null);
-    const [qrDeleteResultOpen, setQrDeleteResultOpen] = useState(true);
-
-
-
-    const { execute: executeTestApi } = useAction(testMetaApi, {
+    const { execute: executeApi } = useAction(testMetaApi, {
         onSuccess: (data, context) => {
-            console.log("[MetaCloudTab] Test API Success:", data, context);
-            if (data.success) toast.success("Operation successful");
-            else toast.error(data.error || "Operation failed");
-
-            switch (context.type) {
-                case 'oba_request':
-                    setObaResult(data);
-                    setObaResultOpen(true);
-                    setObaTesting(false);
-                    break;
-                case 'qr_create':
-                    setQrResult(data);
-                    setQrResultOpen(true);
-                    setQrTesting(false);
-                    break;
-                case 'qr_list':
-                    setQrListResult(data);
-                    setQrListResultOpen(true);
-                    setQrListTesting(false);
-                    break;
-                case 'qr_update':
-                    setQrUpdateResult(data);
-                    setQrUpdateResultOpen(true);
-                    setQrUpdateTesting(false);
-                    break;
-                case 'qr_delete':
-                    setQrDeleteResult(data);
-                    setQrDeleteResultOpen(true);
-                    setQrDeleteTesting(false);
-                    break;
+            console.log(`[QR Management] ${context.type} success:`, data);
+            if (data.success) {
+                if (context.type === 'qr_list') {
+                    const list = data.apiData.data || [];
+                    console.log(`[QR Management] Fetched ${list.length} QR codes`);
+                    setQrList(list);
+                } else if (context.type === 'qr_create') {
+                    toast.success("QR Code created");
+                    setQrMessage('');
+                    fetchQrList();
+                } else if (context.type === 'qr_delete') {
+                    toast.success("QR Code deleted");
+                    fetchQrList();
+                }
+            } else {
+                console.error(`[QR Management] ${context.type} error:`, data.error);
+                toast.error(data.error || "Operation failed");
             }
+            setQrTesting(false);
+            setQrListTesting(false);
+            setDeletingCode(null);
         },
-        onError: (error, context) => {
-            console.error("[MetaCloudTab] Test API Error:", error, context);
+        onError: (error) => {
             toast.error(error);
-            if (context.type === 'oba_request') setObaTesting(false);
-            else if (context.type === 'qr_create') setQrTesting(false);
-            else if (context.type === 'qr_list') setQrListTesting(false);
-            else if (context.type === 'qr_update') setQrUpdateTesting(false);
-            else if (context.type === 'qr_delete') setQrDeleteTesting(false);
+            setQrTesting(false);
+            setQrListTesting(false);
+            setDeletingCode(null);
         }
     });
 
+    const fetchQrList = (tokenOverride, pidOverride) => {
+        const activeToken = tokenOverride || metaCloudAccessToken;
+        const activePid = pidOverride || phoneId;
 
-    const handleGetDisplayNames = () => {
-        setDisplayNamesTesting(true);
-        executeTestApi({
-            workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${displayNamesPhoneId.trim()}?fields=verified_name,name_status`,
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
-        }, { type: 'display_names' });
-    };
+        console.log("[QR Management] Attempting fetch with:", { hasToken: !!activeToken, hasPid: !!activePid });
 
-    const handleCheckObaStatus = () => {
-        setObaStatusTesting(true);
-        executeTestApi({
-            workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}?fields=name_status,code_verification_status`,
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
-        }, { type: 'oba_status_check' });
-    };
+        if (!activeToken || !activePid) {
+            console.warn("[QR Management] Fetch aborted: Missing token or phoneId");
+            return;
+        }
 
-    const handleObaStatus = () => {
-        setObaTesting(true);
-        executeTestApi({
+        setQrListTesting(true);
+        const url = `https://graph.facebook.com/${metaCloudVersion}/${activePid}/message_qrdls`;
+        console.log("[QR Management] Fetching URL:", url);
+
+        executeApi({
             workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/official_business_account`,
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
-            body: {
-                additional_supporting_information: obaAdditionalInfo,
-                business_website_url: obaWebsiteUrl,
-                parent_business_or_brand: obaParentBusiness,
-                primary_country_of_operation: obaCountry,
-                primary_language: obaLanguage,
-            }
-        }, { type: 'oba_request' });
+            url,
+            headers: { 'Authorization': `Bearer ${activeToken}` }
+        }, { type: 'qr_list' });
     };
 
     const handleCreateQR = () => {
+        if (!qrMessage.trim()) return;
         setQrTesting(true);
-        executeTestApi({
+        executeApi({
             workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`,
+            url: `https://graph.facebook.com/${metaCloudVersion}/${phoneId}/message_qrdls`,
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken}` },
             body: { prefilled_message: qrMessage.trim(), generate_qr_image: qrFormat }
         }, { type: 'qr_create' });
     };
 
-    const handleListQR = () => {
-        setQrListTesting(true);
-        executeTestApi({
+    const handleDeleteQR = (qr) => {
+        setDeletingCode(qr.code);
+        executeApi({
             workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`,
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
-        }, { type: 'qr_list' });
-    };
-
-    const handleUpdateQR = () => {
-        setQrUpdateTesting(true);
-        executeTestApi({
-            workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`,
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
-            body: { code: qrUpdateCodeId.trim(), prefilled_message: qrUpdateMessage.trim(), generate_qr_image: qrUpdateFormat }
-        }, { type: 'qr_update' });
-    };
-
-    const handleDeleteQR = () => {
-        setQrDeleteTesting(true);
-        executeTestApi({
-            workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls/${qrDeleteCodeId.trim()}`,
+            url: `https://graph.facebook.com/${metaCloudVersion}/${phoneId}/message_qrdls/${qr.code}`,
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken}` }
         }, { type: 'qr_delete' });
     };
 
+    const filteredQRs = qrList.filter(qr =>
+        qr.prefilled_message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        qr.code?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handlePrint = () => {
+        const printContent = document.getElementById('qr-print-area');
+        const windowUrl = 'about:blank';
+        const uniqueName = new Date();
+        const windowName = 'Print' + uniqueName.getTime();
+        const printWindow = window.open(windowUrl, windowName, 'left=500,top=500,width=900,height=900');
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Print QR Code</title>
+                    <style>
+                        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+                        .qr-title { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+                        .qr-image { width: 300px; height: 300px; }
+                        .qr-link { margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="qr-title">${selectedQR?.prefilled_message || 'WhatsApp QR Code'}</div>
+                    <img src="${selectedQR?.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(selectedQR?.deep_link_url || '')}`}" class="qr-image" />
+                    <div class="qr-link">${selectedQR?.deep_link_url}</div>
+                    <script>
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
     return (
-        <div className="flex-1 outline-none custom-scrollbar overflow-y-auto ">
-            <ScrollArea className="h-[72vh] space-y-4">
-                <div id='all-test-container' className='flex flex-col gap-4 '>
+        <ScrollArea className="h-full w-full">
+            <div className="flex-1 outline-none p-4 pb-20">
+                <div className="max-w-6xl mx-auto space-y-6">
 
+                    {/* Header Section */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                                <QrCode className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold tracking-tight">QR Management</h2>
+                                <p className="text-sm text-muted-foreground font-medium">Create and manage your WhatsApp deep-link QR codes</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button variant="outline" size="sm" className="h-10 rounded-xl gap-2" onClick={() => fetchQrList()}>
+                                <RefreshCw className={`w-4 h-4 ${qrListTesting ? 'animate-spin' : ''}`} />
+                                Refresh List
+                            </Button>
+                        </div>
+                    </div>
 
-
-
-
-                    <div className="flex gap-4 items-stretch">
-
-
-                        {/* Card 4 — QR Codes Section */}
-                        <Card className="border shadow-sm w-full">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-sm font-semibold">QR Code Management</CardTitle>
-                                <CardDescription className="text-xs">Create and manage deep-link QR codes</CardDescription>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        {/* Create Form (Left/Top) */}
+                        <Card className="md:col-span-4 border shadow-sm h-fit">
+                            <CardHeader>
+                                <CardTitle className="text-base font-bold">New QR Code</CardTitle>
+                                <CardDescription className="text-xs">Generate a deep link with a pre-filled message</CardDescription>
                             </CardHeader>
-                            <CardContent className="flex flex-col gap-4">
-                                <Tabs defaultValue="create" className="w-full">
-                                    <TabsList className="bg-muted/5 w-fit justify-start rounded-md h-auto p-1 gap-1 border mb-4">
-                                        {[
-                                            { id: 'create', label: 'Create', icon: Plus },
-                                            { id: 'list', label: 'List', icon: List },
-                                            { id: 'update', label: 'Update', icon: RefreshCw },
-                                            { id: 'delete', label: 'Delete', icon: Trash2 }
-                                        ].map(tab => (
-                                            <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                                                <tab.icon size={14} />
-                                                {tab.label}
-                                            </TabsTrigger>
-                                        ))}
-                                    </TabsList>
-
-                                    <TabsContent value="create" className="space-y-4">
-                                        <div className="flex gap-3">
-                                            <Input placeholder="Prefilled message" value={qrMessage} onChange={(e) => setQrMessage(e.target.value)} className="bg-muted/5 text-sm border rounded-md px-4 flex-1" />
-                                            <Select value={qrFormat} onValueChange={setQrFormat}>
-                                                <SelectTrigger className="w-28 text-sm border rounded-md px-4"><SelectValue /></SelectTrigger>
-                                                <SelectContent className="rounded-md border-border/20">
-                                                    <SelectItem value="SVG" className="text-sm">SVG</SelectItem>
-                                                    <SelectItem value="PNG" className="text-sm">PNG</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <Button
-                                            onClick={handleCreateQR}
-                                            disabled={qrTesting || !qrMessage?.trim()}
-                                            className="w-full text-xs font-medium h-10 gap-2 rounded-md"
-                                        >
-                                            {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                            Create Deep Link
-                                        </Button>
-                                    </TabsContent>
-
-                                    <TabsContent value="list" className="space-y-4">
-                                        <Button onClick={handleListQR} disabled={qrListTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2 rounded-md">
-                                            {qrListTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} List All QR Codes
-                                        </Button>
-                                    </TabsContent>
-
-                                    <TabsContent value="update" className="space-y-4">
-                                        <div className="space-y-3">
-                                            <Input placeholder="QR Code ID" value={qrUpdateCodeId} onChange={(e) => setQrUpdateCodeId(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4" />
-                                            <div className="flex gap-3">
-                                                <Input placeholder="New Message" value={qrUpdateMessage} onChange={(e) => setQrUpdateMessage(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4 flex-1" />
-                                                <Select value={qrUpdateFormat} onValueChange={setQrUpdateFormat}>
-                                                    <SelectTrigger className="w-28 text-sm border-border/40 rounded-xl px-4"><SelectValue /></SelectTrigger>
-                                                    <SelectContent className="rounded-xl border-border/20">
-                                                        <SelectItem value="SVG" className="text-sm">SVG</SelectItem>
-                                                        <SelectItem value="PNG" className="text-sm">PNG</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                        <Button onClick={handleUpdateQR} disabled={qrUpdateTesting || !qrUpdateCodeId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 rounded-md">
-                                            Update Deep Link
-                                        </Button>
-                                    </TabsContent>
-
-                                    <TabsContent value="delete" className="space-y-4">
-                                        <Input placeholder="QR Code ID" value={qrDeleteCodeId} onChange={(e) => setQrDeleteCodeId(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4" />
-                                        <Button variant="destructive" onClick={handleDeleteQR} disabled={qrDeleteTesting || !qrDeleteCodeId?.trim()} className="w-full text-xs font-medium h-10 rounded-md">
-                                            Delete QR Code
-                                        </Button>
-                                    </TabsContent>
-                                </Tabs>
-                                {(qrResult || qrListResult || qrUpdateResult || qrDeleteResult) && (
-                                    <div className="border border-border/40 rounded-xl p-3 bg-muted/5 flex flex-col gap-3 overflow-hidden w-full">
-                                        {qrResult?.apiData && (
-                                            <div className="flex flex-col gap-2 p-3 bg-background rounded-lg border border-border/40 shadow-sm overflow-hidden">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Deep Link</span>
-                                                    <Badge variant="outline" className={`text-[9px] border-none ${qrResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
-                                                        {qrResult.success ? 'Active' : 'Error'}
-                                                    </Badge>
-                                                </div>
-                                                <a href={qrResult.apiData.deep_link_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline break-all font-mono leading-relaxed">
-                                                    {qrResult.apiData.deep_link_url}
-                                                </a>
-                                                <div className="mt-2 flex flex-col gap-1 overflow-hidden">
-                                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">QR Code ID</span>
-                                                    <span className="text-xs font-mono break-all">{qrResult.apiData.code}</span>
-                                                </div>
-                                                {qrResult.apiData.qr_image_url && (
-                                                    <div className="mt-2">
-                                                        <a href={qrResult.apiData.qr_image_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[10px] font-medium text-primary hover:underline break-all">
-                                                            <ExternalLink className="w-3 h-3 flex-shrink-0" /> <span className="truncate">View QR Image</span>
-                                                        </a>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                        <div className="relative">
-                                            <pre className="text-[10px] font-mono text-muted-foreground/80 overflow-x-auto max-h-48 leading-relaxed p-2 bg-muted/5 rounded-md whitespace-pre-wrap break-all">
-                                                {JSON.stringify(qrResult?.apiData || qrListResult?.apiData || qrUpdateResult?.apiData || qrDeleteResult?.apiData, null, 2)}
-                                            </pre>
-                                        </div>
-                                    </div>
-                                )}
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold uppercase text-muted-foreground">Prefilled Message</Label>
+                                    <Input
+                                        placeholder="e.g. Hello, I want to inquire about..."
+                                        value={qrMessage}
+                                        onChange={(e) => setQrMessage(e.target.value)}
+                                        className="bg-muted/5 text-sm h-11"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold uppercase text-muted-foreground">Image Format</Label>
+                                    <Select value={qrFormat} onValueChange={setQrFormat}>
+                                        <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="SVG">SVG (Vector)</SelectItem>
+                                            <SelectItem value="PNG">PNG (Image)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Button
+                                    onClick={handleCreateQR}
+                                    disabled={qrTesting || !qrMessage.trim()}
+                                    className="w-full h-11 gap-2 font-bold shadow-sm"
+                                >
+                                    {qrTesting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                    Create QR Code
+                                </Button>
                             </CardContent>
                         </Card>
+
+                        {/* List (Right/Bottom) */}
+                        <div className="md:col-span-8 space-y-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                                <Input
+                                    placeholder="Search by message or code..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10 h-11 bg-card shadow-sm border-muted-foreground/10"
+                                />
+                            </div>
+
+                            {qrListTesting ? (
+                                <div className="flex flex-col items-center justify-center py-20 bg-card border rounded-2xl gap-3">
+                                    <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                                    <p className="text-sm font-medium text-muted-foreground">Fetching QR codes...</p>
+                                </div>
+                            ) : filteredQRs.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {filteredQRs.map((qr) => (
+                                        <Card key={qr.code} className="border shadow-sm hover:border-primary/20 transition-all group overflow-hidden bg-card">
+                                            <div className="p-4 space-y-4">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="text-sm font-bold truncate leading-tight">{qr.prefilled_message || 'No Message'}</h3>
+                                                        <p className="text-[10px] font-mono text-muted-foreground/60 mt-1 uppercase tracking-tighter">ID: {qr.code}</p>
+                                                    </div>
+                                                    <Badge variant="secondary" className="bg-primary/5 text-primary border-none text-[9px] font-bold">ACTIVE</Badge>
+                                                </div>
+
+                                                <div className="aspect-square relative bg-muted/10 rounded-xl border border-dashed border-muted-foreground/20 flex items-center justify-center overflow-hidden group-hover:border-primary/30 transition-colors">
+                                                    <img 
+                                                        src={qr.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr.deep_link_url)}`} 
+                                                        alt="QR Code" 
+                                                        className="w-full h-full object-contain p-4 transition-transform group-hover:scale-105" 
+                                                    />
+                                                    <div className="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-all">
+                                                        <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => { setSelectedQR(qr); setIsPrintModalOpen(true); }}>
+                                                            <Printer className="w-4 h-4" />
+                                                        </Button>
+                                                        <a href={qr.qr_image_url} download target="_blank" rel="noopener noreferrer">
+                                                            <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg">
+                                                                <Download className="w-4 h-4" />
+                                                            </Button>
+                                                        </a>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-muted-foreground hover:bg-muted/50 transition-colors"
+                                                        onClick={() => { setSelectedQR(qr); setIsPrintModalOpen(true); }}
+                                                    >
+                                                        View & Print
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-9 w-9 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                                                        onClick={() => handleDeleteQR(qr)}
+                                                        disabled={deletingCode === qr.code}
+                                                    >
+                                                        {deletingCode === qr.code ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-24 bg-card border border-dashed rounded-2xl gap-4 text-center">
+                                    <div className="p-4 bg-muted/10 rounded-full">
+                                        <QrCode className="w-8 h-8 text-muted-foreground/20" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-bold text-muted-foreground">No QR codes found</p>
+                                        <p className="text-[11px] text-muted-foreground/60">Create your first deep-link QR code to see it here</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </ScrollArea>
-        </div>
+
+                {/* Print Modal */}
+                <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
+                    <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden">
+                        <div id="qr-print-area" className="flex flex-col items-center p-10 bg-background">
+                            <DialogHeader className="w-full text-center space-y-4 mb-8">
+                                <div className="mx-auto p-3 bg-primary/5 rounded-2xl border border-primary/10 w-fit">
+                                    <QrCode className="w-8 h-8 text-primary" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <DialogTitle className="text-xl font-bold text-center">{selectedQR?.prefilled_message || 'WhatsApp QR'}</DialogTitle>
+                                    <DialogDescription className="text-xs font-medium text-center">Scan to chat with us</DialogDescription>
+                                </div>
+                            </DialogHeader>
+
+                            <div className="relative aspect-square w-64 bg-white p-4 rounded-3xl border-4 border-muted/20 shadow-xl mb-8 flex items-center justify-center">
+                                <img 
+                                    src={selectedQR?.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(selectedQR?.deep_link_url || '')}`} 
+                                    alt="QR Code" 
+                                    className="w-full h-full object-contain" 
+                                />
+                            </div>
+
+                            <div className="w-full bg-muted/5 p-4 rounded-2xl border border-dashed text-center">
+                                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-1">Deep Link URL</p>
+                                <p className="text-xs font-mono text-primary truncate max-w-full px-2">{selectedQR?.deep_link_url}</p>
+                            </div>
+                        </div>
+                        <DialogFooter className="p-6 bg-muted/5 border-t gap-3 sm:gap-0">
+                            <Button variant="ghost" className="flex-1 font-bold" onClick={() => setIsPrintModalOpen(false)}>Cancel</Button>
+                            <Button className="flex-1 gap-2 font-bold shadow-md" onClick={handlePrint}>
+                                <Printer className="w-4 h-4" />
+                                Print Now
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </ScrollArea>
     );
 }
