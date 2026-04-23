@@ -8,15 +8,18 @@ const TestMetaApiSchema = z.object({
     workspaceId: z.string(),
     url: z.string(),
     method: z.string().optional().default('GET'),
-    headers: z.record(z.string()).optional(),
+    headers: z.any().optional(),
     body: z.any().optional(),
 });
 
 const handler = async (data) => {
     const { workspaceId, url, method, headers, body } = data;
+    console.log(`[TestMetaApi] Requesting: ${method} ${url}`);
 
     try {
         await ensureWorkspaceAccess(workspaceId);
+
+
 
         // Security check: ensure the URL is actually a Meta Graph API URL or similar
         if (!url.startsWith('https://graph.facebook.com/')) {
@@ -31,13 +34,14 @@ const handler = async (data) => {
             },
         };
 
-        if (method !== 'GET' && method !== 'HEAD' && body) {
+        if (method?.toUpperCase() !== 'GET' && method?.toUpperCase() !== 'HEAD' && body) {
+            console.log("[TestMetaApi] Body:", body);
             options.body = JSON.stringify(body);
         }
 
         const response = await fetch(url, options);
         const result = await response.json();
-
+        console.log("[result] result:", result);
         return {
             data: {
                 success: response.ok,

@@ -23,24 +23,46 @@ const handler = async (data) => {
                 userId, 
                 platform: { in: ['WHATSAPP', 'WHATSAPP_CLOUD'] } 
             },
-            orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
+            select: {
+                id: true,
+                profile: true,
+                credentials: true,
+                platform: true,
+                isDefault: true
+            },
+            orderBy: [
+                { isDefault: 'desc' }, 
+                { updatedAt: 'desc' } // Get the most recently updated one if multiple
+            ],
         });
 
-        console.log("[GetDecryptedCredentials] Found credential:", cred ? { id: cred.id, profile: cred.profile, platform: cred.platform, isDefault: cred.isDefault } : "None");
+        console.log("-----------------------------------------");
+        console.log("[GetDecryptedCredentials] Record Found:", cred?.profile || "NONE");
 
-        if (!cred) return { error: "No credentials found" };
+
+        if (!cred) {
+            console.log("[GetDecryptedCredentials] No credentials found for userId:", userId);
+            return { error: "No credentials found" };
+        }
 
         let stored = cred.credentials;
         if (typeof stored === 'string' && stored.includes(':')) {
             try {
                 const decrypted = symmetricDecrypt(stored);
                 stored = JSON.parse(decrypted);
+                console.log("[GetDecryptedCredentials] Decryption successful.");
+                console.log("[GetDecryptedCredentials] Extracted values:", {
+                    hasToken: !!stored.accessToken,
+                    phoneId: stored.phoneNumberId,
+                    wabaId: stored.wabaId
+                });
             } catch (e) {
+                console.error("[GetDecryptedCredentials] Decryption failed:", e.message);
                 return { error: 'Failed to decrypt credentials' };
             }
         }
 
-        return {
+        const result = {
             success: true,
             data: {
                 accessToken: stored?.accessToken || '',
@@ -50,6 +72,13 @@ const handler = async (data) => {
                 isDefault: cred.isDefault,
             }
         };
+
+        console.log("[GetDecryptedCredentials] Returning to UI:", {
+            ...result.data,
+            accessToken: result.data.accessToken ? "PRESENT" : "MISSING"
+        });
+
+        return result;
     } catch (error) {
         return { error: error.message || "Failed to fetch credentials" };
     }

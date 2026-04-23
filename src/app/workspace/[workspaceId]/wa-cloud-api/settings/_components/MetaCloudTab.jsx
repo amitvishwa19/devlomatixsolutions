@@ -73,18 +73,23 @@ export function MetaCloudTab({ workspaceId }) {
 
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
         onSuccess: (data) => {
-            console.log(data)
-            console.log("[MetaCloudTab] Credentials loaded:", data.data);
-            if (data.data?.accessToken) setMetaCloudAccessToken(data.data.accessToken);
-            if (data.data?.phoneNumberId) {
-                const phoneId = data.data.phoneNumberId.toString();
+            console.log("[MetaCloudTab] Received credentials from server:", data);
+            if (data?.accessToken) {
+                setMetaCloudAccessToken(data.accessToken);
+                console.log("[MetaCloudTab] Set metaCloudAccessToken (masked):", data.accessToken.substring(0, 5) + "...");
+            }
+            if (data?.phoneNumberId) {
+                const phoneId = data.phoneNumberId.toString();
                 setDisplayNamesPhoneId(phoneId);
                 setObaPhoneId(phoneId);
+                console.log("[MetaCloudTab] Set obaPhoneId:", phoneId);
+            }
+            if (data?.wabaId) {
+                // Set WABA ID if you have a state for it
             }
         },
         onError: (error) => {
             console.error("[MetaCloudTab] Failed to load credentials:", error);
-            toast.error("Failed to sync your WhatsApp credentials: " + error);
         }
     });
 
@@ -96,6 +101,7 @@ export function MetaCloudTab({ workspaceId }) {
 
     const { execute: executeTestApi } = useAction(testMetaApi, {
         onSuccess: (data, context) => {
+            console.log("[MetaCloudTab] Test API Success:", data, context);
             if (data.success) toast.success("Operation successful");
             else toast.error(data.error || "Operation failed");
 
@@ -143,6 +149,7 @@ export function MetaCloudTab({ workspaceId }) {
             }
         },
         onError: (error, context) => {
+            console.error("[MetaCloudTab] Test API Error:", error, context);
             toast.error(error);
             if (context.type === 'meta_test') setMetaCloudTesting(false);
             else if (context.type === 'display_names') setDisplayNamesTesting(false);
@@ -200,15 +207,6 @@ export function MetaCloudTab({ workspaceId }) {
     };
 
     const handleCreateQR = () => {
-        if (!metaCloudAccessToken?.trim()) {
-            toast.error("Access Token is missing. Please check your General settings.");
-            return;
-        }
-        if (!obaPhoneId?.trim()) {
-            toast.error("Phone Number ID is missing. Please check your General settings.");
-            return;
-        }
-
         setQrTesting(true);
         executeTestApi({
             workspaceId,

@@ -22,6 +22,7 @@ export const createSafeAction = (schema, handler) => {
                 return { error: "Internal Server Error: Invalid action schema." };
             }
 
+            console.log("[CreateSafeAction] Raw Data Received:", data);
             let validationResult;
             try {
                 validationResult = schema.safeParse(data);

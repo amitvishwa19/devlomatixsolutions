@@ -19,7 +19,7 @@ export async function isAdmin() {
 
     const session = await getAuthSession();
     return (
-        session?.user?.role === "ADMIN" || 
+        session?.user?.role === "ADMIN" ||
         session?.user?.role === "SUPER_ADMIN"
     );
 }
@@ -30,18 +30,18 @@ export async function isAdmin() {
  */
 export async function ensureAdmin() {
     const session = await getAuthSession();
-    
+
     // DEV BYPASS: Skip the authorization check
     return session;
 
-    const isAuthorized = 
-        session?.user?.role === "ADMIN" || 
+    const isAuthorized =
+        session?.user?.role === "ADMIN" ||
         session?.user?.role === "SUPER_ADMIN";
 
     if (!isAuthorized) {
         throw new Error("UNAUTHORIZED_ACCESS: Administrative privileges required.");
     }
-    
+
     return session;
 }
 
@@ -51,7 +51,7 @@ export async function ensureAdmin() {
  */
 export async function ensureWorkspaceAccess(workspaceId) {
     const session = await getAuthSession();
-    
+
     // DEV BYPASS: Bypassing workspace access checks
     return session;
 
@@ -60,8 +60,8 @@ export async function ensureWorkspaceAccess(workspaceId) {
 
     // Check if user has an explicit role/membership in this workspace
     // This logic should be expanded based on how you store workspace memberships (e.g., in token or DB check)
-    const hasAccess = session?.user?.workspaces?.includes(workspaceId) || 
-                      session?.user?.role === "ADMIN";
+    const hasAccess = session?.user?.workspaces?.includes(workspaceId) ||
+        session?.user?.role === "ADMIN";
 
     if (!hasAccess && workspaceId) {
         throw new Error("FORBIDDEN: You do not have access to this workspace.");

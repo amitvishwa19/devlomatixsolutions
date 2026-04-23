@@ -22,34 +22,60 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // Encrypt credentials
-        const credentials = {
-            accessToken,
-            phoneNumberId,
-            wabaId
-        };
-        const encrypted = symmetricEncrypt(JSON.stringify(credentials));
-
         let account;
+        let finalEncrypted;
+
         if (id) {
             // Update existing record
+            const oldAccount = await db.credentials.findUnique({ where: { id } });
+            if (!oldAccount) return { error: "Account not found" };
+
+            let finalAccessToken = accessToken;
+            // Robust check: if new token is empty, null, or just whitespace, preserve the old one
+            if (!finalAccessToken || finalAccessToken.trim() === '') {
+                const oldCredsRaw = oldAccount.credentials;
+                if (typeof oldCredsRaw === 'string' && oldCredsRaw.includes(':')) {
+                    try {
+                        const decrypted = JSON.parse(symmetricDecrypt(oldCredsRaw));
+                        finalAccessToken = decrypted.accessToken;
+                        console.log("[SaveCloudCredentials] Preserved existing token for account:", profile);
+                    } catch (e) {
+                        console.error("[SaveCloudCredentials] Failed to decrypt old token for preservation:", e.message);
+                    }
+                }
+            }
+
+            const credObj = {
+                accessToken: finalAccessToken,
+                phoneNumberId,
+                wabaId
+            };
+            finalEncrypted = symmetricEncrypt(JSON.stringify(credObj));
+
             account = await db.credentials.update({
                 where: { id },
                 data: {
                     profile,
-                    credentials: encrypted,
+                    credentials: finalEncrypted,
                     status: 'connected'
                 }
             });
         } else {
             // Create new record
+            const credObj = {
+                accessToken,
+                phoneNumberId,
+                wabaId
+            };
+            finalEncrypted = symmetricEncrypt(JSON.stringify(credObj));
+
             account = await db.credentials.create({
                 data: {
                     userId,
                     workspaceId,
                     platform: 'WHATSAPP_CLOUD',
                     profile,
-                    credentials: encrypted,
+                    credentials: finalEncrypted,
                     status: 'connected'
                 }
             });
