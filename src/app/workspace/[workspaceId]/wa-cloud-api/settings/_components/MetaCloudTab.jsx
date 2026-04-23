@@ -74,6 +74,11 @@ export function MetaCloudTab({ workspaceId }) {
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
         onSuccess: (data) => {
             if (data.data?.accessToken) setMetaCloudAccessToken(data.data.accessToken);
+            if (data.data?.phoneNumberId) {
+                const phoneId = data.data.phoneNumberId.toString();
+                setDisplayNamesPhoneId(phoneId);
+                setObaPhoneId(phoneId);
+            }
         }
     });
 
@@ -231,8 +236,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     return (
         <div className="flex-1 outline-none custom-scrollbar overflow-y-auto ">
-            <ScrollArea className="h-[72vh] space-y-6">
-                <div id='all-test-container' className='flex flex-col gap-6 py-4 pr-4'>
+            <ScrollArea className="h-[72vh] space-y-4">
+                <div id='all-test-container' className='flex flex-col gap-4 '>
 
 
 
@@ -367,7 +372,7 @@ export function MetaCloudTab({ workspaceId }) {
                             </CardHeader>
                             <CardContent className="flex flex-col gap-4">
                                 <Tabs defaultValue="create" className="w-full">
-                                    <TabsList className="bg-muted/5 w-fit justify-start rounded-xl h-auto p-1 gap-1 border border-border/40 mb-4">
+                                    <TabsList className="bg-muted/5 w-fit justify-start rounded-md h-auto p-1 gap-1 border mb-4">
                                         {[
                                             { id: 'create', label: 'Create', icon: Plus },
                                             { id: 'list', label: 'List', icon: List },
@@ -383,17 +388,22 @@ export function MetaCloudTab({ workspaceId }) {
 
                                     <TabsContent value="create" className="space-y-4">
                                         <div className="flex gap-3">
-                                            <Input placeholder="Prefilled message" value={qrMessage} onChange={(e) => setQrMessage(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4 flex-1" />
+                                            <Input placeholder="Prefilled message" value={qrMessage} onChange={(e) => setQrMessage(e.target.value)} className="bg-muted/5 text-sm border rounded-md px-4 flex-1" />
                                             <Select value={qrFormat} onValueChange={setQrFormat}>
-                                                <SelectTrigger className="w-28 text-sm border-border/40 rounded-xl px-4"><SelectValue /></SelectTrigger>
-                                                <SelectContent className="rounded-xl border-border/20">
+                                                <SelectTrigger className="w-28 text-sm border rounded-md px-4"><SelectValue /></SelectTrigger>
+                                                <SelectContent className="rounded-md border-border/20">
                                                     <SelectItem value="SVG" className="text-sm">SVG</SelectItem>
                                                     <SelectItem value="PNG" className="text-sm">PNG</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <Button onClick={handleCreateQR} disabled={qrTesting || !obaPhoneId?.trim() || !qrMessage?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2 rounded-md">
-                                            {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Create Deep Link
+                                        <Button
+                                            onClick={handleCreateQR}
+                                            disabled={qrTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()}
+                                            className="w-full text-xs font-medium h-10 gap-2 rounded-md"
+                                        >
+                                            {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                            Create Deep Link
                                         </Button>
                                     </TabsContent>
 
