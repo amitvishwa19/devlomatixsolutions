@@ -34,7 +34,7 @@ export function AppLogo({ size = 130, height, width, link, className, border = t
         <Link href={link}>
             <div
                 className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-1 rounded-md", className)}
-                style={(primaryColor && border) ? { border: `1px solid ${primaryColor}33`, backgroundColor: `${primaryColor}11` } : {}}
+
             >
                 <Image
                     src={logo}

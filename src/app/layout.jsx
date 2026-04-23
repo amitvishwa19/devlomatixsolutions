@@ -38,10 +38,10 @@ export const metadata = {
         template: `%s | ${process.env.APP_NAME}`
     },
     description: 'Devlomatix',
-    icon: {
-        icon: ['/fevicon.png?v=1'],
-        apple: ['/fevicon.png?v=4'],
-        shortcut: ['/fevicon.png?v=4']
+    icons: {
+        icon: '/fevicon.ico?v=5',
+        apple: '/fevicon.ico?v=5',
+        shortcut: '/fevicon.ico?v=5'
     },
     manifest: '/site.webmanifest'
 }

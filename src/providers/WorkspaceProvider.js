@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import axios from '@/utils/axios';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
@@ -43,12 +42,30 @@ export const WorkspaceProvider = ({ children }) => {
     const fetchSettings = useCallback(async () => {
         setSettingsLoading(true);
         try {
-            if (workspaceId) {
-                const response = await axios.get(`/api/workspace/${workspaceId}/system/settings`);
-                setSettings(response.data);
+            if (workspaceId && workspaceId !== '[workspaceId]' && workspaceId !== 'undefined') {
+                const response = await fetch(`/api/workspace/${workspaceId}/system/settings`, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
+                
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error("Expected JSON (settings) but received:", text.substring(0, 100));
+                    return;
+                }
+                const data = await response.json();
+                setSettings(data);
             } else {
-                const response = await axios.get('/api/branding');
-                setSettings({ branding: response.data });
+                const response = await fetch('/api/branding', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
+                
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error("Expected JSON (branding) but received:", text.substring(0, 100));
+                    return;
+                }
+                const data = await response.json();
+                setSettings({ branding: data });
             }
         } catch (error) {
             console.error('Fetch Settings Error:', error);
@@ -59,11 +76,19 @@ export const WorkspaceProvider = ({ children }) => {
 
     // --- Fetch Access Management Data ---
     const fetchAccessData = useCallback(async () => {
-        if (!workspaceId) return;
+        if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
         try {
             setAccessLoading(true);
-            const response = await fetch(`/api/workspace/${workspaceId}/access`);
-            if (!response.ok) throw new Error('Failed to fetch access data');
+            const response = await fetch(`/api/workspace/${workspaceId}/access`, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`Failed to fetch access data: ${response.status}`);
+            
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error("Expected JSON but received:", text.substring(0, 100));
+                return;
+            }
+
             const data = await response.json();
             
             setUsers(data.users || []);
@@ -84,7 +109,13 @@ export const WorkspaceProvider = ({ children }) => {
         setSaving(true);
         const toastId = toast.loading('Saving changes...');
         try {
-            await axios.patch(`/api/workspace/${workspaceId}/system/settings`, newData);
+            const response = await fetch(`/api/workspace/${workspaceId}/system/settings`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newData)
+            });
+            if (!response.ok) throw new Error(`Failed to update settings: ${response.status}`);
+            
             setSettings(prev => ({ ...prev, ...newData }));
             toast.success('Settings updated successfully', { id: toastId });
         } catch (error) {
@@ -136,7 +167,7 @@ export const WorkspaceProvider = ({ children }) => {
         if (workspaceId) fetchAccessData();
     }, [fetchSettings, fetchAccessData, workspaceId]);
 
-    const value = {
+    const value = useMemo(() => ({
         // Core
         workspaceId,
         loading: settingsLoading || accessLoading,
@@ -159,7 +190,23 @@ export const WorkspaceProvider = ({ children }) => {
         resolveRolePermissions,
         activePermissions,
         isSuperAdmin
-    };
+    }), [
+        workspaceId,
+        settingsLoading,
+        accessLoading,
+        settings,
+        saving,
+        fetchSettings,
+        updateSettings,
+        users,
+        roles,
+        permissions,
+        departments,
+        previewRole,
+        resolveRolePermissions,
+        activePermissions,
+        isSuperAdmin
+    ]);
 
     return (
         <WorkspaceContext.Provider value={value}>

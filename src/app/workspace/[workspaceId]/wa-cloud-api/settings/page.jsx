@@ -369,11 +369,17 @@ export default function SettingsPage() {
         executeGetMetadata({ workspaceId });
     };
 
+    // Unified initialization effect
     useEffect(() => {
         if (workspaceId) {
             fetchMetadata();
             fetchCloudCreds();
             fetchTemplatesList();
+            executeGetDecrypted({ workspaceId });
+            
+            if (typeof window !== 'undefined') {
+                setWebhookUrl(`${window.location.origin}/api/wa/webhook`);
+            }
         }
     }, [workspaceId]);
 
@@ -533,19 +539,7 @@ export default function SettingsPage() {
         }, { type: 'qr_delete' });
     };
 
-    useEffect(() => {
-        fetchMetadata();
-        fetchCloudCreds();
-        fetchTemplatesList();
 
-        // Pre-fill all Meta Cloud inputs from the default credential account
-        // Pre-fill Meta Cloud inputs
-        executeGetDecrypted({ workspaceId });
-
-        if (typeof window !== 'undefined') {
-            setWebhookUrl(`${window.location.origin}/api/wa/webhook`);
-        }
-    }, [workspaceId]);
 
 
     const handleSaveMetadata = (updates) => {

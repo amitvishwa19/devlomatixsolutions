@@ -12,15 +12,17 @@ import {
     RefreshCcw,
     AlertCircle,
     CheckCircle2,
-    Loader2
+    Loader2,
+    Zap
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useAction } from "@/hooks/use-action";
 import { getStores } from "./_actions/get-stores";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { ShopifyConnectModal } from "./_components/ShopifyConnectModal";
 import { WooCommerceConnectModal } from "./_components/WooCommerceConnectModal";
 
@@ -30,8 +32,6 @@ const stats = [
     { label: "Abandoned Carts", value: "28", change: "-4.1%", icon: ShoppingCart, color: "text-amber-500", bg: "bg-amber-500/10" },
     { label: "Recovery Rate", value: "64.2%", change: "+2.4%", icon: ShoppingBag, color: "text-purple-500", bg: "bg-purple-500/10" }
 ];
-
-import { useParams } from "next/navigation";
 
 export default function ECommercePage() {
     const params = useParams();
@@ -53,205 +53,219 @@ export default function ECommercePage() {
     });
 
     const fetchStores = () => {
+        if (!workspaceId || workspaceId === '[workspaceId]') return;
         setIsLoading(true);
         executeGetStores({ workspaceId });
     };
 
     useEffect(() => {
-        // We'll need workspaceId here ideally, but for now matching legacy behavior
-        fetchStores();
-    }, []);
+        if (workspaceId && workspaceId !== '[workspaceId]') {
+            fetchStores();
+        }
+    }, [workspaceId]);
 
     return (
-        <div className="p-6 space-y-8 animate-in fade-in duration-700">
-            {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-lg shadow-primary/5">
-                        <ShoppingBag className="h-8 w-8 text-primary" />
+        <div className="flex flex-col h-full text-foreground overflow-hidden">
+            {/* Header Area - Matching Settings Page */}
+            <div className="flex items-center justify-between p-6 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-20">
+                <div className="flex items-center gap-5">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
+                        <ShoppingBag className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold">eCommerce <span className="text-primary/50 text-xl italic font-light ml-1">Connect</span></h1>
-                        <p className="text-muted-foreground text-xs flex items-center gap-1.5 font-medium">
-                            Unified Dashboard for Shopify & WooCommerce
-                        </p>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">eCommerce</h1>
+                            <Badge variant="outline" className="h-5 px-2 text-[9px] font-bold uppercase tracking-widest border-primary/20 text-primary bg-primary/5">
+                                Connect Hub
+                            </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-medium mt-0.5">Manage your Shopify and WooCommerce integrations.</p>
                     </div>
                 </div>
+
                 <div className="flex items-center gap-3">
                     <Button
-                        variant="outline"
+                        variant="secondary"
+                        size="sm"
                         onClick={fetchStores}
-                        className="glass-button border-white/10  rounded-md  px-6 font-bold shadow-2xl active:scale-95 transition-all"
+                        className="h-9 px-4 rounded-xl text-xs font-bold transition-all border border-border/20 shadow-sm"
                     >
-                        <RefreshCcw className="mr-2 h-4 w-4" />
+                        <RefreshCcw className="mr-2 h-3.5 w-3.5" />
                         Sync Data
                     </Button>
                     <Button
+                        size="sm"
                         onClick={() => setIsShopifyModalOpen(true)}
-                        className="bg-primary hover:bg-primary/90 text-white border-0 shadow-lg shadow-primary/20  rounded-md  font-bold active:scale-95 transition-all group overflow-hidden relative"
+                        className="h-9 px-4 rounded-xl text-xs font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all active:scale-95"
                     >
-                        <div className="absolute inset-0 bg-white/10 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12" />
-                        <Plus className="mr-2 h-5 w-5" />
-                        Connect New Store
+                        <Plus className="mr-2 h-4 w-4" />
+                        Connect Store
                     </Button>
                 </div>
             </div>
 
-            {/* Stats Perspective */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, i) => (
-                    <Card key={i} className="glassmorphism border bg-card backdrop-blur-3xl group hover:border-primary/50 transition-all duration-500 overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <stat.icon size={64} />
-                        </div>
-                        <CardContent className="p-2">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={`p-2.5 rounded-xl ${stat.bg}`}>
-                                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            {/* Main Content Area - Scrollable */}
+            <div className="flex-1 custom-scrollbar overflow-y-auto p-6 pt-2">
+                {/* Stats Section - Using Settings-like Card Spacing */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    {stats.map((stat, i) => (
+                        <Card key={i} className="p-4 bg-background/40 backdrop-blur-sm rounded-xl border border-border/20 hover:border-primary/30 transition-all shadow-sm">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className={`p-2 rounded-lg ${stat.bg} border border-border/10`}>
+                                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
                                 </div>
-                                <Badge variant="outline" className="bg-white/5 border-white/10 text-[10px] font-black uppercase text-white/50 tracking-widest">
+                                <Badge variant="outline" className="h-4 px-1.5 text-[8px] font-black uppercase tracking-tighter border-border/20">
                                     {stat.change}
                                 </Badge>
                             </div>
-                            <h3 className="text-sm font-bold text-muted-foreground mb-1">{stat.label}</h3>
-                            <div className="text-2xl font-black ">{stat.value}</div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Store Management Section */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <h2 className="text-xl font-bold  flex items-center gap-2">
-                            <Store className="text-primary h-5 w-5" />
-                            Connected Stores
-                        </h2>
-                    </div>
-
-                    {isLoading ? (
-                        <div className="h-64 flex flex-col items-center justify-center glassmorphism border-white/5 rounded-3xl">
-                            <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
-                            <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Fetching Integrations...</p>
-                        </div>
-                    ) : stores.length === 0 ? (
-                        <div className="h-80 flex flex-col items-center justify-center glassmorphism border-white/5 bg-white/[0.01] rounded-3xl border-dashed border-2 relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                            <div className="p-6 bg-white/5 rounded-full mb-6 border border-white/10 group-hover:scale-110 transition-transform duration-500">
-                                <RefreshCcw size={48} className="text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
-                            </div>
-                            <h3 className="text-xl font-black mb-2 ">No Stores Linked Yet</h3>
-                            <p className="text-muted-foreground text-sm max-w-sm text-center mb-8 font-medium leading-relaxed">
-                                Unlock the power of WhatsApp commerce by connecting your Shopify or WooCommerce store instantly.
-                            </p>
-                            <div className="flex gap-4">
-                                <Button
-                                    onClick={() => setIsShopifyModalOpen(true)}
-                                    className="bg-primary text-white rounded-xl px-8 font-bold h-12 shadow-xl shadow-primary/20 transition-all active:scale-95"
-                                >
-                                    Connect Shopify
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsWooModalOpen(true)}
-                                    className="border-white/10 text-white hover:bg-white/5 rounded-xl px-8 font-bold h-12 transition-all active:scale-95"
-                                >
-                                    WooCommerce Setup
-                                </Button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {stores.map((store) => (
-                                <Card key={store.id} className="glassmorphism border-white/10 bg-[#1e1e2e]/40 p-6 group hover:border-primary/30 transition-all rounded-3xl">
-                                    <div className="flex items-start justify-between mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                                                {store.platform === 'shopify' ?
-                                                    <span className="text-2xl">🛍️</span> :
-                                                    <span className="text-2xl">⚡</span>
-                                                }
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-black text-white mb-1 group-hover:text-primary transition-colors">{store.name}</h3>
-                                                <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px] uppercase font-bold tracking-wider rounded-md">Connected</Badge>
-                                            </div>
-                                        </div>
-                                        <Button variant="ghost" size="icon" className="text-white/20 hover:text-white hover:bg-white/5">
-                                            <ExternalLink size={18} />
-                                        </Button>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-3 mb-6">
-                                        <div className="p-3 rounded-2xl bg-white/5 border border-white/5 text-center">
-                                            <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-1">Orders</div>
-                                            <div className="text-lg font-black text-white">{store._count?.orders || 0}</div>
-                                        </div>
-                                        <div className="p-3 rounded-2xl bg-white/5 border border-white/5 text-center">
-                                            <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-1">Items</div>
-                                            <div className="text-lg font-black text-white">{store._count?.products || 0}</div>
-                                        </div>
-                                        <div className="p-3 rounded-2xl bg-white/5 border border-white/5 text-center">
-                                            <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-1">Carts</div>
-                                            <div className="text-lg font-black text-white">{store._count?.abandonedCarts || 0}</div>
-                                        </div>
-                                    </div>
-
-                                    <Button variant="outline" className="w-full border-white/10 text-white text-xs font-bold rounded-xl h-10 hover:bg-primary hover:border-0 transition-all">
-                                        Manage Integration
-                                    </Button>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</h3>
+                            <div className="text-xl font-bold tracking-tight">{stat.value}</div>
+                        </Card>
+                    ))}
                 </div>
 
-                {/* Right Sidebar Utilities */}
-                <div className="space-y-6">
-                    <Card className="glassmorphism border-white/10 bg-primary/5 rounded-3xl overflow-hidden relative border-0">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 bg-primary/20 blur-3xl w-40 h-40 rounded-full" />
-                        <CardHeader>
-                            <CardTitle className="text-lg font-black text-white tracking-tight flex items-center gap-2">
-                                <AlertCircle className="text-primary h-5 w-5" />
-                                Recovery Quick-Actions
-                            </CardTitle>
-                            <CardDescription className="text-xs font-medium text-muted-foreground">Automate your abandoned cart reminders</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/20 transition-all cursor-pointer group">
-                                <h4 className="text-sm font-bold text-white mb-2 group-hover:text-primary transition-colors italic">High Intent Recovery</h4>
-                                <p className="text-[10px] text-muted-foreground leading-relaxed font-medium">Send a WhatsApp message 30 mins after cart abandonment with a 10% coupon code.</p>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    {/* Main Content (Left) - Store Management */}
+                    <div className="md:col-span-8 space-y-6">
+                        <Card className="p-0 bg-transparent shadow-none border-none">
+                            <div className="flex items-center justify-between mb-4 px-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                                        <Store className="w-4 h-4 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold tracking-tight">Connected Stores</h2>
+                                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Active Integrations</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/20 transition-all cursor-pointer group">
-                                <h4 className="text-sm font-bold text-white mb-2 group-hover:text-primary transition-colors italic">Order Follow-up</h4>
-                                <p className="text-[10px] text-muted-foreground leading-relaxed font-medium">Ask for a product review 7 days after order fulfillment automatically.</p>
-                            </div>
-                            <Button className="w-full bg-white/5 hover:bg-white/10 text-white rounded-xl h-11 font-black text-[10px] uppercase tracking-widest border border-white/10">
-                                Browse All Flow Templates
-                            </Button>
-                        </CardContent>
-                    </Card>
 
-                    <Card className="glassmorphism border-white/10 bg-[#0f0f1a]/60 rounded-3xl p-6">
-                        <h3 className="text-sm font-black text-white/50 tracking-widest uppercase mb-4 px-2">Integration Health</h3>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between px-2">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/100 animate-pulse" />
-                                    <span className="text-xs font-bold text-white">Webhook Listener</span>
-                                </div>
-                                <Badge className="bg-emerald-500/20 text-emerald-500 border-0 text-[10px] font-black uppercase tracking-widest">Active</Badge>
+                            <div className="space-y-4">
+                                {isLoading ? (
+                                    <div className="h-64 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm rounded-2xl border border-border/20 border-dashed">
+                                        <Loader2 className="h-8 w-8 text-primary animate-spin mb-3" />
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Syncing Vault...</p>
+                                    </div>
+                                ) : stores.length === 0 ? (
+                                    <div className="h-80 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm rounded-2xl border border-border/20 border-dashed relative overflow-hidden group">
+                                        <div className="p-6 bg-primary/5 rounded-full mb-4 border border-primary/10">
+                                            <Store size={32} className="text-primary/30" />
+                                        </div>
+                                        <h3 className="text-base font-bold mb-1">No Stores Linked</h3>
+                                        <p className="text-muted-foreground text-xs max-w-xs text-center mb-6 font-medium">
+                                            Connect your eCommerce platform to automate recovery flows.
+                                        </p>
+                                        <div className="flex gap-3">
+                                            <Button
+                                                variant="secondary"
+                                                onClick={() => setIsShopifyModalOpen(true)}
+                                                className="h-10 rounded-xl px-6 text-xs font-bold"
+                                            >
+                                                Shopify
+                                            </Button>
+                                            <Button
+                                                variant="secondary"
+                                                onClick={() => setIsWooModalOpen(true)}
+                                                className="h-10 rounded-xl px-6 text-xs font-bold"
+                                            >
+                                                WooCommerce
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    stores.map((store) => (
+                                        <div key={store.id} className="p-5 bg-background/40 backdrop-blur-sm rounded-xl border border-border/20 hover:border-primary/30 transition-all group shadow-sm">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-14 h-14 rounded-2xl bg-muted/20 border border-border/40 flex items-center justify-center group-hover:text-primary transition-all shadow-inner">
+                                                        {store.platform === 'shopify' ? 
+                                                            <span className="text-xl">🛍️</span> : 
+                                                            <span className="text-xl">⚡</span>
+                                                        }
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm font-bold tracking-tight">{store.name}</span>
+                                                            <Badge className="h-4 text-[8px] font-black tracking-widest bg-emerald-500/10 text-emerald-500 border-0">
+                                                                CONNECTED
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex items-center gap-4 text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+                                                            <span>{store.platform}</span>
+                                                            <Separator orientation="vertical" className="h-3 bg-border/40" />
+                                                            <span>{store._count?.orders || 0} Orders</span>
+                                                            <Separator orientation="vertical" className="h-3 bg-border/40" />
+                                                            <span>{store._count?.products || 0} Items</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-3">
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all">
+                                                        <ExternalLink size={15} />
+                                                    </Button>
+                                                    <Button variant="secondary" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border border-border/20 shadow-sm">
+                                                        Manage
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
-                            <div className="flex items-center justify-between px-2">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/100 animate-pulse" />
-                                    <span className="text-xs font-bold text-white">Prisma Sync Engine</span>
+                        </Card>
+                    </div>
+
+                    {/* Sidebar Area (Right) */}
+                    <div className="md:col-span-4 space-y-6">
+                        <Card className="bg-primary/5 border-primary/10 rounded-2xl overflow-hidden relative shadow-none">
+                            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 bg-primary/20 blur-3xl w-40 h-40 rounded-full" />
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <Zap className="text-primary h-4 w-4" />
+                                    Quick Automations
+                                </CardTitle>
+                                <CardDescription className="text-[10px] font-medium">Pre-built commerce flows</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <div className="p-3 bg-background/40 backdrop-blur-sm rounded-xl border border-border/20 hover:border-primary/20 transition-all cursor-pointer group">
+                                    <h4 className="text-xs font-bold mb-1 group-hover:text-primary transition-colors">Abandoned Recovery</h4>
+                                    <p className="text-[9px] text-muted-foreground leading-relaxed">Recover 15% more sales with automated reminders.</p>
                                 </div>
-                                <Badge className="bg-emerald-500/20 text-emerald-500 border-0 text-[10px] font-black uppercase tracking-widest">Running</Badge>
+                                <div className="p-3 bg-background/40 backdrop-blur-sm rounded-xl border border-border/20 hover:border-primary/20 transition-all cursor-pointer group">
+                                    <h4 className="text-xs font-bold mb-1 group-hover:text-primary transition-colors">Order Feedback</h4>
+                                    <p className="text-[9px] text-muted-foreground leading-relaxed">Automatically collect reviews after delivery.</p>
+                                </div>
+                                <Button variant="outline" className="w-full h-9 rounded-xl text-[9px] font-black uppercase tracking-widest bg-background/50 border-border/40">
+                                    Explore Flow Templates
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-background/40 backdrop-blur-sm border-border/20 rounded-2xl shadow-none p-5">
+                            <h3 className="text-[10px] font-black text-muted-foreground tracking-widest uppercase mb-4 px-1">Infrastructure Status</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between px-1">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                                        <span className="text-[11px] font-bold">API Sync Service</span>
+                                    </div>
+                                    <Badge variant="outline" className="h-4 px-1.5 text-[8px] font-black uppercase border-emerald-500/20 text-emerald-500 bg-emerald-500/5">
+                                        HEALTHY
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center justify-between px-1">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                                        <span className="text-[11px] font-bold">Webhook Listener</span>
+                                    </div>
+                                    <Badge variant="outline" className="h-4 px-1.5 text-[8px] font-black uppercase border-emerald-500/20 text-emerald-500 bg-emerald-500/5">
+                                        LISTENING
+                                    </Badge>
+                                </div>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </Card>
+                    </div>
                 </div>
             </div>
 

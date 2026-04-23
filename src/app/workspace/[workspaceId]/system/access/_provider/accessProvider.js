@@ -19,9 +19,17 @@ export const AccessProvider = ({ children }) => {
  const fetchAccessData = useCallback(async () => {
  try {
  setLoading(true)
- const response = await fetch(`/api/workspace/${workspaceId}/access`)
- if (!response.ok) throw new Error('Failed to fetch access data')
- const data = await response.json()
+  const response = await fetch(`/api/workspace/${workspaceId}/access`)
+  if (!response.ok) throw new Error(`Failed to fetch access data: ${response.status}`)
+  
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    const text = await response.text();
+    console.error("Expected JSON but received:", text.substring(0, 100));
+    return;
+  }
+
+  const data = await response.json()
  
  setUsers(data.users || [])
  setRoles(data.roles || [])

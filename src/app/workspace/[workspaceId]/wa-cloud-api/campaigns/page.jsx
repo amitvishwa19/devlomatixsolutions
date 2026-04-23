@@ -61,6 +61,7 @@ import { deleteCampaign } from "./_actions/delete-campaign";
 import { triggerCampaign } from "./_actions/trigger-campaign";
 import { getTemplates } from "../template/_actions/get-templates";
 import { getContacts } from "../contacts/_actions/get-contacts";
+import { getGroups } from "../contacts/_actions/get-groups";
 import { useParams } from "next/navigation";
 
 export default function CampaignsPage() {

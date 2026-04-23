@@ -11,26 +11,27 @@ const prismaClientSingleton = () => {
 
 // Store the singleton on the global object to prevent multiple instances in dev
 const getBaseDb = () => {
-    if (!global.prismaGlobal) {
-        global.prismaGlobal = prismaClientSingleton();
+    if (!globalThis.prismaGlobal) {
+        globalThis.prismaGlobal = prismaClientSingleton();
+        globalThis.prismaGlobal._schemaVersion = 25;
     }
     
     // Self-healing: If the client was initialized before the new models or fields existed
     // We check for some new models/fields to trigger re-initialization in development
     const SCHEMA_VERSION = 25; // Increment this to force a re-init in dev
     const isStale = process.env.NODE_ENV !== 'production' && (
-        !global.prismaGlobal.agentModel || 
-        !global.prismaGlobal.contactGroup ||
-        global.prismaGlobal._schemaVersion !== SCHEMA_VERSION
+        !globalThis.prismaGlobal.agentModel || 
+        !globalThis.prismaGlobal.contactGroup ||
+        globalThis.prismaGlobal._schemaVersion !== SCHEMA_VERSION
     );
 
     if (isStale) {
-        console.log(`🔄 Stale Prisma Client detected (ver ${global.prismaGlobal._schemaVersion || 0} vs ${SCHEMA_VERSION}). Re-initializing...`);
-        global.prismaGlobal = prismaClientSingleton();
-        global.prismaGlobal._schemaVersion = SCHEMA_VERSION;
+        console.log(`🔄 Stale Prisma Client detected (ver ${globalThis.prismaGlobal._schemaVersion || 0} vs ${SCHEMA_VERSION}). Re-initializing...`);
+        globalThis.prismaGlobal = prismaClientSingleton();
+        globalThis.prismaGlobal._schemaVersion = SCHEMA_VERSION;
     }
     
-    return global.prismaGlobal;
+    return globalThis.prismaGlobal;
 };
 
 /**

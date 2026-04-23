@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ShoppingBag, ShieldCheck, Loader2 } from 'lucide-react';
 import { 
     Dialog, 
     DialogContent, 
