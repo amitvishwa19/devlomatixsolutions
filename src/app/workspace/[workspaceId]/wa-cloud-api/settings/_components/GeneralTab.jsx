@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Globe, Plus, MessageSquare, CheckCircle2, AlertCircle, Star, Zap, RefreshCw, Info, Settings, Trash2, Copy, Database, LayoutDashboard, ChevronRight, MessageCircle, Smartphone, User } from 'lucide-react';
+import { Globe, Plus, MessageSquare, CheckCircle2, AlertCircle, Star, Zap, RefreshCw, Info, Settings, Trash2, Copy, Database, LayoutDashboard, ChevronRight, MessageCircle, Smartphone, User, ExternalLink, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,15 @@ import { updateTestNumbers } from "../_actions/update-test-numbers";
 
 import { CloudAccountModal } from './CloudAccountModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
+import { WhatsAppMetaCloudInfo } from './WhatsAppMetaCloudInfo';
+import { WhatsAppAnalyticsInfo } from './WhatsAppAnalyticsInfo';
 
-export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadata }) {
+export function GeneralTab({
+    workspaceId,
+    metaCloudVersion,
+    metadata,
+    setMetadata
+}) {
     const [cloudCreds, setCloudCreds] = useState([]);
     const [cloudLoading, setCloudLoading] = useState(false);
     const [testState, setTestState] = useState({});
@@ -48,17 +55,6 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
     const [testNumberInput, setTestNumberInput] = useState('');
 
     // Analytics States (Moved here from page.jsx for modularity)
-    const [analyticsWabaId, setAnalyticsWabaId] = useState('');
-    const [analyticsGranularity, setAnalyticsGranularity] = useState('DAY');
-    const [analyticsSince, setAnalyticsSince] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-    const [analyticsUntil, setAnalyticsUntil] = useState(new Date().toISOString().split('T')[0]);
-    const [analyticsMsgTesting, setAnalyticsMsgTesting] = useState(false);
-    const [analyticsMsgResult, setAnalyticsMsgResult] = useState(null);
-    const [analyticsMsgOpen, setAnalyticsMsgOpen] = useState(true);
-    const [analyticsConvTesting, setAnalyticsConvTesting] = useState(false);
-    const [analyticsConvResult, setAnalyticsConvResult] = useState(null);
-    const [analyticsConvOpen, setAnalyticsConvOpen] = useState(true);
-    const [metaCloudAccessToken, setMetaCloudAccessToken] = useState('');
     const [processingNumber, setProcessingNumber] = useState(null);
 
     const { execute: executeGetCreds } = useAction(getCredentials, {
@@ -117,36 +113,6 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
         }
     });
 
-    const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
-        onSuccess: (data) => {
-            if (data.data?.accessToken) setMetaCloudAccessToken(data.data.accessToken);
-            if (data.data?.wabaId && !analyticsWabaId) setAnalyticsWabaId(data.data.wabaId);
-        }
-    });
-
-
-
-    const { execute: executeTestApi } = useAction(testMetaApi, {
-        onSuccess: (data, context) => {
-            if (context.type === 'meta_analytics_msg') {
-                setAnalyticsMsgResult(data.apiData);
-                setAnalyticsMsgOpen(true);
-                setAnalyticsMsgTesting(false);
-            } else if (context.type === 'meta_analytics_conv') {
-                setAnalyticsConvResult(data.apiData);
-                setAnalyticsConvOpen(true);
-                setAnalyticsConvTesting(false);
-            }
-            if (data.success) toast.success("Analytics fetched successfully");
-            else toast.error(data.error || "Operation failed");
-        },
-        onError: (error, context) => {
-            toast.error(error);
-            if (context.type === 'meta_analytics_msg') setAnalyticsMsgTesting(false);
-            else if (context.type === 'meta_analytics_conv') setAnalyticsConvTesting(false);
-        }
-    });
-
     const fetchCloudCreds = () => {
         setCloudLoading(true);
         executeGetCreds({ workspaceId });
@@ -155,7 +121,6 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
     useEffect(() => {
         if (workspaceId) {
             fetchCloudCreds();
-            executeGetDecrypted({ workspaceId });
         }
     }, [workspaceId]);
 
@@ -189,40 +154,6 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
         if (!accountToDelete) return;
         setCloudLoading(true);
         executeRemoveCred({ workspaceId, id: accountToDelete.id });
-    };
-
-    const handleFetchMsgAnalytics = () => {
-        if (!analyticsWabaId?.trim()) { toast.error('WABA ID required.'); return; }
-        if (!metaCloudAccessToken?.trim()) { toast.error('Access Token required.'); return; }
-
-        const start = Math.floor(new Date(analyticsSince).getTime() / 1000);
-        const end = Math.floor(new Date(analyticsUntil).getTime() / 1000);
-        const url = `https://graph.facebook.com/${metaCloudVersion}/${analyticsWabaId.trim()}/analytics?start=${start}&end=${end}&granularity=${analyticsGranularity}&phone_numbers=[]`;
-
-        setAnalyticsMsgTesting(true);
-        executeTestApi({
-            workspaceId,
-            url,
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
-        }, { type: 'meta_analytics_msg' });
-    };
-
-    const handleFetchConvAnalytics = () => {
-        if (!analyticsWabaId?.trim()) { toast.error('WABA ID required.'); return; }
-        if (!metaCloudAccessToken?.trim()) { toast.error('Access Token required.'); return; }
-
-        const start = Math.floor(new Date(analyticsSince).getTime() / 1000);
-        const end = Math.floor(new Date(analyticsUntil).getTime() / 1000);
-        const cats = encodeURIComponent('["MARKETING","UTILITY","AUTHENTICATION","SERVICE"]');
-        const dims = encodeURIComponent('["CONVERSATION_CATEGORY","CONVERSATION_TYPE"]');
-        const url = `https://graph.facebook.com/${metaCloudVersion}/${analyticsWabaId.trim()}/conversation_analytics?start=${start}&end=${end}&granularity=${analyticsGranularity}&phone_numbers=[]&conversation_categories=${cats}&dimensions=${dims}`;
-
-        setAnalyticsConvTesting(true);
-        executeTestApi({
-            workspaceId,
-            url,
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
-        }, { type: 'meta_analytics_conv' });
     };
 
     const { execute: executeUpdateTestNumbers } = useAction(updateTestNumbers, {
@@ -264,6 +195,13 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
 
                 {/* Main Content (Left) */}
                 <div className="md:col-span-8 space-y-6">
+
+                    {/* Developer App Information Card */}
+                    <WhatsAppMetaCloudInfo
+                        workspaceId={workspaceId}
+                        metaCloudVersion={metaCloudVersion}
+                    />
+
                     <Card className="border shadow-sm relative">
                         <CardHeader className="flex flex-row items-center justify-between pb-6">
                             <div className="flex items-center gap-3">
@@ -419,80 +357,6 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
 
                 {/* Sidebar Stats (Right) */}
                 <div className="md:col-span-4 space-y-4">
-
-                    <Card className="border shadow-sm p-2">
-                        <CardContent className="p-2">
-                            <div className="flex flex-wrap gap-3 items-end">
-                                <div className="space-y-1.5 flex-1 min-w-[160px]">
-                                    <Label className="text-xs font-medium text-muted-foreground ml-1">WABA ID</Label>
-                                    <Input
-                                        placeholder="waba_id"
-                                        className="bg-muted/5 text-xs border rounded-md px-4"
-                                        value={analyticsWabaId}
-                                        onChange={(e) => setAnalyticsWabaId(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-1.5 flex-1 min-w-[200px]">
-                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Date Range</Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            type="date"
-                                            className="bg-muted/5 text-xs border rounded-md px-4 flex-1"
-                                            value={analyticsSince}
-                                            onChange={(e) => setAnalyticsSince(e.target.value)}
-                                        />
-                                        <Input
-                                            type="date"
-                                            className="bg-muted/5 text-xs border rounded-md px-4 flex-1"
-                                            value={analyticsUntil}
-                                            onChange={(e) => setAnalyticsUntil(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5 w-32">
-                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Granularity</Label>
-                                    <Select value={analyticsGranularity} onValueChange={setAnalyticsGranularity}>
-                                        <SelectTrigger className="bg-muted/5 text-xs border rounded-md px-4"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="rounded-xl border-border/20">
-                                            <SelectItem value="DAY" className="text-sm">Day</SelectItem>
-                                            <SelectItem value="WEEK" className="text-sm">Week</SelectItem>
-                                            <SelectItem value="MONTH" className="text-sm">Month</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <Tabs defaultValue="messages" className="w-full">
-                                <TabsList className="bg-muted/5 w-fit justify-start rounded-md h-auto p-1 gap-1 border mb-4">
-                                    <TabsTrigger value="messages" className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                                        <MessageSquare size={14} />
-                                        Messages
-                                    </TabsTrigger>
-                                    <TabsTrigger value="conversations" className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                                        <LayoutDashboard size={14} />
-                                        Conversations
-                                    </TabsTrigger>
-                                </TabsList>
-
-                                <TabsContent value="messages" className="space-y-3 mt-0">
-                                    <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
-                                        GET https://graph.facebook.com/{metaCloudVersion}/{analyticsWabaId || '<waba_id>'}/analytics...
-                                    </div>
-                                    <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchMsgAnalytics} disabled={analyticsMsgTesting || !analyticsWabaId?.trim()}>
-                                        {analyticsMsgTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                        {analyticsMsgTesting ? 'Fetching...' : 'Fetch Message Analytics'}
-                                    </Button>
-                                </TabsContent>
-
-                                <TabsContent value="conversations" className="space-y-3 mt-0">
-                                    <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchConvAnalytics} disabled={analyticsConvTesting || !analyticsWabaId?.trim()}>
-                                        {analyticsConvTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                        {analyticsConvTesting ? 'Fetching...' : 'Fetch Conversation Analytics'}
-                                    </Button>
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
 
 
                     <Card className="border shadow-sm overflow-hidden p-2">

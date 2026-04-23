@@ -27,7 +27,8 @@ import {
     Link as LinkIcon,
     Mail,
     BellRing,
-    History
+    History,
+    LayoutDashboard
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,6 +48,7 @@ import { MessagingTab } from './_components/MessagingTab';
 import { NotificationsTab } from './_components/NotificationsTab';
 import { SecurityTab } from './_components/SecurityTab';
 import { MetaCloudTab } from './_components/MetaCloudTab';
+import { WhatsAppAnalyticsInfo } from './_components/WhatsAppAnalyticsInfo';
 
 export default function SettingsPage() {
     const [metadata, setMetadata] = useState({});
@@ -55,6 +57,7 @@ export default function SettingsPage() {
 
     const params = useParams();
     const workspaceId = params?.workspaceId;
+    const metaCloudVersion = "v25.0";
 
     const { execute: executeGetMetadata } = useAction(getWaMetadata, {
         onSuccess: (data) => {
@@ -63,6 +66,8 @@ export default function SettingsPage() {
         },
         onError: () => setLoading(false)
     });
+
+
 
     useEffect(() => {
         if (workspaceId) {
@@ -116,6 +121,7 @@ export default function SettingsPage() {
                             { id: 'general', label: 'General', icon: Settings },
                             { id: 'automation', label: 'Automation', icon: Zap },
                             { id: 'webhooks', label: 'Webhooks', icon: LinkIcon },
+                            { id: 'analytics', label: 'Analytics', icon: LayoutDashboard },
                             { id: 'messaging', label: 'Messaging', icon: Smartphone },
                             { id: 'notifications', label: 'Notifications', icon: BellRing },
                             { id: 'security', label: 'Security', icon: ShieldCheck },
@@ -135,7 +141,7 @@ export default function SettingsPage() {
                     <TabsContent value="general" className="flex-1 overflow-hidden flex flex-col outline-none">
                         <GeneralTab
                             workspaceId={workspaceId}
-                            metaCloudVersion="v25.0"
+                            metaCloudVersion={metaCloudVersion}
                             metadata={metadata}
                             setMetadata={setMetadata}
                         />
@@ -154,6 +160,13 @@ export default function SettingsPage() {
                             workspaceId={workspaceId}
                             metadata={metadata}
                             setMetadata={setMetadata}
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="analytics" className="flex-1 overflow-hidden flex flex-col outline-none">
+                        <WhatsAppAnalyticsInfo
+                            workspaceId={workspaceId}
+                            metaCloudVersion={metaCloudVersion}
                         />
                     </TabsContent>
 
