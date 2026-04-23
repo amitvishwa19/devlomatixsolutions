@@ -59,6 +59,7 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
     const [analyticsConvResult, setAnalyticsConvResult] = useState(null);
     const [analyticsConvOpen, setAnalyticsConvOpen] = useState(true);
     const [metaCloudAccessToken, setMetaCloudAccessToken] = useState('');
+    const [processingNumber, setProcessingNumber] = useState(null);
 
     const { execute: executeGetCreds } = useAction(getCredentials, {
         onSuccess: (data) => {
@@ -123,13 +124,7 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
         }
     });
 
-    const { execute: executeUpdateTestNumbers } = useAction(updateTestNumbers, {
-        onSuccess: (data) => {
-            toast.success('Test numbers updated');
-            setMetadata(prev => ({ ...prev, testNumbers: data.testNumbers }));
-        },
-        onError: (err) => toast.error(err || 'Failed to update test numbers')
-    });
+
 
     const { execute: executeTestApi } = useAction(testMetaApi, {
         onSuccess: (data, context) => {
@@ -230,6 +225,18 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
         }, { type: 'meta_analytics_conv' });
     };
 
+    const { execute: executeUpdateTestNumbers } = useAction(updateTestNumbers, {
+        onSuccess: (data) => {
+            toast.success('Updated successfully', { id: 'test-numbers' });
+            setMetadata(prev => ({ ...prev, testNumbers: data.testNumbers }));
+            setProcessingNumber(null);
+        },
+        onError: (err) => {
+            toast.error(err || 'Operation failed', { id: 'test-numbers' });
+            setProcessingNumber(null);
+        }
+    });
+
     const handleAddTestNumber = () => {
         if (!testNumberInput?.trim()) return;
         const currentNumbers = metadata.testNumbers || [];
@@ -238,12 +245,15 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
             return;
         }
         const updated = [...currentNumbers, testNumberInput];
+        toast.loading(`Adding ${testNumberInput}...`, { id: 'test-numbers' });
         executeUpdateTestNumbers({ workspaceId, testNumbers: updated });
         setTestNumberInput('');
     };
 
     const handleRemoveTestNumber = (num) => {
         const updated = (metadata.testNumbers || []).filter(n => n !== num);
+        setProcessingNumber(num);
+        toast.loading(`Removing ${num}...`, { id: 'test-numbers' });
         executeUpdateTestNumbers({ workspaceId, testNumbers: updated });
     };
 
@@ -534,8 +544,13 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
                                             size="icon"
                                             className="h-8 w-8 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                                             onClick={() => handleRemoveTestNumber(num)}
+                                            disabled={!!processingNumber}
                                         >
-                                            <Trash2 size={14} />
+                                            {processingNumber === num ? (
+                                                <RefreshCw size={14} className="animate-spin" />
+                                            ) : (
+                                                <Trash2 size={14} />
+                                            )}
                                         </Button>
                                     </div>
                                 ))}

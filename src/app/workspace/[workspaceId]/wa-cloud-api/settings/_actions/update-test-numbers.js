@@ -17,23 +17,30 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // Fetch or update the WhatsAppAuth record
+        // Fetch current record to merge metadata
+        const existing = await db.whatsAppAuth.findUnique({
+            where: { sessionId: userId }
+        });
+
+        const currentMetadata = existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {};
+        
+        const updatedMetadata = {
+            ...currentMetadata,
+            testNumbers: testNumbers
+        };
+
         const updated = await db.whatsAppAuth.upsert({
             where: { sessionId: userId },
             update: {
-                metadata: {
-                    testNumbers: testNumbers
-                }
+                metadata: updatedMetadata
             },
             create: {
                 sessionId: userId,
-                metadata: {
-                    testNumbers: testNumbers
-                }
+                metadata: updatedMetadata
             }
         });
 
-        return { success: true, metadata: updated.metadata };
+        return { success: true, testNumbers: testNumbers };
     } catch (error) {
         return { error: error.message || "Failed to update test numbers" };
     }
