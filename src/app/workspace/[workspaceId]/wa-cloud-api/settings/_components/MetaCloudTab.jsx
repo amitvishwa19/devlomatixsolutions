@@ -10,7 +10,8 @@ import {
     Info,
     Plus,
     List,
-    ExternalLink
+    ExternalLink,
+    Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -75,19 +76,42 @@ export function MetaCloudTab({ workspaceId }) {
 
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
         onSuccess: (data) => {
-            console.log("[MetaCloudTab] Received credentials from server:", data);
-            if (data?.accessToken) {
-                setMetaCloudAccessToken(data.accessToken);
-                console.log("[MetaCloudTab] Set metaCloudAccessToken (masked):", data.accessToken.substring(0, 5) + "...");
-            }
-            if (data?.phoneNumberId) {
-                const phoneId = data.phoneNumberId.toString();
+            if (data?.accessToken && data?.phoneNumberId) {
+                const token = data.accessToken.trim();
+                const phoneId = data.phoneNumberId.toString().trim();
+                setMetaCloudAccessToken(token);
                 setDisplayNamesPhoneId(phoneId);
                 setObaPhoneId(phoneId);
-                console.log("[MetaCloudTab] Set obaPhoneId:", phoneId);
-            }
-            if (data?.wabaId) {
-                // Set WABA ID if you have a state for it
+                // Auto-trigger token validation
+                setMetaCloudTesting(true);
+                executeTestApi({
+                    workspaceId,
+                    url: `https://graph.facebook.com/${metaCloudVersion}/debug_token?input_token=${token}`,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }, { type: 'meta_test' });
+                // Auto-trigger display names
+                setDisplayNamesTesting(true);
+                executeTestApi({
+                    workspaceId,
+                    url: `https://graph.facebook.com/${metaCloudVersion}/${phoneId}?fields=verified_name,name_status`,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }, { type: 'display_names' });
+                // Auto-trigger OBA status check
+                setObaStatusTesting(true);
+                executeTestApi({
+                    workspaceId,
+                    url: `https://graph.facebook.com/${metaCloudVersion}/${phoneId}?fields=name_status,code_verification_status`,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }, { type: 'oba_status_check' });
+            } else if (data?.accessToken) {
+                const token = data.accessToken.trim();
+                setMetaCloudAccessToken(token);
+                setMetaCloudTesting(true);
+                executeTestApi({
+                    workspaceId,
+                    url: `https://graph.facebook.com/${metaCloudVersion}/debug_token?input_token=${token}`,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }, { type: 'meta_test' });
             }
         },
         onError: (error) => {
@@ -109,42 +133,42 @@ export function MetaCloudTab({ workspaceId }) {
 
             switch (context.type) {
                 case 'meta_test':
-                    setMetaCloudResult(data.apiData);
+                    setMetaCloudResult(data);
                     setMetaCloudResultOpen(true);
                     setMetaCloudTesting(false);
                     break;
                 case 'display_names':
-                    setDisplayNamesResult(data.apiData);
+                    setDisplayNamesResult(data);
                     setDisplayNamesResultOpen(true);
                     setDisplayNamesTesting(false);
                     break;
                 case 'oba_status_check':
-                    setObaStatusResult(data.apiData);
+                    setObaStatusResult(data);
                     setObaStatusResultOpen(true);
                     setObaStatusTesting(false);
                     break;
                 case 'oba_request':
-                    setObaResult(data.apiData);
+                    setObaResult(data);
                     setObaResultOpen(true);
                     setObaTesting(false);
                     break;
                 case 'qr_create':
-                    setQrResult(data.apiData);
+                    setQrResult(data);
                     setQrResultOpen(true);
                     setQrTesting(false);
                     break;
                 case 'qr_list':
-                    setQrListResult(data.apiData);
+                    setQrListResult(data);
                     setQrListResultOpen(true);
                     setQrListTesting(false);
                     break;
                 case 'qr_update':
-                    setQrUpdateResult(data.apiData);
+                    setQrUpdateResult(data);
                     setQrUpdateResultOpen(true);
                     setQrUpdateTesting(false);
                     break;
                 case 'qr_delete':
-                    setQrDeleteResult(data.apiData);
+                    setQrDeleteResult(data);
                     setQrDeleteResultOpen(true);
                     setQrDeleteTesting(false);
                     break;
@@ -258,126 +282,154 @@ export function MetaCloudTab({ workspaceId }) {
 
                     {/* Card 1 — Developer App Info */}
                     <div className='flex gap-4 items-stretch'>
-                        <Card className="border shadow-sm w-full">
-                            <CardHeader className="pb-4">
+                        <Card id="meta-cloud-app-info" className="border shadow-sm w-full">
+                            <CardHeader className="">
                                 <CardTitle className="text-sm font-semibold">Developer App Information</CardTitle>
                                 <CardDescription className="text-xs">Meta API authentication and versioning</CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-col gap-4">
-                                <div className="flex gap-4">
-                                    <div className="space-y-1.5 w-32 shrink-0">
-                                        <Label className="text-xs font-medium text-muted-foreground ml-1">API Version</Label>
-                                        <Input
-                                            value={metaCloudVersion ?? ''}
-                                            onChange={(e) => setMetaCloudVersion(e.target.value)}
-                                            className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5 flex-1">
-                                        <Label className="text-xs font-medium text-muted-foreground ml-1">System Access Token</Label>
-                                        <Input
-                                            type="password"
-                                            placeholder="EAAG..."
-                                            value={metaCloudAccessToken ?? ''}
-                                            onChange={(e) => setMetaCloudAccessToken(e.target.value)}
-                                            className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
-                                        />
-                                    </div>
-                                </div>
-                                <Button
-                                    className="px-8 rounded-md text-xs font-medium gap-2 h-10"
-                                    onClick={handleTestMetaCloud}
-                                    disabled={metaCloudTesting || !metaCloudAccessToken?.trim()}
-                                >
-                                    {metaCloudTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                    {metaCloudTesting ? 'Fetching token info...' : 'Validate Token'}
-                                </Button>
+
                                 {metaCloudResult && (
-                                    <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
-                                        <button onClick={() => setMetaCloudResultOpen(v => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/10 transition-colors">
-                                            <Badge variant="outline" className={`text-[10px] font-semibold border-none ${metaCloudResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
-                                                {metaCloudResult.success ? 'Success' : 'Failed'}
-                                            </Badge>
-                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${metaCloudResultOpen ? 'rotate-90' : ''}`} />
-                                        </button>
-                                        {metaCloudResultOpen && (
-                                            <pre className="text-[10px] font-mono p-4 overflow-x-auto max-h-72 text-muted-foreground/80 border-t border-border/40 leading-relaxed">
-                                                {metaCloudResult.error ? metaCloudResult.error : JSON.stringify(metaCloudResult.data, null, 2)}
-                                            </pre>
-                                        )}
+                                    <div className=" overflow-hidden ">
+                                        <div className="p-4 space-y-2">
+
+
+                                            {metaCloudResult.success && metaCloudResult.apiData?.data && (
+                                                <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">App Name</Label>
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15">
+                                                            {metaCloudResult.apiData.data.application || 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">App ID</Label>
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-primary/8 text-primary border border-primary/15">
+                                                            {metaCloudResult.apiData.data.app_id || 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">User ID</Label>
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-primary/8 text-primary border border-primary/15">
+                                                            {metaCloudResult.apiData.data.user_id || 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Token Type</Label>
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15">
+                                                            {metaCloudResult.apiData.data.type || 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Status</Label>
+                                                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium border ${metaCloudResult.apiData.data.is_valid ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-red-500/10 text-red-600 border-red-500/20'}`}>
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${metaCloudResult.apiData.data.is_valid ? 'bg-green-600 animate-pulse' : 'bg-red-600'}`} />
+                                                            {metaCloudResult.apiData.data.is_valid ? 'Live / Connected' : 'Invalid'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Token Expiry</Label>
+                                                        {(() => {
+                                                            const exp = metaCloudResult.apiData.data.expires_at;
+                                                            if (!exp || exp === 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-green-500/10 text-green-600 border border-green-500/20">Never</span>;
+                                                            const date = new Date(exp * 1000);
+                                                            const isExpired = date < new Date();
+                                                            return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${isExpired ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-primary/8 text-primary border-primary/15'}`}>{date.toLocaleString()}{isExpired && ' (Expired)'}</span>;
+                                                        })()}
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Data Access Expiry</Label>
+                                                        {(() => {
+                                                            const exp = metaCloudResult.apiData.data.data_access_expires_at;
+                                                            if (!exp || exp === 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-green-500/10 text-green-600 border border-green-500/20">Never</span>;
+                                                            const date = new Date(exp * 1000);
+                                                            const isExpired = date < new Date();
+                                                            return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${isExpired ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-primary/8 text-primary border-primary/15'}`}>{date.toLocaleString()}{isExpired && ' (Expired)'}</span>;
+                                                        })()}
+                                                    </div>
+                                                    <div id='scopes' className="col-span-2 space-y-2 pt-1 border-t border-border/20">
+                                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Granted Scopes</Label>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {metaCloudResult?.apiData?.data?.scopes?.map((scope, index) => (
+                                                                <span key={index} className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15 hover:bg-primary/15 transition-colors cursor-default">
+                                                                    {scope}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {metaCloudResult?.apiData?.data?.granular_scopes?.length > 0 && (
+                                                        <div id='granular_scopes' className="col-span-2 space-y-2 pt-1 border-t border-border/20">
+                                                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Granular Scopes</Label>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {metaCloudResult.apiData.data.granular_scopes.map((gs, index) => (
+                                                                    <span key={index} className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15 hover:bg-primary/15 transition-colors cursor-default">
+                                                                        {gs.scope}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {metaCloudResult.error && (
+                                                <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-lg flex items-start gap-3">
+                                                    <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                                                    <div className="text-xs text-red-600 font-medium leading-relaxed">{metaCloudResult.error}</div>
+                                                </div>
+                                            )}
+
+                                            {/* Phone Number section — from Display Names + OBA */}
+                                            {displayNamesResult?.success && displayNamesResult?.apiData && (
+                                                <div className="border-t border-border/20 pt-3 mt-1">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Phone Number</Label>
+                                                    <div className="grid grid-cols-2 gap-4 mt-2">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Verified Name</Label>
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15">
+                                                                {displayNamesResult.apiData.verified_name || displayNamesResult.apiData.name || 'N/A'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Name Status</Label>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${(displayNamesResult.apiData.name_status || obaStatusResult?.apiData?.name_status) === 'APPROVED'
+                                                                ? 'bg-green-500/10 text-green-600 border-green-500/20'
+                                                                : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                                                                }`}>
+                                                                {displayNamesResult.apiData.name_status || obaStatusResult?.apiData?.name_status || 'Unknown'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Phone Number ID</Label>
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-primary/8 text-primary border border-primary/15">
+                                                                {displayNamesResult.apiData.id || displayNamesPhoneId || 'N/A'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Verification Status</Label>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${obaStatusResult?.apiData?.code_verification_status === 'VERIFIED'
+                                                                ? 'bg-green-500/10 text-green-600 border-green-500/20'
+                                                                : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                                                                }`}>
+                                                                {obaStatusResult?.apiData?.code_verification_status || 'Fetching...'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        </div>
                                     </div>
                                 )}
                             </CardContent>
                         </Card>
 
-                        {/* Card 2 — Get Display Names */}
-                        <Card className="border shadow-sm w-full">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-sm font-semibold">Display Names</CardTitle>
-                                <CardDescription className="text-xs">Fetch verified business names for IDs</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col gap-4">
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Phone Number ID</Label>
-                                    <Input
-                                        placeholder="106540352242922"
-                                        value={displayNamesPhoneId ?? ''}
-                                        onChange={(e) => setDisplayNamesPhoneId(e.target.value)}
-                                        className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
-                                    />
-                                </div>
-                                <Button className="px-8 rounded-md text-xs font-medium gap-2 h-10" onClick={handleGetDisplayNames} disabled={displayNamesTesting || !displayNamesPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
-                                    {displayNamesTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                    {displayNamesTesting ? 'Fetching names...' : 'Get Display Names'}
-                                </Button>
-                                {displayNamesResult && (
-                                    <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
-                                        <button onClick={() => setDisplayNamesResultOpen(v => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/10 transition-colors">
-                                            <Badge variant="outline" className={`text-[10px] font-semibold border-none ${displayNamesResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
-                                                {displayNamesResult.success ? 'Success' : 'Failed'}
-                                            </Badge>
-                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${displayNamesResultOpen ? 'rotate-90' : ''}`} />
-                                        </button>
-                                        {displayNamesResultOpen && (
-                                            <pre className="text-[10px] font-mono p-4 overflow-x-auto max-h-72 text-muted-foreground/80 border-t border-border/40 leading-relaxed">
-                                                {displayNamesResult.error ? displayNamesResult.error : JSON.stringify(displayNamesResult.data, null, 2)}
-                                            </pre>
-                                        )}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+
                     </div>
 
                     <div className="flex gap-4 items-stretch">
-                        {/* Card 3 — OBA Status */}
-                        <Card className="border shadow-sm w-full">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-sm font-semibold">Official Business Account (OBA)</CardTitle>
-                                <CardDescription className="text-xs">Manage green tick verification status</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col gap-4">
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Phone Number ID</Label>
-                                    <Input placeholder="Phone ID" value={obaPhoneId} onChange={(e) => setObaPhoneId(e.target.value)} className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4" />
-                                </div>
-                                <div className="flex gap-3">
-                                    <Button className="flex-1 text-xs font-medium h-10 gap-2 rounded-md" onClick={handleCheckObaStatus} disabled={obaStatusTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
-                                        {obaStatusTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Check Status
-                                    </Button>
-                                    <Button variant="outline" className="flex-1 text-xs font-medium h-10 rounded-md" onClick={() => setObaTesting(true)} disabled={!obaPhoneId?.trim()}>
-                                        Request Verification
-                                    </Button>
-                                </div>
-                                {(obaStatusResult || obaResult) && (
-                                    <div className="border border-border/40 rounded-xl bg-muted/5 p-4">
-                                        <pre className="text-[10px] font-mono text-muted-foreground/80">
-                                            {JSON.stringify(obaStatusResult?.data || obaResult?.data, null, 2)}
-                                        </pre>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+
 
                         {/* Card 4 — QR Codes Section */}
                         <Card className="border shadow-sm w-full">
@@ -456,22 +508,24 @@ export function MetaCloudTab({ workspaceId }) {
                                 </Tabs>
                                 {(qrResult || qrListResult || qrUpdateResult || qrDeleteResult) && (
                                     <div className="border border-border/40 rounded-xl p-3 bg-muted/5 flex flex-col gap-3 overflow-hidden w-full">
-                                        {qrResult && (
+                                        {qrResult?.apiData && (
                                             <div className="flex flex-col gap-2 p-3 bg-background rounded-lg border border-border/40 shadow-sm overflow-hidden">
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Deep Link</span>
-                                                    <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20">Active</Badge>
+                                                    <Badge variant="outline" className={`text-[9px] border-none ${qrResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
+                                                        {qrResult.success ? 'Active' : 'Error'}
+                                                    </Badge>
                                                 </div>
-                                                <a href={qrResult.deep_link_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline break-all font-mono leading-relaxed">
-                                                    {qrResult.deep_link_url}
+                                                <a href={qrResult.apiData.deep_link_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline break-all font-mono leading-relaxed">
+                                                    {qrResult.apiData.deep_link_url}
                                                 </a>
                                                 <div className="mt-2 flex flex-col gap-1 overflow-hidden">
                                                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">QR Code ID</span>
-                                                    <span className="text-xs font-mono break-all">{qrResult.code}</span>
+                                                    <span className="text-xs font-mono break-all">{qrResult.apiData.code}</span>
                                                 </div>
-                                                {qrResult.qr_image_url && (
+                                                {qrResult.apiData.qr_image_url && (
                                                     <div className="mt-2">
-                                                        <a href={qrResult.qr_image_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[10px] font-medium text-primary hover:underline break-all">
+                                                        <a href={qrResult.apiData.qr_image_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[10px] font-medium text-primary hover:underline break-all">
                                                             <ExternalLink className="w-3 h-3 flex-shrink-0" /> <span className="truncate">View QR Image</span>
                                                         </a>
                                                     </div>
@@ -480,7 +534,7 @@ export function MetaCloudTab({ workspaceId }) {
                                         )}
                                         <div className="relative">
                                             <pre className="text-[10px] font-mono text-muted-foreground/80 overflow-x-auto max-h-48 leading-relaxed p-2 bg-muted/5 rounded-md whitespace-pre-wrap break-all">
-                                                {JSON.stringify(qrResult || qrListResult?.data || qrUpdateResult?.data || qrDeleteResult?.data, null, 2)}
+                                                {JSON.stringify(qrResult?.apiData || qrListResult?.apiData || qrUpdateResult?.apiData || qrDeleteResult?.apiData, null, 2)}
                                             </pre>
                                         </div>
                                     </div>
