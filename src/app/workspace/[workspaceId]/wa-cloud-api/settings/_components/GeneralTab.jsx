@@ -497,7 +497,7 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-2">
+                        <CardContent className="p-2 flex flex-col gap-2">
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
                                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40">
@@ -514,7 +514,7 @@ export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadat
                                 <Button size="sm" onClick={handleAddTestNumber} className="px-4 rounded-lg text-xs font-medium">Add</Button>
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="border rounded-md">
                                 {(metadata.testNumbers || []).map((num) => (
                                     <div key={num} className="flex items-center justify-between p-3.5 rounded-lg border border-border/40 bg-card hover:border-primary/20 transition-all group shadow-sm">
                                         <div className="flex items-center gap-3">
