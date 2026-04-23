@@ -2,10 +2,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Zap, 
-    RefreshCw, 
-    ChevronRight, 
+import {
+    Zap,
+    RefreshCw,
+    ChevronRight,
     Trash2,
     Info,
     Plus,
@@ -146,8 +146,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     const handleTestMetaCloud = () => {
         setMetaCloudTesting(true);
-        executeTestApi({ 
-            workspaceId, 
+        executeTestApi({
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/debug_token?input_token=${metaCloudAccessToken.trim()}`,
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
         }, { type: 'meta_test' });
@@ -155,8 +155,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     const handleGetDisplayNames = () => {
         setDisplayNamesTesting(true);
-        executeTestApi({ 
-            workspaceId, 
+        executeTestApi({
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${displayNamesPhoneId.trim()}?fields=verified_name,name_status`,
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
         }, { type: 'display_names' });
@@ -164,8 +164,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     const handleCheckObaStatus = () => {
         setObaStatusTesting(true);
-        executeTestApi({ 
-            workspaceId, 
+        executeTestApi({
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}?fields=name_status,code_verification_status`,
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
         }, { type: 'oba_status_check' });
@@ -174,7 +174,7 @@ export function MetaCloudTab({ workspaceId }) {
     const handleObaStatus = () => {
         setObaTesting(true);
         executeTestApi({
-            workspaceId, 
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/official_business_account`,
             method: 'POST',
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
@@ -190,8 +190,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     const handleCreateQR = () => {
         setQrTesting(true);
-        executeTestApi({ 
-            workspaceId, 
+        executeTestApi({
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`,
             method: 'POST',
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
@@ -201,8 +201,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     const handleListQR = () => {
         setQrListTesting(true);
-        executeTestApi({ 
-            workspaceId, 
+        executeTestApi({
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`,
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
         }, { type: 'qr_list' });
@@ -210,8 +210,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     const handleUpdateQR = () => {
         setQrUpdateTesting(true);
-        executeTestApi({ 
-            workspaceId, 
+        executeTestApi({
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls`,
             method: 'POST',
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
@@ -221,8 +221,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     const handleDeleteQR = () => {
         setQrDeleteTesting(true);
-        executeTestApi({ 
-            workspaceId, 
+        executeTestApi({
+            workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${obaPhoneId.trim()}/message_qrdls/${qrDeleteCodeId.trim()}`,
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` }
@@ -230,179 +230,161 @@ export function MetaCloudTab({ workspaceId }) {
     };
 
     return (
-        <div className="flex-1 outline-none custom-scrollbar overflow-y-auto px-1">
+        <div className="flex-1 outline-none custom-scrollbar overflow-y-auto ">
             <ScrollArea className="h-[72vh] space-y-6">
                 <div id='all-test-container' className='flex flex-col gap-6 py-4 pr-4'>
+
+
+
                     {/* Card 1 — Developer App Info */}
-                    <Card className="border shadow-sm w-full">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-sm font-semibold">Developer App Information</CardTitle>
-                            <CardDescription className="text-xs">Meta API authentication and versioning</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4">
-                            <div className="flex gap-4">
-                                <div className="space-y-1.5 w-32 shrink-0">
-                                    <Label className="text-xs font-medium text-muted-foreground ml-1">API Version</Label>
-                                    <Input
-                                        value={metaCloudVersion ?? ''}
-                                        onChange={(e) => setMetaCloudVersion(e.target.value)}
-                                        className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
-                                    />
-                                </div>
-                                <div className="space-y-1.5 flex-1">
-                                    <Label className="text-xs font-medium text-muted-foreground ml-1">System Access Token</Label>
-                                    <Input
-                                        type="password"
-                                        placeholder="EAAG..."
-                                        value={metaCloudAccessToken ?? ''}
-                                        onChange={(e) => setMetaCloudAccessToken(e.target.value)}
-                                        className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
-                                    />
-                                </div>
-                            </div>
-                            <Button
-                                className="px-8 rounded-xl text-xs font-medium gap-2 h-10"
-                                onClick={handleTestMetaCloud}
-                                disabled={metaCloudTesting || !metaCloudAccessToken?.trim()}
-                            >
-                                {metaCloudTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                {metaCloudTesting ? 'Fetching token info...' : 'Validate Token'}
-                            </Button>
-                            {metaCloudResult && (
-                                <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
-                                    <button onClick={() => setMetaCloudResultOpen(v => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/10 transition-colors">
-                                        <Badge variant="outline" className={`text-[10px] font-semibold border-none ${metaCloudResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
-                                            {metaCloudResult.success ? 'Success' : 'Failed'}
-                                        </Badge>
-                                        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${metaCloudResultOpen ? 'rotate-90' : ''}`} />
-                                    </button>
-                                    {metaCloudResultOpen && (
-                                        <pre className="text-[10px] font-mono p-4 overflow-x-auto max-h-72 text-muted-foreground/80 border-t border-border/40 leading-relaxed">
-                                            {metaCloudResult.error ? metaCloudResult.error : JSON.stringify(metaCloudResult.data, null, 2)}
-                                        </pre>
-                                    )}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Card 2 — Get Display Names */}
-                    <Card className="border shadow-sm w-full">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-sm font-semibold">Display Names</CardTitle>
-                            <CardDescription className="text-xs">Fetch verified business names for IDs</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground ml-1">Phone Number ID</Label>
-                                <Input
-                                    placeholder="106540352242922"
-                                    value={displayNamesPhoneId ?? ''}
-                                    onChange={(e) => setDisplayNamesPhoneId(e.target.value)}
-                                    className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
-                                />
-                            </div>
-                            <Button className="px-8 rounded-xl text-xs font-medium gap-2 h-10" onClick={handleGetDisplayNames} disabled={displayNamesTesting || !displayNamesPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
-                                {displayNamesTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                {displayNamesTesting ? 'Fetching names...' : 'Get Display Names'}
-                            </Button>
-                            {displayNamesResult && (
-                                <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
-                                    <button onClick={() => setDisplayNamesResultOpen(v => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/10 transition-colors">
-                                        <Badge variant="outline" className={`text-[10px] font-semibold border-none ${displayNamesResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
-                                            {displayNamesResult.success ? 'Success' : 'Failed'}
-                                        </Badge>
-                                        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${displayNamesResultOpen ? 'rotate-90' : ''}`} />
-                                    </button>
-                                    {displayNamesResultOpen && (
-                                        <pre className="text-[10px] font-mono p-4 overflow-x-auto max-h-72 text-muted-foreground/80 border-t border-border/40 leading-relaxed">
-                                            {displayNamesResult.error ? displayNamesResult.error : JSON.stringify(displayNamesResult.data, null, 2)}
-                                        </pre>
-                                    )}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Card 3 — OBA Status */}
-                    <Card className="border shadow-sm w-full">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-sm font-semibold">Official Business Account (OBA)</CardTitle>
-                            <CardDescription className="text-xs">Manage green tick verification status</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground ml-1">Phone Number ID</Label>
-                                <Input placeholder="Phone ID" value={obaPhoneId} onChange={(e) => setObaPhoneId(e.target.value)} className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4" />
-                            </div>
-                            <div className="flex gap-3">
-                                <Button className="flex-1 text-xs font-medium h-10 gap-2" onClick={handleCheckObaStatus} disabled={obaStatusTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
-                                    {obaStatusTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Check Status
-                                </Button>
-                                <Button variant="outline" className="flex-1 text-xs font-medium h-10" onClick={() => setObaTesting(true)} disabled={!obaPhoneId?.trim()}>
-                                    Request Verification
-                                </Button>
-                            </div>
-                            {(obaStatusResult || obaResult) && (
-                                <div className="border border-border/40 rounded-xl bg-muted/5 p-4">
-                                    <pre className="text-[10px] font-mono text-muted-foreground/80">
-                                        {JSON.stringify(obaStatusResult?.data || obaResult?.data, null, 2)}
-                                    </pre>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Card 4 — QR Codes Section */}
-                    <Card className="border shadow-sm w-full">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-sm font-semibold">QR Code Management</CardTitle>
-                            <CardDescription className="text-xs">Create and manage deep-link QR codes</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4">
-                            <Tabs defaultValue="create" className="w-full">
-                                <TabsList className="bg-muted/5 w-fit justify-start rounded-xl h-auto p-1 gap-1 border border-border/40 mb-4">
-                                    {[
-                                        { id: 'create', label: 'Create', icon: Plus },
-                                        { id: 'list', label: 'List', icon: List },
-                                        { id: 'update', label: 'Update', icon: RefreshCw },
-                                        { id: 'delete', label: 'Delete', icon: Trash2 }
-                                    ].map(tab => (
-                                        <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                                            <tab.icon size={14} />
-                                            {tab.label}
-                                        </TabsTrigger>
-                                    ))}
-                                </TabsList>
-                                
-                                <TabsContent value="create" className="space-y-4">
-                                    <div className="flex gap-3">
-                                        <Input placeholder="Prefilled message" value={qrMessage} onChange={(e) => setQrMessage(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4 flex-1" />
-                                        <Select value={qrFormat} onValueChange={setQrFormat}>
-                                            <SelectTrigger className="w-28 text-sm border-border/40 rounded-xl px-4"><SelectValue /></SelectTrigger>
-                                            <SelectContent className="rounded-xl border-border/20">
-                                                <SelectItem value="SVG" className="text-sm">SVG</SelectItem>
-                                                <SelectItem value="PNG" className="text-sm">PNG</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                    <div className='flex item-center gap-4'>
+                        <Card className="border shadow-sm w-full">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-sm font-semibold">Developer App Information</CardTitle>
+                                <CardDescription className="text-xs">Meta API authentication and versioning</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-4 rounded-md">
+                                <div className="flex gap-4">
+                                    <div className="space-y-1.5 w-32 shrink-0">
+                                        <Label className="text-xs font-medium text-muted-foreground ml-1">API Version</Label>
+                                        <Input
+                                            value={metaCloudVersion ?? ''}
+                                            onChange={(e) => setMetaCloudVersion(e.target.value)}
+                                            className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
+                                        />
                                     </div>
-                                    <Button onClick={handleCreateQR} disabled={qrTesting || !obaPhoneId?.trim() || !qrMessage?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2">
-                                        {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Create Deep Link
-                                    </Button>
-                                </TabsContent>
+                                    <div className="space-y-1.5 flex-1">
+                                        <Label className="text-xs font-medium text-muted-foreground ml-1">System Access Token</Label>
+                                        <Input
+                                            type="password"
+                                            placeholder="EAAG..."
+                                            value={metaCloudAccessToken ?? ''}
+                                            onChange={(e) => setMetaCloudAccessToken(e.target.value)}
+                                            className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
+                                        />
+                                    </div>
+                                </div>
+                                <Button
+                                    className="px-8 rounded-xl text-xs font-medium gap-2 h-10"
+                                    onClick={handleTestMetaCloud}
+                                    disabled={metaCloudTesting || !metaCloudAccessToken?.trim()}
+                                >
+                                    {metaCloudTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                    {metaCloudTesting ? 'Fetching token info...' : 'Validate Token'}
+                                </Button>
+                                {metaCloudResult && (
+                                    <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
+                                        <button onClick={() => setMetaCloudResultOpen(v => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/10 transition-colors">
+                                            <Badge variant="outline" className={`text-[10px] font-semibold border-none ${metaCloudResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
+                                                {metaCloudResult.success ? 'Success' : 'Failed'}
+                                            </Badge>
+                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${metaCloudResultOpen ? 'rotate-90' : ''}`} />
+                                        </button>
+                                        {metaCloudResultOpen && (
+                                            <pre className="text-[10px] font-mono p-4 overflow-x-auto max-h-72 text-muted-foreground/80 border-t border-border/40 leading-relaxed">
+                                                {metaCloudResult.error ? metaCloudResult.error : JSON.stringify(metaCloudResult.data, null, 2)}
+                                            </pre>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
 
-                                <TabsContent value="list" className="space-y-4">
-                                    <Button onClick={handleListQR} disabled={qrListTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2">
-                                        {qrListTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} List All QR Codes
-                                    </Button>
-                                </TabsContent>
+                        {/* Card 2 — Get Display Names */}
+                        <Card className="border shadow-sm w-full">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-sm font-semibold">Display Names</CardTitle>
+                                <CardDescription className="text-xs">Fetch verified business names for IDs</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-4">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Phone Number ID</Label>
+                                    <Input
+                                        placeholder="106540352242922"
+                                        value={displayNamesPhoneId ?? ''}
+                                        onChange={(e) => setDisplayNamesPhoneId(e.target.value)}
+                                        className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
+                                    />
+                                </div>
+                                <Button className="px-8 rounded-xl text-xs font-medium gap-2 h-10" onClick={handleGetDisplayNames} disabled={displayNamesTesting || !displayNamesPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
+                                    {displayNamesTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                    {displayNamesTesting ? 'Fetching names...' : 'Get Display Names'}
+                                </Button>
+                                {displayNamesResult && (
+                                    <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
+                                        <button onClick={() => setDisplayNamesResultOpen(v => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/10 transition-colors">
+                                            <Badge variant="outline" className={`text-[10px] font-semibold border-none ${displayNamesResult.success ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
+                                                {displayNamesResult.success ? 'Success' : 'Failed'}
+                                            </Badge>
+                                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ml-auto transition-transform duration-200 ${displayNamesResultOpen ? 'rotate-90' : ''}`} />
+                                        </button>
+                                        {displayNamesResultOpen && (
+                                            <pre className="text-[10px] font-mono p-4 overflow-x-auto max-h-72 text-muted-foreground/80 border-t border-border/40 leading-relaxed">
+                                                {displayNamesResult.error ? displayNamesResult.error : JSON.stringify(displayNamesResult.data, null, 2)}
+                                            </pre>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
 
-                                <TabsContent value="update" className="space-y-4">
-                                    <div className="space-y-3">
-                                        <Input placeholder="QR Code ID" value={qrUpdateCodeId} onChange={(e) => setQrUpdateCodeId(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4" />
+                    <div className="flex items-center gap-2">
+                        {/* Card 3 — OBA Status */}
+                        <Card className="border shadow-sm w-full">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-sm font-semibold">Official Business Account (OBA)</CardTitle>
+                                <CardDescription className="text-xs">Manage green tick verification status</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-4">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Phone Number ID</Label>
+                                    <Input placeholder="Phone ID" value={obaPhoneId} onChange={(e) => setObaPhoneId(e.target.value)} className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4" />
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button className="flex-1 text-xs font-medium h-10 gap-2" onClick={handleCheckObaStatus} disabled={obaStatusTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
+                                        {obaStatusTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Check Status
+                                    </Button>
+                                    <Button variant="outline" className="flex-1 text-xs font-medium h-10" onClick={() => setObaTesting(true)} disabled={!obaPhoneId?.trim()}>
+                                        Request Verification
+                                    </Button>
+                                </div>
+                                {(obaStatusResult || obaResult) && (
+                                    <div className="border border-border/40 rounded-xl bg-muted/5 p-4">
+                                        <pre className="text-[10px] font-mono text-muted-foreground/80">
+                                            {JSON.stringify(obaStatusResult?.data || obaResult?.data, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Card 4 — QR Codes Section */}
+                        <Card className="border shadow-sm w-full">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-sm font-semibold">QR Code Management</CardTitle>
+                                <CardDescription className="text-xs">Create and manage deep-link QR codes</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-4">
+                                <Tabs defaultValue="create" className="w-full">
+                                    <TabsList className="bg-muted/5 w-fit justify-start rounded-xl h-auto p-1 gap-1 border border-border/40 mb-4">
+                                        {[
+                                            { id: 'create', label: 'Create', icon: Plus },
+                                            { id: 'list', label: 'List', icon: List },
+                                            { id: 'update', label: 'Update', icon: RefreshCw },
+                                            { id: 'delete', label: 'Delete', icon: Trash2 }
+                                        ].map(tab => (
+                                            <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                                                <tab.icon size={14} />
+                                                {tab.label}
+                                            </TabsTrigger>
+                                        ))}
+                                    </TabsList>
+
+                                    <TabsContent value="create" className="space-y-4">
                                         <div className="flex gap-3">
-                                            <Input placeholder="New Message" value={qrUpdateMessage} onChange={(e) => setQrUpdateMessage(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4 flex-1" />
-                                            <Select value={qrUpdateFormat} onValueChange={setQrUpdateFormat}>
+                                            <Input placeholder="Prefilled message" value={qrMessage} onChange={(e) => setQrMessage(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4 flex-1" />
+                                            <Select value={qrFormat} onValueChange={setQrFormat}>
                                                 <SelectTrigger className="w-28 text-sm border-border/40 rounded-xl px-4"><SelectValue /></SelectTrigger>
                                                 <SelectContent className="rounded-xl border-border/20">
                                                     <SelectItem value="SVG" className="text-sm">SVG</SelectItem>
@@ -410,28 +392,53 @@ export function MetaCloudTab({ workspaceId }) {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                    </div>
-                                    <Button onClick={handleUpdateQR} disabled={qrUpdateTesting || !qrUpdateCodeId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10">
-                                        Update Deep Link
-                                    </Button>
-                                </TabsContent>
+                                        <Button onClick={handleCreateQR} disabled={qrTesting || !obaPhoneId?.trim() || !qrMessage?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2">
+                                            {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Create Deep Link
+                                        </Button>
+                                    </TabsContent>
 
-                                <TabsContent value="delete" className="space-y-4">
-                                    <Input placeholder="QR Code ID" value={qrDeleteCodeId} onChange={(e) => setQrDeleteCodeId(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4" />
-                                    <Button variant="destructive" onClick={handleDeleteQR} disabled={qrDeleteTesting || !qrDeleteCodeId?.trim()} className="w-full text-xs font-medium h-10">
-                                        Delete QR Code
-                                    </Button>
-                                </TabsContent>
-                            </Tabs>
-                            {(qrResult || qrListResult || qrUpdateResult || qrDeleteResult) && (
-                                <div className="border border-border/40 rounded-xl p-4 bg-muted/5">
-                                    <pre className="text-[10px] font-mono text-muted-foreground/80 overflow-x-auto max-h-48 leading-relaxed">
-                                        {JSON.stringify(qrResult?.data || qrListResult?.data || qrUpdateResult?.data || qrDeleteResult?.data, null, 2)}
-                                    </pre>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                    <TabsContent value="list" className="space-y-4">
+                                        <Button onClick={handleListQR} disabled={qrListTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2">
+                                            {qrListTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} List All QR Codes
+                                        </Button>
+                                    </TabsContent>
+
+                                    <TabsContent value="update" className="space-y-4">
+                                        <div className="space-y-3">
+                                            <Input placeholder="QR Code ID" value={qrUpdateCodeId} onChange={(e) => setQrUpdateCodeId(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4" />
+                                            <div className="flex gap-3">
+                                                <Input placeholder="New Message" value={qrUpdateMessage} onChange={(e) => setQrUpdateMessage(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4 flex-1" />
+                                                <Select value={qrUpdateFormat} onValueChange={setQrUpdateFormat}>
+                                                    <SelectTrigger className="w-28 text-sm border-border/40 rounded-xl px-4"><SelectValue /></SelectTrigger>
+                                                    <SelectContent className="rounded-xl border-border/20">
+                                                        <SelectItem value="SVG" className="text-sm">SVG</SelectItem>
+                                                        <SelectItem value="PNG" className="text-sm">PNG</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                        <Button onClick={handleUpdateQR} disabled={qrUpdateTesting || !qrUpdateCodeId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10">
+                                            Update Deep Link
+                                        </Button>
+                                    </TabsContent>
+
+                                    <TabsContent value="delete" className="space-y-4">
+                                        <Input placeholder="QR Code ID" value={qrDeleteCodeId} onChange={(e) => setQrDeleteCodeId(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4" />
+                                        <Button variant="destructive" onClick={handleDeleteQR} disabled={qrDeleteTesting || !qrDeleteCodeId?.trim()} className="w-full text-xs font-medium h-10">
+                                            Delete QR Code
+                                        </Button>
+                                    </TabsContent>
+                                </Tabs>
+                                {(qrResult || qrListResult || qrUpdateResult || qrDeleteResult) && (
+                                    <div className="border border-border/40 rounded-xl p-4 bg-muted/5">
+                                        <pre className="text-[10px] font-mono text-muted-foreground/80 overflow-x-auto max-h-48 leading-relaxed">
+                                            {JSON.stringify(qrResult?.data || qrListResult?.data || qrUpdateResult?.data || qrDeleteResult?.data, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </ScrollArea>
         </div>

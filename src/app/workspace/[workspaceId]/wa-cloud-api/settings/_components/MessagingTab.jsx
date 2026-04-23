@@ -28,8 +28,8 @@ export function MessagingTab({ workspaceId, metadata, setMetadata }) {
     };
 
     return (
-        <div className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
-            <div className="max-w-3xl space-y-6">
+        <div className="flex-1 space-y-4 outline-none custom-scrollbar overflow-y-auto">
+            <div className=" space-y-4">
                 <Card className="border shadow-sm">
                     <CardHeader>
                         <div className="flex items-center gap-3">

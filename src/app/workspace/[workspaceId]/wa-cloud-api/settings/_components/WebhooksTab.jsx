@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Link as LinkIcon, 
-    Copy, 
-    Info, 
-    Eye, 
-    EyeOff 
+import {
+    Link as LinkIcon,
+    Copy,
+    Info,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -49,8 +49,8 @@ export function WebhooksTab({ workspaceId, metadata, setMetadata }) {
     };
 
     return (
-        <div className="flex-1 space-y-6 outline-none custom-scrollbar overflow-y-auto">
-            <div className="max-w-3xl space-y-6">
+        <div className="flex-1 space-y-4 outline-none custom-scrollbar overflow-y-auto">
+            <div className=" space-y-4">
                 <Card className="border shadow-sm">
                     <CardHeader>
                         <div className="flex items-center gap-3">
