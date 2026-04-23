@@ -123,8 +123,8 @@ export default function SettingsPage() {
                             { id: 'automation', label: 'Automation', icon: Zap },
                             { id: 'webhooks', label: 'Webhooks', icon: LinkIcon },
                             { id: 'analytics', label: 'Analytics', icon: LayoutDashboard },
-                            { id: 'messaging', label: 'Messaging', icon: Smartphone },
-                            { id: 'notifications', label: 'Notifications', icon: BellRing },
+                            // { id: 'messaging', label: 'Messaging', icon: Smartphone },
+                            // { id: 'notifications', label: 'Notifications', icon: BellRing },
                             // { id: 'security', label: 'Security', icon: ShieldCheck },
                             { id: 'qr-management', label: 'QR Management', icon: QrCode }
                         ].map((tab) => (
