@@ -2,10 +2,10 @@
 
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
+import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { waManager } from "../_lib/whatsapp-v2";
 
-const ConnectWaSchema = z.object({
+const GetMetadataSchema = z.object({
     workspaceId: z.string(),
 });
 
@@ -16,17 +16,18 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
         
-        waManager.connect(userId);
-        
+        let authRecord = await db.whatsAppAuth.findUnique({
+            where: { sessionId: userId }
+        });
+
         return {
             data: {
-                success: true,
-                status: waManager.getState()
+                metadata: JSON.parse(JSON.stringify(authRecord?.metadata || {})),
             }
         };
     } catch (error) {
-        return { error: error.message || "Failed to connect" };
+        return { error: error.message || "Failed to fetch metadata" };
     }
 };
 
-export const connectWa = createSafeAction(ConnectWaSchema, handler);
+export const getWaMetadata = createSafeAction(GetMetadataSchema, handler);

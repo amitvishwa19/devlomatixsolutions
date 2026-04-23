@@ -82,6 +82,28 @@ export default async function RootLayout({ children }) {
                     {/* </SocketProvider> */}
                 </SessionWrapper>
                 <Toaster position="top-right" className="dark:bg-sky-600" />
+                
+                {/* DEBUG SCRIPT: Catching 'Unexpected token <' errors */}
+                <script dangerouslySetInnerHTML={{
+                    __html: `
+                        window.addEventListener('unhandledrejection', function(event) {
+                            if (event.reason instanceof SyntaxError && event.reason.message.includes('Unexpected token')) {
+                                console.error('DETECTED JSON PARSE ERROR:', event.reason.message);
+                                // Try to find if it came from a fetch
+                                if (window.lastFetchUrl) {
+                                    console.error('Likely culprit URL:', window.lastFetchUrl);
+                                }
+                            }
+                        });
+                        
+                        // Monkey patch fetch to track the last URL (for debugging only)
+                        const originalFetch = window.fetch;
+                        window.fetch = function() {
+                            window.lastFetchUrl = arguments[0];
+                            return originalFetch.apply(this, arguments);
+                        };
+                    `
+                }} />
             </body>
         </html>
     );
