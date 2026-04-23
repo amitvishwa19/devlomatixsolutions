@@ -73,12 +73,18 @@ export function MetaCloudTab({ workspaceId }) {
 
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
         onSuccess: (data) => {
+            console.log(data)
+            console.log("[MetaCloudTab] Credentials loaded:", data.data);
             if (data.data?.accessToken) setMetaCloudAccessToken(data.data.accessToken);
             if (data.data?.phoneNumberId) {
                 const phoneId = data.data.phoneNumberId.toString();
                 setDisplayNamesPhoneId(phoneId);
                 setObaPhoneId(phoneId);
             }
+        },
+        onError: (error) => {
+            console.error("[MetaCloudTab] Failed to load credentials:", error);
+            toast.error("Failed to sync your WhatsApp credentials: " + error);
         }
     });
 
@@ -194,6 +200,15 @@ export function MetaCloudTab({ workspaceId }) {
     };
 
     const handleCreateQR = () => {
+        if (!metaCloudAccessToken?.trim()) {
+            toast.error("Access Token is missing. Please check your General settings.");
+            return;
+        }
+        if (!obaPhoneId?.trim()) {
+            toast.error("Phone Number ID is missing. Please check your General settings.");
+            return;
+        }
+
         setQrTesting(true);
         executeTestApi({
             workspaceId,
@@ -334,7 +349,7 @@ export function MetaCloudTab({ workspaceId }) {
                         </Card>
                     </div>
 
-                    <div className="flex gap-2 items-stretch">
+                    <div className="flex gap-4 items-stretch">
                         {/* Card 3 — OBA Status */}
                         <Card className="border shadow-sm w-full">
                             <CardHeader className="pb-4">
@@ -399,7 +414,7 @@ export function MetaCloudTab({ workspaceId }) {
                                         </div>
                                         <Button
                                             onClick={handleCreateQR}
-                                            disabled={qrTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()}
+                                            disabled={qrTesting || !qrMessage?.trim()}
                                             className="w-full text-xs font-medium h-10 gap-2 rounded-md"
                                         >
                                             {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}

@@ -19,9 +19,14 @@ const handler = async (data) => {
 
         // Prefer default account, fallback to first
         const cred = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD' },
+            where: { 
+                userId, 
+                platform: { in: ['WHATSAPP', 'WHATSAPP_CLOUD'] } 
+            },
             orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
         });
+
+        console.log("[GetDecryptedCredentials] Found credential:", cred ? { id: cred.id, profile: cred.profile, platform: cred.platform, isDefault: cred.isDefault } : "None");
 
         if (!cred) return { error: "No credentials found" };
 
