@@ -237,13 +237,13 @@ export function MetaCloudTab({ workspaceId }) {
 
 
                     {/* Card 1 — Developer App Info */}
-                    <div className='flex item-center gap-4'>
+                    <div className='flex gap-4 items-stretch'>
                         <Card className="border shadow-sm w-full">
                             <CardHeader className="pb-4">
                                 <CardTitle className="text-sm font-semibold">Developer App Information</CardTitle>
                                 <CardDescription className="text-xs">Meta API authentication and versioning</CardDescription>
                             </CardHeader>
-                            <CardContent className="flex flex-col gap-4 rounded-md">
+                            <CardContent className="flex flex-col gap-4">
                                 <div className="flex gap-4">
                                     <div className="space-y-1.5 w-32 shrink-0">
                                         <Label className="text-xs font-medium text-muted-foreground ml-1">API Version</Label>
@@ -265,7 +265,7 @@ export function MetaCloudTab({ workspaceId }) {
                                     </div>
                                 </div>
                                 <Button
-                                    className="px-8 rounded-xl text-xs font-medium gap-2 h-10"
+                                    className="px-8 rounded-md text-xs font-medium gap-2 h-10"
                                     onClick={handleTestMetaCloud}
                                     disabled={metaCloudTesting || !metaCloudAccessToken?.trim()}
                                 >
@@ -306,7 +306,7 @@ export function MetaCloudTab({ workspaceId }) {
                                         className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4"
                                     />
                                 </div>
-                                <Button className="px-8 rounded-xl text-xs font-medium gap-2 h-10" onClick={handleGetDisplayNames} disabled={displayNamesTesting || !displayNamesPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
+                                <Button className="px-8 rounded-md text-xs font-medium gap-2 h-10" onClick={handleGetDisplayNames} disabled={displayNamesTesting || !displayNamesPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
                                     {displayNamesTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
                                     {displayNamesTesting ? 'Fetching names...' : 'Get Display Names'}
                                 </Button>
@@ -329,7 +329,7 @@ export function MetaCloudTab({ workspaceId }) {
                         </Card>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex gap-2 items-stretch">
                         {/* Card 3 — OBA Status */}
                         <Card className="border shadow-sm w-full">
                             <CardHeader className="pb-4">
@@ -342,10 +342,10 @@ export function MetaCloudTab({ workspaceId }) {
                                     <Input placeholder="Phone ID" value={obaPhoneId} onChange={(e) => setObaPhoneId(e.target.value)} className="bg-muted/5 text-sm font-mono border-border/40 rounded-xl px-4" />
                                 </div>
                                 <div className="flex gap-3">
-                                    <Button className="flex-1 text-xs font-medium h-10 gap-2" onClick={handleCheckObaStatus} disabled={obaStatusTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
+                                    <Button className="flex-1 text-xs font-medium h-10 gap-2 rounded-md" onClick={handleCheckObaStatus} disabled={obaStatusTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()}>
                                         {obaStatusTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Check Status
                                     </Button>
-                                    <Button variant="outline" className="flex-1 text-xs font-medium h-10" onClick={() => setObaTesting(true)} disabled={!obaPhoneId?.trim()}>
+                                    <Button variant="outline" className="flex-1 text-xs font-medium h-10 rounded-md" onClick={() => setObaTesting(true)} disabled={!obaPhoneId?.trim()}>
                                         Request Verification
                                     </Button>
                                 </div>
@@ -392,13 +392,13 @@ export function MetaCloudTab({ workspaceId }) {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <Button onClick={handleCreateQR} disabled={qrTesting || !obaPhoneId?.trim() || !qrMessage?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2">
+                                        <Button onClick={handleCreateQR} disabled={qrTesting || !obaPhoneId?.trim() || !qrMessage?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2 rounded-md">
                                             {qrTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} Create Deep Link
                                         </Button>
                                     </TabsContent>
 
                                     <TabsContent value="list" className="space-y-4">
-                                        <Button onClick={handleListQR} disabled={qrListTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2">
+                                        <Button onClick={handleListQR} disabled={qrListTesting || !obaPhoneId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 gap-2 rounded-md">
                                             {qrListTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} List All QR Codes
                                         </Button>
                                     </TabsContent>
@@ -417,14 +417,14 @@ export function MetaCloudTab({ workspaceId }) {
                                                 </Select>
                                             </div>
                                         </div>
-                                        <Button onClick={handleUpdateQR} disabled={qrUpdateTesting || !qrUpdateCodeId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10">
+                                        <Button onClick={handleUpdateQR} disabled={qrUpdateTesting || !qrUpdateCodeId?.trim() || !metaCloudAccessToken?.trim()} className="w-full text-xs font-medium h-10 rounded-md">
                                             Update Deep Link
                                         </Button>
                                     </TabsContent>
 
                                     <TabsContent value="delete" className="space-y-4">
                                         <Input placeholder="QR Code ID" value={qrDeleteCodeId} onChange={(e) => setQrDeleteCodeId(e.target.value)} className="bg-muted/5 text-sm border-border/40 rounded-xl px-4" />
-                                        <Button variant="destructive" onClick={handleDeleteQR} disabled={qrDeleteTesting || !qrDeleteCodeId?.trim()} className="w-full text-xs font-medium h-10">
+                                        <Button variant="destructive" onClick={handleDeleteQR} disabled={qrDeleteTesting || !qrDeleteCodeId?.trim()} className="w-full text-xs font-medium h-10 rounded-md">
                                             Delete QR Code
                                         </Button>
                                     </TabsContent>
