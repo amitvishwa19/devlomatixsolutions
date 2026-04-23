@@ -1,24 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-    Globe,
-    Plus,
-    MessageSquare,
-    CheckCircle2,
-    AlertCircle,
-    Star,
-    Zap,
-    RefreshCw,
-    Info,
-    Settings,
-    Trash2,
-    Copy,
-    Database,
-    LayoutDashboard,
-    ChevronRight,
-    MessageCircle
-} from 'lucide-react';
+import { Globe, Plus, MessageSquare, CheckCircle2, AlertCircle, Star, Zap, RefreshCw, Info, Settings, Trash2, Copy, Database, LayoutDashboard, ChevronRight, MessageCircle, Smartphone, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -42,11 +25,12 @@ import { getTemplates } from "../../template/_actions/get-templates";
 
 import { testMetaApi } from "../_actions/test-meta-api";
 import { getDecryptedCredentials } from "../_actions/get-decrypted-credentials";
+import { updateTestNumbers } from "../_actions/update-test-numbers";
 
 import { CloudAccountModal } from './CloudAccountModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
 
-export function GeneralTab({ workspaceId, metaCloudVersion }) {
+export function GeneralTab({ workspaceId, metaCloudVersion, metadata, setMetadata }) {
     const [cloudCreds, setCloudCreds] = useState([]);
     const [cloudLoading, setCloudLoading] = useState(false);
     const [testState, setTestState] = useState({});
@@ -60,6 +44,8 @@ export function GeneralTab({ workspaceId, metaCloudVersion }) {
         wabaId: '',
         accessToken: ''
     });
+
+    const [testNumberInput, setTestNumberInput] = useState('');
 
     // Analytics States (Moved here from page.jsx for modularity)
     const [analyticsWabaId, setAnalyticsWabaId] = useState('');
@@ -135,6 +121,14 @@ export function GeneralTab({ workspaceId, metaCloudVersion }) {
             if (data.data?.accessToken) setMetaCloudAccessToken(data.data.accessToken);
             if (data.data?.wabaId && !analyticsWabaId) setAnalyticsWabaId(data.data.wabaId);
         }
+    });
+
+    const { execute: executeUpdateTestNumbers } = useAction(updateTestNumbers, {
+        onSuccess: (data) => {
+            toast.success('Test numbers updated');
+            setMetadata(prev => ({ ...prev, testNumbers: data.testNumbers }));
+        },
+        onError: (err) => toast.error(err || 'Failed to update test numbers')
     });
 
     const { execute: executeTestApi } = useAction(testMetaApi, {
@@ -234,6 +228,23 @@ export function GeneralTab({ workspaceId, metaCloudVersion }) {
             url,
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken.trim()}` },
         }, { type: 'meta_analytics_conv' });
+    };
+
+    const handleAddTestNumber = () => {
+        if (!testNumberInput?.trim()) return;
+        const currentNumbers = metadata.testNumbers || [];
+        if (currentNumbers.includes(testNumberInput)) {
+            toast.error("Number already exists");
+            return;
+        }
+        const updated = [...currentNumbers, testNumberInput];
+        executeUpdateTestNumbers({ workspaceId, testNumbers: updated });
+        setTestNumberInput('');
+    };
+
+    const handleRemoveTestNumber = (num) => {
+        const updated = (metadata.testNumbers || []).filter(n => n !== num);
+        executeUpdateTestNumbers({ workspaceId, testNumbers: updated });
     };
 
     return (
@@ -397,123 +408,149 @@ export function GeneralTab({ workspaceId, metaCloudVersion }) {
                 </div>
 
                 {/* Sidebar Stats (Right) */}
-                <div className="md:col-span-4 space-y-6">
-                    <Card className="border shadow-sm p-6 space-y-5">
-                        <div className="flex items-center gap-3 text-muted-foreground">
-                            <div className="p-2 bg-muted/10 rounded-lg">
-                                <Database size={14} className="text-foreground/60" />
-                            </div>
-                            <span className="text-xs font-semibold">Instance Health</span>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between text-xs font-medium">
-                                <span className="text-muted-foreground">App Security</span>
-                                <Badge variant="secondary" className="text-[10px] font-semibold h-5 bg-green-500/10 text-green-600 border-none">High</Badge>
-                            </div>
-                            <div className="flex items-center justify-between text-xs font-medium">
-                                <span className="text-muted-foreground">Latency</span>
-                                <span className="font-semibold text-foreground">0.4ms</span>
-                            </div>
-                            <div className="pt-2">
-                                <div className="w-full h-1 bg-muted/20 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: "98%" }}
-                                        className="h-full bg-primary/60"
+                <div className="md:col-span-4 space-y-4">
+
+                    <Card className="border shadow-sm p-2">
+                        <CardContent className="p-2">
+                            <div className="flex flex-wrap gap-3 items-end">
+                                <div className="space-y-1.5 flex-1 min-w-[160px]">
+                                    <Label className="text-xs font-medium text-muted-foreground ml-1">WABA ID</Label>
+                                    <Input
+                                        placeholder="waba_id"
+                                        className="bg-muted/5 text-xs border rounded-md px-4"
+                                        value={analyticsWabaId}
+                                        onChange={(e) => setAnalyticsWabaId(e.target.value)}
                                     />
                                 </div>
+                                <div className="space-y-1.5 flex-1 min-w-[200px]">
+                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Date Range</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="date"
+                                            className="bg-muted/5 text-xs border rounded-md px-4 flex-1"
+                                            value={analyticsSince}
+                                            onChange={(e) => setAnalyticsSince(e.target.value)}
+                                        />
+                                        <Input
+                                            type="date"
+                                            className="bg-muted/5 text-xs border rounded-md px-4 flex-1"
+                                            value={analyticsUntil}
+                                            onChange={(e) => setAnalyticsUntil(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5 w-32">
+                                    <Label className="text-xs font-medium text-muted-foreground ml-1">Granularity</Label>
+                                    <Select value={analyticsGranularity} onValueChange={setAnalyticsGranularity}>
+                                        <SelectTrigger className="bg-muted/5 text-xs border rounded-md px-4"><SelectValue /></SelectTrigger>
+                                        <SelectContent className="rounded-xl border-border/20">
+                                            <SelectItem value="DAY" className="text-sm">Day</SelectItem>
+                                            <SelectItem value="WEEK" className="text-sm">Week</SelectItem>
+                                            <SelectItem value="MONTH" className="text-sm">Month</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                        </div>
+
+                            <Tabs defaultValue="messages" className="w-full">
+                                <TabsList className="bg-muted/5 w-fit justify-start rounded-md h-auto p-1 gap-1 border mb-4">
+                                    <TabsTrigger value="messages" className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                                        <MessageSquare size={14} />
+                                        Messages
+                                    </TabsTrigger>
+                                    <TabsTrigger value="conversations" className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                                        <LayoutDashboard size={14} />
+                                        Conversations
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="messages" className="space-y-3 mt-0">
+                                    <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
+                                        GET https://graph.facebook.com/{metaCloudVersion}/{analyticsWabaId || '<waba_id>'}/analytics...
+                                    </div>
+                                    <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchMsgAnalytics} disabled={analyticsMsgTesting || !analyticsWabaId?.trim()}>
+                                        {analyticsMsgTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                        {analyticsMsgTesting ? 'Fetching...' : 'Fetch Message Analytics'}
+                                    </Button>
+                                </TabsContent>
+
+                                <TabsContent value="conversations" className="space-y-3 mt-0">
+                                    <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchConvAnalytics} disabled={analyticsConvTesting || !analyticsWabaId?.trim()}>
+                                        {analyticsConvTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                                        {analyticsConvTesting ? 'Fetching...' : 'Fetch Conversation Analytics'}
+                                    </Button>
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
                     </Card>
 
 
-
-                    {/* Analytics Section moved into General Tab */}
-                    <div className="mt-6 space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
-                                <LayoutDashboard className="w-4 h-4 text-primary" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-semibold">Account Analytics</h3>
-                                <p className="text-[10px] text-muted-foreground font-medium">On-demand via Meta Graph API</p>
-                            </div>
-                        </div>
-
-                        <Card className="border shadow-sm">
-                            <CardContent className="pt-5 space-y-4">
-                                <div className="flex flex-wrap gap-3 items-end">
-                                    <div className="space-y-1.5 flex-1 min-w-[160px]">
-                                        <Label className="text-xs font-medium text-muted-foreground ml-1">WABA ID</Label>
-                                        <Input
-                                            placeholder="waba_id"
-                                            className="bg-muted/5 h-11 text-sm font-mono border-border/40 rounded-xl px-4"
-                                            value={analyticsWabaId}
-                                            onChange={(e) => setAnalyticsWabaId(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5 flex-1 min-w-[200px]">
-                                        <Label className="text-xs font-medium text-muted-foreground ml-1">Date Range</Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                type="date"
-                                                className="bg-muted/5 h-11 text-sm border-border/40 rounded-xl px-4 flex-1"
-                                                value={analyticsSince}
-                                                onChange={(e) => setAnalyticsSince(e.target.value)}
-                                            />
-                                            <Input
-                                                type="date"
-                                                className="bg-muted/5 h-11 text-sm border-border/40 rounded-xl px-4 flex-1"
-                                                value={analyticsUntil}
-                                                onChange={(e) => setAnalyticsUntil(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1.5 w-32">
-                                        <Label className="text-xs font-medium text-muted-foreground ml-1">Granularity</Label>
-                                        <Select value={analyticsGranularity} onValueChange={setAnalyticsGranularity}>
-                                            <SelectTrigger className="h-11 bg-muted/5 text-sm border-border/40 rounded-xl px-4"><SelectValue /></SelectTrigger>
-                                            <SelectContent className="rounded-xl border-border/20">
-                                                <SelectItem value="DAY" className="text-sm">Day</SelectItem>
-                                                <SelectItem value="WEEK" className="text-sm">Week</SelectItem>
-                                                <SelectItem value="MONTH" className="text-sm">Month</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                    <Card className="border shadow-sm overflow-hidden p-2">
+                        <CardHeader className="">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-primary/5 rounded-lg border border-primary/10">
+                                    <Smartphone className="w-4 h-4 text-primary" />
                                 </div>
+                                <div className="space-y-0.5">
+                                    <CardTitle className="text-base font-semibold">Test Audience</CardTitle>
+                                    <CardDescription className="text-xs font-medium">Internal QA Node & Verification</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-2">
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40">
+                                        <Plus size={14} />
+                                    </div>
+                                    <Input
+                                        placeholder="Add test number (e.g. +91...)"
+                                        className="pl-10 bg-muted/5 text-xs border rounded-md"
+                                        value={testNumberInput}
+                                        onChange={e => setTestNumberInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleAddTestNumber()}
+                                    />
+                                </div>
+                                <Button size="sm" onClick={handleAddTestNumber} className="px-4 rounded-lg text-xs font-medium">Add</Button>
+                            </div>
 
-                                <Tabs defaultValue="messages" className="w-full">
-                                    <TabsList className="bg-muted/5 w-fit justify-start rounded-xl h-auto p-1 gap-1 border border-border/40 mb-4">
-                                        <TabsTrigger value="messages" className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                                            <MessageSquare size={14} />
-                                            Messages
-                                        </TabsTrigger>
-                                        <TabsTrigger value="conversations" className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                                            <LayoutDashboard size={14} />
-                                            Conversations
-                                        </TabsTrigger>
-                                    </TabsList>
-
-                                    <TabsContent value="messages" className="space-y-3 mt-0">
-                                        <div className="px-3 py-2 bg-muted/10 border border-border/20 rounded-md text-[10px] font-mono text-muted-foreground/60 break-all">
-                                            GET https://graph.facebook.com/{metaCloudVersion}/{analyticsWabaId || '<waba_id>'}/analytics...
+                            <div className="space-y-2">
+                                {(metadata.testNumbers || []).map((num) => (
+                                    <div key={num} className="flex items-center justify-between p-3.5 rounded-lg border border-border/40 bg-card hover:border-primary/20 transition-all group shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-lg bg-muted/5 flex items-center justify-center border border-border/40 text-muted-foreground/60 group-hover:text-primary transition-colors">
+                                                <User className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-xs font-semibold font-mono tracking-tight">{num}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="secondary" className="text-[9px] font-bold h-4 bg-green-500/10 text-green-600 border-none px-1.5 uppercase tracking-wider">Verified</Badge>
+                                                    <span className="text-[9px] text-muted-foreground/60 font-medium">Active QA Node</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchMsgAnalytics} disabled={analyticsMsgTesting || !analyticsWabaId?.trim()}>
-                                            {analyticsMsgTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                            {analyticsMsgTesting ? 'Fetching...' : 'Fetch Message Analytics'}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                                            onClick={() => handleRemoveTestNumber(num)}
+                                        >
+                                            <Trash2 size={14} />
                                         </Button>
-                                    </TabsContent>
+                                    </div>
+                                ))}
+                                {(metadata.testNumbers || []).length === 0 && (
+                                    <div className="flex flex-col items-center justify-center py-10 text-center space-y-3 bg-muted/5 border border-dashed border-border/40 rounded-xl">
+                                        <div className="p-2.5 bg-muted/10 rounded-full">
+                                            <Smartphone className="w-5 h-5 text-muted-foreground/30" />
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground font-medium italic">No test numbers defined yet.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                                    <TabsContent value="conversations" className="space-y-3 mt-0">
-                                        <Button className="px-6 rounded-md text-xs gap-2" onClick={handleFetchConvAnalytics} disabled={analyticsConvTesting || !analyticsWabaId?.trim()}>
-                                            {analyticsConvTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                                            {analyticsConvTesting ? 'Fetching...' : 'Fetch Conversation Analytics'}
-                                        </Button>
-                                    </TabsContent>
-                                </Tabs>
-                            </CardContent>
-                        </Card>
-                    </div>
                 </div>
             </div>
 

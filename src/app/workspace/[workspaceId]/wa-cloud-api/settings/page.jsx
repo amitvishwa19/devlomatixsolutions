@@ -133,7 +133,12 @@ export default function SettingsPage() {
                     </TabsList>
 
                     <TabsContent value="general" className="flex-1 overflow-hidden flex flex-col outline-none">
-                        <GeneralTab workspaceId={workspaceId} metaCloudVersion="v25.0" />
+                        <GeneralTab 
+                            workspaceId={workspaceId} 
+                            metaCloudVersion="v25.0" 
+                            metadata={metadata}
+                            setMetadata={setMetadata}
+                        />
                     </TabsContent>
 
                     <TabsContent value="automation" className="flex-1 overflow-hidden flex flex-col outline-none">
