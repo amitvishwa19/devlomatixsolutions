@@ -29,17 +29,24 @@ async function metaPost(credentials, endpoint, payload) {
             payloadWithCleanTo.to = payloadWithCleanTo.to.replace(/\+/g, '');
         }
 
+        const fullPayload = {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            ...payloadWithCleanTo
+        };
+
+        console.log("[WA_CLOUD_API_REQUEST]", {
+            url,
+            payload: JSON.stringify(fullPayload, null, 2)
+        });
+
         const res = await fetch(url, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                messaging_product: "whatsapp",
-                recipient_type: "individual",
-                ...payloadWithCleanTo
-            })
+            body: JSON.stringify(fullPayload)
         });
 
         const data = await res.json();

@@ -34,6 +34,7 @@ import { submitTemplate } from "./_actions/submit-template";
 import { checkTemplateStatus } from "./_actions/check-template-status";
 import { getContacts as getContactsAction } from "../contacts/_actions/get-contacts";
 import { sendMessage as sendMessageAction } from "../chats/_actions/send-message";
+import { getWaMetadata } from "../settings/_actions/get-wa-metadata";
 
 export default function TemplatePage() {
     const params = useParams();
@@ -82,6 +83,7 @@ export default function TemplatePage() {
     const [isFetchingContacts, setIsFetchingContacts] = useState(false);
     const [variableMappings, setVariableMappings] = useState({});
     const [detectedVariables, setDetectedVariables] = useState([]);
+    const [metadata, setMetadata] = useState({});
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
 
@@ -115,10 +117,23 @@ export default function TemplatePage() {
         }
     };
 
+    const { execute: executeGetMetadata } = useAction(getWaMetadata, {
+        onSuccess: (data) => {
+            setMetadata(data.metadata || {});
+        }
+    });
+
+    const fetchMetadata = () => {
+        if (workspaceId) {
+            executeGetMetadata({ workspaceId });
+        }
+    };
+
     useEffect(() => {
         if (workspaceId) {
             fetchTemplates();
             fetchContacts();
+            fetchMetadata();
         }
     }, [workspaceId]);
 
@@ -324,22 +339,74 @@ export default function TemplatePage() {
 
         const buildComponents = () => {
             const components = [];
+            
+            // Handle Header (Text or Media)
             if (headerVars.length > 0) {
                 components.push({
                     type: 'HEADER',
                     parameters: headerVars.map(v => ({ type: 'TEXT', text: variableMappings[v] || '' }))
                 });
+            } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(testingTemplate.type?.toUpperCase())) {
+                const mediaUrl = testingTemplate.metadata?.mediaUrl;
+                if (mediaUrl) {
+                    const mediaType = testingTemplate.type.toLowerCase();
+                    const isHandle = /^\d+$/.test(mediaUrl.toString()) || mediaUrl.toString().startsWith('4'); // Meta IDs/Handles are usually digits or start with 4
+                    
+                    components.push({
+                        type: 'HEADER',
+                        parameters: [
+                            {
+                                type: mediaType,
+                                [mediaType]: isHandle 
+                                    ? { handle: mediaUrl } // or { id: mediaUrl }
+                                    : { link: mediaUrl }
+                            }
+                        ]
+                    });
+                }
+            } else if (testingTemplate.metadata?.headerText && !headerVars.length) {
+                 // Static text header - usually doesn't need component parameter if no variables
             }
+
+            // Handle Body
             if (bodyVars.length > 0) {
                 components.push({
                     type: 'BODY',
                     parameters: bodyVars.map(v => ({ type: 'TEXT', text: variableMappings[v] || '' }))
                 });
             }
+
+            // Handle Buttons (Specifically Flow buttons if they exist)
+            if (testingTemplate.buttons && Array.isArray(testingTemplate.buttons)) {
+                testingTemplate.buttons.forEach((btn, idx) => {
+                    if (btn.type === 'FLOW') {
+                        components.push({
+                            type: 'button',
+                            sub_type: 'flow',
+                            index: idx,
+                            parameters: [
+                                {
+                                    type: 'action',
+                                    action: {
+                                        flow_token: "test_token_" + Date.now()
+                                    }
+                                }
+                            ]
+                        });
+                    }
+                });
+            }
+
             return components;
         };
 
         const components = buildComponents();
+        
+        console.log("[TEMPLATE_TEST_PAYLOAD]", {
+            template: testingTemplate.templateName || testingTemplate.name,
+            language: testingTemplate.language || 'en_US',
+            components
+        });
 
         for (const to of recipients) {
             executeSendTest({
@@ -491,6 +558,7 @@ export default function TemplatePage() {
                     detectedVariables={detectedVariables}
                     variableMappings={variableMappings}
                     setVariableMappings={setVariableMappings}
+                    testNumbers={metadata.testNumbers || []}
                 />
 
                 <TemplatePreview 

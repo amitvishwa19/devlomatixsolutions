@@ -24,8 +24,7 @@ const handler = async (data) => {
         const contacts = await db.contact.findMany({
             where,
             include: { 
-                groups: true,
-                category: true 
+                groups: true
             },
             orderBy: { createdAt: 'desc' }
         });

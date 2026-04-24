@@ -39,7 +39,8 @@ export default function TestTemplateDialog({
     setContactSearch,
     detectedVariables,
     variableMappings,
-    setVariableMappings
+    setVariableMappings,
+    testNumbers = []
 }) {
     if (!template) return null;
 
@@ -52,6 +53,15 @@ export default function TestTemplateDialog({
         setSelectedContactIds((prev) =>
             prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
         );
+    };
+
+    const toggleTestNumber = (num) => {
+        const currentNumbers = testRecipient.split(',').map(n => n.trim()).filter(n => n);
+        if (currentNumbers.includes(num)) {
+            setTestRecipient(currentNumbers.filter(n => n !== num).join(', '));
+        } else {
+            setTestRecipient([...currentNumbers, num].join(', '));
+        }
     };
 
     return (
@@ -103,6 +113,30 @@ export default function TestTemplateDialog({
                                 onChange={(e) => setTestRecipient(e.target.value)}
                                 className="bg-background border-border"
                             />
+                            {testNumbers.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase py-1">Saved Test Numbers:</span>
+                                    {testNumbers.map((num) => {
+                                        const isActive = testRecipient.split(',').map(n => n.trim()).includes(num);
+                                        return (
+                                            <button
+                                                key={num}
+                                                type="button"
+                                                onClick={() => toggleTestNumber(num)}
+                                                className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all border ${
+                                                    isActive 
+                                                        ? 'bg-primary/10 border-primary text-primary shadow-sm' 
+                                                        : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30 hover:bg-muted'
+                                                }`}
+                                            >
+                                                <Phone className="w-2.5 h-2.5" />
+                                                {num}
+                                                {isActive && <Check className="w-2.5 h-2.5" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-2">
