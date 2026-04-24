@@ -31,6 +31,7 @@ import { CloudAccountModal } from './CloudAccountModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import { WhatsAppMetaCloudInfo } from './WhatsAppMetaCloudInfo';
 import { WhatsAppAnalyticsInfo } from './WhatsAppAnalyticsInfo';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function GeneralTab({
     workspaceId,
@@ -189,18 +190,22 @@ export function GeneralTab({
     };
 
     return (
-        <div className="flex-1 outline-none custom-scrollbar overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <ScrollArea className="flex-1 outline-none h-[70vh] p-2">
+            <div className="flex flex-col gap-4">
 
-
-                {/* Main Content (Left) */}
-                <div className="md:col-span-8 space-y-6">
-
+                <div>
                     {/* Developer App Information Card */}
                     <WhatsAppMetaCloudInfo
                         workspaceId={workspaceId}
                         metaCloudVersion={metaCloudVersion}
                     />
+                </div>
+
+
+                {/* Main Content (Left) */}
+                <div className="md:col-span-8 space-y-6">
+
+
 
                     <Card className="border shadow-sm relative">
                         <CardHeader className="flex flex-row items-center justify-between pb-6">
@@ -449,6 +454,6 @@ export function GeneralTab({
                 onDelete={handleDeleteCloudCred}
                 loading={cloudLoading}
             />
-        </div>
+        </ScrollArea>
     );
 }

@@ -39,9 +39,9 @@ export const metadata = {
     },
     description: 'Devlomatix',
     icons: {
-        icon: '/fevicon.ico?v=5',
-        apple: '/fevicon.ico?v=5',
-        shortcut: '/fevicon.ico?v=5'
+        icon: '/fevicon.ico?v=6',
+        apple: '/fevicon.ico?v=6',
+        shortcut: '/fevicon.ico?v=6'
     },
     manifest: '/site.webmanifest'
 }
@@ -82,7 +82,7 @@ export default async function RootLayout({ children }) {
                     {/* </SocketProvider> */}
                 </SessionWrapper>
                 <Toaster position="top-right" className="dark:bg-sky-600" />
-                
+
                 {/* DEBUG SCRIPT: Catching 'Unexpected token <' errors */}
                 <script dangerouslySetInnerHTML={{
                     __html: `

@@ -124,38 +124,38 @@ export function WhatsAppMetaCloudInfo({ workspaceId, metaCloudVersion = 'v25.0' 
                 <CardContent>
                     {appInfoResult?.success && appInfoResult?.apiData?.data && !isOverallLoading && (
                         <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="space-y-1.5">
+                            <div className="space-x-2">
                                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">App Name</Label>
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15">
                                     {appInfoResult.apiData.data.application || 'N/A'}
                                 </span>
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-x-2">
                                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">App ID</Label>
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-primary/8 text-primary border border-primary/15">
                                     {appInfoResult.apiData.data.app_id || 'N/A'}
                                 </span>
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-x-2">
                                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">User ID</Label>
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-primary/8 text-primary border border-primary/15">
                                     {appInfoResult.apiData.data.user_id || 'N/A'}
                                 </span>
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-x-2">
                                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Token Type</Label>
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15">
                                     {appInfoResult.apiData.data.type || 'N/A'}
                                 </span>
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-x-2">
                                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Status</Label>
                                 <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium border ${appInfoResult.apiData.data.is_valid ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-red-500/10 text-red-600 border-red-500/20'}`}>
                                     <div className={`w-1.5 h-1.5 rounded-full ${appInfoResult.apiData.data.is_valid ? 'bg-green-600 animate-pulse' : 'bg-red-600'}`} />
                                     {appInfoResult.apiData.data.is_valid ? 'Live / Connected' : 'Invalid'}
                                 </span>
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-x-2">
                                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Token Expiry</Label>
                                 {(() => {
                                     const exp = appInfoResult.apiData.data.expires_at;
@@ -165,7 +165,7 @@ export function WhatsAppMetaCloudInfo({ workspaceId, metaCloudVersion = 'v25.0' 
                                     return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${isExpired ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-primary/8 text-primary border-primary/15'}`}>{date.toLocaleString()}{isExpired && ' (Expired)'}</span>;
                                 })()}
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-x-2">
                                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Data Access Expiry</Label>
                                 {(() => {
                                     const exp = appInfoResult.apiData.data.data_access_expires_at;
@@ -189,25 +189,25 @@ export function WhatsAppMetaCloudInfo({ workspaceId, metaCloudVersion = 'v25.0' 
                                 <div className="col-span-2 border-t border-border/20 pt-3 space-y-2">
                                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Phone Number</Label>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
+                                        <div className="space-x-2">
                                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Verified Name</Label>
                                             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/8 text-primary border border-primary/15">
                                                 {displayNamesResult.apiData.verified_name || displayNamesResult.apiData.name || 'N/A'}
                                             </span>
                                         </div>
-                                        <div className="space-y-1.5">
+                                        <div className="space-x-2">
                                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Name Status</Label>
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${(displayNamesResult.apiData.name_status || obaStatusResult?.apiData?.name_status) === 'APPROVED' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}`}>
                                                 {displayNamesResult.apiData.name_status || obaStatusResult?.apiData?.name_status || 'Unknown'}
                                             </span>
                                         </div>
-                                        <div className="space-y-1.5">
+                                        <div className="space-x-2">
                                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Phone Number ID</Label>
                                             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-primary/8 text-primary border border-primary/15">
                                                 {displayNamesResult.apiData.id || displayNamesPhoneId || 'N/A'}
                                             </span>
                                         </div>
-                                        <div className="space-y-1.5">
+                                        <div className="space-x-2">
                                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Verification Status</Label>
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${obaStatusResult?.apiData?.code_verification_status === 'VERIFIED' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}`}>
                                                 {obaStatusResult?.apiData?.code_verification_status || 'Fetching...'}
