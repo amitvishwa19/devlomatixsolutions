@@ -43,6 +43,7 @@ export const getSidebarItems = (workspaceId) => {
         { type: 'child', title: "Campaigns", url: `${baseWhatsappCloudApiPath}/campaigns`, icon: "megaphone", category: "konnectx", permission: `navbar:KonnectX:Campaigns` },
         { type: 'child', title: "Flows", url: `${baseWhatsappCloudApiPath}/flows`, icon: "megaphone", category: "konnectx", permission: `navbar:KonnectX:Flows` },
         { type: 'child', title: "Analytics", url: `${baseWhatsappCloudApiPath}/analytics`, icon: "bar-chart-3", category: "konnectx", permission: `navbar:KonnectX:Analytics` },
+        { type: 'child', title: "Atents", url: `${baseWhatsappCloudApiPath}/agents`, icon: "zap", category: "konnectx", permission: `navbar:KonnectX:Agent` },
         { type: 'child', title: "AI Assistent", url: `${baseWhatsappCloudApiPath}/assistant`, icon: "bar-chart-3", category: "konnectx", permission: `navbar:KonnectX:Assistant` },
         { type: 'child', title: "Chatbot", url: `${baseWhatsappCloudApiPath}/chatbot`, icon: "zap", category: "konnectx", permission: `navbar:KonnectX:Chatbot` },
         { type: 'child', title: "eCommerce", url: `${baseWhatsappCloudApiPath}/ecommerce`, icon: "shopping-cart", category: "konnectx", permission: `navbar:KonnectX:eCommerce` },

@@ -15,7 +15,8 @@ import {
     Printer,
     Download,
     QrCode,
-    Search
+    Search,
+    Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -47,6 +48,10 @@ export function MetaCloudTab({ workspaceId }) {
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingCode, setDeletingCode] = useState(null);
+    const [editingQR, setEditingQR] = useState(null);
+    const [editMessage, setEditMessage] = useState('');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
         onSuccess: (data) => {
@@ -87,6 +92,11 @@ export function MetaCloudTab({ workspaceId }) {
                 } else if (context.type === 'qr_delete') {
                     toast.success("QR Code deleted");
                     fetchQrList();
+                } else if (context.type === 'qr_update') {
+                    toast.success("QR Code updated");
+                    setIsEditModalOpen(false);
+                    setEditingQR(null);
+                    fetchQrList();
                 }
             } else {
                 console.error(`[QR Management] ${context.type} error:`, data.error);
@@ -95,12 +105,14 @@ export function MetaCloudTab({ workspaceId }) {
             setQrTesting(false);
             setQrListTesting(false);
             setDeletingCode(null);
+            setIsUpdating(false);
         },
         onError: (error) => {
             toast.error(error);
             setQrTesting(false);
             setQrListTesting(false);
             setDeletingCode(null);
+            setIsUpdating(false);
         }
     });
 
@@ -146,6 +158,38 @@ export function MetaCloudTab({ workspaceId }) {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken}` }
         }, { type: 'qr_delete' });
+    };
+
+    const handleUpdateQR = () => {
+        if (!editingQR || !editMessage.trim()) return;
+        setIsUpdating(true);
+        executeApi({
+            workspaceId,
+            url: `https://graph.facebook.com/${metaCloudVersion}/${phoneId}/message_qrdls/${editingQR.code}`,
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${metaCloudAccessToken}` },
+            body: { prefilled_message: editMessage.trim() }
+        }, { type: 'qr_update' });
+    };
+
+    const handleDownload = async (qr) => {
+        const imageUrl = qr.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr.deep_link_url)}`;
+        try {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `whatsapp-qr-${qr.code}.png`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Download failed:", error);
+            // Fallback: open in new tab if blob fetch fails
+            window.open(imageUrl, '_blank');
+        }
     };
 
     const filteredQRs = qrList.filter(qr =>
@@ -289,11 +333,9 @@ export function MetaCloudTab({ workspaceId }) {
                                                         <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => { setSelectedQR(qr); setIsPrintModalOpen(true); }}>
                                                             <Printer className="w-4 h-4" />
                                                         </Button>
-                                                        <a href={qr.qr_image_url} download target="_blank" rel="noopener noreferrer">
-                                                            <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg">
-                                                                <Download className="w-4 h-4" />
-                                                            </Button>
-                                                        </a>
+                                                        <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => handleDownload(qr)}>
+                                                            <Download className="w-4 h-4" />
+                                                        </Button>
                                                     </div>
                                                 </div>
 
@@ -305,6 +347,14 @@ export function MetaCloudTab({ workspaceId }) {
                                                         onClick={() => { setSelectedQR(qr); setIsPrintModalOpen(true); }}
                                                     >
                                                         View & Print
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-muted/50 transition-colors"
+                                                        onClick={() => { setEditingQR(qr); setEditMessage(qr.prefilled_message || ''); setIsEditModalOpen(true); }}
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
@@ -367,6 +417,34 @@ export function MetaCloudTab({ workspaceId }) {
                             <Button className="flex-1 gap-2 font-bold shadow-md" onClick={handlePrint}>
                                 <Printer className="w-4 h-4" />
                                 Print Now
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Edit Modal */}
+                <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                    <DialogContent className="sm:max-w-[425px] rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit QR Code</DialogTitle>
+                            <DialogDescription>Update the prefilled message for this QR code.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label>Prefilled Message</Label>
+                                <Input
+                                    value={editMessage}
+                                    onChange={(e) => setEditMessage(e.target.value)}
+                                    placeholder="Enter message..."
+                                    className="h-11"
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+                            <Button onClick={handleUpdateQR} disabled={isUpdating || !editMessage.trim()} className="gap-2">
+                                {isUpdating && <RefreshCw className="w-4 h-4 animate-spin" />}
+                                Update Message
                             </Button>
                         </DialogFooter>
                     </DialogContent>
