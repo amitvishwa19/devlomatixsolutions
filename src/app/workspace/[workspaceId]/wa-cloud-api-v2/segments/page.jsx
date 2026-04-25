@@ -1,27 +1,144 @@
 "use client";
 
-import React from 'react';
-import { useParams } from 'next/navigation';
-import { Filter } from 'lucide-react';
+import { useMemo, useState } from "react";
+import { Filter, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "@/lib/supabase";
+import { applyFilter, describeFilter, EMPTY_FILTER, LIFECYCLE_STAGES } from "../_lib/segments";
+import { useV2Data } from "../layout";
+
+const empty = { name: "", description: "", filter: { ...EMPTY_FILTER } };
 
 export default function SegmentsPage() {
-    const params = useParams();
-    const workspaceId = params.workspaceId;
+  const data = useV2Data();
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(empty);
+  const segments = data.segments.data || [];
+  const contacts = data.contacts.data || [];
 
-    return (
-        <div className="p-8 h-full flex flex-col items-center justify-center space-y-4 animate-in fade-in duration-500">
-            <div className="bg-primary/10 p-6 rounded-full">
-                <Filter className="w-12 h-12 text-primary" />
+  const allTags = useMemo(() => {
+    const set = new Set();
+    contacts.forEach((c) => (c.tags || []).forEach((t) => set.add(t)));
+    return [...set];
+  }, [contacts]);
+
+  const openAdd = () => { setEditing(null); setForm(empty); setOpen(true); };
+  const openEdit = (segment) => {
+    setEditing(segment);
+    setForm({ name: segment.name, description: segment.description || "", filter: { ...EMPTY_FILTER, ...(segment.filter || {}) } });
+    setOpen(true);
+  };
+
+  const save = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) return toast.error("Segment needs a name");
+    const payload = { name: form.name.trim(), description: form.description, filter: form.filter };
+    const { error } = editing
+      ? await supabase.from("wa_segments").update(payload).eq("id", editing.id)
+      : await supabase.from("wa_segments").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success(editing ? "Segment updated" : "Segment saved");
+    setOpen(false); setEditing(null); setForm(empty); data.segments.refetch();
+  };
+
+  const remove = async (segment) => {
+    if (!confirm(`Delete segment "${segment.name}"?`)) return;
+    const { error } = await supabase.from("wa_segments").delete().eq("id", segment.id);
+    if (error) return toast.error(error.message);
+    toast.success("Segment removed"); data.segments.refetch();
+  };
+
+  const setFilter = (patch) => setForm((f) => ({ ...f, filter: { ...f.filter, ...patch } }));
+  const previewCount = useMemo(() => applyFilter(contacts, form.filter).length, [contacts, form.filter]);
+
+  return (
+    <Card className="rounded-md border-border/60 bg-card shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2"><Filter className="h-4 w-4" /> Segments</CardTitle>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm(empty); } }}>
+          <DialogTrigger asChild><Button size="sm" onClick={openAdd}><Plus className="mr-2 h-4 w-4" /> New segment</Button></DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>{editing ? "Edit segment" : "New segment"}</DialogTitle></DialogHeader>
+            <form onSubmit={save} className="space-y-4">
+              <div className="space-y-2"><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="VIP customers" /></div>
+              <div className="space-y-2"><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Optional" /></div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Tag</Label>
+                  <Select value={form.filter.tag || "__any"} onValueChange={(v) => setFilter({ tag: v === "__any" ? "" : v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__any">Any</SelectItem>
+                      {allTags.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Lifecycle</Label>
+                  <Select value={form.filter.lifecycle_stage || "__any"} onValueChange={(v) => setFilter({ lifecycle_stage: v === "__any" ? "" : v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__any">Any</SelectItem>
+                      {LIFECYCLE_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={form.filter.status || "__any"} onValueChange={(v) => setFilter({ status: v === "__any" ? "" : v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__any">Any</SelectItem>
+                      <SelectItem value="active">active</SelectItem>
+                      <SelectItem value="opted_out">opted_out</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2"><Label>Search text</Label><Input value={form.filter.search} onChange={(e) => setFilter({ search: e.target.value })} placeholder="acme" /></div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                <span>Exclude opted-out</span>
+                <Switch checked={!!form.filter.exclude_opted_out} onCheckedChange={(v) => setFilter({ exclude_opted_out: v })} />
+              </div>
+
+              <div className="rounded-md border bg-card/40 p-3 text-xs">
+                <p className="font-medium">{previewCount} matching contacts</p>
+                <p className="mt-1 text-muted-foreground">{describeFilter(form.filter)}</p>
+              </div>
+
+              <Button size="sm" type="submit" className="w-full">{editing ? "Update segment" : "Save segment"}</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {segments.map((s) => {
+          const count = applyFilter(contacts, s.filter).length;
+          return (
+            <div key={s.id} className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
+              <div className="min-w-0">
+                <p className="font-medium">{s.name} <span className="ml-2 text-xs text-muted-foreground">{count} contacts</span></p>
+                <p className="truncate text-xs text-muted-foreground">{s.description || describeFilter(s.filter)}</p>
+              </div>
+              <div className="flex gap-1">
+                <Button size="sm" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
+                <Button size="sm" variant="ghost" onClick={() => remove(s)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Segments</h1>
-            <p className="text-muted-foreground text-center max-w-md">
-                Group your audience based on behavior, tags, and custom fields for highly targeted campaigns.
-            </p>
-            <div className="flex gap-2 mt-4">
-                <div className="h-1.5 w-8 bg-primary/20 rounded-full" />
-                <div className="h-1.5 w-24 bg-primary rounded-full" />
-                <div className="h-1.5 w-8 bg-primary/20 rounded-full" />
-            </div>
-        </div>
-    );
+          );
+        })}
+        {!segments.length && <div className="py-10 text-center text-muted-foreground">No segments yet. Save a filter to reuse it in Campaigns.</div>}
+      </CardContent>
+    </Card>
+  );
 }

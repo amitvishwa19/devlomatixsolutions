@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, RefreshCw, Send, Trash2, Search, FileText, LayoutGrid, Sparkles, Eye, Pencil, CheckCircle2, AlertCircle, Upload as UploadIcon, BookTemplate } from "lucide-react";
+import { Plus, RefreshCw, Send, Trash2, Search, FileText, LayoutGrid, Sparkles, Eye, Pencil, CheckCircle2, AlertCircle, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -628,7 +628,7 @@ function SendTestDialog({ template, onDone }) {
                       {uploadStatus === "failed" && !uploading && (
                         <div className="flex items-start justify-between gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-[11px] text-destructive">
                           <div className="flex items-start gap-1.5">
-                            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                            <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
                             <span><span className="font-medium">Upload failed</span> — {uploadError}</span>
                           </div>
                           <button type="button" onClick={retryUpload} className="shrink-0 underline">Retry</button>
@@ -799,41 +799,34 @@ function EditTemplateDialog({ template, accountId, onDone }) {
                   <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Header type</Label>
-                <Select value={form.headerFmt} onValueChange={(v) => setForm({ ...form, headerFmt: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NONE">None</SelectItem>
-                    <SelectItem value="TEXT">Text</SelectItem>
-                    <SelectItem value="IMAGE" disabled>Image (Edit from JSON)</SelectItem>
-                    <SelectItem value="VIDEO" disabled>Video (Edit from JSON)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               {form.headerFmt === "TEXT" && (
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Header text</Label>
+                  <Label>Header text (max 60)</Label>
                   <Input value={form.header} onChange={(e) => setForm({ ...form, header: e.target.value })} maxLength={60} />
                 </div>
               )}
               <div className="space-y-2 md:col-span-2">
-                <Label>Body *</Label>
+                <Label>Body * — use {`{{1}}, {{2}}`} for variables</Label>
                 <Textarea rows={6} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} maxLength={1024} />
+                <p className="text-xs text-muted-foreground">{countVariables(form.body)} variable(s) · {form.body.length}/1024</p>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Footer</Label>
+                <Label>Footer (max 60)</Label>
                 <Input value={form.footer} onChange={(e) => setForm({ ...form, footer: e.target.value })} maxLength={60} />
               </div>
               <div className="md:col-span-2 flex justify-end gap-2 pt-2">
                 <Button size="sm" type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving..." : "Submit edit"}</Button>
+                <Button size="sm" type="submit" disabled={busy}>{busy ? "Submitting..." : "Submit edit to Meta"}</Button>
               </div>
             </form>
           </ScrollArea>
           <div className="hidden lg:flex flex-col rounded-lg border border-border/60 bg-card/30 p-4">
-            <div className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground"><Eye className="h-3.5 w-3.5" /> Preview</div>
-            <div className="flex-1 overflow-auto"><TemplatePreview components={previewComponents} /></div>
+            <div className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Eye className="h-3.5 w-3.5" /> Live preview
+            </div>
+            <div className="flex-1 overflow-auto">
+              <TemplatePreview components={previewComponents} />
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -843,122 +836,120 @@ function EditTemplateDialog({ template, accountId, onDone }) {
 
 export default function TemplatesPage() {
   const data = useV2Data();
+  const [accountFilter, setAccountFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [syncing, setSyncing] = useState(false);
-  const rows = data.templates.data || [];
+  const [busy, setBusy] = useState(false);
 
-  const filtered = useMemo(() => {
-    let list = rows;
-    if (filter !== "all") list = list.filter((r) => String(r.status).toUpperCase() === filter);
+  const accounts = data.phoneNumbers.data || [];
+  const wabaById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.waba_id, a])), [accounts]);
+  const templates = data.templates.data || [];
+
+  const filtered = templates.filter((t) => {
+    if (accountFilter !== "all") {
+      const acc = accounts.find((a) => a.id === accountFilter);
+      if (acc && t.waba_id !== acc.waba_id) return false;
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((r) => r.name.toLowerCase().includes(q) || r.category.toLowerCase().includes(q));
+      if (!t.name.toLowerCase().includes(q) && !String(t.category).toLowerCase().includes(q)) return false;
     }
-    return list;
-  }, [rows, filter, search]);
+    return true;
+  });
 
-  const sync = async () => {
-    setSyncing(true);
+  const sync = async (account_id) => {
+    if (!account_id) return toast.error("Pick an account to sync");
+    setBusy(true);
     try {
-      await cloudAction("sync_templates", { account_id: data.defaultNumber?.id });
-      toast.success("Templates synced with Meta");
+      const r = await cloudAction("sync_templates", { account_id });
+      toast.success(`Synced ${r.count || 0} templates`);
       data.templates.refetch();
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setSyncing(false);
-    }
+    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
 
-  const del = async (id) => {
-    if (!confirm("Are you sure? This will remove the template from Meta as well.")) return;
+  const remove = async (template) => {
+    if (!confirm(`Delete template "${template.name}"? This also removes it from Meta.`)) return;
+    setBusy(true);
     try {
-      await cloudAction("delete_template", { account_id: data.defaultNumber?.id, template_id: id });
+      const acc = wabaById[template.waba_id];
+      await cloudAction("delete_template", { account_id: acc?.id, template_id: template.id });
       toast.success("Template deleted");
       data.templates.refetch();
-    } catch (e) {
-      toast.error(e.message);
-    }
+    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <Card className="rounded-md border-border/60 bg-card shadow-sm">
+      <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Message Templates</h2>
-          <p className="text-sm text-muted-foreground">Sync and manage your approved WhatsApp message formats.</p>
+          <CardTitle>Message templates</CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">Create, sync, and test WhatsApp templates per account.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={sync} disabled={syncing}>
-            <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} /> Sync
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input className="w-48 pl-8" placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <Select value={accountFilter} onValueChange={setAccountFilter}>
+            <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All accounts</SelectItem>
+              {accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.display_name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => sync(accountFilter !== "all" ? accountFilter : data.defaultNumber?.id)}>
+            <RefreshCw className="mr-2 h-4 w-4" /> Sync
           </Button>
           <CreateTemplateDialog data={data} onCreated={() => data.templates.refetch()} />
         </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search templates..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="APPROVED">Approved</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="REJECTED">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
-        <Badge variant="outline" className="h-7 px-3">{filtered.length} TEMPLATES</Badge>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((t) => (
-          <Card key={t.id} className="group relative flex flex-col overflow-hidden rounded-md border-border/60 bg-card shadow-sm transition-all hover:border-primary/40 hover:shadow-md">
-            <CardHeader className="p-4 pb-2 border-b border-border/60">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <CardTitle className="truncate text-sm font-bold">{t.name}</CardTitle>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">{t.category}</p>
-                </div>
-                <StatusBadge status={t.status} />
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-4 flex flex-col">
-              <div className="flex-1 overflow-hidden rounded border border-border/40 bg-muted/20">
-                <ScrollArea className="h-48 p-2">
-                  <TemplatePreview components={t.components} compact />
-                </ScrollArea>
-              </div>
-              <div className="mt-4 flex items-center justify-between gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">{t.language} · {t.components?.length || 0} comps</span>
-                <div className="flex items-center gap-1.5">
-                  <SendTestDialog template={t} onDone={() => data.templates.refetch()} />
-                  <EditTemplateDialog template={t} accountId={data.defaultNumber?.id} onDone={() => data.templates.refetch()} />
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => del(t.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {!filtered.length && !rows.length && (
-        <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border border-dashed border-border/60 py-24 text-center">
-          <div className="rounded-full bg-primary/10 p-4"><BookTemplate className="h-8 w-8 text-primary" /></div>
-          <div>
-            <p className="text-base font-bold italic uppercase tracking-widest">No templates found</p>
-            <p className="mt-1 text-sm text-muted-foreground">Sync with Meta or create your first template to get started.</p>
+      </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <table className="w-full min-w-[900px] text-sm">
+          <thead>
+            <tr className="border-b border-border/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <th className="py-3 pr-3">Name</th>
+              <th className="px-3">Account</th>
+              <th className="px-3">Language</th>
+              <th className="px-3">Category</th>
+              <th className="px-3">Status</th>
+              <th className="px-3">Updated</th>
+              <th className="px-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((t) => {
+              const acc = wabaById[t.waba_id];
+              return (
+                <tr key={t.id} className="border-b border-border/40 hover:bg-muted/50">
+                  <td className="py-3 pr-3">
+                    <div className="font-medium">{t.name}</div>
+                    {t.rejection_reason && <div className="text-xs text-destructive">{t.rejection_reason}</div>}
+                  </td>
+                  <td className="px-3 text-muted-foreground">{acc?.display_name || "—"}</td>
+                  <td className="px-3 font-mono text-xs">{t.language}</td>
+                  <td className="px-3">{t.category}</td>
+                  <td className="px-3"><StatusBadge status={t.status} /></td>
+                  <td className="px-3 text-xs text-muted-foreground">{formatDate(t.updated_at)}</td>
+                  <td className="px-3">
+                    <div className="flex justify-end gap-2">
+                      <SendTestDialog template={t} onDone={() => data.refetchAll()} />
+                      <EditTemplateDialog template={t} accountId={acc?.id} onDone={() => data.templates.refetch()} />
+                      <Button size="sm" variant="outline" onClick={() => remove(t)} disabled={busy}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {!filtered.length && (
+          <div className="flex flex-col items-center gap-2 py-12 text-center text-sm text-muted-foreground">
+            <FileText className="h-8 w-8" />
+            No templates yet. Sync from Meta or create a new one.
           </div>
-          <Button variant="outline" size="sm" onClick={sync} disabled={syncing}>
-            <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} /> Sync with Meta
-          </Button>
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
