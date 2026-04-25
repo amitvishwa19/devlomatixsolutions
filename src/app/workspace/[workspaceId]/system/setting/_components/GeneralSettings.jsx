@@ -82,10 +82,10 @@ export const GeneralSettings = () => {
                 .getPublicUrl(filePath);
 
             setLocalBranding(prev => ({ ...prev, logoUrl: publicUrl }));
-            
+
             // Auto-save branding after upload
-            updateSettings({ 
-                branding: { ...localBranding, logoUrl: publicUrl } 
+            updateSettings({
+                branding: { ...localBranding, logoUrl: publicUrl }
             });
 
             toast.success("App logo updated successfully");
@@ -100,7 +100,7 @@ export const GeneralSettings = () => {
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Workspace Identity */}
-            <Card className="rounded-md border border-border/40 shadow-xl shadow-primary/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <Card className="rounded-md  border shadow-primary/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <CardHeader className="pb-4">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-primary/10 rounded-md flex items-center justify-center border border-primary/20 shadow-inner">

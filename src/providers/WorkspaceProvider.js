@@ -79,25 +79,37 @@ export const WorkspaceProvider = ({ children }) => {
         if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
         try {
             setAccessLoading(true);
-            const response = await fetch(`/api/workspace/${workspaceId}/access`, { cache: 'no-store' });
-            if (!response.ok) throw new Error(`Failed to fetch access data: ${response.status}`);
             
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const text = await response.text();
-                console.error("Expected JSON but received:", text.substring(0, 100));
+            // Fetch from split endpoints (New Architecture)
+            const [usersRes, rolesRes, permissionsRes] = await Promise.all([
+                fetch(`/api/workspace/${workspaceId}/management/user`, { cache: 'no-store' }),
+                fetch(`/api/workspace/${workspaceId}/management/role`, { cache: 'no-store' }),
+                fetch(`/api/workspace/${workspaceId}/management/permission`, { cache: 'no-store' })
+            ]);
+
+            // Handle errors
+            if (!usersRes.ok || !rolesRes.ok || !permissionsRes.ok) {
+                console.error("Failed to fetch one or more access management resources");
                 return;
             }
 
-            const data = await response.json();
+            const [usersData, rolesData, permissionsData] = await Promise.all([
+                usersRes.json(),
+                rolesRes.json(),
+                permissionsRes.json()
+            ]);
             
-            setUsers(data.users || []);
-            setRoles(data.roles || []);
-            setPermissions(data.permissions || []);
-            setDepartments(data.departments || []);
+            setUsers(usersData || []);
+            setRoles(rolesData || []);
+            
+            // The permissions endpoint returns { all, grouped }
+            setPermissions(permissionsData.all || permissionsData || []);
+            
+            // Departments currently empty/missing in schema
+            setDepartments([]);
+
         } catch (error) {
             console.error('Error fetching access data:', error);
-            // toast.error('Failed to load access management data');
         } finally {
             setAccessLoading(false);
         }

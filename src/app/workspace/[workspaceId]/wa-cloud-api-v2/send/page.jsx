@@ -14,9 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { cloudAction } from "../_lib/api";
 import { isValidPhone, normalizePhone } from "../_lib/validators";
 import { useV2Data } from "../layout";
+import { sendMessage } from "./_actions/message";
 
 function substitute(text, vars) {
   if (!text) return "";
@@ -195,8 +195,9 @@ export default function SendPage() {
     if (!confirm) return;
     setBusy(true);
     try {
-      await cloudAction("send_message", confirm.payload);
-      toast.success("Message queued");
+      const res = await sendMessage(confirm.payload);
+      if (!res.success) throw new Error(res.error);
+      toast.success("Message sent");
       setConfirm(null);
       data.refetchAll();
     } catch (error) {

@@ -18,6 +18,7 @@ export const getSidebarItems = (workspaceId) => {
     const baseMiscellaneousPath = `${basePath}/miscellaneous`;
     const baseEcommercePath = `${basePath}/ecommerce`;
     const baseFlowbytePath = `${basePath}/flowbyte`;
+    const baseFlowgenixPath = `${basePath}/flowgenix`;
 
     return [
         // DASHBOARD
@@ -36,8 +37,8 @@ export const getSidebarItems = (workspaceId) => {
         { type: 'child', title: "Settings", url: `${baseEcommercePath}/settings`, category: "eCommerce", permission: `navbar:eCommerce:Settings` },
 
         // WHATSAPP Cloud Api (KonnectX)
-        { type: 'parent', title: "KonnectX", url: baseWhatsappCloudApiPath, icon: "bot-message-square", category: "konnectx", permission: `navbar:KonnectX:Parent` },
-        { type: 'child', title: "Dashboard", url: baseWhatsappCloudApiPath, icon: "bar-chart-3", category: "konnectx", permission: `navbar:KonnectX:Dashboard` },
+        { type: 'parent', title: "KonnectX", url: baseWhatsappCloudApiPath, icon: "message-circle-more", category: "konnectx", permission: `navbar:KonnectX:Parent` },
+        { type: 'child', title: "Dashboard", url: baseWhatsappCloudApiPath, icon: "message-circle-more", category: "konnectx", permission: `navbar:KonnectX:Dashboard` },
         { type: 'child', title: "Chats", url: `${baseWhatsappCloudApiPath}/chats`, icon: "message-square", category: "konnectx", permission: `navbar:KonnectX:Chats` },
         { type: 'child', title: "Contacts", url: `${baseWhatsappCloudApiPath}/contacts`, icon: "users", category: "konnectx", permission: `navbar:KonnectX:Contacts` },
         { type: 'child', title: "Templates", url: `${baseWhatsappCloudApiPath}/template`, icon: "zap", category: "konnectx", permission: `navbar:KonnectX:Templates` },
@@ -47,28 +48,34 @@ export const getSidebarItems = (workspaceId) => {
         { type: 'child', title: "Atents", url: `${baseWhatsappCloudApiPath}/agents`, icon: "zap", category: "konnectx", permission: `navbar:KonnectX:Agent` },
         { type: 'child', title: "AI Assistent", url: `${baseWhatsappCloudApiPath}/assistant`, icon: "bar-chart-3", category: "konnectx", permission: `navbar:KonnectX:Assistant` },
         { type: 'child', title: "Chatbot", url: `${baseWhatsappCloudApiPath}/chatbot`, icon: "zap", category: "konnectx", permission: `navbar:KonnectX:Chatbot` },
-        { type: 'child', title: "eCommerce", url: `${baseWhatsappCloudApiPath}/ecommerce`, icon: "shopping-cart", category: "konnectx", permission: `navbar:KonnectX:eCommerce` },
+        { type: 'child', title: "Usage & billing", url: `${baseWhatsappCloudApiPath}/settings?tab=billing`, icon: "wallet", category: "konnectx", permission: `navbar:KonnectX:Billing` },
+        { type: 'child', title: "Docs", url: `${baseWhatsappCloudApiPathv2}/docs`, icon: "book-open", category: "konnectx", permission: `navbar:KonnectX:Docs` },
         { type: 'child', title: "Settings", url: `${baseWhatsappCloudApiPath}/settings`, icon: "settings", category: "konnectx", permission: `navbar:KonnectX:Settings` },
 
 
+        { type: 'parent', title: "FlowGenix", url: baseFlowgenixPath, icon: "bot-message-square", category: "konnectxv2", permission: `navbar:KonnectXv2:Parent` },
+        { type: 'child', title: "Dashboard", url: baseFlowgenixPath, icon: "bar-chart-3", category: "konnectxv2", permission: `navbar:KonnectXv2:Dashboard` },
+
+
+
         // WHATSAPP Cloud Api (KonnectX V-2)
-        { type: 'parent', title: "KonnectX V-2", url: baseWhatsappCloudApiPathv2, icon: "bot-message-square", category: "konnectxv2", permission: `navbar:KonnectXv2:Parent` },
-        { type: 'child', title: "Dashboard", url: baseWhatsappCloudApiPathv2, icon: "bar-chart-3", category: "konnectxv2", permission: `navbar:KonnectXv2:Dashboard` },
-        { type: 'child', title: "Analytics", url: `${baseWhatsappCloudApiPathv2}/analytics`, icon: "line-chart", category: "konnectxv2", permission: `navbar:KonnectXv2:Analytics` },
-        { type: 'child', title: "Inbox", url: `${baseWhatsappCloudApiPathv2}/inbox`, icon: "inbox", category: "konnectxv2", permission: `navbar:KonnectXv2:Inbox` },
-        { type: 'child', title: "Stream", url: `${baseWhatsappCloudApiPathv2}/stream`, icon: "activity", category: "konnectxv2", permission: `navbar:KonnectXv2:Stream` },
-        { type: 'child', title: "Messages", url: `${baseWhatsappCloudApiPathv2}/messages`, icon: "messages-square", category: "konnectxv2", permission: `navbar:KonnectXv2:Messages` },
-        { type: 'child', title: "Send", url: `${baseWhatsappCloudApiPathv2}/send`, icon: "message-square", category: "konnectxv2", permission: `navbar:KonnectXv2:Send` },
-        { type: 'child', title: "Contacts", url: `${baseWhatsappCloudApiPathv2}/contacts`, icon: "contact-round", category: "konnectxv2", permission: `navbar:KonnectXv2:Contacts` },
-        { type: 'child', title: "Segments", url: `${baseWhatsappCloudApiPathv2}/segments`, icon: "filter", category: "konnectxv2", permission: `navbar:KonnectXv2:Segments` },
-        { type: 'child', title: "Templates", url: `${baseWhatsappCloudApiPathv2}/template`, icon: "book-template", category: "konnectxv2", permission: `navbar:KonnectXv2:Templates` },
-        { type: 'child', title: "Flows", url: `${baseWhatsappCloudApiPathv2}/flows`, icon: "clipboard-list", category: "konnectxv2", permission: `navbar:KonnectXv2:Flows` },
-        { type: 'child', title: "Automation", url: `${baseWhatsappCloudApiPathv2}/automation`, icon: "bot", category: "konnectxv2", permission: `navbar:KonnectXv2:Automation` },
-        { type: 'child', title: "Campaigns", url: `${baseWhatsappCloudApiPathv2}/campaigns`, icon: "rocket", category: "konnectxv2", permission: `navbar:KonnectXv2:Campaigns` },
-        { type: 'child', title: "Media", url: `${baseWhatsappCloudApiPathv2}/media`, icon: "image", category: "konnectxv2", permission: `navbar:KonnectXv2:Media` },
-        { type: 'child', title: "Usage & billing", url: `${baseWhatsappCloudApiPathv2}/billing`, icon: "wallet", category: "konnectxv2", permission: `navbar:KonnectXv2:Billing` },
-        { type: 'child', title: "Docs", url: `${baseWhatsappCloudApiPathv2}/docs`, icon: "book-open", category: "konnectxv2", permission: `navbar:KonnectXv2:Docs` },
-        { type: 'child', title: "Settings", url: `${baseWhatsappCloudApiPathv2}/settings`, icon: "settings", category: "konnectxv2", permission: `navbar:KonnectXv2:Settings` },
+        // { type: 'parent', title: "KonnectX V-2", url: baseWhatsappCloudApiPathv2, icon: "bot-message-square", category: "konnectxv2", permission: `navbar:KonnectXv2:Parent` },
+        // { type: 'child', title: "Dashboard", url: baseWhatsappCloudApiPathv2, icon: "bar-chart-3", category: "konnectxv2", permission: `navbar:KonnectXv2:Dashboard` },
+        // { type: 'child', title: "Analytics", url: `${baseWhatsappCloudApiPathv2}/analytics`, icon: "line-chart", category: "konnectxv2", permission: `navbar:KonnectXv2:Analytics` },
+        // { type: 'child', title: "Inbox", url: `${baseWhatsappCloudApiPathv2}/inbox`, icon: "inbox", category: "konnectxv2", permission: `navbar:KonnectXv2:Inbox` },
+        // { type: 'child', title: "Stream", url: `${baseWhatsappCloudApiPathv2}/stream`, icon: "activity", category: "konnectxv2", permission: `navbar:KonnectXv2:Stream` },
+        // { type: 'child', title: "Messages", url: `${baseWhatsappCloudApiPathv2}/messages`, icon: "messages-square", category: "konnectxv2", permission: `navbar:KonnectXv2:Messages` },
+        // { type: 'child', title: "Send", url: `${baseWhatsappCloudApiPathv2}/send`, icon: "message-square", category: "konnectxv2", permission: `navbar:KonnectXv2:Send` },
+        // { type: 'child', title: "Contacts", url: `${baseWhatsappCloudApiPathv2}/contacts`, icon: "contact-round", category: "konnectxv2", permission: `navbar:KonnectXv2:Contacts` },
+        // { type: 'child', title: "Segments", url: `${baseWhatsappCloudApiPathv2}/segments`, icon: "filter", category: "konnectxv2", permission: `navbar:KonnectXv2:Segments` },
+        // { type: 'child', title: "Templates", url: `${baseWhatsappCloudApiPathv2}/template`, icon: "book-template", category: "konnectxv2", permission: `navbar:KonnectXv2:Templates` },
+        // { type: 'child', title: "Flows", url: `${baseWhatsappCloudApiPathv2}/flows`, icon: "clipboard-list", category: "konnectxv2", permission: `navbar:KonnectXv2:Flows` },
+        // { type: 'child', title: "Automation", url: `${baseWhatsappCloudApiPathv2}/automation`, icon: "bot", category: "konnectxv2", permission: `navbar:KonnectXv2:Automation` },
+        // { type: 'child', title: "Campaigns", url: `${baseWhatsappCloudApiPathv2}/campaigns`, icon: "rocket", category: "konnectxv2", permission: `navbar:KonnectXv2:Campaigns` },
+        // { type: 'child', title: "Media", url: `${baseWhatsappCloudApiPathv2}/media`, icon: "image", category: "konnectxv2", permission: `navbar:KonnectXv2:Media` },
+        // { type: 'child', title: "Usage & billing", url: `${baseWhatsappCloudApiPathv2}/settings?tab=billing`, icon: "wallet", category: "konnectxv2", permission: `navbar:KonnectXv2:Billing` },
+        // { type: 'child', title: "Docs", url: `${baseWhatsappCloudApiPathv2}/docs`, icon: "book-open", category: "konnectxv2", permission: `navbar:KonnectXv2:Docs` },
+        // { type: 'child', title: "Settings", url: `${baseWhatsappCloudApiPathv2}/settings`, icon: "settings", category: "konnectxv2", permission: `navbar:KonnectXv2:Settings` },
 
 
 

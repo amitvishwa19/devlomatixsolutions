@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
 import {
     Key,
     Smartphone,
@@ -50,15 +50,35 @@ import { NotificationsTab } from './_components/NotificationsTab';
 import { SecurityTab } from './_components/SecurityTab';
 import { MetaCloudTab } from './_components/MetaCloudTab';
 import { WhatsAppAnalyticsInfo } from './_components/WhatsAppAnalyticsInfo';
+import { UsageBillingTab } from './_components/UsageBillingTab';
+import { Wallet } from 'lucide-react';
 
 export default function SettingsPage() {
+    return (
+        <Suspense fallback={<div>Loading settings...</div>}>
+            <SettingsPageContent />
+        </Suspense>
+    );
+}
+
+function SettingsPageContent() {
     const [metadata, setMetadata] = useState({});
     const [loading, setLoading] = useState(true);
     const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
 
     const params = useParams();
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const workspaceId = params?.workspaceId;
     const metaCloudVersion = "v25.0";
+
+    const activeTab = searchParams.get("tab") || "general";
+
+    const setTab = (value) => {
+        const params = new URLSearchParams(searchParams);
+        params.set("tab", value);
+        router.push(`?${params.toString()}`, { scroll: false });
+    };
 
     const { execute: executeGetMetadata } = useAction(getWaMetadata, {
         onSuccess: (data) => {
@@ -68,21 +88,11 @@ export default function SettingsPage() {
         onError: () => setLoading(false)
     });
 
-
-
     useEffect(() => {
         if (workspaceId) {
             executeGetMetadata({ workspaceId });
         }
     }, [workspaceId]);
-
-    // if (loading) {
-    //     return (
-    //         <div className="flex items-center justify-center h-full">
-    //             <SonarLoader show={true} text="Initializing Engine..." />
-    //         </div>
-    //     );
-    // }
 
     return (
         <TooltipProvider>
@@ -114,24 +124,22 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Tabs Navigation */}
-                <Tabs defaultValue="general" className="flex-1 flex flex-col overflow-hidden p-2">
+                <Tabs value={activeTab} onValueChange={setTab} className="flex-1 flex flex-col overflow-hidden p-2">
 
 
                     <TabsList className="bg-card w-full  justify-start rounded-md h-auto  gap-1  border">
                         {[
                             { id: 'general', label: 'General', icon: Settings },
+                            { id: 'billing', label: 'Usage & Billing', icon: Wallet },
                             { id: 'automation', label: 'Automation', icon: Zap },
                             { id: 'webhooks', label: 'Webhooks', icon: LinkIcon },
                             { id: 'analytics', label: 'Analytics', icon: LayoutDashboard },
-                            // { id: 'messaging', label: 'Messaging', icon: Smartphone },
-                            // { id: 'notifications', label: 'Notifications', icon: BellRing },
-                            // { id: 'security', label: 'Security', icon: ShieldCheck },
                             { id: 'qr-management', label: 'QR Management', icon: QrCode }
                         ].map((tab) => (
                             <TabsTrigger
                                 key={tab.id}
                                 value={tab.id}
-                                className="flex items-center w-32 gap-2 px-4 py-2 text-xs font-medium transition-all rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm hover:bg-background/50"
+                                className="flex items-center w-36 gap-2 px-4 py-2 text-xs font-medium transition-all rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm hover:bg-background/50"
                             >
                                 <tab.icon size={14} />
                                 {tab.label}
@@ -146,6 +154,10 @@ export default function SettingsPage() {
                             metadata={metadata}
                             setMetadata={setMetadata}
                         />
+                    </TabsContent>
+
+                    <TabsContent value="billing" className="flex-1 overflow-hidden flex flex-col outline-none">
+                        <UsageBillingTab />
                     </TabsContent>
 
                     <TabsContent value="automation" className="flex-1 overflow-hidden flex flex-col outline-none">
@@ -169,26 +181,6 @@ export default function SettingsPage() {
                             workspaceId={workspaceId}
                             metaCloudVersion={metaCloudVersion}
                         />
-                    </TabsContent>
-
-                    <TabsContent value="messaging" className="flex-1 overflow-hidden flex flex-col outline-none">
-                        <MessagingTab
-                            workspaceId={workspaceId}
-                            metadata={metadata}
-                            setMetadata={setMetadata}
-                        />
-                    </TabsContent>
-
-                    <TabsContent value="notifications" className="flex-1 overflow-hidden flex flex-col outline-none">
-                        <NotificationsTab
-                            workspaceId={workspaceId}
-                            metadata={metadata}
-                            setMetadata={setMetadata}
-                        />
-                    </TabsContent>
-
-                    <TabsContent value="security" className="flex-1 overflow-hidden flex flex-col outline-none">
-                        <SecurityTab />
                     </TabsContent>
 
                     <TabsContent value="qr-management" className="flex-1 overflow-hidden flex flex-col outline-none">

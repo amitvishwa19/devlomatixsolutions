@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { cloudAction } from "../_lib/api";
+import { syncTemplates, deleteTemplate, createTemplate, editTemplate, sendTestTemplate, uploadMedia } from "./_actions/sync";
 import { StatusBadge } from "../_components/StatusBadge";
 import { TemplatePreview } from "../_components/TemplatePreview";
 import { MediaPreview, detectMismatch } from "../_components/MediaPreview";
@@ -159,13 +159,14 @@ function CreateTemplateDialog({ data, onCreated }) {
 
     setBusy(true);
     try {
-      await cloudAction("create_template", {
+      const res = await createTemplate({
         account_id: form.account_id,
         name: form.name,
         language: form.language,
         category: form.category,
         components: componentsToSend,
       });
+      if (!res.success) throw new Error(res.error);
       toast.success("Template submitted to Meta — status will appear as 'In review'");
       setOpen(false);
       onCreated();
@@ -483,14 +484,15 @@ function SendTestDialog({ template, onDone }) {
         reader.onerror = () => reject(new Error("Could not read file"));
         reader.readAsDataURL(file);
       });
-      const res = await cloudAction("upload_media", {
+      const res = await uploadMedia({
         file_base64: base64,
         mime_type: file.type || "application/octet-stream",
         filename: file.name,
       });
+      if (!res.success) throw new Error(res.error);
       setHeaderMediaId(res.media_id);
       setUploadStatus("ok");
-      toast.success(`Media uploaded${res.attempts > 1 ? ` (after ${res.attempts} tries)` : ""}`);
+      toast.success("Media uploaded");
     } catch (err) {
       setUploadStatus("failed");
       setUploadError(err.message);
@@ -524,7 +526,7 @@ function SendTestDialog({ template, onDone }) {
     }
     setBusy(true);
     try {
-      const res = await cloudAction("send_test_template", {
+      const res = await sendTestTemplate({
         template_id: template.id,
         to,
         variables: vars,
@@ -532,9 +534,10 @@ function SendTestDialog({ template, onDone }) {
         header_media_id: headerSource === "upload" ? (headerMediaId || undefined) : undefined,
         header_variables: headerVars,
       });
+      if (!res.success) throw new Error(res.error);
       setSendStatus("ok");
-      setSentMessageId(res.message_id || null);
-      toast.success(`Sent${res.attempts > 1 ? ` (after ${res.attempts} tries)` : ""}`);
+      setSentMessageId(res.result?.messages?.[0]?.id || null);
+      toast.success("Sent");
       onDone?.();
     } catch (err) {
       setSendStatus("failed");
@@ -756,12 +759,13 @@ function EditTemplateDialog({ template, accountId, onDone }) {
     if (!form.body.trim()) return toast.error("Body is required");
     setBusy(true);
     try {
-      await cloudAction("edit_template", {
+      const res = await editTemplate({
         account_id: accountId,
         template_id: template.id,
         category: form.category,
         components: previewComponents,
       });
+      if (!res.success) throw new Error(res.error);
       toast.success("Edit submitted to Meta — status will reflect review state");
       setOpen(false);
       onDone?.();
@@ -861,7 +865,8 @@ export default function TemplatesPage() {
   const sync = async () => {
     setSyncing(true);
     try {
-      await cloudAction("sync_templates", { account_id: data.defaultNumber?.id });
+      const res = await syncTemplates({ account_id: data.defaultNumber?.id });
+      if (!res.success) throw new Error(res.error);
       toast.success("Templates synced with Meta");
       data.templates.refetch();
     } catch (e) {
@@ -874,7 +879,8 @@ export default function TemplatesPage() {
   const del = async (id) => {
     if (!confirm("Are you sure? This will remove the template from Meta as well.")) return;
     try {
-      await cloudAction("delete_template", { account_id: data.defaultNumber?.id, template_id: id });
+      const res = await deleteTemplate(id, data.defaultNumber?.id);
+      if (!res.success) throw new Error(res.error);
       toast.success("Template deleted");
       data.templates.refetch();
     } catch (e) {

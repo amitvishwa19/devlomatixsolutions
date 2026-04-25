@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { db, cloudAction } from "../_lib/api";
+import { db } from "../_lib/api";
+import { sendMessage } from "../send/_actions/message";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "../_lib/validators";
 import { InboxStatusPanel } from "../_components/InboxStatusPanel";
@@ -365,12 +366,13 @@ export default function InboxPage() {
     if (!selected || !reply.trim()) return;
     setSending(true);
     try {
-      await cloudAction("send_message", {
+      const res = await sendMessage({
         account_id: selected.phone_number_id || undefined,
         to: selected.external_contact_phone,
         kind: "text",
         body: reply.trim(),
       });
+      if (!res.success) throw new Error(res.error);
       setReply("");
       loadMessages(selected.id);
       data.conversations.refetch();
@@ -469,7 +471,7 @@ export default function InboxPage() {
     }
     setSendingTemplate(true);
     try {
-      await cloudAction("send_message", {
+      const res = await sendMessage({
         account_id: selected.phone_number_id || undefined,
         to: selected.external_contact_phone,
         kind: "template",
@@ -478,6 +480,7 @@ export default function InboxPage() {
         header_media_url: templateDialog.headerUrl.trim() || undefined,
         header_variables: templateDialog.headerValues.map((v) => String(v ?? "")),
       });
+      if (!res.success) throw new Error(res.error);
       toast.success(`Template "${tpl.name}" sent`);
       setTemplateDialog({ open: false, templateId: "", values: [], headerUrl: "", headerValues: [] });
       loadMessages(selected.id);

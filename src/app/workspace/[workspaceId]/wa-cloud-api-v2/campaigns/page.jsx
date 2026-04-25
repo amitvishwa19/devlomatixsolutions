@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Rocket, FlaskConical, CircleSlash, Filter } from "lucide-react";
+import { Rocket, FlaskConical, CircleSlash, Filter, Play, Pause, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { createCampaign, startCampaign, pauseCampaign, deleteCampaign } from "./_actions/campaign";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,9 +51,7 @@ export default function CampaignsPage() {
         ]
       : [];
 
-    const { data: campaign, error } = await supabase
-      .from("wa_campaigns")
-      .insert({
+    const res = await createCampaign({
         name: form.name,
         phone_number_id: data.defaultNumber.id,
         template_id: form.template_id,
@@ -60,9 +59,9 @@ export default function CampaignsPage() {
         pacing_per_minute: Number(form.pacing_per_minute),
         audience_filter: { tag: form.tag || null, segment_id: form.segment_id || null, exclude_opted_out: true },
         variants,
-      })
-      .select().single();
-    if (error) return toast.error(error.message);
+      });
+    if (!res.success) return toast.error(res.error || "Failed to create campaign");
+    const campaign = res.data;
 
     if (recipients.length) {
       const rows = recipients.map((c, i) => {
@@ -177,11 +176,27 @@ export default function CampaignsPage() {
                   <StatusBadge status={c.status} />
                 </div>
                 <Progress value={progress} className="mt-4" />
-                <div className="mt-3 grid grid-cols-4 gap-2 text-sm text-muted-foreground">
-                  <span>Sent {c.sent_count}</span>
-                  <span>Delivered {c.delivered_count}</span>
-                  <span>Read {c.read_count}</span>
-                  <span>Failed {c.failed_count}</span>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <div className="grid grid-cols-4 gap-2 text-[10px] text-muted-foreground uppercase font-bold tracking-tight flex-1">
+                    <span>Sent {c.sent_count}</span>
+                    <span>Delivered {c.delivered_count}</span>
+                    <span>Read {c.read_count}</span>
+                    <span>Failed {c.failed_count}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {c.status === "paused" || c.status === "draft" ? (
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-500" onClick={async () => { await startCampaign(c.id); data.refetchAll(); toast.success("Campaign started"); }}>
+                        <Play className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : c.status === "running" ? (
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-amber-500" onClick={async () => { await pauseCampaign(c.id); data.refetchAll(); toast.success("Campaign paused"); }}>
+                        <Pause className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : null}
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={async () => { if (confirm("Delete campaign?")) { await deleteCampaign(c.id); data.refetchAll(); toast.success("Campaign deleted"); } }}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
                 {isAB && <ABBreakdown campaignId={c.id} variants={c.variants} />}
               </div>

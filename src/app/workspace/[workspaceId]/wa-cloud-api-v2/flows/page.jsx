@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { addFlow, getFlows, isValidFlowId, removeFlow } from "../_lib/flows";
 import { FIELD_LIBRARY, DEFAULT_SIGNUP_FIELDS, buildSignupFlowJson } from "../_lib/flowBuilder";
-import { cloudAction } from "../_lib/api";
+import { publishFlow } from "./_actions/flow";
 
 function BuilderDialog({ open, onOpenChange, onSaved }) {
   const [step, setStep] = useState("design");
@@ -67,12 +67,13 @@ function BuilderDialog({ open, onOpenChange, onSaved }) {
   const publishToMeta = async () => {
     setPublishing(true);
     try {
-      const res = await cloudAction("publish_flow", {
+      const res = await publishFlow({
         name,
         categories: ["SIGN_UP"],
         flow_json: flowJson,
       });
-      if (res?.flow_id) {
+      if (!res.success) throw new Error(res.error);
+      if (res.flow_id) {
         setFlowId(String(res.flow_id));
         if (res.published) {
           toast.success(`Flow published on Meta (ID ${res.flow_id})`);

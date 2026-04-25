@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Check, KeyRound, Plus, RefreshCw, Star, Trash2, ShieldCheck, ShieldAlert, Sparkles, Phone, Send, UserCircle2, Zap, Webhook, AlertTriangle, CheckCircle2, Copy, Brain, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/lib/supabase";
-import { cloudAction } from "../_lib/api";
+import { testAccount, saveAccount, syncTemplates } from "./_actions/account";
+import { sendMessage } from "../send/_actions/message";
 import { StatusBadge } from "../_components/StatusBadge";
 import { formatDate } from "../_lib/validators";
 import { getTestNumbers, addTestNumber, removeTestNumber, isValidTestPhone } from "../_lib/testNumbers";
@@ -404,8 +406,22 @@ function QuickRepliesCard({ data }) {
   );
 }
 
+import { UsageBillingTab } from "./_components/UsageBillingTab";
+
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div>Loading settings...</div>}>
+      <SettingsPageContent />
+    </Suspense>
+  );
+}
+
+function SettingsPageContent() {
   const data = useV2Data();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams.get("tab") || "general";
+
   const [form, setForm] = useState(empty);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -417,6 +433,12 @@ export default function SettingsPage() {
   const [quickTo, setQuickTo] = useState("");
   const [testMessage, setTestMessage] = useState("Hello from WA Cloud 👋");
   const [sendingTest, setSendingTest] = useState(false);
+
+  const setTab = (value) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", value);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     (async () => {
@@ -451,7 +473,8 @@ export default function SettingsPage() {
     if (!quickTo) return toast.error("Select test number");
     setSendingTest(true);
     try {
-      await cloudAction("send_message", { to: quickTo, kind: "text", body: testMessage });
+      const res = await sendMessage({ to: quickTo, kind: "text", body: testMessage });
+      if (!res.success) throw new Error(res.error);
       toast.success("Sent");
     } catch (error) {
       toast.error(error.message);
@@ -466,12 +489,13 @@ export default function SettingsPage() {
     if (!form.phone_number_id.trim() || !form.access_token.trim()) return toast.error("Phone ID and Token required");
     setTesting(true); setTestResult(null);
     try {
-      const result = await cloudAction("test_account", {
+      const res = await testAccount({
         phone_number_id: form.phone_number_id.trim(),
         waba_id: form.waba_id.trim(),
         access_token: form.access_token.trim(),
       });
-      setTestResult(result);
+      if (!res.success) throw new Error(res.error);
+      setTestResult(res);
       toast.success("Success");
     } catch (error) {
       setTestResult({ error: error.message });
@@ -481,11 +505,12 @@ export default function SettingsPage() {
     }
   };
 
-  const saveAccount = async (event) => {
+  const saveAccountAction = async (event) => {
     event.preventDefault();
     setBusy(true);
     try {
-      await cloudAction("save_account", form);
+      const res = await saveAccount(form);
+      if (!res.success) throw new Error(res.error);
       toast.success("Added");
       reset(); setOpen(false); data.refetchAll();
     } catch (error) {
@@ -513,7 +538,8 @@ export default function SettingsPage() {
   const sync = async (number) => {
     setBusy(true);
     try {
-      const result = await cloudAction("sync_templates", { account_id: number.id });
+      const result = await syncTemplates({ account_id: number.id });
+      if (!result.success) throw new Error(result.error);
       toast.success(`Synced ${result.count || 0} templates`);
       data.refetchAll();
     } catch (error) {
@@ -525,105 +551,134 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <Card className="rounded-md border-border/60 bg-card shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <div>
-            <CardTitle>WhatsApp Cloud accounts</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Manage your Meta WhatsApp accounts.</p>
-          </div>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
-            <DialogTrigger asChild>
-              <Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add account</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
-              <DialogHeader><DialogTitle>Add account</DialogTitle></DialogHeader>
-              <form onSubmit={saveAccount} className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2"><Label>Name</Label><Input value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} placeholder="Support" /></div>
-                <div className="space-y-2"><Label>Phone ID</Label><Input value={form.phone_number_id} onChange={(e) => setForm({ ...form, phone_number_id: e.target.value })} /></div>
-                <div className="space-y-2"><Label>WABA ID</Label><Input value={form.waba_id} onChange={(e) => setForm({ ...form, waba_id: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Access token</Label><Input type="password" value={form.access_token} onChange={(e) => setForm({ ...form, access_token: e.target.value })} /></div>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-2xl font-bold tracking-tight">Configuration</h2>
+        <p className="text-sm text-muted-foreground">Global infrastructure and billing settings for KonnectX Engine.</p>
+      </div>
 
-                <div className="md:col-span-2 flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3">
-                  <div className="text-xs text-muted-foreground">Fetch details from Meta before saving.</div>
-                  <Button size="sm" type="button" variant="outline" onClick={testPreview} disabled={testing} className="shrink-0">
-                    <Sparkles className="mr-2 h-4 w-4" /> {testing ? "Testing..." : "Test & Preview"}
-                  </Button>
-                </div>
+      <Tabs value={activeTab} onValueChange={setTab} className="space-y-6">
+        <TabsList className="bg-muted/50 p-1 border border-border/50">
+          <TabsTrigger value="general" className="text-xs font-bold uppercase tracking-wider px-6">General</TabsTrigger>
+          <TabsTrigger value="billing" className="text-xs font-bold uppercase tracking-wider px-6">Usage & Billing</TabsTrigger>
+          <TabsTrigger value="ai" className="text-xs font-bold uppercase tracking-wider px-6">AI Assistant</TabsTrigger>
+          <TabsTrigger value="team" className="text-xs font-bold uppercase tracking-wider px-6">Team</TabsTrigger>
+          <TabsTrigger value="advanced" className="text-xs font-bold uppercase tracking-wider px-6">Advanced</TabsTrigger>
+        </TabsList>
 
-                {testResult && !testResult.error && (
-                  <div className="md:col-span-2 grid gap-3 rounded-lg border border-green-500/30 bg-green-500/5 p-4 md:grid-cols-2 text-sm">
-                    <div><p className="text-[10px] text-muted-foreground uppercase font-bold">Number</p><p>{testResult.meta?.display_phone_number || "—"}</p></div>
-                    <div><p className="text-[10px] text-muted-foreground uppercase font-bold">Name</p><p>{testResult.meta?.verified_name || "—"}</p></div>
-                  </div>
-                )}
-
-                <div className="md:col-span-2 flex justify-end gap-2">
-                  <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving..." : "Save account"}</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {(data.phoneNumbers.data || []).map((number) => (
-            <div key={number.id} className="grid gap-4 rounded-md border border-border/60 bg-muted/20 p-4 lg:grid-cols-[1fr_auto]">
-              <div className="grid gap-3 md:grid-cols-4 items-center">
-                <div className="md:col-span-2">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-sm">{number.display_name}</p>
-                    {number.is_default && <Badge variant="outline" className="text-[10px] h-4">Default</Badge>}
-                  </div>
-                  <p className="text-xs text-muted-foreground font-mono">{number.phone_number}</p>
-                </div>
-                <div><StatusBadge status={number.quality_rating || "unknown"} /></div>
-                <div className="flex justify-start md:justify-end"><HealthBadge account={number} /></div>
+        <TabsContent value="general" className="space-y-6 outline-none">
+          <Card className="rounded-md border-border/60 bg-card shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between gap-4 py-4 border-b border-border/60">
+              <div>
+                <CardTitle className="text-sm font-bold uppercase tracking-widest">WhatsApp Cloud accounts</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">Manage verified Meta WhatsApp Business accounts.</p>
               </div>
-              <div className="flex items-center gap-2 flex-wrap lg:justify-end">
-                <Button variant="outline" size="sm" onClick={() => setDefault(number)} disabled={number.is_default} className="h-7 text-xs">Default</Button>
-                <Button variant="outline" size="sm" onClick={() => sync(number)} disabled={busy} className="h-7 text-xs">Sync</Button>
-                <Button variant="ghost" size="sm" onClick={() => remove(number)} className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+              <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="h-8 text-xs font-bold uppercase tracking-tight"><Plus className="mr-2 h-3.5 w-3.5" /> Add account</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader><DialogTitle>Add account</DialogTitle></DialogHeader>
+                  <form onSubmit={saveAccountAction} className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2"><Label>Name</Label><Input value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} placeholder="Support" /></div>
+                    <div className="space-y-2"><Label>Phone ID</Label><Input value={form.phone_number_id} onChange={(e) => setForm({ ...form, phone_number_id: e.target.value })} /></div>
+                    <div className="space-y-2"><Label>WABA ID</Label><Input value={form.waba_id} onChange={(e) => setForm({ ...form, waba_id: e.target.value })} /></div>
+                    <div className="space-y-2"><Label>Access token</Label><Input type="password" value={form.access_token} onChange={(e) => setForm({ ...form, access_token: e.target.value })} /></div>
+
+                    <div className="md:col-span-2 flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3">
+                      <div className="text-xs text-muted-foreground">Fetch details from Meta before saving.</div>
+                      <Button size="sm" type="button" variant="outline" onClick={testPreview} disabled={testing} className="shrink-0">
+                        <Sparkles className="mr-2 h-4 w-4" /> {testing ? "Testing..." : "Test & Preview"}
+                      </Button>
+                    </div>
+
+                    {testResult && !testResult.error && (
+                      <div className="md:col-span-2 grid gap-3 rounded-lg border border-green-500/30 bg-green-500/5 p-4 md:grid-cols-2 text-sm">
+                        <div><p className="text-[10px] text-muted-foreground uppercase font-bold">Number</p><p>{testResult.meta?.display_phone_number || "—"}</p></div>
+                        <div><p className="text-[10px] text-muted-foreground uppercase font-bold">Name</p><p>{testResult.meta?.verified_name || "—"}</p></div>
+                      </div>
+                    )}
+
+                    <div className="md:col-span-2 flex justify-end gap-2">
+                      <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving..." : "Save account"}</Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              {(data.phoneNumbers.data || []).map((number) => (
+                <div key={number.id} className="grid gap-4 rounded-md border border-border/60 bg-muted/20 p-4 lg:grid-cols-[1fr_auto]">
+                  <div className="grid gap-3 md:grid-cols-4 items-center">
+                    <div className="md:col-span-2">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">{number.display_name}</p>
+                        {number.is_default && <Badge variant="outline" className="text-[10px] h-4 font-bold bg-primary/10 border-primary/20 text-primary">Default</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground font-mono font-medium">{number.phone_number}</p>
+                    </div>
+                    <div><StatusBadge status={number.quality_rating || "unknown"} /></div>
+                    <div className="flex justify-start md:justify-end"><HealthBadge account={number} /></div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap lg:justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setDefault(number)} disabled={number.is_default} className="h-7 text-[10px] font-bold uppercase tracking-tight">Default</Button>
+                    <Button variant="outline" size="sm" onClick={() => sync(number)} disabled={busy} className="h-7 text-[10px] font-bold uppercase tracking-tight">Sync</Button>
+                    <Button variant="ghost" size="sm" onClick={() => remove(number)} className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              ))}
+              {!(data.phoneNumbers.data || []).length && (
+                <div className="rounded-md border border-dashed border-border/60 p-12 text-center text-muted-foreground text-sm font-bold uppercase tracking-widest">
+                  <KeyRound className="mx-auto mb-4 h-10 w-10 opacity-20" /> No accounts linked yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-md border-border/60 bg-card shadow-sm">
+            <CardHeader className="py-4 border-b border-border/60">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2"><Phone className="h-4 w-4" /> Test numbers</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">Label</Label><Input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="Personal" className="h-9" /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">Phone</Label><Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="+91..." className="h-9" /></div>
+                <div className="flex items-end"><Button size="sm" variant="outline" onClick={addNumber} className="h-9 px-6 font-bold uppercase text-[10px]">Add</Button></div>
               </div>
-            </div>
-          ))}
-          {!(data.phoneNumbers.data || []).length && (
-            <div className="rounded-md border border-dashed border-border/60 p-8 text-center text-muted-foreground text-sm">
-              <KeyRound className="mx-auto mb-3 h-8 w-8" /> No accounts added yet.
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
-      <Card className="rounded-md border-border/60 bg-card shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Phone className="h-5 w-5" /> Test numbers</CardTitle>
-          <p className="mt-1 text-sm text-muted-foreground">Quickly send test messages to these recipients.</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-            <div className="space-y-2"><Label>Label</Label><Input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="Personal" /></div>
-            <div className="space-y-2"><Label>Phone</Label><Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="+91..." /></div>
-            <div className="flex items-end"><Button size="sm" variant="outline" onClick={addNumber} className="h-10">Add</Button></div>
-          </div>
+              <div className="grid gap-3 rounded-md border border-border/60 bg-muted/20 p-3 md:grid-cols-[200px_1fr_auto]">
+                <Select value={quickTo} onValueChange={setQuickTo}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Pick number" /></SelectTrigger>
+                  <SelectContent>
+                    {testNumbers.map((n) => <SelectItem key={n.phone} value={n.phone}>{n.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Input value={testMessage} onChange={(e) => setTestMessage(e.target.value)} className="h-9 text-xs" />
+                <Button size="sm" onClick={sendTestMessage} disabled={sendingTest || !quickTo} className="h-9 px-6 font-bold uppercase text-[10px]">
+                  <Send className="mr-2 h-3.5 w-3.5" /> Send test
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="grid gap-3 rounded-md border border-border/60 bg-muted/20 p-3 md:grid-cols-[200px_1fr_auto]">
-            <Select value={quickTo} onValueChange={setQuickTo}>
-              <SelectTrigger className="h-10"><SelectValue placeholder="Pick number" /></SelectTrigger>
-              <SelectContent>
-                {testNumbers.map((n) => <SelectItem key={n.phone} value={n.phone}>{n.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Input value={testMessage} onChange={(e) => setTestMessage(e.target.value)} className="h-10" />
-            <Button size="sm" onClick={sendTestMessage} disabled={sendingTest || !quickTo} className="h-10">
-              <Send className="mr-2 h-4 w-4" /> Send
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <QuickRepliesCard data={data} />
+        </TabsContent>
 
-      <AiSettingsCard />
-      <AssigneesCard data={data} />
-      <QuickRepliesCard data={data} />
-      <WebhookCard data={data} />
+        <TabsContent value="billing" className="outline-none">
+          <UsageBillingTab />
+        </TabsContent>
+
+        <TabsContent value="ai" className="outline-none">
+          <AiSettingsCard />
+        </TabsContent>
+
+        <TabsContent value="team" className="outline-none">
+          <AssigneesCard data={data} />
+        </TabsContent>
+
+        <TabsContent value="advanced" className="space-y-6 outline-none">
+          <WebhookCard data={data} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

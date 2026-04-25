@@ -39,8 +39,8 @@ export default function SettingPage() {
                     </div>
                 </div>
 
-                <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-8 items-start min-h-[600px]">
-                    <TabsList className="bg-card/50 backdrop-blur-xl p-2 rounded-md border border-border/40 flex flex-col h-auto w-full md:w-72 gap-1.5 sticky top-6 shadow-xl shadow-primary/5">
+                <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-2 items-start h-full">
+                    <TabsList className="bg-transparent p-2 rounded-md  flex flex-col h-auto w-full md:w-72 gap-1.5 sticky top-6 ">
                         <TabsTrigger
                             value="general"
                             className="w-full justify-start rounded-md py-3 px-4 data-[state=active]:bg-card data-[state=active]:shadow-soft data-[state=active]:text-primary transition-all gap-3"
@@ -101,19 +101,19 @@ export default function SettingPage() {
                     </TabsList>
 
                     <div className="flex-1 w-full min-w-0">
-                        <TabsContent value="general">
+                        <TabsContent value="general" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <GeneralSettings />
                         </TabsContent>
-                        <TabsContent value="security">
+                        <TabsContent value="security" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <SecuritySettings />
                         </TabsContent>
-                        <TabsContent value="notifications">
+                        <TabsContent value="notifications" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <NotificationSettings />
                         </TabsContent>
-                        <TabsContent value="integrations">
+                        <TabsContent value="integrations" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <IntegrationSettings />
                         </TabsContent>
-                        <TabsContent value="advanced">
+                        <TabsContent value="advanced" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <AdvancedSettings />
                         </TabsContent>
                         <TabsContent value="privacy" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -122,7 +122,7 @@ export default function SettingPage() {
                         <TabsContent value="developer" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <DeveloperSettings />
                         </TabsContent>
-                        <TabsContent value="danger" className="mt-0">
+                        <TabsContent value="danger" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <DangerZone />
                         </TabsContent>
                     </div>
