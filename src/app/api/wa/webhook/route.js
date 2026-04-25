@@ -40,7 +40,7 @@ export async function GET(req) {
 export async function POST(req) {
     try {
         const body = await req.json();
-        //console.log('🚀 [Webhook] Incoming Payload:', JSON.stringify(body, null, 2));
+        console.log('🚀 [Webhook] Incoming Payload:', JSON.stringify(body, null, 2));
 
         // Check if it's a WhatsApp message event
         if (body.object === "whatsapp_business_account" && body.entry?.[0]?.changes?.[0]?.value) {
@@ -156,6 +156,7 @@ export async function POST(req) {
                         case "video":
                         case "audio":
                         case "document":
+                        case "sticker":
                             textBody = `[${message.type.toUpperCase()}] ${message[message.type]?.caption || ""}`;
                             // Try to get actual media URL from Meta
                             try {
@@ -190,10 +191,20 @@ export async function POST(req) {
                             const iType = message.interactive?.type;
                             if (iType === "button_reply") textBody = message.interactive.button_reply?.title;
                             else if (iType === "list_reply") textBody = message.interactive.list_reply?.title;
+                            else if (iType === "nfm_reply") textBody = `[Flow Response: ${message.interactive.nfm_reply?.name || "Flow"}]`;
                             else textBody = "[Interactive Response]";
                             break;
                         case "button":
                             textBody = message.button?.text || "[Button Click]";
+                            break;
+                        case "reaction":
+                            textBody = `[Reaction: ${message.reaction?.emoji || ""}]`;
+                            break;
+                        case "contacts":
+                            textBody = "[Contact Card]";
+                            break;
+                        case "unsupported":
+                            textBody = "[Unsupported Message Type]";
                             break;
                         default:
                             textBody = `[${message.type.toUpperCase()}]`;

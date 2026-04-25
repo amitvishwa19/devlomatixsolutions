@@ -13,23 +13,23 @@ export default function WorkspaceLayout({ children }) {
     return (
         <WorkspaceProvider>
             <div className={`flex h-dvh max-w-[100vw] ${font.className} overflow-hidden bg-background`}>
-            <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset className='flex flex-col w-full h-full transition-all p-2'>
-                    <div className="p-2">
-                        <AppTopNav />
-                    </div>
-                    <div className='flex-1 min-h-0 relative pt-0 overflow-hidden '>
-                        <div className='h-full relative border border-border rounded-xl bg-card/50 overflow-hidden shadow-soft'>
-                            <ScrollArea className="h-full overflow-hidden relative">
-                                {children}
-                                <ScrollBar orientation="horizontal" />
-                            </ScrollArea>
+                <SidebarProvider>
+                    <AppSidebar />
+                    <SidebarInset className='flex flex-col w-full h-full transition-all p-2'>
+                        <div className="py-2">
+                            <AppTopNav />
                         </div>
-                    </div>
-                </SidebarInset>
-            </SidebarProvider>
-        </div>
+                        <div className='flex-1 min-h-0 relative pt-0 overflow-hidden '>
+                            <div className='h-full relative border border-border rounded-xl bg-card/50 overflow-hidden shadow-soft'>
+                                <ScrollArea className="h-full overflow-hidden relative">
+                                    {children}
+                                    <ScrollBar orientation="horizontal" />
+                                </ScrollArea>
+                            </div>
+                        </div>
+                    </SidebarInset>
+                </SidebarProvider>
+            </div>
         </WorkspaceProvider>
     )
 }

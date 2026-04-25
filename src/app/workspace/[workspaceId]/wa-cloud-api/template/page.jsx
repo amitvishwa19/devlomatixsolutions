@@ -83,6 +83,7 @@ export default function TemplatePage() {
     const [isFetchingContacts, setIsFetchingContacts] = useState(false);
     const [variableMappings, setVariableMappings] = useState({});
     const [detectedVariables, setDetectedVariables] = useState([]);
+    const [mediaUrl, setMediaUrl] = useState('');
     const [metadata, setMetadata] = useState({});
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
@@ -293,13 +294,26 @@ export default function TemplatePage() {
 
     const openTestModal = (template) => {
         setTestingTemplate(template);
+        setTestRecipient("");
+        setSelectedContactIds([]);
+        setMediaUrl(template.metadata?.mediaUrl || '');
         
         // Detect variables from body and header
         const bodyVars = [...(template.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
         const headerText = template.metadata?.headerText || "";
         const headerVars = [...headerText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
         
-        const uniqueVars = Array.from(new Set([...headerVars, ...bodyVars])).sort((a, b) => parseInt(a) - parseInt(b));
+        // Detect variables in buttons
+        let buttonVars = [];
+        if (template.buttons && Array.isArray(template.buttons)) {
+            template.buttons.forEach(btn => {
+                const btnText = typeof btn === 'string' ? btn : (btn.text || "");
+                const vars = [...btnText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
+                buttonVars = [...buttonVars, ...vars];
+            });
+        }
+        
+        const uniqueVars = Array.from(new Set([...headerVars, ...bodyVars, ...buttonVars])).sort((a, b) => parseInt(a) - parseInt(b));
         setDetectedVariables(uniqueVars);
         
         const initialMapping = {};
@@ -347,10 +361,10 @@ export default function TemplatePage() {
                     parameters: headerVars.map(v => ({ type: 'TEXT', text: variableMappings[v] || '' }))
                 });
             } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(testingTemplate.type?.toUpperCase())) {
-                const mediaUrl = testingTemplate.metadata?.mediaUrl;
-                if (mediaUrl) {
+                const finalMediaUrl = mediaUrl || testingTemplate.metadata?.mediaUrl;
+                if (finalMediaUrl) {
                     const mediaType = testingTemplate.type.toLowerCase();
-                    const isHandle = /^\d+$/.test(mediaUrl.toString()) || mediaUrl.toString().startsWith('4'); // Meta IDs/Handles are usually digits or start with 4
+                    const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4'); // Meta IDs/Handles are usually digits or start with 4
                     
                     components.push({
                         type: 'HEADER',
@@ -358,8 +372,8 @@ export default function TemplatePage() {
                             {
                                 type: mediaType,
                                 [mediaType]: isHandle 
-                                    ? { handle: mediaUrl } // or { id: mediaUrl }
-                                    : { link: mediaUrl }
+                                    ? { id: finalMediaUrl } 
+                                    : { link: finalMediaUrl }
                             }
                         ]
                     });
@@ -383,7 +397,7 @@ export default function TemplatePage() {
                         components.push({
                             type: 'button',
                             sub_type: 'flow',
-                            index: idx,
+                            index: idx.toString(),
                             parameters: [
                                 {
                                     type: 'action',
@@ -408,8 +422,8 @@ export default function TemplatePage() {
             components
         });
 
-        for (const to of recipients) {
-            executeSendTest({
+        const sendPromises = recipients.map(async (to) => {
+            const result = await sendMessageAction({
                 workspaceId,
                 to,
                 type: 'template',
@@ -419,9 +433,18 @@ export default function TemplatePage() {
                     components
                 }
             });
-        }
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            return result.data;
+        });
+
+        toast.promise(Promise.all(sendPromises), {
+            loading: `Sending test to ${recipients.length} recipients...`,
+            success: "Test messages dispatched!",
+            error: (err) => `Error: ${err.message || "Failed to send"}`
+        });
         
-        toast.success(`Success! Sent to ${recipients.length} recipients`);
         setIsTestModalOpen(false);
     };
 
@@ -559,6 +582,8 @@ export default function TemplatePage() {
                     variableMappings={variableMappings}
                     setVariableMappings={setVariableMappings}
                     testNumbers={metadata.testNumbers || []}
+                    mediaUrl={mediaUrl}
+                    setMediaUrl={setMediaUrl}
                 />
 
                 <TemplatePreview 

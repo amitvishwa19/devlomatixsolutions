@@ -545,7 +545,7 @@ export default function WhatsAppChatsPage() {
                                         selectedChat.messages.slice().reverse().map((msg, i) => {
                                             const isTemplate = msg.metadata?.type === 'template';
                                             const type = msg.metadata?.type?.toLowerCase() || 'text';
-                                            const isMedia = ['image', 'video', 'audio', 'document'].includes(type);
+                                            const isMedia = ['image', 'video', 'audio', 'document', 'sticker', 'voice'].includes(type);
                                             const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
                                             const templateDef = isTemplate ? templates.find(t => t.templateName === templateName || t.name === templateName) : null;
 

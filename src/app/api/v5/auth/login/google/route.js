@@ -15,6 +15,8 @@ export async function POST(req) {
         let user
         let server
 
+        console.log("Payload", payload)
+
         user = await db.user.upsert({
             where: { email: email },
             update: {
@@ -23,14 +25,14 @@ export async function POST(req) {
                 provider,
                 displayName,
                 avatar,
-                deviceToken,
-                expoPushToken,
-                profile: {
-                    update: {
-                        displayname: displayName,
-                        location: location,
-                    }
-                },
+                // deviceToken,
+                // expoPushToken,
+                // profile: {
+                //     update: {
+                //         displayname: displayName,
+                //         location: location,
+                //     }
+                // },
             },
             create: {
                 uid,
@@ -38,97 +40,96 @@ export async function POST(req) {
                 provider,
                 displayName,
                 avatar,
-                deviceToken,
-                expoPushToken,
-                profile: {
-                    create: {
-                        displayname: displayName,
-                        location: location,
-                    }
-                },
                 credit: {
                     create: {
-                        value: 0
+                        type: 'virtual',
+                        value: 500
                     }
                 },
+                // profile: {
+                //     create: {
+                //         displayname: displayName,
+                //         // location: location
+                //     }
+                // }
             },
         })
 
-        if (user) {
+        // if (user) {
 
-            server = await db.server.findFirst({
-                where: { userId: user?.id }
-            })
+        //     server = await db.server.findFirst({
+        //         where: { userId: user?.id }
+        //     })
 
-            if (!server) {
-                server = await db.server.create({
-                    data: {
-                        userId: user?.id,
-                        name: user?.displayName,
-                        inviteCode: uuidv4(),
-                        selected: true,
-                        channels: {
-                            create: [{ name: 'general', userId: user?.id }]
-                        },
-                        members: {
-                            create: [
-                                {
-                                    userId: user?.id,
-                                    role: MemberRole.ADMIN
-                                }
-                            ]
-                        }
-                    }
-                })
-            }
+        //     if (!server) {
+        //         server = await db.server.create({
+        //             data: {
+        //                 userId: user?.id,
+        //                 name: user?.displayName,
+        //                 inviteCode: uuidv4(),
+        //                 selected: true,
+        //                 channels: {
+        //                     create: [{ name: 'general', userId: user?.id }]
+        //                 },
+        //                 members: {
+        //                     create: [
+        //                         {
+        //                             userId: user?.id,
+        //                             role: MemberRole.ADMIN
+        //                         }
+        //                     ]
+        //                 }
+        //             }
+        //         })
+        //     }
 
-        }
+        // }
 
-        const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
-        const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
+        // const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+        // const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
-        user = await db.user.update({
-            where: { id: user.id },
-            data: { accessToken, refreshToken }
-        })
+        // user = await db.user.update({
+        //     where: { id: user.id },
+        //     data: { accessToken, refreshToken }
+        // })
 
 
 
-        user = await db.user.findUnique({
-            where: { id: user.id },
-            include: {
-                roles: {
-                    include: {
-                        permissions: true
-                    }
-                },
-                servers: {
-                    orderBy: {
-                        createdAt: "asc",
-                    },
-                    include: {
-                        members: {
-                            include: {
-                                user: {
-                                    include: {
-                                        profile: true
-                                    }
-                                }
-                            },
-                            orderBy: {
-                                role: "asc",
-                            }
-                        },
-                        channels: {
-                            orderBy: {
-                                createdAt: "asc",
-                            },
-                        }
-                    },
-                },
-                profile: true
-            }
-        })
+        // user = await db.user.findUnique({
+        //     where: { id: user.id },
+        //     include: {
+        //         roles: {
+        //             include: {
+        //                 permissions: true
+        //             }
+        //         },
+        //         servers: {
+        //             orderBy: {
+        //                 createdAt: "asc",
+        //             },
+        //             include: {
+        //                 members: {
+        //                     include: {
+        //                         user: {
+        //                             include: {
+        //                                 profile: true
+        //                             }
+        //                         }
+        //                     },
+        //                     orderBy: {
+        //                         role: "asc",
+        //                     }
+        //                 },
+        //                 channels: {
+        //                     orderBy: {
+        //                         createdAt: "asc",
+        //                     },
+        //                 }
+        //             },
+        //         },
+        //         profile: true
+        //     }
+        // })
 
         //console.log(user)
 

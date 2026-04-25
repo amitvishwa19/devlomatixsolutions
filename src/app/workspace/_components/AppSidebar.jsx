@@ -115,7 +115,7 @@ export default function AppSidebar() {
 
         Object.entries(groupedNavigation).forEach(([category, { children }]) => {
             const matchesRoute = children.some((i) =>
-                pathname.startsWith(i.url)
+                i.url && (pathname === i.url || pathname.startsWith(i.url + '/'))
             )
 
             if (matchesRoute && !openGroups[category]) {

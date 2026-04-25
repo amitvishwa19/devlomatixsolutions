@@ -1,0 +1,1 @@
+ALTER TABLE public.wa_phone_numbers DROP CONSTRAINT IF EXISTS wa_phone_numbers_quality_rating_check;

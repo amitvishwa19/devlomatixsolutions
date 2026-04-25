@@ -45,7 +45,20 @@ const MediaBubble = ({ msg }) => {
                         )}
                     </div>
                 );
-
+            case 'sticker':
+                return (
+                    <div className="relative group overflow-hidden rounded-lg bg-transparent">
+                        <img 
+                            src={mediaUrl} 
+                            alt="Sticker" 
+                            className="w-[120px] h-[120px] object-contain transition-transform duration-300 group-hover:scale-110"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "https://placehold.co/200x200?text=Expired+Sticker";
+                            }}
+                        />
+                    </div>
+                );
             case 'video':
                 return (
                     <div className="rounded-lg overflow-hidden bg-black/5 border border-border/30">
@@ -66,14 +79,16 @@ const MediaBubble = ({ msg }) => {
                 );
 
             case 'audio':
+            case 'voice':
                 return (
                     <div className="p-3 bg-muted/30 rounded-2xl flex items-center gap-3 w-full max-w-[280px]">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <Music className="w-5 h-5 text-primary" />
+                            {type === 'voice' ? <Music className="w-5 h-5 text-primary" /> : <Music className="w-5 h-5 text-primary" />}
                         </div>
                         <audio controls className="h-8 flex-1">
                             <source src={mediaUrl} type="audio/mpeg" />
                         </audio>
+                        {type === 'voice' && <span className="text-[10px] text-muted-foreground mr-2 font-bold uppercase">Voice</span>}
                     </div>
                 );
 

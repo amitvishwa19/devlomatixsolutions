@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 export default function TestTemplateDialog({
     isOpen,
@@ -40,7 +41,9 @@ export default function TestTemplateDialog({
     detectedVariables,
     variableMappings,
     setVariableMappings,
-    testNumbers = []
+    testNumbers = [],
+    mediaUrl,
+    setMediaUrl
 }) {
     if (!template) return null;
 
@@ -70,14 +73,53 @@ export default function TestTemplateDialog({
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle className="flex items-center gap-2">
                         <Send className="w-5 h-5 text-primary" />
-                        Send Test: {template.name}
+                        Send Test Message
                     </DialogTitle>
                     <DialogDescription>
                         Test your template by sending it to selected contacts or manual numbers.
                     </DialogDescription>
                 </DialogHeader>
 
+                <div className="px-6 py-2">
+                    <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Template: {template.name}</span>
+                            <div className="flex gap-2">
+                                <Badge variant="outline" className="text-[9px] h-4 px-1">{template.category}</Badge>
+                                <Badge variant="outline" className="text-[9px] h-4 px-1">{template.language}</Badge>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 italic font-medium">
+                            "{template.body}"
+                        </p>
+                    </div>
+                </div>
+
                 <div className="p-6 py-4 space-y-6">
+                    {/* Media URL Section */}
+                    {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(template.type?.toUpperCase()) && (
+                        <div className="space-y-3 bg-primary/5 p-4 rounded-xl border border-primary/20">
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                                <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                {template.type} Header Required
+                            </h4>
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold text-foreground opacity-70">
+                                    Provide {template.type} URL or ID
+                                </label>
+                                <Input
+                                    placeholder={`https://... or Meta Media ID`}
+                                    value={mediaUrl || ''}
+                                    onChange={(e) => setMediaUrl(e.target.value)}
+                                    className="h-9 bg-background text-sm border-primary/20 focus-visible:ring-primary/30"
+                                />
+                                <p className="text-[9px] text-muted-foreground">
+                                    This template requires an {template.type.toLowerCase()} header. Enter a public link or an internal ID.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Variable Mapping Section */}
                     {detectedVariables.length > 0 && (
                         <div className="space-y-3 bg-muted/20 p-4 rounded-xl border border-border/50">

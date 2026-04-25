@@ -86,9 +86,9 @@ const handler = async (data) => {
                     footer: footerComp?.text || null,
                     buttons: buttonComp?.buttons || [],
                     metadata: {
-                        headerText: headerComp?.format === 'TEXT' ? headerComp.text : null,
+                        headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
                         mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format) 
-                            ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0]) 
+                            ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null) 
                             : null
                     },
                     isDefault: true,
