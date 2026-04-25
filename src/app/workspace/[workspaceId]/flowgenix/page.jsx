@@ -13,13 +13,25 @@ import {
     KeyRound,
     Loader2,
     Search,
-    ExternalLink
+    ExternalLink,
+    Edit2,
+    Plus,
+    RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Play, Trash2, Eye } from "lucide-react";
 
 // Components
 import { ChatPanel } from "./_components/ChatPanel";
@@ -29,7 +41,7 @@ import { RagPanel } from "./_components/RagPanel";
 
 // Libs
 import { defaultConfig, loadConfig, loadRag } from "./_lib/agent-storage";
-import { listWorkflows } from "./_lib/workflow-storage";
+import { listWorkflows, listRunLogs } from "./_lib/workflow-storage";
 import { listCredentials } from "./_lib/node-credentials";
 import { supabase } from "@/lib/supabase";
 
@@ -126,6 +138,8 @@ export default function FlowgenixDashboard() {
         } finally {
             setCredsLoading(false);
         }
+
+
     };
 
     if (loading) {
@@ -144,22 +158,22 @@ export default function FlowgenixDashboard() {
         <div className="flex h-full w-full flex-col p-0">
             <Tabs defaultValue="chat" className="flex-1 flex flex-col w-full rounded-none">
                 <TabsList className="w-full h-12 border-b border-border bg-card/30 p-0 grid grid-cols-6 rounded-none">
-                    <TabsTrigger value="chat" className="h-12 rounded-none border-b-2 border-transparent px-0 font-mono text-[10px] uppercase tracking-widest transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
+                    <TabsTrigger value="chat" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm    transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <MessageSquare className="h-3.5 w-3.5 mr-2" /> Chat
                     </TabsTrigger>
-                    <TabsTrigger value="setup" className="h-12 rounded-none border-b-2 border-transparent px-0 font-mono text-[10px] uppercase tracking-widest transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
+                    <TabsTrigger value="setup" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm    transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <Settings className="h-3.5 w-3.5 mr-2" /> Setup
                     </TabsTrigger>
-                    <TabsTrigger value="workflows" className="h-12 rounded-none border-b-2 border-transparent px-0 font-mono text-[10px] uppercase tracking-widest transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
+                    <TabsTrigger value="workflows" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm    transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <Workflow className="h-3.5 w-3.5 mr-2" /> Workflows
                     </TabsTrigger>
-                    <TabsTrigger value="runs" onClick={loadRuns} className="h-12 rounded-none border-b-2 border-transparent px-0 font-mono text-[10px] uppercase tracking-widest transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
+                    <TabsTrigger value="runs" onClick={loadRuns} className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm    transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <History className="h-3.5 w-3.5 mr-2" /> Runs
                     </TabsTrigger>
-                    <TabsTrigger value="canvas" className="h-12 rounded-none border-b-2 border-transparent px-0 font-mono text-[10px] uppercase tracking-widest transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
+                    <TabsTrigger value="canvas" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm    transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <LayoutGrid className="h-3.5 w-3.5 mr-2" /> Canvas
                     </TabsTrigger>
-                    <TabsTrigger value="credentials" onClick={loadCredentials} className="h-12 rounded-none border-b-2 border-transparent px-0 font-mono text-[10px] uppercase tracking-widest transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
+                    <TabsTrigger value="credentials" onClick={loadCredentials} className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm    transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <KeyRound className="h-3.5 w-3.5 mr-2" /> Credentials
                     </TabsTrigger>
                 </TabsList>
@@ -167,7 +181,7 @@ export default function FlowgenixDashboard() {
                 <div className="flex-1 p-2">
 
                     {/* CHAT TAB */}
-                    <TabsContent value="chat" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden flex flex-col">
+                    <TabsContent value="chat" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden flex flex-col  h-[86vh]">
                         <div className="flex-1 overflow-hidden rounded-xl border border-border bg-card/50 shadow-2xl shadow-primary/5">
                             <ChatPanel config={config} ragDocs={docs} />
                         </div>
@@ -177,19 +191,19 @@ export default function FlowgenixDashboard() {
                     <TabsContent value="setup" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden overflow-auto">
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                             <div className="rounded-xl border border-border bg-card/50 p-6 lg:col-span-2">
-                                <h2 className="mb-6 font-mono text-xs uppercase tracking-widest text-primary/80 flex items-center gap-2">
+                                <h2 className="mb-6 font-mono text-xs   text-primary/80 flex items-center gap-2">
                                     <span className="h-1 w-1 rounded-full bg-primary" /> Models & Routing
                                 </h2>
                                 <ModelsManager config={config} onChange={setConfig} />
                             </div>
                             <div className="rounded-xl border border-border bg-card/50 p-6">
-                                <h2 className="mb-6 font-mono text-xs uppercase tracking-widest text-primary/80 flex items-center gap-2">
+                                <h2 className="mb-6 font-mono text-xs   text-primary/80 flex items-center gap-2">
                                     <span className="h-1 w-1 rounded-full bg-primary" /> Agent Configuration
                                 </h2>
                                 <AgentSettings config={config} onChange={setConfig} />
                             </div>
                             <div className="rounded-xl border border-border bg-card/50 p-6 self-start">
-                                <h2 className="mb-6 font-mono text-xs uppercase tracking-widest text-primary/80 flex items-center gap-2">
+                                <h2 className="mb-6 font-mono text-xs   text-primary/80 flex items-center gap-2">
                                     <span className="h-1 w-1 rounded-full bg-primary" /> Knowledge Base
                                 </h2>
                                 <RagPanel config={config} docs={docs} setDocs={setDocs} />
@@ -198,102 +212,164 @@ export default function FlowgenixDashboard() {
                     </TabsContent>
 
                     {/* WORKFLOWS TAB */}
-                    <TabsContent value="workflows" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden overflow-auto">
-                        <div className="space-y-4">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search workflows..."
-                                    value={wfSearch}
-                                    onChange={(e) => setWfSearch(e.target.value)}
-                                    className="pl-10 font-mono text-sm bg-card/50 border-border/50 focus:border-primary/50 transition-all"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {workflows.filter(w => w.name.toLowerCase().includes(wfSearch.toLowerCase())).map(w => (
-                                    <div key={w.id} className="group relative flex flex-col rounded-xl border border-border bg-card/40 p-4 transition-all hover:border-primary/30 hover:bg-card/60 hover:shadow-lg hover:shadow-primary/5">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                                    <Workflow className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-mono text-sm font-medium">{w.name}</h3>
-                                                    <p className="text-[10px] text-muted-foreground font-mono">ID: {w.id.slice(0, 8)}...</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex items-center justify-between">
-                                            <span className="font-mono text-[10px] text-muted-foreground">Updated {new Date(w.updated_at).toLocaleDateString()}</span>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 font-mono text-[10px] uppercase tracking-wider gap-2 border-primary/20 hover:bg-primary/10 hover:text-primary transition-all"
-                                                onClick={() => router.push(`/workspace/${workspaceId}/flowgenix/canvas/${w.id}`)}
-                                            >
-                                                Open Canvas <ExternalLink className="h-3 w-3" />
-                                            </Button>
-                                        </div>
+                    <TabsContent value="workflows" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden flex flex-col h-[85vh]">
+                        <Card className="rounded-md border-border/60 bg-card shadow-sm flex-1 flex flex-col overflow-hidden">
+                            <CardHeader className="flex flex-row items-center justify-between border-b border-border/60 py-4 shrink-0">
+                                <div>
+                                    <CardTitle className="text-lg font-bold">Workflows</CardTitle>
+                                    <p className="text-xs text-muted-foreground font-medium">Manage and monitor your automation sequences.</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-64">
+                                        <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Search workflows..."
+                                            value={wfSearch}
+                                            onChange={(e) => setWfSearch(e.target.value)}
+                                            className="pl-9 h-9 text-xs"
+                                        />
                                     </div>
-                                ))}
-                            </div>
-                        </div>
+                                    <Button size="sm" className="h-8 gap-2 px-3">
+                                        <Workflow className="h-3.5 w-3.5" /> New Workflow
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0 flex-1 overflow-hidden">
+                                <ScrollArea className="h-full">
+                                    <table className="w-full text-xs">
+                                        <thead className="sticky top-0 bg-muted/90 backdrop-blur z-10">
+                                            <tr className="border-b border-border/60 text-left font-bold  tracking-tighter text-muted-foreground">
+                                                <th className="py-3 pl-6">Workflow Name</th>
+                                                <th>Status</th>
+                                                <th>Nodes</th>
+                                                <th>Last Updated</th>
+                                                <th className="pr-6 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/60">
+                                            {workflows.filter(w => w.name.toLowerCase().includes(wfSearch.toLowerCase())).map((w) => (
+                                                <tr key={w.id} className="hover:bg-muted/30 transition-colors group">
+                                                    <td className="py-4 pl-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                                <Workflow className="h-4 w-4" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="font-bold text-sm">{w.name}</div>
+                                                                <div className="font-mono  text-muted-foreground opacity-60">ID: {w.id.slice(0, 8)}...</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px] h-5 rounded-sm font-bold  tracking-tighter">
+                                                            Active
+                                                        </Badge>
+                                                    </td>
+                                                    <td>
+                                                        <span className="font-medium text-muted-foreground">12 nodes</span>
+                                                    </td>
+                                                    <td className="text-muted-foreground font-medium">
+                                                        {new Date(w.updated_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="pr-6 text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-40">
+                                                                <DropdownMenuItem onClick={() => router.push(`/workspace/${workspaceId}/flowgenix/canvas/${w.id}`)}>
+                                                                    <Eye className="h-3.5 w-3.5 mr-2" /> View Canvas
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem>
+                                                                    <Play className="h-3.5 w-3.5 mr-2" /> Execute
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem className="text-destructive">
+                                                                    <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     {/* RUNS TAB */}
-                    <TabsContent value="runs" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden overflow-auto">
-                        <div className="rounded-xl border border-border bg-card/50 overflow-hidden shadow-2xl shadow-black/5">
-                            <table className="w-full text-left">
-                                <thead className="bg-muted/30 border-b border-border/50">
-                                    <tr>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Workflow</th>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Status</th>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Trigger</th>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Timestamp</th>
-                                        <th className="px-6 py-4 text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {runsLoading ? (
-                                        <tr>
-                                            <td colSpan={5} className="p-12 text-center">
-                                                <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary/50" />
-                                            </td>
-                                        </tr>
-                                    ) : runs.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="p-12 text-center font-mono text-xs text-muted-foreground">
-                                                No execution history found
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        runs.map(r => (
-                                            <tr key={r.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <p className="font-mono text-sm">{r.workflow_name}</p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <Badge variant="outline" className={cn(
-                                                        "font-mono text-[10px] uppercase px-2 py-0.5",
-                                                        r.status === 'success' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                                            r.status === 'error' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                                'bg-primary/10 text-primary border-primary/20'
-                                                    )}>
-                                                        {r.status}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4 font-mono text-xs text-muted-foreground">{r.trigger}</td>
-                                                <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground">
-                                                    {new Date(r.started_at).toLocaleString()}
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                </td>
+                    <TabsContent value="runs" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden flex flex-col h-[85vh]">
+                        <Card className="rounded-md border-border/60 bg-card shadow-sm flex-1 flex flex-col overflow-hidden">
+                            <CardHeader className="flex flex-row items-center justify-between border-b border-border/60 py-4 shrink-0">
+                                <div>
+                                    <CardTitle className="text-lg font-bold">Execution History</CardTitle>
+                                    <p className="text-xs text-muted-foreground font-medium">Real-time log of all workflow runs and triggers.</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Badge variant="outline" className=" font-bold h-5  ">{runs.length} RUNS</Badge>
+                                    <Button size="sm" variant="ghost" onClick={loadRuns} disabled={runsLoading} className="h-8 w-8 p-0">
+                                        <RefreshCw className={`h-4 w-4 ${runsLoading ? "animate-spin" : ""}`} />
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0 flex-1 overflow-hidden">
+                                <ScrollArea className="h-full">
+                                    <table className="w-full text-xs">
+                                        <thead className="sticky top-0 bg-muted/90 backdrop-blur z-10">
+                                            <tr className="border-b border-border/60 text-left font-bold  tracking-tighter text-muted-foreground">
+                                                <th className="py-3 pl-6">Started At</th>
+                                                <th>Workflow</th>
+                                                <th>Status</th>
+                                                <th>Trigger</th>
+                                                <th className="pr-6 text-right">Actions</th>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/60">
+                                            {runsLoading && !runs.length && (
+                                                <tr><td colSpan={5} className="py-20 text-center text-muted-foreground animate-pulse font-mono   ">Initializing stream...</td></tr>
+                                            )}
+                                            {runs.length === 0 && !runsLoading && (
+                                                <tr><td colSpan={5} className="py-20 text-center text-muted-foreground font-mono  ">No runs found</td></tr>
+                                            )}
+                                            {runs.map((r) => (
+                                                <tr key={r.id} className="hover:bg-muted/30 transition-colors group">
+                                                    <td className="py-3 pl-6 text-muted-foreground font-mono">
+                                                        {new Date(r.started_at).toLocaleString()}
+                                                    </td>
+                                                    <td>
+                                                        <div className="font-bold text-sm">{r.workflow_name}</div>
+                                                        <div className="font-mono text-[9px] text-muted-foreground opacity-50">{r.id.slice(0, 8)}</div>
+                                                    </td>
+                                                    <td>
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[9px] h-5 rounded-sm font-bold  tracking-tighter",
+                                                            r.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                                                r.status === 'error' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                                    'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                                        )}>
+                                                            {r.status}
+                                                        </Badge>
+                                                    </td>
+                                                    <td>
+                                                        <Badge variant="outline" className="text-[9px] h-5 rounded-sm font-bold  tracking-tighter opacity-60">
+                                                            {r.trigger}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="pr-6 text-right">
+                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setOpenRunId(r.id)}>
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     {/* CANVAS TAB */}
@@ -312,54 +388,91 @@ export default function FlowgenixDashboard() {
                     </TabsContent>
 
                     {/* CREDENTIALS TAB */}
-                    <TabsContent value="credentials" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden overflow-auto">
-                        <div className="rounded-xl border border-border bg-card/50 overflow-hidden shadow-2xl shadow-black/5">
-                            <table className="w-full text-left">
-                                <thead className="bg-muted/30 border-b border-border/50">
-                                    <tr>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Name</th>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Kind</th>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Status</th>
-                                        <th className="px-6 py-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Updated</th>
-                                        <th className="px-6 py-4 text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {credsLoading ? (
-                                        <tr>
-                                            <td colSpan={5} className="p-12 text-center">
-                                                <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary/50" />
-                                            </td>
-                                        </tr>
-                                    ) : credentials.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="p-12 text-center font-mono text-xs text-muted-foreground">
-                                                No credentials registered
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        credentials.map(c => (
-                                            <tr key={c.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                                                <td className="px-6 py-4 font-mono text-sm font-medium">{c.name}</td>
-                                                <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground uppercase">{c.kind}</td>
-                                                <td className="px-6 py-4">
-                                                    {c.secret_id ? (
-                                                        <Badge className="bg-green-500/10 text-green-500 border-green-500/20 font-mono text-[10px] uppercase tracking-tighter">Encrypted</Badge>
-                                                    ) : (
-                                                        <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-tighter">Public</Badge>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground">
-                                                    {new Date(c.updated_at).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                </td>
+                    <TabsContent value="credentials" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden flex flex-col h-[85vh]">
+                        <Card className="rounded-md border-border/60 bg-card shadow-sm flex-1 flex flex-col overflow-hidden">
+                            <CardHeader className="flex flex-row items-center justify-between border-b border-border/60 py-4 shrink-0">
+                                <div>
+                                    <CardTitle className="text-lg font-bold">Node Credentials</CardTitle>
+                                    <p className="text-xs text-muted-foreground font-medium">Securely store API keys and auth tokens for nodes.</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Button size="sm" variant="outline" onClick={loadCredentials} className="h-8 gap-2">
+                                        <RefreshCw className={cn("h-3.5 w-3.5", credsLoading && "animate-spin")} /> Refresh
+                                    </Button>
+                                    <Button size="sm" className="h-8 gap-2 px-3">
+                                        <Plus className="h-3.5 w-3.5" /> Add Credential
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0 flex-1 overflow-hidden">
+                                <ScrollArea className="h-full">
+                                    <table className="w-full text-xs">
+                                        <thead className="sticky top-0 bg-muted/90 backdrop-blur z-10">
+                                            <tr className="border-b border-border/60 text-left font-bold  tracking-tighter text-muted-foreground">
+                                                <th className="py-3 pl-6">Name</th>
+                                                <th>Type / Provider</th>
+                                                <th>Status</th>
+                                                <th>Updated At</th>
+                                                <th className="pr-6 text-right">Actions</th>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/60">
+                                            {credsLoading && !credentials.length && (
+                                                <tr><td colSpan={5} className="py-20 text-center text-muted-foreground animate-pulse font-mono  ">Loading credentials...</td></tr>
+                                            )}
+                                            {credentials.length === 0 && !credsLoading && (
+                                                <tr><td colSpan={5} className="py-20 text-center text-muted-foreground font-mono  ">No credentials registered</td></tr>
+                                            )}
+                                            {credentials.map((c) => (
+                                                <tr key={c.id} className="hover:bg-muted/30 transition-colors group">
+                                                    <td className="py-4 pl-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                                <KeyRound className="h-4 w-4" />
+                                                            </div>
+                                                            <div className="font-bold text-sm">{c.name}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <code className=" font-mono bg-muted/50 px-2 py-0.5 rounded border border-border/40  text-muted-foreground">
+                                                            {c.kind}
+                                                        </code>
+                                                    </td>
+                                                    <td>
+                                                        <Badge variant={c.secret_id ? "default" : "outline"} className={cn(
+                                                            "text-[9px] h-5 rounded-sm font-bold  tracking-tighter",
+                                                            c.secret_id ? "bg-emerald-500/20 text-emerald-500 border-0" : "opacity-60"
+                                                        )}>
+                                                            {c.secret_id ? "Encrypted" : "Public"}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="text-muted-foreground font-medium">
+                                                        {new Date(c.updated_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="pr-6 text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-40">
+                                                                <DropdownMenuItem>
+                                                                    <Edit2 className="h-3.5 w-3.5 mr-2" /> Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem className="text-destructive">
+                                                                    <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
                 </div>
             </Tabs>

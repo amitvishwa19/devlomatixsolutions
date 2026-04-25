@@ -64,6 +64,12 @@ model User {
   waDeliveryLogs            WhatsAppDeliveryLog[]
   agentModels               AgentModel[]
   aiAgents                  AIAgent[]
+  agentConfigs              AgentConfig[]
+  nodeCredentials           NodeCredential[]
+  nodeSecrets               NodeSecret[]
+  ragDocs                   RagDoc[]
+  agentChatThreads          AgentChatThread[]
+  agentChatMessages         AgentChatMessage[]
 
   @@index([email])
   @@index([phone])
@@ -883,36 +889,46 @@ model Offer {
 }
 
 model Workflow {
-  id          String              @id @default(cuid())
-  name        String
-  description String?
-  nodes       Json                @default("[]")
-  edges       Json                @default("[]")
-  workspaceId String
-  userId      String
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  definition  Json?
-  status      WorkflowStatus      @default(DRAFT)
-  viewport    Json?
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  executions  WorkflowExecution[]
-  memories    WorkflowMemory[]
+  id                String              @id @default(cuid())
+  name              String
+  description       String?
+  nodes             Json                @default("[]")
+  edges             Json                @default("[]")
+  workspaceId       String
+  userId            String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  definition        Json?
+  status            WorkflowStatus      @default(DRAFT)
+  viewport          Json?
+  isTemplate        Boolean             @default(false)
+  scheduleCron      String?
+  scheduleEnabled   Boolean             @default(false)
+  webhookToken      String?
+  failureWebhookUrl String?
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  executions        WorkflowExecution[]
+  memories          WorkflowMemory[]
 
   @@index([workspaceId])
   @@index([userId])
 }
 
 model WorkflowExecution {
-  id         String    @id @default(cuid())
+  id         String           @id @default(cuid())
   workflowId String
-  status     String    @default("RUNNING")
-  startedAt  DateTime  @default(now())
+  status     String           @default("RUNNING")
+  trigger    String           @default("manual")
+  input      Json?
+  output     Json?
+  error      String?          @db.Text
+  startedAt  DateTime         @default(now())
   finishedAt DateTime?
-  logs       Json      @default("[]")
-  edges      Json      @default("[]")
-  nodes      Json      @default("[]")
-  workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  logs       Json             @default("[]")
+  edges      Json             @default("[]")
+  nodes      Json             @default("[]")
+  workflow   Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  runLogs    WorkflowRunLog[]
 
   @@index([workflowId])
   @@index([status])
@@ -1139,12 +1155,14 @@ model AgentModel {
   workspaceId  String
   provider     String
   name         String
+  label        String?
   apiKey       String
   description  String?
   healthStatus String                 @default("UNTESTED")
   latency      String?
   successRate  String?
   capability   String?
+  strengths    String?
   bestFor      String?
   baseUrl      String?
   isDefault    Boolean                @default(false)
@@ -1200,4 +1218,116 @@ model AgentModelAssignment {
   @@unique([agentId, modelId])
   @@index([agentId])
   @@index([modelId])
+}
+
+model AgentConfig {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  userId           String
+  name             String
+  systemPrompt     String   @db.Text
+  temperature      Float    @default(0.3)
+  enableWebSearch  Boolean  @default(false)
+  enableCalculator Boolean  @default(true)
+  enableRouter     Boolean  @default(true)
+  defaultModelId   String?
+  streamDelayMs    Int      @default(18)
+  singleton        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model WorkflowRunLog {
+  id          String            @id @default(cuid())
+  workspaceId String
+  runId       String
+  nodeId      String
+  nodeLabel   String?
+  nodeKind    String?
+  status      String            @default("success")
+  message     String?           @db.Text
+  data        Json?
+  durationMs  Int?
+  createdAt   DateTime          @default(now())
+  execution   WorkflowExecution @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([runId])
+}
+
+model NodeCredential {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  name        String
+  kind        String
+  config      Json
+  secretId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model NodeSecret {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  name        String
+  kind        String
+  secrets     Json
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model RagDoc {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  name        String
+  chunks      Json     @default("[]")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model AgentChatThread {
+  id          String             @id @default(cuid())
+  workspaceId String
+  userId      String
+  title       String
+  createdAt   DateTime           @default(now())
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    AgentChatMessage[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model AgentChatMessage {
+  id          String           @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String
+  content     String           @db.Text
+  meta        Json?
+  threadId    String?
+  createdAt   DateTime         @default(now())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread      AgentChatThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([threadId])
 }

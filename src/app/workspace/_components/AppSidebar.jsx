@@ -49,8 +49,8 @@ export default function AppSidebar() {
         // 1. If we are in simulation mode (previewRole active), we ALWAYS filter strictly
         if (previewRole) {
             return rawNavigation.filter(item => {
-                return (previewRole?.permissions || []).some(p => 
-                    p.status === true && 
+                return (previewRole?.permissions || []).some(p =>
+                    p.status === true &&
                     (p.url === normalizePath(item.url) || p.value === item.permission)
                 );
             });
@@ -66,8 +66,8 @@ export default function AppSidebar() {
             const navValue = `navigation.${slug}`;
             const parentValue = `navigation.${item.category}.parent`;
 
-            return activePermissions.some(p => 
-                p.status === true && 
+            return activePermissions.some(p =>
+                p.status === true &&
                 (p.url === relativeUrl || p.value === navValue || (item.type === 'parent' && p.value === parentValue) || p.value === item.permission || p.value?.startsWith(`navbar:`))
             );
         });
@@ -81,12 +81,12 @@ export default function AppSidebar() {
         if (!acc[item.category]) {
             // Find the canonical header metadata from the full item list
             const parentItem = rawNavigation.find(i => i.category === item.category && i.type === 'parent');
-            acc[item.category] = { 
-                parent: parentItem || { title: item.category, icon: 'layout-dashboard' }, 
-                children: [] 
+            acc[item.category] = {
+                parent: parentItem || { title: item.category, icon: 'layout-dashboard' },
+                children: []
             }
         }
-        
+
         acc[item.category].children.push(item)
         return acc
     }, {})
@@ -182,7 +182,9 @@ export default function AppSidebar() {
                 <ScrollArea className='h-[87vh]'>
                     {Object.entries(groupedNavigation).map(([category, { parent, children }]) => {
                         const isOpen = openGroups[category]
-                        const hasChildren = children.length > 0
+                        const hasChildren = children.length > 1
+                        const targetUrl = !hasChildren ? (children[0]?.url || parent.url) : undefined
+                        const isGroupActive = !hasChildren ? (pathname === targetUrl) : children.some(c => pathname === c.url)
 
                         return (
                             <SidebarGroup key={category} className="p-0 group-data-[collapsible=icon]:p-0">
@@ -193,16 +195,16 @@ export default function AppSidebar() {
                                                 asChild={!hasChildren}
                                                 onClick={hasChildren ? () => toggleGroup(category) : undefined}
                                                 tooltip={parent.title}
-                                                className="w-full flex items-center gap-3 rounded-xl text-sm font-medium text-foreground hover:bg-card/50 hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer"
+                                                className={`w-full flex mb-2 items-center gap-3 rounded-md text-sm font-medium transition-all group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-none cursor-pointer ${isGroupActive ? "bg-primary/10 text-primary shadow-sm border-l-2 border-primary" : "text-foreground hover:bg-card/50 hover:text-primary border-l-2 border-transparent hover:border-primary"}`}
                                             >
                                                 {!hasChildren ? (
-                                                    <Link href={parent.url} className="flex items-center gap-3 w-full">
+                                                    <Link href={targetUrl} className="flex items-center gap-3 w-full">
                                                         <DynamicIcon
                                                             name={parent.icon}
                                                             size={18}
-                                                            className="shrink-0 text-muted-foreground group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary"
+                                                            className={`shrink-0 ${isGroupActive ? "text-primary" : "text-muted-foreground"} group-data-[collapsible=icon]:ml-4 group-data-[collapsible=icon]:text-primary`}
                                                         />
-                                                        <span className="flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden">
+                                                        <span className={`flex-1 text-left text-sm font-medium group-data-[collapsible=icon]:hidden ${isGroupActive ? "font-bold" : ""}`}>
                                                             {parent.title}
                                                         </span>
                                                     </Link>
@@ -227,31 +229,33 @@ export default function AppSidebar() {
                                     </SidebarMenu>
                                 )}
 
-                                <div className={`overflow-hidden transition-all duration-300 group-data-[collapsible=icon]:hidden ${isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"}`}>
-                                    <SidebarGroupContent>
-                                        <SidebarMenu className="pl-6 group-data-[collapsible=icon]:pl-0">
-                                            {children.map((item) => {
-                                                const isActive = pathname === item.url
-                                                return (
-                                                    <SidebarMenuItem key={`${item.category}-${item.title}`}>
-                                                        <SidebarMenuButton
-                                                            asChild
-                                                            //isActive={isActive}
-                                                            tooltip={item.title}
-                                                            className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl hover:bg-card hover:text-primary transition-colors ${isActive ? "" : ""}`}
-                                                        >
-                                                            <Link href={item.url}>
-                                                                <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>
-                                                                    {item.title}
-                                                                </span>
-                                                            </Link>
-                                                        </SidebarMenuButton>
-                                                    </SidebarMenuItem>
-                                                )
-                                            })}
-                                        </SidebarMenu>
-                                    </SidebarGroupContent>
-                                </div>
+                                {hasChildren && (
+                                    <div className={`overflow-hidden transition-all duration-300 group-data-[collapsible=icon]:hidden ${isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"}`}>
+                                        <SidebarGroupContent>
+                                            <SidebarMenu className="pl-6 group-data-[collapsible=icon]:pl-0">
+                                                {children.map((item) => {
+                                                    const isActive = pathname === item.url
+                                                    return (
+                                                        <SidebarMenuItem key={`${item.category}-${item.title}`}>
+                                                            <SidebarMenuButton
+                                                                asChild
+                                                                //isActive={isActive}
+                                                                tooltip={item.title}
+                                                                className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl hover:bg-card hover:text-primary transition-colors ${isActive ? "" : ""}`}
+                                                            >
+                                                                <Link href={item.url}>
+                                                                    <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                                                                        {item.title}
+                                                                    </span>
+                                                                </Link>
+                                                            </SidebarMenuButton>
+                                                        </SidebarMenuItem>
+                                                    )
+                                                })}
+                                            </SidebarMenu>
+                                        </SidebarGroupContent>
+                                    </div>
+                                )}
                             </SidebarGroup>
                         )
                     })}
