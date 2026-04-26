@@ -36,7 +36,18 @@ export default function DashboardStats() {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map(i => (
-                    <Card key={i} className="bg-card/50 border border-border/50 h-24 animate-pulse" />
+                    <Card key={i} className="bg-card border border-border/50">
+                        <CardContent className="py-3 px-4">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="space-y-2 flex-1">
+                                    <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                                    <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+                                </div>
+                                <div className="w-10 h-10 bg-muted animate-pulse rounded-md shrink-0" />
+                            </div>
+                            <div className="h-3 w-32 bg-muted animate-pulse rounded mt-3" />
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
         );

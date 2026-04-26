@@ -100,12 +100,12 @@ export default function DashboardPage() {
         executeGetActivities({ workspaceId, page, pageSize: 5 });
     }, [workspaceId, executeGetActivities]);
 
-    // useEffect(() => {
-    //     if (workspaceId) {
-    //         fetchCampaigns();
-    //         fetchActivities(activityPage);
-    //     }
-    // }, [workspaceId, activityPage]);
+    useEffect(() => {
+        if (workspaceId && workspaceId !== '[workspaceId]') {
+            fetchCampaigns();
+            fetchActivities(activityPage);
+        }
+    }, [workspaceId, activityPage, fetchCampaigns, fetchActivities]);
 
     const refresh = () => fetchCampaigns();
 
@@ -197,8 +197,31 @@ export default function DashboardPage() {
                     </div>
 
                     {loading ?
-                        <div className="rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
-                            Loading campaigns...
+                        <div className="bg-card border border-border rounded-md overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-border text-left">
+                                            {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                                <th key={i} className="px-6 py-4">
+                                                    <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {[1, 2, 3].map(i => (
+                                            <tr key={i}>
+                                                {[1, 2, 3, 4, 5, 6, 7].map(j => (
+                                                    <td key={j} className="px-6 py-4">
+                                                        <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div> :
                         error ?
                             <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">

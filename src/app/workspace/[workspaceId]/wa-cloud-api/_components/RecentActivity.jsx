@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function RecentActivity({ 
     activities = [], 
+    loading = false,
     currentPage = 1, 
     hasMore = false, 
     onPageChange 
@@ -11,7 +12,17 @@ export default function RecentActivity({
     return (
         <div className="border rounded-lg border-dashed border-border bg-card/50 overflow-hidden flex flex-col h-full">
             <div className="divide-y divide-[#1F2328] flex-1">
-                {activities.length === 0 ? (
+                {loading ? (
+                    [1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="flex items-center gap-4 px-6 py-4">
+                            <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+                            <div className="min-w-0 flex-1 space-y-2">
+                                <div className="h-4 w-[60%] bg-muted animate-pulse rounded" />
+                                <div className="h-2 w-[30%] bg-muted animate-pulse rounded" />
+                            </div>
+                        </div>
+                    ))
+                ) : activities.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                         <MessageSquare className="w-8 h-8 text-muted-foreground/30 mb-2" />
                         <p className="text-xs text-muted-foreground">No recent activity</p>
