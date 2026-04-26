@@ -3,15 +3,35 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-export async function getAgentConfig(workspaceId) {
+export async function getOrCreateAgentConfig(workspaceId, userId) {
     try {
-        const config = await db.agentConfig.findFirst({
+        let config = await db.agentConfig.findFirst({
             where: { workspaceId }
         });
-        return config;
+
+        if (!config) {
+            config = await db.agentConfig.create({
+                data: {
+                    workspaceId,
+                    userId,
+                    name: "New Agent",
+                    systemPrompt: "You are a helpful assistant.",
+                    temperature: 0.7,
+                    streamDelayMs: 0,
+                    enableRouter: false,
+                    enableCalculator: true,
+                    enableWebSearch: true,
+                }
+            });
+            revalidatePath(`/workspace/${workspaceId}/flowgenix`);
+        }
+
+        // Include models in the returned config
+        const models = await listAgentModels(workspaceId);
+        return { ...config, models };
     } catch (error) {
-        console.error("getAgentConfig error:", error);
-        return null;
+        console.error("getOrCreateAgentConfig error:", error);
+        throw error;
     }
 }
 
@@ -45,15 +65,39 @@ export async function listAgentModels(workspaceId) {
 
 export async function upsertAgentModel(workspaceId, userId, data) {
     try {
-        const { id, createdAt, updatedAt, model, baseURL, ...payload } = data;
+        const { 
+            id, 
+            createdAt, 
+            updatedAt, 
+            model, 
+            baseURL, 
+            lastTestOk, 
+            lastTestAt, 
+            lastTestMessage, 
+            lastLatencyMs, 
+            capabilities,
+            ...rest 
+        } = data;
         
-        // Map UI field names to Prisma schema field names
+        // Strictly pick only fields defined in the Prisma schema
         const dbPayload = {
-            ...payload,
-            name: model || payload.name || "missing",
-            baseUrl: baseURL || payload.baseUrl,
             workspaceId,
-            userId
+            userId,
+            provider: rest.provider,
+            name: model || rest.name || "missing",
+            label: rest.label,
+            apiKey: rest.apiKey,
+            description: rest.description,
+            healthStatus: rest.healthStatus,
+            latency: rest.latency,
+            successRate: rest.successRate,
+            capability: rest.capability,
+            strengths: rest.strengths,
+            bestFor: rest.bestFor,
+            baseUrl: baseURL || rest.baseUrl,
+            isDefault: rest.isDefault,
+            isActive: rest.isActive,
+            metadata: rest.metadata,
         };
 
         const result = await db.agentModel.upsert({
@@ -68,7 +112,12 @@ export async function upsertAgentModel(workspaceId, userId, data) {
         return {
             ...result,
             model: result.name,
-            baseURL: result.baseUrl
+            baseURL: result.baseUrl,
+            lastTestOk,
+            lastTestAt,
+            lastTestMessage,
+            lastLatencyMs,
+            capabilities
         };
     } catch (error) {
         console.error("upsertAgentModel error:", error);

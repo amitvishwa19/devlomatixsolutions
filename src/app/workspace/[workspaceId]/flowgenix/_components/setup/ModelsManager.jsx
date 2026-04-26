@@ -421,7 +421,7 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                       label
                     </Label>
                     <Input
-                      value={m.label}
+                      value={m.label || ""}
                       onChange={(e) => updateModelLocal(m.id, { label: e.target.value })}
                       onBlur={(e) => persistModel(m.id, { label: e.target.value })}
                       className="mt-1 h-8 font-mono text-xs"
@@ -451,7 +451,7 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                         model
                       </Label>
                       <Input
-                        value={m.model}
+                        value={m.model || ""}
                         onChange={(e) => updateModelLocal(m.id, { model: e.target.value })}
                         onBlur={(e) => persistModel(m.id, { model: e.target.value })}
                         placeholder="gpt-4o-mini"
@@ -465,7 +465,7 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                       base_url
                     </Label>
                     <Input
-                      value={m.baseURL}
+                      value={m.baseURL || ""}
                       onChange={(e) => updateModelLocal(m.id, { baseURL: e.target.value })}
                       onBlur={(e) => persistModel(m.id, { baseURL: e.target.value })}
                       placeholder="https://api.openai.com/v1"
@@ -480,7 +480,7 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                     <div className="relative mt-1">
                       <Input
                         type={showKeys[m.id] ? "text" : "password"}
-                        value={m.apiKey}
+                        value={m.apiKey || ""}
                         onChange={(e) => updateModelLocal(m.id, { apiKey: e.target.value })}
                         onBlur={(e) => persistModel(m.id, { apiKey: e.target.value })}
                         placeholder="sk-..."

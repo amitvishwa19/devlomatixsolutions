@@ -31,7 +31,7 @@ export const AgentSettings = ({ config, onChange, userId }) => {
           agent.name
         </Label>
         <Input
-          value={config.name}
+          value={config.name || ""}
           onChange={(e) => set("name", e.target.value)}
           className="mt-1 font-mono"
         />
@@ -42,7 +42,7 @@ export const AgentSettings = ({ config, onChange, userId }) => {
           system_prompt
         </Label>
         <Textarea
-          value={config.systemPrompt}
+          value={config.systemPrompt || ""}
           onChange={(e) => set("systemPrompt", e.target.value)}
           rows={5}
           className="mt-1 font-mono text-xs"

@@ -8,14 +8,13 @@ import {
     Settings,
     Workflow as WorkflowIcon,
     History,
-    LayoutGrid,
     KeyRound,
     Loader2
 } from "lucide-react";
 
 // Server Actions
-import { getAgentConfig, listAgentModels, listRagDocs } from "./_actions/setup/actions";
-import { listWorkflows, deleteWorkflow, createWorkflow } from "./_actions/workflows/actions";
+import { getOrCreateAgentConfig, listAgentModels, listRagDocs } from "./_actions/setup/actions";
+import { getOrCreateMainWorkflow } from "./_actions/workflows/actions";
 import { listRuns } from "./_actions/runs/actions";
 import { listCredentials, deleteCredential } from "./_actions/credentials/actions";
 
@@ -24,10 +23,9 @@ import { ChatPanel } from "./_components/chat/ChatPanel";
 import { ModelsManager } from "./_components/setup/ModelsManager";
 import { AgentSettings } from "./_components/setup/AgentSettings";
 import { RagPanel } from "./_components/setup/RagPanel";
-import { WorkflowList } from "./_components/workflows/WorkflowList";
 import { RunList } from "./_components/runs/RunList";
 import { CredentialList } from "./_components/credentials/CredentialList";
-import Canvas from "./_components/canvas/Canvas";
+import WorkflowCanvas from "./_components/WorkflowCanvas";
 
 import { toast } from "sonner";
 
@@ -38,12 +36,11 @@ export default function FlowgenixDashboard() {
 
     const [config, setConfig] = useState(null);
     const [docs, setDocs] = useState([]);
-    const [workflows, setWorkflows] = useState([]);
+    const [mainWorkflow, setMainWorkflow] = useState(null);
     const [runs, setRuns] = useState([]);
     const [credentials, setCredentials] = useState([]);
 
     const [loading, setLoading] = useState(true);
-    const [workflowsLoading, setWorkflowsLoading] = useState(false);
     const [runsLoading, setRunsLoading] = useState(false);
     const [credsLoading, setCredsLoading] = useState(false);
 
@@ -54,41 +51,18 @@ export default function FlowgenixDashboard() {
     const init = async () => {
         setLoading(true);
         try {
-            const [cfg, ragDocs] = await Promise.all([
-                getAgentConfig(workspaceId),
-                listRagDocs(workspaceId)
+            const [c, d, w] = await Promise.all([
+                getOrCreateAgentConfig(workspaceId, userId),
+                listRagDocs(workspaceId),
+                getOrCreateMainWorkflow(workspaceId, userId)
             ]);
-
-            if (cfg) {
-                const models = await listAgentModels(workspaceId);
-                setConfig({ ...cfg, models });
-            } else {
-                setConfig({
-                    name: "New Agent",
-                    systemPrompt: "You are a helpful assistant.",
-                    temperature: 0.7,
-                    streamDelayMs: 0,
-                    enableRouter: false,
-                    enableCalculator: true,
-                    enableWebSearch: true,
-                    models: []
-                });
-            }
-            setDocs(ragDocs);
+            setConfig(c);
+            setDocs(d);
+            setMainWorkflow(w);
         } catch (error) {
-            toast.error("Failed to load configuration");
+            toast.error("Failed to load dashboard data");
         } finally {
             setLoading(false);
-        }
-    };
-
-    const loadWorkflows = async () => {
-        setWorkflowsLoading(true);
-        try {
-            const data = await listWorkflows(workspaceId);
-            setWorkflows(data);
-        } finally {
-            setWorkflowsLoading(false);
         }
     };
 
@@ -109,31 +83,6 @@ export default function FlowgenixDashboard() {
             setCredentials(data);
         } finally {
             setCredsLoading(false);
-        }
-    };
-
-    const handleDeleteWorkflow = async (id) => {
-        try {
-            await deleteWorkflow(workspaceId, id);
-            toast.success("Workflow deleted");
-            loadWorkflows();
-        } catch (e) {
-            toast.error(e.message);
-        }
-    };
-
-    const handleCreateWorkflow = async () => {
-        try {
-            await createWorkflow(workspaceId, userId, {
-                name: "New Workflow",
-                nodes: [],
-                edges: [],
-                status: "Draft"
-            });
-            toast.success("Workflow created");
-            loadWorkflows();
-        } catch (e) {
-            toast.error(e.message);
         }
     };
 
@@ -166,21 +115,18 @@ export default function FlowgenixDashboard() {
     return (
         <div className="flex h-full w-full flex-col p-0">
             <Tabs defaultValue="chat" className="flex-1 flex flex-col w-full rounded-none">
-                <TabsList className="w-full h-12 border-b border-border bg-card/30 p-0 grid grid-cols-6 rounded-none">
+                <TabsList className="w-full h-12 border-b border-border bg-card/30 p-0 grid grid-cols-5 rounded-none">
                     <TabsTrigger value="chat" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <MessageSquare className="h-3.5 w-3.5 mr-2" /> Chat
                     </TabsTrigger>
                     <TabsTrigger value="setup" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <Settings className="h-3.5 w-3.5 mr-2" /> Setup
                     </TabsTrigger>
-                    <TabsTrigger value="workflows" onClick={loadWorkflows} className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
-                        <WorkflowIcon className="h-3.5 w-3.5 mr-2" /> Workflows
+                    <TabsTrigger value="workflow" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
+                        <WorkflowIcon className="h-3.5 w-3.5 mr-2" /> Workflow
                     </TabsTrigger>
                     <TabsTrigger value="runs" onClick={loadRuns} className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <History className="h-3.5 w-3.5 mr-2" /> Runs
-                    </TabsTrigger>
-                    <TabsTrigger value="canvas" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
-                        <LayoutGrid className="h-3.5 w-3.5 mr-2" /> Canvas
                     </TabsTrigger>
                     <TabsTrigger value="credentials" onClick={loadCredentials} className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
                         <KeyRound className="h-3.5 w-3.5 mr-2" /> Credentials
@@ -217,14 +163,15 @@ export default function FlowgenixDashboard() {
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="workflows" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden h-[86vh] p-4">
-                        <WorkflowList
-                            workflows={workflows}
-                            loading={workflowsLoading}
-                            onRefresh={loadWorkflows}
-                            onDelete={handleDeleteWorkflow}
-                            onEdit={(id) => { }}
-                            onRun={(id) => { }}
+                    <TabsContent value="workflow" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden h-[86vh] rounded-xl overflow-hidden border border-border">
+                        <WorkflowCanvas 
+                            workflowId={mainWorkflow?.id} 
+                            workflowName={mainWorkflow?.name}
+                            loadedNodes={mainWorkflow?.nodes}
+                            loadedEdges={mainWorkflow?.edges}
+                            initialCron={mainWorkflow?.cronExpression}
+                            initialScheduleEnabled={mainWorkflow?.scheduleEnabled}
+                            initialViewport={mainWorkflow?.viewport}
                         />
                     </TabsContent>
 
@@ -238,9 +185,7 @@ export default function FlowgenixDashboard() {
                         />
                     </TabsContent>
 
-                    <TabsContent value="canvas" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden h-[86vh] rounded-xl overflow-hidden border border-border">
-                        <Canvas />
-                    </TabsContent>
+
 
                     <TabsContent value="credentials" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden h-[86vh] p-4">
                         <CredentialList

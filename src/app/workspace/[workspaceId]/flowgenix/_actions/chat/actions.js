@@ -55,3 +55,48 @@ export async function saveChatMessage(workspaceId, userId, data) {
         throw error;
     }
 }
+
+export async function renameThread(threadId, title) {
+    try {
+        return await db.agentChatThread.update({
+            where: { id: threadId },
+            data: { title }
+        });
+    } catch (error) {
+        console.error("renameThread error:", error);
+        throw error;
+    }
+}
+
+export async function deleteThread(threadId) {
+    try {
+        await db.agentChatMessage.deleteMany({ where: { threadId } });
+        return await db.agentChatThread.delete({ where: { id: threadId } });
+    } catch (error) {
+        console.error("deleteThread error:", error);
+        throw error;
+    }
+}
+
+export async function clearThreadMessages(threadId) {
+    try {
+        return await db.agentChatMessage.deleteMany({ where: { threadId } });
+    } catch (error) {
+        console.error("clearThreadMessages error:", error);
+        throw error;
+    }
+}
+
+export async function deleteLastAssistantMessage(threadId) {
+    try {
+        const last = await db.agentChatMessage.findFirst({
+            where: { threadId, role: 'assistant' },
+            orderBy: { createdAt: 'desc' }
+        });
+        if (last) {
+            await db.agentChatMessage.delete({ where: { id: last.id } });
+        }
+    } catch (error) {
+        console.error("deleteLastAssistantMessage error:", error);
+    }
+}

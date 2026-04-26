@@ -13,6 +13,10 @@ import {
   createThread,
   getThreadMessages,
   saveChatMessage,
+  renameThread,
+  deleteThread,
+  clearThreadMessages,
+  deleteLastAssistantMessage,
 } from "../../_actions/chat/actions";
 import { saveAgentConfig } from "../../_actions/setup/actions";
 import { ChatThreadList } from "./ChatThreadList";
@@ -193,6 +197,22 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     try {
+      const reply = await runAgent(
+        config,
+        baseHistory,
+        text,
+        ragDocs,
+        (update) => {
+          if (update.toolNote) setToolNotes((s) => [...s, update.toolNote]);
+          if (update.toolCall) {
+            traces.push(update.toolCall);
+            setLiveTraces([...traces]);
+          }
+          if (update.partial) setStreaming(update.partial);
+        },
+        ctrl.signal,
+      );
+
       const meta = traces.length ? JSON.stringify({ toolCalls: traces }) : undefined;
       const assistantMsg = { 
           role: "assistant", 
@@ -255,7 +275,7 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
     if (!activeId) return;
     try {
       // Drop the trailing assistant reply (and the user msg, since runWith re-appends it)
-      await deleteLastAssistant(activeId);
+      await deleteLastAssistantMessage(activeId);
       // Also remove the last user msg from DB so runWith re-inserts cleanly
       await supabase.from("messages").delete().eq("thread_id", activeId)
         .eq("role", "user").eq("content", lastUserText)

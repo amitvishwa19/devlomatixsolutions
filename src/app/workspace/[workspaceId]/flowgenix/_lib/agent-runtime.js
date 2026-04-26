@@ -5,13 +5,13 @@ import { z } from "zod";
 import { PROVIDER_PRESETS, getDefaultModel } from "./agent-storage";
 
 function resolveBaseURL(m) {
-  const configuredBaseURL = m.baseURL.trim();
+  const configuredBaseURL = (m.baseURL || "").trim();
   if (configuredBaseURL) return configuredBaseURL;
 
-  const providerBaseURL = PROVIDER_PRESETS[m.provider]?.baseURL?.trim();
+  const providerBaseURL = (PROVIDER_PRESETS[m.provider]?.baseURL || "").trim();
   if (providerBaseURL) return providerBaseURL;
 
-  if (m.apiKey.startsWith("AIza") || m.model.startsWith("gemini")) {
+  if (m.apiKey?.startsWith("AIza") || m.model?.startsWith("gemini")) {
     return PROVIDER_PRESETS.Gemini.baseURL;
   }
 
@@ -264,19 +264,39 @@ export async function runAgent(
     try {
       res = await bound.invoke(msgs, signal ? { signal } : undefined);
     } catch (e) {
-      const others = cfg.models.filter((m) => m.id !== executor.id);
-      if (!others.length) throw e;
-      onUpdate({ toolNote: `${executor.label} failed; falling back…` });
-      for (const fb of others) {
+      // Handle models that don't support tool calling
+      if (tools.length && (e.message.includes("tool") || e.message.includes("404") || e.message.includes("endpoint"))) {
+        onUpdate({ toolNote: `Tools not supported by ${executor.label}, retrying without tools...` });
         try {
-          const fbModel = buildModelFrom(fb, cfg.temperature);
-          const fbBound = tools.length ? fbModel.bindTools(tools) : fbModel;
-          res = await fbBound.invoke(msgs);
-          executor = fb;
-          onUpdate({ toolNote: `fallback → ${fb.label}` });
-          break;
-        } catch {
-          // try next
+          res = await model.invoke(msgs, signal ? { signal } : undefined);
+        } catch (e2) {
+          e = e2; // Continue to fallback if even without tools it fails
+        }
+      }
+
+      if (!res) {
+        const others = cfg.models.filter((m) => m.id !== executor.id);
+        if (!others.length) throw e;
+        onUpdate({ toolNote: `${executor.label} failed; falling back…` });
+        for (const fb of others) {
+          try {
+            const fbModel = buildModelFrom(fb, cfg.temperature);
+            const fbBound = tools.length ? fbModel.bindTools(tools) : fbModel;
+            try {
+              res = await fbBound.invoke(msgs);
+            } catch (fbErr) {
+              if (tools.length && (fbErr.message.includes("tool") || fbErr.message.includes("404"))) {
+                res = await fbModel.invoke(msgs);
+              } else {
+                throw fbErr;
+              }
+            }
+            executor = fb;
+            onUpdate({ toolNote: `fallback → ${fb.label}` });
+            break;
+          } catch {
+            // try next
+          }
         }
       }
       if (!res) throw e;
