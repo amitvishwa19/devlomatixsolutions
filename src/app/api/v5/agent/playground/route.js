@@ -1,46 +1,56 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { decrypt } from "@/lib/auth";
 
-
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const API_BASE_URL = "https://openrouter.ai/api/v1";
 
 export async function POST(req) {
-
-
     console.log('api agent playground hit')
     try {
-        let user
-        let appointment
+        const body = await req.json();
+        const { prompt } = body;
 
-        // const headersList = await headers()
-        // const authHeader =
-        //     headersList.get('authorization') ||
-        //     headersList.get('Authorization') ||
-        //     headersList.get('x-access-token') ||
-        //     headersList.get('X-Access-Token')
-        // const accessToken = authHeader?.replace(/^Bearer\s+/i, '') || null
-        // console.log('accessToken', accessToken)
-        //const payload = await req.json();
-        //const { date, slot, time, note, type, selectedDoctor, patient, presData } = payload.data
-        //console.log('payload', payload.data)
+        if (!prompt) {
+            return NextResponse.json({ status: 400, message: 'Prompt is required' });
+        }
 
-        //const { userId } = await decrypt(accessToken)
-        //onsole.log(userId)
-        //user = await db.user.findUnique({ where: { id: userId } })
+        if (!OPENROUTER_API_KEY) {
+            console.error('OPENROUTER_API_KEY is not configured in .env');
+            return NextResponse.json({ status: 500, message: 'OpenRouter API key not configured' });
+        }
 
+        const response = await fetch(`${API_BASE_URL}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                'HTTP-Referer': process.env.NEXT_PUBLIC_URL || 'https://dev.devlomatix.com',
+                'X-Title': 'Devlomatix Agent Playground',
+            },
+            body: JSON.stringify({
+                model: 'openrouter/auto',
+                messages: [
+                    { role: 'user', content: prompt }
+                ],
+            }),
+        });
 
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('OpenRouter Error:', errorText);
+            throw new Error(`OpenRouter failed: ${response.status} ${response.statusText}`);
+        }
 
-        //const response = "lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        const data = await response.json();
+        const aiResponse = data.choices[0]?.message?.content || "No response from AI";
 
-
-
-
-
-        //console.log('appointments', appointments)
-        return NextResponse.json({ status: 200, response: "response" })
+        return NextResponse.json({ 
+            status: 200, 
+            response: aiResponse,
+            model: data.model 
+        });
     } catch (error) {
-        console.log(error)
-        return NextResponse.json({ status: 500, message: 'Internal server Error' })
+        console.error('Playground Error:', error);
+        return NextResponse.json({ status: 500, message: error.message || 'Internal server Error' });
     }
 }
