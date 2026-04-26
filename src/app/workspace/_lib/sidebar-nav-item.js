@@ -62,9 +62,7 @@ export const getSidebarNavItems = (workspaceId) => {
         },
         {
             parent: { title: "FlowGenix", icon: "bot-message-square", url: baseFlowgenixPath },
-            child: [
-                { title: "Dashboard", icon: "bar-chart-3", url: baseFlowgenixPath },
-            ],
+            child: [],
             baseUrl: baseFlowgenixPath,
             permission: `navbar:KonnectXv2:Parent`
         },

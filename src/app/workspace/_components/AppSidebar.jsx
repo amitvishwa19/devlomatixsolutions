@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { useParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
@@ -24,13 +24,30 @@ export default function AppSidebar() {
 
     const workspaceId = params?.workspaceId || "testid"
     const [openGroups, setOpenGroups] = useState({})
+    const [hydrated, setHydrated] = useState(false)
 
-    const navigation = getSidebarNavItems(workspaceId)
+    useEffect(() => {
+        const stored = localStorage.getItem("workspace-sidebar")
+        if (stored) {
+            try {
+                setOpenGroups(JSON.parse(stored))
+            } catch (e) {
+                console.error("Error parsing sidebar state", e)
+            }
+        }
+        setHydrated(true)
+    }, [])
+
+    useEffect(() => {
+        if (hydrated) {
+            localStorage.setItem("workspace-sidebar", JSON.stringify(openGroups))
+        }
+    }, [openGroups, hydrated])
+
+    const navigation = useMemo(() => getSidebarNavItems(workspaceId), [workspaceId])
 
     return (
         <Sidebar collapsible="icon" className="[&>div]:bg-transparent">
-
-
             <SidebarHeader className=" group-data-[collapsible=icon]:p-2 flex flex-row transition-all duration-200 ease-in-out relative min-h-[64px]">
                 <AppLogo
                     link={'/'}
@@ -49,42 +66,47 @@ export default function AppSidebar() {
                 <ScrollArea className='h-[87vh]'>
                     {navigation.map((item, index) => {
                         const { parent, child, baseUrl } = item;
-                        const Icon = parent.icon;
+                        const isOpen = openGroups[index]
+                        const isGroupActive = pathname === baseUrl || pathname.startsWith(baseUrl + '/')
                         return (
-                            <SidebarGroup key={index} className="p-0">
-                                <SidebarMenu className="px-3 group-data-[collapsible=icon]:px-0">
+                            <SidebarGroup key={index} className="p-0 ml-2">
+                                <SidebarMenu className="px-3 group-data-[collapsible=icon]:px-0 ">
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton>
+                                        <SidebarMenuButton
+                                            onClick={() => setOpenGroups(prev => ({ ...prev, [index]: !prev[index] }))}
+                                            className={`w-full flex mb-2 items-center gap-3 rounded-md text-sm font-medium cursor-pointer ${isGroupActive ? "bg-primary/10 text-primary border-l-2 border-primary" : "text-foreground hover:bg-card/50 hover:text-primary border-l-2 border-transparent hover:border-primary"}`}
+                                        >
                                             <div className='flex flex-row items-center gap-2'>
-                                                <DynamicIcon name={Icon} size={18} className="shrink-0 text-muted-foreground" />
-                                                <span className='opacity-90'>{parent.title}</span>
+                                                <DynamicIcon name={parent.icon} size={18} className="shrink-0 text-muted-foreground" />
+                                                <span className='opacity-90 text-xs'>{parent.title}</span>
                                             </div>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 </SidebarMenu>
 
-                                <SidebarGroupContent>
-                                    <SidebarMenu className="pl-6 group-data-[collapsible=icon]:pl-0">
-                                        {child.map((c, i) => {
-                                            const isActive = pathname === c.url
-                                            return (
-                                                <SidebarMenuItem key={i}>
-                                                    <SidebarMenuButton
-                                                        asChild
-                                                        tooltip={c.title}
-                                                    >
-                                                        <Link href={c.url} className="flex items-center gap-3 w-full">
-                                                            {c.icon ? <DynamicIcon name={c.icon} size={14} className="shrink-0" /> : <div className="w-3.5 h-3.5" />}
-                                                            <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">{c.title}</span>
-                                                        </Link>
-                                                    </SidebarMenuButton>
-                                                </SidebarMenuItem>
-                                            )
-                                        })}
-                                    </SidebarMenu>
-                                </SidebarGroupContent>
-
-
+                                <div className={`overflow-hidden transition-all duration-100 ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
+                                    <SidebarGroupContent>
+                                        <SidebarMenu className="pl-10 group-data-[collapsible=icon]:pl-0">
+                                            {child.map((c, i) => {
+                                                const isActive = pathname === c.url
+                                                return (
+                                                    <SidebarMenuItem key={i}>
+                                                        <SidebarMenuButton
+                                                            asChild
+                                                            tooltip={c.title}
+                                                            className={isActive ? "bg-primary/10 text-primary" : ""}
+                                                        >
+                                                            <Link href={c.url} className="flex items-center gap-3 w-full">
+                                                                {c.icon ? <DynamicIcon name={c.icon} size={14} className="shrink-0" /> : <div className="w-3.5 h-3.5" />}
+                                                                <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">{c.title}</span>
+                                                            </Link>
+                                                        </SidebarMenuButton>
+                                                    </SidebarMenuItem>
+                                                )
+                                            })}
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </div>
                             </SidebarGroup>
                         )
                     })}
