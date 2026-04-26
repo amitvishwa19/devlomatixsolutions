@@ -4,17 +4,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { saveAgentMeta } from "../_lib/agent-storage";
+import { saveAgentConfig } from "../../_actions/setup/actions";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
+import { useParams } from "next/navigation";
 
-export const AgentSettings = ({ config, onChange }) => {
+export const AgentSettings = ({ config, onChange, userId }) => {
+  const params = useParams();
+  const workspaceId = params?.workspaceId;
   const set = (k, v) =>
     onChange({ ...config, [k]: v });
 
   const handleSave = async () => {
     try {
-      await saveAgentMeta(config);
+      await saveAgentConfig(workspaceId, userId, config);
       toast.success("Agent configuration saved");
     } catch (e) {
       toast.error(e.message);

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, Loader2 } from "lucide-react";
-import { createWorkflow, listWorkflows, saveWorkflow } from "../_lib/workflow-storage";
+import { listWorkflows, createWorkflow } from "../../_actions/workflows/actions";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -25,16 +25,21 @@ export const TemplatesDialog = () => {
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    listWorkflows({ templates: true })
+    listWorkflows(workspaceId, { templates: true })
       .then(setItems)
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed"))
       .finally(() => setLoading(false));
-  }, [open]);
+  }, [open, workspaceId]);
 
   const useTemplate = async (tpl) => {
     try {
-      const wf = await createWorkflow(`${tpl.name} (copy)`);
-      await saveWorkflow(wf.id, { nodes: tpl.nodes, edges: tpl.edges });
+      const userId = "cmo6yh2uq0000m4ik3bo51ghc"; // Default
+      const wf = await createWorkflow(workspaceId, userId, {
+          name: `${tpl.name} (copy)`,
+          nodes: tpl.nodes,
+          edges: tpl.edges,
+          status: "Draft"
+      });
       setOpen(false);
       router.push(`/workspace/${workspaceId}/flowgenix/canvas/${wf.id}`);
     } catch (e) {

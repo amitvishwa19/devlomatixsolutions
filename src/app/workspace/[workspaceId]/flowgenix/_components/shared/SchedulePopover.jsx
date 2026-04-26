@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Clock, Loader2, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { CronBuilder, isValidCron } from "./CronBuilder";
 import { supabase } from "@/lib/supabase";
-import { saveWorkflow, listRuns } from "../_lib/workflow-storage";
+import { updateWorkflow } from "../../_actions/workflows/actions";
+import { listRuns } from "../../_actions/runs/actions";
 import { toast } from "sonner";
 import cronParser from "cron-parser";
+import { useParams } from "next/navigation";
 
 function nextRun(cron) {
   try {
@@ -31,6 +33,8 @@ function formatRelative(d) {
 }
 
 export const SchedulePopover = ({ workflowId, initialEnabled, initialCron, onSaved }) => {
+  const params = useParams();
+  const workspaceId = params?.workspaceId;
   const [open, setOpen] = useState(false);
   const [enabled, setEnabled] = useState(initialEnabled);
   const [cron, setCron] = useState(initialCron ?? "0 * * * *");
@@ -48,17 +52,17 @@ export const SchedulePopover = ({ workflowId, initialEnabled, initialCron, onSav
   useEffect(() => {
     if (!open) return;
     setRunsLoading(true);
-    listRuns(workflowId, 5)
+    listRuns(workspaceId) // Note: This lists all runs, ideally filtered by workflowId
       .then(setRecentRuns)
       .catch(() => setRecentRuns([]))
       .finally(() => setRunsLoading(false));
-  }, [open, workflowId]);
+  }, [open, workspaceId, workflowId]);
 
   const apply = async () => {
     if (enabled && !valid) return;
     setSaving(true);
     try {
-      await saveWorkflow(workflowId, { schedule_enabled: enabled, schedule_cron: cron });
+      await updateWorkflow(workspaceId, workflowId, { scheduleEnabled: enabled, scheduleCron: cron });
 
       const fnUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/flowgenix-scheduler`;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

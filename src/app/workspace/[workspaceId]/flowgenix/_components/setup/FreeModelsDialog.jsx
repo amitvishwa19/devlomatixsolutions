@@ -7,14 +7,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Download, Search, Plug, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
-  PROVIDER_PRESETS,
-  newModel,
-  upsertModel,
-  setDefaultModelId,
-} from "../_lib/agent-storage";
-import { testModelConnection } from "../_lib/agent-runtime";
+  upsertAgentModel,
+  saveAgentConfig,
+} from "../../_actions/setup/actions";
+import { PROVIDER_PRESETS } from "../../_lib/agent-storage";
+import { testModelConnection } from "../../_lib/agent-runtime";
+import { useParams } from "next/navigation";
 
-export const FreeModelsDialog = ({ open, onOpenChange, config, onChange }) => {
+export const FreeModelsDialog = ({ open, onOpenChange, config, onChange, userId }) => {
+  const params = useParams();
+  const workspaceId = params?.workspaceId;
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [models, setModels] = useState([]);
@@ -150,15 +152,17 @@ export const FreeModelsDialog = ({ open, onOpenChange, config, onChange }) => {
     setAdding(true);
     const created = [];
     for (const f of toAdd) {
-      const m = newModel({
+      const m = {
+        name: f.id,
         label: (f.name?.slice(0, 60) || f.id),
         provider: "OpenRouter",
-        baseURL: PROVIDER_PRESETS.OpenRouter.baseURL,
+        baseUrl: PROVIDER_PRESETS.OpenRouter.baseURL,
         model: f.id,
+        baseURL: PROVIDER_PRESETS.OpenRouter.baseURL,
         apiKey: sharedKey,
-      });
+      };
       try {
-        const saved = await upsertModel(m);
+        const saved = await upsertAgentModel(workspaceId, userId, m);
         created.push(saved);
       } catch (e) {
         console.error("Failed to add model", f.id, e);
@@ -169,7 +173,9 @@ export const FreeModelsDialog = ({ open, onOpenChange, config, onChange }) => {
       models: [...config.models, ...created],
       defaultModelId: config.defaultModelId ?? created[0]?.id ?? null,
     };
-    if (!config.defaultModelId && created[0]) await setDefaultModelId(created[0].id);
+    if (!config.defaultModelId && created[0]) {
+        await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId: created[0].id });
+    }
     onChange(next);
     setAdding(false);
     toast.success(`Added ${created.length} model${created.length === 1 ? "" : "s"}`);

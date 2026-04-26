@@ -5,15 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
-  PROVIDER_PRESETS,
-  newModel,
-  upsertModel,
-  deleteModel,
-  saveModelTestResult,
-  setDefaultModelId,
-} from "../_lib/agent-storage";
-import { testModelConnection } from "../_lib/agent-runtime";
-import { inferCapabilities } from "../_lib/model-capabilities";
+  upsertAgentModel,
+  deleteAgentModel,
+  saveAgentConfig,
+} from "../../_actions/setup/actions";
+import { PROVIDER_PRESETS } from "../../_lib/agent-storage";
+import { useParams } from "next/navigation";
+import { testModelConnection } from "../../_lib/agent-runtime";
+import { inferCapabilities } from "../../_lib/model-capabilities";
 import { toast } from "sonner";
 import { Brain, Code2, Eye as EyeIcon, Globe, Infinity as InfinityIcon, CheckCircle2, ChevronDown, ChevronRight, Download, Eye, EyeOff, GripVertical, Loader2, Plug, Plus, Star, Timer, Trash2, XCircle } from "lucide-react";
 import { FreeModelsDialog } from "./FreeModelsDialog";
@@ -26,7 +25,9 @@ const CAP_META = {
   "long-ctx": { icon: InfinityIcon, label: "long-context" },
 };
 
-export const ModelsManager = ({ config, onChange }) => {
+export const ModelsManager = ({ config, onChange, userId }) => {
+  const params = useParams();
+  const workspaceId = params?.workspaceId;
   const [showKeys, setShowKeys] = useState({});
   const [testing, setTesting] = useState({});
   const [results, setResults] = useState(() =>
@@ -84,7 +85,7 @@ export const ModelsManager = ({ config, onChange }) => {
     updateModelLocal(id, patch);
     setSavingId(id);
     try {
-      await upsertModel(merged);
+      await upsertAgentModel(workspaceId, userId, merged);
     } catch (e) {
       toast.error(`Save failed: ${e.message}`);
     } finally {
@@ -96,21 +97,32 @@ export const ModelsManager = ({ config, onChange }) => {
     const preset = PROVIDER_PRESETS[p];
     persistModel(id, {
       provider: p,
+      baseUrl: preset?.baseURL ?? "",
       baseURL: preset?.baseURL ?? "",
+      name: preset?.model ?? "",
       model: preset?.model ?? "",
     });
   };
 
   const addModel = async () => {
-    const m = newModel({ label: `model-${config.models.length + 1}` });
+    const m = { 
+      label: `model-${config.models.length + 1}`,
+      provider: "openai",
+      apiKey: "",
+      name: "",
+      model: "",
+      isActive: true
+    };
     try {
-      const saved = await upsertModel(m);
+      const saved = await upsertAgentModel(workspaceId, userId, m);
       const next = {
         ...config,
         models: [...config.models, saved],
         defaultModelId: config.defaultModelId ?? saved.id,
       };
-      if (!config.defaultModelId) await setDefaultModelId(saved.id);
+      if (!config.defaultModelId) {
+          await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId: saved.id });
+      }
       onChange(next);
       setExpanded((s) => ({ ...s, [saved.id]: true }));
     } catch (e) {
@@ -120,12 +132,12 @@ export const ModelsManager = ({ config, onChange }) => {
 
   const removeModel = async (id) => {
     try {
-      await deleteModel(id);
+      await deleteAgentModel(workspaceId, id);
       const models = config.models.filter((m) => m.id !== id);
       let defaultModelId = config.defaultModelId;
       if (defaultModelId === id) {
         defaultModelId = models[0]?.id ?? null;
-        await setDefaultModelId(defaultModelId);
+        await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId });
       }
       onChange({ ...config, models, defaultModelId });
     } catch (e) {
@@ -135,7 +147,7 @@ export const ModelsManager = ({ config, onChange }) => {
 
   const setDefault = async (id) => {
     try {
-      await setDefaultModelId(id);
+      await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId: id });
       onChange({ ...config, defaultModelId: id });
     } catch (e) {
       toast.error(e.message);
@@ -153,7 +165,14 @@ export const ModelsManager = ({ config, onChange }) => {
     setTesting((s) => ({ ...s, [m.id]: false }));
     const caps = inferCapabilities(m);
     try {
-      await saveModelTestResult(m.id, r.ok, r.message, r.latencyMs, caps);
+      await upsertAgentModel(workspaceId, userId, {
+          ...m,
+          lastTestOk: r.ok,
+          lastTestAt: new Date().toISOString(),
+          lastTestMessage: r.message,
+          lastLatencyMs: r.latencyMs ?? null,
+          capabilities: caps
+      });
       const models = config.models.map((x) =>
         x.id === m.id
           ? {
@@ -188,7 +207,14 @@ export const ModelsManager = ({ config, onChange }) => {
         setResults((s) => ({ ...s, [m.id]: r }));
         setTesting((s) => ({ ...s, [m.id]: false }));
         try {
-          await saveModelTestResult(m.id, r.ok, r.message, r.latencyMs, caps);
+          await upsertAgentModel(workspaceId, userId, {
+              ...m,
+              lastTestOk: r.ok,
+              lastTestAt: new Date().toISOString(),
+              lastTestMessage: r.message,
+              lastLatencyMs: r.latencyMs ?? null,
+              capabilities: caps
+          });
         } catch (e) {
           console.error("persist test result failed", e);
         }
@@ -520,7 +546,7 @@ export const ModelsManager = ({ config, onChange }) => {
           );
         })}
       </div>
-      <FreeModelsDialog open={freeOpen} onOpenChange={setFreeOpen} config={config} onChange={onChange} />
+      <FreeModelsDialog open={freeOpen} onOpenChange={setFreeOpen} config={config} onChange={onChange} userId={userId} />
     </div>
   );
 };

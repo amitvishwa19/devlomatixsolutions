@@ -6,21 +6,18 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   getDefaultModel,
-} from "../_lib/agent-storage";
-import { runAgent, AgentAbortError } from "../_lib/agent-runtime";
+} from "../../_lib/agent-storage";
+import { runAgent, AgentAbortError } from "../../_lib/agent-runtime";
 import {
-  appendThreadMessage,
-  clearThreadMessages,
-  createThread,
-  deleteLastAssistant,
-  deleteThread,
-  ensureDefaultThread,
   listThreads,
-  loadThreadMessages,
-  renameThread,
-} from "../_lib/thread-storage";
+  createThread,
+  getThreadMessages,
+  saveChatMessage,
+} from "../../_actions/chat/actions";
+import { saveAgentConfig } from "../../_actions/setup/actions";
 import { ChatThreadList } from "./ChatThreadList";
 import { toast } from "sonner";
+import { useParams } from "next/navigation";
 import {
   ChevronDown,
   ChevronRight,
@@ -88,7 +85,9 @@ const ToolCallBlock = ({ trace }) => {
   );
 };
 
-export const ChatPanel = ({ config, ragDocs }) => {
+export const ChatPanel = ({ config, ragDocs, userId }) => {
+  const params = useParams();
+  const workspaceId = params?.workspaceId;
   const [threads, setThreads] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -103,9 +102,9 @@ export const ChatPanel = ({ config, ragDocs }) => {
   // Load threads + ensure a default one
   useEffect(() => {
     (async () => {
-      const list = await listThreads("agent");
+      const list = await listThreads(workspaceId, userId);
       if (list.length === 0) {
-        const t = await ensureDefaultThread("agent", null);
+        const t = await createThread(workspaceId, userId, "Default chat");
         setThreads([t]);
         setActiveId(t.id);
       } else {
@@ -113,7 +112,7 @@ export const ChatPanel = ({ config, ragDocs }) => {
         setActiveId(list[0].id);
       }
     })();
-  }, []);
+  }, [workspaceId, userId]);
 
   // Load messages whenever active thread changes
   useEffect(() => {
@@ -122,10 +121,10 @@ export const ChatPanel = ({ config, ragDocs }) => {
       return;
     }
     (async () => {
-      const m = await loadThreadMessages(activeId);
+      const m = await getThreadMessages(workspaceId, activeId);
       setMessages(m);
     })();
-  }, [activeId]);
+  }, [activeId, workspaceId]);
 
   useEffect(() => {
     const vp = scrollRef.current?.querySelector(
@@ -135,13 +134,13 @@ export const ChatPanel = ({ config, ragDocs }) => {
   }, [messages, toolNotes, busy, streaming, liveTraces]);
 
   const refreshThreads = async () => {
-    const list = await listThreads("agent");
+    const list = await listThreads(workspaceId, userId);
     setThreads(list);
   };
 
   const handleNewThread = async () => {
     try {
-      const t = await createThread("agent", null, "New chat");
+      const t = await createThread(workspaceId, userId, "New chat");
       setThreads((s) => [t, ...s]);
       setActiveId(t.id);
     } catch (e) {
@@ -194,33 +193,21 @@ export const ChatPanel = ({ config, ragDocs }) => {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     try {
-      await appendThreadMessage(activeId, userMsg);
-      // Auto-name the thread from the first user message
-      const currentThread = threads.find((t) => t.id === activeId);
-      if (currentThread && (currentThread.title === "New chat" || currentThread.title === "Default") && baseHistory.length === 0) {
-        const newTitle = text.slice(0, 48).replace(/\s+/g, " ").trim() || currentThread.title;
-        renameThread(activeId, newTitle).then(() => {
-          setThreads((s) => s.map((t) => (t.id === activeId ? { ...t, title: newTitle } : t)));
-        }).catch(() => {});
-      }
-      const reply = await runAgent(
-        config,
-        baseHistory,
-        text,
-        ragDocs,
-        (u) => {
-          if (u.toolNote) setToolNotes((s) => [...s, u.toolNote]);
-          if (typeof u.partial === "string") setStreaming(u.partial);
-          if (u.toolCall) {
-            traces.push(u.toolCall);
-            setLiveTraces([...traces]);
-          }
-        },
-        ctrl.signal,
-      );
       const meta = traces.length ? JSON.stringify({ toolCalls: traces }) : undefined;
-      const assistantMsg = { role: "assistant", content: reply, meta };
-      await appendThreadMessage(activeId, assistantMsg);
+      const assistantMsg = { 
+          role: "assistant", 
+          content: reply, 
+          meta, 
+          threadId: activeId,
+          workspaceId,
+          userId
+      };
+      
+      await Promise.all([
+          saveChatMessage(workspaceId, userId, { ...userMsg, threadId: activeId }),
+          saveChatMessage(workspaceId, userId, assistantMsg)
+      ]);
+
       setMessages([...next, assistantMsg]);
       refreshThreads();
     } catch (e) {

@@ -1,11 +1,15 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getDefaultModel, insertRagDoc, deleteRagDoc } from "../_lib/agent-storage";
-import { chunkText, embedTexts } from "../_lib/agent-runtime";
+import { upsertRagDoc, deleteRagDoc } from "../../_actions/setup/actions";
+import { getDefaultModel } from "../../_lib/agent-storage";
+import { chunkText, embedTexts } from "../../_lib/agent-runtime";
 import { toast } from "sonner";
+import { useParams } from "next/navigation";
 import { FileText, Loader2, Trash2, Upload } from "lucide-react";
 
-export const RagPanel = ({ config, docs, setDocs }) => {
+export const RagPanel = ({ config, docs, setDocs, userId }) => {
+  const params = useParams();
+  const workspaceId = params?.workspaceId;
   const ref = useRef(null);
   const [busy, setBusy] = useState(false);
 
@@ -24,12 +28,11 @@ export const RagPanel = ({ config, docs, setDocs }) => {
         const chunks = chunkText(text);
         const vecs = await embedTexts(m, chunks);
         const doc = {
-          id: crypto.randomUUID(),
           name: f.name,
           chunks: chunks.map((text, i) => ({ text, embedding: vecs[i] })),
         };
-        await insertRagDoc(doc);
-        next.push(doc);
+        const saved = await upsertRagDoc(workspaceId, userId, doc);
+        next.push(saved);
       }
       setDocs(next);
       toast.success(`Indexed ${files.length} document(s)`);
@@ -43,7 +46,7 @@ export const RagPanel = ({ config, docs, setDocs }) => {
 
   const remove = async (id) => {
     try {
-      await deleteRagDoc(id);
+      await deleteRagDoc(workspaceId, id);
       setDocs(docs.filter((d) => d.id !== id));
     } catch (e) {
       toast.error(e.message);

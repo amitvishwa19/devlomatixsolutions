@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings, Loader2 } from "lucide-react";
-import { saveWorkflow } from "../_lib/workflow-storage";
+import { updateWorkflow } from "../../_actions/workflows/actions";
 import { toast } from "sonner";
+import { useParams } from "next/navigation";
 
 export const WorkflowSettingsPopover = ({ workflowId, initialUrl, onSaved }) => {
+  const params = useParams();
+  const workspaceId = params?.workspaceId;
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState(initialUrl ?? "");
   const [saving, setSaving] = useState(false);
@@ -16,7 +19,7 @@ export const WorkflowSettingsPopover = ({ workflowId, initialUrl, onSaved }) => 
     setSaving(true);
     try {
       const v = url.trim() || null;
-      await saveWorkflow(workflowId, { failure_webhook_url: v });
+      await updateWorkflow(workspaceId, workflowId, { failureWebhookUrl: v });
       onSaved(v);
       toast.success("Settings saved");
       setOpen(false);
