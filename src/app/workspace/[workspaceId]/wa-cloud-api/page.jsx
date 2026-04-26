@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { CheckCircle2, MessageCircleDashed, Users, MessageSquare, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
@@ -41,15 +41,14 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(false);
     const [activityPage, setActivityPage] = useState(1);
     const [activityPagination, setActivityPagination] = useState({
+        totalPages: 1,
         currentPage: 1,
-        hasMore: false,
-        totalOnPage: 0
+        totalOnPage: 0,
+        hasMore: false
     });
     const [error, setError] = useState(null);
-    const [whatsappSettingOpen, setWhatsappSettingOpen] = useState({
-        open: false,
-        onClose: () => setWhatsappSettingOpen({ open: false })
-    });
+    const [isWhatsappSettingOpen, setIsWhatsappSettingOpen] = useState(false);
+    const handleWhatsappSettingClose = () => setIsWhatsappSettingOpen(false);
 
     const { execute: executeGetCampaigns } = useAction(getCampaigns, {
         onSuccess: (data) => {
@@ -63,16 +62,16 @@ export default function DashboardPage() {
         }
     });
 
-    const fetchCampaigns = () => {
+    const fetchCampaigns = useCallback(() => {
+        if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
+
         setLoading(true);
         setError(null);
-        if (workspaceId) {
-            executeGetCampaigns({ workspaceId });
-        }
-    };
+        executeGetCampaigns({ workspaceId });
+    }, [workspaceId, executeGetCampaigns]);
 
 
-    const { execute: executeGetActivities } = useAction(getActivities, {
+    const { execute: executeGetActivities, isLoading: activitiesLoading } = useAction(getActivities, {
         onSuccess: (data) => {
             if (data.activities) {
                 // Map API activities to UI format
@@ -96,18 +95,17 @@ export default function DashboardPage() {
         }
     });
 
-    const fetchActivities = (page = 1) => {
-        if (workspaceId) {
-            executeGetActivities({ workspaceId, page, pageSize: 5 });
-        }
-    };
+    const fetchActivities = useCallback((page = 1) => {
+        if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
+        executeGetActivities({ workspaceId, page, pageSize: 5 });
+    }, [workspaceId, executeGetActivities]);
 
-    useEffect(() => {
-        if (workspaceId) {
-            fetchCampaigns();
-            fetchActivities(activityPage);
-        }
-    }, [workspaceId, activityPage]);
+    // useEffect(() => {
+    //     if (workspaceId) {
+    //         fetchCampaigns();
+    //         fetchActivities(activityPage);
+    //     }
+    // }, [workspaceId, activityPage]);
 
     const refresh = () => fetchCampaigns();
 
@@ -177,7 +175,7 @@ export default function DashboardPage() {
                     <Button
                         variant=""
                         className="gap-2 cursor-pointer border"
-                        onClick={() => setWhatsappSettingOpen({ open: true, onClose: () => setWhatsappSettingOpen({ open: false }) })}
+                        onClick={() => setIsWhatsappSettingOpen(true)}
                     >
                         <MessageCircleDashed className="w-4 h-4" />
                         <span className="hidden sm:inline">Connect WA</span>
@@ -187,7 +185,7 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            <DashboardStats />
+            <DashboardStats workspaceId={workspaceId} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -243,10 +241,10 @@ export default function DashboardPage() {
                             Recent Activity <span className="text-sm text-muted-foreground">({activities.length})</span>
                         </h3>
                     </div>
-                    <RecentActivity 
-                        activities={activities} 
-                        currentPage={activityPage}
-                        hasMore={activityPagination.hasMore}
+                    <RecentActivity
+                        activities={activities}
+                        loading={activitiesLoading}
+                        pagination={activityPagination}
                         onPageChange={setActivityPage}
                     />
                 </div>
@@ -254,8 +252,8 @@ export default function DashboardPage() {
 
 
             <WhatsAppSettingModal
-                open={whatsappSettingOpen.open}
-                onClose={whatsappSettingOpen.onClose}
+                open={isWhatsappSettingOpen}
+                onClose={handleWhatsappSettingClose}
             />
 
 

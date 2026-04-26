@@ -67,7 +67,7 @@ export default function WorkspaceDashboard({ workspaceId }) {
             title: "WhatsApp Manager",
             description: "Direct customer engagement, bulk campaigns and automated bot flows.",
             icon: MessageCircle,
-            href: `/workspace/${workspaceId}/wa`,
+            href: `/workspace/${workspaceId}/wa-cloud-api`,
             color: "green-500",
             stats: [
                 { label: "Status", value: "Connected" },
