@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Zap, Bot, MessageSquare, Database, GitBranch, Code, Mail, Globe, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { useParams } from "next/navigation";
+import { listWorkflows } from "../../_actions/workflows/actions";
 
 const iconMap = {
   zap: Zap, bot: Bot, message: MessageSquare, database: Database,
@@ -39,13 +41,72 @@ const BUILT_IN_TEMPLATES = [
       { id: "e2", source: "f1", target: "h1", type: "smoothstep", animated: true },
     ],
   },
+  {
+    id: "builtin-schedule-notify",
+    name: "Scheduled Email Alert",
+    description: "Run on a schedule, fetch data, and send email notifications",
+    category: "Automation",
+    icon: "mail",
+    nodes: [
+      { id: "t1", type: "workflowNode", position: { x: 100, y: 250 }, data: { label: "Schedule", type: "schedule", subtitle: "", status: "idle" } },
+      { id: "c1", type: "workflowNode", position: { x: 350, y: 250 }, data: { label: "Code", type: "code", subtitle: "", status: "idle" } },
+      { id: "m1", type: "workflowNode", position: { x: 600, y: 250 }, data: { label: "Send Email", type: "email", subtitle: "", status: "idle" } },
+    ],
+    edges: [
+      { id: "e1", source: "t1", target: "c1", type: "smoothstep", animated: true },
+      { id: "e2", source: "c1", target: "m1", type: "smoothstep", animated: true },
+    ],
+  },
+  {
+    id: "builtin-switch-router",
+    name: "Data Router",
+    description: "Use a Switch node to route data to different processing paths",
+    category: "Core",
+    icon: "branch",
+    nodes: [
+      { id: "t1", type: "workflowNode", position: { x: 100, y: 250 }, data: { label: "Webhook", type: "webhook", subtitle: "", status: "idle" } },
+      { id: "s1", type: "workflowNode", position: { x: 350, y: 250 }, data: { label: "Switch", type: "switch", subtitle: "", status: "idle", config: { rules: [{ field: "type", operator: "equals", value: "order" }, { field: "type", operator: "equals", value: "refund" }] } } },
+      { id: "p1", type: "workflowNode", position: { x: 600, y: 150 }, data: { label: "Process Order", type: "code", subtitle: "", status: "idle" } },
+      { id: "p2", type: "workflowNode", position: { x: 600, y: 350 }, data: { label: "Process Refund", type: "code", subtitle: "", status: "idle" } },
+    ],
+    edges: [
+      { id: "e1", source: "t1", target: "s1", type: "smoothstep", animated: true },
+      { id: "e2", source: "s1", target: "p1", type: "smoothstep", animated: true },
+      { id: "e3", source: "s1", target: "p2", type: "smoothstep", animated: true },
+    ],
+  },
 ];
 
 export default function TemplateGallery({ onClose, onLoadTemplate }) {
+  const [savedTemplates, setSavedTemplates] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const params = useParams();
+  const workspaceId = params.workspaceId;
 
-  const categories = ["All", "AI", "Integration"];
-  const filtered = selectedCategory === "All" ? BUILT_IN_TEMPLATES : BUILT_IN_TEMPLATES.filter((t) => t.category === selectedCategory);
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const res = await listWorkflows(workspaceId, { templates: true });
+        setSavedTemplates(res || []);
+      } catch (e) {
+        console.error("Failed to fetch saved templates:", e);
+      }
+    };
+    fetch();
+  }, [workspaceId]);
+
+  const allTemplates = [
+    ...BUILT_IN_TEMPLATES.map((t) => ({ ...t, isBuiltin: true })),
+    ...savedTemplates.map((t) => ({
+      ...t,
+      isBuiltin: false,
+      category: "Saved",
+      icon: "zap",
+    })),
+  ];
+
+  const categories = ["All", ...Array.from(new Set(allTemplates.map((t) => t.category)))];
+  const filtered = selectedCategory === "All" ? allTemplates : allTemplates.filter((t) => t.category === selectedCategory);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -54,7 +115,7 @@ export default function TemplateGallery({ onClose, onLoadTemplate }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Template Gallery</h2>
-            <p className="text-sm text-muted-foreground">Start from a template or create your own</p>
+            <p className="text-sm text-muted-foreground">Start from a template or load a saved configuration</p>
           </div>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -105,6 +166,9 @@ export default function TemplateGallery({ onClose, onLoadTemplate }) {
                       <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
                         {template.name}
                       </h3>
+                      {template.isBuiltin && (
+                        <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Built-in</span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{template.description}</p>
                     <div className="flex items-center gap-2 mt-2">

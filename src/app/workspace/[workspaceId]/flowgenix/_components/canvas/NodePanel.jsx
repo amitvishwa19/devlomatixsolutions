@@ -156,6 +156,7 @@ const nodeCategories = [
     },
 ];
 
+// Mapping from agent slot id to allowed node category names
 const SLOT_CATEGORY_FILTER = {
     llm: ["LLM Models"],
     memory: ["Memory"],

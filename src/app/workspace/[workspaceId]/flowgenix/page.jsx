@@ -25,7 +25,7 @@ import { AgentSettings } from "./_components/setup/AgentSettings";
 import { RagPanel } from "./_components/setup/RagPanel";
 import { RunList } from "./_components/runs/RunList";
 import { CredentialList } from "./_components/credentials/CredentialList";
-import WorkflowCanvas from "./_components/WorkflowCanvas";
+import WorkflowCanvas from "./_components/canvas/WorkflowCanvas";
 
 import { toast } from "sonner";
 

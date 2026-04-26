@@ -28,7 +28,7 @@ export default function AppSidebar() {
     const { activePermissions, previewRole, isSuperAdmin } = useAccess() || {}
 
     const workspaceId = params?.workspaceId || "testid"
-    const [openGroups, setOpenGroups] = useState({ Workspace: true })
+    const [openGroups, setOpenGroups] = useState({})
     const [hydrated, setHydrated] = useState(false)
 
     const rawNavigation = getSidebarItems(workspaceId)
@@ -119,7 +119,8 @@ export default function AppSidebar() {
             )
 
             if (matchesRoute && !openGroups[category]) {
-                setOpenGroups((prev) => ({ ...prev, [category]: true }))
+                // Accordion behavior: replace state with only the active category
+                setOpenGroups({ [category]: true })
             }
         })
     }, [pathname, hydrated])

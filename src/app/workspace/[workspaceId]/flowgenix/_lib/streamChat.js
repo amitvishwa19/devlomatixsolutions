@@ -12,7 +12,7 @@ export async function streamChat({
   onDone,
   onError,
 }) {
-  const useStream = !enableTools; // tool-calling uses non-streaming
+  const useStream = !enableTools;
 
   if (!CHAT_URL) {
     console.error("NEXT_PUBLIC_AI_CHAT_URL is not defined");
@@ -37,7 +37,6 @@ export async function streamChat({
         }),
       });
       
-      // Handle non-streaming (tool-calling) response
       if (!useStream && resp.ok) {
         try {
           const data = await resp.json();
@@ -103,7 +102,6 @@ export async function streamChat({
         }
       }
     
-      // Flush remaining
       if (buffer.trim()) {
         for (let raw of buffer.split("\n")) {
           if (!raw) continue;

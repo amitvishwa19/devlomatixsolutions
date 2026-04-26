@@ -26,7 +26,6 @@ export function useWorkflowKeyboard(
       const target = e.target;
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
 
-      // Delete / Backspace
       if ((e.key === "Delete" || e.key === "Backspace") && selectedNode) {
         e.preventDefault();
         saveUndo();
@@ -36,13 +35,11 @@ export function useWorkflowKeyboard(
         setSelectedNode(null);
       }
 
-      // Ctrl+C / Cmd+C
       if ((e.ctrlKey || e.metaKey) && e.key === "c" && selectedNode) {
         e.preventDefault();
         clipboardRef.current = [{ ...selectedNode }];
       }
 
-      // Ctrl+V / Cmd+V
       if ((e.ctrlKey || e.metaKey) && e.key === "v" && clipboardRef.current.length > 0) {
         e.preventDefault();
         saveUndo();
@@ -56,7 +53,6 @@ export function useWorkflowKeyboard(
         setNodes((nds) => [...nds, ...pasted]);
       }
 
-      // Ctrl+Z / Cmd+Z
       if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         const prev = undoStackRef.current.pop();

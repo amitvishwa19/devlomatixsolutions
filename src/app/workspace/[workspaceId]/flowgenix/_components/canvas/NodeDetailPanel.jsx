@@ -74,7 +74,7 @@ function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
 
             {executionResult && (
                 <div className="px-4 py-2 border-b border-border flex items-center gap-4 text-[11px] text-muted-foreground bg-muted/30 shrink-0">
-                    <span>Duration: <strong className="text-foreground">{executionResult.duration}</strong></span>
+                    <span>Duration: <strong className="text-foreground">{executionResult.duration}ms</strong></span>
                     <span>Type: <strong className="text-foreground">{executionResult.nodeType}</strong></span>
                 </div>
             )}
@@ -129,7 +129,7 @@ function NodeDetailPanel({ node, executionResult, onClose, onUpdateConfig }) {
                                     <p className="text-xs text-destructive/80 font-mono">{executionResult.error}</p>
                                 </div>
                             )}
-                            {executionResult.output && Object.keys(executionResult.output).length > 0 && <JsonBlock data={executionResult.output} label="Output Data" />}
+                            {Object.keys(executionResult.output).length > 0 && <JsonBlock data={executionResult.output} label="Output Data" />}
                         </div>
                     ) : (
                         <div className="text-center py-8">
@@ -155,14 +155,14 @@ function JsonBlock({ data, label }) {
                     {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                     {label}
                 </span>
-                <span className="text-[10px] opacity-60">{data ? Object.keys(data).length : 0} fields</span>
+                <span className="text-[10px] opacity-60">{Object.keys(data).length} fields</span>
             </button>
             {expanded && (
                 <div className="relative">
                     <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-6 w-6 p-0 opacity-60 hover:opacity-100" onClick={copy}>
                         <Copy className="h-3 w-3" />
                     </Button>
-                    <pre className="p-3 text-xs font-mono text-foreground bg-background overflow-x-auto max-h-[400px] overflow-y-auto leading-relaxed">{json}</pre>
+                    <pre className="p-3 text-xs font-mono text-foreground bg-background overflow-x-auto max-h-[200px] overflow-y-auto leading-relaxed">{json}</pre>
                 </div>
             )}
         </div>
@@ -251,7 +251,7 @@ function SetConfig({ config, onChange }) {
 
     return (
         <div className="space-y-3">
-            <label className="text-xs text-muted-foreground">Assignments</label>
+            <label className="text-xs font-medium text-muted-foreground">Assignments</label>
             {assignments.map((a, i) => (
                 <div key={i} className="flex gap-2 items-start">
                     <div className="flex-1 space-y-1">
@@ -370,17 +370,22 @@ function AgentConfig({ config, onChange }) {
                         className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground"
                     >
                         <optgroup label="OpenAI">
-                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4">GPT-4</option>
                             <option value="gpt-4-turbo">GPT-4 Turbo</option>
                             <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                         </optgroup>
                         <optgroup label="Anthropic">
-                            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
                             <option value="claude-3-opus">Claude 3 Opus</option>
+                            <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                            <option value="claude-3-haiku">Claude 3 Haiku</option>
                         </optgroup>
                         <optgroup label="Google">
-                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gemini-pro">Gemini Pro</option>
+                            <option value="gemini-flash">Gemini Flash</option>
+                        </optgroup>
+                        <optgroup label="Open Source">
+                            <option value="llama-3">Llama 3</option>
+                            <option value="mixtral-8x7b">Mixtral 8x7B</option>
                         </optgroup>
                     </select>
                 </div>
@@ -601,16 +606,19 @@ function FilterConfig({ config, onChange }) {
 }
 
 function WebhookConfig({ config, onChange }) {
+    const webhookUrl = "Save workflow first to generate webhook URL";
+
     return (
         <div className="space-y-3">
             <div>
                 <label className="text-xs text-muted-foreground">Webhook URL</label>
                 <div className="mt-1 p-2 bg-muted/50 border border-border rounded-md">
-                    <code className="text-[10px] text-foreground break-all font-mono">Save workflow to see URL</code>
+                    <code className="text-[10px] text-foreground break-all font-mono">{webhookUrl}</code>
                 </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Send POST/GET requests to this URL to trigger the workflow.</p>
             </div>
             <div>
-                <label className="text-xs text-muted-foreground">Method</label>
+                <label className="text-xs text-muted-foreground">Accepted Methods</label>
                 <select value={config.method || "POST"} onChange={(e) => onChange({ ...config, method: e.target.value })}
                     className="w-full mt-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background text-foreground">
                     <option value="POST">POST</option><option value="GET">GET</option><option value="ANY">Any</option>
@@ -619,5 +627,7 @@ function WebhookConfig({ config, onChange }) {
         </div>
     );
 }
+
+
 
 export default memo(NodeDetailPanel);

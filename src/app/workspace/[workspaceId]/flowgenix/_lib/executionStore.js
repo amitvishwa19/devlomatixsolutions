@@ -1,8 +1,3 @@
-/**
- * A simple pub/sub store for sharing live execution data
- * between the workflow canvas and the executions page.
- */
-
 let liveExecutions = [];
 const listeners = new Set();
 
@@ -20,7 +15,6 @@ export const executionStore = {
     return liveExecutions;
   },
 
-  /** Start a new live execution */
   startExecution(workflow, totalNodes, nodeNames) {
     const id = Date.now();
     const now = new Date();
@@ -49,7 +43,6 @@ export const executionStore = {
     return id;
   },
 
-  /** Mark a node as running */
   nodeRunning(executionId, nodeName) {
     liveExecutions = liveExecutions.map((e) => {
       if (e.id !== executionId) return e;
@@ -63,12 +56,7 @@ export const executionStore = {
     notify();
   },
 
-  /** Mark a node as completed */
-  nodeCompleted(
-    executionId,
-    nodeName,
-    result
-  ) {
+  nodeCompleted(executionId, nodeName, result) {
     liveExecutions = liveExecutions.map((e) => {
       if (e.id !== executionId) return e;
       const updatedNodes = e.nodeExecutions.map((n) =>
@@ -80,7 +68,6 @@ export const executionStore = {
     notify();
   },
 
-  /** Mark remaining nodes as skipped and finish the execution */
   finishExecution(executionId, status, errorMessage) {
     const now = new Date();
     liveExecutions = liveExecutions.map((e) => {

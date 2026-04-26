@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { Key, Plus, ExternalLink } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { listCredentials } from "../../_actions/credentials/actions";
+import { getCredentials } from "../../_actions/workflows/get-credentials";
 
+// Maps node types to credential types they accept
 export const NODE_CREDENTIAL_TYPES = {
   http: ["generic", "oauth2", "jwt"],
   slack: ["slack"],
@@ -51,12 +52,8 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
     const fetch = async () => {
       setLoading(true);
       try {
-        const data = await listCredentials(workspaceId);
-        // Filter by types if needed
-        const filtered = types 
-          ? data.filter(c => types.includes(c.type))
-          : data;
-        setCredentials(filtered || []);
+        const data = await getCredentials({ workspaceId, types });
+        setCredentials(data || []);
       } catch (error) {
         console.error("Failed to fetch credentials:", error);
       } finally {
@@ -84,19 +81,28 @@ export default function CredentialSelector({ value, onChange, types, label = "Cr
           </option>
           {credentials.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name} ({c.type})
+              {c.name} ({c.credential_type})
             </option>
           ))}
         </select>
         <button
           type="button"
-          onClick={() => router.push(`/workspace/${workspaceId}/flowgenix?tab=credentials`)}
+          onClick={() => router.push(`/workspace/${workspaceId}/credentials`)}
           className="px-2 py-1.5 border border-border rounded-md bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           title="Manage credentials"
         >
           <Plus className="h-3.5 w-3.5" />
         </button>
       </div>
+      {value && (
+        <button
+          type="button"
+          onClick={() => router.push(`/workspace/${workspaceId}/credentials`)}
+          className="mt-1 text-[10px] text-primary hover:underline flex items-center gap-1"
+        >
+          <ExternalLink className="h-2.5 w-2.5" /> Manage credentials
+        </button>
+      )}
     </div>
   );
 }

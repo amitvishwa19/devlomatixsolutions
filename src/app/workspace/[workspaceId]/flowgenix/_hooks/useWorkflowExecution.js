@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { executionStore } from "../_lib/executionStore";
-// import { persistExecution } from "../_lib/persistExecution"; // Optional for now
+import { persistExecution } from "../_lib/persistExecution";
 import { executeWorkflowAction } from "../_actions/workflows/actions";
 
 export function useWorkflowExecution(nodes, setNodes, edges, workflowId, workflowName) {
@@ -52,7 +52,6 @@ export function useWorkflowExecution(nodes, setNodes, edges, workflowId, workflo
     nodeNames.forEach((n) => executionStore.nodeRunning(execId, n.name));
 
     try {
-      // Prepare nodes payload with config data
       const nodesPayload = nodes.map((n) => ({
         id: n.id,
         type: n.type,
@@ -89,7 +88,6 @@ export function useWorkflowExecution(nodes, setNodes, edges, workflowId, workflo
         });
       });
 
-      // Mark unprocessed nodes as skipped
       order.forEach((id) => {
         if (!resultsMap.has(id)) {
           setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, status: "idle" } } : n));
@@ -102,13 +100,44 @@ export function useWorkflowExecution(nodes, setNodes, edges, workflowId, workflo
       const errorMsg = hasError ? results.find((r) => r.error)?.error : undefined;
       executionStore.finishExecution(execId, finalStatus, errorMsg);
 
-      // Optional: persist to database if needed in future
-      // const finishedAt = new Date().toISOString();
-      // const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+      const finishedAt = new Date().toISOString();
+      const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+      persistExecution({
+        workflowId,
+        workflowName: wfName,
+        status: finalStatus,
+        startedAt,
+        finishedAt,
+        duration: durationMs > 1000 ? `${(durationMs / 1000).toFixed(1)}s` : `${durationMs}ms`,
+        mode: "manual",
+        errorMessage: errorMsg,
+        nodeExecutions: results.map((r) => ({
+          name: r.label,
+          type: r.nodeType,
+          status: r.status,
+          startTime: r.startTime,
+          duration: `${r.duration}ms`,
+          input: r.input,
+          output: r.output,
+          error: r.error,
+        })),
+      });
     } catch (err) {
       console.error("Workflow Execution Error:", err);
       setNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, status: "error" } })));
       executionStore.finishExecution(execId, "error", err.message || "Execution failed");
+
+      persistExecution({
+        workflowId,
+        workflowName: wfName,
+        status: "error",
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        duration: `${Date.now() - new Date(startedAt).getTime()}ms`,
+        mode: "manual",
+        errorMessage: err.message || "Execution failed",
+        nodeExecutions: [],
+      });
     } finally {
       setIsExecuting(false);
     }
