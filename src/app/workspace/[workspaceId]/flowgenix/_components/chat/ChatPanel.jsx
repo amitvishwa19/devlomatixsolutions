@@ -17,6 +17,7 @@ import {
   deleteThread,
   clearThreadMessages,
   deleteLastAssistantMessage,
+  getChatResponse,
 } from "../../_actions/chat/actions";
 import { saveAgentConfig } from "../../_actions/setup/actions";
 import { ChatThreadList } from "./ChatThreadList";
@@ -257,7 +258,40 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
     const text = input.trim();
     if (!text || busy) return;
     setInput("");
-    await runWith(text, messages);
+    
+    // Add user message
+    const userMsg = { role: "user", content: text };
+    setMessages(prev => [...prev, userMsg]);
+    
+    setBusy(true);
+    try {
+      const res = await getChatResponse({ messages: [...messages, userMsg], hashtag: false });
+      const fullResponse = res.response || "No response received";
+      const words = fullResponse.split(" ");
+      
+      let currentText = "";
+      setStreaming("");
+      
+      for (let i = 0; i < words.length; i++) {
+        currentText += (i === 0 ? "" : " ") + words[i];
+        setStreaming(currentText);
+        await new Promise(resolve => setTimeout(resolve, 20)); // Simulated streaming speed
+      }
+
+      const assistantMsg = { 
+        role: "assistant", 
+        content: fullResponse,
+        meta: JSON.stringify({ model: res.model })
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setStreaming("");
+      setBusy(false);
+    }
+
+    // await runWith(text, messages);
   };
 
   const stop = () => {

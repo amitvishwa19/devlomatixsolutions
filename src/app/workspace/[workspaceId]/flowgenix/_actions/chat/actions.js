@@ -100,3 +100,52 @@ export async function deleteLastAssistantMessage(threadId) {
         console.error("deleteLastAssistantMessage error:", error);
     }
 }
+
+function generate(wordCount = 500) {
+    const words = [
+        "lorem", "ipsum", "dolor", "sit", "amet",
+        "consectetur", "adipiscing", "elit", "sed", "do",
+        "eiusmod", "tempor", "incididunt", "ut", "labore",
+        "et", "dolore", "magna", "aliqua", "enim",
+        "minim", "veniam", "quis", "nostrud", "exercitation",
+        "ullamco", "laboris", "nisi", "aliquip", "commodo",
+        "consequat", "duis", "aute", "irure", "reprehenderit",
+        "voluptate", "velit", "esse", "cillum", "fugiat"
+    ];
+
+    let result = [];
+
+    for (let i = 0; i < wordCount; i++) {
+        result.push(words[Math.floor(Math.random() * words.length)]);
+    }
+
+    // First letter capital + end with period
+    let text = result.join(" ");
+    return text.charAt(0).toUpperCase() + text.slice(1) + ".";
+}
+
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const API_BASE_URL = "https://openrouter.ai/api/v1";
+
+export async function getChatResponse({ messages, model, temperature, systemPrompt, hashtag }) {
+
+    try {
+
+        const res = generate(500)
+        console.log(res)
+
+        return { success: false, error: "Error fetching data from server" }
+
+        return {
+            success: true,
+            response: res,
+            model: 'data.model'
+        };
+
+    } catch (err) {
+        console.error(`[FlowgenixAction] Error with model ${targetModel}:`, err.message);
+        lastError = err.message;
+    }
+
+    return { success: false, error: lastError || "All models failed" };
+}
