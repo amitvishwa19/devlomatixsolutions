@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Map, ShieldCheck, ChevronRight } from "lucide-react";
-import { getSidebarItems } from "@/constants/sidebar-items";
+import { getSidebarItems } from "@/app/workspace/_lib/sidebar-items";
 import { useParams } from "next/navigation";
 
 export function NavigationAccessForm({ form }) {

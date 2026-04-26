@@ -12,7 +12,7 @@ import { AppLogo } from '@/components/global/AppLogo'
 import logo from '@/assets/logo/logo.png'
 import Image from 'next/image'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { getSidebarItems } from '@/constants/sidebar-items'
+import { getSidebarItems } from '../_lib/sidebar-items'
 import { useAccess } from '@/providers/WorkspaceProvider'
 import { useSession } from 'next-auth/react'
 
@@ -240,12 +240,20 @@ export default function AppSidebar() {
                                                         <SidebarMenuItem key={`${item.category}-${item.title}`}>
                                                             <SidebarMenuButton
                                                                 asChild
-                                                                //isActive={isActive}
                                                                 tooltip={item.title}
-                                                                className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-xl hover:bg-card hover:text-primary transition-colors ${isActive ? "" : ""}`}
+                                                                className={`flex items-center gap-3 group-data-[collapsible=icon]:justify-center ml-4 rounded-md hover:bg-card/50 hover:text-primary transition-colors ${isActive ? "bg-primary/5 text-primary" : ""}`}
                                                             >
-                                                                <Link href={item.url}>
-                                                                    <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                                                                <Link href={item.url} className="flex items-center gap-3 w-full">
+                                                                    {item.icon ? (
+                                                                        <DynamicIcon
+                                                                            name={item.icon}
+                                                                            size={14}
+                                                                            className={`shrink-0 ${isActive ? "text-primary" : "text-muted-foreground opacity-70"}`}
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="w-3.5 h-3.5" /> // Spacer if no icon
+                                                                    )}
+                                                                    <span className={`group-data-[collapsible=icon]:hidden text-xs ${isActive ? "font-semibold" : "text-muted-foreground"}`}>
                                                                         {item.title}
                                                                     </span>
                                                                 </Link>
