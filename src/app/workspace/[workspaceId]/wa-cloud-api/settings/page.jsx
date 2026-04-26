@@ -127,7 +127,7 @@ function SettingsPageContent() {
                 <Tabs value={activeTab} onValueChange={setTab} className="flex-1 flex flex-col overflow-hidden p-2">
 
 
-                    <TabsList className="bg-card w-full  justify-start rounded-md h-auto  gap-1  border">
+                    <TabsList className="bg-card w-full  justify-start rounded-md h-auto  gap-1   border">
                         {[
                             { id: 'general', label: 'General', icon: Settings },
                             { id: 'billing', label: 'Usage & Billing', icon: Wallet },

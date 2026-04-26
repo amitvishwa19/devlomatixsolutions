@@ -233,8 +233,8 @@ export function MetaCloudTab({ workspaceId }) {
 
     return (
         <ScrollArea className="h-full w-full">
-            <div className="flex-1 outline-none p-4 pb-20">
-                <div className="max-w-6xl mx-auto space-y-6">
+            <div className="flex-1 outline-none  pb-20">
+                <div className=" mx-auto space-y-4">
 
                     {/* Header Section */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border rounded-2xl p-6 shadow-sm">
@@ -324,10 +324,10 @@ export function MetaCloudTab({ workspaceId }) {
                                                 </div>
 
                                                 <div className="aspect-square relative bg-muted/10 rounded-xl border border-dashed border-muted-foreground/20 flex items-center justify-center overflow-hidden group-hover:border-primary/30 transition-colors">
-                                                    <img 
-                                                        src={qr.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr.deep_link_url)}`} 
-                                                        alt="QR Code" 
-                                                        className="w-full h-full object-contain p-4 transition-transform group-hover:scale-105" 
+                                                    <img
+                                                        src={qr.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr.deep_link_url)}`}
+                                                        alt="QR Code"
+                                                        className="w-full h-full object-contain p-4 transition-transform group-hover:scale-105"
                                                     />
                                                     <div className="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-all">
                                                         <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => { setSelectedQR(qr); setIsPrintModalOpen(true); }}>
@@ -400,10 +400,10 @@ export function MetaCloudTab({ workspaceId }) {
                             </DialogHeader>
 
                             <div className="relative aspect-square w-64 bg-white p-4 rounded-3xl border-4 border-muted/20 shadow-xl mb-8 flex items-center justify-center">
-                                <img 
-                                    src={selectedQR?.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(selectedQR?.deep_link_url || '')}`} 
-                                    alt="QR Code" 
-                                    className="w-full h-full object-contain" 
+                                <img
+                                    src={selectedQR?.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(selectedQR?.deep_link_url || '')}`}
+                                    alt="QR Code"
+                                    className="w-full h-full object-contain"
                                 />
                             </div>
 
