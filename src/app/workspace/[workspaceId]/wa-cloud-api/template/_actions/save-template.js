@@ -26,6 +26,23 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
+        // Find the active phoneNumberId for this workspace
+        const credential = await db.credentials.findFirst({
+            where: { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        });
+        
+        let phoneNumberId = null;
+        if (credential && credential.credentials) {
+            const stored = credential.credentials;
+            if (typeof stored === 'string') {
+                try {
+                    phoneNumberId = JSON.parse(stored).phoneNumberId;
+                } catch (e) {}
+            } else {
+                phoneNumberId = stored.phoneNumberId;
+            }
+        }
+
         if (id) {
             const existing = await db.messageTemplate.findUnique({ where: { id } });
             if (!existing || existing.userId !== userId) {
@@ -42,14 +59,17 @@ const handler = async (data) => {
                     footer: footer || null,
                     buttons: buttons || [],
                     metadata: metadata || null,
-                    status: status || "DRAFT"
+                    status: status || "DRAFT",
+                    phoneNumberId: phoneNumberId || existing.phoneNumberId // Preserve if not found
                 }
             });
             return { success: true, template: updated };
         } else {
-            const existingName = await db.messageTemplate.findFirst({ where: { userId, name } });
+            const existingName = await db.messageTemplate.findFirst({ 
+                where: { userId, name, phoneNumberId } 
+            });
             if (existingName) {
-                return { error: "A template with this name already exists." };
+                return { error: "A template with this name already exists for this phone number." };
             }
             const template = await db.messageTemplate.create({
                 data: {
@@ -62,7 +82,8 @@ const handler = async (data) => {
                     footer: footer || null,
                     buttons: buttons || [],
                     metadata: metadata || null,
-                    status: "PENDING"
+                    status: "PENDING",
+                    phoneNumberId
                 }
             });
             return { success: true, template };

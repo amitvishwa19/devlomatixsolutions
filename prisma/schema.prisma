@@ -354,10 +354,11 @@ model MessageTemplate {
   updatedAt    DateTime   @updatedAt
   isDefault    Boolean    @default(false)
   platform     String     @default("WHATSAPP_CLOUD")
+  phoneNumberId String?
   campaigns    Campaign[]
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, name])
+  @@unique([userId, name, phoneNumberId])
   @@index([userId])
 }
 

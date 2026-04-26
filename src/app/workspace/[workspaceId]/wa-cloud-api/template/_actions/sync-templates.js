@@ -76,6 +76,7 @@ const handler = async (data) => {
 
                 const templateData = {
                     userId,
+                    templateId: metaT.id, // Save the Meta internal ID
                     name: metaT.name,
                     templateName: metaT.name,
                     category: metaT.category,
@@ -92,14 +93,16 @@ const handler = async (data) => {
                             : null
                     },
                     isDefault: true,
-                    platform: 'WHATSAPP_CLOUD'
+                    platform: 'WHATSAPP_CLOUD',
+                    phoneNumberId: cloudCredentials.phoneNumberId
                 };
 
                 const synced = await db.messageTemplate.upsert({
                     where: {
-                        userId_name: {
+                        userId_name_phoneNumberId: {
                             userId,
-                            name: metaT.name
+                            name: metaT.name,
+                            phoneNumberId: cloudCredentials.phoneNumberId
                         }
                     },
                     update: templateData,
