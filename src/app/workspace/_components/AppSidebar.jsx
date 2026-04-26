@@ -69,17 +69,30 @@ export default function AppSidebar() {
                         const isOpen = openGroups[index]
                         const isGroupActive = pathname === baseUrl || pathname.startsWith(baseUrl + '/')
                         return (
-                            <SidebarGroup key={index} className="p-0 ml-2">
+                            <SidebarGroup key={index} className="p-0 group-data-[collapsible=icon]:ml-2">
                                 <SidebarMenu className="px-3 group-data-[collapsible=icon]:px-0 ">
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
-                                            onClick={() => setOpenGroups(prev => ({ ...prev, [index]: !prev[index] }))}
+                                            asChild={!(child && child.length > 0)}
+                                            onClick={child && child.length > 0 ? () => setOpenGroups(prev => ({ ...prev, [index]: !prev[index] })) : undefined}
                                             className={`w-full flex mb-2 items-center gap-3 rounded-md text-sm font-medium cursor-pointer ${isGroupActive ? "bg-primary/10 text-primary border-l-2 border-primary" : "text-foreground hover:bg-card/50 hover:text-primary border-l-2 border-transparent hover:border-primary"}`}
                                         >
-                                            <div className='flex flex-row items-center gap-2'>
-                                                <DynamicIcon name={parent.icon} size={18} className="shrink-0 text-muted-foreground" />
-                                                <span className='opacity-90 text-xs'>{parent.title}</span>
-                                            </div>
+                                            {child && child.length > 0 ? (
+                                                <div className='flex flex-row items-center justify-between w-full pr-2'>
+                                                    <div className='flex flex-row items-center gap-2'>
+                                                        <DynamicIcon name={parent.icon} size={18} className="shrink-0 text-muted-foreground" />
+                                                        <span className='opacity-90 text-xs'>{parent.title}</span>
+                                                    </div>
+                                                    <ChevronRight size={14} className={`transition-transform text-muted-foreground ${isOpen ? "rotate-90" : ""}`} />
+                                                </div>
+                                            ) : (
+                                                <Link href={parent.url} className='flex flex-row items-center justify-between w-full pr-2'>
+                                                    <div className='flex flex-row items-center gap-2'>
+                                                        <DynamicIcon name={parent.icon} size={18} className="shrink-0 text-muted-foreground" />
+                                                        <span className='opacity-90 text-xs'>{parent.title}</span>
+                                                    </div>
+                                                </Link>
+                                            )}
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 </SidebarMenu>
