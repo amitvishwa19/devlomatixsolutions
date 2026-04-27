@@ -40,6 +40,8 @@ import {
 import { useParams } from 'next/navigation';
 import { Country, State, City } from 'country-state-city';
 import SaveContact from './_components/SaveContact';
+import { bulkSaveLeadsAction } from './_actions/bulk-save';
+import { Loader2, Save, ExternalLink } from 'lucide-react';
 
 export default function LeadsPage() {
     const params = useParams();
@@ -347,6 +349,30 @@ export default function LeadsPage() {
                 ? prev.filter(item => item !== id)
                 : [...prev, id]
         );
+    };
+
+    const handleBulkSaveToCRM = async () => {
+        if (selectedLeadIds.length === 0) return;
+        setSaving(true);
+        const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
+        
+        try {
+            const result = await bulkSaveLeadsAction(workspaceId, selectedLeads);
+            if (result.success) {
+                toast.success(`Successfully saved ${result.results.saved} leads to CRM`);
+                // Update local state to show as saved
+                setLeads(prev => prev.map(l => 
+                    selectedLeadIds.includes(l.id) ? { ...l, isSaved: true } : l
+                ));
+                setSelectedLeadIds([]);
+            } else {
+                toast.error(result.error || "Bulk save failed");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred during bulk save");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleExport = () => {
@@ -700,7 +726,11 @@ export default function LeadsPage() {
                             <Button
                                 size="sm"
                                 disabled={leads.length === 0 || saving}
-                                onClick={() => handleSaveLeads(selectedLeadIds.length > 0 ? leads.filter(l => selectedLeadIds.includes(l.id)) : leads)}
+                                onClick={() => setSaveLeadsModal({
+                                    open: true,
+                                    leads: selectedLeadIds.length > 0 ? leads.filter(l => selectedLeadIds.includes(l.id)) : leads,
+                                    selectedLeadIds: selectedLeadIds.length > 0 ? selectedLeadIds : leads.map(l => l.id)
+                                })}
                                 className="bg-primary/90 hover:bg-primary text-white font-bold text-xs  px-6 shadow-lg shadow-primary/20 transition-all active:scale-95 group relative overflow-hidden rounded-md"
                             >
                                 {saving ? (
@@ -768,13 +798,20 @@ export default function LeadsPage() {
                                                             {selectedLeadIds.includes(lead.id) && <CheckCircle2 className="w-3 h-3 text-white" />}
                                                         </div>
                                                     </td>
-                                                    <td className="p-4">
+                                                    <td className="p-4 w-140">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-9 h-9 rounded-lg bg-zinc-800 border flex items-center justify-center text-xs text-primary shadow-inner">
                                                                 {lead.name.charAt(0)}
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm mb-0.5 ">{lead.name}</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className="text-sm mb-0.5 ">{lead.name}</p>
+                                                                    {lead.isSaved && (
+                                                                        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-bold rounded">
+                                                                            SAVED
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
                                                                 <Badge variant="outline" className="text-xs capitalize font-semibold py-0 h-4 bg-primary/5 text-primary border-primary/20 rounded-md">
                                                                     {lead.category}
                                                                 </Badge>
@@ -814,20 +851,31 @@ export default function LeadsPage() {
                                                         </div>
                                                     </td>
                                                     <td className="p-4 pr-6 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100">
+                                                        <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
                                                             <Button
-                                                                disabled={saving}
-                                                                size="sm"
                                                                 variant="outline"
-                                                                className="h-8 bg-zinc-900 border text-xs font-bold text-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/10 gap-1.5 shadow-sm rounded-md"
-                                                                onClick={() => setSaveLeadsModal({
+                                                                size="icon"
+                                                                className="w-8 h-8 rounded-lg bg-zinc-900 border hover:bg-zinc-800"
+                                                                onClick={() => window.open(`https://wa.me/${lead.phone?.replace(/\D/g, '')}`, '_blank')}
+                                                                disabled={!lead.phone}
+                                                                title="Quick WhatsApp Chat"
+                                                            >
+                                                                <Smartphone className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                            <Button
+                                                                disabled={saving || lead.isSaved}
+                                                                size="sm"
+                                                                variant={lead.isSaved ? "secondary" : "outline"}
+                                                                className="h-8 text-xs font-bold gap-1.5 rounded-lg"
+                                                                onClick={() => setSaveLeadsModal(prev => ({
+                                                                    ...prev,
                                                                     open: true,
                                                                     leads: [lead],
                                                                     selectedLeadIds: [lead.id]
-                                                                })}
+                                                                }))}
                                                             >
-                                                                <CheckCircle2 className="w-3 h-3" />
-                                                                Save
+                                                                {lead.isSaved ? <CheckCircle2 className="w-3 h-3" /> : <Save className="w-3 h-3" />}
+                                                                {lead.isSaved ? "Saved" : "Save"}
                                                             </Button>
                                                             <Button size="icon" variant="ghost" className="h-8 w-8 text-white/40 hover:text-primary rounded-lg transition-colors" asChild title="View Website">
                                                                 <a href={lead.website} target="_blank" rel="noreferrer">
@@ -861,7 +909,7 @@ export default function LeadsPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2 text-center">
-                                    <p className="text-sm font-black text-white  tracking-[0.3em] animate-pulse">
+                                    <p className="text-sm font-black text-white   animate-pulse">
                                         {searching ? "Extracting Intelligence" : "Fetching Next Batch"}
                                     </p>
                                     <p className="text-xs text-muted-foreground/80 font-bold  ">Consulting Google Maps API • Scraping Contact Details</p>
@@ -880,6 +928,61 @@ export default function LeadsPage() {
                         )}
                     </AnimatePresence>
                 </CardContent>
+
+                {/* Bulk Action Bar - Simple & Cohesive */}
+                <AnimatePresence>
+                    {selectedLeadIds.length > 0 && (
+                        <motion.div 
+                            initial={{ y: -50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -50, opacity: 0 }}
+                            className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4"
+                        >
+                            <div className="bg-zinc-950/90 border border-border shadow-2xl px-6 py-3 rounded-xl flex items-center justify-between gap-6 backdrop-blur-md">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center justify-center bg-primary text-primary-foreground w-6 h-6 rounded text-[10px] font-bold">
+                                        {selectedLeadIds.length}
+                                    </div>
+                                    <span className="text-xs font-bold text-white">Leads Selected</span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setSelectedLeadIds([])}
+                                        className="text-xs font-medium text-muted-foreground hover:text-white"
+                                    >
+                                        Clear
+                                    </Button>
+                                    <div className="w-px h-4 bg-border/50 mx-1" />
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExport}
+                                        className="text-xs font-bold gap-2 h-8"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Export
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => setSaveLeadsModal({
+                                            open: true,
+                                            leads: leads.filter(l => selectedLeadIds.includes(l.id)),
+                                            selectedLeadIds: selectedLeadIds
+                                        })}
+                                        disabled={saving}
+                                        className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold h-8 gap-2"
+                                    >
+                                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                                        Save Selected
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <CardFooter className="bg-black/20 border-t border-border/10 py-3 px-6 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
                     <div className="flex items-center gap-3">
@@ -921,7 +1024,13 @@ export default function LeadsPage() {
 
             <SaveContact
                 open={saveLeadsModal.open}
-                setOpen={setSaveLeadsModal}
+                setOpen={(val) => {
+                    if (typeof val === 'boolean') {
+                        setSaveLeadsModal(prev => ({ ...prev, open: val }));
+                    } else {
+                        setSaveLeadsModal(val);
+                    }
+                }}
                 leads={saveLeadsModal.leads}
                 selectedLeadIds={saveLeadsModal.selectedLeadIds}
             />

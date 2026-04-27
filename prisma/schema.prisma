@@ -419,6 +419,7 @@ model Contact {
   groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
   address         String?
+  location        Json?
   subscribed      Boolean          @default(true)
   verified        Boolean          @default(false)
 

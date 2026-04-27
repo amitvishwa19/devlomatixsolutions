@@ -115,14 +115,27 @@ export async function POST(req, { params }) {
                 return {
                     id: place.place_id,
                     name: place.name,
-                    phone: detailData.result?.formatted_phone_number || null,
+                    phone: (() => {
+                        const rawPhone = detailData.result?.formatted_phone_number;
+                        if (!rawPhone) return null;
+                        let clean = rawPhone.replace(/\D/g, '');
+                        // If 11 digits starting with 0, remove 0 and add 91
+                        if (clean.length === 11 && clean.startsWith('0')) {
+                            clean = clean.substring(1);
+                        }
+                        return clean.length === 10 ? `91${clean}` : clean;
+                    })(),
                     email: null,
                     rating: place.rating || 0,
                     reviews: place.user_ratings_total || 0,
                     address: place.formatted_address || "Address not available",
                     website: detailData.result?.website || null,
                     category: category !== 'all' ? category : (place.types?.[0] || 'Business'),
-                    location: place.formatted_address
+                    location: {
+                        address: place.formatted_address,
+                        lat: place.geometry?.location?.lat,
+                        lng: place.geometry?.location?.lng
+                    }
                 };
             } catch (err) {
                 console.error(`[LEADS_API] Error fetching details for ${place.place_id}:`, err);
@@ -136,7 +149,11 @@ export async function POST(req, { params }) {
                     address: place.formatted_address || "Address not available",
                     website: null,
                     category: category !== 'all' ? category : (place.types?.[0] || 'Business'),
-                    location: place.formatted_address
+                    location: {
+                        address: place.formatted_address,
+                        lat: place.geometry?.location?.lat,
+                        lng: place.geometry?.location?.lng
+                    }
                 };
             }
         });
@@ -146,15 +163,31 @@ export async function POST(req, { params }) {
             .filter(r => r.status === 'fulfilled')
             .map(r => r.value);
 
+        // 5. Duplicate Detection: Check if these leads are already in the Contact table
+        const phoneNumbers = detailedLeads.map(l => l.phone).filter(Boolean);
+        const existingContacts = await db.contact.findMany({
+            where: {
+                workspaceId: params.workspaceId,
+                phone: { in: phoneNumbers }
+            },
+            select: { phone: true }
+        });
+        const existingPhones = new Set(existingContacts.map(c => c.phone));
+
+        const leadsWithStatus = detailedLeads.map(lead => ({
+            ...lead,
+            isSaved: existingPhones.has(lead.phone)
+        }));
+
         return NextResponse.json({
             success: true,
-            leads: detailedLeads,
+            leads: leadsWithStatus,
             nextPageToken: searchData.next_page_token || null,
             stats: {
-                totalLeads: detailedLeads.length,
-                withPhone: detailedLeads.filter(l => l.phone).length,
+                totalLeads: leadsWithStatus.length,
+                withPhone: leadsWithStatus.filter(l => l.phone).length,
                 withEmail: 0,
-                avgRating: (detailedLeads.reduce((acc, l) => acc + l.rating, 0) / (detailedLeads.length || 1)).toFixed(1)
+                avgRating: (leadsWithStatus.reduce((acc, l) => acc + l.rating, 0) / (leadsWithStatus.length || 1)).toFixed(1)
             }
         });
 
