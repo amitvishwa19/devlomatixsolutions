@@ -125,6 +125,7 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Quotation", icon: "file-spreadsheet", url: `${baseMiscellaneousPath}/quotation` },
                 { title: "Lead Generation", icon: "user-plus", url: `${baseMiscellaneousPath}/leads` },
                 { title: "Lead Generation v-2", icon: "user-check", url: `${baseMiscellaneousPath}/leads-v2` },
+                { title: "Playground", icon: "user-check", url: `${baseMiscellaneousPath}/playground` },
             ],
             baseUrl: baseMiscellaneousPath,
             permission: `navbar:Miscellaneous:Parent`
