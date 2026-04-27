@@ -40,6 +40,7 @@ import {
 import { useParams } from 'next/navigation';
 import { Country, State, City } from 'country-state-city';
 import SaveContact from './_components/SaveContact';
+import BulkActionBar from './_components/BulkActionBar';
 import { bulkSaveLeadsAction } from './_actions/bulk-save';
 import { Loader2, Save, ExternalLink } from 'lucide-react';
 
@@ -104,25 +105,26 @@ export default function LeadsPage() {
         if (!newFilters.keyword.trim()) return;
 
         setSearchHistory(prev => {
-            // Check if this search already exists (simple stringify comparison or key fields)
             const entry = {
                 keyword: newFilters.keyword,
                 category: newFilters.category,
                 country: newFilters.country,
                 state: newFilters.state,
                 city: newFilters.city,
+                pincode: newFilters.pincode,
                 timestamp: new Date().getTime()
             };
 
             const isDuplicate = prev.some(h =>
                 h.keyword === entry.keyword &&
                 h.city === entry.city &&
-                h.category === entry.category
+                h.category === entry.category &&
+                h.pincode === entry.pincode
             );
 
             if (isDuplicate) return prev;
 
-            const updated = [entry, ...prev].slice(0, 10); // Keep last 10
+            const updated = [entry, ...prev].slice(0, 10);
             localStorage.setItem('leads_search_history', JSON.stringify(updated));
             return updated;
         });
@@ -130,12 +132,12 @@ export default function LeadsPage() {
 
     const applyHistory = (entry) => {
         setFilters({
-            ...filters,
-            keyword: entry.keyword,
-            category: entry.category,
-            country: entry.country,
-            state: entry.state,
-            city: entry.city
+            keyword: entry.keyword || '',
+            category: entry.category || 'all',
+            country: entry.country || 'IN',
+            state: entry.state || '',
+            city: entry.city || '',
+            pincode: entry.pincode || ''
         });
         // Trigger search after state updates
         setTimeout(() => {
@@ -355,13 +357,13 @@ export default function LeadsPage() {
         if (selectedLeadIds.length === 0) return;
         setSaving(true);
         const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
-        
+
         try {
             const result = await bulkSaveLeadsAction(workspaceId, selectedLeads);
             if (result.success) {
                 toast.success(`Successfully saved ${result.results.saved} leads to CRM`);
                 // Update local state to show as saved
-                setLeads(prev => prev.map(l => 
+                setLeads(prev => prev.map(l =>
                     selectedLeadIds.includes(l.id) ? { ...l, isSaved: true } : l
                 ));
                 setSelectedLeadIds([]);
@@ -798,11 +800,9 @@ export default function LeadsPage() {
                                                             {selectedLeadIds.includes(lead.id) && <CheckCircle2 className="w-3 h-3 text-white" />}
                                                         </div>
                                                     </td>
-                                                    <td className="p-4 w-140">
+                                                    <td className="p-4 w-160">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-9 h-9 rounded-lg bg-zinc-800 border flex items-center justify-center text-xs text-primary shadow-inner">
-                                                                {lead.name.charAt(0)}
-                                                            </div>
+
                                                             <div>
                                                                 <div className="flex items-center gap-2">
                                                                     <p className="text-sm mb-0.5 ">{lead.name}</p>
@@ -929,60 +929,14 @@ export default function LeadsPage() {
                     </AnimatePresence>
                 </CardContent>
 
-                {/* Bulk Action Bar - Simple & Cohesive */}
-                <AnimatePresence>
-                    {selectedLeadIds.length > 0 && (
-                        <motion.div 
-                            initial={{ y: -50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: -50, opacity: 0 }}
-                            className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4"
-                        >
-                            <div className="bg-zinc-950/90 border border-border shadow-2xl px-6 py-3 rounded-xl flex items-center justify-between gap-6 backdrop-blur-md">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center justify-center bg-primary text-primary-foreground w-6 h-6 rounded text-[10px] font-bold">
-                                        {selectedLeadIds.length}
-                                    </div>
-                                    <span className="text-xs font-bold text-white">Leads Selected</span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setSelectedLeadIds([])}
-                                        className="text-xs font-medium text-muted-foreground hover:text-white"
-                                    >
-                                        Clear
-                                    </Button>
-                                    <div className="w-px h-4 bg-border/50 mx-1" />
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={handleExport}
-                                        className="text-xs font-bold gap-2 h-8"
-                                    >
-                                        <Download className="w-3.5 h-3.5" />
-                                        Export
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => setSaveLeadsModal({
-                                            open: true,
-                                            leads: leads.filter(l => selectedLeadIds.includes(l.id)),
-                                            selectedLeadIds: selectedLeadIds
-                                        })}
-                                        disabled={saving}
-                                        className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold h-8 gap-2"
-                                    >
-                                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                                        Save Selected
-                                    </Button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <BulkActionBar
+                    selectedLeadIds={selectedLeadIds}
+                    leads={leads}
+                    saving={saving}
+                    onClear={() => setSelectedLeadIds([])}
+                    onExport={handleExport}
+                    onSave={setSaveLeadsModal}
+                />
 
                 <CardFooter className="bg-black/20 border-t border-border/10 py-3 px-6 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
                     <div className="flex items-center gap-3">
@@ -1033,6 +987,10 @@ export default function LeadsPage() {
                 }}
                 leads={saveLeadsModal.leads}
                 selectedLeadIds={saveLeadsModal.selectedLeadIds}
+                onSuccess={() => {
+                    setSelectedLeadIds([]);
+                    handleFindLeads(false); // Refresh badges without clearing results
+                }}
             />
 
         </div >

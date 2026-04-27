@@ -47,7 +47,7 @@ const getFirstFiveWords = (name) => {
     return name.split(/\s+/).slice(0, 5).join(" ");
 }
 
-export default function SaveContact({ open, setOpen, leads, selectedLeadIds }) {
+export default function SaveContact({ open, setOpen, leads, selectedLeadIds, onSuccess }) {
     const { workspaceId } = useParams();
     const isBulk = selectedLeadIds?.length > 1;
     const lead = leads?.[0];
@@ -116,6 +116,7 @@ export default function SaveContact({ open, setOpen, leads, selectedLeadIds }) {
                 
                 if (result.success) {
                     toast.success(`Successfully saved ${result.results.saved} leads`);
+                    if (onSuccess) onSuccess();
                     handleOpenChange(false);
                 } else {
                     toast.error(result.error || "Bulk save failed");
@@ -130,6 +131,7 @@ export default function SaveContact({ open, setOpen, leads, selectedLeadIds }) {
                 const result = await saveLeadAction(workspaceId, data);
                 if (result.success) {
                     toast.success("Lead saved to contacts successfully");
+                    if (onSuccess) onSuccess();
                     handleOpenChange(false);
                 } else {
                     toast.error(result.error || "Failed to save lead");
