@@ -1,124 +1,122 @@
 'use client';
 
-import React, { useState, useEffect } from'react';
+import React, { useState, useEffect } from 'react';
 import { useSettings } from '@/providers/WorkspaceProvider';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from'@/components/ui/card';
-import { Switch } from'@/components/ui/switch';
-import { Label } from'@/components/ui/label';
-import { Button } from'@/components/ui/button';
-import { ShieldCheck, Lock, Fingerprint, ShieldAlert, History } from'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { ShieldCheck, Lock, Fingerprint, ShieldAlert, History } from 'lucide-react';
 
 export const SecuritySettings = () => {
- const { settings, updateSettings, saving } = useSettings();
- const [localSecurity, setLocalSecurity] = useState({
- mfaEnabled: false,
- sessionTimeout: 3600,
- passwordPolicy:"standard"
- });
+    const { settings, updateSettings, saving } = useSettings();
+    const [localSecurity, setLocalSecurity] = useState({
+        mfaEnabled: false,
+        sessionTimeout: 3600,
+        passwordPolicy: "standard"
+    });
 
- useEffect(() => {
- if (settings?.security) {
- setLocalSecurity({
- mfaEnabled: settings.security.mfaEnabled || false,
- sessionTimeout: settings.security.sessionTimeout || 3600,
- passwordPolicy: settings.security.passwordPolicy ||"standard"
- });
- }
- }, [settings]);
+    useEffect(() => {
+        if (settings?.security) {
+            setLocalSecurity({
+                mfaEnabled: settings.security.mfaEnabled || false,
+                sessionTimeout: settings.security.sessionTimeout || 3600,
+                passwordPolicy: settings.security.passwordPolicy || "standard"
+            });
+        }
+    }, [settings]);
 
- const handleToggleMFA = (checked) => {
- setLocalSecurity(prev => ({ ...prev, mfaEnabled: checked }));
- };
+    const handleToggleMFA = (checked) => {
+        setLocalSecurity(prev => ({ ...prev, mfaEnabled: checked }));
+    };
 
- const handleSave = () => {
- updateSettings({ security: localSecurity });
- };
+    const handleSave = () => {
+        updateSettings({ security: localSecurity });
+    };
 
- return (
- <div className="space-y-6 animate-fade-in">
- <Card className="rounded-md border border-border/40 shadow-xl shadow-sky-500/5 bg-card/60 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
- <CardHeader className="pb-4">
- <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-sky-500/10 rounded-md flex items-center justify-center border border-sky-500/20 shadow-inner">
- <ShieldCheck className="w-6 h-6 text-sky-500"/>
- </div>
- <div>
- <CardTitle className="text-xl font-bold">Security & Governance</CardTitle>
- <CardDescription className="text-sm font-medium opacity-70">
- Manage your workspace security policies and authentication requirements.
- </CardDescription>
- </div>
- </div>
- </CardHeader>
- <CardContent className="space-y-8">
- <div className="flex items-center justify-between gap-8 p-4 bg-muted/20 rounded-md border border-border/40">
- <div className="space-y-1">
- <div className="flex items-center gap-2">
- <Fingerprint className="w-4 h-4 text-primary"/>
- <Label className="text-sm font-bold">Multi-Factor Authentication</Label>
- </div>
- <p className="text-xs text-muted-foreground font-medium opacity-70">
- Require users to verify their identity with a second factor (TOTP or SMS).
- </p>
- </div>
- <Switch 
- disabled={saving}
- checked={localSecurity.mfaEnabled}
- onCheckedChange={handleToggleMFA}
- className="data-[state=checked]:bg-primary"
- />
- </div>
+    return (
+        <div className="space-y-4 animate-in fade-in duration-500">
+            <Card className="rounded-md border border-border/50 bg-transparent overflow-hidden hover:border-primary/20 transition-colors duration-300">
+                <CardHeader className="p-3 border-b border-border/10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-sky-500/5 rounded-md flex items-center justify-center border border-sky-500/10">
+                            <ShieldCheck className="w-4 h-4 text-sky-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-sm font-bold">Security & Governance</CardTitle>
+                            <CardDescription className="text-[10px] font-medium opacity-60">
+                                Authentication requirements and policies.
+                            </CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4 p-4">
+                    <div className="flex items-center justify-between gap-4 p-3 rounded-md border border-border/50 bg-muted/5">
+                        <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
+                                <Label className="text-xs font-bold">Multi-Factor Authentication</Label>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground font-medium opacity-70 leading-relaxed">
+                                Require TOTP/SMS for all team members.
+                            </p>
+                        </div>
+                        <Switch
+                            disabled={saving}
+                            checked={localSecurity.mfaEnabled}
+                            onCheckedChange={handleToggleMFA}
+                            className="scale-90"
+                        />
+                    </div>
 
- <div className="grid gap-6">
- <div className="grid gap-3">
- <Label className="text-[10px] font-bold opacity-70">Session Idle Timeout</Label>
- <div className="flex gap-4 items-center">
- <History className="w-5 h-5 text-muted-foreground/40"/>
- <code className="text-[11px] text-foreground flex-1">
- CURRENTLY SET TO: {Math.floor(localSecurity.sessionTimeout / 60)} MINUTES
- </code>
- <Button variant="outline"size="sm"className="rounded-md text-[10px] font-bold h-8"disabled>
- Adjust Policy
- </Button>
- </div>
- </div>
+                    <div className="grid gap-4">
+                        <div className="grid gap-1.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-0.5">Session Idle Timeout</Label>
+                            <div className="flex gap-3 items-center p-2.5 rounded-md border border-border/50">
+                                <History className="w-3.5 h-3.5 text-muted-foreground/40" />
+                                <div className="flex-1 flex flex-col">
+                                    <span className="text-[10px] font-bold uppercase tracking-tighter">Current Policy</span>
+                                    <span className="text-[9px] font-medium text-muted-foreground">{Math.floor(localSecurity.sessionTimeout / 60)} minutes</span>
+                                </div>
+                                <Button variant="ghost" size="sm" className="rounded-md text-[9px] font-bold h-6 px-3 border border-border/50 hover:bg-primary/5" disabled>
+                                    Adjust
+                                </Button>
+                            </div>
+                        </div>
 
- <div className="grid gap-3">
- <Label className="text-[10px] font-bold opacity-70">Password Strength Policy</Label>
- <div className="flex gap-4 items-center">
- <Lock className="w-5 h-5 text-muted-foreground/40"/>
- <code className="text-[11px] text-foreground flex-1">
- {localSecurity.passwordPolicy}
- </code>
- <Button variant="outline"size="sm"className="rounded-md text-[10px] font-bold h-8"disabled>
- Change Level
- </Button>
- </div>
- </div>
- </div>
- </CardContent>
- <CardFooter className="border-t border-border/10 bg-sky-500/5 p-6 flex justify-end">
- <Button 
- onClick={handleSave} 
- disabled={saving}
- className="rounded-md font-bold px-8 shadow-xl shadow-sky-500/20 bg-sky-600 hover:bg-sky-700 text-white transition-all transform hover:scale-[1.02]"
- >
- {saving ?"Saving...":"Update Security"}
- </Button>
- </CardFooter>
- </Card>
+                        <div className="grid gap-1.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-0.5">Password Strength</Label>
+                            <div className="flex gap-3 items-center p-2.5 rounded-md border border-border/50">
+                                <Lock className="w-3.5 h-3.5 text-muted-foreground/40" />
+                                <div className="flex-1 flex flex-col">
+                                    <span className="text-[10px] font-bold uppercase tracking-tighter">Current Level</span>
+                                    <span className="text-[9px] font-medium text-muted-foreground uppercase">{localSecurity.passwordPolicy}</span>
+                                </div>
+                                <Button variant="ghost" size="sm" className="rounded-md text-[9px] font-bold h-6 px-3 border border-border/50 hover:bg-primary/5" disabled>
+                                    Change
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter className="border-t border-border/10 p-3 flex justify-end">
+                    <Button
+                        onClick={handleSave}
+                        disabled={saving}
+                        size="sm"
+                        className="rounded-md font-bold px-4 bg-sky-600 hover:bg-sky-700 text-white text-[10px] h-8"
+                    >
+                        {saving ? "Saving..." : "Update Security"}
+                    </Button>
+                </CardFooter>
+            </Card>
 
- <div className="p-4 bg-amber-500/5 rounded-md border border-amber-500/10 flex gap-4 items-start shadow-inner">
- <div className="p-2 bg-amber-500/10 rounded-md mt-0.5">
- <ShieldAlert className="w-4 h-4 text-amber-500"/>
- </div>
- <div className="space-y-1">
- <p className="text-[11px] font-bold text-amber-600 tracking-wide">Critical Action Logged</p>
- <p className="text-xs text-amber-500/80 font-medium">
- Disabling authentication requirements will trigger an alert to all workspace administrators.
- </p>
- </div>
- </div>
- </div>
- );
+            <div className="p-2.5 rounded-md border border-amber-500/10 bg-amber-500/[0.02] flex gap-2.5 items-start">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    Changing security policies will notify all administrators.
+                </p>
+            </div>
+        </div>
+    );
 };
