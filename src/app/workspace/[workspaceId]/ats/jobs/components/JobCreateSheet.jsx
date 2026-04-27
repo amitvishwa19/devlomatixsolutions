@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     Rocket,
@@ -10,7 +10,8 @@ import {
     Target,
     Info,
     Layout,
-    Plus
+    Plus,
+    Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +39,7 @@ import useSWR from 'swr';
 
 const fetcher = url => axios.get(url).then(res => res.data);
 
-export default function JobCreateSheet({ workspaceId, onSuccess }) {
+export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = false, trigger }) {
     const [open, setOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -56,6 +57,17 @@ export default function JobCreateSheet({ workspaceId, onSuccess }) {
     const [salaryRange, setSalaryRange] = useState("");
     const [description, setDescription] = useState('<h1>Job Description</h1><p>Describe the role, responsibilities, and impact here...</p>');
 
+    useEffect(() => {
+        if (isEdit && data && open) {
+            setTitle(data.title || "");
+            setCategoryId(data.categoryId || "");
+            setLocation(data.location || "");
+            setType(data.type || "");
+            setSalaryRange(data.salaryRange || "");
+            setDescription(data.description || '<h1>Job Description</h1><p>Describe the role, responsibilities, and impact here...</p>');
+        }
+    }, [isEdit, data, open]);
+
     const handlePublish = async () => {
         if (!title || !description) {
             toast.error("Please provide at least a title and description");
@@ -64,22 +76,30 @@ export default function JobCreateSheet({ workspaceId, onSuccess }) {
 
         setIsSubmitting(true);
         try {
-            await axios.post(`/api/workspace/${workspaceId}/ats/jobs`, {
+            const payload = {
                 title,
                 description,
                 categoryId,
                 location,
                 type,
                 salaryRange,
-                status: 'OPEN'
-            });
-            toast.success("Job position published successfully!");
+                status: data?.status || 'OPEN'
+            };
+
+            if (isEdit && data?.id) {
+                await axios.put(`/api/workspace/${workspaceId}/ats/jobs/${data.id}`, payload);
+                toast.success("Job position updated successfully!");
+            } else {
+                await axios.post(`/api/workspace/${workspaceId}/ats/jobs`, payload);
+                toast.success("Job position published successfully!");
+            }
+            
             setOpen(false);
-            resetForm();
+            if (!isEdit) resetForm();
             if (onSuccess) onSuccess();
         } catch (error) {
-            console.error("Failed to publish job:", error.response?.data || error);
-            const errMsg = error.response?.data?.error || "Failed to publish job position";
+            console.error("Failed to save job:", error.response?.data || error);
+            const errMsg = error.response?.data?.message || error.response?.data?.error || "Failed to save job position";
             toast.error(errMsg);
         } finally {
             setIsSubmitting(false);
@@ -98,14 +118,16 @@ export default function JobCreateSheet({ workspaceId, onSuccess }) {
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button className="rounded-md px-6 font-bold bg-primary shadow-lg shadow-primary/20">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Position
-                </Button>
+                {trigger || (
+                    <Button className="rounded-md px-6 font-bold bg-primary shadow-lg shadow-primary/20">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Position
+                    </Button>
+                )}
             </SheetTrigger>
 
-            <SheetContent className="w-full sm:min-w-[80%]  bg-transparent border-none p-2">
-                <div className="flex flex-col  overflow-hidden bg-card rounded-md border h-full">
+            <SheetContent className="w-full sm:min-w-[80%] bg-transparent border-none p-2">
+                <div className="flex flex-col overflow-hidden bg-card rounded-md border h-full">
                     {/* Header */}
                     <div className="p-8 border-b border-white/5 bg-primary/5">
                         <SheetHeader className="space-y-1">
@@ -113,8 +135,12 @@ export default function JobCreateSheet({ workspaceId, onSuccess }) {
                                 <Rocket className="w-4 h-4" />
                                 ATS Module
                             </div>
-                            <SheetTitle className="text-xl font-bold">New Position</SheetTitle>
-                            <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">Configure your job posting details</p>
+                            <SheetTitle className="text-xl font-bold">
+                                {isEdit ? "Update Position" : "New Position"}
+                            </SheetTitle>
+                            <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">
+                                {isEdit ? `Editing: ${data?.title}` : "Configure your job posting details"}
+                            </p>
                         </SheetHeader>
                     </div>
 
@@ -162,14 +188,6 @@ export default function JobCreateSheet({ workspaceId, onSuccess }) {
                                                 {(!departments || departments.length === 0) && !isLoadingDepts && (
                                                     <div className="p-8 text-center space-y-2">
                                                         <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No departments found.</p>
-                                                        <Button
-                                                            variant="link"
-                                                            size="sm"
-                                                            className="text-[9px] h-auto p-0 text-primary uppercase font-black"
-                                                            onClick={() => router.push(`/workspace/${workspaceId}/ats/departments`)}
-                                                        >
-                                                            Create One Now
-                                                        </Button>
                                                     </div>
                                                 )}
                                             </SelectContent>
@@ -238,9 +256,9 @@ export default function JobCreateSheet({ workspaceId, onSuccess }) {
                         <Button
                             onClick={handlePublish}
                             disabled={isSubmitting}
-                            className="h-12 rounded-md px-10 font-black uppercase text-[10px] tracking-widest bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 active:scale-95 transition-all"
+                            className={`h-12 rounded-md px-10 font-black uppercase text-[10px] tracking-widest text-white shadow-lg active:scale-95 transition-all ${isEdit ? 'bg-primary hover:bg-primary/90 shadow-primary/20' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20'}`}
                         >
-                            {isSubmitting ? "Publishing..." : "Publish Position"}
+                            {isSubmitting ? (isEdit ? "Saving..." : "Publishing...") : (isEdit ? "Save Changes" : "Publish Position")}
                         </Button>
                     </div>
                 </div>
@@ -248,3 +266,4 @@ export default function JobCreateSheet({ workspaceId, onSuccess }) {
         </Sheet>
     );
 }
+
