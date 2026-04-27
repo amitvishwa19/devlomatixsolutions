@@ -418,6 +418,7 @@ model Contact {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
+  address         String?
   subscribed      Boolean          @default(true)
   verified        Boolean          @default(false)
 

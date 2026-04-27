@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { useParams } from 'next/navigation';
 import { Country, State, City } from 'country-state-city';
+import SaveContact from './_components/SaveContact';
 
 export default function LeadsPage() {
     const params = useParams();
@@ -67,6 +68,13 @@ export default function LeadsPage() {
         state: '',
         city: '',
         pincode: ''
+    });
+
+    const [saveLeadsModal, setSaveLeadsModal] = useState({
+        open: false,
+        leads: [],
+        selectedLeadIds: [],
+        toggleModal: (data = null) => setSaveLeadsModal(prev => ({ ...prev, open: !prev.open, leads: data ? data : [], selectedLeadIds: data ? data.map(l => l.id) : [] }))
     });
 
     const [searchHistory, setSearchHistory] = useState([]);
@@ -458,7 +466,7 @@ export default function LeadsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
-                    <div className="">
+                    <div className="flex flex-col gap-4">
                         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2">
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-muted-foreground/70">Keyword</Label>
@@ -800,7 +808,7 @@ export default function LeadsPage() {
                                                     </td>
                                                     <td className="p-4">
                                                         <div className="w-80">
-                                                            <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-2 hover:line-clamp-none transition-all">
+                                                            <p className="text-xs font-medium text-muted-foreground leading-relaxed  transition-all">
                                                                 {lead.address}
                                                             </p>
                                                         </div>
@@ -812,7 +820,11 @@ export default function LeadsPage() {
                                                                 size="sm"
                                                                 variant="outline"
                                                                 className="h-8 bg-zinc-900 border text-xs font-bold text-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/10 gap-1.5 shadow-sm rounded-md"
-                                                                onClick={() => handleSaveLeads([lead])}
+                                                                onClick={() => setSaveLeadsModal({
+                                                                    open: true,
+                                                                    leads: [lead],
+                                                                    selectedLeadIds: [lead.id]
+                                                                })}
                                                             >
                                                                 <CheckCircle2 className="w-3 h-3" />
                                                                 Save
@@ -906,6 +918,14 @@ export default function LeadsPage() {
                     </div>
                 </CardFooter>
             </Card >
+
+            <SaveContact
+                open={saveLeadsModal.open}
+                setOpen={setSaveLeadsModal}
+                leads={saveLeadsModal.leads}
+                selectedLeadIds={saveLeadsModal.selectedLeadIds}
+            />
+
         </div >
     );
 }
