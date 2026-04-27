@@ -418,7 +418,7 @@ export default function LeadsPage() {
             {/* Search History Tag Cloud */}
             {searchHistory.length > 0 && (
                 <div className="space-y-2 animate-in slide-in-from-top duration-500">
-                    <div className="flex items-center gap-2 text-sx font-bold text-muted-foreground/60 pl-1">
+                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60 pl-1">
                         <History className="w-3 h-3" />
                         Recent Searches
                     </div>
@@ -427,7 +427,7 @@ export default function LeadsPage() {
                             <Badge
                                 key={`${entry.timestamp}-${i}`}
                                 variant="outline"
-                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-muted-foreground cursor-pointer transition-all hover:scale-105 active:scale-95 text-sx font-medium py-1 px-3 rounded-full flex items-center gap-2 group"
+                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-muted-foreground cursor-pointer transition-all hover:scale-105 active:scale-95 text-xs font-medium py-1 px-3 rounded-full flex items-center gap-2 group"
                                 onClick={() => applyHistory(entry)}
                             >
                                 <Search className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100" />
@@ -461,7 +461,7 @@ export default function LeadsPage() {
                     <div className="">
                         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2">
                             <div className="space-y-2">
-                                <Label className="text-sx font-bold text-muted-foreground/70">Keyword</Label>
+                                <Label className="text-xs font-bold text-muted-foreground/70">Keyword</Label>
                                 <div className="relative">
                                     <Input
                                         placeholder="e.g. Restaurant, Dentist..."
@@ -475,7 +475,7 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-sx font-bold text-muted-foreground/70">Category</Label>
+                                <Label className="text-xs font-bold text-muted-foreground/70">Category</Label>
                                 <Select value={filters.category} onValueChange={(val) => setFilters({ ...filters, category: val })}>
                                     <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white rounded-md">
                                         <SelectValue placeholder="Select Category" />
@@ -489,7 +489,7 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-sx font-bold text-muted-foreground/70">Country</Label>
+                                <Label className="text-xs font-bold text-muted-foreground/70">Country</Label>
                                 <Select value={filters.country} onValueChange={(val) => setFilters({ ...filters, country: val })}>
                                     <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white rounded-md">
                                         <SelectValue placeholder="Select Country" />
@@ -503,7 +503,7 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-sx font-bold text-muted-foreground/70">State / Region</Label>
+                                <Label className="text-xs font-bold text-muted-foreground/70">State / Region</Label>
                                 <Select
                                     value={filters.state}
                                     onValueChange={(val) => setFilters({ ...filters, state: val })}
@@ -524,7 +524,7 @@ export default function LeadsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2 items-center">
 
                             <div className="space-y-2">
-                                <Label className="text-sx font-bold text-muted-foreground/70">City</Label>
+                                <Label className="text-xs font-bold text-muted-foreground/70">City</Label>
                                 <Select
                                     value={filters.city}
                                     onValueChange={(val) => setFilters({ ...filters, city: val })}
@@ -544,7 +544,7 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-sx font-bold text-muted-foreground/70">Pincode</Label>
+                                <Label className="text-xs font-bold text-muted-foreground/70">Pincode</Label>
                                 <div className="relative">
                                     <Input
                                         placeholder="e.g. 94102"
@@ -614,13 +614,13 @@ export default function LeadsPage() {
                             <div className={`absolute right-4 top-1/2 -translate-y-1/2 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`}>
                                 <stat.icon className="w-16 h-16" />
                             </div>
-                            <CardContent className="p-6">
+                            <CardContent className="p-2">
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-3 ${stat.bg} rounded-xl border`}>
+                                    <div className={`p-2 ${stat.bg} rounded-xl border`}>
                                         <stat.icon className={`w-5 h-5 ${stat.color}`} />
                                     </div>
                                     <div>
-                                        <p className="text-sx font-bold text-muted-foreground/60">{stat.label}</p>
+                                        <p className="text-xs font-bold text-muted-foreground/60">{stat.label}</p>
                                         <div className="flex items-baseline gap-1">
                                             <h3 className="text-2xl font-bold text-white tracking-tighter">
                                                 <AnimatePresence mode="wait">
@@ -644,15 +644,16 @@ export default function LeadsPage() {
             </div>
 
             {/* Results Table Area */}
-            <Card className="bg-card border backdrop-blur-md overflow-hidden flex-1 shadow-2xl flex flex-col min-h-[500px] p-0 rounded-xl">
+            <Card className="bg-card border backdrop-blur-md overflow-hidden flex-1 shadow-2xl flex flex-col  p-0 rounded-xl">
+
                 <CardHeader className="border-b py-4 px-6 flex flex-col lg:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="p-1.5 bg-blue-500/10 rounded-lg">
                             <LayoutGrid className="w-4 h-4 text-blue-400" />
                         </div>
                         <div>
-                            <CardTitle className="text-sm font-bold text-white">Extraction Results</CardTitle>
-                            <p className="text-sx text-muted-foreground font-medium">Manage and export your discovered leads</p>
+                            <CardTitle className="text-sm font-semibold">Extraction Results</CardTitle>
+                            <p className="text-xs text-muted-foreground font-medium">Manage and export your discovered leads</p>
                         </div>
                     </div>
 
@@ -660,7 +661,7 @@ export default function LeadsPage() {
                         <div className="flex items-center gap-3 w-full lg:w-auto">
                             {contactGroups.length > 0 ? (
                                 <div className="flex items-center gap-3 bg-zinc-900/50 p-1.5 pl-3 rounded-xl border w-full lg:w-auto shadow-inner">
-                                    <Label className="text-sx font-bold text-muted-foreground/70 whitespace-nowrap flex items-center gap-1.5">
+                                    <Label className="text-xs font-bold text-muted-foreground/70 whitespace-nowrap flex items-center gap-1.5">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                         Save to Group:
                                     </Label>
@@ -683,7 +684,7 @@ export default function LeadsPage() {
                                     </Select>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl text-amber-500/80 text-sx font-bold">
+                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl text-amber-500/80 text-xs font-bold">
                                     <AlertCircle className="w-3.5 h-3.5" />
                                     No contact groups found
                                 </div>
@@ -692,7 +693,7 @@ export default function LeadsPage() {
                                 size="sm"
                                 disabled={leads.length === 0 || saving}
                                 onClick={() => handleSaveLeads(selectedLeadIds.length > 0 ? leads.filter(l => selectedLeadIds.includes(l.id)) : leads)}
-                                className="bg-primary/90 hover:bg-primary text-white font-bold text-sx h-10 px-6 shadow-lg shadow-primary/20 transition-all active:scale-95 group relative overflow-hidden rounded-md"
+                                className="bg-primary/90 hover:bg-primary text-white font-bold text-xs  px-6 shadow-lg shadow-primary/20 transition-all active:scale-95 group relative overflow-hidden rounded-md"
                             >
                                 {saving ? (
                                     <RefreshCcw className="w-3.5 h-3.5 animate-spin mr-2" />
@@ -707,8 +708,10 @@ export default function LeadsPage() {
                     )}
                 </CardHeader>
 
-                <CardContent className="p-0 flex-1 flex flex-col relative overflow-hidden">
-                    <ScrollArea className="h-full flex-1">
+                <CardContent className="p-0 flex-1 flex flex-col relative -mt-6 overflow-hidden">
+                    <ScrollArea className="flex-1">
+
+
                         {leads.length === 0 ? (
                             <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-12 opacity-80">
                                 <div className="w-24 h-24 bg-zinc-800/50 rounded-full flex items-center justify-center mb-6 border border-white/5 animate-pulse">
@@ -732,11 +735,11 @@ export default function LeadsPage() {
                                                     {selectedLeadIds.length === leads.length && <CheckCircle2 className="w-3 h-3 text-white" />}
                                                 </div>
                                             </th>
-                                            <th className="p-4 text-sx font-bold text-muted-foreground">Business Info</th>
-                                            <th className="p-4 text-sx font-bold text-muted-foreground">Contact Details</th>
-                                            <th className="p-4 text-sx font-bold text-muted-foreground">Reputation</th>
-                                            <th className="p-4 text-sx font-bold text-muted-foreground">Location</th>
-                                            <th className="p-4 pr-6 text-right text-sx font-bold text-muted-foreground min-w-[150px]">Actions</th>
+                                            <th className="p-4 text-xs font-bold text-muted-foreground">Business Info</th>
+                                            <th className="p-4 text-xs font-bold text-muted-foreground">Contact Details</th>
+                                            <th className="p-4 text-xs font-bold text-muted-foreground">Reputation</th>
+                                            <th className="p-4 text-xs font-bold text-muted-foreground">Location</th>
+                                            <th className="p-4 pr-6 text-right text-xs font-bold text-muted-foreground min-w-[150px]">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/10">
@@ -764,7 +767,7 @@ export default function LeadsPage() {
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm mb-0.5 ">{lead.name}</p>
-                                                                <Badge variant="outline" className="text-xs font-bold py-0 h-4 bg-primary/5 text-primary border-primary/20 rounded-md">
+                                                                <Badge variant="outline" className="text-xs capitalize font-semibold py-0 h-4 bg-primary/5 text-primary border-primary/20 rounded-md">
                                                                     {lead.category}
                                                                 </Badge>
                                                             </div>
@@ -773,14 +776,14 @@ export default function LeadsPage() {
                                                     <td className="p-4">
                                                         <div className="space-y-1.5">
                                                             {lead.phone && (
-                                                                <div className="flex items-center gap-2 text-[11px] font-mono font-medium text-white/80 group/info hover:text-emerald-400 transition-colors cursor-pointer">
-                                                                    <Smartphone className="w-3 h-3 text-emerald-500/70" />
+                                                                <div className="flex items-center gap-2 text-xs  font-medium  group/info hover:text-emerald-400 transition-colors cursor-pointer">
+                                                                    <Smartphone className="w-4 h-4 text-emerald-500/70" />
                                                                     {lead.phone}
                                                                 </div>
                                                             )}
                                                             {lead.email && (
-                                                                <div className="flex items-center gap-2 text-[11px] font-mono font-medium text-white/80 group/info hover:text-purple-400 transition-colors cursor-pointer">
-                                                                    <Mail className="w-3 h-3 text-purple-500/70" />
+                                                                <div className="flex items-center gap-2 text-xs  font-medium  group/info hover:text-purple-400 transition-colors cursor-pointer">
+                                                                    <Mail className="w-4 h-4 text-muted-foreground" />
                                                                     {lead.email}
                                                                 </div>
                                                             )}
@@ -792,12 +795,12 @@ export default function LeadsPage() {
                                                                 <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                                                                 <span className="text-xs font-bold text-amber-500">{lead.rating}</span>
                                                             </div>
-                                                            <span className="text-sx font-bold text-muted-foreground">{lead.reviews} reviews</span>
+                                                            <span className="text-xs font-bold text-muted-foreground">{lead.reviews} reviews</span>
                                                         </div>
                                                     </td>
                                                     <td className="p-4">
-                                                        <div className="max-w-[180px]">
-                                                            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed line-clamp-2 hover:line-clamp-none transition-all">
+                                                        <div className="w-80">
+                                                            <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-2 hover:line-clamp-none transition-all">
                                                                 {lead.address}
                                                             </p>
                                                         </div>
@@ -808,7 +811,7 @@ export default function LeadsPage() {
                                                                 disabled={saving}
                                                                 size="sm"
                                                                 variant="outline"
-                                                                className="h-8 bg-zinc-900 border text-[9px] font-bold text-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/10 gap-1.5 shadow-sm rounded-md"
+                                                                className="h-8 bg-zinc-900 border text-xs font-bold text-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/10 gap-1.5 shadow-sm rounded-md"
                                                                 onClick={() => handleSaveLeads([lead])}
                                                             >
                                                                 <CheckCircle2 className="w-3 h-3" />
@@ -832,7 +835,7 @@ export default function LeadsPage() {
 
                     {/* Animated Overlay during Search */}
                     <AnimatePresence>
-                        {(!searching || !loadingMore) && (
+                        {(searching || loadingMore) && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -849,7 +852,7 @@ export default function LeadsPage() {
                                     <p className="text-sm font-black text-white  tracking-[0.3em] animate-pulse">
                                         {searching ? "Extracting Intelligence" : "Fetching Next Batch"}
                                     </p>
-                                    <p className="text-sx text-muted-foreground/80 font-bold  ">Consulting Google Maps API • Scraping Contact Details</p>
+                                    <p className="text-xs text-muted-foreground/80 font-bold  ">Consulting Google Maps API • Scraping Contact Details</p>
                                 </div>
                                 <div className="flex gap-1">
                                     {[0, 1, 2].map(i => (
@@ -868,7 +871,7 @@ export default function LeadsPage() {
 
                 <CardFooter className="bg-black/20 border-t border-border/10 py-3 px-6 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
                     <div className="flex items-center gap-3">
-                        <p className="text-sx font-bold text-muted-foreground  ">
+                        <p className="text-xs font-bold text-muted-foreground  ">
                             {leads.length > 0 ? `Showing ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, leads.length)} of ${leads.length} found` : "System Standby"}
                         </p>
                         {nextPageToken && (
@@ -884,25 +887,25 @@ export default function LeadsPage() {
                             size="sm"
                             disabled={currentPage === 1 || searching || loadingMore}
                             onClick={handlePrevPage}
-                            className="bg-zinc-900 border-border/40 text-sx font-black   h-8 px-4"
+                            className="bg-zinc-900 border-border/40 text-xs font-black   h-8 px-4"
                         >
                             Previous
                         </Button>
                         <div className="flex items-center justify-center bg-zinc-900 border border-border/40 rounded-md h-8 px-4">
-                            <span className="text-sx font-black text-primary ">Page {currentPage}</span>
+                            <span className="text-xs font-black text-primary ">Page {currentPage}</span>
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
                             disabled={(startIndex + itemsPerPage >= leads.length && !nextPageToken) || searching || loadingMore}
                             onClick={handleNextPage}
-                            className="bg-zinc-900 border-border/40 text-sx font-black   h-8 px-4"
+                            className="bg-zinc-900 border-border/40 text-xs font-black   h-8 px-4"
                         >
                             {startIndex + itemsPerPage >= leads.length && nextPageToken ? "Fetch More" : "Next"}
                         </Button>
                     </div>
                 </CardFooter>
-            </Card>
-        </div>
+            </Card >
+        </div >
     );
 }
