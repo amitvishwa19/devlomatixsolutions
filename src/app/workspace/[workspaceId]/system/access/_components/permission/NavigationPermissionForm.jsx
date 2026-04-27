@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { DynamicIcon } from "lucide-react/dynamic";
-import { getSidebarItems } from "@/app/workspace/_lib/sidebar-items";
+import { getSidebarItems } from "@/app/workspace/_lib/sidebar-nav-item";
 
 export function NavigationPermissionForm({ form, selectedNavItems: legacyItems, setSelectedNavItems: setLegacyItems }) {
     // Determine state source: either from RHF form or legacy props

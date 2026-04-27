@@ -145,3 +145,43 @@ export const getSidebarNavItems = (workspaceId) => {
         },
     ];
 };
+
+/**
+ * Legacy utility that returns a flat list of all navigation items.
+ * Used by Access Management components (PermissionEditor, NavigationPermissionForm).
+ */
+export const getSidebarItems = (workspaceId) => {
+    const navStructure = getSidebarNavItems(workspaceId);
+    const flatItems = [];
+
+    navStructure.forEach(group => {
+        // Add parent as a special type if it has children
+        if (group.child && group.child.length > 0) {
+            flatItems.push({
+                ...group.parent,
+                category: group.parent.title,
+                type: 'parent'
+            });
+        }
+
+        // Add children
+        group.child.forEach(child => {
+            flatItems.push({
+                ...child,
+                category: group.parent.title,
+                type: 'child'
+            });
+        });
+
+        // Handle groups with no children (like FlowGenix/AI Agent in the current lib)
+        if (!group.child || group.child.length === 0) {
+            flatItems.push({
+                ...group.parent,
+                category: group.parent.title,
+                type: 'child'
+            });
+        }
+    });
+
+    return flatItems;
+};

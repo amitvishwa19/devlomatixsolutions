@@ -25,7 +25,7 @@ import { GeneralPermissionForm } from "./GeneralPermissionForm";
 import { NavigationPermissionForm } from "./NavigationPermissionForm";
 import { PermissionInfo } from "./PermissionInfo";
 import { SecurityFlow } from "../shared/SecurityFlow";
-import { getSidebarItems } from "@/app/workspace/_lib/sidebar-items";
+import { getSidebarItems } from "@/app/workspace/_lib/sidebar-nav-item";
 
 const defaultActionOptions = [
     { id: "view", label: "View", description: "Read-only access" },
