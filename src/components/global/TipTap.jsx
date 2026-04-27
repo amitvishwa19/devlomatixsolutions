@@ -11,10 +11,10 @@ import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Highlight } from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
+import Placeholder from '@tiptap/extension-placeholder';
 import { Separator } from '@/components/ui/separator';
 import { Toggle } from "@/components/ui/toggle"
 import Heading from '@tiptap/extension-heading'
@@ -28,33 +28,33 @@ import {
     Quote, Code2, Minus,
     Link as LinkIcon, Image as ImageIcon, Table as TableIcon,
     Undo, Redo, Highlighter,
-    Plus, Palette, Type
+    Plus, Type
 } from 'lucide-react';
 
 const FontFamily = Extension.create({
-  name: 'fontFamily',
-  addOptions() { return { types: ['textStyle'] } },
-  addGlobalAttributes() {
-    return [{
-      types: this.options.types,
-      attributes: {
-        fontFamily: {
-          default: null,
-          parseHTML: element => element.style.fontFamily?.replace(/['"]+/g, ''),
-          renderHTML: attributes => {
-            if (!attributes.fontFamily) return {}
-            return { style: `font-family: ${attributes.fontFamily}` }
-          },
-        },
-      },
-    }]
-  },
-  addCommands() {
-    return {
-      setFontFamily: fontFamily => ({ chain }) => chain().setMark('textStyle', { fontFamily }).run(),
-      unsetFontFamily: () => ({ chain }) => chain().setMark('textStyle', { fontFamily: null }).removeEmptyTextStyle().run(),
-    }
-  },
+    name: 'fontFamily',
+    addOptions() { return { types: ['textStyle'] } },
+    addGlobalAttributes() {
+        return [{
+            types: this.options.types,
+            attributes: {
+                fontFamily: {
+                    default: null,
+                    parseHTML: element => element.style.fontFamily?.replace(/['"]+/g, ''),
+                    renderHTML: attributes => {
+                        if (!attributes.fontFamily) return {}
+                        return { style: `font-family: ${attributes.fontFamily}` }
+                    },
+                },
+            },
+        }]
+    },
+    addCommands() {
+        return {
+            setFontFamily: fontFamily => ({ chain }) => chain().setMark('textStyle', { fontFamily }).run(),
+            unsetFontFamily: () => ({ chain }) => chain().setMark('textStyle', { fontFamily: null }).removeEmptyTextStyle().run(),
+        }
+    },
 })
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -65,7 +65,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export default function TipTap({ data, onChange }) {
     const [linkUrl, setLinkUrl] = useState('');
     const [imageUrl, setImageUrl] = useState('');
-    const [textColor, setTextColor] = useState('#000000');
     const [highlightColor, setHighlightColor] = useState('#ffff00');
 
     const editor = useEditor({
@@ -80,16 +79,18 @@ export default function TipTap({ data, onChange }) {
             TableCell,
             TaskList,
             TaskItem.configure({ nested: true }),
-            Color,
             TextStyle,
             FontFamily,
             Highlight.configure({ multicolor: true }),
             Underline,
+            Placeholder.configure({
+                placeholder: '',
+            }),
         ],
         content: data,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none p-6 max-w-none break-words overflow-x-auto',
+                class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl dark:prose-invert focus:outline-none p-6 max-w-none break-words overflow-x-auto',
             },
         },
         immediatelyRender: false,
@@ -184,17 +185,6 @@ export default function TipTap({ data, onChange }) {
                             </PopoverContent>
                         </Popover>
 
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <Palette className="h-4 w-4" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="flex gap-2">
-                                <Input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} />
-                                <Button onClick={() => editor.chain().focus().setColor(textColor).run()}>Apply</Button>
-                            </PopoverContent>
-                        </Popover>
 
                         <Popover>
                             <PopoverTrigger asChild>
@@ -309,7 +299,7 @@ export default function TipTap({ data, onChange }) {
 
             {/* ✅ SCROLLABLE EDITOR ONLY */}
             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full">
+                <ScrollArea className="">
                     <EditorContent editor={editor} />
                 </ScrollArea>
             </div>

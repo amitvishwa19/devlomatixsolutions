@@ -50,7 +50,7 @@ export default function AppSidebar() {
 
 
     return (
-        <Sidebar collapsible="icon" className="[&>div]:bg-transparent glass border-r border-border/50">
+        <Sidebar collapsible="icon" className="  border-r border-border/50">
             <SidebarHeader className="group-data-[collapsible=icon]:p-2 flex flex-row transition-all duration-300 ease-in-out relative min-h-[64px] border-b border-border/10">
                 <AnimatePresence mode="wait">
                     {state === 'expanded' ? (
@@ -150,10 +150,10 @@ export default function AppSidebar() {
                                                                 >
                                                                     <Link href={c.url} className="flex items-center gap-3 w-full group/sub">
                                                                         {c.icon ? (
-                                                                            <DynamicIcon 
-                                                                                name={c.icon} 
-                                                                                size={14} 
-                                                                                className={`shrink-0 transition-all duration-300 ${isActive ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "text-muted-foreground/70 group-hover/sub:text-primary/70"}`} 
+                                                                            <DynamicIcon
+                                                                                name={c.icon}
+                                                                                size={14}
+                                                                                className={`shrink-0 transition-all duration-300 ${isActive ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "text-muted-foreground/70 group-hover/sub:text-primary/70"}`}
                                                                             />
                                                                         ) : (
                                                                             <div className="w-3.5 h-3.5" />
@@ -161,19 +161,19 @@ export default function AppSidebar() {
                                                                         <span className={`text-xs transition-all duration-300 group-data-[collapsible=icon]:hidden ${isActive ? "text-foreground" : "text-muted-foreground group-hover/sub:text-primary/70"}`}>
                                                                             {c.title}
                                                                         </span>
-                                                                        
+
                                                                         {isActive && (
                                                                             <>
                                                                                 {/* Active Indicator Dot */}
-                                                                                <motion.div 
-                                                                                    layoutId="active-nav-dot" 
-                                                                                    className="w-1.5 h-1.5 rounded-full bg-primary ml-auto mr-2 shadow-[0_0_8px_rgba(var(--primary),0.8)]" 
+                                                                                <motion.div
+                                                                                    layoutId="active-nav-dot"
+                                                                                    className="w-1.5 h-1.5 rounded-full bg-primary ml-auto mr-2 shadow-[0_0_8px_rgba(var(--primary),0.8)]"
                                                                                 />
                                                                                 {/* Background Shimmer Glow */}
                                                                                 <motion.div
                                                                                     className="absolute inset-0 bg-primary/5 rounded-md -z-10"
                                                                                     initial={{ opacity: 0 }}
-                                                                                    animate={{ 
+                                                                                    animate={{
                                                                                         opacity: [0.3, 0.6, 0.3],
                                                                                         boxShadow: [
                                                                                             "inset 0 0 0px rgba(var(--primary),0)",
