@@ -50,16 +50,16 @@ export const NotificationSettings = () => {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-2 p-3">
+                <CardContent className="space-y-3 p-4">
                     {/* WhatsApp */}
-                    <div className="flex items-center justify-between gap-4 p-2.5 rounded-md border border-border/50 bg-muted/5">
+                    <div className="flex items-center justify-between gap-4 p-3 rounded-md border border-border/50 bg-muted/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 bg-emerald-500/5 rounded flex items-center justify-center border border-emerald-500/10">
-                                <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+                            <div className="w-8 h-8 bg-emerald-500/5 rounded flex items-center justify-center border border-emerald-500/10">
+                                <MessageSquare className="w-4 h-4 text-emerald-500" />
                             </div>
                             <div className="space-y-0.5">
                                 <Label className="text-xs font-bold">WhatsApp Alerts</Label>
-                                <p className="text-[9px] text-muted-foreground font-medium opacity-60">Critical notifications.</p>
+                                <p className="text-[10px] text-muted-foreground font-medium opacity-60">Critical notifications.</p>
                             </div>
                         </div>
                         <Switch
@@ -71,14 +71,14 @@ export const NotificationSettings = () => {
                     </div>
 
                     {/* Email */}
-                    <div className="flex items-center justify-between gap-4 p-2.5 rounded-md border border-border/50 bg-muted/5">
+                    <div className="flex items-center justify-between gap-4 p-3 rounded-md border border-border/50 bg-muted/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 bg-blue-500/5 rounded flex items-center justify-center border border-blue-500/10">
-                                <Mail className="w-3.5 h-3.5 text-blue-500" />
+                            <div className="w-8 h-8 bg-blue-500/5 rounded flex items-center justify-center border border-blue-500/10">
+                                <Mail className="w-4 h-4 text-blue-500" />
                             </div>
                             <div className="space-y-0.5">
                                 <Label className="text-xs font-bold">Email Digest</Label>
-                                <p className="text-[9px] text-muted-foreground font-medium opacity-60">Activity summaries.</p>
+                                <p className="text-[10px] text-muted-foreground font-medium opacity-60">Activity summaries.</p>
                             </div>
                         </div>
                         <Switch
@@ -90,14 +90,14 @@ export const NotificationSettings = () => {
                     </div>
 
                     {/* Desktop Push */}
-                    <div className="flex items-center justify-between gap-4 p-2.5 rounded-md border border-border/50 bg-muted/5">
+                    <div className="flex items-center justify-between gap-4 p-3 rounded-md border border-border/50 bg-muted/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 bg-muted rounded flex items-center justify-center border border-border/10">
-                                <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
+                            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center border border-border/10">
+                                <Monitor className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div className="space-y-0.5">
                                 <Label className="text-xs font-bold">Desktop Push</Label>
-                                <p className="text-[9px] text-muted-foreground font-medium opacity-60">Browser alerts.</p>
+                                <p className="text-[10px] text-muted-foreground font-medium opacity-60">Browser alerts.</p>
                             </div>
                         </div>
                         <Switch

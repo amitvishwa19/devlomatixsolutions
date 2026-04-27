@@ -182,90 +182,100 @@ export const DeveloperSettings = () => {
     }
   };
 
+  const cardClasses = "rounded-md border border-border/50 bg-transparent overflow-hidden hover:border-primary/20 transition-colors duration-300";
+
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
       {/* Developer Hub Header */}
-      <div className="p-4 rounded-md border border-fuchsia-500/10 flex gap-4 items-center bg-fuchsia-500/[0.01]">
-        <div className="w-10 h-10 bg-fuchsia-500/5 rounded-md flex items-center justify-center border border-fuchsia-500/10 shrink-0">
-          <Terminal className="w-5 h-5 text-fuchsia-500" />
+      <div className="p-6 bg-fuchsia-500/5 rounded-md border border-fuchsia-500/10 flex gap-6 items-center">
+        <div className="w-16 h-16 bg-fuchsia-500/10 rounded-md flex items-center justify-center border border-fuchsia-500/20 shadow-inner shrink-0 scale-110">
+          <Terminal className="w-8 h-8 text-fuchsia-500" />
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-fuchsia-500/5 text-fuchsia-600 border-fuchsia-500/10 text-[8px] h-4 uppercase font-bold tracking-tighter px-1.5">Dev Hub</Badge>
-            <h3 className="text-sm font-bold text-foreground">Developer Operations</h3>
+            <Badge variant="outline" className="bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20 text-[9px]">Dev Hub</Badge>
+            <h3 className="text-lg text-foreground">Developer Operations</h3>
           </div>
-          <p className="text-[10px] text-muted-foreground font-medium mt-0.5 opacity-60">
-            Control API connectivity and real-time event distribution.
+          <p className="text-xs text-muted-foreground font-medium mt-1">
+            Control your external integrations, API connectivity, and real-time event distribution.
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="webhooks" className="w-full">
-        <TabsList className="bg-transparent border border-border/50 p-1 rounded-md mb-4 h-9 gap-1">
-          {['webhooks', 'apikeys', 'activity', 'cleaner'].map((tab) => (
-            <TabsTrigger 
-              key={tab} 
-              value={tab} 
-              className="rounded-md gap-2 text-[10px] font-bold px-3 transition-all data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:border-primary/20 border border-transparent h-7"
-            >
-              {tab === 'webhooks' && <Webhook className="w-3 h-3" />}
-              {tab === 'apikeys' && <Key className="w-3 h-3" />}
-              {tab === 'activity' && <Activity className="w-3 h-3" />}
-              {tab === 'cleaner' && <Sparkles className="w-3 h-3" />}
-              <span className="capitalize">{tab}</span>
-            </TabsTrigger>
-          ))}
+        <TabsList className="bg-background/50 border border-border/40 p-1 rounded-md mb-6">
+          <TabsTrigger value="webhooks" className="rounded-md gap-2 text-xs font-bold px-4 transition-all data-[state=active]:bg-card data-[state=active]:text-fuchsia-500">
+            <Webhook className="w-3.5 h-3.5" />
+            Webhooks & Automation
+          </TabsTrigger>
+          <TabsTrigger value="apikeys" className="rounded-md gap-2 text-xs font-bold px-4 transition-all data-[state=active]:bg-card data-[state=active]:text-fuchsia-500">
+            <Key className="w-3.5 h-3.5" />
+            API Access
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="rounded-md gap-2 text-xs font-bold px-4 transition-all data-[state=active]:bg-card data-[state=active]:text-fuchsia-500">
+            <Activity className="w-3.5 h-3.5" />
+            Live Feed
+          </TabsTrigger>
+          <TabsTrigger value="cleaner" className="rounded-md gap-2 text-xs font-bold px-4 transition-all data-[state=active]:bg-card data-[state=active]:text-fuchsia-500">
+            <Sparkles className="w-3.5 h-3.5" />
+            Class Cleaner
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="cleaner" className="mt-0 space-y-3">
-          <Card className="rounded-md border border-border/50 bg-transparent overflow-hidden">
-            <CardHeader className="border-b border-border/10 p-3">
+        <TabsContent value="cleaner" className="mt-0 space-y-4">
+          <Card className={cardClasses + " min-h-[500px]"}>
+            <CardHeader className="border-b border-border/10 bg-fuchsia-500/5 pb-6 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-fuchsia-500" />
+                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-fuchsia-500" />
                     Global Class Search
                   </CardTitle>
+                  <CardDescription className="text-xs">Find all occurrences of a specific CSS class across your project (src/app).</CardDescription>
                 </div>
                 {searchResults.length > 0 && (
-                  <Badge variant="outline" className="text-[9px] h-4">
+                  <Badge className="bg-fuchsia-500/20 text-fuchsia-600 border-fuchsia-500/30 font-bold px-3 py-1">
                     {searchResults.length} Matches
                   </Badge>
                 )}
               </div>
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-3 mt-6">
                 <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/40" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
                   <Input
-                    placeholder="Search CSS classes..."
-                    className="pl-8 h-8 bg-transparent border-border/50 rounded-md font-medium text-[11px]"
+                    placeholder="Enter class name (e.g. font-bold, italic, uppercase...)"
+                    className="pl-10 h-11 bg-background/50 border-border/40 rounded-md font-bold text-xs"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
                 <Button
-                  size="sm"
                   onClick={handleClassSearch}
                   disabled={isSearching}
-                  className="rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-8 px-4 text-[10px]"
+                  className="rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-11 px-6 shadow-lg shadow-fuchsia-500/20"
                 >
-                  {isSearching ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Search className="w-3 h-3 mr-2" />}
-                  Scan
+                  {isSearching ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
+                  Scan Project
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[300px]">
+              <ScrollArea className="h-[400px]">
                 {searchResults.length > 0 ? (
                   <div className="divide-y divide-border/10">
                     {searchResults.map((result, i) => (
-                      <div key={i} className="p-3 hover:bg-fuchsia-500/5 transition-all group">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <FileCode className="w-3.5 h-3.5 text-fuchsia-500 mt-0.5 shrink-0" />
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <p className="text-[10px] font-bold text-foreground truncate">{result.file} <span className="opacity-40 ml-1">L{result.line}</span></p>
-                              <div className="bg-muted/5 p-2 rounded border border-border/50 font-mono text-[9px] text-muted-foreground truncate">
+                      <div key={i} className="p-4 hover:bg-fuchsia-500/5 transition-all group">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4 flex-1 min-w-0">
+                            <div className="p-2 bg-fuchsia-500/10 rounded-md mt-0.5 shrink-0">
+                              <FileCode className="w-4 h-4 text-fuchsia-500" />
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-bold text-foreground truncate">{result.file}</p>
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 opacity-60">Line {result.line}</Badge>
+                              </div>
+                              <div className="bg-background/40 p-2.5 rounded-md border border-border/20 overflow-x-auto whitespace-pre font-mono text-[10px] text-muted-foreground/80 group-hover:text-fuchsia-500/80 transition-colors">
                                 {result.snippet}
                               </div>
                             </div>
@@ -275,9 +285,9 @@ export const DeveloperSettings = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-12 text-center opacity-30">
-                    <Search className="w-10 h-10 mx-auto mb-2" />
-                    <p className="text-[10px] font-bold uppercase">Search results</p>
+                  <div className="p-24 text-center">
+                    <Search className="w-16 h-16 mx-auto opacity-20 mb-4" />
+                    <p className="text-xs font-bold text-muted-foreground opacity-40">Scan results will appear here</p>
                   </div>
                 )}
               </ScrollArea>
@@ -285,36 +295,37 @@ export const DeveloperSettings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="webhooks" className="mt-0 space-y-3">
-          <Card className="rounded-md border border-border/50 bg-transparent overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-border/10">
+        <TabsContent value="webhooks" className="mt-0 space-y-4">
+          <Card className={cardClasses}>
+            <CardHeader className="flex flex-row items-center justify-between pb-4 p-6 border-b border-border/10">
               <div>
-                <CardTitle className="text-sm font-bold">Endpoints</CardTitle>
+                <CardTitle className="text-lg font-bold">Webhook Endpoints</CardTitle>
+                <CardDescription className="text-xs">Receive real-time notifications when events happen in your workspace.</CardDescription>
               </div>
               <Dialog open={isAddWebhookOpen} onOpenChange={setIsAddWebhookOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="rounded-md h-7 px-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-[10px] font-bold">
-                    <Plus className="w-3 h-3 mr-1" />
-                    Add
+                  <Button size="sm" className="rounded-md gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-9">
+                    <Plus className="w-4 h-4" />
+                    Add Endpoint
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[400px] rounded-md">
+                <DialogContent className="sm:max-w-[425px] rounded-md">
                   <DialogHeader>
-                    <DialogTitle className="text-base font-bold text-fuchsia-600">Configure Webhook</DialogTitle>
+                    <DialogTitle className="text-xl font-bold text-fuchsia-600">Configure Webhook</DialogTitle>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-1.5">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">URL</Label>
+                  <div className="grid gap-6 py-4">
+                    <div className="grid gap-3">
+                      <Label className="text-[10px] font-bold opacity-70">Endpoint URL</Label>
                       <Input
                         placeholder="https://your-api.com/webhooks"
-                        className="rounded-md border border-border/50 h-9 bg-transparent font-medium text-xs"
+                        className="rounded-md border border-border/50 h-11 bg-background shadow-inner font-bold text-xs"
                         value={newWebhook.url}
                         onChange={(e) => setNewWebhook(prev => ({ ...prev, url: e.target.value }))}
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button onClick={handleAddWebhook} className="rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white w-full h-9 text-xs font-bold">Deploy Endpoint</Button>
+                    <Button onClick={handleAddWebhook} className="rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white w-full h-11 font-bold">Deploy Endpoint</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -322,14 +333,14 @@ export const DeveloperSettings = () => {
             <CardContent className="p-0">
               {webhooks.length > 0 ? (
                 webhooks.map((hook) => (
-                  <div key={hook.id} className="p-3 border-b border-border/10 last:border-0 flex items-center justify-between group">
-                    <div className="flex items-center gap-3 truncate">
-                      <Globe className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <div className="truncate">
-                        <p className="text-[11px] font-bold truncate">{hook.url}</p>
-                        <div className="flex gap-1 mt-0.5">
+                  <div key={hook.id} className="p-6 border-t border-border/10 hover:bg-fuchsia-500/5 transition-colors flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                      <Globe className="w-5 h-5 text-emerald-500" />
+                      <div>
+                        <p className="text-sm font-bold truncate max-w-xs">{hook.url}</p>
+                        <div className="flex gap-2 mt-1">
                           {hook.events.map(event => (
-                            <span key={event} className="text-[8px] bg-muted px-1 rounded opacity-60">{event}</span>
+                            <Badge key={event} variant="secondary" className="text-[9px] font-bold h-4 px-1.5">{event}</Badge>
                           ))}
                         </div>
                       </div>
@@ -337,37 +348,43 @@ export const DeveloperSettings = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-rose-500 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-9 w-9 text-rose-500 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => handleDeleteWebhook(hook.id)}
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center opacity-30">
-                  <Webhook className="w-8 h-8 mx-auto" />
+                <div className="p-12 text-center opacity-20">
+                  <Webhook className="w-12 h-12 mx-auto" />
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="apikeys" className="mt-0 space-y-3">
-          <Card className="rounded-md border border-border/50 bg-transparent overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-border/10">
-              <CardTitle className="text-sm font-bold">API Access Keys</CardTitle>
-              <Button size="sm" className="rounded-md h-7 px-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-[10px] font-bold">New Key</Button>
+        <TabsContent value="apikeys" className="mt-0 space-y-4">
+          <Card className={cardClasses}>
+            <CardHeader className="flex flex-row items-center justify-between pb-4 p-6 border-b border-border/10">
+              <div>
+                <CardTitle className="text-lg font-bold">Secret API Keys</CardTitle>
+                <CardDescription className="text-xs">Authenticate requests to the Devlomatix API.</CardDescription>
+              </div>
+              <Button size="sm" className="rounded-md gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold h-9">
+                <Plus className="w-4 h-4" />
+                Create New Key
+              </Button>
             </CardHeader>
             <CardContent className="p-0">
               {apiKeys.map((key) => (
-                <div key={key.id} className="p-3 border-b border-border/10 last:border-0 flex items-center justify-between group">
-                  <div className="space-y-0.5">
-                    <p className="text-[11px] font-bold">{key.name}</p>
-                    <code className="text-[9px] opacity-60 font-mono">{key.key}</code>
+                <div key={key.id} className="flex items-center justify-between p-6 border-t border-border/10 hover:bg-fuchsia-500/5 transition-colors group">
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold">{key.name}</p>
+                    <code className="text-[10px] bg-background/80 px-2 py-1 rounded border border-border/40 font-mono text-muted-foreground">{key.key}</code>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 border border-border/50" onClick={() => copyToClipboard(key.key)}>
-                    <Copy className="w-3 h-3 text-muted-foreground" />
+                  <Button variant="ghost" size="icon" className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => copyToClipboard(key.key)}>
+                    <Copy className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
@@ -375,35 +392,43 @@ export const DeveloperSettings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="activity" className="mt-0 space-y-3">
-          <Card className="rounded-md border border-border/50 bg-transparent overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-border/10">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Activity className="w-4 h-4 text-indigo-500" />
-                Live Feed
-              </CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={fetchLogs} disabled={isLoadingLogs}>
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingLogs ? 'animate-spin' : ''}`} />
+        <TabsContent value="activity" className="mt-0 space-y-4">
+          <Card className={cardClasses + " min-h-[400px]"}>
+            <CardHeader className="flex flex-row items-center justify-between pb-4 p-6 border-b border-border/10">
+              <div>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-indigo-500" />
+                  Webhook Activity
+                </CardTitle>
+                <CardDescription className="text-xs">Real-time log of outgoing deliveries.</CardDescription>
+              </div>
+              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={fetchLogs} disabled={isLoadingLogs}>
+                <RefreshCw className={`w-4 h-4 ${isLoadingLogs ? 'animate-spin' : ''}`} />
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[300px]">
+              <ScrollArea className="h-[400px]">
                 {activityLogs.length > 0 ? (
                   activityLogs.map((log) => (
-                    <div key={log.id} className="p-3 border-b border-border/10 last:border-0 flex gap-3 items-start">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 ${log.level === 'SUCCESS' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      <div className="flex-1 min-w-0">
+                    <div key={log.id} className="p-6 border-t border-border/10 hover:bg-muted/30 transition-colors flex gap-4 items-start">
+                      <div className={`p-2 rounded-md mt-0.5 ${log.level === 'SUCCESS' ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
+                        {log.level === 'SUCCESS' ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-[10px] font-bold truncate">{log.message}</p>
-                          <span className="text-[8px] opacity-40">{new Date(log.createdAt).toLocaleTimeString()}</span>
+                          <p className="text-sm font-bold truncate">{log.message}</p>
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-medium">{new Date(log.createdAt).toLocaleTimeString()}</span>
+                          </div>
                         </div>
-                        <p className="text-[9px] opacity-50 truncate">{JSON.stringify(log.details)}</p>
+                        <p className="text-[10px] opacity-50 truncate">{JSON.stringify(log.details)}</p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="p-12 text-center opacity-20">
-                    <Activity className="w-8 h-8 mx-auto" />
+                  <div className="p-24 text-center opacity-20">
+                    <Activity className="w-12 h-12 mx-auto" />
                   </div>
                 )}
               </ScrollArea>
@@ -412,10 +437,10 @@ export const DeveloperSettings = () => {
         </TabsContent>
       </Tabs>
 
-      <div className="p-2.5 rounded-md border border-amber-500/10 bg-amber-500/[0.02] flex gap-2.5 items-start">
-        <ShieldCheck className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          Sensitive developer operations are recorded in secure audit vaults.
+      <div className="p-4 bg-amber-500/5 rounded-md border border-amber-500/10 flex gap-4 items-start opacity-60">
+        <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+          Sensitive developer operations are recorded in secure audit vaults for compliance and tracking.
         </p>
       </div>
     </div>

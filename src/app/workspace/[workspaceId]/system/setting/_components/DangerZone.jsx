@@ -18,33 +18,33 @@ export const DangerZone = () => {
 
     return (
         <div className="space-y-4 animate-in fade-in duration-500">
-            <Card className="rounded-md border border-rose-500/20 bg-transparent overflow-hidden">
-                <CardHeader className="p-3 border-b border-rose-500/10">
+            <Card className="rounded-md border border-rose-500/20 bg-transparent overflow-hidden hover:border-rose-500/40 transition-colors duration-300">
+                <CardHeader className="p-4 border-b border-rose-500/10">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-rose-500/5 rounded-md flex items-center justify-center border border-rose-500/10">
-                            <AlertTriangle className="w-4 h-4 text-rose-500" />
+                        <div className="w-10 h-10 bg-rose-500/5 rounded-md flex items-center justify-center border border-rose-500/10 shrink-0">
+                            <AlertTriangle className="w-5 h-5 text-rose-500" />
                         </div>
                         <div>
-                            <CardTitle className="text-sm font-bold text-rose-600">Danger Zone</CardTitle>
-                            <CardDescription className="text-[10px] font-medium text-rose-500/60">
+                            <CardTitle className="text-base font-bold text-rose-600">Danger Zone</CardTitle>
+                            <CardDescription className="text-xs font-medium text-rose-500/60">
                                 Irreversible and destructive actions.
                             </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-2 p-3">
-                    <div className="flex items-center justify-between gap-4 p-2.5 rounded-md border border-border/50 bg-muted/5">
-                        <div className="space-y-0.5">
+                <CardContent className="space-y-4 p-4">
+                    <div className="flex items-center justify-between gap-4 p-4 rounded-md border border-border/50 bg-muted/5">
+                        <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Power className="w-3.5 h-3.5 text-amber-500" />
-                                <Label className="text-xs font-bold">Maintenance Mode</Label>
+                                <Power className="w-4 h-4 text-amber-500" />
+                                <Label className="text-sm font-bold">Maintenance Mode</Label>
                             </div>
-                            <p className="text-[10px] text-muted-foreground font-medium opacity-60">Restrict workspace access.</p>
+                            <p className="text-xs text-muted-foreground font-medium opacity-70">Restrict all workspace access immediately.</p>
                         </div>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className={`rounded-md text-[9px] font-bold h-7 px-3 border border-border/50 ${isMaintenanceMode ? 'bg-amber-500 text-white border-none' : 'text-amber-600 hover:bg-amber-500/5'}`}
+                            className={`rounded-md text-[10px] font-bold h-8 px-4 border border-border/50 ${isMaintenanceMode ? 'bg-amber-500 text-white border-none' : 'text-amber-600 hover:bg-amber-500/5'}`}
                             onClick={() => {
                                 setIsMaintenanceMode(!isMaintenanceMode);
                                 toast.info(isMaintenanceMode ? "Maintenance mode disabled" : "Maintenance mode enabled");
@@ -54,31 +54,31 @@ export const DangerZone = () => {
                         </Button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 p-2.5 rounded-md border border-border/50 bg-muted/5">
-                        <div className="space-y-0.5">
+                    <div className="flex items-center justify-between gap-4 p-4 rounded-md border border-border/50 bg-muted/5">
+                        <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <RotateCcw className="w-3.5 h-3.5 text-blue-500" />
-                                <Label className="text-xs font-bold">Reset Configuration</Label>
+                                <RotateCcw className="w-4 h-4 text-blue-500" />
+                                <Label className="text-sm font-bold">Reset Configuration</Label>
                             </div>
-                            <p className="text-[10px] text-muted-foreground font-medium opacity-60">Restore system defaults.</p>
+                            <p className="text-xs text-muted-foreground font-medium opacity-70">Restore all system settings to defaults.</p>
                         </div>
-                        <Button variant="ghost" size="sm" className="rounded-md text-[9px] font-bold h-7 px-3 border border-border/50 text-blue-600 hover:bg-blue-500/5">
+                        <Button variant="ghost" size="sm" className="rounded-md text-[10px] font-bold h-8 px-4 border border-border/50 text-blue-600 hover:bg-blue-500/5">
                             RESET
                         </Button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 p-2.5 rounded-md border border-rose-500/20 bg-rose-500/[0.02]">
-                        <div className="space-y-0.5">
+                    <div className="flex items-center justify-between gap-4 p-4 rounded-md border border-rose-500/20 bg-rose-500/[0.02]">
+                        <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                                <Label className="text-xs font-bold text-rose-600">Delete Workspace</Label>
+                                <Trash2 className="w-4 h-4 text-rose-500" />
+                                <Label className="text-sm font-bold text-rose-600">Delete Workspace</Label>
                             </div>
-                            <p className="text-[10px] text-rose-500/60 font-medium italic opacity-80">This action is permanent.</p>
+                            <p className="text-xs text-rose-500/60 font-medium italic opacity-80">This action is permanent and irreversible.</p>
                         </div>
                         <Button
                             variant="destructive"
                             size="sm"
-                            className="rounded-md text-[9px] font-bold px-4 bg-rose-600 hover:bg-rose-700 h-7"
+                            className="rounded-md text-[10px] font-bold px-6 bg-rose-600 hover:bg-rose-700 h-8 shadow-lg shadow-rose-500/20"
                             onClick={handleDeleteWorkspace}
                         >
                             DELETE
@@ -87,9 +87,9 @@ export const DangerZone = () => {
                 </CardContent>
             </Card>
 
-            <div className="p-2 border border-border/30 rounded-md flex flex-col items-center text-center opacity-40">
-                <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">
-                    Infrastructure Node: {settings?.general?.inviteCode || "..."}
+            <div className="p-4 border border-dashed border-border/30 rounded-md flex flex-col items-center text-center opacity-30">
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                    Infrastructure Node: {settings?.general?.inviteCode || "DV-PRO-8291"}
                 </p>
             </div>
         </div>

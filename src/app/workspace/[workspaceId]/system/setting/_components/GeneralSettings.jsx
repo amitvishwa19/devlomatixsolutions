@@ -18,7 +18,14 @@ export const GeneralSettings = () => {
     const [localGeneral, setLocalGeneral] = useState({
         name: '',
         description: '',
-        imageUrl: '',
+        imageUrl: ''
+    });
+
+    const [localBranding, setLocalBranding] = useState({
+        primaryColor: '#3b82f6',
+        logoUrl: '',
+        appName: '',
+        appDescription: '',
         socialLinks: {
             facebook: { url: '', active: false },
             twitter: { url: '', active: false },
@@ -28,26 +35,12 @@ export const GeneralSettings = () => {
         }
     });
 
-    const [localBranding, setLocalBranding] = useState({
-        primaryColor: '#3b82f6',
-        logoUrl: '',
-        appName: '',
-        appDescription: ''
-    });
-
     useEffect(() => {
         if (settings?.general) {
             setLocalGeneral({
                 name: settings.general.name || '',
                 description: settings.general.description || '',
-                imageUrl: settings.general.imageUrl || '',
-                socialLinks: settings.general.socialLinks || {
-                    facebook: { url: '', active: false },
-                    twitter: { url: '', active: false },
-                    instagram: { url: '', active: false },
-                    linkedin: { url: '', active: false },
-                    youtube: { url: '', active: false }
-                }
+                imageUrl: settings.general.imageUrl || ''
             });
         }
         if (settings?.branding) {
@@ -55,7 +48,14 @@ export const GeneralSettings = () => {
                 primaryColor: settings.branding.primaryColor || '#3b82f6',
                 logoUrl: settings.branding.logoUrl || '',
                 appName: settings.branding.appName || '',
-                appDescription: settings.branding.appDescription || ''
+                appDescription: settings.branding.appDescription || '',
+                socialLinks: settings.branding.socialLinks || {
+                    facebook: { url: '', active: false },
+                    twitter: { url: '', active: false },
+                    instagram: { url: '', active: false },
+                    linkedin: { url: '', active: false },
+                    youtube: { url: '', active: false }
+                }
             });
         }
     }, [settings]);
@@ -69,7 +69,7 @@ export const GeneralSettings = () => {
     };
 
     const handleSocialChange = (platform, field, value) => {
-        setLocalGeneral(prev => ({
+        setLocalBranding(prev => ({
             ...prev,
             socialLinks: {
                 ...prev.socialLinks,
@@ -108,10 +108,11 @@ export const GeneralSettings = () => {
                 .from('system')
                 .getPublicUrl(filePath);
 
-            setLocalBranding(prev => ({ ...prev, logoUrl: publicUrl }));
+            const updatedBranding = { ...localBranding, logoUrl: publicUrl };
+            setLocalBranding(updatedBranding);
 
             updateSettings({
-                branding: { ...localBranding, logoUrl: publicUrl }
+                branding: updatedBranding
             });
 
             toast.success("App logo updated successfully");
@@ -158,7 +159,7 @@ export const GeneralSettings = () => {
                                 value={localGeneral.name}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, name: e.target.value }))}
                                 placeholder="Enter workspace name"
-                                className="rounded-md border border-border/50 h-9 bg-transparent font-medium text-xs focus:ring-1 focus:ring-primary/20"
+                                className="rounded-md border border-border/50 h-9 bg-transparent font-medium text-xs focus:ring-1 focus:ring-primary/20 px-3"
                             />
                         </div>
                         <div className="grid gap-1.5">
@@ -168,7 +169,7 @@ export const GeneralSettings = () => {
                                 value={localGeneral.description}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Describe what this workspace is for..."
-                                className="rounded-md border border-border/50 bg-transparent font-medium text-xs focus:ring-1 focus:ring-primary/20 resize-none"
+                                className="rounded-md border border-border/50 bg-transparent font-medium text-xs focus:ring-1 focus:ring-primary/20 resize-none px-3 py-2"
                             />
                         </div>
                     </CardContent>
@@ -199,23 +200,23 @@ export const GeneralSettings = () => {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-3 space-y-2 flex-1">
+                    <CardContent className="p-4 space-y-3 flex-1">
                         {socialPlatforms.map((platform) => (
-                            <div key={platform.id} className="flex items-center gap-2 p-1.5 rounded-md border border-border/50 bg-muted/5 group/link">
-                                <div className={`w-6 h-6 bg-background rounded flex items-center justify-center border border-border/50 ${platform.color} shrink-0 group-hover/link:scale-105 transition-transform`}>
-                                    <platform.icon className="w-3.5 h-3.5" />
+                            <div key={platform.id} className="flex items-center gap-3 p-2 rounded-md border border-border/50 bg-muted/5 group/link">
+                                <div className={`w-7 h-7 bg-background rounded flex items-center justify-center border border-border/50 ${platform.color} shrink-0 group-hover/link:scale-105 transition-transform`}>
+                                    <platform.icon className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <Input
-                                        value={localGeneral.socialLinks[platform.id].url}
+                                        value={localBranding.socialLinks?.[platform.id]?.url || ''}
                                         onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)}
                                         placeholder={`${platform.label} URL`}
-                                        className="h-7 rounded border-none bg-transparent text-[10px] font-medium focus-visible:ring-0 px-1 placeholder:opacity-30"
+                                        className="h-8 rounded border-none bg-transparent text-[10px] font-medium focus-visible:ring-0 px-1 placeholder:opacity-30"
                                     />
                                 </div>
-                                <div className="flex items-center gap-2 pr-1 border-l border-border/10 pl-2">
+                                <div className="flex items-center gap-2 pr-1 border-l border-border/10 pl-3">
                                     <Switch
-                                        checked={localGeneral.socialLinks[platform.id].active}
+                                        checked={localBranding.socialLinks?.[platform.id]?.active || false}
                                         onCheckedChange={(checked) => handleSocialChange(platform.id, 'active', checked)}
                                         className="scale-75"
                                     />
@@ -225,7 +226,7 @@ export const GeneralSettings = () => {
                     </CardContent>
                     <CardFooter className="border-t border-border/10 p-3 flex justify-end bg-muted/[0.02]">
                         <Button
-                            onClick={handleSaveGeneral}
+                            onClick={handleSaveBranding}
                             disabled={saving}
                             size="sm"
                             className="rounded-md font-bold px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] h-8"
@@ -260,7 +261,7 @@ export const GeneralSettings = () => {
                                 value={localBranding.appName}
                                 onChange={(e) => setLocalBranding(prev => ({ ...prev, appName: e.target.value }))}
                                 placeholder="e.g. HealthFine Platform"
-                                className="rounded-md border border-border/50 h-9 bg-transparent font-medium text-xs focus:ring-1 focus:ring-indigo-500/20"
+                                className="rounded-md border border-border/50 h-9 bg-transparent font-medium text-xs focus:ring-1 focus:ring-indigo-500/20 px-3"
                             />
                         </div>
                         <div className="grid gap-1.5">
@@ -269,7 +270,7 @@ export const GeneralSettings = () => {
                                 value={localBranding.appDescription}
                                 onChange={(e) => setLocalBranding(prev => ({ ...prev, appDescription: e.target.value }))}
                                 placeholder="A brief tagline for your app"
-                                className="rounded-md border border-border/50 h-9 bg-transparent font-medium text-xs focus:ring-1 focus:ring-indigo-500/20"
+                                className="rounded-md border border-border/50 h-9 bg-transparent font-medium text-xs focus:ring-1 focus:ring-indigo-500/20 px-3"
                             />
                         </div>
                     </CardContent>
@@ -301,7 +302,7 @@ export const GeneralSettings = () => {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4 p-4 flex-1">
-                        <div className="flex gap-4 items-start">
+                        <div className="flex gap-6 items-start">
                             <div
                                 onClick={() => !uploading && fileInputRef.current?.click()}
                                 className={`relative w-20 h-20 rounded-md border border-dashed border-border/60 flex flex-col items-center justify-center gap-1 group cursor-pointer hover:border-primary/40 transition-all shrink-0 overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
