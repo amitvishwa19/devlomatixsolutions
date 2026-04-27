@@ -126,7 +126,8 @@ export default function SaveContact({ open, setOpen, leads, selectedLeadIds, onS
                     ...values,
                     tags: tags,
                     location: lead.location,
-                    email: lead.email
+                    email: lead.email,
+                    raw: lead // Pass the full lead object here
                 };
                 const result = await saveLeadAction(workspaceId, data);
                 if (result.success) {

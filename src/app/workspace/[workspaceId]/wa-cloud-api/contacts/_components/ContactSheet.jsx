@@ -128,7 +128,7 @@ export default function ContactSheet({
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Logical Category</Label>
+                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Categorization</Label>
                         <div className="grid grid-cols-2 gap-2">
                             {categories.map(cat => (
                                 <div 
@@ -142,6 +142,32 @@ export default function ContactSheet({
                             ))}
                         </div>
                     </div>
+
+                    {/* Raw Details Section */}
+                    {activeContact?.info?.raw && (
+                        <div className="space-y-3 mt-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Raw Intelligence</Label>
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                {Object.entries(activeContact.info.raw).map(([key, value]) => {
+                                    if (typeof value === 'object' || Array.isArray(value) || !value) return null;
+                                    if (['id', 'name', 'phone', 'email', 'address'].includes(key)) return null;
+                                    return (
+                                        <div key={key} className="flex flex-col gap-0.5 border-b border-white/5 pb-2 last:border-0">
+                                            <span className="text-[10px] text-muted-foreground uppercase font-medium">{key.replace(/_/g, ' ')}</span>
+                                            <span className="text-xs text-zinc-200 font-semibold">{String(value)}</span>
+                                        </div>
+                                    );
+                                })}
+                                {/* Handle complex objects like opening hours or reviews if needed */}
+                                {activeContact.info.raw.rating && (
+                                    <div className="flex flex-col gap-0.5 border-b border-white/5 pb-2">
+                                        <span className="text-[10px] text-muted-foreground uppercase font-medium">Rating</span>
+                                        <span className="text-xs text-amber-400 font-bold">★ {activeContact.info.raw.rating} ({activeContact.info.raw.reviewsCount || 0} reviews)</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     <Button type="submit" disabled={isSaving} className="px-8 shadow-lg shadow-primary/20 gap-2">
                         {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                         {activeContact ? (isSaving ? 'Updating...' : 'Save Changes') : (isSaving ? 'Initializing...' : 'Initialize Contact')}

@@ -226,14 +226,31 @@ export async function POST(req) {
                                     name: value.contacts?.[0]?.profile?.name || `WA User (${phone})`,
                                     phone,
                                     type: 'LEAD',
-                                    tags: ['WHATSAPP_LEAD']
+                                    tags: ['WHATSAPP_LEAD'],
+                                    lastInteraction: new Date(),
+                                    lastMessage: JSON.stringify({
+                                        text: textBody,
+                                        type: message.type,
+                                        url: message[message.type]?.url || null,
+                                        caption: message[message.type]?.caption || null,
+                                        timestamp: timestamp
+                                    })
                                 }
                             });
                         } else {
                             // Update last interaction
                             await db.contact.update({
                                 where: { id: contact.id },
-                                data: { lastInteraction: new Date(), lastMessage: textBody }
+                                data: { 
+                                    lastInteraction: new Date(), 
+                                    lastMessage: JSON.stringify({
+                                        text: textBody,
+                                        type: message.type,
+                                        url: message[message.type]?.url || null,
+                                        caption: message[message.type]?.caption || null,
+                                        timestamp: timestamp
+                                    })
+                                }
                             });
                         }
                     } catch (contactErr) {

@@ -51,6 +51,30 @@ import {
 import MediaBubble from "./_components/MediaBubble";
 import TemplateMessage from "./_components/TemplateMessage";
 
+// Helper: Parse lastMessage JSON and return a preview string
+function renderMessagePreview(lastMessage) {
+    if (!lastMessage) return "";
+    try {
+        const parsed = JSON.parse(lastMessage);
+        if (typeof parsed === 'object' && parsed !== null) {
+            const type = (parsed.type || 'text').toLowerCase();
+            const text = parsed.text || "";
+            
+            if (type === 'text') return text;
+            if (['image', 'video', 'audio', 'document', 'sticker'].includes(type)) {
+                return `[${type.toUpperCase()}] ${parsed.caption || text || ""}`.trim();
+            }
+            if (type === 'template') return `[Template] ${text || ""}`.trim();
+            if (type === 'location') return "📍 Location shared";
+            
+            return text || `[${type.toUpperCase()}]`;
+        }
+        return String(lastMessage);
+    } catch (e) {
+        return String(lastMessage);
+    }
+}
+
 // Helper: replace {{N}} placeholders in a template body string
 function fillTemplatePreview(body, vars) {
     let text = body || '';
@@ -258,7 +282,11 @@ export default function WhatsAppChatsPage() {
             if (conv.jid === selectedJid) {
                 return {
                     ...conv,
-                    lastMessage: textToSend,
+                    lastMessage: JSON.stringify({
+                        text: textToSend,
+                        type: 'text',
+                        timestamp: optimisticMsg.timestamp
+                    }),
                     timestamp: optimisticMsg.timestamp,
                     messages: [optimisticMsg, ...conv.messages]
                 };
@@ -328,9 +356,16 @@ export default function WhatsAppChatsPage() {
             metadata: { type: 'template', templateName }
         };
         setConversations(prev => prev.map(conv => {
-            if (conv.jid === selectedJid) {
-                return { ...conv, lastMessage: previewText, messages: [optimisticMsg, ...conv.messages] };
-            }
+                return { 
+                    ...conv, 
+                    lastMessage: JSON.stringify({
+                        text: previewText,
+                        type: 'template',
+                        templateName: templateName,
+                        timestamp: optimisticMsg.timestamp
+                    }), 
+                    messages: [optimisticMsg, ...conv.messages] 
+                };
             return conv;
         }));
         setIsTemplateDrawerOpen(false);
@@ -485,7 +520,7 @@ export default function WhatsAppChatsPage() {
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground truncate opacity-70">
                                                         {chat.fromMe && <span className="text-[9px] uppercase font-bold mr-1 text-primary/60">You:</span>}
-                                                        {chat.lastMessage}
+                                                        {renderMessagePreview(chat.lastMessage)}
                                                     </p>
                                                 </div>
                                             </div>

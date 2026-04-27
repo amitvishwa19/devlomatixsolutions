@@ -119,8 +119,8 @@ export default function ContactsPage() {
                 const groupId = activeSegment.split(':')[1];
                 matchesSegment = contact.groups?.some(g => g.id === groupId);
             } else if (activeSegment.startsWith('category:')) {
-                const catId = activeSegment.split(':')[1];
-                matchesSegment = contact.categoryId === catId;
+                const catName = activeSegment.split(':')[1];
+                matchesSegment = contact.category === catName;
             } else if (activeSegment.startsWith('tag:')) {
                 const tagName = activeSegment.split(':')[1];
                 matchesSegment = contact.tags?.includes(tagName);
@@ -563,44 +563,29 @@ export default function ContactsPage() {
                             <div id="categories" className="space-y-2">
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Categories</span>
-                                    <Button variant="ghost" size="icon" className="h-5 w-5 opacity-40 hover:opacity-100" onClick={() => setIsManageCategoriesOpen(true)}>
-                                        <Plus className="w-3 h-3" />
-                                    </Button>
                                 </div>
                                 <div className="space-y-1">
-                                    {categories.map(cat => (
-                                        <div key={cat.id} className="relative group flex items-center pr-2">
+                                    {Array.from(new Set(contacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                                        <div key={catName} className="relative group flex items-center pr-2">
                                             <div
-                                                variant={activeSegment === `category:${cat.id}` ? 'secondary' : 'ghost'}
-                                                className={`w-full flex items-center justify-between transition-all cursor-pointer p-2 border border-transparent rounded-md ${activeSegment === `category:${cat.id}` ? 'bg-card' : 'hover:bg-card'}`}
-                                                onClick={() => setActiveSegment(`category:${cat.id}`)}
+                                                className={`w-full flex items-center justify-between transition-all cursor-pointer p-2 border border-transparent rounded-md ${activeSegment === `category:${catName}` ? 'bg-card border-primary/20' : 'hover:bg-card'}`}
+                                                onClick={() => setActiveSegment(`category:${catName}`)}
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                                                    <div className="w-2 h-2 rounded-full bg-primary/40" />
                                                     <span className="flex items-center truncate max-w-[120px] text-xs gap-2">
-                                                        {cat.name}
-                                                        <span className="text-xs opacity-60">
-                                                            ({contacts.filter(c => c.categoryId === cat.id).length})
+                                                        {catName}
+                                                        <span className="text-[10px] opacity-40 font-mono">
+                                                            {contacts.filter(c => c.category === catName).length}
                                                         </span>
                                                     </span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    {isDeletingCategory && pendingDeleteEntity?.id === cat.id ? (
-                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
-                                                    ) : (
-                                                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-opacity"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setPendingDeleteEntity({ id: cat.id, name: cat.name });
-                                                                setIsDeleteCategoryOpen(true);
-                                                            }}
-                                                        />
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
-                                    {categories.length === 0 && <p className="text-[10px] text-muted-foreground italic px-2">No categories defined.</p>}
+                                    {contacts.filter(c => c.category).length === 0 && (
+                                        <p className="text-[10px] text-muted-foreground italic px-2">No categories found.</p>
+                                    )}
                                 </div>
                             </div>
 

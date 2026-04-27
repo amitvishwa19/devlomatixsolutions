@@ -78,7 +78,13 @@ const handler = async (data) => {
                 conversationsMap[normalizedJid] = {
                     jid: normalizedJid,
                     name: contactMap[cleanPhone] || null,
-                    lastMessage: msg.text,
+                    lastMessage: JSON.stringify({
+                        text: msg.text,
+                        type: msg.metadata?.type || 'text',
+                        url: msg.metadata?.mediaUrl || msg.metadata?.raw?.[msg.metadata?.type]?.url || null,
+                        caption: msg.metadata?.caption || msg.metadata?.raw?.[msg.metadata?.type]?.caption || null,
+                        timestamp: Number(msg.timestamp)
+                    }),
                     timestamp: Number(msg.timestamp),
                     fromMe: msg.fromMe,
                     unreadCount: 0,

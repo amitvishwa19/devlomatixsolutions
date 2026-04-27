@@ -41,7 +41,8 @@ export async function saveLeadAction(workspaceId, data) {
         const info = {
             description: description || "",
             source: 'LeadFinder',
-            savedAt: new Date().toISOString()
+            savedAt: new Date().toISOString(),
+            raw: data.raw || {} // Store full exact response here
         };
 
         const contact = await db.contact.upsert({

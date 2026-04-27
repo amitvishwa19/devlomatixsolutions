@@ -57,7 +57,8 @@ export async function bulkSaveLeadsAction(workspaceId, leads, globalData = {}) {
                 const info = {
                     description: globalData.description || "",
                     source: 'LeadFinder (Bulk)',
-                    savedAt: new Date().toISOString()
+                    savedAt: new Date().toISOString(),
+                    raw: lead // Store the full original lead data here
                 };
 
                 await db.contact.upsert({

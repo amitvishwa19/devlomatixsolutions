@@ -139,10 +139,15 @@ export default function LeadsPage() {
             city: entry.city || '',
             pincode: entry.pincode || ''
         });
-        // Trigger search after state updates
-        setTimeout(() => {
-            handleFindLeads(true);
-        }, 100);
+    };
+
+    const deleteHistoryEntry = (e, timestamp) => {
+        e.stopPropagation();
+        setSearchHistory(prev => {
+            const updated = prev.filter(h => h.timestamp !== timestamp);
+            localStorage.setItem('leads_search_history', JSON.stringify(updated));
+            return updated;
+        });
     };
 
     const getHistoryLabel = (entry) => {
@@ -463,11 +468,17 @@ export default function LeadsPage() {
                             <Badge
                                 key={`${entry.timestamp}-${i}`}
                                 variant="outline"
-                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-muted-foreground cursor-pointer transition-all hover:scale-105 active:scale-95 text-xs font-medium py-1 px-3 rounded-full flex items-center gap-2 group"
+                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-muted-foreground cursor-pointer transition-all hover:scale-105 active:scale-95 text-xs font-medium py-1 px-3 rounded-full flex items-center gap-2 group relative pr-7"
                                 onClick={() => applyHistory(entry)}
                             >
                                 <Search className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100" />
                                 {getHistoryLabel(entry)}
+                                <button
+                                    onClick={(e) => deleteHistoryEntry(e, entry.timestamp)}
+                                    className="absolute right-1.5 p-0.5 hover:bg-destructive/20 hover:text-destructive rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                    <Trash2 className="w-2.5 h-2.5" />
+                                </button>
                             </Badge>
                         ))}
                         <Button

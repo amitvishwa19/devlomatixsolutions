@@ -87,15 +87,23 @@ export async function POST(req, { params }) {
             searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(queryText)}&key=${apiKey}`;
         }
 
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
+        let searchRes = await fetch(searchUrl);
+        let searchData = await searchRes.json();
+
+        // 4. Handle "Token Too Fresh" - Google requires 1-2s delay for next_page_token to activate
+        if (searchData.status === 'INVALID_REQUEST' && pageToken) {
+            console.log("[LEADS_API] Token too fresh, retrying in 2 seconds...");
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            searchRes = await fetch(searchUrl);
+            searchData = await searchRes.json();
+        }
 
         if (searchData.status === 'REQUEST_DENIED') {
             return NextResponse.json({ success: false, message: `Google API Error: ${searchData.error_message}` }, { status: 400 });
         }
 
         if (searchData.status === 'INVALID_REQUEST' && pageToken) {
-             return NextResponse.json({ success: false, message: "Pagination token too fresh. Google requires a short delay (1-2s) between page requests. Please try again in a moment." }, { status: 429 });
+             return NextResponse.json({ success: false, message: "Pagination token still not active. Please wait another second and try again." }, { status: 429 });
         }
 
         if (!searchData.results || searchData.results.length === 0) {
