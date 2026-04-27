@@ -146,12 +146,45 @@ export default function AppSidebar() {
                                                                 <SidebarMenuButton
                                                                     asChild
                                                                     tooltip={c.title}
-                                                                    className={`transition-all duration-200 ${i === 0 && 'mt-2'} ${isActive ? "bg-primary/5 text-primary font-medium" : "hover:bg-muted/50"}`}
+                                                                    className={`relative transition-all duration-300 ${i === 0 && 'mt-2'} ${isActive ? "bg-primary/10 text-primary font-semibold" : "hover:bg-primary/5 hover:text-primary/80 text-muted-foreground"}`}
                                                                 >
-                                                                    <Link href={c.url} className="flex items-center gap-3 w-full">
-                                                                        {c.icon ? <DynamicIcon name={c.icon} size={14} className={`shrink-0 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`} /> : <div className="w-3.5 h-3.5" />}
-                                                                        <span className={`text-xs transition-all group-data-[collapsible=icon]:hidden ${isActive ? "text-foreground font-semibold" : "text-muted-foreground"}`}>{c.title}</span>
-                                                                        {isActive && <motion.div layoutId="active-nav-dot" className="w-1 h-1 rounded-full bg-primary ml-auto mr-2" />}
+                                                                    <Link href={c.url} className="flex items-center gap-3 w-full group/sub">
+                                                                        {c.icon ? (
+                                                                            <DynamicIcon 
+                                                                                name={c.icon} 
+                                                                                size={14} 
+                                                                                className={`shrink-0 transition-all duration-300 ${isActive ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "text-muted-foreground/70 group-hover/sub:text-primary/70"}`} 
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="w-3.5 h-3.5" />
+                                                                        )}
+                                                                        <span className={`text-xs transition-all duration-300 group-data-[collapsible=icon]:hidden ${isActive ? "text-foreground" : "text-muted-foreground group-hover/sub:text-primary/70"}`}>
+                                                                            {c.title}
+                                                                        </span>
+                                                                        
+                                                                        {isActive && (
+                                                                            <>
+                                                                                {/* Active Indicator Dot */}
+                                                                                <motion.div 
+                                                                                    layoutId="active-nav-dot" 
+                                                                                    className="w-1.5 h-1.5 rounded-full bg-primary ml-auto mr-2 shadow-[0_0_8px_rgba(var(--primary),0.8)]" 
+                                                                                />
+                                                                                {/* Background Shimmer Glow */}
+                                                                                <motion.div
+                                                                                    className="absolute inset-0 bg-primary/5 rounded-md -z-10"
+                                                                                    initial={{ opacity: 0 }}
+                                                                                    animate={{ 
+                                                                                        opacity: [0.3, 0.6, 0.3],
+                                                                                        boxShadow: [
+                                                                                            "inset 0 0 0px rgba(var(--primary),0)",
+                                                                                            "inset 0 0 10px rgba(var(--primary),0.1)",
+                                                                                            "inset 0 0 0px rgba(var(--primary),0)"
+                                                                                        ]
+                                                                                    }}
+                                                                                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                                                                />
+                                                                            </>
+                                                                        )}
                                                                     </Link>
                                                                 </SidebarMenuButton>
                                                             </SidebarMenuItem>
@@ -168,6 +201,19 @@ export default function AppSidebar() {
                     })}
                 </ScrollArea>
             </SidebarContent>
+
+            <div className="mt-auto px-2 pb-2">
+                <div className="flex flex-col gap-1 p-2 rounded-xl bg-primary/5 border border-primary/10 backdrop-blur-sm group-data-[collapsible=icon]:p-1 group-data-[collapsible=icon]:items-center">
+                    <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 group/footer w-full group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
+                        <DynamicIcon name="help-circle" size={16} className="shrink-0 opacity-70 group-hover/footer:opacity-100 transition-opacity" />
+                        <span className="group-data-[collapsible=icon]:hidden whitespace-nowrap">Help & Support</span>
+                    </button>
+                    <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 group/footer w-full group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
+                        <DynamicIcon name="settings" size={16} className="shrink-0 opacity-70 group-hover/footer:opacity-100 transition-opacity" />
+                        <span className="group-data-[collapsible=icon]:hidden whitespace-nowrap">System Settings</span>
+                    </button>
+                </div>
+            </div>
 
             <SidebarFooter>
                 <OrgAuthBlock collapsed={state === 'collapsed'} />
