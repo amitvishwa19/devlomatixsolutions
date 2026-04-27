@@ -52,6 +52,7 @@ export default function LeadsPage() {
     const [contactGroups, setContactGroups] = useState([]);
     const [selectedGroupId, setSelectedGroupId] = useState('');
     const [saving, setSaving] = useState(false);
+    const [selectedLeadIds, setSelectedLeadIds] = useState([]);
     const [stats, setStats] = useState({
         totalLeads: 0,
         withPhone: 0,
@@ -164,7 +165,7 @@ export default function LeadsPage() {
 
     const fetchContactGroups = async () => {
         try {
-            const res = await fetch(`/api/wa/groups`);
+            const res = await fetch(`/api/workspace/${workspaceId}/contacts/groups`);
             const data = await res.json();
             if (Array.isArray(data)) {
                 setContactGroups(data);
@@ -217,11 +218,6 @@ export default function LeadsPage() {
     ];
 
     const handleSaveLeads = async (leadsToSave) => {
-        if (!selectedGroupId) {
-            toast.error("Please select a target Contact Group first");
-            return;
-        }
-
         setSaving(true);
         const toastId = toast.loading(`Saving ${leadsToSave.length} leads to group...`);
 
@@ -329,13 +325,33 @@ export default function LeadsPage() {
         }
     };
 
+    const toggleSelectAll = () => {
+        if (selectedLeadIds.length === leads.length) {
+            setSelectedLeadIds([]);
+        } else {
+            setSelectedLeadIds(leads.map(l => l.id));
+        }
+    };
+
+    const toggleSelectLead = (id) => {
+        setSelectedLeadIds(prev =>
+            prev.includes(id)
+                ? prev.filter(item => item !== id)
+                : [...prev, id]
+        );
+    };
+
     const handleExport = () => {
         if (leads.length === 0) return;
+
+        const leadsToExport = selectedLeadIds.length > 0
+            ? leads.filter(l => selectedLeadIds.includes(l.id))
+            : leads;
 
         const headers = ["Name", "Phone", "Email", "Rating", "Reviews", "Address", "Website"];
         const csvContent = [
             headers.join(","),
-            ...leads.map(l => [
+            ...leadsToExport.map(l => [
                 `"${l.name}"`,
                 `"${l.phone}"`,
                 `"${l.email}"`,
@@ -352,11 +368,13 @@ export default function LeadsPage() {
         a.href = url;
         a.download = `leads_export_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
-        toast.success("CSV Exported successfully");
+        toast.success(selectedLeadIds.length > 0 ? `Exported ${selectedLeadIds.length} selected leads` : "Exported all leads successfully");
     };
 
     return (
-        <div className="p-4 space-y-6 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
+        <div className="p-4 space-y-4 animate-in fade-in duration-500  mx-auto">
+
+
             {/* Header / Branding */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -364,19 +382,22 @@ export default function LeadsPage() {
                         <div className="p-2 bg-primary rounded-xl">
                             <Search className="w-5 h-5 text-white" />
                         </div>
-                        <h1 className="text-xl font-bold">LeadFinder</h1>
+                        <div>
+                            <h1 className="text-xl font-bold">LeadFinder</h1>
+                            <p className="text-xs  text-muted-foreground  flex items-center gap-2 mb-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                Google & Maps Lead Generator Engine
+                            </p>
+                        </div>
                     </div>
-                    <p className="text-xs  text-muted-foreground  flex items-center gap-2 mb-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Google & Maps Lead Generator Engine
-                    </p>
+
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-card/50 border-border/50 text-xs font-bold uppercase gap-2 flex-1 md:flex-initial"
-                        onClick={() => { setLeads([]); setStats({ totalLeads: 0, withPhone: 0, withEmail: 0, avgRating: 0 }); setCurrentPage(1); setNextPageToken(null); }}
+                        className="bg-card/50 border text-xs font-bold gap-2 flex-1 md:flex-initial rounded-md"
+                        onClick={() => { setLeads([]); setStats({ totalLeads: 0, withPhone: 0, withEmail: 0, avgRating: 0 }); setCurrentPage(1); setNextPageToken(null); setSelectedLeadIds([]); }}
                     >
                         <Trash2 className="w-3.5 h-3.5" />
                         Clear
@@ -385,7 +406,7 @@ export default function LeadsPage() {
                         disabled={leads.length === 0}
                         variant="secondary"
                         size="sm"
-                        className="text-xs font-bold uppercase gap-2 flex-1 md:flex-initial"
+                        className="text-xs font-bold gap-2 flex-1 md:flex-initial rounded-md"
                         onClick={handleExport}
                     >
                         <Download className="w-3.5 h-3.5" />
@@ -397,7 +418,7 @@ export default function LeadsPage() {
             {/* Search History Tag Cloud */}
             {searchHistory.length > 0 && (
                 <div className="space-y-2 animate-in slide-in-from-top duration-500">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest pl-1">
+                    <div className="flex items-center gap-2 text-sx font-bold text-muted-foreground/60 pl-1">
                         <History className="w-3 h-3" />
                         Recent Searches
                     </div>
@@ -406,7 +427,7 @@ export default function LeadsPage() {
                             <Badge
                                 key={`${entry.timestamp}-${i}`}
                                 variant="outline"
-                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-muted-foreground cursor-pointer transition-all hover:scale-105 active:scale-95 text-[10px] font-bold py-1 px-3 rounded-full flex items-center gap-2 group"
+                                className="bg-primary/5 hover:bg-primary/20 border-primary/20 text-muted-foreground cursor-pointer transition-all hover:scale-105 active:scale-95 text-sx font-medium py-1 px-3 rounded-full flex items-center gap-2 group"
                                 onClick={() => applyHistory(entry)}
                             >
                                 <Search className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100" />
@@ -416,7 +437,7 @@ export default function LeadsPage() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 px-2 text-[9px] font-bold text-muted-foreground hover:text-destructive transition-colors"
+                            className="h-6 px-2 text-[9px] font-medium text-muted-foreground hover:text-destructive transition-colors"
                             onClick={() => { setSearchHistory([]); localStorage.removeItem('leads_search_history'); }}
                         >
                             Clear History
@@ -426,25 +447,25 @@ export default function LeadsPage() {
             )}
 
             {/* Search Filters Card */}
-            <Card className="bg-card/30 border-border/40 backdrop-blur-md overflow-hidden relative group">
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
-                <CardHeader className="pb-4">
+            <Card className="bg-card border backdrop-blur-md overflow-hidden relative group rounded-xl p-4">
+                <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent opacity-50" />
+                <CardHeader className="">
                     <div className="flex items-center gap-3">
                         <div className="p-1.5 bg-primary/10 rounded-lg">
                             <Filter className="w-4 h-4 text-primary" />
                         </div>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-white">Advanced Search Filters</CardTitle>
+                        <CardTitle className="text-sm font-bold text-white">Advanced Search Filters</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
                     <div className="">
                         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground/70 tracking-widest">Keyword</Label>
+                                <Label className="text-sx font-bold text-muted-foreground/70">Keyword</Label>
                                 <div className="relative">
                                     <Input
                                         placeholder="e.g. Restaurant, Dentist..."
-                                        className="bg-background/20 border text-xs h-11 pl-9 focus:border-primary/50 transition-all font-medium text-white"
+                                        className="bg-background/20 border text-xs h-11 pl-9 focus:border-primary/50 transition-all font-medium text-white rounded-md"
                                         value={filters.keyword}
                                         onChange={(e) => setFilters({ ...filters, keyword: e.target.value })}
                                         onKeyDown={(e) => e.key === 'Enter' && handleFindLeads()}
@@ -454,12 +475,12 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground/70 tracking-widest">Category</Label>
+                                <Label className="text-sx font-bold text-muted-foreground/70">Category</Label>
                                 <Select value={filters.category} onValueChange={(val) => setFilters({ ...filters, category: val })}>
-                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white">
+                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white rounded-md">
                                         <SelectValue placeholder="Select Category" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-border/40">
+                                    <SelectContent className="bg-zinc-900 border">
                                         {categories.map(cat => (
                                             <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
                                         ))}
@@ -468,12 +489,12 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground/70 tracking-widest">Country</Label>
+                                <Label className="text-sx font-bold text-muted-foreground/70">Country</Label>
                                 <Select value={filters.country} onValueChange={(val) => setFilters({ ...filters, country: val })}>
-                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white">
+                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white rounded-md">
                                         <SelectValue placeholder="Select Country" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-border/40">
+                                    <SelectContent className="bg-zinc-900 border">
                                         {allCountries.map(c => (
                                             <SelectItem key={c.isoCode} value={c.isoCode} className="text-xs">{c.name}</SelectItem>
                                         ))}
@@ -482,16 +503,16 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground/70 tracking-widest">State / Region</Label>
+                                <Label className="text-sx font-bold text-muted-foreground/70">State / Region</Label>
                                 <Select
                                     value={filters.state}
                                     onValueChange={(val) => setFilters({ ...filters, state: val })}
                                     disabled={states.length === 0}
                                 >
-                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white">
+                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white rounded-md">
                                         <SelectValue placeholder={states.length > 0 ? "Select State" : "N/A"} />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-border/40">
+                                    <SelectContent className="bg-zinc-900 border">
                                         {states.map(s => (
                                             <SelectItem key={s.isoCode} value={s.isoCode} className="text-xs">{s.name}</SelectItem>
                                         ))}
@@ -503,16 +524,16 @@ export default function LeadsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2 items-center">
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground/70 tracking-widest">City</Label>
+                                <Label className="text-sx font-bold text-muted-foreground/70">City</Label>
                                 <Select
                                     value={filters.city}
                                     onValueChange={(val) => setFilters({ ...filters, city: val })}
                                     disabled={cities.length === 0}
                                 >
-                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white">
+                                    <SelectTrigger className="bg-background/20 border text-xs h-11 font-medium text-white rounded-md">
                                         <SelectValue placeholder={cities.length > 0 ? "Select City" : "N/A"} />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-border/40">
+                                    <SelectContent className="bg-zinc-900 border">
                                         <ScrollArea className="h-72">
                                             {cities.map(c => (
                                                 <SelectItem key={c.name} value={c.name} className="text-xs">{c.name}</SelectItem>
@@ -523,11 +544,11 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground/70 tracking-widest">Pincode</Label>
+                                <Label className="text-sx font-bold text-muted-foreground/70">Pincode</Label>
                                 <div className="relative">
                                     <Input
                                         placeholder="e.g. 94102"
-                                        className="bg-background/20 border text-xs h-11 pl-9 font-medium text-white"
+                                        className="bg-background/20 border text-xs h-11 pl-9 font-medium text-white rounded-md"
                                         value={filters.pincode}
                                         onChange={(e) => setFilters({ ...filters, pincode: e.target.value })}
                                     />
@@ -539,7 +560,7 @@ export default function LeadsPage() {
                                 <Button
                                     onClick={() => handleFindLeads(true)}
                                     disabled={searching}
-                                    className="w-full h-10  bg-primary hover:bg-primary/90 text-white font-black text-xs  shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-3 overflow-hidden group"
+                                    className="w-full h-10  bg-primary hover:bg-primary/90 text-white font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-3 overflow-hidden group rounded-md"
                                 >
                                     <AnimatePresence mode="wait">
                                         {searching ? (
@@ -595,13 +616,13 @@ export default function LeadsPage() {
                             </div>
                             <CardContent className="p-6">
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-3 ${stat.bg} rounded-xl border border-white/5`}>
+                                    <div className={`p-3 ${stat.bg} rounded-xl border`}>
                                         <stat.icon className={`w-5 h-5 ${stat.color}`} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{stat.label}</p>
+                                        <p className="text-sx font-bold text-muted-foreground/60">{stat.label}</p>
                                         <div className="flex items-baseline gap-1">
-                                            <h3 className="text-2xl font-black text-white tracking-tighter">
+                                            <h3 className="text-2xl font-bold text-white tracking-tighter">
                                                 <AnimatePresence mode="wait">
                                                     <motion.span
                                                         key={`${stat.label}-${stat.value}`}
@@ -623,31 +644,31 @@ export default function LeadsPage() {
             </div>
 
             {/* Results Table Area */}
-            <Card className="bg-card border backdrop-blur-md overflow-hidden flex-1 shadow-2xl flex flex-col min-h-[500px] p-0">
-                <CardHeader className="border-b border-border/10 py-4 px-6 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <Card className="bg-card border backdrop-blur-md overflow-hidden flex-1 shadow-2xl flex flex-col min-h-[500px] p-0 rounded-xl">
+                <CardHeader className="border-b py-4 px-6 flex flex-col lg:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="p-1.5 bg-blue-500/10 rounded-lg">
                             <LayoutGrid className="w-4 h-4 text-blue-400" />
                         </div>
                         <div>
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-white">Extraction Results</CardTitle>
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Manage and export your discovered leads</p>
+                            <CardTitle className="text-sm font-bold text-white">Extraction Results</CardTitle>
+                            <p className="text-sx text-muted-foreground font-medium">Manage and export your discovered leads</p>
                         </div>
                     </div>
 
                     {leads.length > 0 && (
                         <div className="flex items-center gap-3 w-full lg:w-auto">
                             {contactGroups.length > 0 ? (
-                                <div className="flex items-center gap-3 bg-zinc-900/50 p-1.5 pl-3 rounded-xl border border-white/5 w-full lg:w-auto shadow-inner">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground/70 tracking-widest whitespace-nowrap flex items-center gap-1.5">
+                                <div className="flex items-center gap-3 bg-zinc-900/50 p-1.5 pl-3 rounded-xl border w-full lg:w-auto shadow-inner">
+                                    <Label className="text-sx font-bold text-muted-foreground/70 whitespace-nowrap flex items-center gap-1.5">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                        Save Top:
+                                        Save to Group:
                                     </Label>
                                     <Select value={selectedGroupId} onValueChange={setSelectedGroupId} disabled={saving}>
                                         <SelectTrigger className="bg-background/40 border-none text-[11px] h-8 w-full lg:w-[180px] font-bold text-white transition-all hover:bg-background/60">
                                             <SelectValue placeholder="Choose Destination" />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-zinc-900 border-border/40">
+                                        <SelectContent className="bg-zinc-900 border">
                                             {contactGroups.map(group => (
                                                 <SelectItem key={group.id} value={group.id} className="text-xs group">
                                                     <span className="flex items-center justify-between w-full gap-4">
@@ -662,23 +683,23 @@ export default function LeadsPage() {
                                     </Select>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">
+                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl text-amber-500/80 text-sx font-bold">
                                     <AlertCircle className="w-3.5 h-3.5" />
-                                    No contact groups found - Go to WhatsApp section to create one
+                                    No contact groups found
                                 </div>
                             )}
                             <Button
                                 size="sm"
-                                disabled={!selectedGroupId || leads.length === 0 || saving}
-                                onClick={() => handleSaveLeads(leads)}
-                                className="bg-primary/90 hover:bg-primary text-white font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg shadow-primary/20 transition-all active:scale-95 group relative overflow-hidden"
+                                disabled={leads.length === 0 || saving}
+                                onClick={() => handleSaveLeads(selectedLeadIds.length > 0 ? leads.filter(l => selectedLeadIds.includes(l.id)) : leads)}
+                                className="bg-primary/90 hover:bg-primary text-white font-bold text-sx h-10 px-6 shadow-lg shadow-primary/20 transition-all active:scale-95 group relative overflow-hidden rounded-md"
                             >
                                 {saving ? (
                                     <RefreshCcw className="w-3.5 h-3.5 animate-spin mr-2" />
                                 ) : (
                                     <div className="flex items-center gap-2 group-hover:scale-105 transition-transform duration-300">
                                         <CheckCircle2 className="w-3.5 h-3.5" />
-                                        Add All Results
+                                        {selectedLeadIds.length > 0 ? `Save Selected (${selectedLeadIds.length})` : "Save All Results"}
                                     </div>
                                 )}
                             </Button>
@@ -693,7 +714,7 @@ export default function LeadsPage() {
                                 <div className="w-24 h-24 bg-zinc-800/50 rounded-full flex items-center justify-center mb-6 border border-white/5 animate-pulse">
                                     <MapPin className="w-10 h-10 text-muted-foreground/40" />
                                 </div>
-                                <h3 className="text-xl font-black text-white mb-2">Find Business Leads Instantly</h3>
+                                <h3 className="text-xl font-bold text-white mb-2">Find Business Leads Instantly</h3>
                                 <p className="text-xs text-muted-foreground/70 max-w-sm font-medium leading-relaxed  ">
                                     Select a location and category above to discover businesses directly from Google and Google Maps. Export with contact info in one click.
                                 </p>
@@ -703,11 +724,19 @@ export default function LeadsPage() {
                                 <table className="w-full text-left border-collapse">
                                     <thead className="bg-black/40 sticky top-0 z-10">
                                         <tr>
-                                            <th className="p-4 pl-6 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Business Info</th>
-                                            <th className="p-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Contact Details</th>
-                                            <th className="p-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Reputation</th>
-                                            <th className="p-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Location</th>
-                                            <th className="p-4 pr-6 text-right text-[10px] font-black uppercase text-muted-foreground tracking-widest min-w-[150px]">Actions</th>
+                                            <th className="p-4 pl-6 w-10">
+                                                <div
+                                                    className={`w-4 h-4 border rounded cursor-pointer flex items-center justify-center transition-colors ${selectedLeadIds.length === leads.length ? 'bg-primary border-primary' : 'bg-transparent border-white/20'}`}
+                                                    onClick={toggleSelectAll}
+                                                >
+                                                    {selectedLeadIds.length === leads.length && <CheckCircle2 className="w-3 h-3 text-white" />}
+                                                </div>
+                                            </th>
+                                            <th className="p-4 text-sx font-bold text-muted-foreground">Business Info</th>
+                                            <th className="p-4 text-sx font-bold text-muted-foreground">Contact Details</th>
+                                            <th className="p-4 text-sx font-bold text-muted-foreground">Reputation</th>
+                                            <th className="p-4 text-sx font-bold text-muted-foreground">Location</th>
+                                            <th className="p-4 pr-6 text-right text-sx font-bold text-muted-foreground min-w-[150px]">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/10">
@@ -718,16 +747,24 @@ export default function LeadsPage() {
                                                     initial={{ opacity: 0, x: -20 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: idx * 0.05 }}
-                                                    className="group hover:bg-white/5 transition-colors"
+                                                    className="group hover:bg-white/5"
                                                 >
                                                     <td className="p-4 pl-6">
+                                                        <div
+                                                            className={`w-4 h-4 border rounded cursor-pointer flex items-center justify-center transition-colors ${selectedLeadIds.includes(lead.id) ? 'bg-primary border-primary' : 'bg-transparent border-white/20'}`}
+                                                            onClick={() => toggleSelectLead(lead.id)}
+                                                        >
+                                                            {selectedLeadIds.includes(lead.id) && <CheckCircle2 className="w-3 h-3 text-white" />}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-white/5 flex items-center justify-center  font-black text-xs text-primary shadow-inner">
+                                                            <div className="w-9 h-9 rounded-lg bg-zinc-800 border flex items-center justify-center text-xs text-primary shadow-inner">
                                                                 {lead.name.charAt(0)}
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm mb-0.5 ">{lead.name}</p>
-                                                                <Badge variant="outline" className="text-xs uppercase font-bold py-0 h-4 bg-primary/5 text-primary border-primary/20 ">
+                                                                <Badge variant="outline" className="text-xs font-bold py-0 h-4 bg-primary/5 text-primary border-primary/20 rounded-md">
                                                                     {lead.category}
                                                                 </Badge>
                                                             </div>
@@ -753,9 +790,9 @@ export default function LeadsPage() {
                                                         <div className="flex items-center gap-3">
                                                             <div className="flex items-center gap-1 bg-amber-500/5 px-2 py-1 rounded border border-amber-500/20">
                                                                 <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                                                                <span className="text-xs font-black text-amber-500">{lead.rating}</span>
+                                                                <span className="text-xs font-bold text-amber-500">{lead.rating}</span>
                                                             </div>
-                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{lead.reviews} reviews</span>
+                                                            <span className="text-sx font-bold text-muted-foreground">{lead.reviews} reviews</span>
                                                         </div>
                                                     </td>
                                                     <td className="p-4">
@@ -766,12 +803,12 @@ export default function LeadsPage() {
                                                         </div>
                                                     </td>
                                                     <td className="p-4 pr-6 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100">
                                                             <Button
-                                                                disabled={!selectedGroupId || saving}
+                                                                disabled={saving}
                                                                 size="sm"
                                                                 variant="outline"
-                                                                className="h-8 bg-zinc-900 border-border/40 text-[9px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/10 gap-1.5 shadow-sm"
+                                                                className="h-8 bg-zinc-900 border text-[9px] font-bold text-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/10 gap-1.5 shadow-sm rounded-md"
                                                                 onClick={() => handleSaveLeads([lead])}
                                                             >
                                                                 <CheckCircle2 className="w-3 h-3" />
@@ -795,7 +832,7 @@ export default function LeadsPage() {
 
                     {/* Animated Overlay during Search */}
                     <AnimatePresence>
-                        {(searching || loadingMore) && (
+                        {(!searching || !loadingMore) && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -809,10 +846,10 @@ export default function LeadsPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2 text-center">
-                                    <p className="text-sm font-black text-white uppercase tracking-[0.3em] animate-pulse">
+                                    <p className="text-sm font-black text-white  tracking-[0.3em] animate-pulse">
                                         {searching ? "Extracting Intelligence" : "Fetching Next Batch"}
                                     </p>
-                                    <p className="text-[10px] text-muted-foreground/80 font-bold uppercase tracking-widest">Consulting Google Maps API • Scraping Contact Details</p>
+                                    <p className="text-sx text-muted-foreground/80 font-bold  ">Consulting Google Maps API • Scraping Contact Details</p>
                                 </div>
                                 <div className="flex gap-1">
                                     {[0, 1, 2].map(i => (
@@ -831,11 +868,11 @@ export default function LeadsPage() {
 
                 <CardFooter className="bg-black/20 border-t border-border/10 py-3 px-6 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
                     <div className="flex items-center gap-3">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        <p className="text-sx font-bold text-muted-foreground  ">
                             {leads.length > 0 ? `Showing ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, leads.length)} of ${leads.length} found` : "System Standby"}
                         </p>
                         {nextPageToken && (
-                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest animate-pulse">
+                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black   animate-pulse">
                                 More Available
                             </Badge>
                         )}
@@ -847,19 +884,19 @@ export default function LeadsPage() {
                             size="sm"
                             disabled={currentPage === 1 || searching || loadingMore}
                             onClick={handlePrevPage}
-                            className="bg-zinc-900 border-border/40 text-[10px] font-black uppercase tracking-widest h-8 px-4"
+                            className="bg-zinc-900 border-border/40 text-sx font-black   h-8 px-4"
                         >
                             Previous
                         </Button>
                         <div className="flex items-center justify-center bg-zinc-900 border border-border/40 rounded-md h-8 px-4">
-                            <span className="text-[10px] font-black text-primary tracking-widest">Page {currentPage}</span>
+                            <span className="text-sx font-black text-primary ">Page {currentPage}</span>
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
                             disabled={(startIndex + itemsPerPage >= leads.length && !nextPageToken) || searching || loadingMore}
                             onClick={handleNextPage}
-                            className="bg-zinc-900 border-border/40 text-[10px] font-black uppercase tracking-widest h-8 px-4"
+                            className="bg-zinc-900 border-border/40 text-sx font-black   h-8 px-4"
                         >
                             {startIndex + itemsPerPage >= leads.length && nextPageToken ? "Fetch More" : "Next"}
                         </Button>

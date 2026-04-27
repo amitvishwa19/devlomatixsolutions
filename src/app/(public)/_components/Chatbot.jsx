@@ -88,8 +88,8 @@ export const Chatbot = () => {
                         {/* Header */}
                         <div className="p-2 bg-primary/5 border-b border-border/50 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                                    <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                                <div className="w-10 h-10 rounded-full bg-primary/80 flex items-center justify-center shadow-lg shadow-primary/20">
+                                    <Bot className="w-5 h-5 text-white animate-pulse" />
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-sm text-foreground">Devlomatix AI</h3>

@@ -375,24 +375,42 @@ async function testGooglePlaces(credentials) {
  */
 async function testGoogle(credentials) {
     const token = credentials.access_token || credentials.accessToken || credentials.token;
-    if (!token) return { success: false, message: 'Missing access_token in credentials' };
+    const clientId = credentials.clientId || credentials.client_id || credentials.clientid;
+    const secret = credentials.secret || credentials.client_secret || credentials.clientSecret;
 
-    const { ok, data } = await fetchWithTimeout(
-        'https://www.googleapis.com/oauth2/v2/userinfo',
-        { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (ok && data?.email) {
-        return { 
-            success: true, 
-            message: `Connected as ${data.email}`, 
+    // If we have an access token, verify the account identity
+    if (token) {
+        const { ok, data } = await fetchWithTimeout(
+            'https://www.googleapis.com/oauth2/v2/userinfo',
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (ok && data?.email) {
+            return { 
+                success: true, 
+                message: `Connected as ${data.email}`, 
+                data: {
+                    ...data,
+                    profileName: data.name || data.email,
+                    profileImage: data.picture
+                } 
+            };
+        }
+        return { success: false, message: data?.error?.message || 'Connection failed', data };
+    }
+
+    // If we only have Client ID and Secret, verify their presence
+    if (clientId && secret) {
+        return {
+            success: true,
+            message: 'Google Client Credentials present',
             data: {
-                ...data,
-                profileName: data.name || data.email,
-                profileImage: data.picture
-            } 
+                profileName: 'Google API Project',
+                clientId
+            }
         };
     }
-    return { success: false, message: data?.error?.message || 'Connection failed', data };
+
+    return { success: false, message: 'Missing access_token or clientId/secret in credentials' };
 }
 
 /**

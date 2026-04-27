@@ -70,45 +70,45 @@ html {
   --card-foreground: hsl(200 20% 90%);
   --popover: hsl(220 35% 9%);
   --popover-foreground: hsl(200 20% 90%);
-  --primary: hsl(190 90% 50%);
+  --primary: hsl(203 89% 53%);
   --primary-foreground: hsl(220 40% 6%);
   --secondary: hsl(220 30% 12%);
   --secondary-foreground: hsl(200 20% 90%);
   --muted: hsl(220 25% 14%);
   --muted-foreground: hsl(210 15% 50%);
-  --accent: hsl(190 90% 50%);
+  --accent: hsl(203 89% 53%);
   --accent-foreground: hsl(220 40% 6%);
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 98%);
   --border: hsl(220 25% 14%);
   --input: hsl(220 25% 14%);
-  --ring: hsl(190 90% 50%);
-  --chart-1: hsl(190 90% 50%);
+  --ring: hsl(203 89% 53%);
+  --chart-1: hsl(203 89% 53%);
   --chart-2: hsl(170 80% 45%);
   --chart-3: hsl(210 60% 50%);
   --chart-4: hsl(150 70% 45%);
   --chart-5: hsl(200 80% 55%);
   --sidebar: hsl(220 35% 8%);
   --sidebar-foreground: hsl(200 20% 90%);
-  --sidebar-primary: hsl(190 90% 50%);
+  --sidebar-primary: hsl(203 89% 53%);
   --sidebar-primary-foreground: hsl(220 40% 6%);
   --sidebar-accent: hsl(220 30% 12%);
   --sidebar-accent-foreground: hsl(200 20% 90%);
   --sidebar-border: hsl(220 25% 14%);
-  --sidebar-ring: hsl(190 90% 50%);
+  --sidebar-ring: hsl(203 89% 53%);
 
-  --gradient-sun: linear-gradient(135deg, hsl(190 90% 50%), hsl(170 80% 45%));
+  --gradient-sun: linear-gradient(135deg, hsl(203 89% 53%), hsl(190 90% 50%));
   --gradient-hero: linear-gradient(180deg, hsl(220 40% 6% / 0.85), hsl(220 40% 6% / 0.98));
   --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.02));
-  --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(190 90% 50% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(170 80% 45% / 0.03) 0%, transparent 50%);
+  --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(203 89% 53% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(190 90% 50% / 0.03) 0%, transparent 50%);
   --shadow-card: 0 1px 3px hsl(220 40% 4% / 0.3), 0 4px 16px hsl(220 40% 4% / 0.2);
   --shadow-elevated: 0 4px 12px hsl(220 40% 4% / 0.4), 0 16px 48px hsl(220 40% 4% / 0.3);
-  --shadow-glow: 0 0 30px hsl(190 90% 50% / 0.15);
-  --shadow-glow-lg: 0 0 60px hsl(190 90% 50% / 0.25), 0 0 120px hsl(190 90% 50% / 0.1);
+  --shadow-glow: 0 0 30px hsl(203 89% 53% / 0.15);
+  --shadow-glow-lg: 0 0 60px hsl(203 89% 53% / 0.25), 0 0 120px hsl(203 89% 53% / 0.1);
 
   /* Brand Colors */
-  --kx-cyan: 190 90% 50%;
-  --kx-teal: 170 80% 45%;
+  --kx-cyan: 203 89% 53%;
+  --kx-teal: 190 90% 50%;
 
   /* n8n specific tokens (Light) */
   --n8n-sidebar-bg: 210 15% 96%;
@@ -137,8 +137,8 @@ html {
 .dark {
   --n8n-sidebar-bg: 220 35% 8%;
   --n8n-sidebar-fg: 200 20% 70%;
-  --n8n-sidebar-active: 190 90% 50%;
-  --n8n-sidebar-hover: 220 30% 12%;
+  --n8n-sidebar-active: hsl(203 89% 53%);
+  --n8n-sidebar-hover: hsl(220 30% 12%);
   --n8n-canvas-bg: 220 40% 6%;
   --n8n-canvas-dot: 220 25% 14%;
   --n8n-node-bg: 220 35% 9%;

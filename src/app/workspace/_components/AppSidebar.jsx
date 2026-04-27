@@ -86,7 +86,7 @@ export default function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="bg-transparent px-2 group-data-[collapsible=icon]:px-0 overflow-hidden">
-                <ScrollArea className='h-[87vh]'>
+                <ScrollArea className='h-[75vh]'>
                     {navigation.map((item, index) => {
                         const { parent, child, baseUrl } = item;
                         const isOpen = openGroups[index]

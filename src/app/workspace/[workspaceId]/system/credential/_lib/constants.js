@@ -30,7 +30,7 @@ export const credentialsTypes = [
         description: 'Social Media Accounts',
         model: null,
         provider: null,
-        plattforms: ['facebook', 'instagram', 'twitter', 'x', 'linkedin', 'youtube', 'pinterest', 'tiktok', 'reddit', 'other']
+        plattforms: ['facebook', 'instagram', 'twitter', 'x', 'linkedin', 'youtube', 'pinterest', 'tiktok', 'reddit', 'google', 'other']
     },
     {
         id: 'cloud',
@@ -41,7 +41,7 @@ export const credentialsTypes = [
         description: 'Cloud Services',
         model: null,
         provider: null,
-        plattforms: ['aws', 'gcp', 'azure', 'supabase', 'firebase', 'vercel', 'digitalocean', 'cloudflare', 'other']
+        plattforms: ['aws', 'gcp', 'azure', 'supabase', 'firebase', 'vercel', 'digitalocean', 'cloudflare', 'google', 'other']
     },
     {
         id: 'other',

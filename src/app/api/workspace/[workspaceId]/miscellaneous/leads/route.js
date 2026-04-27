@@ -107,7 +107,6 @@ export async function POST(req, { params }) {
         }
 
         // 4. Fetch Details for phone/website (Standard Text Search doesn't return these)
-        // We do this in parallel for all results in this batch (usually 20)
         const detailPromises = searchData.results.map(async (place) => {
             try {
                 const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website&key=${apiKey}`;
@@ -117,7 +116,7 @@ export async function POST(req, { params }) {
                     id: place.place_id,
                     name: place.name,
                     phone: detailData.result?.formatted_phone_number || null,
-                    email: null, // Google Places API does not provide emails
+                    email: null,
                     rating: place.rating || 0,
                     reviews: place.user_ratings_total || 0,
                     address: place.formatted_address || "Address not available",
@@ -142,7 +141,10 @@ export async function POST(req, { params }) {
             }
         });
 
-        const detailedLeads = await Promise.all(detailPromises);
+        const results = await Promise.allSettled(detailPromises);
+        const detailedLeads = results
+            .filter(r => r.status === 'fulfilled')
+            .map(r => r.value);
 
         return NextResponse.json({
             success: true,
@@ -151,7 +153,7 @@ export async function POST(req, { params }) {
             stats: {
                 totalLeads: detailedLeads.length,
                 withPhone: detailedLeads.filter(l => l.phone).length,
-                withEmail: 0, // No emails from Google
+                withEmail: 0,
                 avgRating: (detailedLeads.reduce((acc, l) => acc + l.rating, 0) / (detailedLeads.length || 1)).toFixed(1)
             }
         });
