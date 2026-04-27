@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,14 +13,16 @@ import { toast } from "sonner";
 import PageTransition from '../_components/PageTransition';
 
 
+import { sendContactEmail } from './_actions/send-contact-email';
+
+
 const contactSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email"),
     company: z.string().optional(),
-    subject: z.string().min(5, "Subject must be at least 5 characters"),
-    message: z.string().min(20, "Message must be at least 20 characters"),
+    mobile: z.string().min(10, "Please enter a valid mobile number"),
+    message: z.string().min(10, "Message must be at least 20 characters"),
 });
-;
 
 const contactInfo = [
     {
@@ -64,13 +66,21 @@ export default function ContactPage() {
     });
 
     const onSubmit = async (data) => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        console.log("Contact form submitted:", data);
-        setIsSubmitted(true);
-        toast.success("Message sent successfully!");
-        reset();
-        setTimeout(() => setIsSubmitted(false), 3000);
+        try {
+            const result = await sendContactEmail(data);
+
+            if (result.success) {
+                setIsSubmitted(true);
+                toast.success("Message sent successfully!");
+                reset();
+                setTimeout(() => setIsSubmitted(false), 5000);
+            } else {
+                toast.error(result.error || "Failed to send message. Please try again.");
+            }
+        } catch (error) {
+            console.error("Submission error:", error);
+            toast.error("An unexpected error occurred. Please try again.");
+        }
     };
 
 
@@ -243,16 +253,17 @@ export default function ContactPage() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="subject">Subject *</Label>
+                                            <Label htmlFor="mobile">Mobile Number *</Label>
                                             <Input
-                                                id="subject"
-                                                placeholder="Project Inquiry"
-                                                {...register("subject")}
-                                                className={errors.subject ? "border-destructive" : ""}
+                                                id="mobile"
+                                                type="tel"
+                                                placeholder="+91 98765 43210"
+                                                {...register("mobile")}
+                                                className={errors.mobile ? "border-destructive" : ""}
                                             />
-                                            {errors.subject && (
+                                            {errors.mobile && (
                                                 <p className="text-sm text-destructive">
-                                                    {errors.subject.message}
+                                                    {errors.mobile.message}
                                                 </p>
                                             )}
                                         </div>
@@ -274,7 +285,7 @@ export default function ContactPage() {
 
                                     <Button
                                         type="submit"
-                                        variant="hero"
+                                        variant="primary"
                                         size="lg"
                                         className="w-full"
                                         disabled={isSubmitting || isSubmitted}
@@ -286,6 +297,7 @@ export default function ContactPage() {
                                                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                                     className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
                                                 />
+
                                                 Sending...
                                             </span>
                                         ) : isSubmitted ? (

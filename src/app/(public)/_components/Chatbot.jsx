@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-    MessageCircle, 
-    X, 
-    Send, 
-    Bot, 
-    User, 
-    Minus, 
+import {
+    MessageCircle,
+    X,
+    Send,
+    Bot,
+    User,
+    Minus,
     Maximize2,
     Sparkles,
     Loader2
@@ -22,14 +22,14 @@ export const Chatbot = () => {
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [messages, setMessages] = useState([
-        { 
-            id: 1, 
-            role: "assistant", 
+        {
+            id: 1,
+            role: "assistant",
             content: "Hi! I'm your Devlomatix AI assistant. How can I help you build your next venture today?",
             timestamp: new Date()
         }
     ]);
-    
+
     const scrollRef = useRef(null);
 
     // Auto-scroll to bottom
@@ -82,7 +82,7 @@ export const Chatbot = () => {
                         initial={{ opacity: 0, scale: 0.9, y: 20, transformOrigin: "bottom right" }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="w-[380px] h-[550px] mb-4 bg-background/95 backdrop-blur-2xl border border-border/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+                        className="w-[380px] h-[550px] mb-4 bg-background/95 backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
                     >
                         {/* Header */}
                         <div className="p-4 bg-primary/5 border-b border-border/50 flex items-center justify-between">
@@ -109,7 +109,7 @@ export const Chatbot = () => {
                         </div>
 
                         {/* Messages Area */}
-                        <div 
+                        <div
                             ref={scrollRef}
                             className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
                         >
@@ -131,15 +131,15 @@ export const Chatbot = () => {
                                     </div>
                                     <div className={cn(
                                         "rounded-2xl px-4 py-3 text-sm font-medium leading-relaxed",
-                                        msg.role === 'user' 
-                                            ? "bg-primary text-white rounded-tr-none" 
+                                        msg.role === 'user'
+                                            ? "bg-primary text-white rounded-tr-none"
                                             : "bg-muted/50 border border-border/50 text-foreground rounded-tl-none"
                                     )}>
                                         {msg.content}
                                     </div>
                                 </motion.div>
                             ))}
-                            
+
                             {isTyping && (
                                 <div className="flex gap-3 max-w-[85%]">
                                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 border border-border/50">
@@ -156,17 +156,17 @@ export const Chatbot = () => {
 
                         {/* Input Area */}
                         <div className="p-4 border-t border-border/50 bg-background/50">
-                            <form 
+                            <form
                                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                                 className="relative"
                             >
-                                <Input 
+                                <Input
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     placeholder="Type your message..."
-                                    className="pr-12 h-12 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/20"
+                                    className="pr-12 h-12 rounded-lg bg-muted/30 border focus-visible:ring-primary/20"
                                 />
-                                <Button 
+                                <Button
                                     type="submit"
                                     size="icon"
                                     disabled={!input.trim() || isTyping}
@@ -190,8 +190,8 @@ export const Chatbot = () => {
                 whileTap={{ scale: 0.95 }}
                 className={cn(
                     "w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 pointer-events-auto",
-                    isOpen 
-                        ? "bg-destructive text-white rotate-90" 
+                    isOpen
+                        ? "bg-destructive text-white rotate-90"
                         : "bg-primary text-white hover:shadow-primary/20"
                 )}
             >
