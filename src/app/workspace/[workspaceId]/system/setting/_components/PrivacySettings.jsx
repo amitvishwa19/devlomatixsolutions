@@ -31,10 +31,12 @@ export const PrivacySettings = () => {
         updateSettings({ privacy: localPrivacy });
     };
 
+    const cardClasses = "rounded-md border border-border/50 bg-transparent overflow-hidden hover:border-primary/20 transition-colors duration-300";
+
     return (
         <div className="space-y-4 animate-in fade-in duration-500">
             {/* Data Governance */}
-            <Card className="rounded-md border border-border/50 bg-transparent overflow-hidden">
+            <Card className={cardClasses}>
                 <CardHeader className="p-3 border-b border-border/10">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-emerald-500/5 rounded-md flex items-center justify-center border border-emerald-500/10">
@@ -80,7 +82,7 @@ export const PrivacySettings = () => {
             </Card>
 
             {/* Audit & Transparency */}
-            <Card className="rounded-md border border-border/50 bg-transparent overflow-hidden">
+            <Card className={cardClasses}>
                 <CardHeader className="p-3 border-b border-border/10">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-sky-500/5 rounded-md flex items-center justify-center border border-sky-500/10">
