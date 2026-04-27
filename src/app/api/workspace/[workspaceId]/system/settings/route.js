@@ -45,14 +45,20 @@ export async function GET(req, { params }) {
                 name: workspace.name,
                 description: workspace.description || "",
                 imageUrl: workspace.imageUrl || "",
-                inviteCode: workspace.inviteCode
+                inviteCode: workspace.inviteCode,
+                // Include workspace-specific social links if they exist
+                socialLinks: workspaceSettings?.general?.socialLinks || {}
             },
-            branding: globalSettings?.social || {
-                primaryColor: "#3b82f6",
-                logoUrl: workspace.imageUrl || "",
-                appName: "Devlomatix",
-                appDescription: "Your Productivity Platform",
-                workspaceUrl: `http://localhost:3000`
+            branding: {
+                ...(globalSettings?.social || {
+                    primaryColor: "#3b82f6",
+                    logoUrl: workspace.imageUrl || "",
+                    appName: "Devlomatix",
+                    appDescription: "Your Productivity Platform",
+                    workspaceUrl: `http://localhost:3000`
+                }),
+                // Also merge socialLinks into branding for components that expect it there
+                socialLinks: workspaceSettings?.general?.socialLinks || globalSettings?.social?.socialLinks || {}
             },
             security: workspaceSettings?.security || {
                 mfaEnabled: false,
@@ -144,6 +150,7 @@ export async function PATCH(req, { params }) {
 
         // 3. Update Workspace-Specific Settings
         const workspaceUpdateData = {
+            general: general || undefined, // Store socialLinks and other general settings here
             security: security || undefined,
             notifications: notifications || undefined,
             integrations: finalIntegrations || undefined,

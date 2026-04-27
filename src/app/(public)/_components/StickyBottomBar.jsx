@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/providers/WorkspaceProvider";
-import { Facebook, Twitter, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Share2 } from "lucide-react";
 
 const StickyBottomBar = () => {
-    const { settings } = useSettings();
+    const { settings, loading } = useSettings();
 
     // Map social IDs to Lucide icons
     const socialIcons = {
@@ -15,11 +15,12 @@ const StickyBottomBar = () => {
         twitter: Twitter,
         instagram: Instagram,
         linkedin: Linkedin,
-        youtube: Youtube
+        youtube: Youtube,
+        github: Github
     };
 
     // Filter active social links from branding settings
-    const activeSocialLinks = settings?.branding?.socialLinks
+    const activeSocialLinks = settings?.branding?.socialLinks 
         ? Object.entries(settings.branding.socialLinks)
             .filter(([_, data]) => data.active && data.url)
             .map(([id, data]) => ({
@@ -30,7 +31,7 @@ const StickyBottomBar = () => {
         : [];
 
     return (
-        <div className="fixed border bottom-0 left-0 right-0 z-50 px-4 pb-3 pointer-events-none">
+        <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-3 pointer-events-none">
             <motion.div
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
@@ -41,27 +42,38 @@ const StickyBottomBar = () => {
                 )}
             >
                 <div id='bottombar' className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-muted-foreground">
-                        © 2024 {process.env.NEXT_PUBLIC_APP_NAME}. All rights reserved.
-                    </p>
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                        <p className="text-sm text-muted-foreground">
+                            © {new Date().getFullYear()} {settings?.branding?.appName || process.env.NEXT_PUBLIC_APP_NAME || 'Devlomatix'}. All rights reserved.
+                        </p>
+                        
                         {/* Dynamic Social Links */}
                         {activeSocialLinks.length > 0 && (
-                            <div className="flex items-center gap-4 pr-6 border-r border-border/50">
+                            <div className="flex items-center gap-4 pl-4 border-l border-border/50">
                                 {activeSocialLinks.map((social) => (
-                                    <a
+                                    <a 
                                         key={social.id}
                                         href={social.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                        className="text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 active:scale-95"
+                                        title={social.id.charAt(0).toUpperCase() + social.id.slice(1)}
                                     >
                                         <social.icon className="w-4 h-4" />
                                     </a>
                                 ))}
                             </div>
                         )}
+                        
+                        {!loading && activeSocialLinks.length === 0 && (
+                            <div className="hidden group-hover:flex items-center gap-2 pl-4 border-l border-border/50 opacity-20">
+                                <Share2 className="w-3 h-3" />
+                                <span className="text-[10px] font-bold">Manage links in settings</span>
+                            </div>
+                        )}
+                    </div>
 
+                    <div className="flex items-center gap-6">
                         <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Privacy Policy
                         </Link>

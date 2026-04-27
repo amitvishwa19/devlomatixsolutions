@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { LayoutGrid, Palette, UploadCloud, Info, Loader2, Sparkles, Facebook, Twitter, Instagram, Linkedin, Youtube, Share2 } from 'lucide-react';
+import { LayoutGrid, Palette, UploadCloud, Info, Loader2, Sparkles, Facebook, Twitter, Instagram, Linkedin, Youtube, Share2, Github } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 
@@ -31,7 +31,8 @@ export const GeneralSettings = () => {
             twitter: { url: '', active: false },
             instagram: { url: '', active: false },
             linkedin: { url: '', active: false },
-            youtube: { url: '', active: false }
+            youtube: { url: '', active: false },
+            github: { url: '', active: false }
         }
     });
 
@@ -54,7 +55,8 @@ export const GeneralSettings = () => {
                     twitter: { url: '', active: false },
                     instagram: { url: '', active: false },
                     linkedin: { url: '', active: false },
-                    youtube: { url: '', active: false }
+                    youtube: { url: '', active: false },
+                    github: { url: '', active: false }
                 }
             });
         }
@@ -129,7 +131,8 @@ export const GeneralSettings = () => {
         { id: 'twitter', label: 'X (Twitter)', icon: Twitter, color: 'text-sky-500' },
         { id: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-rose-500' },
         { id: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'text-blue-700' },
-        { id: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-600' }
+        { id: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-600' },
+        { id: 'github', label: 'GitHub', icon: Github, color: 'text-slate-800' }
     ];
 
     const cardClasses = "rounded-md border border-border/50 bg-transparent overflow-hidden flex flex-col hover:border-primary/20 transition-colors duration-300";
