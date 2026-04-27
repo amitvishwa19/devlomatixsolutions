@@ -9,13 +9,13 @@ import ProjectInquiryDialog from '../_components/ProjectInquiryDialog';
 
 const projects = [
     {
-        title: "Asha Carewell",
+        title: "Curexa",
         category: "Healthcare",
         description: "A modern healthcare platform providing comprehensive patient care services, wellness programs, and health management tools for individuals and families.",
         tech: ["React", "Node.js", "PostgreSQL", "Tailwind CSS", "AWS"],
         image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=600&fit=crop",
         results: "Live platform serving real patients and caregivers",
-        link: "https://www.ashacarewell.com/",
+        link: "https://curexa.devlomatix.com",
     },
     {
         title: "FinanceFlow",

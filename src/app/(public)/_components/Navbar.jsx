@@ -53,6 +53,7 @@ const Navbar = () => {
         { name: "Home", href: "/" },
         { name: "Services", href: "/service", hasDropdown: false },
         { name: "Projects", href: "/project" },
+        { name: "Ventures", href: "/ventures" },
         { name: "Case Studies", href: "/casestudy" },
         { name: "Articles", href: "/article" },
         { name: "About", href: "/about" },

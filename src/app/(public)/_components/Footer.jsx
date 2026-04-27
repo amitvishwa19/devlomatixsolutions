@@ -9,13 +9,24 @@ const Footer = () => {
 
     const links = {
         services: [
-            "Custom Development",
-            "Process Automation",
-            "Web & Mobile Apps",
-            "Cloud Solutions",
+            { name: "Custom Development", href: "/service#web" },
+            { name: "Process Automation", href: "/service#automation" },
+            { name: "Web & Mobile Apps", href: "/service#mobile" },
+            { name: "Cloud Solutions", href: "/service#cloud" },
         ],
-        company: ["About Us", "Our Process", "Careers", "Contact"],
-        resources: ["Blog", "Case Studies", "Documentation", "Support"],
+        company: [
+            { name: "About Us", href: "/about" },
+            { name: "Our Ventures", href: "/ventures" },
+            { name: "Our Process", href: "/about#process" },
+            { name: "Careers", href: "/career" },
+            { name: "Contact", href: "/contact" }
+        ],
+        resources: [
+            { name: "Blog", href: "/article" },
+            { name: "Case Studies", href: "/casestudy" },
+            { name: "Documentation", href: "/docs" },
+            { name: "Support", href: "/contact" }
+        ],
     };
 
     // Map social IDs to Lucide icons
@@ -29,7 +40,7 @@ const Footer = () => {
     };
 
     // Filter active social links from branding settings
-    const activeSocialLinks = settings?.branding?.socialLinks 
+    const activeSocialLinks = settings?.branding?.socialLinks
         ? Object.entries(settings.branding.socialLinks)
             .filter(([_, data]) => data.active && data.url)
             .map(([id, data]) => ({
@@ -46,12 +57,12 @@ const Footer = () => {
                     {/* Brand */}
                     <div className="lg:col-span-2">
                         <div className="flex items-center gap-2 mb-4">
-                            <AppLogo link={'/'} size={100} height={50} />
+                            <AppLogo link={'/'} size={200} height={100} />
                         </div>
                         <p className="text-muted-foreground max-w-sm mb-6 font-medium text-sm leading-relaxed">
                             {settings?.branding?.appDescription || "Building innovative software solutions that drive business growth and digital transformation."}
                         </p>
-                        
+
                         {/* Dynamic Social Icons */}
                         <div className="flex items-center gap-4">
                             {activeSocialLinks.length > 0 ? (
@@ -87,9 +98,9 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {links.services.map((link, index) => (
                                 <li key={index}>
-                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
-                                        {link}
-                                    </a>
+                                    <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
+                                        {link.name}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
@@ -100,9 +111,9 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {links.company.map((link, index) => (
                                 <li key={index}>
-                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
-                                        {link}
-                                    </a>
+                                    <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
+                                        {link.name}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
@@ -113,9 +124,9 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {links.resources.map((link, index) => (
                                 <li key={index}>
-                                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
-                                        {link}
-                                    </a>
+                                    <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
+                                        {link.name}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
