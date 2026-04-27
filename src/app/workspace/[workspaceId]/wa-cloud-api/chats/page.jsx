@@ -20,11 +20,13 @@ import {
     ArrowLeft,
     Loader2,
     Sparkles,
-    MessageSquare
+    MessageSquare,
+    Trash2
 } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
 import { getConversations } from "./_actions/get-conversations";
 import { sendMessage } from "./_actions/send-message";
+import { deleteConversation } from "./_actions/delete-conversation";
 import { getAiSuggestions } from "./_actions/get-ai-suggestions";
 import { getContacts } from "../contacts/_actions/get-contacts";
 import { getTemplates } from "../template/_actions/get-templates";
@@ -36,6 +38,16 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import MediaBubble from "./_components/MediaBubble";
 import TemplateMessage from "./_components/TemplateMessage";
 
@@ -86,6 +98,11 @@ export default function WhatsAppChatsPage() {
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
     const [isFetchingContacts, setIsFetchingContacts] = useState(false);
+    
+    // Delete Modal State
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [jidToDelete, setJidToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const scrollRef = useRef(null);
 
@@ -127,7 +144,10 @@ export default function WhatsAppChatsPage() {
             setIsLoading(false);
         },
         onError: (err) => {
-            console.error("Conversations error:", err);
+            // Suppress standard "Failed to fetch" console errors as they are transient network blips
+            if (err !== "Failed to fetch") {
+                console.error("Conversations error:", err);
+            }
             setIsLoading(false);
         }
     });
@@ -174,10 +194,33 @@ export default function WhatsAppChatsPage() {
         onSettled: () => setIsAiLoading(false)
     });
 
+    const { execute: executeDeleteConversation } = useAction(deleteConversation, {
+        onSuccess: (data, context) => {
+            toast.success("Chat deleted");
+            setConversations(prev => prev.filter(c => c.jid !== context.jid));
+            if (selectedJid === context.jid) setSelectedJid(null);
+            setIsDeleteDialogOpen(false);
+        },
+        onError: (err) => toast.error(err || "Failed to delete chat"),
+        onSettled: () => setIsDeleting(false)
+    });
+
 
     const fetchConversations = () => executeConversations({ workspaceId });
     const fetchContacts = () => { setIsFetchingContacts(true); executeGetContacts({ workspaceId }); };
     const fetchTemplates = () => executeGetTemplates({ workspaceId });
+
+    const handleDeleteConversation = (e, jid) => {
+        e.stopPropagation();
+        setJidToDelete(jid);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (!jidToDelete) return;
+        setIsDeleting(true);
+        executeDeleteConversation({ workspaceId, jid: jidToDelete }, { jid: jidToDelete });
+    };
 
     useEffect(() => {
         fetchConversations();
@@ -430,9 +473,15 @@ export default function WhatsAppChatsPage() {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between mb-0.5">
                                                         <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid}</h3>
-                                                        <span className="text-[9px] text-muted-foreground">
+                                                        <span className="text-[9px] text-muted-foreground group-hover:hidden">
                                                             {formatDistanceToNow(chat.timestamp)}
                                                         </span>
+                                                        <button 
+                                                            onClick={(e) => handleDeleteConversation(e, chat.jid)}
+                                                            className="hidden group-hover:flex p-1 hover:bg-red-100 hover:text-red-600 rounded-md transition-colors text-muted-foreground"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </button>
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground truncate opacity-70">
                                                         {chat.fromMe && <span className="text-[9px] uppercase font-bold mr-1 text-primary/60">You:</span>}
@@ -570,7 +619,7 @@ export default function WhatsAppChatsPage() {
                                                                 ? 'bg-primary/5 border border-primary/20 rounded-tr-none'
                                                                 : 'bg-card border border-border/50 rounded-tl-none'
                                                                 }`}>
-                                                                <MediaBubble msg={msg} />
+                                                                <MediaBubble msg={msg} workspaceId={workspaceId} />
                                                             </div>
                                                         ) : (
                                                             <div
@@ -799,25 +848,51 @@ export default function WhatsAppChatsPage() {
                                     <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedTemplateForSend(null)}>
                                         ← Back
                                     </Button>
-                                    <Button
-                                        size="sm"
-                                        className="text-xs bg-primary hover:bg-primary/90 gap-1.5"
-                                        onClick={handleSendTemplate}
-                                        disabled={isSending}
-                                    >
-                                        {isSending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                                    <Button size="sm" className="text-xs bg-primary" onClick={handleSendTemplate}>
                                         Send Template
                                     </Button>
                                 </>
                             ) : (
-                                <Button variant="ghost" size="sm" className="text-xs ml-auto" onClick={() => setIsTemplateDrawerOpen(false)}>
-                                    Cancel
-                                </Button>
+                                <div className="text-[10px] text-muted-foreground italic">
+                                    Select an approved template to continue
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
             )}
+            {/* Delete Confirmation Modal */}
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete all messages in this conversation.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={(e) => {
+                                e.preventDefault();
+                                confirmDelete();
+                            }}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                        >
+                            {isDeleting ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                "Delete Chat"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

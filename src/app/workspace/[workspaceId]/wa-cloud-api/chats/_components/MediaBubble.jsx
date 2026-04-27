@@ -9,16 +9,19 @@ import {
     Music 
 } from 'lucide-react';
 
-const MediaBubble = ({ msg }) => {
+const MediaBubble = ({ msg, workspaceId }) => {
     const metadata = msg.metadata || {};
     const type = metadata.type?.toLowerCase() || 'text';
-    const originalPayload = metadata.originalPayload || {};
+    const originalPayload = metadata.originalPayload || metadata.raw || {};
     
-    // Extract URL from various possible metadata structures
-    const mediaUrl = metadata.mediaUrl || 
-                   originalPayload[type]?.url || 
-                   originalPayload[type]?.link || 
-                   originalPayload.link;
+    // Extract ID and URL
+    const mediaId = originalPayload[type]?.id || metadata.mediaId;
+    
+    // If we have a mediaId and a workspaceId, use our secure proxy
+    // Otherwise fall back to whatever URL we have
+    const mediaUrl = (mediaId && workspaceId) 
+        ? `/api/wa/media?mediaId=${mediaId}&workspaceId=${workspaceId}`
+        : (metadata.mediaUrl || originalPayload[type]?.url || originalPayload[type]?.link || originalPayload.link);
 
     const caption = metadata.caption || originalPayload[type]?.caption || "";
 
@@ -61,18 +64,29 @@ const MediaBubble = ({ msg }) => {
                 );
             case 'video':
                 return (
-                    <div className="rounded-lg overflow-hidden bg-black/5 border border-border/30">
+                    <div className="rounded-lg overflow-hidden bg-zinc-900 border border-border/30 shadow-sm relative group/video">
                         <video 
                             controls 
-                            className="w-full max-h-[300px]"
-                            poster={mediaUrl + "?thumb=true"}
+                            playsInline
+                            preload="metadata"
+                            crossOrigin="anonymous"
+                            className="w-full max-h-[400px] bg-black"
                         >
-                            <source src={mediaUrl} type="video/mp4" />
+                            <source src={mediaUrl} />
                             Your browser does not support the video tag.
                         </video>
                         {caption && (
-                            <div className="p-2 border-t border-border/30 bg-card/80 backdrop-blur-sm">
-                                <p className="text-xs leading-relaxed">{caption}</p>
+                            <div className="p-2.5 bg-card/90 backdrop-blur-md border-t border-border/20">
+                                <p className="text-[11px] leading-relaxed text-foreground/90">{caption}</p>
+                                <a 
+                                    href={mediaUrl} 
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download 
+                                    className="text-[9px] text-primary hover:underline mt-1 flex items-center gap-1 font-bold"
+                                >
+                                    <Download size={10} /> Download / View Original
+                                </a>
                             </div>
                         )}
                     </div>
