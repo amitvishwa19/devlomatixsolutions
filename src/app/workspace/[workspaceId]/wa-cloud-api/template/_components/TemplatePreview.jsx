@@ -197,7 +197,7 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                     </div>
                 </div>
             </div>
-            <div className="absolute -inset-1 bg-gradient-to-tr from-primary/20 to-transparent blur-2xl opacity-50 -z-10 group-hover:opacity-70 transition-opacity" />
+            <div className="absolute -inset-1 bg-linear-to-tr from-primary/20 to-transparent blur-2xl opacity-50 -z-10 group-hover:opacity-70 transition-opacity" />
         </div>
     );
 

@@ -100,7 +100,12 @@ export default function AppSidebar() {
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
                                             asChild={!(child && child.length > 0)}
-                                            onClick={child && child.length > 0 ? () => setOpenGroups(prev => ({ ...prev, [index]: !prev[index] })) : undefined}
+                                            onClick={child && child.length > 0 ? () => setOpenGroups(prev => {
+                                                const isCurrentlyOpen = !!prev[index];
+                                                // Accordion behavior: if we're opening this one, close everything else.
+                                                // If we're closing this one, just return empty.
+                                                return isCurrentlyOpen ? {} : { [index]: true };
+                                            }) : undefined}
                                             className={`w-full flex items-center gap-3 rounded-md text-sm font-medium transition-all duration-300 cursor-pointer ${isGroupActive ? "bg-primary/10 text-primary border-l-2 border-primary shadow-sm shadow-primary/20" : "text-foreground hover:bg-card/50 hover:text-primary border-l-2 border-transparent hover:border-primary"}`}
                                         >
                                             {child && child.length > 0 ? (
