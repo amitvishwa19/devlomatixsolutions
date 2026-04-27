@@ -12,7 +12,7 @@ export async function GET(req, { params }) {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        const applications = await prisma.application.findMany({
+        const applications = await prisma.jobApplication.findMany({
             where: {
                 workspaceId,
                 jobId: jobId || undefined
@@ -40,7 +40,7 @@ export async function POST(req, { params }) {
         const body = await req.json();
         const { jobId, candidateId, stage } = body;
 
-        const application = await prisma.application.create({
+        const application = await prisma.jobApplication.create({
             data: {
                 jobId,
                 candidateId,
@@ -65,7 +65,7 @@ export async function PUT(req, { params }) {
         const body = await req.json();
         const { applicationId, stage, status } = body;
 
-        const application = await prisma.application.update({
+        const application = await prisma.jobApplication.update({
             where: { id: applicationId },
             data: {
                 stage: stage !== undefined ? stage : undefined,

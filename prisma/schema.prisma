@@ -747,7 +747,7 @@ model Job {
   userId       String
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  applications Application[]
+  applications JobApplication[]
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   category     Category?     @relation(fields: [categoryId], references: [id])
   categoryId   String?
@@ -787,7 +787,7 @@ model Candidate {
   userId       String
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  applications Application[]
+  applications JobApplication[]
   notes        AtsNote[]
   scorecards   Scorecard[]
 
@@ -795,7 +795,7 @@ model Candidate {
   @@index([email])
 }
 
-model Application {
+model JobApplication {
   id           String      @id @default(cuid())
   jobId        String
   candidateId  String
@@ -803,6 +803,7 @@ model Application {
   status       String      @default("ACTIVE")
   source       String?
   referredById String?
+  resumeUrl    String?
   workspaceId  String
   appliedAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -831,7 +832,7 @@ model Interview {
   interviewers  String[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application   JobApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
 }
@@ -848,7 +849,7 @@ model Scorecard {
   attributes     Json?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  application    Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application    JobApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   candidate      Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   interviewer    User         @relation(fields: [interviewerId], references: [id], onDelete: Cascade)
 
@@ -866,7 +867,7 @@ model AtsNote {
   isPrivate     Boolean      @default(false)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application   JobApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   candidate     Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -884,7 +885,7 @@ model Offer {
   offerLetterUrl String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application    JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
 }

@@ -2,15 +2,20 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Resend } from 'resend';
 import JobApplyConfirmationEmail from '@/emails/JobApplyConfirmation';
+import { NewJobApplicationNotificationEmail } from '@/emails/NewJobApplicationNotification';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req, { params }) {
     try {
         const { jobId } = await params;
-        const { name, email, phone, resumeUrl, portfolioUrl } = await req.json();
+        const body = await req.json();
+        const { name, email, phone, resumeUrl, portfolioUrl } = body;
+
+        console.log("[JOB_APPLY_START]", { jobId, name, email, resumeUrl });
 
         if (!name || !email || !jobId) {
+            console.error("[JOB_APPLY_ERROR] Missing fields");
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -20,18 +25,20 @@ export async function POST(req, { params }) {
         });
 
         if (!job) {
+            console.error("[JOB_APPLY_ERROR] Job not found", jobId);
             return NextResponse.json({ error: "Job not found" }, { status: 404 });
         }
 
+        console.log("[JOB_APPLY_CONTEXT]", { workspaceId: job.workspaceId, userId: job.userId });
+
         // 2. Upsert Candidate
-        // We use email as the unique identifier. We'll update the name, phone, and resumeUrl.
         const candidate = await prisma.candidate.upsert({
             where: { email },
             update: {
                 name,
                 phone,
                 resumeUrl,
-                location: 'Public Applicant', // Or handle if provided
+                location: 'Public Applicant',
                 updatedAt: new Date(),
             },
             create: {
@@ -44,9 +51,10 @@ export async function POST(req, { params }) {
             }
         });
 
-        // 3. Create Application
-        // Check if an application already exists for this candidate and job
-        const existingApplication = await prisma.application.findFirst({
+        console.log("[JOB_APPLY_CANDIDATE_OK]", candidate.id);
+
+        // 3. Create JobApplication
+        const existingApplication = await prisma.jobApplication.findFirst({
             where: {
                 jobId,
                 candidateId: candidate.id
@@ -54,6 +62,7 @@ export async function POST(req, { params }) {
         });
 
         if (existingApplication) {
+            console.log("[JOB_APPLY_DUPLICATE]", existingApplication.id);
             return NextResponse.json({ 
                 success: true, 
                 message: "You have already applied for this position. We have updated your profile.",
@@ -61,23 +70,31 @@ export async function POST(req, { params }) {
             });
         }
 
-        const application = await prisma.application.create({
+        const application = await prisma.jobApplication.create({
             data: {
                 jobId,
                 candidateId: candidate.id,
                 stage: 'APPLIED',
                 status: 'ACTIVE',
                 workspaceId: job.workspaceId,
+                resumeUrl: resumeUrl,
             }
         });
 
-        // 4. Send Confirmation Email via Resend
+        console.log("[JOB_APPLY_APPLICATION_OK]", application.id);
+
+        // 4. Send Emails via Resend
         try {
-            console.log("[EMAIL_SEND_ATTEMPT]", { to: email, from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev' });
-            const { data, error } = await resend.emails.send({
-                from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+            const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+            const adminEmail = process.env.JOB_APPLICATION_MAIL;
+
+            console.log("[JOB_APPLY_EMAILS_START]", { fromEmail, adminEmail });
+
+            // A. Send Confirmation Email to Candidate
+            await resend.emails.send({
+                from: fromEmail,
                 to: email,
-                subject: `Application Received: ${job.title}`,
+                subject: `Application submitted successfully for ${job.title}`,
                 react: (
                     <JobApplyConfirmationEmail 
                         name={name}
@@ -88,13 +105,30 @@ export async function POST(req, { params }) {
                 )
             });
 
-            if (error) {
-                console.error("[RESEND_ERROR]", error);
-            } else {
-                console.log("[RESEND_SUCCESS]", data);
+            console.log("[JOB_APPLY_CANDIDATE_EMAIL_SENT]");
+
+            // B. Send Notification Email to Admin
+            if (adminEmail) {
+                await resend.emails.send({
+                    from: fromEmail,
+                    to: adminEmail,
+                    subject: `New Application: ${name} - ${job.title}`,
+                    react: (
+                        <NewJobApplicationNotificationEmail 
+                            name={name}
+                            email={email}
+                            phone={phone}
+                            jobTitle={job.title}
+                            resumeUrl={resumeUrl}
+                            portfolioUrl={portfolioUrl}
+                            appliedAt={new Date().toLocaleString()}
+                        />
+                    )
+                });
+                console.log("[JOB_APPLY_ADMIN_EMAIL_SENT]");
             }
+
         } catch (emailError) {
-            // We don't want to fail the whole application if email fails, but we log it
             console.error("[EMAIL_SEND_EXCEPTION]", emailError);
         }
 
@@ -105,7 +139,7 @@ export async function POST(req, { params }) {
         });
 
     } catch (error) {
-        console.error("[JOB_APPLY_ERROR]", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        console.error("[JOB_APPLY_FATAL_ERROR]", error);
+        return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
     }
 }

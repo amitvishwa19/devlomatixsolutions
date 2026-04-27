@@ -23,7 +23,7 @@ export default function PublicLayout({ children }) {
             <div className=''>
                 <Footer />
             </div>
-            <Chatbot />
+            {/* <Chatbot /> */}
             <StickyBottomBar />
         </div>
     )

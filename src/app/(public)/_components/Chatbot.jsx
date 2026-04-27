@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
     MessageCircle,
+    BotMessageSquare,
     X,
     Send,
     Bot,
@@ -75,17 +76,17 @@ export const Chatbot = () => {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end pointer-events-none">
+        <div className="relative pointer-events-none">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20, transformOrigin: "bottom right" }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="w-[380px] h-[550px] mb-4 bg-background/95 backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+                        className="absolute bottom-full right-0 w-[320px] h-[480px] mb-4 bg-background/95 backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
                     >
                         {/* Header */}
-                        <div className="p-4 bg-primary/5 border-b border-border/50 flex items-center justify-between">
+                        <div className="p-2 bg-primary/5 border-b border-border/50 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                                     <Sparkles className="w-5 h-5 text-white animate-pulse" />
@@ -186,20 +187,20 @@ export const Chatbot = () => {
             {/* Trigger Button */}
             <motion.button
                 onClick={() => setIsOpen(!isOpen)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 className={cn(
-                    "w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 pointer-events-auto",
+                    "flex items-center justify-center transition-all duration-500 pointer-events-auto relative p-2 rounded-xl group cursor-pointer",
                     isOpen
-                        ? "bg-destructive text-white rotate-90"
-                        : "bg-primary text-white hover:shadow-primary/20"
+                        ? "text-destructive rotate-90 bg-destructive/10"
+                        : "text-primary hover:bg-primary/10"
                 )}
             >
-                {isOpen ? <X className="w-7 h-7" /> : <MessageCircle className="w-7 h-7" />}
+                {isOpen ? <X className="w-6 h-6" /> : <BotMessageSquare className="w-6 h-6 cursor-pointer" />}
                 {!isOpen && (
                     <>
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-background rounded-full animate-pulse" />
-                        <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20" />
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 border-2 border-background rounded-full animate-pulse z-10 pointer-events-none" />
+                        <span className="absolute inset-0 rounded-xl bg-primary animate-ping opacity-20 scale-75 pointer-events-none" />
                     </>
                 )}
             </motion.button>

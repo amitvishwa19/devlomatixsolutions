@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
     X,
     Upload,
@@ -32,22 +35,37 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+const applySchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().min(10, "Invalid phone number"),
+    portfolioUrl: z.string().url("Invalid URL").optional().or(z.string().length(0)),
+});
+
 export const ApplyModal = ({ job, isOpen, onClose }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [resumeUrl, setResumeUrl] = useState("");
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        portfolioUrl: ""
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset
+    } = useForm({
+        resolver: zodResolver(applySchema),
+        defaultValues: {
+            name: "",
+            email: "",
+            phone: "",
+            portfolioUrl: ""
+        }
     });
 
     if (!job) return null;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const onSubmit = async (data) => {
         if (!resumeUrl) {
             toast.error("Please upload your resume");
             return;
@@ -56,7 +74,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
         setIsSubmitting(true);
         try {
             const response = await axios.post(`/api/public/jobs/${job.id}/apply`, {
-                ...formData,
+                ...data,
                 resumeUrl
             });
 
@@ -120,14 +138,14 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
     const handleClose = () => {
         setIsSuccess(false);
         setResumeUrl("");
-        setFormData({ name: "", email: "", phone: "", portfolioUrl: "" });
+        reset();
         onClose();
     };
 
     if (isSuccess) {
         return (
             <Dialog open={isOpen} onOpenChange={handleClose}>
-                <DialogContent className="min-w-[80vw] bg-background border-none rounded-3xl p-8 overflow-hidden">
+                <DialogContent className="bg-card border rounded-xl p-4 overflow-hidden">
                     <div className="flex flex-col items-center text-center space-y-6 py-8">
                         <motion.div
                             initial={{ scale: 0 }}
@@ -143,7 +161,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                                 Thanks for applying to the <span className="text-primary font-bold">{job.title}</span> position at Devlomatix. We'll be in touch soon!
                             </p>
                         </div>
-                        <Button onClick={handleClose} className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]">
+                        <Button onClick={handleClose} className="w-full h-12 rounded-lg font-bold ">
                             Got it, thanks!
                         </Button>
                     </div>
@@ -228,50 +246,55 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                                 <p className="text-xs font-bold text-muted-foreground opacity-60">Complete the form below to start your journey.</p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-5">
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                                 <div className="space-y-2">
                                     <label className="text-[10px] uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Full Name</label>
                                     <Input
-                                        required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        {...register('name')}
                                         placeholder="Amit Sharma"
-                                        className="bg-muted/30 h-12 border border-secondary rounded-md text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner"
+                                        className={`bg-muted/30 h-12 border rounded-md text-sm  focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner ${errors.name ? 'border-destructive' : 'border-secondary'}`}
                                     />
+                                    {errors.name && (
+                                        <p className="text-[10px] font-bold text-destructive ml-1">{errors.name.message}</p>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Email</label>
                                         <Input
-                                            required
+                                            {...register('email')}
                                             type="email"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                             placeholder="laksh@example.com"
-                                            className="bg-muted/30 border border-secondary h-12 rounded-md text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner"
+                                            className={`bg-muted/30 border h-12 rounded-md text-sm  focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner ${errors.email ? 'border-destructive' : 'border-secondary'}`}
                                         />
+                                        {errors.email && (
+                                            <p className="text-[10px] font-bold text-destructive ml-1">{errors.email.message}</p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Phone</label>
                                         <Input
-                                            required
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            {...register('phone')}
                                             placeholder="+91 97123 40450"
-                                            className="bg-muted/30 border border-secondary h-12 rounded-md text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner"
+                                            className={`bg-muted/30 border h-12 rounded-md text-sm  focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner ${errors.phone ? 'border-destructive' : 'border-secondary'}`}
                                         />
+                                        {errors.phone && (
+                                            <p className="text-[10px] font-bold text-destructive ml-1">{errors.phone.message}</p>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] uppercase tracking-widest text-muted-foreground opacity-50 ml-1">Portfolio / LinkedIn</label>
                                     <Input
-                                        value={formData.portfolioUrl}
-                                        onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
+                                        {...register('portfolioUrl')}
                                         placeholder="https://..."
-                                        className="bg-muted/30 border border-secondary h-12 rounded-md text-sm font-bold focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner"
+                                        className={`bg-muted/30 border h-12 rounded-md text-sm focus-visible:ring-1 focus-visible:ring-primary/40 shadow-inner ${errors.portfolioUrl ? 'border-destructive' : 'border-secondary'}`}
                                     />
+                                    {errors.portfolioUrl && (
+                                        <p className="text-[10px] font-bold text-destructive ml-1">{errors.portfolioUrl.message}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">

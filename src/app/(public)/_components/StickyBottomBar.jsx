@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/providers/WorkspaceProvider";
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Share2 } from "lucide-react";
+import Chatbot from "./Chatbot";
 
 const StickyBottomBar = () => {
     const { settings, loading } = useSettings();
@@ -20,7 +21,7 @@ const StickyBottomBar = () => {
     };
 
     // Filter active social links from branding settings
-    const activeSocialLinks = settings?.branding?.socialLinks 
+    const activeSocialLinks = settings?.branding?.socialLinks
         ? Object.entries(settings.branding.socialLinks)
             .filter(([_, data]) => data.active && data.url)
             .map(([id, data]) => ({
@@ -46,12 +47,12 @@ const StickyBottomBar = () => {
                         <p className="text-sm text-muted-foreground">
                             © {new Date().getFullYear()} {settings?.branding?.appName || process.env.NEXT_PUBLIC_APP_NAME || 'Devlomatix'}. All rights reserved.
                         </p>
-                        
+
                         {/* Dynamic Social Links */}
                         {activeSocialLinks.length > 0 && (
                             <div className="flex items-center gap-4 pl-4 border-l border-border/50">
                                 {activeSocialLinks.map((social) => (
-                                    <a 
+                                    <a
                                         key={social.id}
                                         href={social.url}
                                         target="_blank"
@@ -64,7 +65,7 @@ const StickyBottomBar = () => {
                                 ))}
                             </div>
                         )}
-                        
+
                         {!loading && activeSocialLinks.length === 0 && (
                             <div className="hidden group-hover:flex items-center gap-2 pl-4 border-l border-border/50 opacity-20">
                                 <Share2 className="w-3 h-3" />
@@ -80,6 +81,9 @@ const StickyBottomBar = () => {
                         <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Terms of Service
                         </Link>
+
+                        <Chatbot />
+
                     </div>
                 </div>
             </motion.div>

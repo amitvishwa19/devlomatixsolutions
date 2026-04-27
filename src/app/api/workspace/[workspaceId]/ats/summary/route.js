@@ -29,14 +29,14 @@ export async function GET(req, { params }) {
                 }
             }),
             prisma.job.count({ where: { workspaceId, status: 'OPEN' } }),
-            prisma.application.count({ where: { workspaceId } }),
-            prisma.application.findMany({
+            prisma.jobApplication.count({ where: { workspaceId } }),
+            prisma.jobApplication.findMany({
                 where: { workspaceId },
                 include: { candidate: true, job: true },
                 orderBy: { appliedAt: 'desc' },
                 take: 5
             }),
-            prisma.application.groupBy({
+            prisma.jobApplication.groupBy({
                 by: ['stage'],
                 where: { workspaceId },
                 _count: { id: true }
@@ -53,7 +53,7 @@ export async function GET(req, { params }) {
                 orderBy: { startTime: 'asc' },
                 take: 5
             }),
-            prisma.application.groupBy({
+            prisma.jobApplication.groupBy({
                 by: ['source'],
                 where: { workspaceId },
                 _count: { id: true }
