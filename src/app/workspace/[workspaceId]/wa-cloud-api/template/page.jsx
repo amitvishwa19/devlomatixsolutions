@@ -28,7 +28,7 @@ import TemplatePreview from './_components/TemplatePreview';
 import { useAction } from "@/hooks/use-action";
 import { getTemplates } from "./_actions/get-templates";
 import { saveTemplate } from "./_actions/save-template";
-import { syncTemplates } from "./_actions/sync-templates";
+import { syncTemplates } from "./_actions/sync-templates-v2";
 import { deleteTemplate } from "./_actions/delete-template";
 import { submitTemplate } from "./_actions/submit-template";
 import { checkTemplateStatus } from "./_actions/check-template-status";
@@ -101,6 +101,7 @@ export default function TemplatePage() {
                 }
                 return newT;
             });
+            console.log(`[Template Page] Received ${parsedTemplates.length} templates:`, parsedTemplates.map(t => ({ name: t.name, isDefault: t.isDefault, platform: t.platform })));
             setTemplates(parsedTemplates);
             setIsLoading(false);
         },

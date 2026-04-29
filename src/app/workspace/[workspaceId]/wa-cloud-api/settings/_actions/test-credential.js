@@ -74,6 +74,12 @@ const handler = async (data) => {
             if (!response.ok) return { error: "Invalid access token or account info" };
         }
 
+        // 3. Update verified status in database
+        await db.credentials.update({
+            where: { id },
+            data: { verified: true }
+        });
+
         return { success: true };
     } catch (error) {
         return { error: error.message || "Test failed" };

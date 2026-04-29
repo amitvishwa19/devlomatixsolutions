@@ -14,6 +14,7 @@ import { saveCampaign } from "./campaigns/_actions/save-campaign";
 import { deleteCampaign as deleteCampaignAction } from "./campaigns/_actions/delete-campaign";
 import { toggleCampaignStatus as toggleCampaignStatusAction } from "./campaigns/_actions/toggle-campaign-status";
 import WhatsAppSettingModal from "./_components/WhatsAppSettingModal";
+import AccountSwitcher from "./_components/AccountSwitcher";
 
 
 
@@ -181,7 +182,7 @@ export default function DashboardPage() {
                         <span className="hidden sm:inline">Connect WA</span>
                     </Button>
 
-
+                    <AccountSwitcher />
                 </div>
             </div>
 

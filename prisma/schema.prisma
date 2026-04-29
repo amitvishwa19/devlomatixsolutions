@@ -358,7 +358,7 @@ model MessageTemplate {
   campaigns     Campaign[]
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, name, phoneNumberId])
+  @@unique([userId, name, language, phoneNumberId], name: "unique_template_record")
   @@index([userId])
 }
 

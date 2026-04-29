@@ -18,13 +18,10 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // 1. Fetch ALL Cloud API Credentials for this user
+        // 1. Fetch ONLY the Default (Active) Cloud API Credential
         const credentials = await db.credentials.findMany({
-            where: { userId, platform: 'WHATSAPP_CLOUD' },
-            orderBy: { updatedAt: 'desc' }
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
         });
-        
-        console.log(`[Template Sync Action] Found ${credentials.length} credentials for user ${userId}`);
 
         if (credentials.length === 0) {
             return { error: "No WhatsApp Cloud credentials found" };
@@ -34,48 +31,29 @@ const handler = async (data) => {
         let totalMetaTemplates = 0;
 
         for (const credential of credentials) {
-            console.log(`--- Syncing Credential: ${credential.profile} (${credential.id}) ---`);
             let cloudCredentials = null;
             const stored = credential.credentials;
 
             if (typeof stored === 'string' && stored.includes(':')) {
                 try {
-                    const decrypted = symmetricDecrypt(stored);
-                    cloudCredentials = JSON.parse(decrypted);
-                } catch (e) {
-                    console.error(`[Template Sync Action] Decryption failed for ${credential.profile}:`, e);
-                    continue;
-                }
+                    cloudCredentials = JSON.parse(symmetricDecrypt(stored));
+                } catch (e) { continue; }
             } else if (typeof stored === 'string') {
                 try {
                     cloudCredentials = JSON.parse(stored);
-                } catch (e) {
-                    console.error(`[Template Sync Action] JSON parse failed for ${credential.profile}:`, e);
-                    continue;
-                }
+                } catch (e) { continue; }
             } else {
                 cloudCredentials = stored;
             }
 
-            if (!cloudCredentials || !cloudCredentials.accessToken || !cloudCredentials.wabaId) {
-                console.warn(`[Template Sync Action] Incomplete credentials for ${credential.profile}`);
-                continue;
-            }
+            if (!cloudCredentials || !cloudCredentials.accessToken || !cloudCredentials.wabaId) continue;
 
-            // 2. Fetch Templates from Meta
             const metaRes = await cloudApi.fetchTemplates(cloudCredentials);
-            if (!metaRes.success) {
-                console.error(`[Template Sync Action] Failed to fetch from Meta for ${credential.profile}:`, metaRes.error);
-                continue;
-            }
+            if (!metaRes.success || !Array.isArray(metaRes.data)) continue;
 
             const metaTemplates = metaRes.data;
-            if (!Array.isArray(metaTemplates)) continue;
-
             totalMetaTemplates += metaTemplates.length;
-            console.log(`[Template Sync Action] Fetched ${metaTemplates.length} templates for ${credential.profile}`);
 
-            // 3. Upsert into Database
             for (const metaT of metaTemplates) {
                 try {
                     const bodyComp = metaT.components?.find(c => c.type === 'BODY');
@@ -106,8 +84,6 @@ const handler = async (data) => {
                         phoneNumberId: cloudCredentials.phoneNumberId
                     };
 
-                    console.log(`[Template Sync Action] VERIFIED NEW LOGIC RUNNING for ${metaT.name}`);
-                    // Manual Upsert to avoid Prisma Client caching issues with compound unique names
                     const existing = await db.messageTemplate.findFirst({
                         where: {
                             userId,
@@ -117,20 +93,14 @@ const handler = async (data) => {
                         }
                     });
 
-                    let synced;
                     if (existing) {
-                        synced = await db.messageTemplate.update({
-                            where: { id: existing.id },
-                            data: templateData
-                        });
+                        await db.messageTemplate.update({ where: { id: existing.id }, data: templateData });
                     } else {
-                        synced = await db.messageTemplate.create({
-                            data: templateData
-                        });
+                        await db.messageTemplate.create({ data: templateData });
                     }
-                    syncResults.push(synced);
+                    syncResults.push(metaT.name);
                 } catch (error) {
-                    console.error(`[Template Sync Action] Failed to sync ${metaT.name}:`, error);
+                    console.error(`Failed to sync ${metaT.name}:`, error);
                 }
             }
         }
@@ -139,7 +109,7 @@ const handler = async (data) => {
             success: true,
             count: totalMetaTemplates,
             synced: syncResults.length,
-            message: `Successfully synchronized ${syncResults.length} templates across ${credentials.length} accounts.`
+            message: `Successfully synchronized ${syncResults.length} templates.`
         };
 
     } catch (error) {

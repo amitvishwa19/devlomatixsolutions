@@ -69,17 +69,66 @@ export default function AnalyticsPage() {
 
     if (isLoading) {
         return (
-            <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center">
-                    <Skeleton className="h-10 w-48" />
-                    <Skeleton className="h-10 w-32" />
+            <div className="p-6 space-y-8 bg-background h-screen overflow-y-auto pb-24 animate-in fade-in duration-500">
+                {/* Header Skeleton */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-3">
+                        <Skeleton className="h-8 w-[300px] rounded-xl" />
+                        <Skeleton className="h-4 w-[400px] rounded-lg" />
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-[180px] rounded-xl" />
+                        <Skeleton className="h-10 w-10 rounded-xl" />
+                        <Skeleton className="h-10 w-[140px] rounded-xl" />
+                    </div>
                 </div>
+
+                {/* Quick Metrics Grid Skeleton */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 w-full" />)}
+                    {[1, 2, 3, 4].map(i => (
+                        <Card key={i} className="bg-card/40 border-border/50">
+                            <CardContent className="p-6">
+                                <div className="flex items-center gap-4">
+                                    <Skeleton className="h-12 w-12 rounded-xl" />
+                                    <div className="space-y-2 flex-1">
+                                        <Skeleton className="h-3 w-24 rounded-md" />
+                                        <Skeleton className="h-6 w-16 rounded-md" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
+
+                {/* Main Charts Section Skeleton */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Skeleton className="lg:col-span-2 h-[400px] w-full" />
-                    <Skeleton className="h-[400px] w-full" />
+                    {/* Traffic Chart Skeleton */}
+                    <Card className="lg:col-span-2 bg-card border-border/50 h-[450px]">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <div className="space-y-2">
+                                <Skeleton className="h-5 w-32 rounded-md" />
+                                <Skeleton className="h-3 w-48 rounded-md" />
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-3 w-12 rounded-md" />
+                                <Skeleton className="h-3 w-12 rounded-md" />
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-4 h-[350px]">
+                            <Skeleton className="w-full h-full rounded-xl" />
+                        </CardContent>
+                    </Card>
+
+                    {/* Distribution Pie Skeleton */}
+                    <Card className="bg-card border-border/50 h-[450px]">
+                        <CardHeader>
+                            <Skeleton className="h-5 w-32 rounded-md mb-2" />
+                            <Skeleton className="h-3 w-48 rounded-md" />
+                        </CardHeader>
+                        <CardContent className="h-[300px] flex items-center justify-center">
+                            <Skeleton className="w-48 h-48 rounded-full" />
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );

@@ -129,20 +129,20 @@ export default function FlowsPage() {
             url: `https://graph.facebook.com/${metaCloudVersion}/${wabaId}/flows`,
             method: 'POST',
             headers: { 'Authorization': `Bearer ${metaCloudAccessToken}` },
-            body: { 
+            body: {
                 name: flowName.trim(),
                 clone_flow_id: selectedFlow.id
             }
         }, { type: 'flow_clone' });
     };
 
-    const filteredFlows = flows.filter(flow => 
+    const filteredFlows = flows.filter(flow =>
         flow.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         flow.id?.includes(searchTerm)
     );
 
     const getStatusBadge = (status) => {
-        switch(status?.toUpperCase()) {
+        switch (status?.toUpperCase()) {
             case 'PUBLISHED':
                 return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 gap-1"><CheckCircle2 className="w-3 h-3" /> Published</Badge>;
             case 'DRAFT':
@@ -156,6 +156,7 @@ export default function FlowsPage() {
 
     return (
         <div className="flex flex-col h-full bg-background animate-in fade-in duration-500">
+
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between p-6 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-20 gap-4">
                 <div className="flex items-center gap-5">
@@ -163,17 +164,24 @@ export default function FlowsPage() {
                         <Layers className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">WhatsApp Flows</h1>
-                        <p className="text-sm text-muted-foreground">Manage and create interactive form-based flows for your chats.</p>
+                        <h1 className="text-xl font-semibold  text-foreground">WhatsApp Flows</h1>
+                        <p className="text-xs text-muted-foreground">Manage and create interactive form-based flows for your chats.</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="h-10 rounded-xl gap-2 border-primary/20 text-primary hover:bg-primary/5" onClick={() => fetchFlows()}>
+                    <Button
+                        variant="outline"
+                        size="sm" className=" "
+                        onClick={() => fetchFlows()}
+                    >
                         <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
                         Refresh Flows
                     </Button>
-                    <Button className="h-10 rounded-xl gap-2 shadow-lg shadow-primary/20" onClick={() => window.open(`https://business.facebook.com/wa/manage/flows/`, '_blank')}>
+                    <Button
+                        className=" gap-2 shadow-lg shadow-primary/20"
+                        onClick={() => window.open(`https://business.facebook.com/wa/manage/flows/`, '_blank')}
+                    >
                         <Plus className="w-4 h-4" />
                         Create Flow
                     </Button>
@@ -181,12 +189,12 @@ export default function FlowsPage() {
             </div>
 
             <ScrollArea className="flex-1 p-6">
-                <div className="max-w-7xl mx-auto space-y-6">
+                <div className="w-full space-y-4">
                     {/* Search Bar */}
                     <div className="relative max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                        <Input 
-                            placeholder="Search flows by name or ID..." 
+                        <Input
+                            placeholder="Search flows by name or ID..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 h-11 bg-card shadow-sm border-muted-foreground/10 rounded-xl"
@@ -206,7 +214,7 @@ export default function FlowsPage() {
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1 min-w-0">
                                                 <CardTitle className="text-base font-bold truncate group-hover:text-primary transition-colors">{flow.name}</CardTitle>
-                                                <CardDescription className="text-[10px] font-mono uppercase tracking-tighter opacity-60">ID: {flow.id}</CardDescription>
+                                                <CardDescription className="text-[10px] font-mono uppercase text-smer opacity-60">ID: {flow.id}</CardDescription>
                                             </div>
                                             {getStatusBadge(flow.status)}
                                         </div>
@@ -219,9 +227,9 @@ export default function FlowsPage() {
                                         </div>
 
                                         <div className="flex items-center gap-2 pt-2 border-t border-border/40">
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
                                                 onClick={() => {
                                                     setSelectedFlow(flow);
@@ -232,9 +240,9 @@ export default function FlowsPage() {
                                                 <Pencil className="w-3.5 h-3.5" />
                                                 Edit
                                             </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
                                                 onClick={() => {
                                                     setSelectedFlow(flow);
@@ -245,9 +253,9 @@ export default function FlowsPage() {
                                                 <Copy className="w-3.5 h-3.5" />
                                                 Clone
                                             </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
                                                 onClick={() => window.open(flow.preview_url, '_blank')}
                                                 disabled={!flow.preview_url}
@@ -283,9 +291,9 @@ export default function FlowsPage() {
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label>Flow Name</Label>
-                            <Input 
-                                value={flowName} 
-                                onChange={(e) => setFlowName(e.target.value)} 
+                            <Input
+                                value={flowName}
+                                onChange={(e) => setFlowName(e.target.value)}
                                 placeholder="Enter flow name..."
                                 className="h-11 rounded-xl"
                             />
@@ -315,9 +323,9 @@ export default function FlowsPage() {
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label>New Flow Name</Label>
-                            <Input 
-                                value={flowName} 
-                                onChange={(e) => setFlowName(e.target.value)} 
+                            <Input
+                                value={flowName}
+                                onChange={(e) => setFlowName(e.target.value)}
                                 placeholder="Enter new flow name..."
                                 className="h-11 rounded-xl"
                             />
