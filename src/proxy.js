@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 export async function proxy(request) {
-  const token = await getToken({ req: request })
+  const token = await getToken({ req: request, secret: process.env.ENCRYPTION_KEY })
 
   const url = request.nextUrl.clone()
   const pathname = url.pathname

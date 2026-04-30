@@ -135,33 +135,55 @@ export const authOptions = {
             return true
         },
 
-        async session({ session, token, trigger, }) {
-
-            if (!token?.email) return session;
-
-            const usr = await db.user.findUnique({
-                where: { email: token.email },
-                include: {
-                    roles: {
-                        include: {
-                            permissions: true,
-                        },
-                    },
-                },
-            });
-
-            session.user.userId = usr.id;
-            session.user.displayName = usr.displayName;
-            session.user.avatar = usr.avatar;
-            session.user.role = usr.role;
-            session.user.roles = usr.roles;
-
-
-
+        async session({ session, token }) {
+            if (token) {
+                session.user.userId = token.userId;
+                session.user.displayName = token.displayName;
+                session.user.avatar = token.avatar;
+                session.user.role = token.role;
+                session.user.roles = token.roles;
+                session.user.workspaces = token.workspaces;
+            }
             return session
         },
 
-        async jwt({ token, user, account, profile, isNewUser }) {
+        async jwt({ token, user, trigger, session }) {
+            if (user) {
+                token.userId = user.id;
+            }
+
+            // Fetch roles and extra info on sign-in or when an update is triggered
+            if (!token.roles || trigger === "signIn" || trigger === "update") {
+                try {
+                    const usr = await db.user.findUnique({
+                        where: { email: token.email },
+                        include: {
+                            members: {
+                                select: {
+                                    serverId: true,
+                                    role: true
+                                }
+                            },
+                            roles: {
+                                include: {
+                                    permissions: true
+                                }
+                            }
+                        }
+                    });
+
+                    if (usr) {
+                        token.userId = usr.id;
+                        token.displayName = usr.displayName;
+                        token.avatar = usr.avatar;
+                        token.role = usr.role;
+                        token.roles = usr.roles;
+                        token.workspaces = usr.members.map(m => m.serverId);
+                    }
+                } catch (error) {
+                    console.error("[NextAuth Security Layer] Failed to enrich session token:", error);
+                }
+            }
 
             return token
         }
@@ -169,10 +191,10 @@ export const authOptions = {
     pages: {
         signIn: '/login',
         signOut: '/logout',
-        error: '/error', // Error code passed in query string as ?error=
-        verifyRequest: '/verify-request', // (used for check email message)
-        newUser: '/new-user' // New users will be directed here on first sign in (leave the property out if not of interest)
+        error: '/error',
+        verifyRequest: '/verify-request',
+        newUser: '/new-user'
     },
-    secret: process.env.NEXTAUTH_SECRET
+    secret: process.env.ENCRYPTION_KEY
 
 }

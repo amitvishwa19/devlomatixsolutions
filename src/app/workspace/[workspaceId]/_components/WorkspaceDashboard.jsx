@@ -53,58 +53,58 @@ const DashboardCard = ({ title, description, icon: Icon, href, color, stats }) =
 export default function WorkspaceDashboard({ workspaceId }) {
     const modules = [
         {
-            title: "Social Media Hub",
-            description: "Design, schedule and publish content across Meta, X, and LinkedIn.",
+            title: "Wisdom & Chronicles",
+            description: "Compose and publish spiritual guides, healing chronicles, and sacred stone wisdom.",
             icon: Share2,
             href: `/workspace/${workspaceId}/article`,
             color: "primary",
             stats: [
-                { label: "Active", value: "8 Posts" },
-                { label: "Scheduled", value: "3" }
+                { label: "Chronicles", value: "8 Active" },
+                { label: "Drafts", value: "3" }
             ]
         },
         {
-            title: "WhatsApp Manager",
-            description: "Direct customer engagement, bulk campaigns and automated bot flows.",
+            title: "Mystical Artifacts",
+            description: "Manage your collection of ethically sourced crystals, pricing, and inventory levels.",
             icon: MessageCircle,
-            href: `/workspace/${workspaceId}/wa`,
+            href: `/workspace/${workspaceId}/ecommerce/products`,
             color: "green-500",
             stats: [
-                { label: "Status", value: "Connected" },
-                { label: "Campaigns", value: "24" }
+                { label: "Status", value: "Syncing..." },
+                { label: "Inventory", value: "24 Items" }
             ]
         },
         {
-            title: "Digital Assets",
-            description: "Securely store and organize your documents, images and rich media.",
+            title: "Digital Sanctuary",
+            description: "Securely store and organize your sacred documents, media, and ritual guides.",
             icon: FileText,
             href: `/workspace/${workspaceId}/document`,
             color: "blue-500",
             stats: [
-                { label: "Storage", value: "4.2 GB" },
-                { label: "Files", value: "156" }
+                { label: "Energy", value: "4.2 GB" },
+                { label: "Artifacts", value: "156" }
             ]
         },
         {
-            title: "System & Access",
-            description: "Manage credentials, team permissions and platform configurations.",
+            title: "Aura Classifications",
+            description: "Organize the mystical taxonomy of your stones and spiritual asset hierarchies.",
             icon: Settings,
-            href: `/workspace/${workspaceId}/system/setting`,
+            href: `/workspace/${workspaceId}/category`,
             color: "orange-500",
             stats: [
-                { label: "Team", value: "12 Members" },
-                { label: "Security", value: "Shield On" }
+                { label: "Taxonomies", value: "12 Groups" },
+                { label: "Sync", value: "Active" }
             ]
         },
         {
-            title: "Contacts & CRM",
-            description: "Centralized business vault for your leads, active clients, and team contacts.",
+            title: "Seeker Registry",
+            description: "Centralized vault for your spiritual seekers, active clients, and community leads.",
             icon: Users,
             href: `/workspace/${workspaceId}/contact`,
             color: "purple-500",
             stats: [
-                { label: "Total Vault", value: "Syncing..." },
-                { label: "Classification", value: "Multi-tenant" }
+                { label: "Seekers", value: "Syncing..." },
+                { label: "Aura Type", value: "Community" }
             ]
         }
     ];
@@ -117,13 +117,13 @@ export default function WorkspaceDashboard({ workspaceId }) {
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary w-fit text-[10px] font-extrabold tracking-[0.2em]">
-                            <Zap size={12} className="fill-primary" /> Multi-Channel Engine
+                            <Zap size={12} className="fill-primary" /> SACRED ENERGY ENGINE
                         </div>
                         <h1 className="text-4xl md:text-xl tracking-tighter text-foreground">
-                            Welcome to your <span className="text-primary tracking-normal italic">Workspace.</span>
+                            Welcome to the <span className="text-primary tracking-normal italic">Crystal Aura Sanctuary.</span>
                         </h1>
                         <p className="text-xs text-muted-foreground max-w-xl leading-relaxed font-medium">
-                            Control your entire digital presence from one centralized command center. Manage content, automate messaging, and secure your credentials with ease.
+                            Control your spiritual presence and sacred commerce from one centralized sanctuary. Manage artifact chronicles, automate seeker outreach, and secure your mystical assets with ease.
                         </p>
                     </div>
 

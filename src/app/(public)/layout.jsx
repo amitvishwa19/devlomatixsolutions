@@ -19,12 +19,12 @@ export default function CrystalAuraLayout({ children }) {
           {/* Background effects */}
           <div className="fixed inset-0 bg-[#0a0a0a] pointer-events-none -z-10" />
           <div className="fixed inset-0 noise-overlay pointer-events-none opacity-20 -z-10" />
-          
+
           <Navbar />
           <CartDrawer />
           <WhatsAppButton />
-          
-          <main className="flex-grow pt-20">
+
+          <main className="grow pt-20">
             {children}
           </main>
 

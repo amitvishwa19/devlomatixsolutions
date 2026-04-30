@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
 
 
 
-const secretKey = process.env.APP_SECRET;
+const secretKey = process.env.ENCRYPTION_KEY;
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload) {

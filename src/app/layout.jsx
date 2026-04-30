@@ -35,10 +35,10 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
     title: {
-        default: process.env.APP_NAME,
-        template: `%s | ${process.env.APP_NAME}`
+        default: "Crystal Aura & Sacred Stones",
+        template: `%s | Crystal Aura`
     },
-    description: 'Devlomatix',
+    description: 'Authentic gemstones, healing crystals, and spiritual guidance for your journey.',
     icon: {
         icon: ['/fevicon.png?v=1'],
         apple: ['/fevicon.png?v=4'],
@@ -48,19 +48,8 @@ export const metadata = {
 }
 
 export default async function RootLayout({ children }) {
-    const session = await getServerSession(authOptions);
 
-    const user = session?.user ? await db.user.findUnique({
-        where: { id: session.user.userId },
-        include: {
-            roles: {
-                include: {
-                    permissions: true,
-                },
-            },
-            profile: true,
-        },
-    }) : null;
+
 
     return (
         <html lang="en">
@@ -73,15 +62,15 @@ export default async function RootLayout({ children }) {
                                 <ThemeProvider>
                                     <AuthProvider>
 
-                                        <AccessProvider user={user}>
-                                            <Providers>
-                                                {/* <OrgModalProvider /> */}
 
-                                                {children}
-                                                <CookieConsent />
+                                        <Providers>
+                                            {/* <OrgModalProvider /> */}
 
-                                            </Providers>
-                                        </AccessProvider>
+                                            {children}
+                                            <CookieConsent />
+
+                                        </Providers>
+
 
                                     </AuthProvider>
                                 </ThemeProvider>

@@ -36,3 +36,41 @@ export async function GET(req, { params }) {
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
+export async function POST(req, { params }) {
+    try {
+        const { workspaceId } = await params;
+        const session = await getServerSession(authOptions);
+
+        if (!session) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const body = await req.json();
+        const { title, description, sku, price, discount, quantity, status, category, imageUrl } = body;
+
+        const product = await db.eCommerceProduct.create({
+            data: {
+                title,
+                description,
+                sku,
+                price: parseFloat(price),
+                discount: parseFloat(discount || 0),
+                inventoryCount: parseInt(quantity || 0),
+                status: status || "active",
+                imageUrl,
+                userId: session.user.userId,
+                // Optional: Store category in metadata or another field if available
+                metadata: { category }
+            }
+        });
+
+        return NextResponse.json({
+            success: true,
+            product
+        });
+
+    } catch (error) {
+        console.error("[ECOMMERCE_PRODUCT_CREATE_ERROR]", error);
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    }
+}

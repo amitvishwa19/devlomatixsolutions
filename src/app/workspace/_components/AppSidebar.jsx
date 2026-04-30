@@ -61,12 +61,9 @@ export default function AppSidebar() {
         { type: 'child', title: "Contacts", url: `${baseWhathappPath}/contacts`, icon: "users", category: "WhatsApp Manager" },
         { type: 'child', title: "Templates", url: `${baseWhathappPath}/template`, icon: "zap", category: "WhatsApp Manager" },
         { type: 'child', title: "Campaigns", url: `${baseWhathappPath}/campaigns`, icon: "megaphone", category: "WhatsApp Manager" },
-        // { type: 'child', title: "Quick Message", url: `${baseWhathappPath}/quick-message`, icon: "zap", category: "WhatsApp Manager" },
         { type: 'child', title: "Analytics", url: `${baseWhathappPath}/analytics`, icon: "bar-chart-3", category: "WhatsApp Manager" },
-        // { type: 'child', title: "Button & Quick Reply", url: `${baseWhathappPath}/button-quick-reply`, icon: "mouse-pointer-click", category: "WhatsApp Manager" },
         { type: 'child', title: "Chatbot", url: `${baseWhathappPath}/chatbot`, icon: "zap", category: "WhatsApp Manager" },
         { type: 'child', title: "eCommerce", url: `${baseWhathappPath}/ecommerce`, icon: "shopping-cart", category: "WhatsApp Manager" },
-        // { type: 'child', title: "AI Smart Reply", url: `${baseWhathappPath}/ai-smart-reply`, icon: "brain", category: "WhatsApp Manager" },
         { type: 'child', title: "Settings", url: `${baseWhathappPath}/settings`, icon: "settings", category: "WhatsApp Manager" },
 
         // Document Manager
@@ -91,18 +88,11 @@ export default function AppSidebar() {
         { type: 'child', title: "Kanban", url: `${baseProductivityPath}/kanban`, icon: "bar-chart-3", category: "productivity" },
         { type: 'child', title: "Mailbox", url: `${baseProductivityPath}/mailbox`, icon: "mail", category: "productivity" },
         { type: 'child', title: "Message", url: `${baseProductivityPath}/message`, icon: "bar-chart-3", category: "productivity" },
-        // { type:'child', title:"Trash", url: `${baseDocPath}/trash`, icon:"trash", category:"productivity"},
 
         // Flowbot
         { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
         { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
         { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
-
-        // { type:'parent', title:"Access Management", url: `${basePath}`, icon:"file", category:"access-management"},
-        // { type:'child', title:"Users", url: `${baseAccessPath}/user`, icon:"bar-chart-3", category:"access-management"},
-        // { type:'child', title:"Roles", url: `${baseAccessPath}/role`, icon:"bar-chart-3", category:"access-management"},
-        // { type:'child', title:"Permissions", url: `${baseAccessPath}/permission`, icon:"bar-chart-3", category:"access-management"},
-        // { type:'child', title:"Access", url: `${baseAccessPath}/access`, icon:"bar-chart-3", category:"access-management"},
 
         // AI AGent
         { type: 'parent', title: "AI Agent", url: `${baseAgentPath}`, icon: "monitor-cog", category: "agent" },
@@ -114,15 +104,10 @@ export default function AppSidebar() {
         { type: 'child', title: "Dashboard", url: `${baseMiscellaneousPath}/`, icon: "bar-chart-3", category: "miscellaneous" },
         { type: 'child', title: "Quotation", url: `${baseMiscellaneousPath}/quotation`, icon: "bar-chart-3", category: "miscellaneous" },
         { type: 'child', title: "Lead Generation", url: `${baseMiscellaneousPath}/leads`, icon: "bar-chart-3", category: "miscellaneous" },
-        { type: 'child', title: "Lead Generation v-2", url: `${baseMiscellaneousPath}/leads-v2`, icon: "bar-chart-3", category: "miscellaneous" },
 
         // System
         { type: 'parent', title: "System", url: `${basePath}`, icon: "monitor-cog", category: "system" },
         { type: 'child', title: "Access Control", url: `${systemPath}/access`, icon: "bar-chart-3", category: "system" },
-        { type: 'child', title: "Credentials", url: `${systemPath}/credential`, icon: "bar-chart-3", category: "system" },
-        { type: 'child', title: "Logs", url: `${systemPath}/log`, icon: "bar-chart-3", category: "system" },
-        { type: 'child', title: "Mailer", url: `${systemPath}/mailer`, icon: "bar-chart-3", category: "system" },
-        { type: 'child', title: "Cron Jobs", url: `${systemPath}/cron`, icon: "bar-chart-3", category: "system" },
         { type: 'child', title: "Settings", url: `${systemPath}/setting`, icon: "bar-chart-3", category: "system" },
 
     ]
