@@ -9,7 +9,7 @@ import { MemberRole } from "@prisma/client";
 export async function POST(req) {
 
     try {
-        const secretKey = process.env.APP_SECRET;
+        const secretKey = process.env.ENCRYPTION_KEY;
         const key = new TextEncoder().encode(secretKey);
         const payload = await req.json();
         const { email, password, deviceToken, location } = payload

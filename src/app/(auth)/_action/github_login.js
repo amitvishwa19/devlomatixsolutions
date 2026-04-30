@@ -52,8 +52,8 @@ const handler = async (data) => {
 
         }
 
-        const accessToken = jwt.sign({ id: user.id }, process.env.APP_SECRET, { expiresIn: '1d' })
-        const refreshToken = jwt.sign({ id: user.id, email }, process.env.APP_SECRET, { expiresIn: '10d' })
+        const accessToken = jwt.sign({ id: user.id }, process.env.ENCRYPTION_KEY, { expiresIn: '1d' })
+        const refreshToken = jwt.sign({ id: user.id, email }, process.env.ENCRYPTION_KEY, { expiresIn: '10d' })
 
         await db.user.update({
             where: { email: email },

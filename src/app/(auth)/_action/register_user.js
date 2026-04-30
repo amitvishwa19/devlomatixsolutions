@@ -54,7 +54,7 @@ const handler = async (data) => {
         //console.log('user registration test', 'displayName', displayName)
 
         if (user) {
-            verifyToken = jwt.sign({ id: user.id }, process.env.APP_SECRET, { expiresIn: '1d' })
+            verifyToken = jwt.sign({ id: user.id }, process.env.ENCRYPTION_KEY, { expiresIn: '1d' })
             user = await db.user.update({
                 where: { email: email },
                 data: { verifyToken }

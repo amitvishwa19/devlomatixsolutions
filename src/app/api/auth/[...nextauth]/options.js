@@ -177,7 +177,7 @@ export const authOptions = {
                             }
                         }
                     });
-                    
+
                     if (usr) {
                         token.userId = usr.id;
                         token.displayName = usr.displayName;
@@ -196,12 +196,13 @@ export const authOptions = {
         }
     },
     pages: {
-        signIn: '/',
+        signIn: '/login',
         signOut: '/logout',
         error: '/error', // Error code passed in query string as ?error=
         verifyRequest: '/verify-request', // (used for check email message)
         newUser: '/new-user' // New users will be directed here on first sign in (leave the property out if not of interest)
     },
-    secret: process.env.NEXTAUTH_SECRET
+    secret: process.env.ENCRYPTION_KEY,
+    debug: true
 
 }

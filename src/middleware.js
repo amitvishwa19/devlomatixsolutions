@@ -14,7 +14,7 @@ export async function middleware(request) {
         return NextResponse.next()
     }
 
-    const token = await getToken({ req: request })
+    const token = await getToken({ req: request, secret: process.env.ENCRYPTION_KEY })
 
     const isMainDomain =
         process.env.NODE_ENV === 'production'

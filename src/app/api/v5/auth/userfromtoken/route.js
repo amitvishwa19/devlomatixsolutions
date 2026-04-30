@@ -14,7 +14,7 @@ export async function POST(req) {
         const accessToken = headersList.get('Authorization')
         //console.log('userfromtoken', accessToken)
 
-        const secretKey = process.env.APP_SECRET;
+        const secretKey = process.env.ENCRYPTION_KEY;
 
 
 

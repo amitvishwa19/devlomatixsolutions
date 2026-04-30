@@ -17,7 +17,7 @@ const handler = async (data) => {
 
     try {
 
-        const auth = jwt.verify(token, process.env.APP_SECRET)
+        const auth = jwt.verify(token, process.env.ENCRYPTION_KEY)
 
         console.log('auth', auth)
 

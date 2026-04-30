@@ -63,7 +63,7 @@ export default function Login() {
     const handleGoogleLogin = () => {
         const deviceToken = 'wola token'
         document.cookie = `deviceToken=${deviceToken}; path=/`;
-        signIn('google')
+        signIn('google', { callbackUrl: '/' })
     }
 
     const handleGithubLogin = () => {

@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 export async function POST(req) {
 
     try {
-        const secretKey = process.env.APP_SECRET;
+        const secretKey = process.env.ENCRYPTION_KEY;
         const key = new TextEncoder().encode(secretKey);
         const payload = await req.json();
         const { uid, email, provider, displayName, avatar, location, deviceToken, expoPushToken } = payload
