@@ -116,7 +116,7 @@ export default function Login() {
                         </div>
 
                         <Button
-                            className='h-10 w-full mt-2 cursor-pointer bg-gradient-to-r from-[#00F0FF] to-[#00D0FF] text-[#0f172a] hover:from-[#00D0FF] hover:to-[#00B0FF] font-bold text-shadow-sm shadow-[0_0_20px_rgba(0,240,255,0.4)] hover:shadow-[0_0_30px_rgba(0,240,255,0.6)] transition-all ease-out'
+                            className='h-10 w-full mt-2 cursor-pointer   font-bold transition-all ease-out'
                             disabled={loading}
                             onClick={login}
                         >
