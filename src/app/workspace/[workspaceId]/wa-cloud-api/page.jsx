@@ -106,6 +106,14 @@ export default function DashboardPage() {
             fetchCampaigns();
             fetchActivities(activityPage);
         }
+
+        const handleAccountSwitch = () => {
+            fetchCampaigns();
+            fetchActivities(activityPage);
+        };
+
+        window.addEventListener('wa-account-switched', handleAccountSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleAccountSwitch);
     }, [workspaceId, activityPage, fetchCampaigns, fetchActivities]);
 
     const refresh = () => fetchCampaigns();

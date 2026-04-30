@@ -24,6 +24,10 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
+        const defaultCredential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        });
+
         const campaignData = {
             name,
             description,
@@ -31,6 +35,7 @@ const handler = async (data) => {
             messageTemplate: messageTemplate || {},
             templateId: templateId || null,
             userId: userId,
+            credentialId: defaultCredential?.id || null,
         };
 
         let allRecipients = recipients && Array.isArray(recipients) ? [...recipients] : [];

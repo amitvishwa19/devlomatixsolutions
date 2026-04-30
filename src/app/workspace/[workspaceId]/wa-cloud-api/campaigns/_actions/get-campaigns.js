@@ -16,8 +16,19 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
+        const defaultCredential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        });
+
+        if (!defaultCredential) {
+            return { data: { campaigns: [] } };
+        }
+
         const campaigns = await db.campaign.findMany({
-            where: { userId },
+            where: { 
+                userId,
+                credentialId: defaultCredential.id
+            },
             include: {
                 _count: {
                     select: { recipients: true }

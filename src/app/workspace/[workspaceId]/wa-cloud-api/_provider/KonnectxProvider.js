@@ -18,7 +18,7 @@ const extractPermissions = (user) => {
 export const KonnectxProvider = ({ children }) => {
 
     return (
-        <KonnectxContext.Provider>
+        <KonnectxContext.Provider value={{}}>
             {children}
         </KonnectxContext.Provider>
     );

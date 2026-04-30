@@ -278,16 +278,19 @@ model Campaign {
   messageType     String              @default("text")
   messageTemplate Json
   templateId      String?
+  credentialId    String?
   scheduledAt     DateTime?
   userId          String
   platform        String              @default("WHATSAPP_CLOUD")
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   template        MessageTemplate?    @relation(fields: [templateId], references: [id])
+  credential      Credentials?        @relation(fields: [credentialId], references: [id])
   user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   recipients      CampaignRecipient[]
 
   @@index([templateId])
+  @@index([credentialId])
 }
 
 model CampaignRecipient {
@@ -622,6 +625,7 @@ model Credentials {
   isDefault   Boolean   @default(false)
   verified    Boolean   @default(false)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns   Campaign[]
 
   @@index([userId])
   @@index([workspaceId])

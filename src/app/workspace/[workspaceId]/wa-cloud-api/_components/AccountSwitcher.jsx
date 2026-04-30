@@ -37,7 +37,7 @@ export default function AccountSwitcher() {
         onSuccess: () => {
             toast.success("Active account switched");
             // Reload the page to ensure all dashboard components fetch data for the new default account
-            window.location.reload();
+            window.dispatchEvent(new Event('wa-account-switched'));
         },
         onError: (err) => {
             toast.error(err || "Failed to switch account");

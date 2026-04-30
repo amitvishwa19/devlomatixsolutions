@@ -39,7 +39,7 @@ export function CloudAccountModal({
                             <Label className="text-xs font-medium text-muted-foreground ml-1">Account Nickname</Label>
                             <Input
                                 className="bg-muted/5  text-sm font-medium rounded-md px-4 border"
-                                value={tempCreds.profile}
+                                value={tempCreds.profile || ''}
                                 onChange={(e) => setTempCreds({ ...tempCreds, profile: e.target.value })}
                                 placeholder="e.g. Sales Primary"
                             />
@@ -48,7 +48,7 @@ export function CloudAccountModal({
                             <Label className="text-xs font-medium text-muted-foreground ml-1">Phone Number ID</Label>
                             <Input
                                 className="bg-muted/5  text-sm font-medium rounded-md px-4 border"
-                                value={tempCreds.phoneNumberId}
+                                value={tempCreds.phoneNumberId || ''}
                                 onChange={(e) => setTempCreds({ ...tempCreds, phoneNumberId: e.target.value })}
                                 placeholder="10492..."
                             />
@@ -57,7 +57,7 @@ export function CloudAccountModal({
                             <Label className="text-xs font-medium text-muted-foreground ml-1">Business Account ID (WABA)</Label>
                             <Input
                                 className="bg-muted/5  text-sm font-medium rounded-md px-4 border"
-                                value={tempCreds.wabaId}
+                                value={tempCreds.wabaId || ''}
                                 onChange={(e) => setTempCreds({ ...tempCreds, wabaId: e.target.value })}
                                 placeholder="92837..."
                             />
@@ -67,7 +67,7 @@ export function CloudAccountModal({
                             <Input
                                 className="bg-muted/5  text-sm font-medium rounded-md px-4 border"
                                 type="password"
-                                value={tempCreds.accessToken}
+                                value={tempCreds.accessToken || ''}
                                 onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })}
                                 placeholder={tempCreds.id ? "•••••••• (Token is stored. Leave blank to keep existing.)" : "EAAG..."}
                             />
