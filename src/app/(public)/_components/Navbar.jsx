@@ -160,31 +160,6 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    {/* Right: Actions */}
-                    <div className="hidden md:flex items-center gap-2">
-                        {/* <ThemeToggle /> */}
-                        {/* <ThemeSwitcher /> */}
-
-                        {session && (
-                            session.user.role === 'admin' ||
-                            session.user.role === 'superadmin' ||
-                            session.user.role === 'super-admin' ||
-                            session.user.roles?.some(role => role.title === 'workspace')
-                        ) ? (
-                            <Link href="/workspace">
-                                <button variant="outline" size="sm" className="rounded-full h-9 px-5 text-sm  border border-primary/30 bg-primary/10 item-center justify-center hover:bg-primary/20 hover:text-primary cursor-pointer">
-                                    Workspace
-                                </button>
-                            </Link>
-                        ) : !session ? (
-                            <Link href="/login">
-                                <button variant="ghost" size="sm" className="rounded-full h-9 px-5 text-sm  border border-primary/30 bg-primary/10 item-center justify-center hover:bg-primary/20 hover:text-primary cursor-pointer">
-                                    Login
-                                </button>
-                            </Link>
-                        ) : null}
-
-                    </div>
 
                     {/* Mobile */}
                     <div className="flex md:hidden items-center gap-3">
