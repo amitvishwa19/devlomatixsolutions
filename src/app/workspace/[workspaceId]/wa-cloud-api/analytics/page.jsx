@@ -52,6 +52,12 @@ export default function AnalyticsPage() {
 
     useEffect(() => {
         fetchAnalytics();
+
+        const handleSwitch = () => {
+            fetchAnalytics();
+        };
+        window.addEventListener('wa-account-switched', handleSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleSwitch);
     }, [range]);
 
     const containerVariants = {

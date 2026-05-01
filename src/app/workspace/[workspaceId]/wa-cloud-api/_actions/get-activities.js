@@ -18,12 +18,48 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
+        // 0. Find Default Credential
+        const defaultCredential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        });
+
+        if (!defaultCredential) {
+            return { data: { success: true, activities: [], pagination: { currentPage: 1, pageSize, hasMore: false, totalOnPage: 0 } } };
+        }
+
+        // Extract Phone Number ID from credential
+        let cloudCreds = null;
+        const stored = defaultCredential.credentials;
+        if (typeof stored === 'string' && stored.includes(':')) {
+            try {
+                const { symmetricDecrypt } = await import("@/lib/encryption");
+                cloudCreds = JSON.parse(symmetricDecrypt(stored));
+            } catch (e) { }
+        } else if (typeof stored === 'string') {
+            try { cloudCreds = JSON.parse(stored); } catch (e) { }
+        } else { cloudCreds = stored; }
+        
+        if (cloudCreds?.enc) {
+            try {
+                const { symmetricDecrypt } = await import("@/lib/encryption");
+                cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
+            } catch (e) { }
+        }
+
+        const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+
         // Calculate offset for buffer (we fetch enough to sort globally)
         const bufferSize = page * pageSize + 10; 
 
-        // 1. Fetch Recent Activity from WhatsApp Messages
+        // 1. Fetch Recent Activity from WhatsApp Messages for active account only
         const recentMessages = await db.whatsAppMessage.findMany({
-            where: { userId },
+            where: { 
+                userId,
+                metadata: {
+                    path: ['phone_number_id'],
+                    equals: activePhoneId
+                }
+            },
             orderBy: { createdAt: 'desc' },
             take: bufferSize,
             select: {
@@ -37,9 +73,12 @@ const handler = async (data) => {
             }
         });
 
-        // 2. Fetch Recent Template Status Changes
+        // 2. Fetch Recent Template Status Changes for active account only
         const templateActivities = await db.messageTemplate.findMany({
-            where: { userId },
+            where: { 
+                userId,
+                phoneNumberId: activePhoneId 
+            },
             orderBy: { updatedAt: 'desc' },
             take: bufferSize
         });

@@ -38,12 +38,12 @@ const handler = async (data) => {
                     email: email || null,
                     userId,
                     workspaceId,
-                    categoryId: categoryId || null,
+                    category: categoryId || null,
                     tags: tags || [],
                     info: info || undefined,
                     type: type || 'CONTACT'
                 },
-                include: { category: true, groups: true }
+                include: { groups: true }
             });
             return { data: updated };
         } else {
@@ -58,7 +58,7 @@ const handler = async (data) => {
                 update: {
                     name,
                     email: email || null,
-                    categoryId: categoryId || null,
+                    category: categoryId || null,
                     tags: tags || [],
                     info: info || undefined,
                     type: type || 'CONTACT'
@@ -69,11 +69,11 @@ const handler = async (data) => {
                     email: email || null,
                     userId,
                     workspaceId,
-                    categoryId: categoryId || null,
+                    category: categoryId || null,
                     tags: tags || [],
                     type: type || 'CONTACT'
                 },
-                include: { category: true, groups: true }
+                include: { groups: true }
             });
             return { data: contact };
         }

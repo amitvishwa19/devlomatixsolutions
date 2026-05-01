@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import MediaBubble from "./_components/MediaBubble";
 import TemplateMessage from "./_components/TemplateMessage";
+import AccountSwitcher from "../_components/AccountSwitcher";
 
 // Helper: Parse lastMessage JSON and return a preview string
 function renderMessagePreview(lastMessage) {
@@ -59,14 +60,14 @@ function renderMessagePreview(lastMessage) {
         if (typeof parsed === 'object' && parsed !== null) {
             const type = (parsed.type || 'text').toLowerCase();
             const text = parsed.text || "";
-            
+
             if (type === 'text') return text;
             if (['image', 'video', 'audio', 'document', 'sticker'].includes(type)) {
                 return `[${type.toUpperCase()}] ${parsed.caption || text || ""}`.trim();
             }
             if (type === 'template') return `[Template] ${text || ""}`.trim();
             if (type === 'location') return "📍 Location shared";
-            
+
             return text || `[${type.toUpperCase()}]`;
         }
         return String(lastMessage);
@@ -122,7 +123,7 @@ export default function WhatsAppChatsPage() {
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
     const [isFetchingContacts, setIsFetchingContacts] = useState(false);
-    
+
     // Delete Modal State
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [jidToDelete, setJidToDelete] = useState(null);
@@ -146,8 +147,8 @@ export default function WhatsAppChatsPage() {
                     const mergedResults = data.conversations.map(newConv => {
                         const prevConv = prevConversations.find(p => p.jid === newConv.jid);
                         if (!prevConv) return newConv;
-                        const localTempMsgs = prevConv.messages.filter(m => 
-                            String(m.id).startsWith('temp_') && 
+                        const localTempMsgs = prevConv.messages.filter(m =>
+                            String(m.id).startsWith('temp_') &&
                             !newConv.messages.some(nm => nm.text === m.text && Math.abs(nm.timestamp - m.timestamp) < 30)
                         );
                         return { ...newConv, messages: [...localTempMsgs, ...newConv.messages] };
@@ -250,8 +251,18 @@ export default function WhatsAppChatsPage() {
         fetchConversations();
         fetchTemplates();
         fetchContacts();
+
+        const handleSwitch = () => {
+            fetchConversations();
+            fetchTemplates();
+        };
+        window.addEventListener('wa-account-switched', handleSwitch);
+
         const interval = setInterval(fetchConversations, 5000);
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('wa-account-switched', handleSwitch);
+        };
     }, [workspaceId]);
 
     useEffect(() => {
@@ -327,9 +338,9 @@ export default function WhatsAppChatsPage() {
 
     const handleSendTemplate = async () => {
         if (!selectedTemplateForSend || !selectedJid) return;
-        
+
         const templateName = selectedTemplateForSend.templateName || selectedTemplateForSend.name;
-        
+
         // Build body parameters from vars
         const bodyParams = Object.entries(templateVars).map(([, val]) => ({
             type: 'text',
@@ -356,16 +367,16 @@ export default function WhatsAppChatsPage() {
             metadata: { type: 'template', templateName }
         };
         setConversations(prev => prev.map(conv => {
-                return { 
-                    ...conv, 
-                    lastMessage: JSON.stringify({
-                        text: previewText,
-                        type: 'template',
-                        templateName: templateName,
-                        timestamp: optimisticMsg.timestamp
-                    }), 
-                    messages: [optimisticMsg, ...conv.messages] 
-                };
+            return {
+                ...conv,
+                lastMessage: JSON.stringify({
+                    text: previewText,
+                    type: 'template',
+                    templateName: templateName,
+                    timestamp: optimisticMsg.timestamp
+                }),
+                messages: [optimisticMsg, ...conv.messages]
+            };
             return conv;
         }));
         setIsTemplateDrawerOpen(false);
@@ -446,20 +457,24 @@ export default function WhatsAppChatsPage() {
         <div id='main-content-container' className="h-full flex flex-col overflow-hidden shadow-2xl transition-all ">
 
 
-            <div className="p-5 border-b border-border/50 bg-card/20 backdrop-blur-sm">
-                <div className="flex items-center justify-between gap-2">
+            <div className=" border-b border-border/50 bg-card/20 backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-2 py-2 px-4">
                     <div className="flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-primary" />
                         <h1 className="text-xl font-bold tracking-tight">WhatsApp Chats</h1>
                     </div>
-                    <div className="relative w-80 border rounded-lg">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-                        <Input
-                            placeholder={`Search ${activeTab}...`}
-                            className="bg-background/50 border-border/40 pl-9 h-9 text-xs rounded-lg"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <div className="flex flex-row gap-2">
+                        <div className="relative w-80 border rounded-lg">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                            <Input
+                                placeholder={`Search ${activeTab}...`}
+                                className="bg-background/50 border-border/40 pl-9 h-9 text-xs rounded-lg"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <AccountSwitcher />
                     </div>
                 </div>
 
@@ -511,7 +526,7 @@ export default function WhatsAppChatsPage() {
                                                         <span className="text-[9px] text-muted-foreground group-hover:hidden">
                                                             {formatDistanceToNow(chat.timestamp)}
                                                         </span>
-                                                        <button 
+                                                        <button
                                                             onClick={(e) => handleDeleteConversation(e, chat.jid)}
                                                             className="hidden group-hover:flex p-1 hover:bg-red-100 hover:text-red-600 rounded-md transition-colors text-muted-foreground"
                                                         >
@@ -640,13 +655,13 @@ export default function WhatsAppChatsPage() {
                                                 >
                                                     <div className="relative group max-w-[85%]">
                                                         {isTemplate ? (
-                                                            <div 
+                                                            <div
                                                                 onClick={() => handleTemplateClick(msg)}
                                                                 className="cursor-pointer transition-transform active:scale-[0.98]"
                                                             >
-                                                                <TemplateMessage 
-                                                                    msg={msg} 
-                                                                    templateDefinition={templateDef} 
+                                                                <TemplateMessage
+                                                                    msg={msg}
+                                                                    templateDefinition={templateDef}
                                                                 />
                                                             </div>
                                                         ) : isMedia ? (
@@ -664,7 +679,7 @@ export default function WhatsAppChatsPage() {
                                                                     }`}
                                                             >
                                                                 <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                                                                
+
                                                                 {/* Source Tail (Bubble Hook) for regular text */}
                                                                 {msg.fromMe ? (
                                                                     <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
@@ -721,8 +736,8 @@ export default function WhatsAppChatsPage() {
                                                     {s}
                                                 </button>
                                             ))}
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setAiSuggestions([])}
                                                 className="text-[10px] text-muted-foreground hover:text-foreground px-2"
                                             >
@@ -831,7 +846,7 @@ export default function WhatsAppChatsPage() {
                                                                 <span className="text-[9px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-medium">
                                                                     APPROVED
                                                                 </span>
-                                                                <span className="text-[9px] text-muted-foreground uppercase">{ tpl.language || 'en' }</span>
+                                                                <span className="text-[9px] text-muted-foreground uppercase">{tpl.language || 'en'}</span>
                                                             </div>
                                                         </div>
                                                     </button>
@@ -908,7 +923,7 @@ export default function WhatsAppChatsPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmDelete();

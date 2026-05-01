@@ -137,6 +137,13 @@ export default function TemplatePage() {
             fetchContacts();
             fetchMetadata();
         }
+
+        const handleSwitch = () => {
+            fetchTemplates();
+            fetchMetadata();
+        };
+        window.addEventListener('wa-account-switched', handleSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleSwitch);
     }, [workspaceId]);
 
     const { execute: executeSync } = useAction(syncTemplates, {

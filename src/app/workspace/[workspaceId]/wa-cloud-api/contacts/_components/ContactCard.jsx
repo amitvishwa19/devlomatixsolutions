@@ -50,9 +50,9 @@ export default function ContactCard({
                         <div className="flex items-center justify-between ">
                             <div className="flex items-center gap-2 overflow-hidden">
                                 <h3 className="text-sm font-bold truncate t">{contact.name}</h3>
-                                {contact.categoryId && (
-                                    <Badge variant="outline" className="h-4 text-[9px] font-bold px-1.5 border-none" style={{ backgroundColor: `${getCategoryColor(contact.categoryId)}20`, color: getCategoryColor(contact.categoryId) }}>
-                                        {categories.find(c => c.id === contact.categoryId)?.name || 'Cat'}
+                                {contact.category && (
+                                    <Badge variant="outline" className="h-4 text-[9px] font-bold px-1.5 border-none" style={{ backgroundColor: `${getCategoryColor(contact.category)}20`, color: getCategoryColor(contact.category) }}>
+                                        {categories.find(c => c.id === contact.category)?.name || 'Cat'}
                                     </Badge>
                                 )}
                             </div>

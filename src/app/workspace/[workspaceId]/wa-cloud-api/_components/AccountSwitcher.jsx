@@ -63,15 +63,15 @@ export default function AccountSwitcher() {
     }
 
     return (
-        <Select 
-            value={activeAccount} 
+        <Select
+            value={activeAccount}
             onValueChange={(val) => {
                 setActiveAccount(val);
                 setAsDefault({ workspaceId, id: val });
             }}
             disabled={isSettingDefault}
         >
-            <SelectTrigger className="w-[220px] h-10 bg-card border-border shadow-sm font-medium text-sm">
+            <SelectTrigger className="w-full h-10 bg-card border-border shadow-sm font-medium text-sm cursor-pointer">
                 <SelectValue placeholder="Select Account" />
             </SelectTrigger>
             <SelectContent>

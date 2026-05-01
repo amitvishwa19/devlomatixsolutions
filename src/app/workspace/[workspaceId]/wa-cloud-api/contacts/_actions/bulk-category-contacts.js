@@ -22,7 +22,7 @@ const handler = async (data) => {
                 workspaceId
             },
             data: {
-                categoryId: categoryId === 'none' ? null : categoryId
+                category: categoryId === 'none' ? null : categoryId
             }
         });
 

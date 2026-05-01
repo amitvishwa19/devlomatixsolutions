@@ -50,7 +50,7 @@ import { sendMessage } from './_actions/send-message';
 import ManageCategoriesDialog from './_components/ManageCategoriesDialog';
 import ManageTagsDialog from './_components/ManageTagsDialog';
 import ManageGroupsDialog from './_components/ManageGroupsDialog';
-import ContactSheet from './_components/ContactSheet';
+import ContactDialog from './_components/ContactDialog';
 import ReviewImportDialog from './_components/ReviewImportDialog';
 import BulkDeleteDialog from './_components/BulkDeleteDialog';
 import BulkTagDialog from './_components/BulkTagDialog';
@@ -574,7 +574,7 @@ export default function ContactsPage() {
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full bg-primary/40" />
                                                     <span className="flex items-center truncate max-w-[120px] text-xs gap-2">
-                                                        {catName}
+                                                        {categories.find(c => c.id === catName)?.name || catName}
                                                         <span className="text-[10px] opacity-40 font-mono">
                                                             {contacts.filter(c => c.category === catName).length}
                                                         </span>
@@ -873,7 +873,7 @@ export default function ContactsPage() {
                     </AlertDialogContent>
                 </AlertDialog>
 
-                <ContactSheet
+                <ContactDialog
                     isOpen={isAddContactOpen || isEditContactOpen}
                     onOpenChange={(open) => {
                         if (!open) { setIsAddContactOpen(false); setIsEditContactOpen(false); setActiveContact(null); }

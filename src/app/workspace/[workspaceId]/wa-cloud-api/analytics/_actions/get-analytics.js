@@ -18,21 +18,63 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
+        // 0. Find Default Credential
+        const defaultCredential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        });
+
+        if (!defaultCredential) {
+            return { data: { success: true, timeSeries: [], templatePerformance: [], distribution: [], totalMessages: 0, overallReadRate: 0 } };
+        }
+
+        // Extract Phone Number ID
+        let cloudCreds = null;
+        const stored = defaultCredential.credentials;
+        if (typeof stored === 'string' && stored.includes(':')) {
+            try {
+                const { symmetricDecrypt } = await import("@/lib/encryption");
+                cloudCreds = JSON.parse(symmetricDecrypt(stored));
+            } catch (e) { }
+        } else if (typeof stored === 'string') {
+            try { cloudCreds = JSON.parse(stored); } catch (e) { }
+        } else { cloudCreds = stored; }
+        
+        if (cloudCreds?.enc) {
+            try {
+                const { symmetricDecrypt } = await import("@/lib/encryption");
+                cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
+            } catch (e) { }
+        }
+        const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+
         const daysToSub = parseInt(range) - 1;
         const endDate = new Date();
         const startDate = startOfDay(subDays(endDate, daysToSub));
 
-        // 1. Fetch Time-Series Data
+        // 1. Fetch Time-Series Data for active account
         const [messages, deliveryLogs, templates] = await Promise.all([
             db.whatsAppMessage.findMany({
-                where: { userId, createdAt: { gte: startDate } },
+                where: { 
+                    userId, 
+                    createdAt: { gte: startDate },
+                    metadata: {
+                        path: ['phone_number_id'],
+                        equals: activePhoneId
+                    }
+                },
                 select: { status: true, fromMe: true, createdAt: true, metadata: true, text: true }
             }),
             db.whatsAppDeliveryLog.findMany({
-                where: { userId, createdAt: { gte: startDate } }
+                where: { 
+                    userId, 
+                    createdAt: { gte: startDate },
+                    // Assuming delivery logs might be tied to jobId which is tied to credential, 
+                    // but for direct messages we might need metadata filter if available.
+                    // For now, filtering messages is most important.
+                }
             }),
             db.messageTemplate.findMany({
-                where: { userId }
+                where: { userId, phoneNumberId: activePhoneId }
             })
         ]);
 

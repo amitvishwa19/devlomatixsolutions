@@ -1100,11 +1100,13 @@ model ECommerceOrder {
 
 model ECommerceProduct {
   id                String         @id @default(cuid())
-  storeId           String
-  externalProductId String         @unique
+  storeId           String?
+  externalProductId String?        @unique
+  sku               String?        @unique
   title             String
   description       String?
   price             Float
+  discount          Float?         @default(0)
   currency          String         @default("INR")
   imageUrl          String?
   status            String
@@ -1113,7 +1115,7 @@ model ECommerceProduct {
   userId            String
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
-  store             ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  store             ECommerceStore? @relation(fields: [storeId], references: [id], onDelete: Cascade)
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([storeId])

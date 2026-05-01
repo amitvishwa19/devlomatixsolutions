@@ -18,10 +18,12 @@ const getBaseDb = () => {
     
     // Self-healing: If the client was initialized before the new models or fields existed
     // We check for some new models/fields to trigger re-initialization in development
-    const SCHEMA_VERSION = 25; // Increment this to force a re-init in dev
+    const SCHEMA_VERSION = 26; // Increment this to force a re-init in dev
     const isStale = process.env.NODE_ENV !== 'production' && (
         !globalThis.prismaGlobal.agentModel || 
         !globalThis.prismaGlobal.contactGroup ||
+        !globalThis.prismaGlobal.role || 
+        !globalThis.prismaGlobal.permission ||
         globalThis.prismaGlobal._schemaVersion !== SCHEMA_VERSION
     );
 
