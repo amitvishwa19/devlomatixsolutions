@@ -1,19 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Layout, 
-    Plus, 
-    Trash2, 
-    Settings, 
-    Play, 
-    Code, 
-    ChevronRight, 
-    Type, 
-    Hash, 
-    Calendar, 
-    List, 
-    CircleDot, 
+import {
+    Layout as LayoutIcon,
+    Plus,
+    Trash2,
+    Settings,
+    Play,
+    Code,
+    ChevronRight,
+    Type,
+    Hash,
+    Calendar,
+    List,
+    CircleDot,
     CheckSquare,
     Save,
     ArrowRight
@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from 'sonner';
+import { generateFlowDSL } from "../_lib/flow-utils";
 
 const COMPONENT_TYPES = [
     { id: 'TextItem', label: 'Static Text', icon: Type, default: { text: 'New Text', style: 'body' } },
@@ -43,9 +44,16 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
         { id: 'SCREEN_1', title: 'Welcome', children: [] }
     ]);
     const [activeScreenId, setActiveScreenId] = useState(screens[0]?.id);
+    const [selectedComponentId, setSelectedComponentId] = useState(null);
     const [viewMode, setViewMode] = useState('design'); // design | code
+    const [activeSidebarTab, setActiveSidebarTab] = useState('library');
 
     const activeScreen = screens.find(s => s.id === activeScreenId);
+    const selectedComponent = activeScreen?.children.find(c => c.id === selectedComponentId);
+
+    useEffect(() => {
+        setSelectedComponentId(null);
+    }, [activeScreenId]);
 
     const addScreen = () => {
         const newId = `SCREEN_${screens.length + 1}`;
@@ -63,6 +71,8 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
         };
 
         setScreens(screens.map(s => s.id === activeScreenId ? { ...s, children: [...s.children, newComp] } : s));
+        setSelectedComponentId(newComp.id);
+        setActiveSidebarTab('inspector');
     };
 
     const updateComponent = (compId, updates) => {
@@ -90,44 +100,7 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
     };
 
     const generateFlowJson = () => {
-        const flow = {
-            version: "5.0",
-            screens: screens.map(s => ({
-                id: s.id,
-                title: s.title,
-                layout: {
-                    type: "SingleColumnLayout",
-                    children: [
-                        ...s.children.map(c => {
-                            const base = { type: c.type };
-                            if (c.type === 'TextItem') {
-                                return { ...base, text: c.text, style: c.style };
-                            }
-                            if (c.type === 'TextInput') {
-                                return { ...base, label: c.label, name: c.name, required: c.required };
-                            }
-                            if (['Select', 'RadioButtons', 'CheckboxGroup'].includes(c.type)) {
-                                return { ...base, label: c.label, name: c.name, options: c.options };
-                            }
-                            if (c.type === 'DatePicker') {
-                                return { ...base, label: c.label, name: c.name };
-                            }
-                            return base;
-                        }),
-                        {
-                            type: "Footer",
-                            label: "Continue",
-                            on_click_action: {
-                                name: "navigate",
-                                payload: {
-                                    screen: screens[screens.indexOf(s) + 1]?.id || "SUCCESS"
-                                }
-                            }
-                        }
-                    ]
-                }
-            }))
-        };
+        const flow = generateFlowDSL(screens);
         return JSON.stringify(flow, null, 4);
     };
 
@@ -185,8 +158,14 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
                     {viewMode === 'design' ? (
                         <>
                             {/* Canvas */}
-                            <div className="flex-1 bg-muted/5 p-8 flex flex-col items-center overflow-y-auto">
-                                <div className="w-[360px] min-h-[600px] bg-card border-4 border-muted rounded-[40px] shadow-2xl relative overflow-hidden flex flex-col">
+                            <div
+                                className="flex-1 bg-muted/5 p-8 flex flex-col items-center overflow-y-auto"
+                                onClick={() => setSelectedComponentId(null)}
+                            >
+                                <div
+                                    className="w-[360px] min-h-[600px] bg-card border-4 border-muted rounded-[40px] shadow-2xl relative overflow-hidden flex flex-col"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     {/* Phone Header Mock */}
                                     <div className="h-14 bg-muted/50 flex items-center justify-center border-b">
                                         <div className="w-16 h-1 bg-muted-foreground/20 rounded-full" />
@@ -201,19 +180,34 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
 
                                         <div className="space-y-4">
                                             {activeScreen?.children.map((c) => (
-                                                <div key={c.id} className="relative group p-3 border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 rounded-xl transition-all">
-                                                    {c.type === 'TextItem' && <p className={`text-sm ${c.style === 'heading' ? 'font-bold text-base' : 'text-muted-foreground'}`}>{c.text}</p>}
+                                                <div
+                                                    key={c.id}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedComponentId(c.id);
+                                                        setActiveSidebarTab('inspector');
+                                                    }}
+                                                    className={`relative group p-3 border-2 transition-all cursor-pointer rounded-xl ${selectedComponentId === c.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-transparent hover:border-primary/20 hover:bg-primary/5'}`}
+                                                >
+                                                    {selectedComponentId === c.id && (
+                                                        <Badge className="absolute -left-2 -top-2 text-[8px] h-4 px-1 animate-pulse">EDITING</Badge>
+                                                    )}
+                                                    {c.type === 'TextItem' && <p className={`text-sm pointer-events-none ${c.style === 'heading' ? 'font-bold text-base' : 'text-muted-foreground'}`}>{c.text}</p>}
                                                     {['TextInput', 'Select', 'RadioButtons', 'CheckboxGroup', 'DatePicker'].includes(c.type) && (
-                                                        <div className="space-y-2">
+                                                        <div className="space-y-2 pointer-events-none">
                                                             <Label className="text-xs font-bold text-primary/80">{c.label} {c.required && '*'}</Label>
                                                             <div className="h-10 border border-dashed rounded-lg bg-card/50 flex items-center px-3 text-[11px] text-muted-foreground italic">
-                                                                {c.name} component placeholder
+                                                                {c.name}
                                                             </div>
                                                         </div>
                                                     )}
-                                                    <button 
-                                                        onClick={() => deleteComponent(c.id)}
-                                                        className="absolute -right-2 -top-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 flex items-center justify-center shadow-lg transition-all"
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteComponent(c.id);
+                                                            if (selectedComponentId === c.id) setSelectedComponentId(null);
+                                                        }}
+                                                        className="absolute -right-2 -top-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 flex items-center justify-center shadow-lg transition-all z-10"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
@@ -222,7 +216,7 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
 
                                             {activeScreen?.children.length === 0 && (
                                                 <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed rounded-3xl gap-3 text-center px-4">
-                                                    <Layout className="w-8 h-8 text-muted-foreground/30" />
+                                                    <LayoutIcon className="w-8 h-8 text-muted-foreground/30" />
                                                     <p className="text-xs text-muted-foreground font-medium">Add components from the library to build this screen.</p>
                                                 </div>
                                             )}
@@ -238,15 +232,15 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
 
                             {/* Library/Inspector Sidebar */}
                             <div className="w-80 border-l bg-card flex flex-col overflow-hidden">
-                                <Tabs defaultValue="library" className="flex-1 flex flex-col">
+                                <Tabs value={activeSidebarTab} onValueChange={setActiveSidebarTab} className="flex-1 flex flex-col">
                                     <TabsList className="w-full rounded-none h-12 border-b bg-muted/20">
                                         <TabsTrigger value="library" className="flex-1 text-xs font-bold">Library</TabsTrigger>
                                         <TabsTrigger value="inspector" className="flex-1 text-xs font-bold">Properties</TabsTrigger>
                                     </TabsList>
 
-                                    <TabsContent value="library" className="flex-1 m-0">
-                                        <ScrollArea className="h-full">
-                                            <div className="p-4 grid grid-cols-2 gap-3">
+                                    <div className="flex-1 overflow-y-auto bg-card pointer-events-auto">
+                                        <TabsContent value="library" className="m-0 p-4">
+                                            <div className="grid grid-cols-2 gap-3 pb-10">
                                                 {COMPONENT_TYPES.map(type => (
                                                     <button
                                                         key={type.id}
@@ -260,91 +254,159 @@ const FlowBuilder = ({ initialScreens = [], onSave }) => {
                                                     </button>
                                                 ))}
                                             </div>
-                                        </ScrollArea>
-                                    </TabsContent>
+                                        </TabsContent>
 
-                                    <TabsContent value="inspector" className="flex-1 m-0">
-                                        <ScrollArea className="h-full">
-                                            <div className="p-6 space-y-6">
+                                        <TabsContent value="inspector" className="m-0 p-6">
+                                            <div className="space-y-6 pb-10">
                                                 <div className="space-y-4">
                                                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Screen Settings</h4>
                                                     <div className="space-y-2">
                                                         <Label className="text-xs">Screen Title</Label>
-                                                        <Input 
-                                                            value={activeScreen?.title || ''} 
+                                                        <input
+                                                            value={activeScreen?.title || ''}
                                                             onChange={(e) => setScreens(screens.map(s => s.id === activeScreenId ? { ...s, title: e.target.value } : s))}
-                                                            className="h-9"
+                                                            className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-4">
                                                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Component Properties</h4>
-                                                    {activeScreen?.children.length === 0 ? (
-                                                        <p className="text-xs text-muted-foreground italic">Select a component on the canvas to edit its properties.</p>
+                                                    {!selectedComponent ? (
+                                                        <div className="py-10 text-center space-y-3">
+                                                            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center mx-auto opacity-40">
+                                                                <Settings className="w-5 h-5" />
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground italic px-4">Select a component on the canvas to edit its properties.</p>
+                                                        </div>
                                                     ) : (
                                                         <div className="space-y-4">
-                                                            {activeScreen?.children.map(c => (
-                                                                <Card key={c.id} className="border-primary/10">
-                                                                    <CardContent className="p-4 space-y-4">
-                                                                        <div className="flex items-center justify-between">
-                                                                            <Badge variant="secondary" className="text-[9px] uppercase tracking-tighter">{c.type}</Badge>
-                                                                            <span className="text-[9px] font-mono opacity-40">{c.id}</span>
-                                                                        </div>
-                                                                        
-                                                                        {c.type === 'TextItem' && (
-                                                                            <div className="space-y-3">
-                                                                                <div className="space-y-1.5">
-                                                                                    <Label className="text-[11px]">Content</Label>
-                                                                                    <Textarea 
-                                                                                        value={c.text} 
-                                                                                        onChange={(e) => updateComponent(c.id, { text: e.target.value })}
-                                                                                        className="text-xs min-h-[60px]"
-                                                                                    />
-                                                                                </div>
-                                                                                <div className="space-y-1.5">
-                                                                                    <Label className="text-[11px]">Style</Label>
-                                                                                    <Select value={c.style} onValueChange={(val) => updateComponent(c.id, { style: val })}>
-                                                                                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                                                                                        <SelectContent>
-                                                                                            <SelectItem value="body">Body</SelectItem>
-                                                                                            <SelectItem value="heading">Heading</SelectItem>
-                                                                                            <SelectItem value="caption">Caption</SelectItem>
-                                                                                        </SelectContent>
-                                                                                    </Select>
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
+                                                            <Card className="border-primary/20 shadow-sm">
+                                                                <CardContent className="p-4 space-y-4">
+                                                                    <div className="flex items-center justify-between border-b pb-2 mb-2">
+                                                                        <Badge variant="outline" className="text-[9px] uppercase tracking-tighter bg-primary/5">{selectedComponent.type}</Badge>
+                                                                        <span className="text-[9px] font-mono opacity-40">{selectedComponent.id}</span>
+                                                                    </div>
 
-                                                                        {['TextInput', 'Select', 'RadioButtons', 'CheckboxGroup', 'DatePicker'].includes(c.type) && (
-                                                                            <div className="space-y-3">
-                                                                                <div className="space-y-1.5">
-                                                                                    <Label className="text-[11px]">Label</Label>
-                                                                                    <Input 
-                                                                                        value={c.label} 
-                                                                                        onChange={(e) => updateComponent(c.id, { label: e.target.value })}
-                                                                                        className="h-8 text-xs"
-                                                                                    />
-                                                                                </div>
-                                                                                <div className="space-y-1.5">
-                                                                                    <Label className="text-[11px]">System Name (Key)</Label>
-                                                                                    <Input 
-                                                                                        value={c.name} 
-                                                                                        onChange={(e) => updateComponent(c.id, { name: e.target.value })}
-                                                                                        className="h-8 text-xs font-mono"
-                                                                                    />
-                                                                                </div>
+                                                                    {selectedComponent.type === 'TextItem' && (
+                                                                        <div className="space-y-3">
+                                                                            <div className="space-y-1.5">
+                                                                                <Label className="text-[11px]">Content</Label>
+                                                                                <textarea
+                                                                                    value={selectedComponent.text}
+                                                                                    onChange={(e) => updateComponent(selectedComponent.id, { text: e.target.value })}
+                                                                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                                                />
                                                                             </div>
-                                                                        )}
-                                                                    </CardContent>
-                                                                </Card>
-                                                            ))}
+                                                                            <div className="space-y-1.5">
+                                                                                <Label className="text-[11px]">Style</Label>
+                                                                                <Select value={selectedComponent.style} onValueChange={(val) => updateComponent(selectedComponent.id, { style: val })}>
+                                                                                    <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        <SelectItem value="body">Body</SelectItem>
+                                                                                        <SelectItem value="heading">Heading</SelectItem>
+                                                                                        <SelectItem value="caption">Caption</SelectItem>
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {['TextInput', 'Select', 'RadioButtons', 'CheckboxGroup', 'DatePicker'].includes(selectedComponent.type) && (
+                                                                        <div className="space-y-3">
+                                                                            <div className="space-y-1.5">
+                                                                                <Label className="text-[11px]">Label</Label>
+                                                                                <input
+                                                                                    value={selectedComponent.label}
+                                                                                    onChange={(e) => updateComponent(selectedComponent.id, { label: e.target.value })}
+                                                                                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="space-y-1.5">
+                                                                                <Label className="text-[11px]">System Name (Key)</Label>
+                                                                                <input
+                                                                                    value={selectedComponent.name}
+                                                                                    onChange={(e) => updateComponent(selectedComponent.id, { name: e.target.value })}
+                                                                                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-xs font-mono shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2 pt-2">
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    id="req-toggle"
+                                                                                    checked={selectedComponent.required}
+                                                                                    onChange={(e) => updateComponent(selectedComponent.id, { required: e.target.checked })}
+                                                                                    className="rounded border-gray-300 text-primary focus:ring-primary h-3.5 w-3.5"
+                                                                                />
+                                                                                <Label htmlFor="req-toggle" className="text-[11px] font-medium cursor-pointer">Required Field</Label>
+                                                                            </div>
+
+                                                                            {/* Options Manager for Selection Types */}
+                                                                            {['Select', 'RadioButtons', 'CheckboxGroup'].includes(selectedComponent.type) && (
+                                                                                <div className="space-y-3 pt-4 border-t">
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <Label className="text-[11px] font-bold">Choices</Label>
+                                                                                        <Button
+                                                                                            variant="ghost"
+                                                                                            size="icon"
+                                                                                            className="h-6 w-6 text-primary"
+                                                                                            onClick={() => {
+                                                                                                const newOpts = [...(selectedComponent.options || []), { label: `Option ${selectedComponent.options?.length + 1}`, value: `opt${selectedComponent.options?.length + 1}` }];
+                                                                                                updateComponent(selectedComponent.id, { options: newOpts });
+                                                                                            }}
+                                                                                        >
+                                                                                            <Plus className="w-3.5 h-3.5" />
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                    <div className="space-y-2">
+                                                                                        {selectedComponent.options?.map((opt, idx) => (
+                                                                                            <div key={idx} className="flex items-center gap-2">
+                                                                                                <input
+                                                                                                    value={opt.label}
+                                                                                                    onChange={(e) => {
+                                                                                                        const newOpts = [...selectedComponent.options];
+                                                                                                        newOpts[idx].label = e.target.value;
+                                                                                                        updateComponent(selectedComponent.id, { options: newOpts });
+                                                                                                    }}
+                                                                                                    placeholder="Label"
+                                                                                                    className="flex-1 h-8 rounded-md border border-input bg-transparent px-2 text-[10px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                                                                />
+                                                                                                <input
+                                                                                                    value={opt.value}
+                                                                                                    onChange={(e) => {
+                                                                                                        const newOpts = [...selectedComponent.options];
+                                                                                                        newOpts[idx].value = e.target.value;
+                                                                                                        updateComponent(selectedComponent.id, { options: newOpts });
+                                                                                                    }}
+                                                                                                    placeholder="Value"
+                                                                                                    className="w-20 h-8 rounded-md border border-input bg-transparent px-2 text-[10px] font-mono shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                                                                />
+                                                                                                <Button
+                                                                                                    variant="ghost"
+                                                                                                    size="icon"
+                                                                                                    className="h-8 w-8 text-destructive"
+                                                                                                    onClick={() => {
+                                                                                                        const newOpts = selectedComponent.options.filter((_, i) => i !== idx);
+                                                                                                        updateComponent(selectedComponent.id, { options: newOpts });
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                                                </Button>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </CardContent>
+                                                            </Card>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                        </ScrollArea>
-                                    </TabsContent>
+                                        </TabsContent>
+                                    </div>
                                 </Tabs>
                             </div>
                         </>

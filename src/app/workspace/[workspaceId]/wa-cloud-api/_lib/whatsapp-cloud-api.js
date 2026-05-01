@@ -7,7 +7,7 @@
  * All functions return a standardized { success, data, error } object.
  */
 
-const DEFAULT_VERSION = 'v21.0';
+const DEFAULT_VERSION = process.env.NEXT_PUBLIC_META_API_VERSION || 'v21.0';
 const BASE_URL = 'https://graph.facebook.com';
 
 /**
@@ -265,6 +265,123 @@ const getMediaUrl = async (credentials, mediaId) => {
     }
 }
 
+/**
+ * 11. WhatsApp Flows Management
+ */
+
+async function fetchFlowsMeta(credentials) {
+    const { accessToken, wabaId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!wabaId) return response(false, null, 'Missing wabaId');
+
+    const url = `${BASE_URL}/${version}/${wabaId}/flows?fields=id,name,status,categories,validation_errors,last_updated`;
+
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to fetch flows');
+        return response(true, data.data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function createFlowMeta(credentials, name, categories = ["OTHER"]) {
+    const { accessToken, wabaId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!wabaId) return response(false, null, 'Missing wabaId');
+
+    const url = `${BASE_URL}/${version}/${wabaId}/flows`;
+    const payload = { name, categories };
+
+    console.log("[WA_FLOW_CREATE_REQUEST]", { url, payload });
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.error('[WA_FLOW_CREATE_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to create flow');
+        }
+        return response(true, data);
+    } catch (err) {
+        console.error('[WA_FLOW_CREATE_FETCH_ERROR]', err);
+        return response(false, null, err.message);
+    }
+}
+
+async function updateFlowAssetMeta(credentials, flowId, flowJson) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${flowId}/assets`;
+
+    try {
+        const formData = new FormData();
+        const blob = new Blob([JSON.stringify(flowJson)], { type: 'application/json' });
+        formData.append('name', 'flow.json');
+        formData.append('asset_type', 'FLOW_JSON');
+        formData.append('file', blob, 'flow.json');
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to upload flow asset');
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function publishFlowMeta(credentials, flowId) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${flowId}/publish`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to publish flow');
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function deleteFlowMeta(credentials, flowId) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${flowId}`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to delete flow');
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
 export {
     testCloudConnection,
     sendTextMessage,
@@ -275,5 +392,10 @@ export {
     sendMediaMessage,
     sendLocationMessage,
     sendInteractiveMessage,
-    getMediaUrl
+    getMediaUrl,
+    fetchFlowsMeta,
+    createFlowMeta,
+    updateFlowAssetMeta,
+    publishFlowMeta,
+    deleteFlowMeta
 };

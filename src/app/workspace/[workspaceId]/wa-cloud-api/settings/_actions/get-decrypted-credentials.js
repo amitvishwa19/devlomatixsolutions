@@ -62,23 +62,13 @@ const handler = async (data) => {
             }
         }
 
-        const result = {
-            success: true,
-            data: {
-                accessToken: stored?.accessToken || '',
-                phoneNumberId: stored?.phoneNumberId || '',
-                wabaId: stored?.wabaId || '',
-                profile: cred.profile || 'Default Account',
-                isDefault: cred.isDefault,
-            }
+        return {
+            accessToken: stored?.accessToken || '',
+            phoneNumberId: stored?.phoneNumberId || '',
+            wabaId: stored?.wabaId || '',
+            profile: cred.profile || 'Default Account',
+            isDefault: cred.isDefault,
         };
-
-        console.log("[GetDecryptedCredentials] Returning to UI:", {
-            ...result.data,
-            accessToken: result.data.accessToken ? "PRESENT" : "MISSING"
-        });
-
-        return result;
     } catch (error) {
         return { error: error.message || "Failed to fetch credentials" };
     }

@@ -41,6 +41,10 @@ import { getDecryptedCredentials } from "../settings/_actions/get-decrypted-cred
 import { getFlows } from "./_actions/get-flows";
 import { saveFlow } from "./_actions/save-flow";
 import { deleteFlow } from "./_actions/delete-flow";
+import { pushFlowToMeta } from "./_actions/push-flow";
+import { publishMetaFlow } from "./_actions/publish-meta-flow";
+import { syncMetaFlows } from "./_actions/sync-meta-flows";
+import { cloneFlow } from "./_actions/clone-flow";
 
 // Components
 import FlowBuilder from "./_components/FlowBuilder";
@@ -64,6 +68,10 @@ export default function FlowsPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [newFlowName, setNewFlowName] = useState('');
+
+    // Inline rename state
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [tempName, setTempName] = useState('');
 
     // --- Actions ---
 
@@ -91,6 +99,38 @@ export default function FlowsPage() {
             toast.success("Flow deleted");
             executeGetLocal({ workspaceId });
         }
+    });
+
+    const { execute: executePush, isLoading: isPushing } = useAction(pushFlowToMeta, {
+        onSuccess: (data) => {
+            toast.success("Flow pushed to Meta successfully");
+            executeGetLocal({ workspaceId });
+        },
+        onError: (error) => toast.error(error)
+    });
+
+    const { execute: executePublish, isLoading: isPublishing } = useAction(publishMetaFlow, {
+        onSuccess: (data) => {
+            toast.success("Flow published on Meta");
+            executeGetLocal({ workspaceId });
+        },
+        onError: (error) => toast.error(error)
+    });
+
+    const { execute: executeSync, isLoading: isSyncing } = useAction(syncMetaFlows, {
+        onSuccess: (data) => {
+            toast.success(`Synced ${data.count} flows from Meta`);
+            executeGetLocal({ workspaceId });
+        },
+        onError: (error) => toast.error(error)
+    });
+
+    const { execute: executeClone, isLoading: isCloning } = useAction(cloneFlow, {
+        onSuccess: () => {
+            toast.success('Flow cloned successfully');
+            executeGetLocal({ workspaceId });
+        },
+        onError: (error) => toast.error(error)
     });
 
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
@@ -194,8 +234,46 @@ export default function FlowsPage() {
                         <Button variant="ghost" size="icon" onClick={() => setView('list')} className="rounded-full">
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
-                        <div>
-                            <h2 className="text-sm font-bold">{selectedFlow?.name}</h2>
+                        <div className="flex flex-col">
+                            {isEditingName ? (
+                                <div className="flex items-center gap-2">
+                                    <input 
+                                        autoFocus
+                                        value={tempName}
+                                        onChange={(e) => setTempName(e.target.value)}
+                                        onBlur={() => {
+                                            if (tempName.trim() && tempName !== selectedFlow.name) {
+                                                executeSaveLocal({
+                                                    workspaceId,
+                                                    id: selectedFlow.id,
+                                                    name: tempName.trim()
+                                                });
+                                                setSelectedFlow({...selectedFlow, name: tempName.trim()});
+                                            }
+                                            setIsEditingName(false);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') e.currentTarget.blur();
+                                            if (e.key === 'Escape') {
+                                                setTempName(selectedFlow.name);
+                                                setIsEditingName(false);
+                                            }
+                                        }}
+                                        className="text-sm font-bold bg-transparent border-b border-primary outline-none px-0 py-0.5 min-w-[200px]"
+                                    />
+                                </div>
+                            ) : (
+                                <h2 
+                                    className="text-sm font-bold cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
+                                    onClick={() => {
+                                        setTempName(selectedFlow.name);
+                                        setIsEditingName(true);
+                                    }}
+                                >
+                                    {selectedFlow?.name}
+                                    <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50" />
+                                </h2>
+                            )}
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Visual Flow Designer</p>
                         </div>
                     </div>
@@ -231,16 +309,14 @@ export default function FlowsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                            if (activeTab === 'local') executeGetLocal({ workspaceId });
-                            else fetchMetaFlows();
-                        }}
-                    >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-                        Refresh
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => executeSync({ workspaceId })}
+                            disabled={isSyncing}
+                        >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing || isFetching ? 'animate-spin' : ''}`} />
+                        Sync Meta
                     </Button>
                     <Button
                         className="gap-2 shadow-lg shadow-primary/20"
@@ -315,6 +391,42 @@ export default function FlowsPage() {
                                                         <Pencil className="w-3.5 h-3.5" />
                                                         Design
                                                     </Button>
+
+                                                    {!flow.flowId ? (
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-blue-500/5 text-blue-600 border-blue-500/20 hover:bg-blue-500/10"
+                                                            onClick={() => executePush({ workspaceId, id: flow.id })}
+                                                            disabled={isPushing}
+                                                        >
+                                                            <Globe className={`w-3.5 h-3.5 ${isPushing ? 'animate-spin' : ''}`} />
+                                                            Push
+                                                        </Button>
+                                                    ) : flow.status === 'DRAFT' ? (
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-green-500/5 text-green-600 border-green-500/20 hover:bg-green-500/10"
+                                                            onClick={() => executePublish({ workspaceId, id: flow.id })}
+                                                            disabled={isPublishing}
+                                                        >
+                                                            <CheckCircle2 className={`w-3.5 h-3.5 ${isPublishing ? 'animate-spin' : ''}`} />
+                                                            Publish
+                                                        </Button>
+                                                    ) : null}
+
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-purple-500/5 text-purple-600 border-purple-500/20 hover:bg-purple-500/10"
+                                                        onClick={() => executeClone({ workspaceId, id: flow.id })}
+                                                        disabled={isCloning}
+                                                    >
+                                                        <Copy className={`w-3.5 h-3.5 ${isCloning ? 'animate-spin' : ''}`} />
+                                                        Clone
+                                                    </Button>
+
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
