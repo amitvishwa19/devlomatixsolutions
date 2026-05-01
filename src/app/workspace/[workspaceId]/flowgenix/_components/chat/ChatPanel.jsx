@@ -207,21 +207,16 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
         const ctrl = new AbortController();
         abortRef.current = ctrl;
         try {
-            const reply = await runAgent(
+            const result = await getChatResponse({
                 config,
-                baseHistory,
-                text,
-                ragDocs,
-                (update) => {
-                    if (update.toolNote) setToolNotes((s) => [...s, update.toolNote]);
-                    if (update.toolCall) {
-                        traces.push(update.toolCall);
-                        setLiveTraces([...traces]);
-                    }
-                    if (update.partial) setStreaming(update.partial);
-                },
-                ctrl.signal,
-            );
+                history: baseHistory,
+                userInput: text,
+                ragDocs
+            });
+
+            if (!result.success) throw new Error(result.error);
+
+            const reply = result.response;
 
             const meta = traces.length ? JSON.stringify({ toolCalls: traces }) : undefined;
             const assistantMsg = {

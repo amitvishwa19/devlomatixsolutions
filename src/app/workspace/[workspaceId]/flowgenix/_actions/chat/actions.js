@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { runAgent } from "../../_lib/agent-runtime";
 
 export async function listThreads(workspaceId, userId) {
     try {
@@ -124,28 +125,26 @@ function generate(wordCount = 500) {
     return text.charAt(0).toUpperCase() + text.slice(1) + ".";
 }
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const API_BASE_URL = "https://openrouter.ai/api/v1";
-
-export async function getChatResponse({ messages, model, temperature, systemPrompt, hashtag }) {
-
+export async function getChatResponse({ config, history, userInput, ragDocs }) {
     try {
-
-        const res = generate(500)
-        console.log(res)
-
-        return { success: false, error: "Error fetching data from server" }
+        let fullText = "";
+        await runAgent(
+            config,
+            history,
+            userInput,
+            ragDocs,
+            (update) => {
+                if (update.partial) fullText = update.partial;
+            },
+            null
+        );
 
         return {
             success: true,
-            response: res,
-            model: 'data.model'
+            response: fullText,
         };
-
     } catch (err) {
-        console.error(`[FlowgenixAction] Error with model ${targetModel}:`, err.message);
-        lastError = err.message;
+        console.error(`[FlowgenixAction] Chat Error:`, err.message);
+        return { success: false, error: err.message };
     }
-
-    return { success: false, error: lastError || "All models failed" };
 }
