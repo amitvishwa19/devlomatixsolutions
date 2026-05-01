@@ -32,13 +32,19 @@ export const defaultConfig = {
   enableCalculator: true,
   models: [],
   defaultModelId: null,
-  enableRouter: true,
+  enableRouter: false,
   streamDelayMs: 18,
 };
 
 export const getDefaultModel = (c) => {
   const models = c?.models ?? [];
-  return models.find((m) => m.id === c?.defaultModelId) ?? models[0] ?? null;
+  const healthy = models.filter((m) => m.lastTestOk && m.apiKey);
+  
+  const explicit = healthy.find((m) => m.id === c?.defaultModelId);
+  if (explicit) return explicit;
+
+  if (healthy.length > 0) return healthy[0];
+  return models[0] ?? null;
 };
 
 // ---------- Config (singleton row) ----------

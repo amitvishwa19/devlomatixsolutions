@@ -5,13 +5,13 @@ import { z } from "zod";
 import { PROVIDER_PRESETS, getDefaultModel } from "./agent-storage";
 
 function resolveBaseURL(m) {
-  const configuredBaseURL = (m.baseURL || "").trim();
+  const configuredBaseURL = (m.baseURL || m.baseUrl || "").trim();
   if (configuredBaseURL) return configuredBaseURL;
 
   const providerBaseURL = (PROVIDER_PRESETS[m.provider]?.baseURL || "").trim();
   if (providerBaseURL) return providerBaseURL;
 
-  if (m.apiKey?.startsWith("AIza") || m.model?.startsWith("gemini")) {
+  if (m.apiKey?.startsWith("AIza") || (m.model || m.name || "").startsWith("gemini")) {
     return PROVIDER_PRESETS.Gemini.baseURL;
   }
 
@@ -21,7 +21,7 @@ function resolveBaseURL(m) {
 export function buildModelFrom(m, temperature, streaming = false) {
   return new ChatOpenAI({
     apiKey: m.apiKey || "sk-missing",
-    model: m.model,
+    model: m.model || m.name,
     temperature,
     streaming,
     configuration: { baseURL: resolveBaseURL(m), dangerouslyAllowBrowser: true },
@@ -42,7 +42,7 @@ export async function testModelConnection(m) {
         Authorization: `Bearer ${m.apiKey || "sk-missing"}`,
       },
       body: JSON.stringify({
-        model: m.model,
+        model: m.model || m.name,
         temperature: 0,
         max_tokens: 5,
         messages: [{ role: "user", content: "ok" }],
@@ -220,18 +220,22 @@ export async function runAgent(
     ...(cfg.enableWebSearch ? [webSearchTool] : []),
   ];
 
-  const defaultModel = getDefaultModel(cfg);
-  if (!defaultModel) throw new Error("No models configured. Add one in Setup.");
+  const executorModel = getDefaultModel(cfg);
+  if (!executorModel) throw new Error("No models configured. Add one in Setup.");
 
-  let executor = defaultModel;
+  let executor = executorModel;
   let prompt = userInput;
   if (cfg.enableRouter && cfg.models.length > 1) {
-    const fallbacks = cfg.models.filter((m) => m.id !== defaultModel.id);
-    onUpdate({ toolNote: `router: analyzing with ${defaultModel.label}…` });
-    const r = await routeInput(defaultModel, [defaultModel, ...fallbacks], userInput);
-    executor = r.chosen;
-    prompt = r.rewrittenInput;
-    onUpdate({ toolNote: `router → ${r.chosen.label} (${r.reason})` });
+    onUpdate({ toolNote: `router: selecting best model…` });
+    const candidates = cfg.models.filter(m => m.apiKey && m.lastTestOk);
+    if (candidates.length > 1) {
+      const r = await routeInput(executorModel, candidates, userInput);
+      executor = r.chosen;
+      prompt = r.rewrittenInput;
+      onUpdate({ toolNote: `router → ${executor.label} (${r.reason})` });
+    }
+  } else {
+    onUpdate({ toolNote: `engine: using ${executor.label}` });
   }
 
   let context = "";
@@ -257,6 +261,8 @@ export async function runAgent(
 
   const model = buildModelFrom(executor, cfg.temperature);
   const bound = tools.length ? model.bindTools(tools) : model;
+
+  onUpdate({ toolNote: `engine: invoking ${executor.label}…` });
 
   for (let step = 0; step < 5; step++) {
     checkAbort();
@@ -305,6 +311,10 @@ export async function runAgent(
     const calls = res.tool_calls || [];
 
     if (!calls.length) {
+      // If we already have content from the first invoke, we can use it as a fallback
+      const initialContent = typeof res.content === "string" ? res.content : JSON.stringify(res.content);
+      
+      // Try to stream for a better UI experience
       const streamModel = buildModelFrom(executor, cfg.temperature, true);
       let acc = "";
       try {
@@ -324,9 +334,11 @@ export async function runAgent(
           }
         }
       } catch (e) {
+        console.error("Streaming error:", e);
         if (e instanceof AgentAbortError) throw e;
       }
-      const text = acc || (typeof res.content === "string" ? res.content : JSON.stringify(res.content));
+      
+      const text = acc || initialContent || "_(no response)_";
       onUpdate({ partial: text });
       return text;
     }

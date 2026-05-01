@@ -53,7 +53,7 @@ export default function FlowgenixDashboard() {
 
     useEffect(() => {
         if (workspaceId && userId) {
-            //init();
+            init();
         }
     }, [workspaceId, userId]);
 
@@ -188,7 +188,7 @@ export default function FlowgenixDashboard() {
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 p-4">
                             <div className="rounded-xl border border-border bg-card/50 p-6 lg:col-span-2">
                                 <h2 className="mb-6 font-mono text-xs text-primary/80 flex items-center gap-2">
-                                    <span className="h-1 w-1 rounded-full bg-primary" /> Models & Routing
+                                    <span className="h-1 w-1 rounded-full bg-primary" /> Models (Auto-Optimized)
                                 </h2>
                                 <ModelsManager config={config} onChange={setConfig} userId={userId} />
                             </div>

@@ -89,7 +89,7 @@ export const ModelsManager = ({ config, onChange, userId }) => {
         updateModelLocal(id, patch);
         setSavingId(id);
         try {
-            // await upsertAgentModel(workspaceId, userId, merged);
+            await upsertAgentModel(workspaceId, userId, merged);
         } catch (e) {
             toast.error(`Save failed: ${e.message}`);
         } finally {
@@ -118,15 +118,14 @@ export const ModelsManager = ({ config, onChange, userId }) => {
             isActive: true
         };
         try {
-            // const saved = await upsertAgentModel(workspaceId, userId, m);
-            const saved = { ...m, id: `temp-${Date.now()}` };
+            const saved = await upsertAgentModel(workspaceId, userId, m);
             const next = {
                 ...config,
                 models: [...(config?.models || []), saved],
                 defaultModelId: config?.defaultModelId ?? saved.id,
             };
             if (!config?.defaultModelId) {
-                // await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId: saved.id });
+                await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId: saved.id });
             }
             onChange(next);
             setExpanded((s) => ({ ...s, [saved.id]: true }));
@@ -137,12 +136,12 @@ export const ModelsManager = ({ config, onChange, userId }) => {
 
     const removeModel = async (id) => {
         try {
-            // await deleteAgentModel(workspaceId, id);
+            await deleteAgentModel(workspaceId, id);
             const models = (config?.models || []).filter((m) => m.id !== id);
             let defaultModelId = config?.defaultModelId;
             if (defaultModelId === id) {
                 defaultModelId = models[0]?.id ?? null;
-                // await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId });
+                await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId });
             }
             onChange({ ...config, models, defaultModelId });
         } catch (e) {
@@ -152,7 +151,7 @@ export const ModelsManager = ({ config, onChange, userId }) => {
 
     const setDefault = async (id) => {
         try {
-            // await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId: id });
+            await saveAgentConfig(workspaceId, userId, { ...config, defaultModelId: id });
             onChange({ ...config, defaultModelId: id });
         } catch (e) {
             toast.error(e.message);
@@ -170,7 +169,6 @@ export const ModelsManager = ({ config, onChange, userId }) => {
         setTesting((s) => ({ ...s, [m.id]: false }));
         const caps = inferCapabilities(m);
         try {
-            /*
             await upsertAgentModel(workspaceId, userId, {
                 ...m,
                 lastTestOk: r.ok,
@@ -179,7 +177,7 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                 lastLatencyMs: r.latencyMs ?? null,
                 capabilities: caps
             });
-            */
+
             const models = (config?.models || []).map((x) =>
                 x.id === m.id
                     ? {
@@ -399,11 +397,11 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                                         ) : (
                                             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                         )}
-                                        <span className="font-mono text-xs truncate">{m.label}</span>
+                                        <span className="font-mono text-xs truncate">{m?.label}</span>
                                         <span className="font-mono text-[10px] text-muted-foreground truncate">
-                                            · {m.provider} · {m.model || "no-model"}
+                                            · {m?.provider} · {m?.model || m?.name || m?.label || "no-model"}
                                         </span>
-                                        {(m.capabilities || []).map((cap) => {
+                                        {(m?.capabilities || []).map((cap) => {
                                             const hit = CAP_META[cap];
                                             if (!hit) return null;
                                             const { icon: Icon, label } = hit;
@@ -429,17 +427,17 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                                         )}
                                         {isDefault && (
                                             <Badge className="font-mono text-[10px] gap-1 bg-primary text-primary-foreground border-transparent hover:bg-primary">
-                                                <Star className="h-3 w-3" /> default
+                                                <Star className="h-3 w-3" /> Default
                                             </Badge>
                                         )}
                                         {result?.ok && (
                                             <Badge className="font-mono text-[10px] gap-1 bg-primary text-primary-foreground border-transparent hover:bg-primary">
-                                                <CheckCircle2 className="h-3 w-3" /> ok
+                                                <CheckCircle2 className="h-3 w-3" /> Ok
                                             </Badge>
                                         )}
                                         {result && !result.ok && (
                                             <Badge variant="destructive" className="font-mono text-[10px] gap-1">
-                                                <XCircle className="h-3 w-3" /> failed
+                                                <XCircle className="h-3 w-3" /> Failed
                                             </Badge>
                                         )}
                                         {savingId === m.id && (
@@ -506,10 +504,10 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                                                     model
                                                 </Label>
                                                 <Input
-                                                    value={m.model || ""}
-                                                    onChange={(e) => updateModelLocal(m.id, { model: e.target.value })}
-                                                    onBlur={(e) => persistModel(m.id, { model: e.target.value })}
-                                                    placeholder="gpt-4o-mini"
+                                                    value={m.model || m.name || ""}
+                                                    onChange={(e) => updateModelLocal(m.id, { model: e.target.value, name: e.target.value })}
+                                                    onBlur={(e) => persistModel(m.id, { model: e.target.value, name: e.target.value })}
+                                                    placeholder="model name"
                                                     className="mt-1 h-8 font-mono text-xs"
                                                 />
                                             </div>
@@ -520,9 +518,9 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                                                 base_url
                                             </Label>
                                             <Input
-                                                value={m.baseURL || ""}
-                                                onChange={(e) => updateModelLocal(m.id, { baseURL: e.target.value })}
-                                                onBlur={(e) => persistModel(m.id, { baseURL: e.target.value })}
+                                                value={m.baseURL || m.baseUrl || ""}
+                                                onChange={(e) => updateModelLocal(m.id, { baseURL: e.target.value, baseUrl: e.target.value })}
+                                                onBlur={(e) => persistModel(m.id, { baseURL: e.target.value, baseUrl: e.target.value })}
                                                 placeholder="https://api.openai.com/v1"
                                                 className="mt-1 h-8 font-mono text-xs"
                                             />

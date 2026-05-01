@@ -53,10 +53,16 @@ export async function saveAgentConfig(workspaceId, userId, data) {
 
 export async function listAgentModels(workspaceId) {
     try {
-        return await db.agentModel.findMany({
+        const models = await db.agentModel.findMany({
             where: { workspaceId },
             orderBy: { createdAt: 'desc' }
         });
+        return models.map(m => ({
+            ...m,
+            model: m.name,
+            baseURL: m.baseUrl,
+            lastTestOk: true, // simplified for now as these aren't in main DB yet
+        }));
     } catch (error) {
         console.error("listAgentModels error:", error);
         return [];
