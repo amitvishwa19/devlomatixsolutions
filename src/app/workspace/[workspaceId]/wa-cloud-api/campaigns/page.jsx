@@ -15,7 +15,8 @@ import {
     Edit,
     Trash,
     Trash2,
-    BarChart3
+    BarChart3,
+    Copy
 } from
     'lucide-react';
 import {
@@ -81,6 +82,7 @@ export default function CampaignsPage() {
     const [groups, setGroups] = useState([]);
     const [selectedGroupIds, setSelectedGroupIds] = useState([]);
     const [recipientType, setRecipientType] = useState('contacts'); //'contacts'or'groups'
+    const [statusFilter, setStatusFilter] = useState('All Statuses');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -284,6 +286,38 @@ export default function CampaignsPage() {
 
     };
 
+    const handleCloneCampaign = (campaign) => {
+        const clonedName = `${campaign.name} (Copy)`;
+        setActiveCampaign(null); // Create as new
+        setEditDialogOpen(true);
+
+        // Setup form with campaign data
+        const mt = campaign.messageTemplate;
+        setEditForm({
+            name: clonedName,
+            status: 'DRAFT',
+            templateId: campaign.templateId || '',
+            template: mt?.text || mt?.interactive?.body || (typeof mt === 'string' ? mt : ''),
+            phone: '', // Don't copy recipients directly for safety
+            messageType: campaign.messageType || 'text',
+            scheduledAt: '',
+            mediaUrl: mt?.image?.url || mt?.document?.url || '',
+            intBody: mt?.interactive?.body || mt?.text || '',
+            intFooter: mt?.interactive?.footer || '',
+            intButton: mt?.interactive?.buttonText || 'Choose Option',
+            intSections: JSON.stringify(mt?.interactive?.sections || [{ title: 'Options', rows: [{ title: 'Option 1', id: 'opt1' }] }], null, 2)
+        });
+
+        // Fetch original recipients to pre-fill if desired
+        executeGetDetails({ workspaceId, id: campaign.id });
+    };
+
+    const filteredCampaigns = campaigns.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'All Statuses' || c.status === statusFilter.toUpperCase();
+        return matchesSearch && matchesStatus;
+    });
+
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-500">
             {/* Header Area */}
@@ -335,9 +369,9 @@ export default function CampaignsPage() {
                             <span className="font-medium text-sm">Avg. Success Rate</span>
                         </div>
                         <p className=" font-bold text-foreground text-xl">
-                            {campaigns.length > 0 ?
+                            {filteredCampaigns.length > 0 ?
                                 `${Math.round(
-                                    campaigns.reduce((sum, c) => sum + (c.successRate || 0), 0) / campaigns.length
+                                    filteredCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0) / filteredCampaigns.length
                                 )}%` :
                                 'N/A'}
                         </p>
@@ -362,13 +396,14 @@ export default function CampaignsPage() {
                         <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
                         <Input
                             type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search campaigns..."
                             className="w-full bg-muted/50 border-border text-foreground rounded-md pl-10" />
-
                     </div>
 
                     <div className="flex gap-2">
-                        <Select defaultValue="All Statuses">
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger className="bg-muted/50 border-border text-foreground rounded-md w-[140px]">
                                 <SelectValue placeholder="All Statuses" />
                             </SelectTrigger>
@@ -377,6 +412,8 @@ export default function CampaignsPage() {
                                 <SelectItem value="Running">Running</SelectItem>
                                 <SelectItem value="Scheduled">Scheduled</SelectItem>
                                 <SelectItem value="Draft">Draft</SelectItem>
+                                <SelectItem value="Completed">Completed</SelectItem>
+                                <SelectItem value="Paused">Paused</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -401,7 +438,7 @@ export default function CampaignsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50">
-                            {campaigns.map((c) =>
+                            {filteredCampaigns.map((c) =>
                                 <tr key={c.id} className="hover:bg-muted/20 transition-colors group">
                                     <td className="px-6 py-4 font-medium text-foreground">
                                         {c.name}
@@ -435,6 +472,13 @@ export default function CampaignsPage() {
                                                 className={`p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${c.status === 'RUNNING' ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
 
                                                 {c.status === 'RUNNING' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                            </button>
+                                            <button
+                                                onClick={() => handleCloneCampaign(c)}
+                                                className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                                title="Clone Campaign"
+                                            >
+                                                <Copy className="w-4 h-4" />
                                             </button>
                                             <button
                                                 onClick={() => openEditDialog(c)}

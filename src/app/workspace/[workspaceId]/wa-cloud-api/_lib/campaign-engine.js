@@ -90,12 +90,33 @@ export class CampaignEngine {
                     const phone = recipient.phone.replace(/\D/g, '');
                     
                     let result;
-                    if (campaign.templateId) {
-                        // Send Template
-                        const components = []; // Logic to build components from variables would go here if needed
-                        result = await cloudApi.sendTemplateMessage(credential, phone, campaign.template.templateName);
+                    if (campaign.templateId && campaign.template) {
+                        // Send Template with variables
+                        const parameters = Object.keys(variables)
+                            .sort((a, b) => {
+                                const numA = parseInt(a.replace('v', ''));
+                                const numB = parseInt(b.replace('v', ''));
+                                return numA - numB;
+                            })
+                            .map(key => ({
+                                type: 'text',
+                                text: String(variables[key])
+                            }));
+
+                        const components = parameters.length > 0 ? [{
+                            type: 'body',
+                            parameters
+                        }] : [];
+
+                        result = await cloudApi.sendTemplateMessage(
+                            credential, 
+                            phone, 
+                            campaign.template.templateName,
+                            campaign.template.language || 'en_US',
+                            components
+                        );
                     } else {
-                        // Send Text
+                        // Send Text (Custom Message)
                         result = await cloudApi.sendTextMessage(credential, phone, messageText);
                     }
 
