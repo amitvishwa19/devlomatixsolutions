@@ -311,6 +311,13 @@ export default function ContactsPage() {
         if (userId && workspaceId) {
             fetchInitialData();
         }
+
+        const handleAccountSwitch = () => {
+            fetchInitialData(true);
+        };
+
+        window.addEventListener('wa-account-switched', handleAccountSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleAccountSwitch);
     }, [userId, workspaceId]);
 
     const fetchInitialData = async (silent = false) => {

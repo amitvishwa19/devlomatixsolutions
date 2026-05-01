@@ -30,6 +30,13 @@ export default function DashboardStats() {
         if (workspaceId) {
             execute({ workspaceId });
         }
+
+        const handleAccountSwitch = () => {
+            execute({ workspaceId });
+        };
+
+        window.addEventListener('wa-account-switched', handleAccountSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleAccountSwitch);
     }, [workspaceId, execute]);
 
     if (isLoading) {

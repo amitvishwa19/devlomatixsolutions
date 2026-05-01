@@ -4,6 +4,18 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 
+const formatPhoneNumber = (phone) => {
+    // Remove all non-numeric characters
+    let cleaned = phone.replace(/\D/g, '');
+    
+    // If 10 digits, add 91 prefix
+    if (cleaned.length === 10) {
+        cleaned = '91' + cleaned;
+    }
+    
+    return cleaned;
+};
+
 const ImportContactsSchema = z.object({
     contactsData: z.array(z.any()),
     workspaceId: z.string(),
@@ -17,56 +29,40 @@ const handler = async (data) => {
         let successCount = 0;
         let errorCount = 0;
 
-        // Fetch existing categories
-        const existingCategories = await db.category.findMany({
-            where: { workspaceId, type: 'CONTACT' }
-        });
-
         for (const record of contactsData) {
             try {
                 const name = record.name || 'Unnamed Contact';
-                const phone = (record.phone || record.number || '').replace(/[^\d+]/g, '');
+                const rawPhone = (record.phone || record.number || '');
+                const cleanPhone = formatPhoneNumber(rawPhone);
 
-                if (!phone) {
+                // Validation: Only import if it's a valid 12-digit number
+                if (cleanPhone.length !== 12) {
                     errorCount++;
                     continue;
                 }
 
                 const email = record.email || null;
-                const categoryName = record.category || record.group || null;
+                const category = record.category || record.group || null;
                 const tagsRaw = record.tags || '';
-                const tags = Array.isArray(tagsRaw) ? tagsRaw : (tagsRaw ? tagsRaw.split('|').map(t => t.trim()).filter(Boolean) : []);
-
-                let categoryId = null;
-                if (categoryName) {
-                    let cat = existingCategories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
-                    if (!cat) {
-                        const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
-                        cat = await db.category.create({
-                            data: { name: categoryName, slug, workspaceId, type: 'CONTACT' }
-                        });
-                        existingCategories.push(cat);
-                    }
-                    categoryId = cat.id;
-                }
+                const tags = Array.isArray(tagsRaw) ? tagsRaw : (tagsRaw ? String(tagsRaw).split('|').map(t => t.trim()).filter(Boolean) : []);
 
                 await db.contact.upsert({
                     where: {
-                        workspaceId_phone: { workspaceId, phone }
+                        workspaceId_phone: { workspaceId, phone: cleanPhone }
                     },
                     update: {
                         name,
                         email,
-                        categoryId,
+                        category,
                         tags: { set: tags }
                     },
                     create: {
                         name,
-                        phone,
+                        phone: cleanPhone,
                         email,
                         userId,
                         workspaceId,
-                        categoryId,
+                        category,
                         tags
                     }
                 });

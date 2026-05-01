@@ -89,6 +89,15 @@ export default function BulkSenderPage() {
         fetchTemplates();
         fetchContacts();
         fetchGroups();
+
+        const handleAccountSwitch = () => {
+            fetchTemplates();
+            fetchContacts();
+            fetchGroups();
+        };
+
+        window.addEventListener('wa-account-switched', handleAccountSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleAccountSwitch);
     }, [workspaceId]);
 
     const { execute: executeSaveCampaign, isLoading: isSending } = useAction(saveCampaign, {

@@ -153,7 +153,11 @@ const handler = async (data) => {
                     fromMe: true,
                     timestamp: BigInt(Math.floor(Date.now() / 1000)),
                     status: "SENT",
-                    metadata: { type: msgType, originalPayload: data }
+                    metadata: { 
+                        type: msgType, 
+                        originalPayload: data,
+                        phone_number_id: String(cloudCredentials?.phoneNumberId || cloudCredentials?.phone_number_id || "")
+                    }
                 }
             });
         } catch (dbError) {

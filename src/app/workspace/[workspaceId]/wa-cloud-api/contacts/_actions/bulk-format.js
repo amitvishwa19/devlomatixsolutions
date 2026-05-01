@@ -25,35 +25,19 @@ const handler = async (data) => {
 
         // Perform updates
         const updates = contacts.map(async (contact) => {
-            let phone = contact.phone.trim();
+            // Remove ALL non-numeric characters (including +)
+            let phone = contact.phone.replace(/\D/g, '');
             
-            // 1. Basic cleaning: remove spaces, hyphens, and everything except digits and '+'
-            phone = phone.replace(/[^\d+]/g, '');
-
-            // 2. Formatting Logic
-            let newPhone = phone;
-
-            if (phone.startsWith('+')) {
-                // Already has a country code plus, assume it's valid
-                return;
-            } else if (phone.length === 10) {
-                // Standard 10-digit Indian number
-                newPhone = `+91${phone}`;
-            } else if (phone.length === 12 && phone.startsWith('91')) {
-                // 12-digit starting with 91, just missing the '+'
-                newPhone = `+${phone}`;
-            } else if (phone.length === 11 && phone.startsWith('0')) {
-                // 11-digit starting with 0, replace 0 with +91
-                newPhone = `+91${phone.substring(1)}`;
-            } else {
-                // Unknown format, skip
-                return;
+            // If 10 digits, add 91 prefix
+            if (phone.length === 10) {
+                phone = '91' + phone;
             }
 
-            if (newPhone !== contact.phone) {
+            // Only update if it becomes a valid 12-digit number and is different from original
+            if (phone.length === 12 && phone !== contact.phone) {
                 await db.contact.update({
                     where: { id: contact.id },
-                    data: { phone: newPhone }
+                    data: { phone: phone }
                 });
                 formattedCount++;
             }
@@ -63,7 +47,7 @@ const handler = async (data) => {
 
         return {
             data: {
-                message: `Successfully formatted ${formattedCount} contacts.`,
+                message: `Successfully formatted ${formattedCount} contacts to strict 12-digit format.`,
                 count: formattedCount
             }
         };

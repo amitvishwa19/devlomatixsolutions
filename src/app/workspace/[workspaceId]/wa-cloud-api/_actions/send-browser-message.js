@@ -67,7 +67,8 @@ const handler = async (data) => {
                 status: 'SENT',
                 metadata: { 
                     provider: 'WHATSAPP_CLOUD',
-                    messageId: result.data?.messages?.[0]?.id 
+                    messageId: result.data?.messages?.[0]?.id,
+                    phone_number_id: String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "")
                 }
             }
         });

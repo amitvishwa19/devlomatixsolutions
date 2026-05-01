@@ -138,12 +138,14 @@ export default function TemplatePage() {
             fetchMetadata();
         }
 
-        const handleSwitch = () => {
+        const handleAccountSwitch = () => {
             fetchTemplates();
+            fetchContacts();
             fetchMetadata();
         };
-        window.addEventListener('wa-account-switched', handleSwitch);
-        return () => window.removeEventListener('wa-account-switched', handleSwitch);
+
+        window.addEventListener('wa-account-switched', handleAccountSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleAccountSwitch);
     }, [workspaceId]);
 
     const { execute: executeSync } = useAction(syncTemplates, {

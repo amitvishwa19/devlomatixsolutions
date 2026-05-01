@@ -145,12 +145,13 @@ export default function ContactDialog({
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-muted-foreground/60 px-1">Mobile</Label>
                                 <Input
-                                    placeholder="+123456789"
+                                    placeholder="e.g. 9876543210"
                                     value={contactForm.phone}
                                     onChange={e => setContactForm({ ...contactForm, phone: e.target.value })}
                                     required
                                     className="bg-muted/20 border focus:border-primary/40 transition-colors"
                                 />
+                                <p className="text-[9px] text-muted-foreground/50 px-1 italic">Will be cleaned to 12 digits (e.g. 10 digits becomes 91xxxxxxxxxx)</p>
                                 {fieldErrors?.phone && <p className="text-[10px] text-destructive px-1">{fieldErrors.phone[0]}</p>}
                             </div>
                             <div className="space-y-2">
