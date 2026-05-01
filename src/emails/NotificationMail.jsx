@@ -28,7 +28,7 @@ export default function NotificationMail({ verificationCode = "596853" }) {
                             <Text style={mainText}>
                                 Thanks for starting the new AWS account creation process. We
                                 want to make sure it's really you. Please enter the following
-                                verification code when prompted. If you don&apos;t want to
+                                verification code when prompted. If you don't want to
                                 create an account, you can ignore this message.
                             </Text>
                             <Section style={verificationSection}>
