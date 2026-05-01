@@ -18,10 +18,11 @@ const getBaseDb = () => {
     
     // Self-healing: If the client was initialized before the new models or fields existed
     // We check for some new models/fields to trigger re-initialization in development
-    const SCHEMA_VERSION = 26; // Increment this to force a re-init in dev
+    const SCHEMA_VERSION = 30; // Increment this to force a re-init in dev
     const isStale = process.env.NODE_ENV !== 'production' && (
         !globalThis.prismaGlobal.agentModel || 
         !globalThis.prismaGlobal.contactGroup ||
+        !globalThis.prismaGlobal.whatsAppFlow ||
         !globalThis.prismaGlobal.role || 
         !globalThis.prismaGlobal.permission ||
         globalThis.prismaGlobal._schemaVersion !== SCHEMA_VERSION
@@ -29,8 +30,16 @@ const getBaseDb = () => {
 
     if (isStale) {
         console.log(`🔄 Stale Prisma Client detected (ver ${globalThis.prismaGlobal._schemaVersion || 0} vs ${SCHEMA_VERSION}). Re-initializing...`);
+        if (globalThis.prismaGlobal && !globalThis.prismaGlobal.whatsAppFlow) {
+            console.log("⚠️ whatsAppFlow model missing in current client!");
+            console.log("🔍 Available models:", Object.keys(globalThis.prismaGlobal).filter(k => !k.startsWith('_')));
+        }
+        
         globalThis.prismaGlobal = prismaClientSingleton();
         globalThis.prismaGlobal._schemaVersion = SCHEMA_VERSION;
+        
+        console.log("✅ Prisma Client re-initialized.");
+        console.dir(Object.keys(globalThis.prismaGlobal).filter(k => !k.startsWith('_')), { depth: null });
     }
     
     return globalThis.prismaGlobal;

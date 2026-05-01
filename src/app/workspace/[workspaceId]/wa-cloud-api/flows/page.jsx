@@ -16,7 +16,12 @@ import {
     Info,
     AlertCircle,
     CheckCircle2,
-    Clock
+    Clock,
+    Layout,
+    ArrowLeft,
+    Eye,
+    Globe,
+    FileCode
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,10 +31,19 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useAction } from "@/hooks/use-action";
 import { testMetaApi } from "../settings/_actions/test-meta-api";
 import { getDecryptedCredentials } from "../settings/_actions/get-decrypted-credentials";
+
+// Local Actions
+import { getFlows } from "./_actions/get-flows";
+import { saveFlow } from "./_actions/save-flow";
+import { deleteFlow } from "./_actions/delete-flow";
+
+// Components
+import FlowBuilder from "./_components/FlowBuilder";
 
 export default function FlowsPage() {
     const params = useParams();
@@ -39,25 +53,54 @@ export default function FlowsPage() {
     const [metaCloudAccessToken, setMetaCloudAccessToken] = useState('');
     const [wabaId, setWabaId] = useState('');
 
-    const [flows, setFlows] = useState([]);
+    const [localFlows, setLocalFlows] = useState([]);
+    const [metaFlows, setMetaFlows] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [view, setView] = useState('list'); // list | builder
+    const [activeTab, setActiveTab] = useState('local'); // local | meta
 
     const [selectedFlow, setSelectedFlow] = useState(null);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
-    const [flowName, setFlowName] = useState('');
+    const [newFlowName, setNewFlowName] = useState('');
+
+    // --- Actions ---
+
+    const { execute: executeGetLocal } = useAction(getFlows, {
+        onSuccess: (data) => setLocalFlows(data.flows || []),
+        onError: (err) => toast.error(err)
+    });
+
+    const { execute: executeSaveLocal } = useAction(saveFlow, {
+        onSuccess: (data) => {
+            toast.success(selectedFlow ? "Flow updated" : "Flow created");
+            setIsCreateModalOpen(false);
+            executeGetLocal({ workspaceId });
+            if (!selectedFlow) {
+                // If it was a new flow, open builder
+                handleEditLocal(data.flow);
+            }
+        },
+        onError: (err) => toast.error(err),
+        onSettled: () => setIsUpdating(false)
+    });
+
+    const { execute: executeDeleteLocal } = useAction(deleteFlow, {
+        onSuccess: () => {
+            toast.success("Flow deleted");
+            executeGetLocal({ workspaceId });
+        }
+    });
 
     const { execute: executeGetDecrypted } = useAction(getDecryptedCredentials, {
         onSuccess: (data) => {
             const token = data?.accessToken || data.data?.accessToken;
             const wid = data?.wabaId ? data.wabaId.toString() : data.data?.wabaId?.toString();
-
             if (token) setMetaCloudAccessToken(token);
             if (wid) {
                 setWabaId(wid);
-                fetchFlows(token, wid);
+                fetchMetaFlows(token, wid);
             }
         }
     });
@@ -65,40 +108,28 @@ export default function FlowsPage() {
     const { execute: executeApi } = useAction(testMetaApi, {
         onSuccess: (data, context) => {
             if (data.success) {
-                if (context.type === 'flows_list') {
-                    setFlows(data.apiData.data || []);
-                } else if (context.type === 'flow_update') {
-                    toast.success("Flow updated successfully");
-                    setIsEditModalOpen(false);
-                    fetchFlows();
-                } else if (context.type === 'flow_clone') {
-                    toast.success("Flow cloned successfully");
-                    setIsCloneModalOpen(false);
-                    fetchFlows();
+                if (context.type === 'meta_flows_list') {
+                    setMetaFlows(data.apiData.data || []);
                 }
-            } else {
-                toast.error(data.error || "Operation failed");
             }
             setIsFetching(false);
-            setIsUpdating(false);
-        },
-        onError: (error) => {
-            toast.error(error);
-            setIsFetching(false);
-            setIsUpdating(false);
         }
     });
 
+    // --- Effects ---
+
     useEffect(() => {
         if (workspaceId) {
+            executeGetLocal({ workspaceId });
             executeGetDecrypted({ workspaceId });
         }
     }, [workspaceId]);
 
-    const fetchFlows = (tokenOverride, widOverride) => {
+    // --- Handlers ---
+
+    const fetchMetaFlows = (tokenOverride, widOverride) => {
         const activeToken = tokenOverride || metaCloudAccessToken;
         const activeWid = widOverride || wabaId;
-
         if (!activeToken || !activeWid) return;
 
         setIsFetching(true);
@@ -106,40 +137,41 @@ export default function FlowsPage() {
             workspaceId,
             url: `https://graph.facebook.com/${metaCloudVersion}/${activeWid}/flows?fields=id,name,status,categories,preview_url`,
             headers: { 'Authorization': `Bearer ${activeToken}` }
-        }, { type: 'flows_list' });
+        }, { type: 'meta_flows_list' });
     };
 
-    const handleUpdateFlow = () => {
-        if (!selectedFlow || !flowName.trim()) return;
+    const handleCreateLocal = () => {
+        if (!newFlowName.trim()) return;
         setIsUpdating(true);
-        executeApi({
+        executeSaveLocal({
             workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${selectedFlow.id}`,
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken}` },
-            body: { name: flowName.trim() }
-        }, { type: 'flow_update' });
+            name: newFlowName.trim(),
+            screens: []
+        });
     };
 
-    const handleCloneFlow = () => {
-        if (!selectedFlow || !flowName.trim()) return;
-        setIsUpdating(true);
-        executeApi({
-            workspaceId,
-            url: `https://graph.facebook.com/${metaCloudVersion}/${wabaId}/flows`,
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${metaCloudAccessToken}` },
-            body: {
-                name: flowName.trim(),
-                clone_flow_id: selectedFlow.id
+    const handleEditLocal = (flow) => {
+        setSelectedFlow(flow);
+        setView('builder');
+    };
+
+    const handleSaveFromBuilder = (screens, definitionJson) => {
+        if (!selectedFlow) return;
+        toast.promise(
+            executeSaveLocal({
+                workspaceId,
+                id: selectedFlow.id,
+                name: selectedFlow.name,
+                screens,
+                definition: JSON.parse(definitionJson)
+            }),
+            {
+                loading: 'Saving flow definitions...',
+                success: 'Flow saved successfully',
+                error: 'Failed to save flow'
             }
-        }, { type: 'flow_clone' });
+        );
     };
-
-    const filteredFlows = flows.filter(flow =>
-        flow.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        flow.id?.includes(searchTerm)
-    );
 
     const getStatusBadge = (status) => {
         switch (status?.toUpperCase()) {
@@ -154,188 +186,214 @@ export default function FlowsPage() {
         }
     };
 
+    if (view === 'builder') {
+        return (
+            <div className="flex flex-col h-full bg-background animate-in slide-in-from-right duration-500">
+                <div className="flex items-center justify-between p-4 border-b bg-card/50">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" onClick={() => setView('list')} className="rounded-full">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Button>
+                        <div>
+                            <h2 className="text-sm font-bold">{selectedFlow?.name}</h2>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Visual Flow Designer</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-1 overflow-hidden p-4">
+                    <FlowBuilder 
+                        initialScreens={selectedFlow?.screens || []} 
+                        onSave={handleSaveFromBuilder}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    const currentFlows = activeTab === 'local' ? localFlows : metaFlows;
+    const filteredFlows = currentFlows.filter(flow =>
+        flow.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        flow.id?.includes(searchTerm)
+    );
+
     return (
         <div className="flex flex-col h-full bg-background animate-in fade-in duration-500">
-
-            {/* Header Section */}
+            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between p-6 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-20 gap-4">
                 <div className="flex items-center gap-5">
                     <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
                         <Layers className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-semibold  text-foreground">WhatsApp Flows</h1>
-                        <p className="text-xs text-muted-foreground">Manage and create interactive form-based flows for your chats.</p>
+                        <h1 className="text-xl font-semibold text-foreground">WhatsApp Flows</h1>
+                        <p className="text-xs text-muted-foreground">Build and manage multi-screen interactive form experiences.</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Button
                         variant="outline"
-                        size="sm" className=" "
-                        onClick={() => fetchFlows()}
+                        size="sm"
+                        onClick={() => {
+                            if (activeTab === 'local') executeGetLocal({ workspaceId });
+                            else fetchMetaFlows();
+                        }}
                     >
-                        <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-                        Refresh Flows
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+                        Refresh
                     </Button>
                     <Button
-                        className=" gap-2 shadow-lg shadow-primary/20"
-                        onClick={() => window.open(`https://business.facebook.com/wa/manage/flows/`, '_blank')}
+                        className="gap-2 shadow-lg shadow-primary/20"
+                        onClick={() => setIsCreateModalOpen(true)}
                     >
                         <Plus className="w-4 h-4" />
-                        Create Flow
+                        Design New Flow
                     </Button>
                 </div>
             </div>
 
-            <ScrollArea className="flex-1 p-6">
-                <div className="w-full space-y-4">
-                    {/* Search Bar */}
-                    <div className="relative max-w-md">
+            <div className="flex-1 flex flex-col p-6 space-y-6 overflow-hidden">
+                {/* Search and Tabs */}
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="relative w-full md:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                         <Input
-                            placeholder="Search flows by name or ID..."
+                            placeholder="Search flows..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 h-11 bg-card shadow-sm border-muted-foreground/10 rounded-xl"
                         />
                     </div>
 
-                    {isFetching && flows.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 bg-card/50 border border-dashed rounded-3xl gap-4">
-                            <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-                            <p className="text-sm font-medium text-muted-foreground">Fetching your flows from Meta...</p>
-                        </div>
-                    ) : filteredFlows.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredFlows.map((flow) => (
-                                <Card key={flow.id} className="group border shadow-sm hover:border-primary/20 transition-all overflow-hidden bg-card/50 backdrop-blur-sm">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+                        <TabsList className="bg-muted/30 p-1 h-11 rounded-xl">
+                            <TabsTrigger value="local" className="rounded-lg gap-2 text-xs font-bold px-5">
+                                <Layout className="w-3.5 h-3.5" />
+                                Local Drafts
+                            </TabsTrigger>
+                            <TabsTrigger value="meta" className="rounded-lg gap-2 text-xs font-bold px-5">
+                                <Globe className="w-3.5 h-3.5" />
+                                Synced from Meta
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+
+                {/* Content */}
+                <ScrollArea className="flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+                        {filteredFlows.length > 0 ? (
+                            filteredFlows.map((flow) => (
+                                <Card key={flow.id} className="group border shadow-sm hover:border-primary/20 transition-all overflow-hidden bg-card/50 backdrop-blur-sm relative">
                                     <CardHeader className="pb-4">
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1 min-w-0">
                                                 <CardTitle className="text-base font-bold truncate group-hover:text-primary transition-colors">{flow.name}</CardTitle>
-                                                <CardDescription className="text-[10px] font-mono uppercase text-smer opacity-60">ID: {flow.id}</CardDescription>
+                                                <CardDescription className="text-[10px] font-mono uppercase opacity-60">
+                                                    {activeTab === 'local' ? `Local ID: ${flow.id.slice(-8)}` : `Meta ID: ${flow.id}`}
+                                                </CardDescription>
                                             </div>
                                             {getStatusBadge(flow.status)}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
-                                        <div className="flex flex-wrap gap-1.5">
+                                        <div className="flex flex-wrap gap-1.5 min-h-[20px]">
                                             {flow.categories?.map((cat) => (
                                                 <Badge key={cat} variant="outline" className="text-[9px] font-bold py-0 h-5 bg-muted/20 border-muted-foreground/10">{cat}</Badge>
                                             ))}
                                         </div>
 
                                         <div className="flex items-center gap-2 pt-2 border-t border-border/40">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                                                onClick={() => {
-                                                    setSelectedFlow(flow);
-                                                    setFlowName(flow.name);
-                                                    setIsEditModalOpen(true);
-                                                }}
-                                            >
-                                                <Pencil className="w-3.5 h-3.5" />
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                                                onClick={() => {
-                                                    setSelectedFlow(flow);
-                                                    setFlowName(`${flow.name} (Copy)`);
-                                                    setIsCloneModalOpen(true);
-                                                }}
-                                            >
-                                                <Copy className="w-3.5 h-3.5" />
-                                                Clone
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                                                onClick={() => window.open(flow.preview_url, '_blank')}
-                                                disabled={!flow.preview_url}
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                            </Button>
+                                            {activeTab === 'local' ? (
+                                                <>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-primary hover:bg-primary/5 transition-all"
+                                                        onClick={() => handleEditLocal(flow)}
+                                                    >
+                                                        <Pencil className="w-3.5 h-3.5" />
+                                                        Design
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-red-500/5 hover:text-red-500 transition-all"
+                                                        onClick={() => executeDeleteLocal({ workspaceId, id: flow.id })}
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
+                                                        onClick={() => window.open(`https://business.facebook.com/wa/manage/flows/${flow.id}`, '_blank')}
+                                                    >
+                                                        <ExternalLink className="w-3.5 h-3.5" />
+                                                        Open in Meta
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
+                                                        onClick={() => window.open(flow.preview_url, '_blank')}
+                                                        disabled={!flow.preview_url}
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-24 bg-card border border-dashed rounded-3xl gap-4 text-center">
-                            <div className="p-4 bg-primary/5 rounded-full border border-primary/10">
-                                <Layers className="w-8 h-8 text-primary/40" />
+                            ))
+                        ) : (
+                            <div className="col-span-full flex flex-col items-center justify-center py-24 bg-card border border-dashed rounded-3xl gap-4 text-center">
+                                <div className="p-4 bg-primary/5 rounded-full border border-primary/10 text-primary/40">
+                                    {activeTab === 'local' ? <Layout className="w-8 h-8" /> : <Globe className="w-8 h-8" />}
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-bold text-foreground">
+                                        {activeTab === 'local' ? "No local drafts" : "No flows found on Meta"}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                                        {activeTab === 'local' 
+                                            ? "Click 'Design New Flow' to start building your interactive experience."
+                                            : "Make sure your WhatsApp credentials are correctly configured in Settings."}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                <h3 className="text-lg font-bold text-foreground">No flows found</h3>
-                                <p className="text-sm text-muted-foreground max-w-xs mx-auto">Click "Create Flow" to build your first interactive WhatsApp experience.</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </ScrollArea>
+                        )}
+                    </div>
+                </ScrollArea>
+            </div>
 
-            {/* Edit Modal */}
-            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+            {/* Create Local Flow Modal */}
+            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                 <DialogContent className="sm:max-w-[425px] rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle>Edit Flow Metadata</DialogTitle>
-                        <DialogDescription>Update the name of your WhatsApp flow.</DialogDescription>
+                        <DialogTitle>New Flow Draft</DialogTitle>
+                        <DialogDescription>Give your flow a name to start designing screens.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label>Flow Name</Label>
                             <Input
-                                value={flowName}
-                                onChange={(e) => setFlowName(e.target.value)}
-                                placeholder="Enter flow name..."
-                                className="h-11 rounded-xl"
-                            />
-                        </div>
-                        <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex gap-3 items-start">
-                            <Info className="w-4 h-4 text-blue-600 mt-0.5" />
-                            <p className="text-[11px] text-blue-600 font-medium">Note: You can only update the flow name here. To edit the flow screens and logic, use the Meta Flow Builder.</p>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleUpdateFlow} disabled={isUpdating || !flowName.trim()} className="rounded-xl gap-2">
-                            {isUpdating && <RefreshCw className="w-4 h-4 animate-spin" />}
-                            Update Flow
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Clone Modal */}
-            <Dialog open={isCloneModalOpen} onOpenChange={setIsCloneModalOpen}>
-                <DialogContent className="sm:max-w-[425px] rounded-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Clone Flow</DialogTitle>
-                        <DialogDescription>Create a duplicate of this flow with a new name.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>New Flow Name</Label>
-                            <Input
-                                value={flowName}
-                                onChange={(e) => setFlowName(e.target.value)}
-                                placeholder="Enter new flow name..."
+                                value={newFlowName}
+                                onChange={(e) => setNewFlowName(e.target.value)}
+                                placeholder="e.g., Customer Feedback Form"
                                 className="h-11 rounded-xl"
                             />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsCloneModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleCloneFlow} disabled={isUpdating || !flowName.trim()} className="rounded-xl gap-2">
-                            {isUpdating && <RefreshCw className="w-4 h-4 animate-spin" />}
-                            Clone Flow
+                        <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleCreateLocal} disabled={isUpdating || !newFlowName.trim()} className="rounded-xl gap-2 px-6">
+                            {isUpdating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                            Create Draft
                         </Button>
                     </DialogFooter>
                 </DialogContent>
