@@ -207,16 +207,49 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
         const ctrl = new AbortController();
         abortRef.current = ctrl;
         try {
-            const result = await getChatResponse({
-                config,
-                history: baseHistory,
-                userInput: text,
-                ragDocs
+            const response = await fetch("/api/flowgenix/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ config, history: baseHistory, userInput: text, ragDocs }),
+                signal: ctrl.signal,
             });
 
-            if (!result.success) throw new Error(result.error);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({ error: "Server error" }));
+                throw new Error(err.error || "Network error");
+            }
 
-            const reply = result.response;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullReply = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split("\n").filter(Boolean);
+
+                for (const line of lines) {
+                    try {
+                        const update = JSON.parse(line);
+                        if (update.error) throw new Error(update.error);
+                        
+                        if (update.toolNote) setToolNotes((s) => [...s, update.toolNote]);
+                        if (update.toolCall) {
+                            traces.push(update.toolCall);
+                            setLiveTraces([...traces]);
+                        }
+                        if (update.partial) {
+                            setStreaming(update.partial);
+                            fullReply = update.partial;
+                        }
+                    } catch (e) {
+                        console.error("Stream parse error:", e);
+                    }
+                }
+            }
+            const reply = fullReply;
 
             const meta = traces.length ? JSON.stringify({ toolCalls: traces }) : undefined;
             const assistantMsg = {
