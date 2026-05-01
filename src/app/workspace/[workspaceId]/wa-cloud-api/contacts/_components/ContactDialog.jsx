@@ -12,6 +12,13 @@ import {
     DialogTitle,
     DialogFooter
 } from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Loader2, Tag, X } from 'lucide-react';
 import { useAction } from '@/hooks/use-action';
 import { saveContact } from '../_actions/save-contact';
@@ -33,23 +40,21 @@ export default function ContactDialog({
         email: '',
         category: '',
         tags: [],
-        info: ''
+        info: '',
+        type: 'CONTACT'
     });
 
     const [tagInput, setTagInput] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
 
-    const { execute: executeSave } = useAction(saveContact, {
+    const { execute: executeSave, isLoading, fieldErrors } = useAction(saveContact, {
         onSuccess: () => {
             toast.success(activeContact ? "Contact updated" : "Contact created", { id: 'save-contact' });
-            setIsSaving(false);
             onSave();
             onOpenChange(false);
         },
         onError: (err) => {
             const errorMsg = typeof err === 'string' ? err : (err?.message || "Failed to save contact");
             toast.error(errorMsg, { id: 'save-contact' });
-            setIsSaving(false);
         }
     });
 
@@ -61,7 +66,8 @@ export default function ContactDialog({
                 email: activeContact.email || '',
                 category: activeContact.category || '',
                 tags: activeContact.tags || [],
-                info: activeContact.info || ''
+                info: activeContact.info || '',
+                type: activeContact.type || 'CONTACT'
             });
         } else {
             setContactForm({
@@ -70,7 +76,8 @@ export default function ContactDialog({
                 email: '',
                 category: '',
                 tags: [],
-                info: ''
+                info: '',
+                type: 'CONTACT'
             });
         }
         setTagInput('');
@@ -92,12 +99,14 @@ export default function ContactDialog({
     };
 
     const handleSave = async (e) => {
-        e.preventDefault();
-        setIsSaving(true);
+        if (e) e.preventDefault();
+        if (isLoading) return;
+
         toast.loading(activeContact ? "Updating contact..." : "Creating contact...", { id: 'save-contact' });
+
         executeSave({
             ...contactForm,
-            categoryId: contactForm.category, // Map 'category' back to 'categoryId' for the existing server action
+            category: contactForm.category,
             id: activeContact?.id,
             userId,
             workspaceId
@@ -117,7 +126,7 @@ export default function ContactDialog({
                 <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 pt-2 space-y-6 custom-scrollbar">
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label className="text-xs font-bold   text-muted-foreground/60 px-1">Identity</Label>
+                            <Label className="text-xs font-bold text-muted-foreground/60 px-1">Identity</Label>
                             <Input
                                 placeholder="Full Name"
                                 value={contactForm.name}
@@ -125,6 +134,7 @@ export default function ContactDialog({
                                 required
                                 className="bg-muted/20 border focus:border-primary/40 transition-colors"
                             />
+                            {fieldErrors?.name && <p className="text-[10px] text-destructive px-1">{fieldErrors.name[0]}</p>}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -136,6 +146,7 @@ export default function ContactDialog({
                                     required
                                     className="bg-muted/20 border focus:border-primary/40 transition-colors"
                                 />
+                                {fieldErrors?.phone && <p className="text-[10px] text-destructive px-1">{fieldErrors.phone[0]}</p>}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-muted-foreground/60 px-1">Email (Optional)</Label>
@@ -145,13 +156,14 @@ export default function ContactDialog({
                                     onChange={e => setContactForm({ ...contactForm, email: e.target.value })}
                                     className="bg-muted/20 border focus:border-primary/40 transition-colors"
                                 />
+                                {fieldErrors?.email && <p className="text-[10px] text-destructive px-1">{fieldErrors.email[0]}</p>}
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <Label className="text-xs font-bold   text-muted-foreground/60 px-1">Tags</Label>
-                        <div className="flex flex-wrap gap-2 p-2 min-h-[44px] bg-muted/10 rounded-lg border border-border/40 focus-within:border-primary/50 transition-colors">
+                        <Label className="text-xs font-bold text-muted-foreground/60 px-1">Tags</Label>
+                        <div className="flex flex-wrap gap-2 p-2 bg-muted/20 rounded-lg border focus-within:border-primary/40 transition-colors">
                             {contactForm.tags.map(tag => (
                                 <Badge key={tag} variant="secondary" className="gap-1 pl-2 pr-1 py-1 bg-primary/10 text-primary border-none hover:bg-primary/20">
                                     {tag}
@@ -163,43 +175,78 @@ export default function ContactDialog({
                                 value={tagInput}
                                 onChange={e => setTagInput(e.target.value)}
                                 onKeyDown={handleAddTag}
-                                className="flex-1bg-muted/20  border-none outline-none text-sm min-w-[120px] py-1"
+                                className="flex-1 bg-transparent border-none outline-none text-sm min-w-[120px] "
                             />
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <Label className="text-xs font-bold   text-muted-foreground/60 px-1 flex items-center gap-2">
-                            Categorization
-                            {contactForm.category && (
-                                <span className="text-[9px] text-primary lowercase font-medium bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">Selected</span>
-                            )}
-                        </Label>
-                        <div className="grid grid-cols-2 gap-2">
-                            {categories.map(cat => (
-                                <div
-                                    key={cat.id}
-                                    onClick={() => setContactForm({ ...contactForm, category: contactForm.category === cat.id ? '' : cat.id })}
-                                    className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${contactForm.category === cat.id ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20' : 'hover:bg-muted/30 border-border/40 opacity-70 hover:opacity-100'}`}
+                        <Label className="text-xs font-bold text-muted-foreground/60 px-1">Classification</Label>
+                        <div className="flex gap-2">
+                            {['CONTACT', 'CLIENT', 'LEAD'].map(type => (
+                                <Button
+                                    key={type}
+                                    type="button"
+                                    variant={contactForm.type === type ? 'default' : 'outline'}
+                                    onClick={() => setContactForm({ ...contactForm, type })}
+                                    className="flex-1 h-9 text-[10px] font-bold"
                                 >
-                                    <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: cat.color }} />
-                                    <span className="text-[11px] font-bold truncate">{cat.name}</span>
-                                </div>
+                                    {type}
+                                </Button>
                             ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between px-1">
+                            <Label className="text-xs font-bold text-muted-foreground/60">Category</Label>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Select
+                                value={categories.find(c => c.name === contactForm.category)?.name || ""}
+                                onValueChange={(val) => setContactForm({ ...contactForm, category: val })}
+                            >
+                                <SelectTrigger className="bg-muted/20 border">
+                                    <SelectValue placeholder="Select existing category..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {categories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.name}>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                                                {cat.name}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                    <Tag className="w-3 h-3 text-muted-foreground/40" />
+                                </div>
+                                <Input
+                                    placeholder="Or type a new category..."
+                                    value={contactForm.category}
+                                    onChange={e => setContactForm({ ...contactForm, category: e.target.value })}
+                                    className="pl-9 bg-muted/20 border focus:border-primary/40 transition-colors h-10"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     {/* Raw Details Section (only for editing) */}
                     {activeContact?.info?.raw && (
                         <div className="space-y-3 mt-4 p-4 rounded-xl bg-muted/20 border border-border/40">
-                            <Label className="text-xs font-bold   text-primary/70">Raw Intelligence</Label>
+                            <Label className="text-xs font-bold text-primary/70">Raw Intelligence</Label>
                             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                                 {Object.entries(activeContact.info.raw).map(([key, value]) => {
                                     if (typeof value === 'object' || Array.isArray(value) || !value) return null;
                                     if (['id', 'name', 'phone', 'email', 'address'].includes(key)) return null;
                                     return (
                                         <div key={key} className="flex flex-col gap-0.5 border-b border-border/30 pb-2 last:border-0">
-                                            <span className="text-[9px] text-muted-foreground  font-semibold">{key.replace(/_/g, ' ')}</span>
+                                            <span className="text-[9px] text-muted-foreground font-semibold">{key.replace(/_/g, ' ')}</span>
                                             <span className="text-xs text-foreground/80 font-medium">{String(value)}</span>
                                         </div>
                                     );
@@ -207,24 +254,28 @@ export default function ContactDialog({
                             </div>
                         </div>
                     )}
+
+                    <button type="submit" className="hidden" />
                 </form>
 
                 <DialogFooter className="p-6 pt-2">
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => onOpenChange(false)}
-                        className="flex-1 border border-border/40 hover:bg-muted/50"
+                        className="hover:bg-muted/50"
+                        disabled={isLoading}
                     >
                         Cancel
                     </Button>
                     <Button
+                        type="button"
                         onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex-[2] shadow-lg shadow-primary/20 gap-2 font-bold"
+                        disabled={isLoading}
+                        className="shadow-lg shadow-primary/20 gap-2 font-bold"
                     >
-                        {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {activeContact ? (isSaving ? 'Updating...' : 'Save Changes') : (isSaving ? 'Initializing...' : 'Add Contact')}
+                        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {activeContact ? (isLoading ? 'Updating...' : 'Save Changes') : (isLoading ? 'Initializing...' : 'Add Contact')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

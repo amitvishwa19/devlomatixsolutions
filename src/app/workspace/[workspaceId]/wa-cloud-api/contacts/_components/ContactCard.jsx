@@ -52,7 +52,7 @@ export default function ContactCard({
                                 <h3 className="text-sm font-bold truncate t">{contact.name}</h3>
                                 {contact.category && (
                                     <Badge variant="outline" className="h-4 text-[9px] font-bold px-1.5 border-none" style={{ backgroundColor: `${getCategoryColor(contact.category)}20`, color: getCategoryColor(contact.category) }}>
-                                        {categories.find(c => c.id === contact.category)?.name || 'Cat'}
+                                        {contact.category}
                                     </Badge>
                                 )}
                             </div>

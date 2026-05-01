@@ -12,7 +12,7 @@ const SaveContactSchema = z.object({
     email: z.string().email().optional().or(z.literal('')),
     userId: z.string(),
     workspaceId: z.string(),
-    categoryId: z.string().optional().or(z.literal('')),
+    category: z.string().optional().or(z.literal('')),
     tags: z.array(z.string()).optional(),
     info: z.any().optional(),
     type: z.string().optional(),
@@ -20,15 +20,24 @@ const SaveContactSchema = z.object({
 
 const handler = async (data) => {
     const { workspaceId } = data;
-    await ensureWorkspaceAccess(workspaceId);
+    console.log('[SAVE_CONTACT] Starting...', { name: data.name, phone: data.phone });
     
-    const { id, name, phone, email, userId, categoryId, tags, info, type } = data;
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+    } catch (e) {
+        console.error('[SAVE_CONTACT] Auth Error:', e.message);
+        return { error: "Unauthorized access to workspace" };
+    }
+    
+    const { id, name, phone, email, userId, category, tags, info, type } = data;
 
     try {
         // Clean phone number
         const cleanPhone = phone.replace(/[^\d+]/g, '');
+        console.log('[SAVE_CONTACT] Clean Phone:', cleanPhone);
 
         if (id) {
+            console.log('[SAVE_CONTACT] Updating existing contact:', id);
             // Update
             const updated = await db.contact.update({
                 where: { id },
@@ -38,15 +47,17 @@ const handler = async (data) => {
                     email: email || null,
                     userId,
                     workspaceId,
-                    category: categoryId || null,
+                    category: category || null,
                     tags: tags || [],
                     info: info || undefined,
                     type: type || 'CONTACT'
                 },
                 include: { groups: true }
             });
+            console.log('[SAVE_CONTACT] Update successful');
             return { data: updated };
         } else {
+            console.log('[SAVE_CONTACT] Upserting contact...');
             // Create or Upsert based on workspace/phone unique constraint
             const contact = await db.contact.upsert({
                 where: {
@@ -58,7 +69,7 @@ const handler = async (data) => {
                 update: {
                     name,
                     email: email || null,
-                    category: categoryId || null,
+                    category: category || null,
                     tags: tags || [],
                     info: info || undefined,
                     type: type || 'CONTACT'
@@ -69,16 +80,17 @@ const handler = async (data) => {
                     email: email || null,
                     userId,
                     workspaceId,
-                    category: categoryId || null,
+                    category: category || null,
                     tags: tags || [],
                     type: type || 'CONTACT'
                 },
                 include: { groups: true }
             });
+            console.log('[SAVE_CONTACT] Upsert successful');
             return { data: contact };
         }
     } catch (error) {
-        console.error('Action Error (saveContact):', error);
+        console.error('[SAVE_CONTACT] Database Error:', error);
         return { error: error.message || 'Internal Server Error' };
     }
 };

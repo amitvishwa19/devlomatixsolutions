@@ -142,6 +142,14 @@ export default function ContactsPage() {
         return Array.from(tags).sort();
     }, [contacts]);
 
+    const availableCategories = useMemo(() => {
+        const contactCatNames = Array.from(new Set(contacts.map(c => c.category).filter(Boolean)));
+        return contactCatNames.map(name => {
+            const existing = categories.find(c => c.name === name);
+            return existing || { id: name, name, color: '#94a3b8' };
+        });
+    }, [contacts, categories]);
+
     // --- Server Actions ---
     const { execute: executeGetContacts } = useAction(getContacts, {
         onSuccess: (data) => setContacts(data || []),
@@ -574,7 +582,7 @@ export default function ContactsPage() {
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full bg-primary/40" />
                                                     <span className="flex items-center truncate max-w-[120px] text-xs gap-2">
-                                                        {categories.find(c => c.id === catName)?.name || catName}
+                                                        {catName}
                                                         <span className="text-[10px] opacity-40 font-mono">
                                                             {contacts.filter(c => c.category === catName).length}
                                                         </span>
@@ -635,12 +643,7 @@ export default function ContactsPage() {
                         </div>
                     </ScrollArea>
 
-                    <div className="p-4 border-t bg-muted/10">
-                        <Button variant="ghost" className="w-full justify-between h-9 text-[10px] px-2 font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors" onClick={() => setIsManageTagsOpen(true)}>
-                            Manage Tag Library
-                            <ChevronRight className="w-3 h-3" />
-                        </Button>
-                    </div>
+
                 </div>
 
                 {/* Main Content Area */}
@@ -879,7 +882,7 @@ export default function ContactsPage() {
                         if (!open) { setIsAddContactOpen(false); setIsEditContactOpen(false); setActiveContact(null); }
                     }}
                     activeContact={activeContact}
-                    categories={categories}
+                    categories={availableCategories}
                     userId={userId}
                     workspaceId={workspaceId}
                     onSave={fetchInitialData}
