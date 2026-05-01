@@ -42,6 +42,7 @@ import { deleteGroup } from './_actions/delete-group';
 import { bulkDeleteContacts } from './_actions/bulk-delete-contacts';
 import { bulkTagContacts } from './_actions/bulk-tag-contacts';
 import { bulkCategoryContacts } from './_actions/bulk-category-contacts';
+import { bulkGroupContacts } from './_actions/bulk-group-contacts';
 import { bulkFormatContacts } from './_actions/bulk-format';
 import { importContacts } from './_actions/import-contacts';
 import { sendMessage } from './_actions/send-message';
@@ -55,6 +56,7 @@ import ReviewImportDialog from './_components/ReviewImportDialog';
 import BulkDeleteDialog from './_components/BulkDeleteDialog';
 import BulkTagDialog from './_components/BulkTagDialog';
 import BulkCategoryDialog from './_components/BulkCategoryDialog';
+import BulkGroupDialog from './_components/BulkGroupDialog';
 import MessageDialog from './_components/MessageDialog';
 import ContactCard from './_components/ContactCard';
 
@@ -105,6 +107,7 @@ export default function ContactsPage() {
     const [isBulkProcessing, setIsBulkProcessing] = useState(false);
     const [importReviewData, setImportReviewData] = useState([]);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [isBulkGroupOpen, setIsBulkGroupOpen] = useState(false);
 
     // Computed: Filtered Contacts
     const filteredContacts = useMemo(() => {
@@ -231,6 +234,17 @@ export default function ContactsPage() {
             if (previousCategories) setCategories(previousCategories);
             toast.error(typeof err === 'string' ? err : (err?.message || "Failed to remove category"), { id: 'segment-ops' });
         }
+    });
+
+    const { execute: executeBulkGroup } = useAction(bulkGroupContacts, {
+        onSuccess: (res) => {
+            shadToast({ title: "Success", description: `Added ${res.count} contacts to broadcast list.` });
+            setSelectedContacts([]);
+            setIsBulkGroupOpen(false);
+            fetchInitialData();
+        },
+        onError: (err) => shadToast({ title: "Error", description: err, variant: "destructive" }),
+        onComplete: () => setIsBulkProcessing(false)
     });
 
     const { execute: executeDeleteGroup, isLoading: isDeletingGroup } = useAction(deleteGroup, {
@@ -364,7 +378,7 @@ export default function ContactsPage() {
         executeBulkTag({ ids: selectedContacts, tag, workspaceId }, previousSnapshot);
     };
 
-    const handleBulkCategory = (categoryId) => {
+    const handleBulkCategory = (category) => {
         setIsBulkProcessing(true);
         setIsBulkCategoryOpen(false);
         const previousSnapshot = [...contacts];
@@ -372,11 +386,17 @@ export default function ContactsPage() {
         // Optimistic Category Update
         setContacts(curr => curr.map(c =>
             selectedContacts.includes(c.id)
-                ? { ...c, categoryId }
+                ? { ...c, category }
                 : c
         ));
 
-        executeBulkCategory({ ids: selectedContacts, categoryId, workspaceId }, previousSnapshot);
+        executeBulkCategory({ contactIds: selectedContacts, category, workspaceId }, previousSnapshot);
+    };
+
+    const handleBulkGroup = (groupId) => {
+        setIsBulkProcessing(true);
+        setIsBulkGroupOpen(false);
+        executeBulkGroup({ contactIds: selectedContacts, groupId, workspaceId });
     };
 
 
@@ -625,13 +645,22 @@ export default function ContactsPage() {
                                                     {isDeletingGroup && pendingDeleteEntity?.id === group.id ? (
                                                         <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
                                                     ) : (
-                                                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-opacity"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setPendingDeleteEntity({ id: group.id, name: group.name });
-                                                                setIsDeleteGroupOpen(true);
-                                                            }}
-                                                        />
+                                                        <>
+                                                            <Pencil className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-opacity"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setPendingDeleteEntity({ id: group.id, name: group.name });
+                                                                    setIsManageGroupsOpen(true);
+                                                                }}
+                                                            />
+                                                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-opacity"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setPendingDeleteEntity({ id: group.id, name: group.name });
+                                                                    setIsDeleteGroupOpen(true);
+                                                                }}
+                                                            />
+                                                        </>
                                                     )}
                                                 </div>
                                             </div>
@@ -719,6 +748,9 @@ export default function ContactsPage() {
                                 </Button>
                                 <Button variant="ghost" size="sm" onClick={() => setIsBulkCategoryOpen(true)} className="h-8 gap-2 text-primary hover:bg-primary/5">
                                     <Layers className="w-3.5 h-3.5" /> Category
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => setIsBulkGroupOpen(true)} className="h-8 gap-2 text-primary hover:bg-primary/5">
+                                    <Layers className="w-3.5 h-3.5" /> Broadcast List
                                 </Button>
                                 <Button variant="ghost" size="sm" onClick={() => setIsDeleteConfirmOpen(true)} className="h-8 gap-2 text-destructive hover:bg-destructive/5">
                                     <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -883,6 +915,7 @@ export default function ContactsPage() {
                     }}
                     activeContact={activeContact}
                     categories={availableCategories}
+                    groups={groups}
                     userId={userId}
                     workspaceId={workspaceId}
                     onSave={fetchInitialData}
@@ -916,6 +949,15 @@ export default function ContactsPage() {
                     onOpenChange={setIsBulkCategoryOpen}
                     categories={categories}
                     onConfirm={handleBulkCategory}
+                    isProcessing={isBulkProcessing}
+                />
+
+                <BulkGroupDialog
+                    isOpen={isBulkGroupOpen}
+                    onOpenChange={setIsBulkGroupOpen}
+                    count={selectedContacts.length}
+                    groups={groups}
+                    onConfirm={handleBulkGroup}
                     isProcessing={isBulkProcessing}
                 />
 

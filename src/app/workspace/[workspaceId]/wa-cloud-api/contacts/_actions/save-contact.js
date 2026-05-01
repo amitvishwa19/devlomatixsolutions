@@ -5,10 +5,27 @@ import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 
+const formatPhoneNumber = (phone) => {
+    // Remove all non-numeric characters
+    let cleaned = phone.replace(/\D/g, '');
+    
+    // If 10 digits, add 91 prefix
+    if (cleaned.length === 10) {
+        cleaned = '91' + cleaned;
+    }
+    
+    return cleaned;
+};
+
 const SaveContactSchema = z.object({
     id: z.string().optional(),
     name: z.string().min(1, "Name is required"),
-    phone: z.string().min(1, "Phone is required"),
+    phone: z.string().refine((val) => {
+        const formatted = formatPhoneNumber(val);
+        return formatted.length === 12;
+    }, {
+        message: "Phone must be a valid 10-digit mobile number (which will be prefixed with 91) or a full 12-digit number."
+    }),
     email: z.string().email().optional().or(z.literal('')),
     userId: z.string(),
     workspaceId: z.string(),
@@ -16,6 +33,7 @@ const SaveContactSchema = z.object({
     tags: z.array(z.string()).optional(),
     info: z.any().optional(),
     type: z.string().optional(),
+    groupIds: z.array(z.string()).optional(),
 });
 
 const handler = async (data) => {
@@ -29,12 +47,17 @@ const handler = async (data) => {
         return { error: "Unauthorized access to workspace" };
     }
     
-    const { id, name, phone, email, userId, category, tags, info, type } = data;
+    const { id, name, phone, email, userId, category, tags, info, type, groupIds } = data;
 
     try {
-        // Clean phone number
-        const cleanPhone = phone.replace(/[^\d+]/g, '');
-        console.log('[SAVE_CONTACT] Clean Phone:', cleanPhone);
+        // Strict Phone Formatting
+        const cleanPhone = formatPhoneNumber(phone);
+        console.log('[SAVE_CONTACT] Cleaned Phone:', cleanPhone);
+
+        // Final safety check
+        if (cleanPhone.length !== 12) {
+            return { error: "Phone number must be 12 digits (Country Code + Mobile)" };
+        }
 
         if (id) {
             console.log('[SAVE_CONTACT] Updating existing contact:', id);
@@ -50,7 +73,10 @@ const handler = async (data) => {
                     category: category || null,
                     tags: tags || [],
                     info: info || undefined,
-                    type: type || 'CONTACT'
+                    type: type || 'CONTACT',
+                    groups: {
+                        set: groupIds?.map(id => ({ id })) || []
+                    }
                 },
                 include: { groups: true }
             });
@@ -72,7 +98,10 @@ const handler = async (data) => {
                     category: category || null,
                     tags: tags || [],
                     info: info || undefined,
-                    type: type || 'CONTACT'
+                    type: type || 'CONTACT',
+                    groups: {
+                        set: groupIds?.map(id => ({ id })) || []
+                    }
                 },
                 create: {
                     name,
@@ -82,7 +111,10 @@ const handler = async (data) => {
                     workspaceId,
                     category: category || null,
                     tags: tags || [],
-                    type: type || 'CONTACT'
+                    type: type || 'CONTACT',
+                    groups: {
+                        connect: groupIds?.map(id => ({ id })) || []
+                    }
                 },
                 include: { groups: true }
             });

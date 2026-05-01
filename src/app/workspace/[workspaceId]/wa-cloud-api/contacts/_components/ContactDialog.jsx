@@ -19,7 +19,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Tag, X } from 'lucide-react';
+import { MultiSelect } from "@/components/ui/multi-select";
+import { Loader2, Tag, X, Users } from 'lucide-react';
 import { useAction } from '@/hooks/use-action';
 import { saveContact } from '../_actions/save-contact';
 import { toast } from 'sonner';
@@ -30,6 +31,7 @@ export default function ContactDialog({
     onOpenChange,
     activeContact,
     categories,
+    groups = [],
     userId,
     workspaceId,
     onSave
@@ -41,7 +43,8 @@ export default function ContactDialog({
         category: '',
         tags: [],
         info: '',
-        type: 'CONTACT'
+        type: 'CONTACT',
+        selectedGroups: [] // Stores objects {id, name}
     });
 
     const [tagInput, setTagInput] = useState('');
@@ -67,7 +70,8 @@ export default function ContactDialog({
                 category: activeContact.category || '',
                 tags: activeContact.tags || [],
                 info: activeContact.info || '',
-                type: activeContact.type || 'CONTACT'
+                type: activeContact.type || 'CONTACT',
+                selectedGroups: activeContact.groups || []
             });
         } else {
             setContactForm({
@@ -77,7 +81,8 @@ export default function ContactDialog({
                 category: '',
                 tags: [],
                 info: '',
-                type: 'CONTACT'
+                type: 'CONTACT',
+                selectedGroups: []
             });
         }
         setTagInput('');
@@ -103,10 +108,10 @@ export default function ContactDialog({
         if (isLoading) return;
 
         toast.loading(activeContact ? "Updating contact..." : "Creating contact...", { id: 'save-contact' });
-
+        
         executeSave({
             ...contactForm,
-            category: contactForm.category,
+            groupIds: contactForm.selectedGroups.map(g => g.id),
             id: activeContact?.id,
             userId,
             workspaceId
@@ -162,6 +167,17 @@ export default function ContactDialog({
                     </div>
 
                     <div className="space-y-3">
+                        <Label className="text-xs font-bold text-muted-foreground/60 px-1">Broadcast Lists (Groups)</Label>
+                        <MultiSelect
+                            options={groups}
+                            selected={contactForm.selectedGroups}
+                            onChange={(val) => setContactForm({ ...contactForm, selectedGroups: val })}
+                            placeholder="Add to broadcast lists..."
+                            className="bg-muted/20 border border-border/40"
+                        />
+                    </div>
+
+                    <div className="space-y-3">
                         <Label className="text-xs font-bold text-muted-foreground/60 px-1">Tags</Label>
                         <div className="flex flex-wrap gap-2 p-2 bg-muted/20 rounded-lg border focus-within:border-primary/40 transition-colors">
                             {contactForm.tags.map(tag => (
@@ -201,10 +217,10 @@ export default function ContactDialog({
                         <div className="flex items-center justify-between px-1">
                             <Label className="text-xs font-bold text-muted-foreground/60">Category</Label>
                         </div>
-
+                        
                         <div className="space-y-2">
-                            <Select
-                                value={categories.find(c => c.name === contactForm.category)?.name || ""}
+                            <Select 
+                                value={categories.find(c => c.name === contactForm.category)?.name || ""} 
                                 onValueChange={(val) => setContactForm({ ...contactForm, category: val })}
                             >
                                 <SelectTrigger className="bg-muted/20 border">
