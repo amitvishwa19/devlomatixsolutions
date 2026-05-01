@@ -185,26 +185,33 @@ export async function POST(req) {
                             }
                             break;
                         case "location":
-                            textBody = `📍 [Location Shared] ${message.location?.name || `${message.location?.latitude}, ${message.location?.longitude}`}`;
+                            const loc = message.location || {};
+                            textBody = `📍 Location: ${loc.name || loc.address || "Shared Location"} (${loc.latitude}, ${loc.longitude})`;
                             break;
                         case "interactive":
                             const iType = message.interactive?.type;
                             if (iType === "button_reply") textBody = message.interactive.button_reply?.title;
                             else if (iType === "list_reply") textBody = message.interactive.list_reply?.title;
-                            else if (iType === "nfm_reply") textBody = `[Flow Response: ${message.interactive.nfm_reply?.name || "Flow"}]`;
-                            else textBody = "[Interactive Response]";
+                            else if (iType === "nfm_reply") textBody = `[Flow: ${message.interactive.nfm_reply?.name || "Response"}]`;
+                            else textBody = "[Interactive Message]";
                             break;
                         case "button":
                             textBody = message.button?.text || "[Button Click]";
                             break;
                         case "reaction":
-                            textBody = `[Reaction: ${message.reaction?.emoji || ""}]`;
+                            const react = message.reaction || {};
+                            textBody = `[Reaction: ${react.emoji || "removed"}]`;
                             break;
                         case "contacts":
-                            textBody = "[Contact Card]";
+                            const contact = message.contacts?.[0] || {};
+                            textBody = `👤 Contact: ${contact.name?.formatted_name || "Shared Contact"}`;
+                            break;
+                        case "poll":
+                            const poll = message.poll || {};
+                            textBody = `📊 Poll: ${poll.name || "New Poll"}`;
                             break;
                         case "unsupported":
-                            textBody = "[Unsupported Message Type]";
+                            textBody = "[WhatsApp System/Unsupported Message]";
                             break;
                         default:
                             textBody = `[${message.type.toUpperCase()}]`;

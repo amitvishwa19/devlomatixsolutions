@@ -71,6 +71,9 @@ function renderMessagePreview(lastMessage) {
             }
             if (type === 'template') return `[Template] ${text || ""}`.trim();
             if (type === 'location') return "📍 Location shared";
+            if (type === 'contacts') return `👤 Contact: ${parsed.text || "Shared Contact"}`;
+            if (type === 'poll') return `📊 Poll: ${parsed.text || "New Poll"}`;
+            if (type === 'unsupported') return "⚠️ WhatsApp System Message";
 
             return text || `[${type.toUpperCase()}]`;
         }
@@ -616,7 +619,7 @@ export default function WhatsAppChatsPage() {
                                                             )}
                                                         </div>
                                                         <span className="text-[9px] text-muted-foreground group-hover:hidden">
-                                                            {formatDistanceToNow(chat.timestamp)}
+                                                            {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
                                                         </span>
                                                         <button
                                                             onClick={(e) => handleDeleteConversation(e, chat.jid)}
@@ -768,7 +771,7 @@ export default function WhatsAppChatsPage() {
                                         selectedChat.messages.slice().reverse().map((msg, i) => {
                                             const isTemplate = msg.metadata?.type === 'template';
                                             const type = msg.metadata?.type?.toLowerCase() || 'text';
-                                            const isMedia = ['image', 'video', 'audio', 'document', 'sticker', 'voice'].includes(type);
+                                            const isMedia = ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'unsupported'].includes(type);
                                             const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
                                             const templateDef = isTemplate ? templates.find(t => t.templateName === templateName || t.name === templateName) : null;
 

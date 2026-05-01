@@ -6,8 +6,14 @@ import {
     Image as ImageIcon, 
     Video as VideoIcon, 
     File, 
-    Music 
+    Music,
+    MapPin,
+    User,
+    FileDigit,
+    Layers,
+    AlertCircle
 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 const MediaBubble = ({ msg, workspaceId }) => {
     const metadata = msg.metadata || {};
@@ -24,8 +30,6 @@ const MediaBubble = ({ msg, workspaceId }) => {
         : (metadata.mediaUrl || originalPayload[type]?.url || originalPayload[type]?.link || originalPayload.link);
 
     const caption = metadata.caption || originalPayload[type]?.caption || "";
-
-    if (!mediaUrl) return <div className="text-xs italic text-muted-foreground p-2 border border-dashed rounded-md">Media content unavailable</div>;
 
     const renderContent = () => {
         switch (type) {
@@ -107,7 +111,7 @@ const MediaBubble = ({ msg, workspaceId }) => {
                 );
 
             case 'document':
-                const fileName = metadata.fileName || "Document";
+                const fileName = metadata.fileName || originalPayload.document?.filename || "Document";
                 return (
                     <a 
                         href={mediaUrl} 
@@ -126,11 +130,111 @@ const MediaBubble = ({ msg, workspaceId }) => {
                     </a>
                 );
 
+            case 'location':
+                const loc = originalPayload.location || metadata.location || {};
+                const lat = loc.latitude;
+                const lon = loc.longitude;
+                const name = loc.name || "Shared Location";
+                const address = loc.address || "";
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+                
+                return (
+                    <a 
+                        href={mapsUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block p-0 overflow-hidden rounded-xl bg-card border border-border/50 hover:border-primary/50 transition-all w-full max-w-[280px]"
+                    >
+                        <div className="bg-primary/10 h-24 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                <MapPin className="w-5 h-5 text-primary" />
+                            </div>
+                        </div>
+                        <div className="p-3">
+                            <p className="text-xs font-bold truncate">{name}</p>
+                            {address && <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{address}</p>}
+                            <p className="text-[9px] text-primary font-bold mt-2 uppercase tracking-wider flex items-center gap-1">
+                                View on Maps <Download size={8} />
+                            </p>
+                        </div>
+                    </a>
+                );
+
+            case 'contacts':
+                const contactData = originalPayload.contacts?.[0] || {};
+                const cName = contactData.name?.formatted_name || contactData.name?.first_name || "Contact";
+                const cPhone = contactData.phones?.[0]?.phone || "No number";
+                
+                return (
+                    <div className="p-3 bg-card border border-border/50 rounded-xl flex items-center gap-3 w-full max-w-[280px]">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <User className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold truncate">{cName}</p>
+                            <p className="text-[10px] text-muted-foreground">{cPhone}</p>
+                        </div>
+                    </div>
+                );
+
+            case 'poll':
+            case 'poll_creation':
+                const pollData = originalPayload.poll || {};
+                const pollName = pollData.name || "WhatsApp Poll";
+                return (
+                    <div className="p-3 bg-card border border-border/50 rounded-xl flex flex-col gap-2 w-full max-w-[280px]">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-7 h-7 rounded-full bg-orange-500/10 flex items-center justify-center">
+                                <FileDigit className="w-4 h-4 text-orange-500" />
+                            </div>
+                            <p className="text-xs font-bold">{pollName}</p>
+                        </div>
+                        {pollData.options?.map((opt, i) => (
+                            <div key={i} className="px-3 py-1.5 bg-muted/50 rounded-lg text-[10px] border border-border/30">
+                                {opt.option_text}
+                            </div>
+                        ))}
+                        <p className="text-[9px] text-muted-foreground mt-1 italic italic">Poll created via WhatsApp</p>
+                    </div>
+                );
+
+            case 'interactive':
+                const iType = originalPayload.interactive?.type;
+                let iText = "Interactive Response";
+                if (iType === "button_reply") iText = originalPayload.interactive.button_reply?.title;
+                else if (iType === "list_reply") iText = originalPayload.interactive.list_reply?.title;
+                else if (iType === "nfm_reply") iText = `Flow: ${originalPayload.interactive.nfm_reply?.name || "Response"}`;
+
+                return (
+                    <div className="p-2.5 bg-primary/5 border border-primary/20 rounded-xl flex items-center gap-2.5 w-full max-w-[280px]">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <Layers className="w-4 h-4 text-primary" />
+                        </div>
+                        <p className="text-xs font-medium text-primary-foreground/90 bg-primary px-3 py-1 rounded-full">{iText}</p>
+                    </div>
+                );
+
+            case 'unsupported':
+                return (
+                    <div className="flex flex-col gap-2 p-3 bg-muted/20 border border-dashed border-muted-foreground/30 rounded-xl w-full max-w-[280px]">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <AlertCircle className="w-4 h-4" />
+                            <p className="text-[11px] font-bold uppercase tracking-wider">System Message</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground/80 leading-relaxed italic">
+                            This message type is currently not supported by your WhatsApp API version or device.
+                        </p>
+                        <div className="text-[9px] px-2 py-0.5 bg-muted/50 rounded-full w-fit">
+                            Type: {metadata.type || 'unknown'}
+                        </div>
+                    </div>
+                );
+
             default:
                 return (
-                    <div className="flex items-center gap-2 p-2 text-xs text-muted-foreground border rounded-md">
+                    <div className="flex items-center gap-2 p-3 bg-muted/10 border border-border/50 rounded-xl text-xs text-muted-foreground italic">
                         <File className="w-4 h-4" />
-                        Unsupported media type: {type}
+                        {msg.text || `Message Type: ${type}`}
                     </div>
                 );
         }
@@ -138,5 +242,4 @@ const MediaBubble = ({ msg, workspaceId }) => {
 
     return <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">{renderContent()}</div>;
 };
-
 export default MediaBubble;
