@@ -29,17 +29,8 @@ const getBaseDb = () => {
     );
 
     if (isStale) {
-        console.log(`🔄 Stale Prisma Client detected (ver ${globalThis.prismaGlobal._schemaVersion || 0} vs ${SCHEMA_VERSION}). Re-initializing...`);
-        if (globalThis.prismaGlobal && !globalThis.prismaGlobal.whatsAppFlow) {
-            console.log("⚠️ whatsAppFlow model missing in current client!");
-            console.log("🔍 Available models:", Object.keys(globalThis.prismaGlobal).filter(k => !k.startsWith('_')));
-        }
-        
         globalThis.prismaGlobal = prismaClientSingleton();
         globalThis.prismaGlobal._schemaVersion = SCHEMA_VERSION;
-        
-        console.log("✅ Prisma Client re-initialized.");
-        console.dir(Object.keys(globalThis.prismaGlobal).filter(k => !k.startsWith('_')), { depth: null });
     }
     
     return globalThis.prismaGlobal;

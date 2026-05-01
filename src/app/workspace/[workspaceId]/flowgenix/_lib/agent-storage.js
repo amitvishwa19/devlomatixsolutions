@@ -7,6 +7,7 @@ export const PROVIDER_PRESETS = {
   Groq: { baseURL: "https://api.groq.com/openai/v1", model: "llama-3.3-70b-versatile" },
   Together: { baseURL: "https://api.together.xyz/v1", model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   Mistral: { baseURL: "https://api.mistral.ai/v1", model: "mistral-large-latest" },
+  NVIDIA: { baseURL: "https://integrate.api.nvidia.com/v1", model: "meta/llama-3.1-405b-instruct" },
   Ollama: { baseURL: "http://localhost:11434/v1", model: "llama3.1" },
   Custom: { baseURL: "", model: "" },
 };

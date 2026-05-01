@@ -48,12 +48,10 @@ export function generateFlowDSL(screens) {
                     children: [
                         ...s.children.map(c => {
                             if (c.type === 'TextItem') {
-                                // Reverting to universal TextItem with style for better compatibility
-                                return { 
-                                    type: "TextItem", 
-                                    text: c.text,
-                                    style: c.style === 'heading' ? 'header' : (c.style === 'caption' ? 'caption' : 'body')
-                                };
+                                let metaType = "TextBody";
+                                if (c.style === 'heading') metaType = "TextHeading";
+                                if (c.style === 'caption') metaType = "TextCaption";
+                                return { type: metaType, text: c.text };
                             }
                             
                             const base = { type: c.type };
@@ -61,7 +59,8 @@ export function generateFlowDSL(screens) {
                                 return { ...base, label: c.label, name: c.name, required: c.required || false };
                             }
                             if (['Select', 'RadioButtons', 'CheckboxGroup'].includes(c.type)) {
-                                return { type: c.type, label: c.label, name: c.name, options: c.options };
+                                const type = c.type === 'Select' ? 'Dropdown' : c.type;
+                                return { type, label: c.label, name: c.name, options: c.options };
                             }
                             if (c.type === 'DatePicker') {
                                 return { ...base, label: c.label, name: c.name };

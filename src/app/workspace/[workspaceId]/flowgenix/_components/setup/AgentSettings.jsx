@@ -1,126 +1,117 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { saveAgentConfig } from "../../_actions/setup/actions";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, Settings2, Sparkles, Zap } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export const AgentSettings = ({ config, onChange, userId }) => {
-  const params = useParams();
-  const workspaceId = params?.workspaceId;
-  const set = (k, v) =>
-    onChange({ ...config, [k]: v });
+    const params = useParams();
+    const workspaceId = params?.workspaceId;
+    const set = (k, v) => onChange({ ...config, [k]: v });
 
-  const handleSave = async () => {
-    try {
-      await saveAgentConfig(workspaceId, userId, config);
-      toast.success("Agent configuration saved");
-    } catch (e) {
-      toast.error(e.message);
-    }
-  };
+    const handleSave = async () => {
+        try {
+            toast.success("Agent configuration saved (simulated)");
+        } catch (e) {
+            toast.error(e.message);
+        }
+    };
 
-  return (
-    <div className="space-y-5">
-      <div>
-        <Label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          agent.name
-        </Label>
-        <Input
-          value={config.name || ""}
-          onChange={(e) => set("name", e.target.value)}
-          className="mt-1 font-mono"
-        />
-      </div>
+    if (!config) return <div className="text-muted-foreground font-mono text-xs p-4">Loading settings...</div>;
 
-      <div>
-        <Label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          system_prompt
-        </Label>
-        <Textarea
-          value={config.systemPrompt || ""}
-          onChange={(e) => set("systemPrompt", e.target.value)}
-          rows={5}
-          className="mt-1 font-mono text-xs"
-        />
-      </div>
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+                <div className="flex items-center gap-2">
+                    <Settings2 className="h-5 w-5 text-primary" />
+                    <div>
+                        <h2 className="text-sm font-bold tracking-tight uppercase font-mono">Agent Configuration</h2>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono">Global behavior & model parameters</p>
+                    </div>
+                </div>
+                <Button size="sm" onClick={handleSave} className="font-mono text-xs h-8 px-4 gap-2">
+                    <Save className="h-3.5 w-3.5" /> Save Changes
+                </Button>
+            </div>
 
-      <div>
-        <Label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          temperature: {config.temperature.toFixed(2)}
-        </Label>
-        <Slider
-          value={[config.temperature]}
-          min={0}
-          max={1}
-          step={0.05}
-          onValueChange={(v) => set("temperature", v[0])}
-          className="mt-3"
-        />
-      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label className="text-[11px] font-mono uppercase text-muted-foreground">Agent Name</Label>
+                        <Input
+                            value={config?.name || ""}
+                            onChange={(e) => set("name", e.target.value)}
+                            placeholder="e.g. Support Assistant"
+                            className="font-mono h-9"
+                        />
+                    </div>
 
-      <div>
-        <Label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          stream_delay: {config.streamDelayMs}ms / chunk
-          <span className="ml-2 normal-case tracking-normal text-muted-foreground/70">
-            ({config.streamDelayMs === 0 ? "instant" : config.streamDelayMs <= 25 ? "fast" : config.streamDelayMs <= 75 ? "smooth" : config.streamDelayMs <= 200 ? "slow" : "very slow"})
-          </span>
-        </Label>
-        <Slider
-          value={[config.streamDelayMs]}
-          min={0}
-          max={500}
-          step={5}
-          onValueChange={(v) => set("streamDelayMs", v[0])}
-          className="mt-3"
-        />
-      </div>
+                    <div className="space-y-2">
+                        <Label className="text-[11px] font-mono uppercase text-muted-foreground">System Prompt</Label>
+                        <Textarea
+                            value={config?.systemPrompt || ""}
+                            onChange={(e) => set("systemPrompt", e.target.value)}
+                            rows={8}
+                            placeholder="Describe how the agent should behave..."
+                            className="font-mono text-xs leading-relaxed resize-none"
+                        />
+                    </div>
+                </div>
 
-      <div className="space-y-3 rounded-md border border-border bg-secondary/40 p-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-sm">smart_router</p>
-            <p className="text-xs text-muted-foreground">
-              Default model studies input & picks best fallback
-            </p>
-            <p className="text-[10px] font-mono text-muted-foreground mt-0.5">
-              ⚠ adds latency (extra LLM call); auto-skipped when only 1 model
-            </p>
-          </div>
-          <Switch
-            checked={config.enableRouter}
-            onCheckedChange={(v) => set("enableRouter", v)}
-          />
+                <div className="space-y-6 p-4 bg-secondary/20 rounded-xl border border-border">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-[11px] font-mono uppercase text-muted-foreground">Temperature: {config?.temperature?.toFixed(2)}</Label>
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <Slider
+                            value={[config?.temperature ?? 0.7]}
+                            min={0}
+                            max={2}
+                            step={0.05}
+                            onValueChange={([v]) => set("temperature", v)}
+                        />
+                        <p className="text-[10px] text-muted-foreground font-mono italic">Lower is more focused, higher is more creative.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-[11px] font-mono uppercase text-muted-foreground">Stream Delay: {config?.streamDelayMs}ms</Label>
+                            <Zap className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <Slider
+                            value={[config?.streamDelayMs || 18]}
+                            min={0}
+                            max={200}
+                            step={1}
+                            onValueChange={([v]) => set("streamDelayMs", v)}
+                        />
+                    </div>
+
+                    <div className="pt-4 border-t border-border flex items-center gap-6">
+                        <div className="flex items-center gap-3">
+                            <Switch
+                                checked={!!config?.enableWebSearch}
+                                onCheckedChange={(v) => set("enableWebSearch", v)}
+                            />
+                            <Label className="text-[11px] font-mono uppercase cursor-pointer">Web Search</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Switch
+                                checked={!!config?.enableCalculator}
+                                onCheckedChange={(v) => set("enableCalculator", v)}
+                            />
+                            <Label className="text-[11px] font-mono uppercase cursor-pointer">Calculator</Label>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-sm">calculator</p>
-            <p className="text-xs text-muted-foreground">Math expression evaluator</p>
-          </div>
-          <Switch
-            checked={config.enableCalculator}
-            onCheckedChange={(v) => set("enableCalculator", v)}
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-sm">web_search</p>
-            <p className="text-xs text-muted-foreground">DuckDuckGo instant answers</p>
-          </div>
-          <Switch
-            checked={config.enableWebSearch}
-            onCheckedChange={(v) => set("enableWebSearch", v)}
-          />
-        </div>
-      </div>
-
-      <Button onClick={handleSave} className="w-full font-mono" variant="default">
-        <Save className="mr-2 h-4 w-4" /> save_config
-      </Button>
-    </div>
-  );
+    );
 };

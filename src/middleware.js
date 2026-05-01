@@ -34,13 +34,14 @@ export async function middleware(request) {
 
     const isPublicRoute =
         pathname === '/' ||
+        pathname === '/login' ||
         pathname === '/register' ||
         pathname === '/verify' ||
         pathname === '/reset'
 
     // Not logged in -> block protected routes
     if (isProtectedRoute && !token) {
-        return NextResponse.redirect(new URL('/', request.url))
+        return NextResponse.redirect(new URL('/login', request.url))
     }
 
     // Workspace Access Control (RBAC & Multi-Tenancy Isolation)

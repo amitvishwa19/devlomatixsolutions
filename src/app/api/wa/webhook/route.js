@@ -189,11 +189,30 @@ export async function POST(req) {
                             textBody = `📍 Location: ${loc.name || loc.address || "Shared Location"} (${loc.latitude}, ${loc.longitude})`;
                             break;
                         case "interactive":
-                            const iType = message.interactive?.type;
-                            if (iType === "button_reply") textBody = message.interactive.button_reply?.title;
-                            else if (iType === "list_reply") textBody = message.interactive.list_reply?.title;
-                            else if (iType === "nfm_reply") textBody = `[Flow: ${message.interactive.nfm_reply?.name || "Response"}]`;
-                            else textBody = "[Interactive Message]";
+                            const interactive = message.interactive;
+                            const iType = interactive?.type;
+                            
+                            if (iType === "button_reply") {
+                                textBody = interactive.button_reply?.title;
+                            } else if (iType === "list_reply") {
+                                textBody = interactive.list_reply?.title;
+                            } else if (iType === "nfm_reply") {
+                                // 🌟 FLOW COMPLETION HANDLING 🌟
+                                const nfmReply = interactive.nfm_reply;
+                                const flowData = JSON.parse(nfmReply.response_json || "{}");
+                                textBody = `[Flow: ${nfmReply.name}] Submitted`;
+                                
+                                console.log("✅ [Webhook] Flow Response Received:", {
+                                    flowName: nfmReply.name,
+                                    data: flowData
+                                });
+
+                                // Store flow data in metadata for later use
+                                message.flow_data = flowData;
+                                message.flow_name = nfmReply.name;
+                            } else {
+                                textBody = "[Interactive Message]";
+                            }
                             break;
                         case "button":
                             textBody = message.button?.text || "[Button Click]";
@@ -290,7 +309,9 @@ export async function POST(req) {
                                 fileName: message[message.type]?.filename,
                                 mimetype: message[message.type]?.mime_type,
                                 raw: message,
-                                phone_number_id: phoneNumberId
+                                phone_number_id: phoneNumberId,
+                                flow_name: message.flow_name,
+                                flow_data: message.flow_data
                             }
                         }
                     });

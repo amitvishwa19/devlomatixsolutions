@@ -31,8 +31,10 @@ export const RagPanel = ({ config, docs, setDocs, userId }) => {
           name: f.name,
           chunks: chunks.map((text, i) => ({ text, embedding: vecs[i] })),
         };
+        /*
         const saved = await upsertRagDoc(workspaceId, userId, doc);
         next.push(saved);
+        */
       }
       setDocs(next);
       toast.success(`Indexed ${files.length} document(s)`);
@@ -46,7 +48,7 @@ export const RagPanel = ({ config, docs, setDocs, userId }) => {
 
   const remove = async (id) => {
     try {
-      await deleteRagDoc(workspaceId, id);
+      // await deleteRagDoc(workspaceId, id);
       setDocs(docs.filter((d) => d.id !== id));
     } catch (e) {
       toast.error(e.message);

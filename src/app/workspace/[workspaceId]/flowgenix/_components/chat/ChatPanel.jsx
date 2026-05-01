@@ -105,7 +105,9 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
   const abortRef = useRef(null);
 
   // Load threads + ensure a default one
+  /*
   useEffect(() => {
+    if (!userId) return;
     (async () => {
       const list = await listThreads(workspaceId, userId);
       if (list.length === 0) {
@@ -118,8 +120,10 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
       }
     })();
   }, [workspaceId, userId]);
+  */
 
   // Load messages whenever active thread changes
+  /*
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
@@ -130,6 +134,7 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
       setMessages(m);
     })();
   }, [activeId, workspaceId]);
+  */
 
   useEffect(() => {
     const vp = scrollRef.current?.querySelector(
@@ -258,40 +263,7 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
     const text = input.trim();
     if (!text || busy) return;
     setInput("");
-    
-    // Add user message
-    const userMsg = { role: "user", content: text };
-    setMessages(prev => [...prev, userMsg]);
-    
-    setBusy(true);
-    try {
-      const res = await getChatResponse({ messages: [...messages, userMsg], hashtag: false });
-      const fullResponse = res.response || "No response received";
-      const words = fullResponse.split(" ");
-      
-      let currentText = "";
-      setStreaming("");
-      
-      for (let i = 0; i < words.length; i++) {
-        currentText += (i === 0 ? "" : " ") + words[i];
-        setStreaming(currentText);
-        await new Promise(resolve => setTimeout(resolve, 20)); // Simulated streaming speed
-      }
-
-      const assistantMsg = { 
-        role: "assistant", 
-        content: fullResponse,
-        meta: JSON.stringify({ model: res.model })
-      };
-      setMessages(prev => [...prev, assistantMsg]);
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setStreaming("");
-      setBusy(false);
-    }
-
-    // await runWith(text, messages);
+    await runWith(text, messages);
   };
 
   const stop = () => {
@@ -348,6 +320,8 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             {(() => {
+              if (!config) return <span className="font-mono text-sm text-muted-foreground italic">No Configuration</span>;
+              
               const d = getDefaultModel(config);
               const status = d?.lastTestOk;
               const dotClass =
@@ -365,10 +339,10 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
               return (
                 <>
                   <span className={`h-2 w-2 rounded-full shrink-0 ${dotClass}`} title={title} />
-                  <span className="font-mono text-sm truncate">{config.name}</span>
+                  <span className="font-mono text-sm truncate">{config.name || "unnamed agent"}</span>
                   <span className="font-mono text-xs text-muted-foreground truncate">
                     · {(() => { const d2 = getDefaultModel(config); return d2 ? `${d2.label} (${d2.model})` : "no model"; })()}
-                    {config.enableRouter && config.models.length > 1 && " · router"}
+                    {config.enableRouter && config.models?.length > 1 && " · router"}
                   </span>
                 </>
               );
