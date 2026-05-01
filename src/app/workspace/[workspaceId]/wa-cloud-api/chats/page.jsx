@@ -29,6 +29,8 @@ import { sendMessage } from "./_actions/send-message";
 import { deleteConversation } from "./_actions/delete-conversation";
 import { getAiSuggestions } from "./_actions/get-ai-suggestions";
 import { getContacts } from "../contacts/_actions/get-contacts";
+import { getGroups } from "../contacts/_actions/get-groups";
+import { getCategories } from "../contacts/_actions/get-categories";
 import { getTemplates } from "../template/_actions/get-templates";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -38,6 +40,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Layers } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -129,6 +133,11 @@ export default function WhatsAppChatsPage() {
     const [jidToDelete, setJidToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Sidebar/Filter State
+    const [groups, setGroups] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [activeSegment, setActiveSegment] = useState('all'); // all, group:[id], category:[name]
+
     const scrollRef = useRef(null);
 
     // Derived State: Get the actual chat object based on selectedJid
@@ -185,6 +194,14 @@ export default function WhatsAppChatsPage() {
         onError: () => setIsFetchingContacts(false)
     });
 
+    const { execute: executeGetGroups } = useAction(getGroups, {
+        onSuccess: (data) => setGroups(data || [])
+    });
+
+    const { execute: executeGetCategories } = useAction(getCategories, {
+        onSuccess: (data) => setCategories(data || [])
+    });
+
     const { execute: executeGetTemplates } = useAction(getTemplates, {
         onSuccess: (data) => setTemplates(data.templates || []),
     });
@@ -234,6 +251,8 @@ export default function WhatsAppChatsPage() {
     const fetchConversations = () => executeConversations({ workspaceId });
     const fetchContacts = () => { setIsFetchingContacts(true); executeGetContacts({ workspaceId }); };
     const fetchTemplates = () => executeGetTemplates({ workspaceId });
+    const fetchGroups = () => executeGetGroups({ workspaceId });
+    const fetchCategories = () => executeGetCategories({ workspaceId, type: 'CONTACT' });
 
     const handleDeleteConversation = (e, jid) => {
         e.stopPropagation();
@@ -251,10 +270,15 @@ export default function WhatsAppChatsPage() {
         fetchConversations();
         fetchTemplates();
         fetchContacts();
+        fetchGroups();
+        fetchCategories();
 
         const handleSwitch = () => {
             fetchConversations();
             fetchTemplates();
+            fetchContacts();
+            fetchGroups();
+            fetchCategories();
         };
         window.addEventListener('wa-account-switched', handleSwitch);
 
@@ -414,15 +438,45 @@ export default function WhatsAppChatsPage() {
         }
     };
 
-    const filteredConversations = conversations.filter(c =>
-        c.jid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.name || "").toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Helper: Find contact for a JID
+    const getContactForJid = (jid) => {
+        const cleanJid = jid.replace(/\D/g, '').split('@')[0];
+        return allContacts.find(c => c.phone.replace(/\D/g, '') === cleanJid);
+    };
 
-    const filteredContacts = allContacts.filter(contact =>
-        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.phone.includes(searchTerm)
-    );
+    const filteredConversations = conversations.filter(c => {
+        const matchesSearch = c.jid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (c.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+        let matchesSegment = true;
+        const contact = getContactForJid(c.jid);
+
+        if (activeSegment.startsWith('group:')) {
+            const groupId = activeSegment.split(':')[1];
+            matchesSegment = contact?.groups?.some(g => g.id === groupId);
+        } else if (activeSegment.startsWith('category:')) {
+            const catName = activeSegment.split(':')[1];
+            matchesSegment = contact?.category === catName;
+        }
+
+        return matchesSearch && matchesSegment;
+    });
+
+    const filteredContacts = allContacts.filter(contact => {
+        const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            contact.phone.includes(searchTerm);
+
+        let matchesSegment = true;
+        if (activeSegment.startsWith('group:')) {
+            const groupId = activeSegment.split(':')[1];
+            matchesSegment = contact.groups?.some(g => g.id === groupId);
+        } else if (activeSegment.startsWith('category:')) {
+            const catName = activeSegment.split(':')[1];
+            matchesSegment = contact.category === catName;
+        }
+
+        return matchesSearch && matchesSegment;
+    });
 
     const handleTabChange = (value) => {
         setActiveTab(value);
@@ -481,10 +535,9 @@ export default function WhatsAppChatsPage() {
             </div>
 
 
-            <div className="flex h-full">
-                <div className="w-1/4 border-r border-border/50 flex flex-col">
+            <div className="flex h-full overflow-hidden">
+                <div className="w-1/4 border-r border-border/50 flex flex-col min-w-[300px]">
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col h-full">
-
 
                         <div className="px-4 h-14 py-2 border-b border-border/50 bg-muted/5">
                             <TabsList className="grid w-full grid-cols-2">
@@ -494,6 +547,38 @@ export default function WhatsAppChatsPage() {
                         </div>
 
                         <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                            {/* Segment Filters Inside Tab */}
+                            <div className="px-4 py-2 border-b border-border/40 bg-card/10 flex flex-wrap items-center gap-2">
+                                <Badge
+                                    variant={activeSegment === 'all' ? 'default' : 'outline'}
+                                    className="cursor-pointer text-[10px]"
+                                    onClick={() => setActiveSegment('all')}
+                                >
+                                    All Chats
+                                </Badge>
+                                {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                                    <Badge
+                                        key={catName}
+                                        variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px] gap-1"
+                                        onClick={() => setActiveSegment(`category:${catName}`)}
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                                        {catName}
+                                    </Badge>
+                                ))}
+                                {groups.map(group => (
+                                    <Badge
+                                        key={group.id}
+                                        variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px]"
+                                        onClick={() => setActiveSegment(`group:${group.id}`)}
+                                    >
+                                        {group.name}
+                                    </Badge>
+                                ))}
+                            </div>
+
                             <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 h-full [&>div>div]:h-full ">
                                 <div id="chats-contacts-list-content" className="flex flex-col h-full ">
                                     {filteredConversations.length === 0 ? (
@@ -502,9 +587,9 @@ export default function WhatsAppChatsPage() {
                                                 <MessageSquare className="w-8 h-8 text-primary/60" />
                                                 <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
                                             </div>
-                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Yet</h3>
+                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Found</h3>
                                             <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                                                Your message history will appear here. Start a new chat from the contacts tab!
+                                                {activeSegment === 'all' ? "Your message history will appear here." : "No chats match the selected filter."}
                                             </p>
                                         </div>
                                     ) : (
@@ -522,7 +607,14 @@ export default function WhatsAppChatsPage() {
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between mb-0.5">
-                                                        <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid}</h3>
+                                                        <div className="flex items-center gap-2">
+                                                            <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid}</h3>
+                                                            {getContactForJid(chat.jid)?.category && (
+                                                                <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50 px-1">
+                                                                    {getContactForJid(chat.jid).category}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
                                                         <span className="text-[9px] text-muted-foreground group-hover:hidden">
                                                             {formatDistanceToNow(chat.timestamp)}
                                                         </span>
@@ -546,6 +638,38 @@ export default function WhatsAppChatsPage() {
                         </TabsContent>
 
                         <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col ">
+                            {/* Segment Filters Inside Tab */}
+                            <div className="px-4 py-2 border-b border-border/40 bg-card/10 flex flex-wrap items-center gap-2">
+                                <Badge
+                                    variant={activeSegment === 'all' ? 'default' : 'outline'}
+                                    className="cursor-pointer text-[10px]"
+                                    onClick={() => setActiveSegment('all')}
+                                >
+                                    All Contacts
+                                </Badge>
+                                {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                                    <Badge
+                                        key={catName}
+                                        variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px] gap-1"
+                                        onClick={() => setActiveSegment(`category:${catName}`)}
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
+                                        {catName}
+                                    </Badge>
+                                ))}
+                                {groups.map(group => (
+                                    <Badge
+                                        key={group.id}
+                                        variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px]"
+                                        onClick={() => setActiveSegment(`group:${group.id}`)}
+                                    >
+                                        {group.name}
+                                    </Badge>
+                                ))}
+                            </div>
+
                             <ScrollArea className="flex-1 min-h-0 h-full [&>div>div]:h-full">
                                 <div className="flex flex-col h-full">
                                     {filteredContacts.length === 0 ? (
@@ -554,9 +678,9 @@ export default function WhatsAppChatsPage() {
                                                 <Users className="w-8 h-8 text-emerald-500/60" />
                                                 <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping duration-[3000ms]" />
                                             </div>
-                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">Contacts list is empty</h3>
+                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Contacts Found</h3>
                                             <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                                                We couldn't find any contacts matching your search or in this workspace.
+                                                We couldn't find any contacts matching the selected filter.
                                             </p>
                                         </div>
                                     ) : (
@@ -578,7 +702,7 @@ export default function WhatsAppChatsPage() {
                                                         <div className="flex items-center justify-between mb-0.5">
                                                             <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{contact.name}</h3>
                                                             <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50">
-                                                                {contact.type || "Contact"}
+                                                                {contact.category || contact.type || "Contact"}
                                                             </Badge>
                                                         </div>
                                                         <p className="text-[11px] text-muted-foreground truncate opacity-70">
@@ -789,6 +913,8 @@ export default function WhatsAppChatsPage() {
                         </div>
                     )}
                 </div>
+
+
 
             </div>
 
