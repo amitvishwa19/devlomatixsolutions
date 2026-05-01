@@ -81,6 +81,7 @@ export async function testOpenRouterConnection(apiKey, model = "google/gemini-2.
 
 export async function testNvidiaConnection(apiKey, model = "meta/llama-3.1-405b-instruct") {
     try {
+        console.log(`[testNvidiaConnection] Testing model: ${model}`);
         const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -96,14 +97,23 @@ export async function testNvidiaConnection(apiKey, model = "meta/llama-3.1-405b-
 
         if (response.ok) {
             const j = await response.json();
-            const reply = j.choices[0]?.message?.content || "Connection successful (no content)";
-            return { ok: true, message: reply };
+            console.log("[testNvidiaConnection] Success");
+            const reply = j.choices?.[0]?.message?.content || "Connection successful (no content)";
+            return { ok: true, message: String(reply) };
         } else {
-            const err = await response.json();
-            return { ok: false, message: err?.detail || err?.message || "Invalid API key or model" };
+            let errorMsg = "API Error";
+            try {
+                const err = await response.json();
+                console.log("[testNvidiaConnection] Error Payload:", JSON.stringify(err));
+                errorMsg = err?.detail || err?.message || JSON.stringify(err);
+            } catch (e) {
+                errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            return { ok: false, message: String(errorMsg) };
         }
     } catch (error) {
-        return { ok: false, message: error.message };
+        console.error("[testNvidiaConnection] Critical Error:", error);
+        return { ok: false, message: String(error.message) };
     }
 }
 

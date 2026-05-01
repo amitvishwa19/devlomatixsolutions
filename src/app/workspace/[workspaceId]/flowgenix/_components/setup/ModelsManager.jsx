@@ -14,7 +14,7 @@ import { useParams } from "next/navigation";
 import { testModelConnection, testModelConnectionV2, testNvidiaConnection } from "../../_actions/setup/llm-api-check";
 import { inferCapabilities } from "../../_lib/model-capabilities";
 import { toast } from "sonner";
-import { Brain, Code2, Eye as EyeIcon, Globe, Infinity as InfinityIcon, CheckCircle2, ChevronDown, ChevronRight, Download, Eye, EyeOff, GripVertical, Loader2, Plug, Plus, Star, Timer, Trash2, XCircle, Zap, Save } from "lucide-react";
+import { Brain, Code2, Eye as EyeIcon, Globe, Infinity as InfinityIcon, CheckCircle2, ChevronDown, ChevronRight, Download, Eye, EyeOff, GripVertical, Loader2, Plug, Plus, Star, Timer, Trash2, XCircle, Zap, Save, Sparkles } from "lucide-react";
 import { FreeModelsDialog } from "./FreeModelsDialog";
 
 const CAP_META = {
@@ -269,8 +269,20 @@ export const ModelsManager = ({ config, onChange, userId }) => {
         }
 
         if (m.provider?.toLowerCase() === "nvidia") {
-            const r = await testNvidiaConnection(m.apiKey, m.model || m.name);
-            console.log("Nvidia Connection Result:", r);
+            const toastId = toast.loading("Establishing NVIDIA NIM connection...");
+            try {
+                const r = await testNvidiaConnection(m.apiKey, m.model || m.name);
+                console.log("Nvidia Connection Result:", r);
+
+                if (r.ok) {
+                    toast.success("NVIDIA NIM: Connected successfully", { id: toastId });
+                } else {
+                    toast.error(`NVIDIA NIM: ${r.message}`, { id: toastId });
+                }
+                setResultsV2((s) => ({ ...s, [m.id]: r }));
+            } catch (error) {
+                toast.error("NVIDIA NIM: Connection failed", { id: toastId });
+            }
         }
     };
 
@@ -552,39 +564,65 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                                             />
                                         </div>
 
-                                        <div className="mt-4 flex items-center gap-2">
+                                        <div className="mt-4 flex items-center justify-between ">
 
-                                            <div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => test(m)}
-                                                    disabled={testing[m.id]}
-                                                    className="font-mono text-[11px] h-7"
-                                                >
-                                                    {testing[m.id] ? (
-                                                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                                                    ) : (
-                                                        <Plug className="mr-1 h-3.5 w-3.5" />
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => test(m)}
+                                                        disabled={testing[m.id]}
+                                                        className="font-mono text-[11px] h-7"
+                                                    >
+                                                        {testing[m.id] ? (
+                                                            <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Plug className="mr-1 h-3.5 w-3.5" />
+                                                        )}
+                                                        Connect
+                                                    </Button>
+
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => { testConnectionV2(m) }}
+                                                        disabled={testingV2[m.id]}
+                                                        className="font-mono text-[11px] h-7 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                                                    >
+                                                        {testingV2[m.id] ? (
+                                                            <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Zap className="mr-1 h-3.5 w-3.5" />
+                                                        )}
+                                                        Connect v-2
+                                                    </Button>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1 min-w-0">
+                                                    {result && (
+                                                        <div
+                                                            className={`flex items-center gap-1 font-mono text-[11px] truncate ${result.ok ? "text-primary" : "text-destructive"}`}
+                                                            title={result.message}
+                                                        >
+                                                            {result.ok ? (
+                                                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                                                            ) : (
+                                                                <XCircle className="h-3.5 w-3.5 shrink-0" />
+                                                            )}
+                                                            <span className="truncate max-w-[180px]">{result.message}</span>
+                                                        </div>
                                                     )}
-                                                    Connect
-                                                </Button>
-
-
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    onClick={() => { testConnectionV2(m) }}
-                                                    disabled={testingV2[m.id]}
-                                                    className="font-mono text-[11px] h-7 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
-                                                >
-                                                    {testingV2[m.id] ? (
-                                                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                                                    ) : (
-                                                        <Zap className="mr-1 h-3.5 w-3.5" />
+                                                    {resultsV2[m.id] && (
+                                                        <div
+                                                            className={`flex items-center gap-1 font-mono text-[11px] truncate ${resultsV2[m.id].ok ? "text-primary" : "text-destructive"}`}
+                                                            title={resultsV2[m.id].message}
+                                                        >
+                                                            <Sparkles className="h-3 w-3 shrink-0" />
+                                                            <span className="truncate max-w-[300px]">v2: {resultsV2[m.id].message}</span>
+                                                        </div>
                                                     )}
-                                                    Connect v-2
-                                                </Button>
+                                                </div>
                                             </div>
 
                                             <div>
@@ -603,20 +641,6 @@ export const ModelsManager = ({ config, onChange, userId }) => {
                                                     Save
                                                 </Button>
                                             </div>
-
-                                            {result && (
-                                                <div
-                                                    className={`flex items-center gap-1 font-mono text-[11px] truncate ${result.ok ? "text-primary" : "text-destructive"}`}
-                                                    title={result.message}
-                                                >
-                                                    {result.ok ? (
-                                                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                                                    ) : (
-                                                        <XCircle className="h-3.5 w-3.5 shrink-0" />
-                                                    )}
-                                                    <span className="truncate max-w-[180px]">{result.message}</span>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 )}
