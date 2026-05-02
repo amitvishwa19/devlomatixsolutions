@@ -361,173 +361,173 @@ export const ChatPanel = ({ config: initialConfig, ragDocs: initialDocs, userId,
                 </div>
             ) : (
                 <div className="grid h-full min-h-0 grid-cols-[200px_1fr]">
-            <ChatThreadList
-                threads={threads}
-                activeId={activeId}
-                onSelect={setActiveId}
-                onCreate={handleNewThread}
-                onRename={handleRename}
-                onDelete={handleDeleteThread}
-            />
-            <div className="flex h-full min-h-0 min-w-0 flex-col">
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                        {(() => {
-                            if (!config) return <span className="font-mono text-sm text-muted-foreground italic">No Configuration</span>;
+                    <ChatThreadList
+                        threads={threads}
+                        activeId={activeId}
+                        onSelect={setActiveId}
+                        onCreate={handleNewThread}
+                        onRename={handleRename}
+                        onDelete={handleDeleteThread}
+                    />
+                    <div className="flex h-full min-h-0 min-w-0 flex-col">
+                        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                                {(() => {
+                                    if (!config) return <span className="font-mono text-sm text-muted-foreground italic">No Configuration</span>;
 
-                            const d = getDefaultModel(config);
-                            const status = d?.lastTestOk;
-                            const dotClass =
-                                status === true
-                                    ? "bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
-                                    : status === false
-                                        ? "bg-destructive shadow-[0_0_8px_hsl(var(--destructive))]"
-                                        : "bg-muted-foreground/40";
-                            const title =
-                                status === true
-                                    ? `Healthy · ${d?.lastTestMessage ?? "ok"}`
-                                    : status === false
-                                        ? `Unhealthy · ${d?.lastTestMessage ?? "failed"}`
-                                        : "Not tested yet — click test_connection in Setup";
-                            return (
-                                <>
-                                    <span className={`h-2 w-2 rounded-full shrink-0 ${dotClass}`} title={title} />
-                                    <span className="font-mono text-sm truncate">{config.name || "unnamed agent"}</span>
-                                    <span className="font-mono text-xs text-muted-foreground truncate">
-                                        · {(() => { const d2 = getDefaultModel(config); return d2 ? `${d2.label} (${d2.provider}/${d2.model})` : "no model"; })()}
-                                    </span>
-                                </>
-                            );
-                        })()}
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={reset} className="font-mono text-xs">
-                        <Trash2 className="mr-1 h-3.5 w-3.5" /> clear
-                    </Button>
-                </div>
-
-                <ScrollArea ref={scrollRef} className="flex-1 min-h-0">
-                    <div className="px-4 py-6 space-y-5">
-                        {messages.length === 0 && !busy && (
-                            <div className="mx-auto max-w-md text-center text-muted-foreground font-mono text-sm pt-12">
-                                <p className="mb-2 text-primary"># ready</p>
-                                <p className="text-xs leading-relaxed">
-                                    Configure your agent on the left, then send a message.
-                                    Tools and document context are injected automatically.
-                                </p>
+                                    const d = getDefaultModel(config);
+                                    const status = d?.lastTestOk;
+                                    const dotClass =
+                                        status === true
+                                            ? "bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
+                                            : status === false
+                                                ? "bg-destructive shadow-[0_0_8px_hsl(var(--destructive))]"
+                                                : "bg-muted-foreground/40";
+                                    const title =
+                                        status === true
+                                            ? `Healthy · ${d?.lastTestMessage ?? "ok"}`
+                                            : status === false
+                                                ? `Unhealthy · ${d?.lastTestMessage ?? "failed"}`
+                                                : "Not tested yet — click test_connection in Setup";
+                                    return (
+                                        <>
+                                            <span className={`h-2 w-2 rounded-full shrink-0 ${dotClass}`} title={title} />
+                                            <span className="font-mono text-sm truncate">{config.name || "unnamed agent"}</span>
+                                            <span className="font-mono text-xs text-muted-foreground truncate">
+                                                · {(() => { const d2 = getDefaultModel(config); return d2 ? `${d2.label} (${d2.provider}/${d2.model})` : "no model"; })()}
+                                            </span>
+                                        </>
+                                    );
+                                })()}
                             </div>
-                        )}
+                            <Button variant="ghost" size="sm" onClick={reset} className="font-mono text-xs">
+                                <Trash2 className="mr-1 h-3.5 w-3.5" /> clear
+                            </Button>
+                        </div>
 
-                        {messages.map((m, i) => {
-                            const traces = m.role === "assistant" ? parseTraces(m.meta) : [];
-                            return (
-                                <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                                    <div
-                                        className={
-                                            m.role === "user"
-                                                ? "max-w-[80%] rounded-lg bg-secondary px-4 py-2.5 text-sm"
-                                                : "max-w-[85%] rounded-lg border border-border bg-card px-4 py-3 text-sm"
-                                        }
-                                    >
-                                        {m.role === "assistant" ? (
-                                            <>
-                                                {traces.map((t, idx) => (
-                                                    <ToolCallBlock key={idx} trace={t} />
-                                                ))}
-                                                <div className="prose prose-sm prose-invert max-w-none prose-pre:bg-background prose-pre:border prose-pre:border-border">
-                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <p className="whitespace-pre-wrap">{m.content}</p>
-                                        )}
+                        <ScrollArea ref={scrollRef} className="flex-1 min-h-0">
+                            <div className="px-4 py-6 space-y-5">
+                                {messages.length === 0 && !busy && (
+                                    <div className="mx-auto max-w-md text-center text-muted-foreground font-mono text-sm pt-12">
+                                        <p className="mb-2 text-primary"># ready</p>
+                                        <p className="text-xs leading-relaxed">
+                                            Configure your agent on the left, then send a message.
+                                            Tools and document context are injected automatically.
+                                        </p>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                )}
 
-                        {busy && (streaming || liveTraces.length > 0) && (
-                            <div className="flex justify-start">
-                                <div className="max-w-[85%] rounded-lg border border-border bg-card px-4 py-3 text-sm">
-                                    {liveTraces.map((t, idx) => (
-                                        <ToolCallBlock key={idx} trace={t} />
-                                    ))}
-                                    {streaming && (
-                                        <div className="prose prose-sm prose-invert max-w-none prose-pre:bg-background prose-pre:border prose-pre:border-border">
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{streaming}</ReactMarkdown>
+                                {messages.map((m, i) => {
+                                    const traces = m.role === "assistant" ? parseTraces(m.meta) : [];
+                                    return (
+                                        <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                                            <div
+                                                className={
+                                                    m.role === "user"
+                                                        ? "max-w-[80%] rounded-lg bg-secondary px-4 py-2.5 text-sm"
+                                                        : "max-w-[85%] rounded-lg border border-border bg-card px-4 py-3 text-sm"
+                                                }
+                                            >
+                                                {m.role === "assistant" ? (
+                                                    <>
+                                                        {traces.map((t, idx) => (
+                                                            <ToolCallBlock key={idx} trace={t} />
+                                                        ))}
+                                                        <div className="prose prose-sm prose-invert max-w-none prose-pre:bg-background prose-pre:border prose-pre:border-border">
+                                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <p className="whitespace-pre-wrap">{m.content}</p>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
-                                    <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary align-middle" />
-                                </div>
-                            </div>
-                        )}
+                                    );
+                                })}
 
-                        {busy && !streaming && liveTraces.length === 0 && (
-                            <div className="flex justify-start">
-                                <div className="rounded-lg border border-border bg-card px-4 py-3">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground font-mono">
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> thinking...
-                                    </div>
-                                    {toolNotes.length > 0 && (
-                                        <div className="mt-2 space-y-1 border-t border-border pt-2">
-                                            {toolNotes.map((n, i) => (
-                                                <div key={i} className="flex items-center gap-1.5 text-[11px] font-mono text-primary/80">
-                                                    <Wrench className="h-3 w-3" /> {n}
-                                                </div>
+                                {busy && (streaming || liveTraces.length > 0) && (
+                                    <div className="flex justify-start">
+                                        <div className="max-w-[85%] rounded-lg border border-border bg-card px-4 py-3 text-sm">
+                                            {liveTraces.map((t, idx) => (
+                                                <ToolCallBlock key={idx} trace={t} />
                                             ))}
+                                            {streaming && (
+                                                <div className="prose prose-sm prose-invert max-w-none prose-pre:bg-background prose-pre:border prose-pre:border-border">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{streaming}</ReactMarkdown>
+                                                </div>
+                                            )}
+                                            <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary align-middle" />
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </ScrollArea>
+                                    </div>
+                                )}
 
-                <div className="border-t border-border bg-card/40 p-3">
-                    <div className="mb-2 flex items-center justify-end gap-2">
-                        {busy ? (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={stop}
-                                className="h-7 gap-1.5 font-mono text-xs"
-                            >
-                                <Square className="h-3 w-3 fill-current" /> Stop
-                            </Button>
-                        ) : (
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={regenerate}
-                                disabled={!canRegenerate}
-                                className="h-7 gap-1.5 font-mono text-xs"
-                                title="Re-run last user message"
-                            >
-                                <RefreshCw className="h-3 w-3" /> Regenerate
-                            </Button>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    send();
-                                }
-                            }}
-                            placeholder="message your agent... (Enter to send, Shift+Enter for newline)"
-                            rows={2}
-                            className="font-mono text-sm resize-none"
-                            disabled={busy}
-                        />
-                        <Button onClick={send} disabled={busy || !input.trim()} className="h-full font-mono self-end">
-                            <Send className="h-4 w-4" />
-                        </Button>
+                                {busy && !streaming && liveTraces.length === 0 && (
+                                    <div className="flex justify-start">
+                                        <div className="rounded-lg border border-border bg-card px-4 py-3">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground font-mono">
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> thinking...
+                                            </div>
+                                            {toolNotes.length > 0 && (
+                                                <div className="mt-2 space-y-1 border-t border-border pt-2">
+                                                    {toolNotes.map((n, i) => (
+                                                        <div key={i} className="flex items-center gap-1.5 text-[11px] font-mono text-primary/80">
+                                                            <Wrench className="h-3 w-3" /> {n}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
+
+                        <div className="border-t border-border bg-card/40 p-3">
+                            <div className="mb-2 flex items-center justify-end gap-2">
+                                {busy ? (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={stop}
+                                        className="h-7 gap-1.5 font-mono text-xs"
+                                    >
+                                        <Square className="h-3 w-3 fill-current" /> Stop
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={regenerate}
+                                        disabled={!canRegenerate}
+                                        className="h-7 gap-1.5 font-mono text-xs"
+                                        title="Re-run last user message"
+                                    >
+                                        <RefreshCw className="h-3 w-3" /> Regenerate
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <Textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                            e.preventDefault();
+                                            send();
+                                        }
+                                    }}
+                                    placeholder="message your agent... (Enter to send, Shift+Enter for newline)"
+                                    rows={2}
+                                    className="font-mono text-sm resize-none"
+                                    disabled={busy}
+                                />
+                                <Button onClick={send} disabled={busy || !input.trim()} className="h-full font-mono self-end">
+                                    <Send className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            </div>
             )}
         </div>
     );

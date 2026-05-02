@@ -48,6 +48,7 @@ export function SetupTab({ workspaceId, userId }) {
                 config={config} 
                 workspaceId={workspaceId} 
                 userId={userId} 
+                onChange={loadData}
             />
             <AgentSettings 
                 config={config} 

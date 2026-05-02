@@ -39,9 +39,9 @@ export default function FlowgenixDashboard() {
     }
 
     return (
-        <div className="flex flex-col h-[92vh] overflow-hidden p-2">
-            <Tabs defaultValue="chat" className="flex flex-col h-full bg-card/20 border border-border rounded-xl overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between px-6 py-2 border-b border-border/50 bg-card/30">
+        <div className="flex flex-col h-[93vh] overflow-hidden">
+            <Tabs defaultValue="chat" className="flex flex-col h-full bg-card/20 overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-6 py-2 border-b border-border/50 ">
                     <div className="flex items-center gap-2">
                         <h1 className="text-sm font-bold tracking-tight uppercase">FlowGenix</h1>
                     </div>
@@ -60,11 +60,12 @@ export default function FlowgenixDashboard() {
                             <Settings2 className="h-3.5 w-3.5" /> Setup
                         </TabsTrigger>
                     </TabsList>
+
                 </div>
 
                 {/* Content Section */}
                 <div className="flex-1 min-h-0 relative">
-                    <TabsContent value="chat" className="h-full mt-0 data-[state=inactive]:hidden">
+                    <TabsContent value="chat" className="h-full mt-0 p-0 data-[state=inactive]:hidden">
                         <ChatPanel
                             userId={userId}
                             workspaceId={workspaceId}
@@ -91,6 +92,7 @@ export default function FlowgenixDashboard() {
                         />
                     </TabsContent>
                 </div>
+
             </Tabs>
         </div>
     );
