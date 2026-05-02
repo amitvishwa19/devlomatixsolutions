@@ -39,11 +39,11 @@ export default function FlowgenixDashboard() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-background overflow-hidden p-4">
+        <div className="flex flex-col h-[92vh] overflow-hidden p-2">
             <Tabs defaultValue="chat" className="flex flex-col h-full bg-card/20 border border-border rounded-xl overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-6 py-2 border-b border-border/50 bg-card/30">
                     <div className="flex items-center gap-2">
-                         <h1 className="text-sm font-bold tracking-tight uppercase">FlowGenix</h1>
+                        <h1 className="text-sm font-bold tracking-tight uppercase">FlowGenix</h1>
                     </div>
 
                     <TabsList className="bg-muted/50 p-1 rounded-lg border border-border/50">
@@ -65,29 +65,29 @@ export default function FlowgenixDashboard() {
                 {/* Content Section */}
                 <div className="flex-1 min-h-0 relative">
                     <TabsContent value="chat" className="h-full mt-0 data-[state=inactive]:hidden">
-                        <ChatPanel 
-                            userId={userId} 
-                            workspaceId={workspaceId} 
+                        <ChatPanel
+                            userId={userId}
+                            workspaceId={workspaceId}
                         />
                     </TabsContent>
 
                     <TabsContent value="workflow" className="h-full mt-0 data-[state=inactive]:hidden p-4">
-                        <WorkflowTab 
-                            workspaceId={workspaceId} 
-                            userId={userId} 
+                        <WorkflowTab
+                            workspaceId={workspaceId}
+                            userId={userId}
                         />
                     </TabsContent>
 
                     <TabsContent value="history" className="h-full mt-0 data-[state=inactive]:hidden p-4">
-                        <RunListTab 
-                            workspaceId={workspaceId} 
+                        <RunListTab
+                            workspaceId={workspaceId}
                         />
                     </TabsContent>
 
                     <TabsContent value="setup" className="h-full mt-0 data-[state=inactive]:hidden">
-                        <SetupTab 
-                            workspaceId={workspaceId} 
-                            userId={userId} 
+                        <SetupTab
+                            workspaceId={workspaceId}
+                            userId={userId}
                         />
                     </TabsContent>
                 </div>
