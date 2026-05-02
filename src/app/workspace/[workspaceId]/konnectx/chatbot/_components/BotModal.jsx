@@ -108,6 +108,7 @@ export function BotModal({ isOpen, onClose, onSave, workspaceId, bot = null }) {
                         <Label htmlFor="description">Description</Label>
                         <Textarea
                             id="description"
+                            rows='4'
                             placeholder="Briefly describe what this bot does..."
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -141,6 +142,7 @@ export function BotModal({ isOpen, onClose, onSave, workspaceId, bot = null }) {
                             <Label htmlFor="responseText">Auto Reply Message</Label>
                             <Textarea
                                 id="responseText"
+                                rows='6'
                                 placeholder="Type the message sent automatically..."
                                 value={responseText}
                                 onChange={(e) => setResponseText(e.target.value)}
@@ -151,6 +153,7 @@ export function BotModal({ isOpen, onClose, onSave, workspaceId, bot = null }) {
                             <Label htmlFor="fallbackText">Fallback Reply</Label>
                             <Textarea
                                 id="fallbackText"
+                                rows='6'
                                 placeholder="Optional reply when no active bot keyword matches..."
                                 value={fallbackText}
                                 onChange={(e) => setFallbackText(e.target.value)}
