@@ -90,14 +90,42 @@ const ToolCallBlock = ({ trace }) => {
     );
 };
 
-export const ChatPanel = ({ config, ragDocs, userId, workspaceId }) => {
+import { getOrCreateAgentConfig, listRagDocs } from "../../_actions/setup/actions";
+
+export const ChatPanel = ({ config: initialConfig, ragDocs: initialDocs, userId, workspaceId }) => {
     const params = useParams();
+    const [config, setConfig] = useState(initialConfig || null);
+    const [ragDocs, setRagDocs] = useState(initialDocs || []);
     const [threads, setThreads] = useState([]);
     const [activeId, setActiveId] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [busy, setBusy] = useState(false);
     const [toolNotes, setToolNotes] = useState([]);
+    const [loadingConfig, setLoadingConfig] = useState(!initialConfig);
+
+    // Auto-load config if not provided
+    useEffect(() => {
+        async function load() {
+            if (!initialConfig && workspaceId && userId) {
+                try {
+                    const [cfg, docs] = await Promise.all([
+                        getOrCreateAgentConfig(workspaceId, userId),
+                        listRagDocs(workspaceId)
+                    ]);
+                    setConfig(cfg);
+                    setRagDocs(docs);
+                } catch (err) {
+                    console.error("ChatPanel config load error:", err);
+                } finally {
+                    setLoadingConfig(false);
+                }
+            } else if (initialConfig) {
+                setLoadingConfig(false);
+            }
+        }
+        load();
+    }, [initialConfig, workspaceId, userId]);
     const [liveTraces, setLiveTraces] = useState([]);
     const [streaming, setStreaming] = useState("");
     const scrollRef = useRef(null);
@@ -315,7 +343,24 @@ export const ChatPanel = ({ config, ragDocs, userId, workspaceId }) => {
     const canRegenerate = !busy && messages.some((m) => m.role === "user");
 
     return (
-        <div className="grid h-full min-h-0 grid-cols-[200px_1fr]">
+        <div className="h-full min-h-0">
+            {loadingConfig ? (
+                <div className="h-full flex flex-col items-center justify-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary/20" />
+                    <p className="text-xs text-muted-foreground animate-pulse uppercase tracking-widest font-mono">Loading Configuration...</p>
+                </div>
+            ) : !config ? (
+                <div className="h-full flex flex-col items-center justify-center space-y-4">
+                    <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
+                        <RefreshCw className="h-6 w-6 text-destructive" />
+                    </div>
+                    <div className="text-center space-y-1">
+                        <p className="text-sm font-bold uppercase tracking-tight">No Configuration Found</p>
+                        <p className="text-[10px] text-muted-foreground max-w-[200px]">Please check your Setup tab to initialize your AI agent.</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="grid h-full min-h-0 grid-cols-[200px_1fr]">
             <ChatThreadList
                 threads={threads}
                 activeId={activeId}
@@ -482,6 +527,8 @@ export const ChatPanel = ({ config, ragDocs, userId, workspaceId }) => {
                     </div>
                 </div>
             </div>
+            </div>
+            )}
         </div>
     );
 };

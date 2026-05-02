@@ -5,7 +5,7 @@ import {
     ReactFlow, addEdge, useNodesState, useEdgesState, Controls,
     Background, BackgroundVariant, Panel, useReactFlow, ReactFlowProvider,
 } from "@xyflow/react";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import "@xyflow/react/dist/style.css";
 import WorkflowNode from "./WorkflowNode";
 import WorkflowEdge from "./WorkflowEdge";
@@ -13,7 +13,7 @@ import NodePanel from "./NodePanel";
 import NodeDetailPanel from "./NodeDetailPanel";
 import TemplateGallery from "./TemplateGallery";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Save, Pencil, Trash2, Loader2, Home, MessageSquare, BookOpen, Download, Clock } from "lucide-react";
+import { Plus, Play, Save, Pencil, Trash2, Loader2, Home, MessageSquare, BookOpen, Download, Clock, X } from "lucide-react";
 import ScheduleDialog from "./ScheduleDialog";
 import ChatPanel from "./ChatPanel";
 import { useRouter, useParams } from "next/navigation";
@@ -33,21 +33,22 @@ const initialEdges = [];
 
 const DEFAULT_VIEWPORT = { x: 500, y: 150, zoom: 0.8 };
 
-function WorkflowCanvasInner({ 
-    workflowId, 
-    workflowName: initialName, 
-    loadedNodes, 
-    loadedEdges, 
-    initialCron, 
-    initialScheduleEnabled, 
+function WorkflowCanvasInner({
+    workflowId,
+    workflowName: initialName,
+    loadedNodes,
+    loadedEdges,
+    initialCron,
+    initialScheduleEnabled,
     initialViewport,
-    userId
+    userId,
+    onClose
 }) {
     const router = useRouter();
     const params = useParams();
     const workspaceId = params.workspaceId;
     const reactFlowWrapper = useRef(null);
-    
+
     const [nodes, setNodes, onNodesChange] = useNodesState((loadedNodes && loadedNodes.length > 0) ? loadedNodes : initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState((loadedEdges && loadedEdges.length > 0) ? loadedEdges : initialEdges);
     const [workflowName, setWorkflowName] = useState(initialName || "Main Workflow");
@@ -68,7 +69,7 @@ function WorkflowCanvasInner({
     const [showSchedule, setShowSchedule] = useState(false);
     const [cronExpression, setCronExpression] = useState(initialCron || "");
     const [scheduleEnabled, setScheduleEnabled] = useState(initialScheduleEnabled || false);
-    
+
     const { screenToFlowPosition, getViewport, setViewport } = useReactFlow();
 
     useEffect(() => {
@@ -97,7 +98,7 @@ function WorkflowCanvasInner({
         if (sourceStatus === "success" && targetStatus === "running") edgeStatus = 'running';
         else if (sourceStatus === "success" && targetStatus === "success") edgeStatus = 'success';
         else if (sourceStatus === "error" || targetStatus === "error") edgeStatus = 'error';
-        
+
         if (isWaitingForChat) {
             return {
                 ...edge, type: 'workflowEdge', data: { status: 'running' }, animated: true,
@@ -228,9 +229,16 @@ function WorkflowCanvasInner({
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/workspace/${workspaceId}/dashboard`)}>
                         <Home className="h-4 w-4" />
                     </Button>
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none">Flowgenix</span>
-                        <input value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} className="text-sm font-semibold bg-transparent border-none outline-none text-foreground hover:bg-muted px-1 rounded transition-colors" />
+                    <div className="flex items-center gap-2">
+                        {onClose && (
+                            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0 rounded-full hover:bg-primary/10">
+                                <X className="h-4 w-4" />
+                            </Button>
+                        )}
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none">Flowgenix</span>
+                            <input value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} className="text-sm font-semibold bg-transparent border-none outline-none text-foreground hover:bg-muted px-1 rounded transition-colors" />
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -244,7 +252,12 @@ function WorkflowCanvasInner({
                     <Button variant="outline" size="sm" className={`h-8 text-xs gap-1.5 ${scheduleEnabled ? "border-primary text-primary bg-primary/5" : ""}`} onClick={() => setShowSchedule(true)}>
                         <Clock className="h-3.5 w-3.5" /> {scheduleEnabled ? "Scheduled" : "Schedule"}
                     </Button>
-                    <Button size="sm" className="h-8 text-xs gap-1.5 bg-orange-600 hover:bg-orange-700 text-white" onClick={() => hasChatTrigger ? setShowChat(true) : execute()} disabled={isExecuting}>
+                    {hasChatTrigger && (
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-primary text-primary bg-primary/5 hover:bg-primary/10" onClick={() => setShowChat(true)}>
+                            <MessageSquare className="h-3.5 w-3.5" /> Chat
+                        </Button>
+                    )}
+                    <Button size="sm" className="h-8 text-xs gap-1.5 bg-orange-600 hover:bg-orange-700 text-white" onClick={() => execute()} disabled={isExecuting}>
                         {isExecuting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                         {isExecuting ? "Running..." : "Execute"}
                     </Button>

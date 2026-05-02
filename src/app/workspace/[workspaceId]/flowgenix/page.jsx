@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -13,26 +12,14 @@ import {
     ChevronRight,
     Loader2
 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-// Server Actions
-import { getOrCreateAgentConfig, listAgentModels, listRagDocs } from "./_actions/setup/actions";
-import { getOrCreateMainWorkflow } from "./_actions/workflows/actions";
-import { listRuns } from "./_actions/runs/actions";
-import { listCredentials, deleteCredential } from "./_actions/credentials/actions";
+import { useSession } from "next-auth/react";
 
 // Components
 import { ChatPanel } from "./_components/chat/ChatPanel";
-import { ModelsManager } from "./_components/setup/ModelsManager";
-import { AgentSettings } from "./_components/setup/AgentSettings";
-import { RagPanel } from "./_components/setup/RagPanel";
-import { RunList } from "./_components/runs/RunList";
-import { CredentialList } from "./_components/credentials/CredentialList";
-import WorkflowCanvas from "./_components/canvas/WorkflowCanvas";
-
-import { toast } from "sonner";
-
-import { useSession } from "next-auth/react";
+import { RunListTab } from "./_components/tabs/RunListTab";
+import { CredentialListTab } from "./_components/tabs/CredentialListTab";
+import { WorkflowTab } from "./_components/tabs/WorkflowTab";
+import { SetupTab } from "./_components/tabs/SetupTab";
 
 export default function FlowgenixDashboard() {
     const { data: session, status: sessionStatus } = useSession();
@@ -40,152 +27,67 @@ export default function FlowgenixDashboard() {
     const workspaceId = params?.workspaceId;
     const userId = session?.user?.userId;
 
-    const [config, setConfig] = useState(null);
-    const [docs, setDocs] = useState([]);
-    const [mainWorkflow, setMainWorkflow] = useState(null);
-    const [runs, setRuns] = useState([]);
-    const [credentials, setCredentials] = useState([]);
-
-    const [loading, setLoading] = useState(false);
-    const [runsLoading, setRunsLoading] = useState(false);
-    const [credsLoading, setCredsLoading] = useState(false);
-
-    useEffect(() => {
-        if (workspaceId && userId) {
-            init();
-        }
-    }, [workspaceId, userId]);
-
-    const init = async () => {
-        setLoading(true);
-        try {
-            const [cfg, ragDocs, workflow, creds] = await Promise.all([
-                getOrCreateAgentConfig(workspaceId, userId),
-                listRagDocs(workspaceId),
-                getOrCreateMainWorkflow(workspaceId, userId),
-                listCredentials(workspaceId)
-            ]);
-            setConfig(cfg);
-            setDocs(ragDocs);
-            setMainWorkflow(workflow);
-            setCredentials(creds);
-        } catch (error) {
-            console.error("Initialization error:", error);
-            toast.error("Failed to initialize workspace");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadRuns = async () => {
-        if (!workspaceId) return;
-        setRunsLoading(true);
-        try {
-            const data = await listRuns(workspaceId);
-            setRuns(data);
-        } catch (error) {
-            toast.error("Failed to load runs");
-        } finally {
-            setRunsLoading(false);
-        }
-    };
-
-    const handleDeleteCredential = async (id) => {
-        try {
-            await deleteCredential(workspaceId, id);
-            setCredentials(prev => prev.filter(c => c.id !== id));
-            toast.success("Credential deleted");
-        } catch (error) {
-            toast.error("Failed to delete credential");
-        }
-    };
-
-    if (loading) {
+    if (sessionStatus === "loading") {
         return (
-            <div className="flex items-center justify-center h-screen bg-background">
+            <div className="flex items-center justify-center h-screen bg-background text-foreground">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="text-sm font-mono animate-pulse">Initializing Flowgenix...</p>
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-xs font-mono animate-pulse uppercase tracking-widest">Initialising FlowGenix...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex h-full w-full flex-col p-0">
-            <Tabs defaultValue="chat" className="flex-1 flex flex-col w-full rounded-none">
-                <TabsList className="w-full h-12 border-b border-border bg-card/30 p-0 grid grid-cols-4 rounded-none">
-                    <TabsTrigger value="chat" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
-                        <MessageSquare className="h-3.5 w-3.5 mr-2" /> Chat
-                    </TabsTrigger>
-                    <TabsTrigger value="setup" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
-                        <Settings2 className="h-3.5 w-3.5 mr-2" /> Setup
-                    </TabsTrigger>
-                    <TabsTrigger value="workflow" className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
-                        <WorkflowIcon className="h-3.5 w-3.5 mr-2" /> Workflow
-                    </TabsTrigger>
-                    <TabsTrigger value="runs" onClick={loadRuns} className="h-12 rounded-none border-b-2 border-transparent px-0 text-sm transition-all data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary hover:text-foreground/80 shadow-none bg-transparent">
-                        <History className="h-3.5 w-3.5 mr-2" /> Runs
-                    </TabsTrigger>
-                </TabsList>
+        <div className="flex flex-col h-screen bg-background overflow-hidden p-4">
+            <Tabs defaultValue="chat" className="flex flex-col h-full bg-card/20 border border-border rounded-xl overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-6 py-2 border-b border-border/50 bg-card/30">
+                    <div className="flex items-center gap-2">
+                         <h1 className="text-sm font-bold tracking-tight uppercase">FlowGenix</h1>
+                    </div>
 
-                <div className="flex-1 p-2">
-                    <TabsContent value="chat" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden flex flex-col h-[86vh]">
-                        <div className="flex-1 overflow-hidden rounded-xl border border-border bg-card/50 shadow-2xl shadow-primary/5">
-                            <ChatPanel config={config} ragDocs={docs} userId={userId} workspaceId={workspaceId} />
-                        </div>
-                    </TabsContent>
+                    <TabsList className="bg-muted/50 p-1 rounded-lg border border-border/50">
+                        <TabsTrigger value="chat" className="gap-2 font-medium text-xs px-4 rounded-md">
+                            <MessageSquare className="h-3.5 w-3.5" /> Chat with AI Agent
+                        </TabsTrigger>
+                        <TabsTrigger value="workflow" className="gap-2 font-medium text-xs px-4 rounded-md">
+                            <WorkflowIcon className="h-3.5 w-3.5" /> Workflows
+                        </TabsTrigger>
+                        <TabsTrigger value="history" className="gap-2 font-medium text-xs px-4 rounded-md">
+                            <History className="h-3.5 w-3.5" /> Executions
+                        </TabsTrigger>
+                        <TabsTrigger value="setup" className="gap-2 font-medium text-xs px-4 rounded-md">
+                            <Settings2 className="h-3.5 w-3.5" /> Setup
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
-                    <TabsContent value="setup" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden h-[86vh]">
-                        <ScrollArea className="h-full w-full">
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 p-4">
-                                <div className="space-y-6">
-                                    <div className="rounded-xl border border-border bg-card/50 p-6 lg:col-span-2">
-                                        <h2 className="mb-6 font-mono text-xs text-primary/80 flex items-center gap-2">
-                                            <span className="h-1 w-1 rounded-full bg-primary" /> Models (Auto-Optimized)
-                                        </h2>
-                                        <ModelsManager config={config} onChange={setConfig} userId={userId} />
-                                    </div>
-                                    <CredentialList credentials={credentials} loading={credsLoading} onDelete={handleDeleteCredential} />
-                                </div>
-                                <div className="space-y-6">
-                                    <div className="rounded-xl border border-border bg-card/50 p-6">
-                                        <h2 className="mb-6 font-mono text-xs text-primary/80 flex items-center gap-2">
-                                            <span className="h-1 w-1 rounded-full bg-primary" /> Agent Configuration
-                                        </h2>
-                                        <AgentSettings config={config} onChange={setConfig} userId={userId} />
-                                    </div>
-                                    <div className="rounded-xl border border-border bg-card/50 p-6 self-start">
-                                        <h2 className="mb-6 font-mono text-xs text-primary/80 flex items-center gap-2">
-                                            <span className="h-1 w-1 rounded-full bg-primary" /> Knowledge Base
-                                        </h2>
-                                        <RagPanel config={config} docs={docs} setDocs={setDocs} userId={userId} />
-                                    </div>
-                                </div>
-                            </div>
-                        </ScrollArea>
-                    </TabsContent>
-
-                    <TabsContent value="workflow" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden h-[86vh] rounded-xl overflow-hidden border border-border">
-                        <WorkflowCanvas
-                            workflowId={mainWorkflow?.id}
-                            workflowName={mainWorkflow?.name}
-                            loadedNodes={mainWorkflow?.nodes}
-                            loadedEdges={mainWorkflow?.edges}
-                            initialCron={mainWorkflow?.cronExpression}
-                            initialScheduleEnabled={mainWorkflow?.scheduleEnabled}
-                            initialViewport={mainWorkflow?.viewport}
-                            userId={userId}
+                {/* Content Section */}
+                <div className="flex-1 min-h-0 relative">
+                    <TabsContent value="chat" className="h-full mt-0 data-[state=inactive]:hidden">
+                        <ChatPanel 
+                            userId={userId} 
+                            workspaceId={workspaceId} 
                         />
                     </TabsContent>
 
-                    <TabsContent value="runs" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden h-[86vh] p-4">
-                        <RunList
-                            runs={runs}
-                            loading={runsLoading}
-                            onRefresh={loadRuns}
-                            onRerun={(run) => { }}
-                            onOpenLogs={(id) => { }}
+                    <TabsContent value="workflow" className="h-full mt-0 data-[state=inactive]:hidden p-4">
+                        <WorkflowTab 
+                            workspaceId={workspaceId} 
+                            userId={userId} 
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="history" className="h-full mt-0 data-[state=inactive]:hidden p-4">
+                        <RunListTab 
+                            workspaceId={workspaceId} 
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="setup" className="h-full mt-0 data-[state=inactive]:hidden">
+                        <SetupTab 
+                            workspaceId={workspaceId} 
+                            userId={userId} 
                         />
                     </TabsContent>
                 </div>

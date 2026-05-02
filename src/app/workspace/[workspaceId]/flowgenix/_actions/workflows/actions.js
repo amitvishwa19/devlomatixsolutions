@@ -20,6 +20,7 @@ export async function listWorkflows(workspaceId, { templates = false } = {}) {
 }
 
 export async function createWorkflow(workspaceId, userId, data) {
+    if (!userId) throw new Error("userId is required to create a workflow");
     try {
         const workflow = await db.workflow.create({
             data: {

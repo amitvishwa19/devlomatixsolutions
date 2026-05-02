@@ -163,8 +163,22 @@ const SLOT_CATEGORY_FILTER = {
     tool: ["AI / Agents", "Core"],
 };
 
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useRef } from "react";
+
 export default function NodePanel({ onClose, onAddNode, slotFilter }) {
     const [search, setSearch] = useState("");
+    const panelRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (panelRef.current && !panelRef.current.contains(event.target)) {
+                onClose();
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [onClose]);
 
     const allowedCategories = slotFilter ? SLOT_CATEGORY_FILTER[slotFilter] : null;
 
@@ -188,7 +202,7 @@ export default function NodePanel({ onClose, onAddNode, slotFilter }) {
     };
 
     return (
-        <div className="absolute top-12 right-0 w-[540px] h-[calc(100%-3rem)] bg-card border-l border-border shadow-lg z-20 flex flex-col">
+        <div ref={panelRef} className="absolute top-12 right-0 w-[540px] h-[calc(100%-3rem)] bg-card border-l border-border shadow-lg z-20 flex flex-col">
             <div className="p-3 border-b border-border flex items-center justify-between">
                 <h3 className="font-semibold text-sm text-foreground">{slotFilter ? `Add ${slotFilter === 'llm' ? 'Chat Model' : slotFilter === 'memory' ? 'Memory' : 'Tool'}` : 'Add Node'}</h3>
                 <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -209,33 +223,35 @@ export default function NodePanel({ onClose, onAddNode, slotFilter }) {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-4">
-                <p className="text-xs text-muted-foreground italic">Drag a node onto the canvas or click to add</p>
-                {filtered.map((cat) => (
-                    <div key={cat.name}>
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{cat.name}</h4>
-                        <div className="space-y-1">
-                            {cat.nodes.map((node) => (
-                                <button
-                                    key={node.type}
-                                    draggable
-                                    onDragStart={(e) => onDragStart(e, node.type, node.label)}
-                                    onClick={() => onAddNode(node.type, node.label)}
-                                    className="w-full flex items-center gap-3 p-2.5 rounded-md hover:bg-muted transition-colors text-left cursor-grab active:cursor-grabbing"
-                                >
-                                    <div className="p-1.5 rounded bg-muted">
-                                        <node.icon className="h-4 w-4 text-muted-foreground" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="text-sm font-medium text-foreground">{node.label}</div>
-                                        <div className="text-xs text-muted-foreground truncate">{node.description}</div>
-                                    </div>
-                                </button>
-                            ))}
+            <ScrollArea className="h-[80vh] p-3">
+                <div className="space-y-4">
+                    <p className="text-xs text-muted-foreground italic">Drag a node onto the canvas or click to add</p>
+                    {filtered.map((cat) => (
+                        <div key={cat.name}>
+                            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{cat.name}</h4>
+                            <div className="space-y-1">
+                                {cat.nodes.map((node) => (
+                                    <button
+                                        key={node.type}
+                                        draggable
+                                        onDragStart={(e) => onDragStart(e, node.type, node.label)}
+                                        onClick={() => onAddNode(node.type, node.label)}
+                                        className="w-full flex items-center gap-3 p-2.5 rounded-md hover:bg-muted transition-colors text-left cursor-grab active:cursor-grabbing"
+                                    >
+                                        <div className="p-1.5 rounded bg-muted">
+                                            <node.icon className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-medium text-foreground">{node.label}</div>
+                                            <div className="text-xs text-muted-foreground truncate">{node.description}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            </ScrollArea>
         </div>
     );
 }
