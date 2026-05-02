@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { Gem, ShoppingBag, Menu, X, Heart, History, User, LogOut, ChevronDown } from "lucide-react";
+import { Gem, ShoppingBag, Menu, X, Heart, History, User, LogOut, ChevronDown, ShoppingCart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +27,10 @@ const navLinks = [
     { label: "About", path: "/about" },
     { label: "Contact", path: "/contact" },
 ];
+
+const openGoogleOneTapLogin = () => {
+    window.dispatchEvent(new Event("crystal-aura:google-one-tap"));
+};
 
 const Navbar = () => {
     const pathname = usePathname();
@@ -105,33 +109,16 @@ const Navbar = () => {
                         )}
                     </Link>
 
-                    {/* Orders */}
-                    <Link
-                        href="/orders"
-                        className="hidden sm:flex p-2.5 rounded-full bg-white/5 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300"
-                    >
-                        <History className="w-4 h-4" />
-                    </Link>
+                    
 
-                    {isLoggedIn && (
-                        <Link
-                            href="/account"
-                            className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pathname === "/account"
-                                ? "text-primary bg-primary/10"
-                                : "text-foreground bg-white/5 hover:bg-primary/10 hover:text-primary"
-                                }`}
-                        >
-                            <User className="w-4 h-4" />
-                            Account
-                        </Link>
-                    )}
-
+                    
                     {/* Cart */}
                     <button
                         onClick={() => setIsOpen(true)}
                         className="relative p-2.5 rounded-full bg-white/5 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 group"
                     >
-                        <ShoppingBag className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                        {/* <ShoppingBag className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" /> */}
+                        <ShoppingCart className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
                         {totalItems > 0 && (
                             <motion.span
                                 initial={{ scale: 0 }}
@@ -191,6 +178,36 @@ const Navbar = () => {
                                 >
                                     <LogOut className="mr-2 h-4 w-4" />
                                     Logout
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+
+                    {!isLoggedIn && status !== "loading" && (
+                        <DropdownMenu modal={false}>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    className="hidden sm:flex items-center gap-2 rounded-full bg-white/5 px-2.5 py-2 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
+                                    aria-label="Open login menu"
+                                >
+                                    <User className="h-4 w-4" />
+                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="w-48 border-white/10 bg-[#121214] text-white shadow-2xl"
+                            >
+                                <DropdownMenuLabel className="px-3 py-2 text-xs font-medium text-white/55">
+                                    Account
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-white/10" />
+                                <DropdownMenuItem
+                                    onSelect={openGoogleOneTapLogin}
+                                    className="cursor-pointer focus:bg-white/10 focus:text-white"
+                                >
+                                    <User className="mr-2 h-4 w-4" />
+                                    Login
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -280,6 +297,24 @@ const Navbar = () => {
                                     >
                                         <LogOut className="w-4 h-4" />
                                         Logout
+                                    </button>
+                                </motion.li>
+                            )}
+                            {!isLoggedIn && status !== "loading" && (
+                                <motion.li
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: navLinks.length * 0.05 }}
+                                >
+                                    <button
+                                        onClick={() => {
+                                            setMobileOpen(false);
+                                            openGoogleOneTapLogin();
+                                        }}
+                                        className="flex w-full items-center gap-2 py-3 px-4 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-300"
+                                    >
+                                        <User className="w-4 h-4" />
+                                        Login
                                     </button>
                                 </motion.li>
                             )}
