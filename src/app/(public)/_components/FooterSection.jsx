@@ -48,7 +48,7 @@ const FooterSection = () => {
           </div>
 
           <div>
-            <h4 className="font-sans text-xs tracking-[0.2em] uppercase text-foreground mb-5">Shop</h4>
+            <h4 className="font-sans text-xs font-medium text-foreground mb-5">Shop</h4>
             <ul className="space-y-3 text-muted-foreground text-sm font-light">
               <li><Link href="/crystalaura/shop" className="hover:text-primary transition-colors duration-300">All Products</Link></li>
               <li><Link href="/crystalaura/crystals" className="hover:text-primary transition-colors duration-300">Crystal Guide</Link></li>
@@ -57,7 +57,7 @@ const FooterSection = () => {
           </div>
 
           <div>
-            <h4 className="font-sans text-xs tracking-[0.2em] uppercase text-foreground mb-5">Company</h4>
+            <h4 className="font-sans text-xs font-medium text-foreground mb-5">Company</h4>
             <ul className="space-y-3 text-muted-foreground text-sm font-light">
               <li><Link href="/crystalaura/about" className="hover:text-primary transition-colors duration-300">About Us</Link></li>
               <li><Link href="/crystalaura/contact" className="hover:text-primary transition-colors duration-300">Contact</Link></li>
@@ -66,7 +66,7 @@ const FooterSection = () => {
           </div>
 
           <div>
-            <h4 className="font-sans text-xs tracking-[0.2em] uppercase text-foreground mb-5">Connect</h4>
+            <h4 className="font-sans text-xs font-medium text-foreground mb-5">Connect</h4>
             <ul className="space-y-3 text-muted-foreground text-sm font-light">
               <li>📧 hello@crystalaura.com</li>
               <li>📱 +91 98765 43210</li>
@@ -76,7 +76,7 @@ const FooterSection = () => {
         </div>
 
         <div className="section-divider w-full mb-6" />
-        <p className="text-center text-muted-foreground/40 text-[10px] uppercase tracking-widest font-light">
+        <p className="text-center text-muted-foreground/40 text-xs font-light">
           © 2026 Crystal Aura. All rights reserved. Crystals for wellness, not medical advice.
         </p>
       </div>

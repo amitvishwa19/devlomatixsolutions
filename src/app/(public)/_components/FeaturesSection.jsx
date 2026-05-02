@@ -44,7 +44,7 @@ const FeaturesSection = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">Why Choose Us</p>
+          <p className="text-primary text-xs font-medium mb-4">Why Choose Us</p>
           <h2 className="font-serif text-4xl md:text-5xl text-foreground">
             The <span className="text-gold-gradient font-semibold">Crystal Aura</span> Promise
           </h2>

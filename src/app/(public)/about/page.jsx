@@ -24,7 +24,7 @@ export default function CrystalAuraAboutPage() {
             transition={{ duration: 0.7 }}
             className="text-center mb-16"
           >
-            <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+            <p className="text-primary text-xs font-medium mb-4">
               ✦ Our Journey ✦
             </p>
             <h1 className="font-serif text-5xl md:text-7xl text-foreground mb-6">
@@ -70,7 +70,7 @@ export default function CrystalAuraAboutPage() {
                     <stat.icon className="w-6 h-6 text-primary" />
                 </div>
                 <p className="font-serif text-4xl text-gold-gradient font-bold mb-2">{stat.value}</p>
-                <p className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-black leading-tight">{stat.label}</p>
+                <p className="text-muted-foreground/40 text-xs font-medium leading-tight">{stat.label}</p>
               </motion.div>
             ))}
           </div>

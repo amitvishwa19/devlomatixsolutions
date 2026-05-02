@@ -38,7 +38,7 @@ const TestimonialSection = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+          <p className="text-primary text-xs font-medium mb-4">
             Testimonials
           </p>
           <h2 className="font-serif text-4xl md:text-6xl text-foreground">
@@ -74,8 +74,8 @@ const TestimonialSection = () => {
                     <span className="text-primary font-serif text-lg">{t.name[0]}</span>
                   </div>
                   <div>
-                    <p className="text-foreground font-sans text-xs uppercase font-bold tracking-widest">{t.name}</p>
-                    <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-light">{t.location}</p>
+                    <p className="text-foreground font-sans text-xs font-medium">{t.name}</p>
+                    <p className="text-muted-foreground text-xs font-light">{t.location}</p>
                   </div>
                 </div>
               </div>

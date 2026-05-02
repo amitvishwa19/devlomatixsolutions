@@ -20,7 +20,7 @@ export default function CrystalAuraWishlistPage() {
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
-          <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+          <p className="text-primary text-xs font-medium mb-4">
             ✦ Your Favorites ✦
           </p>
           <h1 className="font-serif text-5xl md:text-7xl text-foreground mb-6">
@@ -40,9 +40,9 @@ export default function CrystalAuraWishlistPage() {
                 <Heart className="w-8 h-8 text-muted-foreground/30" />
             </div>
             <p className="text-muted-foreground font-light text-lg mb-2">Your wishlist is currently empty</p>
-            <p className="text-muted-foreground/40 text-[10px] uppercase font-bold tracking-widest mb-10">Discover your next sacred companion</p>
+            <p className="text-muted-foreground/40 text-xs font-medium mb-10">Discover your next sacred companion</p>
             <Link href="/crystalaura/shop">
-              <Button className="bg-gold-gradient text-white px-10 py-7 rounded-2xl font-sans tracking-[0.2em] font-black uppercase text-[10px] hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
+              <Button className="bg-gold-gradient text-white px-10 py-7 rounded-2xl font-medium text-sm hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
                 <Search className="w-4 h-4 mr-2" />
                 Browse Shop
               </Button>

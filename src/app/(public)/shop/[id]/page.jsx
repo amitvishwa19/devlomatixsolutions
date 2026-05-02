@@ -33,7 +33,7 @@ export default function CrystalAuraProductDetailPage() {
           <h1 className="font-serif text-4xl text-foreground mb-6">Sacred Product Not Found</h1>
           <p className="text-muted-foreground font-light mb-8">The treasure you seek might have been moved or returned to the earth.</p>
           <Link href="/crystalaura/shop">
-            <Button className="bg-gold-gradient text-white px-8 py-6 rounded-xl font-sans tracking-widest uppercase font-black text-[10px]">
+            <Button className="bg-gold-gradient text-white px-8 py-6 rounded-xl font-medium text-sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Shop
             </Button>
@@ -87,7 +87,7 @@ export default function CrystalAuraProductDetailPage() {
     <div className="min-h-screen bg-transparent pt-12 pb-24 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-[10px] font-sans text-muted-foreground mb-12 uppercase tracking-[0.2em] font-black">
+        <nav className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-12">
           <Link href="/crystalaura" className="hover:text-primary transition-colors">Home</Link>
           <span className="opacity-30">/</span>
           <Link href="/crystalaura/shop" className="hover:text-primary transition-colors">Shop</Link>
@@ -110,7 +110,7 @@ export default function CrystalAuraProductDetailPage() {
                 className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute top-6 left-6">
-                <Badge className="bg-gold-gradient text-white border-none shadow-lg px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-black">
+                <Badge className="bg-gold-gradient text-white border-none shadow-lg px-4 py-1.5 rounded-full text-xs font-medium">
                   {product.category}
                 </Badge>
               </div>
@@ -138,12 +138,12 @@ export default function CrystalAuraProductDetailPage() {
                   />
                 ))}
               </div>
-              <span className="text-muted-foreground text-xs font-sans font-bold uppercase tracking-widest">{avgRating} ({fakeReviews.length} reviews)</span>
+              <span className="text-muted-foreground text-xs font-medium">{avgRating} ({fakeReviews.length} reviews)</span>
             </div>
 
             <div className="flex items-baseline gap-4 mb-2">
               <p className="text-primary font-serif text-5xl md:text-6xl font-bold">{product.price}</p>
-              <p className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-light">Inc. of all taxes</p>
+              <p className="text-muted-foreground/40 text-xs font-light">Inc. of all taxes</p>
             </div>
 
             <p className="text-muted-foreground font-light leading-relaxed text-lg mb-12 max-w-xl">
@@ -152,7 +152,7 @@ export default function CrystalAuraProductDetailPage() {
 
             {/* Quantity Selector */}
             <div className="flex items-center gap-8 mb-10">
-              <span className="text-foreground text-[10px] uppercase tracking-widest font-black">Quantity</span>
+              <span className="text-foreground text-xs font-medium">Quantity</span>
               <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-2xl p-1">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -180,7 +180,7 @@ export default function CrystalAuraProductDetailPage() {
               <Button
                 onClick={handleAddToCart}
                 size="lg"
-                className="flex-1 min-w-[240px] bg-gold-gradient text-white font-sans tracking-[0.25em] font-black uppercase text-[10px] py-8 rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-primary/20"
+                className="flex-1 min-w-[240px] bg-gold-gradient text-white font-medium text-sm py-8 rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-primary/20"
               >
                 <ShoppingBag className="w-5 h-5 mr-3" />
                 Add to Cart — ₹{(product.priceNum * quantity).toLocaleString("en-IN")}
@@ -216,13 +216,13 @@ export default function CrystalAuraProductDetailPage() {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <f.icon className="w-5 h-5 text-primary" />
                   </div>
-                  <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-black leading-tight">{f.label}</p>
+                  <p className="text-muted-foreground text-xs font-medium leading-tight">{f.label}</p>
                 </div>
               ))}
             </div>
 
             {/* Availability */}
-            <div className="flex items-center gap-3 text-[10px] font-sans font-black uppercase tracking-[0.2em] bg-white/[0.03] w-fit px-6 py-3 rounded-full border border-white/5">
+            <div className="flex items-center gap-3 text-xs font-medium bg-white/[0.03] w-fit px-6 py-3 rounded-full border border-white/5">
               <Check className="w-3.5 h-3.5 text-green-500" />
               <span className="text-muted-foreground/60">In Stock — Ships within 2-3 days</span>
             </div>
@@ -246,11 +246,11 @@ export default function CrystalAuraProductDetailPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-6 text-[10px] font-sans tracking-[0.3em] uppercase font-black transition-all border-b-2 -mb-[2px] ${
-                  activeTab === tab.id
-                    ? "text-primary border-primary"
-                    : "text-muted-foreground/40 border-transparent hover:text-foreground"
-                }`}
+className={`pb-6 text-sm font-medium transition-all border-b-2 -mb-[2px] ${
+                      activeTab === tab.id
+                        ? "text-primary border-primary"
+                        : "text-muted-foreground/40 border-transparent hover:text-foreground"
+                    }`}
               >
                 {tab.label}
               </button>
@@ -278,8 +278,8 @@ export default function CrystalAuraProductDetailPage() {
                     ["Returns", "7-day easy returns"],
                   ].map(([key, value]) => (
                     <div key={key} className="flex justify-between py-5 border-b border-white/5 last:border-0">
-                      <span className="text-muted-foreground/40 text-[10px] uppercase font-black tracking-widest">{key}</span>
-                      <span className="text-foreground text-sm font-sans font-bold uppercase tracking-widest">{value}</span>
+                      <span className="text-muted-foreground/40 text-xs font-medium">{key}</span>
+                      <span className="text-foreground text-sm font-medium">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -299,7 +299,7 @@ export default function CrystalAuraProductDetailPage() {
                            />
                          ))}
                       </div>
-                      <p className="text-muted-foreground/40 text-[10px] uppercase tracking-[0.3em] font-black mt-4">Based on {fakeReviews.length} reviews</p>
+                      <p className="text-muted-foreground/40 text-xs font-medium mt-4">Based on {fakeReviews.length} reviews</p>
                    </div>
                 </div>
 
@@ -312,11 +312,11 @@ export default function CrystalAuraProductDetailPage() {
                             {review.name[0]}
                           </div>
                           <div>
-                            <span className="text-foreground text-sm font-sans font-black uppercase tracking-widest">{review.name}</span>
-                            <p className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-light mt-1">{review.location || "Verified Buyer"}</p>
+                            <span className="text-foreground text-sm font-medium">{review.name}</span>
+                            <p className="text-muted-foreground/40 text-xs font-light mt-1">{review.location || "Verified Buyer"}</p>
                           </div>
                         </div>
-                        <span className="text-muted-foreground/20 text-[10px] uppercase tracking-widest font-black">{review.date}</span>
+                        <span className="text-muted-foreground/20 text-xs font-medium">{review.date}</span>
                       </div>
                       <div className="flex items-center gap-1 mb-6 opacity-60">
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -346,7 +346,7 @@ export default function CrystalAuraProductDetailPage() {
               viewport={{ once: true }}
               className="text-center mb-16"
             >
-              <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+              <p className="text-primary text-xs font-medium mb-4">
                 Personal Guidance
               </p>
               <h2 className="font-serif text-4xl md:text-6xl text-foreground">

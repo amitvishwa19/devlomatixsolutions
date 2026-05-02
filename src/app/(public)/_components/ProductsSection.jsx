@@ -22,7 +22,7 @@ const ProductsSection = () => {
           className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6"
         >
           <div>
-            <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+            <p className="text-primary text-xs font-medium mb-4">
               Our Collection
             </p>
             <h2 className="font-serif text-4xl md:text-6xl text-foreground">
@@ -30,7 +30,7 @@ const ProductsSection = () => {
             </h2>
           </div>
           <Link href="/crystalaura/shop">
-            <Button variant="outline" className="border-white/10 text-foreground font-sans tracking-widest uppercase font-black text-[10px] hover:bg-white/5 hover:border-white/20 group py-6 px-8 rounded-xl transition-all duration-300">
+            <Button variant="outline" className="border-white/10 text-foreground font-medium text-sm hover:bg-white/5 hover:border-white/20 group py-6 px-8 rounded-xl transition-all duration-300">
               View All
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
             </Button>

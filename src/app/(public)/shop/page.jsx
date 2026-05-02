@@ -31,7 +31,7 @@ export default function CrystalAuraShopPage() {
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
-          <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+          <p className="text-primary text-xs font-medium mb-4">
             ✦ Browse Our Collection ✦
           </p>
           <h1 className="font-serif text-5xl md:text-7xl text-foreground mb-6">
@@ -65,7 +65,7 @@ export default function CrystalAuraShopPage() {
               <button
                 key={cat.value}
                 onClick={() => setActiveCategory(cat.value)}
-                className={`px-6 py-2.5 rounded-full text-xs font-sans tracking-widest uppercase font-black transition-all duration-300 border ${
+                className={`px-6 py-2.5 rounded-full text-xs font-medium transition-all duration-300 border ${
                   activeCategory === cat.value
                     ? "bg-gold-gradient text-white border-transparent shadow-lg shadow-primary/20"
                     : "border-white/5 text-muted-foreground hover:border-white/20 hover:text-foreground bg-white/[0.02]"
@@ -81,7 +81,7 @@ export default function CrystalAuraShopPage() {
           <div className="text-center py-32 glass-card rounded-3xl">
             <Search className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
             <p className="text-muted-foreground font-light text-lg">No sacred treasures found</p>
-            <p className="text-muted-foreground/40 text-xs mt-1 uppercase tracking-widest font-bold">Try a different search or category</p>
+            <p className="text-muted-foreground/40 text-xs mt-1 font-medium">Try a different search or category</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">

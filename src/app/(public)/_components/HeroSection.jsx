@@ -43,7 +43,7 @@ const HeroSection = () => {
                     className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-primary/20 bg-primary/5 mb-8"
                 >
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-primary font-sans text-[10px] tracking-[0.25em] uppercase font-bold">
+                    <span className="text-primary font-sans text-xs font-medium">
                         Healing Energy & Spiritual Wellness
                     </span>
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -81,13 +81,13 @@ const HeroSection = () => {
                     className="flex flex-col sm:flex-row gap-4 justify-center"
                 >
                     <Link href="/crystalaura/shop">
-                        <Button size="lg" className="bg-gold-gradient text-white font-sans tracking-widest uppercase font-black text-[10px] px-10 py-7 hover:opacity-90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 group rounded-xl">
+                        <Button size="lg" className="bg-gold-gradient text-white font-medium text-sm px-10 py-7 hover:opacity-90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 group rounded-xl">
                             Explore Collection
                             <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                         </Button>
                     </Link>
                     <Link href="/crystalaura/about">
-                        <Button size="lg" variant="outline" className="border-white/10 text-foreground font-sans tracking-widest uppercase font-black text-[10px] px-10 py-7 hover:bg-white/5 hover:border-white/20 transition-all duration-300 rounded-xl">
+                        <Button size="lg" variant="outline" className="border-white/10 text-foreground font-medium text-sm px-10 py-7 hover:bg-white/5 hover:border-white/20 transition-all duration-300 rounded-xl">
                             Our Story
                         </Button>
                     </Link>
@@ -98,7 +98,7 @@ const HeroSection = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1.2, duration: 0.8 }}
-                    className="mt-16 flex items-center justify-center gap-8 text-muted-foreground/40 text-[10px] font-sans tracking-widest uppercase font-bold"
+                    className="mt-16 flex items-center justify-center gap-8 text-muted-foreground/40 text-xs font-medium"
                 >
                     <span>✦ 100% Authentic</span>
                     <span className="w-1 h-1 rounded-full bg-primary/30" />

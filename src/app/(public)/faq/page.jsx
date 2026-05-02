@@ -27,7 +27,7 @@ export default function CrystalAuraFAQPage() {
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
-          <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">
+          <p className="text-primary text-xs font-medium mb-4">
             ✦ Common Questions ✦
           </p>
           <h1 className="font-serif text-5xl md:text-7xl text-foreground mb-6">

@@ -42,6 +42,8 @@ export default async function WorkspacePage() {
 
     // redirectTo={`/workspace/${server.id}`} 
 
+    // return <WorkspaceLoader redirectTo={`/workspace`} />
+
     return <WorkspaceLoader redirectTo={`/workspace/${server.id}`} />
 
 }

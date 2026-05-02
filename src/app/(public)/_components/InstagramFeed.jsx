@@ -24,7 +24,7 @@ const InstagramFeed = () => {
           transition={{ duration: 0.7 }}
           className="text-center mb-12"
         >
-          <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-3 font-sans font-black">
+          <p className="text-primary text-xs font-medium mb-3">
             ✦ Follow Our Journey ✦
           </p>
           <h2 className="font-serif text-4xl md:text-5xl text-foreground mb-4">
@@ -69,7 +69,7 @@ const InstagramFeed = () => {
             href="https://instagram.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-primary text-[10px] font-sans tracking-[0.2em] uppercase font-black hover:opacity-80 transition-opacity"
+            className="inline-flex items-center gap-2 text-primary text-xs font-medium hover:opacity-80 transition-opacity"
           >
             <Instagram className="w-4 h-4" />
             Follow us on Instagram

@@ -72,32 +72,8 @@ export default function AppSidebar() {
         { type: 'child', title: "Files", url: `${baseDocPath}/files`, icon: "bar-chart-3", category: "documents" },
         { type: 'child', title: "Folders", url: `${baseDocPath}/folders`, icon: "bar-chart-3", category: "documents" },
         { type: 'child', title: "Uploads", url: `${baseDocPath}/uploads`, icon: "bar-chart-3", category: "documents" },
-        { type: 'child', title: "Trash", url: `${baseDocPath}/trash`, icon: "trash", category: "documents" },
+        { type: 'child', title: "Trash", url: `${baseDocPath}/trash`, icon: "trash", category: "documents" },  
 
-        // Applicant tracking system
-        { type: 'parent', title: "ATS Management", url: `${baseAtsPath}`, icon: "user", category: "ats" },
-        { type: 'child', title: "Dashboard", url: `${baseAtsPath}`, icon: "bar-chart-3", category: "ats" },
-        { type: 'child', title: "Jobs", url: `${baseAtsPath}/jobs`, icon: "bar-chart-3", category: "ats" },
-        { type: 'child', title: "Candidates", url: `${baseAtsPath}/candidates`, icon: "bar-chart-3", category: "ats" },
-        { type: 'child', title: "Pipeline", url: `${baseAtsPath}/pipeline`, icon: "bar-chart-3", category: "ats" },
-
-
-        // Productivity Manager
-        { type: 'parent', title: "Productivity", url: `${baseProductivityPath}`, icon: "folder-kanban", category: "productivity" },
-        { type: 'child', title: "Dashboard", url: `${baseProductivityPath}/`, icon: "bar-chart-3", category: "productivity" },
-        { type: 'child', title: "Kanban", url: `${baseProductivityPath}/kanban`, icon: "bar-chart-3", category: "productivity" },
-        { type: 'child', title: "Mailbox", url: `${baseProductivityPath}/mailbox`, icon: "mail", category: "productivity" },
-        { type: 'child', title: "Message", url: `${baseProductivityPath}/message`, icon: "bar-chart-3", category: "productivity" },
-
-        // Flowbot
-        { type: 'parent', title: "Flow Bot", url: `${baseFlowbotPath}`, icon: "git-branch", category: "flowbot" },
-        { type: 'child', title: "Dashboard", url: `${baseFlowbotPath}/`, icon: "bar-chart-3", category: "flowbot" },
-        { type: 'child', title: "Executions", url: `${baseFlowbotPath}/executions`, icon: "bar-chart-3", category: "flowbot" },
-
-        // AI AGent
-        { type: 'parent', title: "AI Agent", url: `${baseAgentPath}`, icon: "monitor-cog", category: "agent" },
-        { type: 'child', title: "Dashboard", url: `${baseAgentPath}/`, icon: "bar-chart-3", category: "agent" },
-        { type: 'child', title: "Credentials", url: `${baseAgentPath}/credential`, icon: "bar-chart-3", category: "agent" },
 
         // Miscellaneous
         { type: 'parent', title: "Miscellaneous", url: `${baseMiscellaneousPath}`, icon: "blocks", category: "miscellaneous" },

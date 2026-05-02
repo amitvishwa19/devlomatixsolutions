@@ -13,7 +13,7 @@ export default function CrystalAuraNotFound() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -z-10" />
         <ShoppingBag className="w-16 h-16 text-muted-foreground/20 mx-auto mb-8" />
         
-        <p className="text-primary text-[10px] tracking-[0.3em] uppercase mb-4 font-sans font-black">Sacred Void</p>
+        <p className="text-primary text-xs font-medium mb-4">Sacred Void</p>
         <h1 className="font-serif text-5xl md:text-7xl text-foreground mb-8 font-semibold leading-none">
           404 <span className="text-gold-gradient">Lost</span>
         </h1>
@@ -23,7 +23,7 @@ export default function CrystalAuraNotFound() {
         </p>
         
         <Link href="/crystalaura">
-          <Button className="bg-gold-gradient text-white px-10 py-7 rounded-2xl font-sans tracking-[0.2em] font-black uppercase text-[10px] hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
+          <Button className="bg-gold-gradient text-white px-10 py-7 rounded-2xl font-medium text-sm hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
             <ArrowLeft className="w-4 h-4 mr-3" />
             Return to Home
           </Button>
