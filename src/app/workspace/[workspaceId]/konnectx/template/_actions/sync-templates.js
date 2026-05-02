@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import * as cloudApi from "@/app/workspace/[workspaceId]/wa-cloud-api/_lib/whatsapp-cloud-api";
+import * as cloudApi from "@/app/workspace/[workspaceId]/konnectx/_lib/whatsapp-cloud-api";
 import { symmetricDecrypt } from "@/lib/encryption";
 
 const SyncTemplatesSchema = z.object({
@@ -23,7 +23,7 @@ const handler = async (data) => {
             where: { userId, platform: 'WHATSAPP_CLOUD' },
             orderBy: { updatedAt: 'desc' }
         });
-        
+
         console.log(`[Template Sync Action] Found ${credentials.length} credentials for user ${userId}`);
 
         if (credentials.length === 0) {
@@ -85,7 +85,7 @@ const handler = async (data) => {
 
                     const templateData = {
                         userId,
-                        templateId: metaT.id, 
+                        templateId: metaT.id,
                         name: metaT.name,
                         templateName: metaT.name,
                         category: metaT.category,
@@ -97,8 +97,8 @@ const handler = async (data) => {
                         buttons: buttonComp?.buttons || [],
                         metadata: {
                             headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
-                            mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format) 
-                                ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null) 
+                            mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
+                                ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
                                 : null
                         },
                         isDefault: true,

@@ -5,7 +5,7 @@
 
 export const getSidebarNavItems = (workspaceId) => {
     const basePath = `/workspace/${workspaceId}`;
-    const baseWhatsappCloudApiPath = `${basePath}/wa-cloud-api`;
+    const baseWhatsappCloudApiPath = `${basePath}/konnectx`;
     const baseDocPath = `${basePath}/document`;
     const systemPath = `${basePath}/system`;
     const baseProductivityPath = `${basePath}/productivity`;
@@ -49,9 +49,9 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Templates", icon: "zap", url: `${baseWhatsappCloudApiPath}/template` },
                 { title: "Campaigns", icon: "megaphone", url: `${baseWhatsappCloudApiPath}/campaigns` },
                 { title: "Flows", icon: "megaphone", url: `${baseWhatsappCloudApiPath}/flows` },
-                { title: "Analytics", icon: "line-chart", url: `${baseWhatsappCloudApiPath}/analytics` },
-                { title: "Agents", icon: "bot", url: `${baseWhatsappCloudApiPath}/agents` },
-                { title: "AI Assistant", icon: "sparkles", url: `${baseWhatsappCloudApiPath}/assistant` },
+                // { title: "Analytics", icon: "line-chart", url: `${baseWhatsappCloudApiPath}/analytics` },
+                // { title: "Agents", icon: "bot", url: `${baseWhatsappCloudApiPath}/agents` },
+                // { title: "AI Assistant", icon: "sparkles", url: `${baseWhatsappCloudApiPath}/assistant` },
                 { title: "Chatbot", icon: "message-square-text", url: `${baseWhatsappCloudApiPath}/chatbot` },
                 { title: "Usage & billing", icon: "credit-card", url: `${baseWhatsappCloudApiPath}/settings?tab=billing` },
                 { title: "Docs", icon: "book-open-text", url: `${baseWhatsappCloudApiPath}/docs` },

@@ -98,7 +98,7 @@ export const WA_NODE_REGISTRY = {
         name: 'textMessage',
         icon: MessageSquare,
         group: 'Messages',
-        type: 'actionNode',
+        type: 'messageNode',
         description: 'Send a plain text message',
         properties: [
             {
@@ -115,7 +115,7 @@ export const WA_NODE_REGISTRY = {
         name: 'imageMessage',
         icon: Image,
         group: 'Messages',
-        type: 'actionNode',
+        type: 'messageNode',
         description: 'Send an image message',
         properties: [
             {
@@ -138,7 +138,7 @@ export const WA_NODE_REGISTRY = {
         name: 'templateMessage',
         icon: FileText,
         group: 'Messages',
-        type: 'actionNode',
+        type: 'messageNode',
         description: 'Send a Meta approved template',
         properties: [
             {
@@ -163,7 +163,7 @@ export const WA_NODE_REGISTRY = {
         name: 'condition',
         icon: GitBranch,
         group: 'Logic & flow',
-        type: 'actionNode',
+        type: 'logicNode',
         description: 'Branch the flow based on a condition',
         properties: [
             {
@@ -196,7 +196,7 @@ export const WA_NODE_REGISTRY = {
         name: 'delay',
         icon: Clock,
         group: 'Logic & flow',
-        type: 'actionNode',
+        type: 'logicNode',
         description: 'Wait for a specified time',
         properties: [
             {

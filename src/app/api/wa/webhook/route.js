@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
-import { getMediaUrl } from "@/app/workspace/[workspaceId]/wa-cloud-api/_lib/whatsapp-cloud-api";
+import { getMediaUrl } from "@/app/workspace/[workspaceId]/konnectx/_lib/whatsapp-cloud-api";
 
 // The VERIFY_TOKEN is now strictly tied to the ENCRYPTION_KEY environment variable
 const VERIFY_TOKEN = process.env.ENCRYPTION_KEY;
@@ -191,7 +191,7 @@ export async function POST(req) {
                         case "interactive":
                             const interactive = message.interactive;
                             const iType = interactive?.type;
-                            
+
                             if (iType === "button_reply") {
                                 textBody = interactive.button_reply?.title;
                             } else if (iType === "list_reply") {
@@ -201,7 +201,7 @@ export async function POST(req) {
                                 const nfmReply = interactive.nfm_reply;
                                 const flowData = JSON.parse(nfmReply.response_json || "{}");
                                 textBody = `[Flow: ${nfmReply.name}] Submitted`;
-                                
+
                                 console.log("✅ [Webhook] Flow Response Received:", {
                                     flowName: nfmReply.name,
                                     data: flowData
@@ -267,8 +267,8 @@ export async function POST(req) {
                             // Update last interaction
                             await db.contact.update({
                                 where: { id: contact.id },
-                                data: { 
-                                    lastInteraction: new Date(), 
+                                data: {
+                                    lastInteraction: new Date(),
                                     lastMessage: JSON.stringify({
                                         text: textBody,
                                         type: message.type,
@@ -285,9 +285,11 @@ export async function POST(req) {
 
                     // Phase 2: Trigger Bot Engine
                     try {
-                        const workspaceId = targetCred.workspaceId || "cmnbhifag000458ikwhv1zso2";
-                        const { waBotEngine } = await import("@/app/workspace/[workspaceId]/wa-cloud-api/_lib/bot-engine");
-                        waBotEngine.processIncomingMessage(userId, workspaceId, from, textBody).catch(e => console.error('[Webhook] Bot Error:', e));
+                        const workspaceId = targetCred.workspaceId;
+                        if (workspaceId) {
+                            const { waBotEngine } = await import("@/app/workspace/[workspaceId]/konnectx/_lib/bot-engine");
+                            waBotEngine.processIncomingMessage(userId, workspaceId, from, textBody).catch(e => console.error('[Webhook] Bot Error:', e));
+                        }
                     } catch (botErr) {
                         console.error('[Webhook] Bot Engine Trigger Error:', botErr);
                     }

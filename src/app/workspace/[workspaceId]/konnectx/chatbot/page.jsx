@@ -122,7 +122,7 @@ export default function ChatbotPage() {
             header: "Steps",
             cell: ({ row }) => (
                 <span className="text-sm font-medium">
-                    {row.original.steps?.length || 0} nodes
+                    {Array.isArray(row.original.nodes) ? row.original.nodes.length : row.original.steps?.length || 0} nodes
                 </span>
             )
         },

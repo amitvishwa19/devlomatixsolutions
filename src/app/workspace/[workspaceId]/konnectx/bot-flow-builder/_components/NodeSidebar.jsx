@@ -10,8 +10,13 @@ export const NodeSidebar = () => {
     const categories = getWaNodesByCategory();
     const [search, setSearch] = React.useState('');
 
-    const onDragStart = (event, nodeType, subType, label) => {
-        event.dataTransfer.setData('application/reactflow', JSON.stringify({ type: nodeType, subType, label }));
+    const onDragStart = (event, node) => {
+        event.dataTransfer.setData('application/reactflow', JSON.stringify({
+            type: node.type,
+            subType: node.name,
+            label: node.displayName,
+            properties: node.properties || []
+        }));
         event.dataTransfer.effectAllowed = 'move';
     };
 
@@ -44,7 +49,7 @@ export const NodeSidebar = () => {
                                         "group flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/[0.02]",
                                         "hover:bg-white/[0.05] hover:border-primary/30 transition-all cursor-grab active:scale-95 active:cursor-grabbing"
                                     )}
-                                    onDragStart={(event) => onDragStart(event, node.type, node.name, node.displayName)}
+                                    onDragStart={(event) => onDragStart(event, node)}
                                     draggable
                                 >
                                     <div className="p-2 rounded-lg bg-white/5 group-hover:bg-primary/10 transition-colors">

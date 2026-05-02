@@ -16,6 +16,7 @@ import { nodeTypes } from './Nodes';
 import { PropertyPanel } from './PropertyPanel';
 import { NodeSidebar } from './NodeSidebar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
     Save, 
     Play, 
@@ -24,7 +25,8 @@ import {
     Settings, 
     Loader2, 
     Download,
-    Maximize2
+    Maximize2,
+    Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
@@ -39,7 +41,34 @@ const initialNodes = [
         id: 'start_node',
         type: 'triggerNode',
         position: { x: 100, y: 100 },
-        data: { label: 'Welcome Trigger', type: 'welcome', configured: true }
+        data: {
+            label: 'Keyword Trigger',
+            subType: 'keyword',
+            type: 'keyword',
+            keywords: 'hello, hi, start',
+            configured: true
+        }
+    },
+    {
+        id: 'welcome_reply',
+        type: 'messageNode',
+        position: { x: 430, y: 100 },
+        data: {
+            label: 'Auto Reply',
+            subType: 'textMessage',
+            text: 'Hello! Thanks for messaging us. How can we help you today?',
+            configured: true
+        }
+    }
+];
+
+const initialEdges = [
+    {
+        id: 'start_node-welcome_reply',
+        source: 'start_node',
+        target: 'welcome_reply',
+        animated: true,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     }
 ];
 
@@ -58,6 +87,8 @@ export const FlowCanvas = ({ flowId }) => {
     const [flowData, setFlowData] = useState(null);
 
     const [selectedNode, setSelectedNode] = useState(null);
+    const [testMessage, setTestMessage] = useState('hello');
+    const [testPreview, setTestPreview] = useState('');
 
     const { execute: executeGetDetails } = useAction(getBotDetails, {
         onSuccess: (data) => {
@@ -65,7 +96,7 @@ export const FlowCanvas = ({ flowId }) => {
             const savedNodes = data.bot.nodes;
             const savedEdges = data.bot.edges;
             setNodes(savedNodes && Array.isArray(savedNodes) && savedNodes.length > 0 ? savedNodes : initialNodes);
-            setEdges(savedEdges || []);
+            setEdges(savedEdges && Array.isArray(savedEdges) && savedEdges.length > 0 ? savedEdges : initialEdges);
             setTimeout(() => fitView({ padding: 0.2 }), 100);
             setIsLoading(false);
         },
@@ -86,6 +117,7 @@ export const FlowCanvas = ({ flowId }) => {
     useEffect(() => {
         if (!flowId) {
             setNodes(initialNodes);
+            setEdges(initialEdges);
             setIsLoading(false);
             return;
         }
@@ -173,6 +205,41 @@ export const FlowCanvas = ({ flowId }) => {
         executeSaveBot({ workspaceId, id: flowId, nodes, edges });
     };
 
+    const interpolatePreview = (text) => {
+        return String(text || '')
+            .replace(/\{\{\s*message\s*\}\}/g, testMessage)
+            .replace(/\{\{\s*from\s*\}\}/g, '919999999999');
+    };
+
+    const runPreview = () => {
+        const lower = testMessage.toLowerCase();
+        const trigger = nodes.find((node) => {
+            if (node.type !== 'triggerNode') return false;
+            const keywords = String(node.data?.keywords || '')
+                .split(',')
+                .map((keyword) => keyword.trim().toLowerCase())
+                .filter(Boolean);
+            return keywords.some((keyword) => lower === keyword || lower.includes(keyword));
+        });
+        const fallback = nodes.find((node) => node.data?.isFallback && node.data?.text);
+        let current = trigger || fallback;
+        const replies = [];
+        const visited = new Set();
+
+        while (current && !visited.has(current.id) && visited.size < 15) {
+            visited.add(current.id);
+            if (current.type === 'messageNode') {
+                if (current.data?.text) replies.push(interpolatePreview(current.data.text));
+                if (current.data?.imageUrl) replies.push(`[Image] ${current.data.imageUrl}`);
+                if (current.data?.templateName) replies.push(`[Template] ${current.data.templateName}`);
+            }
+            const edge = edges.find((item) => item.source === current.id);
+            current = edge ? nodes.find((node) => node.id === edge.target) : null;
+        }
+
+        setTestPreview(replies.length > 0 ? replies.join('\n\n') : 'No reply matched this test message.');
+    };
+
     if (isLoading) {
         return (
             <div className="flex-1 flex items-center justify-center bg-[#0f0f1a]">
@@ -246,11 +313,41 @@ export const FlowCanvas = ({ flowId }) => {
                          <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(`/workspace/${workspaceId}/wa/chatbot`)}
+                            onClick={() => router.push(`/workspace/${workspaceId}/konnectx/chatbot`)}
                             className="bg-white/5 border-white/10 text-white rounded-xl h-10 px-4 font-bold text-[10px] uppercase hover:bg-white/10"
                         >
                             <ArrowLeft size={14} className="mr-2" /> Exit Builder
                         </Button>
+                    </Panel>
+
+                    <Panel position="bottom-right" className="m-6 w-80">
+                        <div className="rounded-xl border border-white/10 bg-[#1e1e2e]/90 shadow-2xl backdrop-blur-md p-4 space-y-3">
+                            <div>
+                                <h3 className="text-xs font-black text-white uppercase tracking-widest">Test Auto Reply</h3>
+                                <p className="text-[10px] text-muted-foreground mt-1">Preview the reply without sending a WhatsApp message.</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Input
+                                    value={testMessage}
+                                    onChange={(e) => setTestMessage(e.target.value)}
+                                    className="h-9 bg-white/5 border-white/10 text-xs rounded-xl"
+                                    placeholder="Incoming message"
+                                />
+                                <Button
+                                    type="button"
+                                    size="icon"
+                                    onClick={runPreview}
+                                    className="h-9 w-9 rounded-xl bg-primary hover:bg-primary/90"
+                                >
+                                    <Send size={14} />
+                                </Button>
+                            </div>
+                            {testPreview && (
+                                <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-white whitespace-pre-wrap">
+                                    {testPreview}
+                                </div>
+                            )}
+                        </div>
                     </Panel>
                 </ReactFlow>
 
