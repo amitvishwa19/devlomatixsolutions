@@ -40,7 +40,8 @@ function WorkflowCanvasInner({
     loadedEdges, 
     initialCron, 
     initialScheduleEnabled, 
-    initialViewport 
+    initialViewport,
+    userId
 }) {
     const router = useRouter();
     const params = useParams();
@@ -112,7 +113,7 @@ function WorkflowCanvasInner({
     const handleSlotAdd = useCallback((slotId) => { setNodePanelSlotFilter(slotId); setShowNodePanel(true); }, []);
     const nodesWithCallbacks = nodes.map((n) => (n.data).type === "ai-agent" ? { ...n, data: { ...n.data, onSlotAdd: handleSlotAdd } } : n);
 
-    const { execute, isExecuting, executionResults } = useWorkflowExecution(nodes, setNodes, edges, workflowId, workflowName);
+    const { execute, isExecuting, executionResults } = useWorkflowExecution(nodes, setNodes, edges, workflowId, workflowName, workspaceId, userId);
     useWorkflowKeyboard(nodes, edges, setNodes, setEdges, selectedNode, setSelectedNode);
 
     const onUpdateConfig = useCallback((nodeId, config) => {

@@ -1,40 +1,52 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 import { runAgent } from "../../../workspace/[workspaceId]/flowgenix/_lib/agent-runtime";
 
 export async function POST(req) {
     try {
-        const { config, history, userInput, ragDocs } = await req.json();
+        const { agentId, message, history = [] } = await req.json();
+        
+        // Find agent config
+        const config = await db.agentConfig.findUnique({
+            where: { id: agentId },
+            include: { user: true }
+        });
 
-        const encoder = new TextEncoder();
-        const stream = new TransformStream();
-        const writer = stream.writable.getWriter();
+        if (!config) {
+            return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+        }
 
-        // Run agent in background and pipe to stream
-        (async () => {
-            try {
-                await runAgent(
-                    config,
-                    history,
-                    userInput,
-                    ragDocs,
-                    (update) => {
-                        writer.write(encoder.encode(JSON.stringify(update) + "\n"));
-                    },
-                    null
-                );
-            } catch (e) {
-                writer.write(encoder.encode(JSON.stringify({ error: e.message }) + "\n"));
-            } finally {
-                writer.close();
-            }
-        })();
+        // Fetch models for this config
+        const models = await db.agentModel.findMany({
+            where: { workspaceId: config.workspaceId, isActive: true }
+        });
+        
+        const fullConfig = { ...config, models };
 
-        return new Response(stream.readable, {
-            headers: {
-                "Content-Type": "application/x-ndjson",
-                "Cache-Control": "no-cache",
+        // Fetch RAG docs
+        const ragDocs = await db.ragDoc.findMany({
+            where: { workspaceId: config.workspaceId }
+        });
+
+        let fullText = "";
+        await runAgent(
+            fullConfig,
+            history,
+            message,
+            ragDocs,
+            (update) => {
+                if (update.partial) fullText = update.partial;
             },
+            null
+        );
+
+        return NextResponse.json({ 
+            success: true, 
+            response: fullText,
+            agentName: config.name
         });
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        console.error("Public API Chat Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

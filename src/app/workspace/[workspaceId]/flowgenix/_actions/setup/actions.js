@@ -2,6 +2,8 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { chunkText, embedTexts } from "../../_lib/agent-runtime";
+import { getDefaultModel } from "../../_lib/agent-storage";
 
 export async function getOrCreateAgentConfig(workspaceId, userId) {
     try {
@@ -153,6 +155,31 @@ export async function listRagDocs(workspaceId) {
     } catch (error) {
         console.error("listRagDocs error:", error);
         return [];
+    }
+}
+
+export async function uploadAndEmbedDoc(workspaceId, userId, fileName, text, config) {
+    try {
+        const m = getDefaultModel(config);
+        if (!m || !m.apiKey) throw new Error("No model with API key for embeddings");
+
+        const chunks = chunkText(text);
+        const vecs = await embedTexts(m, chunks);
+
+        const doc = await db.ragDoc.create({
+            data: {
+                workspaceId,
+                userId,
+                name: fileName,
+                chunks: chunks.map((text, i) => ({ text, embedding: vecs[i] }))
+            }
+        });
+
+        revalidatePath(`/workspace/${workspaceId}/flowgenix`);
+        return doc;
+    } catch (error) {
+        console.error("uploadAndEmbedDoc error:", error);
+        throw error;
     }
 }
 

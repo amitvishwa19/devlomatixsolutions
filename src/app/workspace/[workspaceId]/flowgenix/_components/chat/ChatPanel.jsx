@@ -90,9 +90,8 @@ const ToolCallBlock = ({ trace }) => {
     );
 };
 
-export const ChatPanel = ({ config, ragDocs, userId }) => {
+export const ChatPanel = ({ config, ragDocs, userId, workspaceId }) => {
     const params = useParams();
-    const workspaceId = params?.workspaceId;
     const [threads, setThreads] = useState([]);
     const [activeId, setActiveId] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -207,47 +206,25 @@ export const ChatPanel = ({ config, ragDocs, userId }) => {
         const ctrl = new AbortController();
         abortRef.current = ctrl;
         try {
-            const response = await fetch("/api/flowgenix/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ config, history: baseHistory, userInput: text, ragDocs }),
-                signal: ctrl.signal,
+            const result = await getChatResponse({
+                config,
+                history: baseHistory,
+                userInput: text,
+                ragDocs,
+                workspaceId
             });
 
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({ error: "Server error" }));
-                throw new Error(err.error || "Network error");
-            }
+            if (!result.success) throw new Error(result.error);
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let fullReply = "";
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n").filter(Boolean);
-
-                for (const line of lines) {
-                    try {
-                        const update = JSON.parse(line);
-                        if (update.error) throw new Error(update.error);
-                        
-                        if (update.toolNote) setToolNotes((s) => [...s, update.toolNote]);
-                        if (update.toolCall) {
-                            traces.push(update.toolCall);
-                            setLiveTraces([...traces]);
-                        }
-                        if (update.partial) {
-                            setStreaming(update.partial);
-                            fullReply = update.partial;
-                        }
-                    } catch (e) {
-                        console.error("Stream parse error:", e);
-                    }
-                }
+            // Mimic streaming in UI with typewriter effect
+            const fullReply = result.response;
+            const words = (fullReply || "").split(" ");
+            let current = "";
+            for (let i = 0; i < words.length; i++) {
+                current += (i === 0 ? "" : " ") + words[i];
+                setStreaming(current);
+                // Simulate typing speed
+                await new Promise(r => setTimeout(r, 20 + Math.random() * 20));
             }
             const reply = fullReply;
 

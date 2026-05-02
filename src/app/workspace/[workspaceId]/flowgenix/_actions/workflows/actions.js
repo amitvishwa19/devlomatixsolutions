@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { executeWorkflow } from "../../_lib/workflow-engine";
 
 export async function listWorkflows(workspaceId, { templates = false } = {}) {
     try {
@@ -127,27 +128,25 @@ export async function updateScheduleAction({ workflowId, cron, enabled }) {
     }
 }
 
-export async function executeWorkflowAction({ workflowId, nodes, edges, chatInput }) {
+export async function executeWorkflowAction({ workspaceId, userId, workflowId, chatInput }) {
     try {
-        // simulation fallback
+        const executionId = await executeWorkflow(workspaceId, userId, workflowId, "manual", { prompt: chatInput });
+        const logs = await db.workflowRunLog.findMany({
+            where: { runId: executionId },
+            orderBy: { createdAt: 'asc' }
+        });
+
         return {
-            results: nodes.map(n => ({
-                nodeId: n.id,
-                nodeType: n.data?.type || 'unknown',
-                label: n.data?.label || 'Node',
-                status: "success",
-                input: chatInput ? { chatInput } : {},
-                output: { 
-                    message: `Processed by ${n.data?.label}`,
-                    timestamp: new Date().toISOString(),
-                    data: n.data?.config || {}
-                },
-                duration: Math.floor(Math.random() * 500) + 100,
-                startTime: new Date().toISOString()
+            executionId,
+            results: logs.map(l => ({
+                nodeId: l.nodeId,
+                label: l.nodeLabel,
+                status: l.status,
+                output: l.data
             }))
         };
     } catch (error) {
         console.error("executeWorkflowAction error:", error);
-        return { error: "Execution failed" };
+        return { error: error.message || "Execution failed" };
     }
 }

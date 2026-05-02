@@ -5,7 +5,7 @@ import { executionStore } from "../_lib/executionStore";
 import { persistExecution } from "../_lib/persistExecution";
 import { executeWorkflowAction } from "../_actions/workflows/actions";
 
-export function useWorkflowExecution(nodes, setNodes, edges, workflowId, workflowName) {
+export function useWorkflowExecution(nodes, setNodes, edges, workflowId, workflowName, workspaceId, userId) {
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResults, setExecutionResults] = useState(new Map());
 
@@ -63,6 +63,8 @@ export function useWorkflowExecution(nodes, setNodes, edges, workflowId, workflo
       }));
 
       const data = await executeWorkflowAction({
+        workspaceId,
+        userId,
         workflowId,
         nodes: nodesPayload,
         edges,

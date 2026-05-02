@@ -125,8 +125,19 @@ function generate(wordCount = 500) {
     return text.charAt(0).toUpperCase() + text.slice(1) + ".";
 }
 
-export async function getChatResponse({ config, history, userInput, ragDocs }) {
+export async function getChatResponse({ config, history, userInput, ragDocs, workspaceId }) {
     try {
+        let tavilyKey = "";
+        if (config.enableWebSearch) {
+            const cred = await db.nodeCredential.findFirst({
+                where: { workspaceId, kind: "tavily" }
+            });
+            if (cred && cred.config) {
+                const cfg = typeof cred.config === "string" ? JSON.parse(cred.config) : cred.config;
+                tavilyKey = cfg.apiKey || "";
+            }
+        }
+
         let fullText = "";
         await runAgent(
             config,
@@ -136,7 +147,8 @@ export async function getChatResponse({ config, history, userInput, ragDocs }) {
             (update) => {
                 if (update.partial) fullText = update.partial;
             },
-            null
+            null,
+            tavilyKey
         );
 
         return {

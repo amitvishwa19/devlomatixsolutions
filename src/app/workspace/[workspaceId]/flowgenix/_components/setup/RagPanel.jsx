@@ -1,8 +1,6 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { upsertRagDoc, deleteRagDoc } from "../../_actions/setup/actions";
-import { getDefaultModel } from "../../_lib/agent-storage";
-import { chunkText, embedTexts } from "../../_lib/agent-runtime";
+import { uploadAndEmbedDoc, deleteRagDoc } from "../../_actions/setup/actions";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import { FileText, Loader2, Trash2, Upload } from "lucide-react";
@@ -22,21 +20,11 @@ export const RagPanel = ({ config, docs, setDocs, userId }) => {
     }
     setBusy(true);
     try {
-      const next = [...docs];
       for (const f of Array.from(files)) {
         const text = await f.text();
-        const chunks = chunkText(text);
-        const vecs = await embedTexts(m, chunks);
-        const doc = {
-          name: f.name,
-          chunks: chunks.map((text, i) => ({ text, embedding: vecs[i] })),
-        };
-        /*
-        const saved = await upsertRagDoc(workspaceId, userId, doc);
-        next.push(saved);
-        */
+        const saved = await uploadAndEmbedDoc(workspaceId, userId, f.name, text, config);
+        setDocs((prev) => [...prev, saved]);
       }
-      setDocs(next);
       toast.success(`Indexed ${files.length} document(s)`);
     } catch (e) {
       toast.error(`Embedding failed: ${e.message}`);
@@ -48,8 +36,9 @@ export const RagPanel = ({ config, docs, setDocs, userId }) => {
 
   const remove = async (id) => {
     try {
-      // await deleteRagDoc(workspaceId, id);
+      await deleteRagDoc(workspaceId, id);
       setDocs(docs.filter((d) => d.id !== id));
+      toast.success("Document removed");
     } catch (e) {
       toast.error(e.message);
     }

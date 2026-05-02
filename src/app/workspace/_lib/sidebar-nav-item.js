@@ -90,18 +90,6 @@ export const getSidebarNavItems = (workspaceId) => {
             permission: `navbar:ATS:Parent`
         },
         {
-            parent: { title: "FlowByte", icon: "workflow", url: baseFlowbytePath },
-            child: [
-                { title: "Workflows", icon: "workflow", url: baseFlowbytePath },
-                { title: "Executions", icon: "activity", url: `${baseFlowbytePath}/executions` },
-                { title: "Credentials", icon: "key-round", url: `${baseFlowbytePath}/credentials` },
-                { title: "Templates", icon: "layout-template", url: `${baseFlowbytePath}/templates` },
-                { title: "Settings", icon: "settings-2", url: `${baseFlowbytePath}/settings` },
-            ],
-            baseUrl: baseFlowbytePath,
-            permission: `navbar:FlowByte:Parent`
-        },
-        {
             parent: { title: "Productivity", icon: "folder-kanban", url: baseProductivityPath },
             child: [
                 { title: "Dashboard", icon: "layout-grid", url: `${baseProductivityPath}/` },
@@ -111,12 +99,6 @@ export const getSidebarNavItems = (workspaceId) => {
             ],
             baseUrl: baseProductivityPath,
             permission: `navbar:Productivity:Parent`
-        },
-        {
-            parent: { title: "AI Agent", icon: "brain", url: `${baseAgentPath}/` },
-            child: [],
-            baseUrl: baseAgentPath,
-            permission: `navbar:Agent:Parent`
         },
         {
             parent: { title: "Miscellaneous", icon: "blocks", url: baseMiscellaneousPath },

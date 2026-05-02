@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getOrCreateAgentConfig, saveAgentConfig } from "../../_actions/setup/actions";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -17,7 +18,8 @@ export const AgentSettings = ({ config, onChange, userId }) => {
 
     const handleSave = async () => {
         try {
-            toast.success("Agent configuration saved (simulated)");
+            await saveAgentConfig(workspaceId, userId, config);
+            toast.success("Agent configuration updated successfully");
         } catch (e) {
             toast.error(e.message);
         }
@@ -108,6 +110,34 @@ export const AgentSettings = ({ config, onChange, userId }) => {
                                 onCheckedChange={(v) => set("enableCalculator", v)}
                             />
                             <Label className="text-[11px] font-mono uppercase cursor-pointer">Calculator</Label>
+                        </div>
+                    </div>
+                    <div className="pt-6 border-t border-border space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                            <h3 className="text-xs font-bold uppercase font-mono">Share & API</h3>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-mono uppercase text-muted-foreground">Public Agent ID</Label>
+                                <div className="flex gap-2">
+                                    <Input readOnly value={config?.id || ""} className="font-mono text-[10px] h-8 bg-muted" />
+                                    <Button 
+                                        size="sm" 
+                                        variant="outline" 
+                                        className="h-8 text-[10px]" 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(config?.id || "");
+                                            toast.success("Copied Agent ID");
+                                        }}
+                                    >
+                                        Copy
+                                    </Button>
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground font-mono leading-relaxed">
+                                Use this ID with the public API: <code className="bg-muted px-1">{"/api/flowgenix/chat"}</code>
+                            </p>
                         </div>
                     </div>
                 </div>

@@ -3,6 +3,7 @@ import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { PROVIDER_PRESETS, getDefaultModel } from "./agent-storage";
+import * as math from "mathjs";
 
 function resolveBaseURL(m) {
   const configuredBaseURL = (m.baseURL || m.baseUrl || "").trim();
@@ -68,9 +69,8 @@ export async function testModelConnection(m) {
 
 const calculatorTool = tool(
   async ({ expression }) => {
-    if (!/^[-+/*().\d\s,e]+$/i.test(expression)) return "Invalid expression.";
     try {
-      const v = Function(`"use strict"; return (${expression});`)();
+      const v = math.evaluate(expression);
       return String(v);
     } catch (e) {
       return `Error: ${e.message}`;
@@ -78,13 +78,28 @@ const calculatorTool = tool(
   },
   {
     name: "calculator",
-    description: "Evaluate a basic math expression. Input: { expression: string }.",
+    description: "Evaluate a complex math expression using mathjs. Input: { expression: string }.",
     schema: z.object({ expression: z.string() }),
   },
 );
 
 const webSearchTool = tool(
-  async ({ query }) => {
+  async ({ query }, { configurable }) => {
+    const tavilyKey = configurable?.tavilyKey;
+    if (tavilyKey) {
+      try {
+        const res = await fetch("https://api.tavily.com/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: tavilyKey, query, search_depth: "basic", max_results: 5 }),
+        });
+        const j = await res.json();
+        return (j.results || []).map(r => `Title: ${r.title}\nURL: ${r.url}\nContent: ${r.content}`).join("\n\n") || "No results.";
+      } catch (e) {
+        return `Tavily Search failed: ${e.message}`;
+      }
+    }
+
     try {
       const res = await fetch(
         `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&no_redirect=1`,
@@ -210,6 +225,7 @@ export async function runAgent(
   ragDocs,
   onUpdate,
   signal,
+  tavilyKey,
 ) {
   const checkAbort = (partial = "") => {
     if (signal?.aborted) throw new AgentAbortError(partial);
@@ -249,7 +265,7 @@ export async function runAgent(
   }
 
   const sys = new SystemMessage(
-    cfg.systemPrompt + (context ? `\n\n--- DOCUMENT CONTEXT ---\n${context}` : ""),
+    cfg.systemPrompt + (context ? `\n\n--- DOCUMENT CONTEXT ---\n${context}\n\nIMPORTANT: When using info from the DOCUMENT CONTEXT, you MUST cite the source filename like (Source: filename.pdf).` : ""),
   );
   const msgs = [
     sys,
@@ -268,7 +284,7 @@ export async function runAgent(
     checkAbort();
     let res;
     try {
-      res = await bound.invoke(msgs, signal ? { signal } : undefined);
+      res = await bound.invoke(msgs, { signal, configurable: { tavilyKey } });
     } catch (e) {
       // Handle models that don't support tool calling
       if (tools.length && (e.message.includes("tool") || e.message.includes("404") || e.message.includes("endpoint"))) {
@@ -289,7 +305,7 @@ export async function runAgent(
             const fbModel = buildModelFrom(fb, cfg.temperature);
             const fbBound = tools.length ? fbModel.bindTools(tools) : fbModel;
             try {
-              res = await fbBound.invoke(msgs);
+              res = await fbBound.invoke(msgs, { configurable: { tavilyKey } });
             } catch (fbErr) {
               if (tools.length && (fbErr.message.includes("tool") || fbErr.message.includes("404"))) {
                 res = await fbModel.invoke(msgs);
