@@ -1,11 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { Gem, ShoppingBag, Menu, X, Heart, Sun, Moon, History } from "lucide-react";
+import { Gem, ShoppingBag, Menu, X, Heart, History, User, LogOut, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCart, useWishlist, useTheme } from "../_context/CrystalAuraProviders";
+import { signOut, useSession } from "next-auth/react";
+import { useCart, useWishlist } from "../_context/CrystalAuraProviders";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
     { label: "Home", path: "/" },
@@ -20,10 +30,10 @@ const navLinks = [
 
 const Navbar = () => {
     const pathname = usePathname();
+    const { data: session, status } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
     const { totalItems, setIsOpen } = useCart();
     const { items: wishlistItems } = useWishlist();
-    const { theme, toggleTheme } = useTheme();
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -32,10 +42,12 @@ const Navbar = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Sync mobile menu close with pathname changes
-    useEffect(() => {
-        setMobileOpen(false);
-    }, [pathname]);
+    const user = session?.user;
+    const userName = user?.displayName || user?.name || "Account";
+    const userEmail = user?.email || "";
+    const userAvatar = user?.avatar || user?.image;
+    const userInitial = (userName || userEmail || "U").charAt(0).toUpperCase();
+    const isLoggedIn = status === "authenticated";
 
     return (
         <motion.nav
@@ -80,15 +92,6 @@ const Navbar = () => {
                 </ul>
 
                 <div className="flex items-center gap-2">
-                    {/* Theme Toggle */}
-                    {/* <button
-                        onClick={toggleTheme}
-                        className="p-2.5 rounded-full bg-white/5 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300"
-                        aria-label="Toggle theme"
-                    >
-                        {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    </button> */}
-
                     {/* Wishlist */}
                     <Link
                         href="/wishlist"
@@ -110,6 +113,19 @@ const Navbar = () => {
                         <History className="w-4 h-4" />
                     </Link>
 
+                    {isLoggedIn && (
+                        <Link
+                            href="/account"
+                            className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pathname === "/account"
+                                ? "text-primary bg-primary/10"
+                                : "text-foreground bg-white/5 hover:bg-primary/10 hover:text-primary"
+                                }`}
+                        >
+                            <User className="w-4 h-4" />
+                            Account
+                        </Link>
+                    )}
+
                     {/* Cart */}
                     <button
                         onClick={() => setIsOpen(true)}
@@ -126,6 +142,59 @@ const Navbar = () => {
                             </motion.span>
                         )}
                     </button>
+
+                    {isLoggedIn && (
+                        <DropdownMenu modal={false}>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    className="hidden sm:flex items-center gap-2 rounded-full bg-white/5 px-2 py-1.5 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
+                                    aria-label="Open account menu"
+                                >
+                                    <Avatar className="h-8 w-8 border border-white/10">
+                                        <AvatarImage src={userAvatar} alt={userName} />
+                                        <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
+                                            {userInitial}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="w-64 border-white/10 bg-[#121214] text-white shadow-2xl"
+                            >
+                                <DropdownMenuLabel className="flex items-center gap-3 p-3">
+                                    <Avatar className="h-10 w-10 border border-white/10">
+                                        <AvatarImage src={userAvatar} alt={userName} />
+                                        <AvatarFallback className="bg-primary/15 text-primary font-semibold">
+                                            {userInitial}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold">{userName}</p>
+                                        {userEmail && (
+                                            <p className="truncate text-xs font-normal text-white/55">{userEmail}</p>
+                                        )}
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-white/10" />
+                                <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10 focus:text-white">
+                                    <Link href="/account" className="flex items-center gap-2">
+                                        <User className="h-4 w-4" />
+                                        Account
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-white/10" />
+                                <DropdownMenuItem
+                                    onSelect={() => signOut({ callbackUrl: "/" })}
+                                    className="cursor-pointer text-red-300 focus:bg-red-500/10 focus:text-red-200"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Logout
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
 
                     <button
                         className="lg:hidden p-2.5 rounded-full bg-white/5 text-foreground hover:bg-primary/10 transition-all duration-300"
@@ -155,6 +224,7 @@ const Navbar = () => {
                                 >
                                     <Link
                                         href={link.path}
+                                        onClick={() => setMobileOpen(false)}
                                         className={`block py-3 px-4 rounded-lg transition-all duration-300 ${pathname === link.path
                                             ? "text-primary bg-primary/10"
                                             : "text-muted-foreground hover:text-foreground hover:bg-white/5"
@@ -164,6 +234,55 @@ const Navbar = () => {
                                     </Link>
                                 </motion.li>
                             ))}
+                            {isLoggedIn && (
+                                <motion.li
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: navLinks.length * 0.05 }}
+                                >
+                                    <Link
+                                        href="/account"
+                                        onClick={() => setMobileOpen(false)}
+                                        className={`flex items-center gap-2 py-3 px-4 rounded-lg transition-all duration-300 ${pathname === "/account"
+                                            ? "text-primary bg-primary/10"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                                            }`}
+                                    >
+                                        <User className="w-4 h-4" />
+                                        Account
+                                    </Link>
+                                </motion.li>
+                            )}
+                            {isLoggedIn && (
+                                <motion.li
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: (navLinks.length + 1) * 0.05 }}
+                                    className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-10 w-10 border border-white/10">
+                                            <AvatarImage src={userAvatar} alt={userName} />
+                                            <AvatarFallback className="bg-primary/15 text-primary font-semibold">
+                                                {userInitial}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
+                                            {userEmail && (
+                                                <p className="truncate text-xs text-muted-foreground">{userEmail}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => signOut({ callbackUrl: "/" })}
+                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm font-medium text-red-200 hover:bg-red-500/20 transition-colors"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        Logout
+                                    </button>
+                                </motion.li>
+                            )}
                         </ul>
                     </motion.div>
                 )}

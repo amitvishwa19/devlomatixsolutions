@@ -1,6 +1,7 @@
 import Google from "next-auth/providers/google"
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
+import { OAuth2Client } from "google-auth-library";
 
 const GoogleProvider = Google.default || Google;
 const GitHubProvider = GitHub.default || GitHub;
@@ -11,6 +12,8 @@ import { db } from "@/lib/db";
 import { v4 as uuidv4 } from 'uuid'
 import { MemberRole } from "@prisma/client";
 import { uuid } from "@/utils/functions";
+
+const googleOneTapClient = new OAuth2Client(process.env.GOOGLE_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
 
 
@@ -23,6 +26,77 @@ export const authOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_ID,
             clientSecret: process.env.GOOGLE_SECRET,
+        }),
+
+        CredentialsProvider({
+            id: "google-one-tap",
+            name: "Google One Tap",
+            credentials: {
+                credential: { label: "Google Credential", type: "text" },
+            },
+            async authorize(credentials) {
+                const clientId = process.env.GOOGLE_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+                if (!clientId || !credentials?.credential) {
+                    return null;
+                }
+
+                const ticket = await googleOneTapClient.verifyIdToken({
+                    idToken: credentials.credential,
+                    audience: clientId,
+                });
+                const payload = ticket.getPayload();
+
+                if (!payload?.email || !payload.email_verified) {
+                    return null;
+                }
+
+                const user = await db.user.upsert({
+                    where: {
+                        email: payload.email,
+                    },
+                    update: {
+                        displayName: payload.name ?? undefined,
+                        avatar: payload.picture ?? undefined,
+                    },
+                    create: {
+                        email: payload.email,
+                        displayName: payload.name ?? "",
+                        avatar: payload.picture ?? "",
+                        webDeviceToken: "deviceToken",
+                        uuid: uuid(),
+                        profile: { create: {} },
+                        setting: { create: {} },
+                        credit: { create: { value: 0 } },
+                    },
+                });
+
+                let server = await db.server.findFirst({
+                    where: { userId: user.id },
+                });
+
+                if (!server) {
+                    server = await db.server.create({
+                        data: {
+                            userId: user.id,
+                            name: "default",
+                            default: true,
+                            selected: true,
+                            inviteCode: uuidv4(),
+                        },
+                    });
+
+                    await db.channel.create({
+                        data: { name: "general", serverId: server.id, userId: user.id },
+                    });
+
+                    await db.member.create({
+                        data: { userId: user.id, serverId: server.id, role: MemberRole.ADMIN },
+                    });
+                }
+
+                return user;
+            }
         }),
 
         GitHubProvider({

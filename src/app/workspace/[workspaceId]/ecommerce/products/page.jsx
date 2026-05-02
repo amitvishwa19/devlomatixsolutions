@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { AddProductModal } from './_components/AddProductModal';
 import { Skeleton } from "@/components/ui/skeleton";
 import { deleteProduct } from './_actions/deleteProduct'
+import { seedPublicProducts } from './_actions/seedPublicProducts'
 
 export default function EcommerceProductsPage({ params: paramsPromise }) {
     const params = use(paramsPromise);
@@ -114,6 +115,21 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
         fetchProducts();
     };
 
+    const handleSeed = async () => {
+        try {
+            const result = await seedPublicProducts();
+            if (result.success) {
+                toast.success(result.message);
+                fetchProducts();
+            } else {
+                toast.error(result.message || 'Failed to seed');
+            }
+        } catch (error) {
+            console.error('[SEED_ERROR]', error);
+            toast.error('Failed to seed products');
+        }
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-700 pb-10 p-4">
             <AddProductModal 
@@ -149,6 +165,16 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                     >
                         <Download className="w-4 h-4" /> Export CSV
                     </Button>
+                    {products.length === 0 && (
+                        <Button 
+                            onClick={handleSeed}
+                            variant="secondary" 
+                            size="sm" 
+                            className="h-10 px-4 rounded-md gap-2"
+                        >
+                            <Sparkles className="w-4 h-4" /> Seed Demo Products
+                        </Button>
+                    )}
                     <Button 
                         onClick={handleAdd}
                         className="h-10 px-6 rounded-md gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
@@ -255,9 +281,14 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                                     <tr key={product.id} className="group hover:bg-accent/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-md bg-muted border border-border overflow-hidden flex items-center justify-center">
+                                                <div className="w-10 h-10 rounded-md bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0">
                                                     {product.imageUrl ? (
-                                                        <img src={product.imageUrl} alt="" className="object-cover w-full h-full" />
+                                                        <img 
+                                                            src={product.imageUrl} 
+                                                            alt="" 
+                                                            className="object-cover w-full h-full" 
+                                                            onError={(e) => { e.target.style.display = 'none' }} 
+                                                        />
                                                     ) : (
                                                         <Package className="w-5 h-5 text-muted-foreground" />
                                                     )}

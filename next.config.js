@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV !== 'production';
+
 const nextConfig = {
   transpilePackages: ['lucide-react'],
   reactStrictMode: false,
@@ -48,6 +50,19 @@ const nextConfig = {
   },
   async headers() {
     return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Referrer-Policy",
+            value: isDev ? "no-referrer-when-downgrade" : "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
+        ],
+      },
       {
         // matching all API routes
         source: "/localhost:3000/api/v1/:path*",

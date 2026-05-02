@@ -15,8 +15,9 @@ export async function GET(req, { params }) {
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get("limit") || "100");
 
+        // Use workspaceId directly for products
         const products = await db.eCommerceProduct.findMany({
-            where: { userId: session.user.userId },
+            where: { userId: workspaceId },
             include: {
                 store: {
                     select: { name: true, platform: true }
