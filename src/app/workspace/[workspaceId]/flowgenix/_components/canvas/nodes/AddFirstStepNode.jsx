@@ -13,10 +13,10 @@ export const AddFirstStepNode = memo(({ data }) => {
       <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-dashed border-border bg-background text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary">
         <Plus className="h-3.5 w-3.5" />
       </div>
-      <p className="text-center font-mono text-[10px] leading-tight text-muted-foreground group-hover:text-foreground">
+      <p className="text-center font-mono text-[10px]  text-muted-foreground group-hover:text-foreground">
         Add first step…
       </p>
-      <Handle type="source" position={Position.Right} className="!opacity-0" />
+      <Handle type="source" position={Position.Right} className="opacity-0!" />
     </button>
   );
 });

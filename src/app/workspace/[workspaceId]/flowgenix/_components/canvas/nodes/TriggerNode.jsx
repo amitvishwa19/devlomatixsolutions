@@ -20,7 +20,7 @@ export const TriggerNode = memo(({ id, data }) => {
           </p>
         </div>
       </div>
-      <Handle type="source" position={Position.Right} className="!h-2 !w-2 !bg-primary !border-0" />
+      <Handle type="source" position={Position.Right} className="h-2! w-10! bg-primary! border-0!" />
 
       <button
         type="button"

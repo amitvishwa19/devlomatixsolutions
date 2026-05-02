@@ -59,6 +59,7 @@ export default function FlowgenixDashboard() {
                         <TabsTrigger value="setup" className="gap-2 font-medium text-xs px-4 rounded-md">
                             <Settings2 className="h-3.5 w-3.5" /> Setup
                         </TabsTrigger>
+
                     </TabsList>
 
                 </div>
@@ -91,6 +92,7 @@ export default function FlowgenixDashboard() {
                             userId={userId}
                         />
                     </TabsContent>
+
                 </div>
 
             </Tabs>

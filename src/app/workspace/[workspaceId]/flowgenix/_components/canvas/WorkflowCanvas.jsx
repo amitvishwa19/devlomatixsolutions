@@ -27,11 +27,11 @@ const nodeTypes = { workflowNode: WorkflowNode };
 const edgeTypes = { workflowEdge: WorkflowEdge };
 
 const initialNodes = [
-    { id: "trigger-placeholder", type: "workflowNode", position: { x: -350, y: 150 }, data: { label: "Add Trigger", type: "trigger-placeholder", subtitle: "Click to select a trigger", status: "idle" } },
+    { id: "trigger-placeholder", type: "workflowNode", position: { x: 0, y: 0 }, data: { label: "Add Trigger", type: "trigger-placeholder", subtitle: "Click to select a trigger", status: "idle" } },
 ];
 const initialEdges = [];
 
-const DEFAULT_VIEWPORT = { x: 500, y: 150, zoom: 0.8 };
+const DEFAULT_VIEWPORT = { x: 450, y: 250, zoom: 0.9 };
 
 function WorkflowCanvasInner({
     workflowId,
@@ -111,8 +111,32 @@ function WorkflowCanvasInner({
         };
     });
 
-    const handleSlotAdd = useCallback((slotId) => { setNodePanelSlotFilter(slotId); setShowNodePanel(true); }, []);
-    const nodesWithCallbacks = nodes.map((n) => (n.data).type === "ai-agent" ? { ...n, data: { ...n.data, onSlotAdd: handleSlotAdd } } : n);
+    const connectingNodeId = useRef(null);
+    const connectingHandleId = useRef(null);
+    const pendingConnection = useRef(null);
+    const handleSlotAdd = useCallback((slotId, nodeId) => {
+        setNodePanelSlotFilter(slotId);
+        setShowNodePanel(true);
+        if (slotId === 'trigger-output' || slotId.startsWith('slot-')) {
+            pendingConnection.current = {
+                source: nodeId,
+                sourceHandle: slotId === 'trigger-output' ? null : slotId,
+                position: null // Will be calculated in addNode if not set
+            };
+        }
+    }, []);
+    const nodesWithCallbacks = nodes.map((n) => {
+        const data = n.data;
+        let attachedSlots = {};
+        if (data.type === "ai-agent") {
+            edges.forEach((e) => {
+                if (e.target === n.id && e.targetHandle?.startsWith("slot-")) {
+                    attachedSlots[e.targetHandle.replace("slot-", "")] = true;
+                }
+            });
+        }
+        return { ...n, data: { ...data, attachedSlots, onSlotAdd: (slotId) => handleSlotAdd(slotId, n.id) } };
+    });
 
     const { execute, isExecuting, executionResults } = useWorkflowExecution(nodes, setNodes, edges, workflowId, workflowName, workspaceId, userId);
     useWorkflowKeyboard(nodes, edges, setNodes, setEdges, selectedNode, setSelectedNode);
@@ -134,23 +158,79 @@ function WorkflowCanvasInner({
     const onNodeContextMenu = useCallback((event, node) => { event.preventDefault(); setContextMenu({ x: event.clientX, y: event.clientY, nodeId: node.id }); }, []);
 
     const deleteNode = useCallback((nodeId) => {
-        setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+        setNodes((nds) => {
+            const nextNodes = nds.filter((n) => n.id !== nodeId);
+            return nextNodes.length === 0 ? initialNodes : nextNodes;
+        });
         setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
         setContextMenu(null); if (selectedNode?.id === nodeId) setSelectedNode(null);
     }, [setNodes, setEdges, selectedNode]);
 
     const editNode = useCallback((nodeId) => { const node = nodes.find((n) => n.id === nodeId); if (node) setSelectedNode(node); setContextMenu(null); }, [nodes]);
 
+    const onConnectStart = useCallback((_, { nodeId, handleId }) => {
+        connectingNodeId.current = nodeId;
+        connectingHandleId.current = handleId;
+    }, []);
+
+    const onConnectEnd = useCallback((event) => {
+        if (!connectingNodeId.current) return;
+        const targetIsPane = event.target.classList.contains('react-flow__pane');
+
+        if (targetIsPane) {
+            const { clientX, clientY } = event;
+            const position = screenToFlowPosition({ x: clientX, y: clientY });
+            setNodePanelSlotFilter('trigger-output'); 
+            setShowNodePanel(true);
+            pendingConnection.current = {
+                source: connectingNodeId.current,
+                sourceHandle: connectingHandleId.current,
+                position
+            };
+        }
+        connectingNodeId.current = null;
+        connectingHandleId.current = null;
+    }, [screenToFlowPosition]);
+
     const addNode = useCallback((type, label) => {
         const hasPlaceholder = nodes.some((n) => (n.data).type === "trigger-placeholder");
         if (hasPlaceholder) {
             setNodes((nds) => nds.map((n) => (n.data).type === "trigger-placeholder" ? { ...n, data: { label, type, subtitle: "", status: "idle", ...(type === "ai-agent" ? { config: { builtinLlm: "gpt-4", builtinMemory: "buffer", temperature: 0.7, maxIterations: 5 } } : {}) } } : n));
         } else {
-            const newNode = { id: `${Date.now()}`, type: "workflowNode", position: { x: -300 + Math.random() * 200, y: 150 + Math.random() * 200 }, data: { label, type, subtitle: "", status: "idle", ...(type === "ai-agent" ? { config: { builtinLlm: "gpt-4", builtinMemory: "buffer", temperature: 0.7, maxIterations: 5 } } : {}) } };
+            const newNodeId = crypto.randomUUID();
+            const rect = reactFlowWrapper.current?.getBoundingClientRect();
+            
+            // Use pending position if it's a drag-to-space, otherwise center of view
+            const dropPosition = pendingConnection.current?.position;
+            const center = dropPosition || screenToFlowPosition({
+                x: rect ? (rect.left + rect.width / 2) : window.innerWidth / 2,
+                y: rect ? (rect.top + rect.height / 2) : window.innerHeight / 2,
+            });
+
+            const newNode = { 
+                id: newNodeId, 
+                type: "workflowNode", 
+                position: { x: center.x - 75, y: center.y - 40 }, 
+                data: { label, type, subtitle: "", status: "idle", ...(type === "ai-agent" ? { config: { builtinLlm: "gpt-4", builtinMemory: "buffer", temperature: 0.7, maxIterations: 5 } } : {}) } 
+            };
+            
             setNodes((nds) => [...nds, newNode]);
+
+            if (pendingConnection.current) {
+                const { source, sourceHandle } = pendingConnection.current;
+                setEdges((eds) => addEdge({
+                    source,
+                    sourceHandle,
+                    target: newNodeId,
+                    type: "workflowEdge",
+                    animated: true
+                }, eds));
+                pendingConnection.current = null;
+            }
         }
         setShowNodePanel(false);
-    }, [setNodes, nodes]);
+        setNodePanelSlotFilter(undefined);
+    }, [nodes, setNodes, setEdges, screenToFlowPosition]);
 
     const [isSaving, setIsSaving] = useState(false);
     const saveWorkflow = useCallback(async () => {
@@ -168,7 +248,7 @@ function WorkflowCanvasInner({
         const label = event.dataTransfer.getData("application/reactflow-label");
         if (!type || !label) return;
         const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-        setNodes((nds) => [...nds, { id: `${Date.now()}`, type: "workflowNode", position, data: { label, type, subtitle: "", status: "idle" } }]);
+        setNodes((nds) => [...nds, { id: crypto.randomUUID(), type: "workflowNode", position, data: { label, type, subtitle: "", status: "idle" } }]);
     }, [screenToFlowPosition, setNodes]);
 
     const handleChatSend = useCallback(async (text) => {
@@ -178,14 +258,28 @@ function WorkflowCanvasInner({
         setConversationHistory(newHistory);
         setNodes((nds) => nds.map((n) => {
             const t = (n.data).type;
-            if (t === "chat-trigger") return { ...n, data: { ...n.data, status: "success" } };
-            if (t === "ai-agent") return { ...n, data: { ...n.data, status: "running" } };
+            if (t === "chat-trigger") return { ...n, data: { ...n.data, status: "running" } };
             return n;
         }));
         setChatLogs((prev) => [...prev, { id: crypto.randomUUID(), nodeName: "Chat Trigger", duration: 0, status: "success", timestamp: new Date(), output: { chatInput: text, sessionId: chatSessionId, triggered: true } }]);
 
         if (connectedAgentNode) {
+            // Check if model is attached
+            const isModelAttached = !!(connectedAgentNode.data.attachedSlots?.llm);
+            if (!isModelAttached) {
+                setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "bot", text: "⚠️ Error: No Chat Model attached to the AI Agent. Please connect a model node (e.g., OpenAI, Groq) to the Agent's Chat Model slot.", timestamp: new Date() }]);
+                setNodes((nds) => nds.map((n) => n.id === connectedAgentNode.id ? { ...n, data: { ...n.data, status: "error" } } : n));
+                return;
+            }
+
+            await new Promise(r => setTimeout(r, 600)); // Brief pause to show trigger success
             setIsStreaming(true); const botMsgId = crypto.randomUUID(); const startTime = Date.now();
+            setNodes((nds) => nds.map((n) => {
+                const t = (n.data).type;
+                if (t === "chat-trigger") return { ...n, data: { ...n.data, status: "success" } };
+                if (n.id === connectedAgentNode.id) return { ...n, data: { ...n.data, status: "running" } };
+                return n;
+            }));
             setChatMessages((prev) => [...prev, { id: botMsgId, role: "bot", text: "", timestamp: new Date(), isStreaming: true }]);
             let fullResponse = "";
             await streamChat({
@@ -197,11 +291,20 @@ function WorkflowCanvasInner({
                     setIsStreaming(false); setConversationHistory((prev) => [...prev, { role: "assistant", content: fullResponse }]);
                     const duration = Date.now() - startTime;
                     setChatLogs((prev) => [...prev, { id: crypto.randomUUID(), nodeName: "AI Agent", duration, status: "success", timestamp: new Date(), output: { input: text, response: fullResponse } }]);
-                    setNodes((nds) => nds.map((n) => (n.data).type === "ai-agent" ? { ...n, data: { ...n.data, status: "success" } } : n));
+                    setNodes((nds) => nds.map((n) => {
+                        const t = (n.data).type;
+                        if (t === "ai-agent" || t === "chat-trigger") return { ...n, data: { ...n.data, status: "success" } };
+                        return n;
+                    }));
                 },
                 onError: (errMsg) => {
                     setChatMessages((prev) => prev.map((m) => m.id === botMsgId ? { ...m, text: `Error: ${errMsg}`, isStreaming: false } : m));
-                    setIsStreaming(false); setNodes((nds) => nds.map((n) => (n.data).type === "ai-agent" ? { ...n, data: { ...n.data, status: "error" } } : n));
+                    setIsStreaming(false); 
+                    setNodes((nds) => nds.map((n) => {
+                        const t = (n.data).type;
+                        if (t === "ai-agent" || t === "chat-trigger") return { ...n, data: { ...n.data, status: "error" } };
+                        return n;
+                    }));
                     toast.error(errMsg);
                 },
             });
@@ -213,6 +316,7 @@ function WorkflowCanvasInner({
                 const outputData = lastResult?.output || { chatInput: text };
                 setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "bot", text: JSON.stringify(outputData, null, 2), timestamp: new Date() }]);
                 setChatLogs((prev) => [...prev, { id: crypto.randomUUID(), nodeName: "Workflow", duration, status: (lastResult?.status || "success"), timestamp: new Date(), output: outputData }]);
+                setNodes((nds) => nds.map((n) => (n.data).type === "chat-trigger" ? { ...n, data: { ...n.data, status: (lastResult?.status || "success") } } : n));
             });
         }
     }, [conversationHistory, connectedAgentNode, agentConfig, execute, executionResults, enableTools, chatSessionId, setNodes]);
@@ -252,11 +356,6 @@ function WorkflowCanvasInner({
                     <Button variant="outline" size="sm" className={`h-8 text-xs gap-1.5 ${scheduleEnabled ? "border-primary text-primary bg-primary/5" : ""}`} onClick={() => setShowSchedule(true)}>
                         <Clock className="h-3.5 w-3.5" /> {scheduleEnabled ? "Scheduled" : "Schedule"}
                     </Button>
-                    {hasChatTrigger && (
-                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-primary text-primary bg-primary/5 hover:bg-primary/10" onClick={() => setShowChat(true)}>
-                            <MessageSquare className="h-3.5 w-3.5" /> Chat
-                        </Button>
-                    )}
                     <Button size="sm" className="h-8 text-xs gap-1.5 bg-orange-600 hover:bg-orange-700 text-white" onClick={() => execute()} disabled={isExecuting}>
                         {isExecuting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                         {isExecuting ? "Running..." : "Execute"}
@@ -267,17 +366,31 @@ function WorkflowCanvasInner({
             <div className="flex-1 relative overflow-hidden pt-12">
                 <ReactFlow
                     nodes={nodesWithCallbacks} edges={styledEdges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-                    onConnect={onConnect} onNodeClick={onNodeClick} onNodeContextMenu={onNodeContextMenu} onEdgeClick={onEdgeClick}
+                    onConnect={onConnect} onConnectStart={onConnectStart} onConnectEnd={onConnectEnd}
+                    onNodeClick={onNodeClick} onNodeContextMenu={onNodeContextMenu} onEdgeClick={onEdgeClick}
                     onPaneClick={onPaneClick} onDragOver={onDragOver} onDrop={onDrop} nodeTypes={nodeTypes} edgeTypes={edgeTypes}
                     defaultEdgeOptions={{ type: "workflowEdge", animated: true }}
                 >
                     <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--muted-foreground)/0.2)" />
                     <Controls position="bottom-right" showInteractive={false} className="!bg-card !border-border !shadow-lg" />
+                    
                     <Panel position="bottom-left">
                         <Button onClick={() => setShowNodePanel(true)} size="sm" className="gap-1.5 shadow-xl bg-primary text-primary-foreground hover:scale-105 transition-transform">
                             <Plus className="h-4 w-4" /> Add Node
                         </Button>
                     </Panel>
+                    {hasChatTrigger && (
+                        <Panel position="bottom-center" className="mb-4">
+                            <Button 
+                                onClick={() => setShowChat((v) => !v)} 
+                                size="sm" 
+                                className="gap-2 shadow-2xl bg-orange-600 hover:bg-orange-700 text-white border-orange-600 hover:scale-105 active:scale-95 transition-all h-10 px-6 rounded-full"
+                            >
+                                <MessageSquare className="h-4 w-4" />
+                                {showChat ? "Hide Chat" : "Open Chat"}
+                            </Button>
+                        </Panel>
+                    )}
                 </ReactFlow>
 
                 <AnimatePresence>

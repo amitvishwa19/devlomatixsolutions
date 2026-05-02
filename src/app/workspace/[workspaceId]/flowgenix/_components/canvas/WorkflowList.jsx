@@ -70,7 +70,7 @@ export function WorkflowList({ workflows, onEdit, onCreate, onDelete, onExecute 
                                         <DropdownMenuItem onClick={() => onEdit(wf)} className="gap-2">
                                             <Pencil className="h-3.5 w-3.5" /> Edit Canvas
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onDelete(wf.id)} className="gap-2 text-destructive">
+                                        <DropdownMenuItem onClick={() => onDelete(wf)} className="gap-2 text-destructive">
                                             <Trash2 className="h-3.5 w-3.5" /> Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

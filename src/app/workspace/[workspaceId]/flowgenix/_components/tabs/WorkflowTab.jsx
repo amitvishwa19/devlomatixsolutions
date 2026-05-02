@@ -7,11 +7,26 @@ import { toast } from "sonner";
 import { listWorkflows, createWorkflow, deleteWorkflow, executeWorkflowAction } from "../../_actions/workflows/actions";
 import { Loader2 } from "lucide-react";
 
+import { 
+    AlertDialog, 
+    AlertDialogAction, 
+    AlertDialogCancel, 
+    AlertDialogContent, 
+    AlertDialogDescription, 
+    AlertDialogFooter, 
+    AlertDialogHeader, 
+    AlertDialogTitle, 
+} from "@/components/ui/alert-dialog";
+
 export function WorkflowTab({ workspaceId, userId, onRefreshRuns }) {
     const [workflows, setWorkflows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedWorkflow, setSelectedWorkflow] = useState(null);
     const [isCanvasOpen, setIsCanvasOpen] = useState(false);
+    
+    // Delete states
+    const [workflowToDelete, setWorkflowToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const loadWorkflows = useCallback(async () => {
         if (!workspaceId) return;
@@ -53,14 +68,18 @@ export function WorkflowTab({ workspaceId, userId, onRefreshRuns }) {
         }
     };
 
-    const handleDeleteWorkflow = async (id) => {
-        if (!confirm("Are you sure?")) return;
+    const confirmDelete = async () => {
+        if (!workflowToDelete) return;
+        setIsDeleting(true);
         try {
-            await deleteWorkflow(workspaceId, id);
-            setWorkflows(prev => prev.filter(w => w.id !== id));
+            await deleteWorkflow(workspaceId, workflowToDelete.id);
+            setWorkflows(prev => prev.filter(w => w.id !== workflowToDelete.id));
             toast.success("Workflow deleted");
+            setWorkflowToDelete(null);
         } catch (error) {
             toast.error("Failed to delete workflow");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -92,7 +111,7 @@ export function WorkflowTab({ workspaceId, userId, onRefreshRuns }) {
                     setIsCanvasOpen(true);
                 }}
                 onCreate={handleCreateWorkflow}
-                onDelete={handleDeleteWorkflow}
+                onDelete={(wf) => setWorkflowToDelete(wf)}
                 onExecute={handleExecuteWorkflow}
             />
 
@@ -100,11 +119,40 @@ export function WorkflowTab({ workspaceId, userId, onRefreshRuns }) {
                 open={isCanvasOpen} 
                 onOpenChange={(open) => {
                     setIsCanvasOpen(open);
-                    if (!open) loadWorkflows(); // Refresh list when closing modal to show updated names/schedules
+                    if (!open) loadWorkflows(); // Refresh list when closing modal
                 }} 
                 workflow={selectedWorkflow} 
                 userId={userId} 
             />
+
+            <AlertDialog open={!!workflowToDelete} onOpenChange={(open) => !open && setWorkflowToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the workflow
+                            <span className="font-semibold text-foreground mx-1">"{workflowToDelete?.name}"</span>
+                            and all its configuration.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={(e) => {
+                                e.preventDefault();
+                                confirmDelete();
+                            }}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
+                            {isDeleting ? "Deleting..." : "Delete Workflow"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

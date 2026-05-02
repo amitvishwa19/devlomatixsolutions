@@ -39,6 +39,8 @@ const nodeCategories = [
             { type: "ollama", label: "Ollama", icon: Terminal, description: "Local open-source models" },
             { type: "huggingface", label: "Hugging Face", icon: Cpu, description: "Inference API models" },
             { type: "groq", label: "Groq", icon: Zap, description: "Ultra-fast LLM inference" },
+            { type: "nvidia", label: "NVIDIA NIM", icon: Cpu, description: "NVIDIA NIM inference" },
+            { type: "openrouter", label: "OpenRouter", icon: Globe, description: "Unified LLM API" },
         ],
     },
     {
@@ -161,6 +163,7 @@ const SLOT_CATEGORY_FILTER = {
     llm: ["LLM Models"],
     memory: ["Memory"],
     tool: ["AI / Agents", "Core"],
+    'trigger-output': ["AI / Agents", "Core", "Communication", "Data & Storage", "Media"],
 };
 
 import { ScrollArea } from "@/components/ui/scroll-area";

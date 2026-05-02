@@ -157,7 +157,7 @@ const colorMap = {
 };
 
 const AI_SUB_TYPES = new Set([
-  "openai", "anthropic", "google-ai", "ollama", "huggingface", "groq",
+  "openai", "anthropic", "google-ai", "ollama", "huggingface", "groq", "nvidia", "openrouter",
   "buffer-memory", "window-memory", "vector-store-memory", "summary-memory",
   "ai-tool", "ai-output-parser",
 ]);
@@ -206,15 +206,16 @@ const WorkflowNode = ({ data, selected }) => {
   const colorClass = colorMap[nodeData.type] || "bg-primary";
   const isAgent = nodeData.type === "ai-agent";
   const agentConfig = nodeData.config;
-  const hasBuiltinLlm = isAgent;
-  const hasBuiltinMemory = isAgent && agentConfig?.builtinMemory && agentConfig.builtinMemory !== "none";
+  const hasBuiltinLlm = false; // Forced to attach a model
+  const hasBuiltinMemory = false; // Forced to attach a memory
   const isSubComponent = AI_SUB_TYPES.has(nodeData.type);
+  const missingRequiredSlot = isAgent && AGENT_SLOTS.some(slot => slot.required && !nodeData.attachedSlots?.[slot.id] && (slot.id === 'llm' ? !hasBuiltinLlm : !hasBuiltinMemory));
 
-  const status = nodeData.status || (nodeData.error ? "error" : nodeData.executed ? "success" : "idle");
+  const status = nodeData.status || (missingRequiredSlot ? "error" : (nodeData.error ? "error" : nodeData.executed ? "success" : "idle"));
 
   const borderClass =
     status === "error"
-      ? "border-destructive"
+      ? "border-destructive shadow-[0_0_15px_rgba(239,68,68,0.3)]"
       : status === "running"
         ? "border-primary animate-pulse"
         : status === "waiting"
@@ -252,8 +253,15 @@ const WorkflowNode = ({ data, selected }) => {
           <Handle
             type="source"
             position={Position.Right}
-            className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-colors"
+            className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-all z-50"
           />
+          <button
+            onClick={(e) => { e.stopPropagation(); data.onSlotAdd?.('trigger-output'); }}
+            className="absolute -right-7 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md border border-muted-foreground/30 bg-card flex items-center justify-center hover:border-primary hover:text-primary transition-all text-muted-foreground shadow-sm z-10"
+            title="Add next step"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
         </div>
         <span className="text-xs text-center text-foreground font-medium max-w-[120px] leading-tight mt-1">
           {nodeData.label}
@@ -273,7 +281,7 @@ const WorkflowNode = ({ data, selected }) => {
           <Handle
             type="target"
             position={Position.Left}
-            className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-colors"
+            className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-all z-50"
           />
           <div className="flex items-center gap-3 px-4 py-2.5">
             <div className="bg-muted rounded-lg p-1.5 flex items-center justify-center">
@@ -287,7 +295,7 @@ const WorkflowNode = ({ data, selected }) => {
           <Handle
             type="source"
             position={Position.Right}
-            className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-colors"
+            className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-all z-50"
           />
         </div>
 
@@ -306,7 +314,7 @@ const WorkflowNode = ({ data, selected }) => {
                     type="target"
                     position={Position.Bottom}
                     id={`slot-${slot.id}`}
-                    className="!w-5 !h-5 !bg-transparent !border-0 !rounded-none !transform-none"
+                    className="!w-5 !h-5 !bg-transparent !border-0 !rounded-none !transform-none z-50"
                     style={{ position: "absolute", top: 0, left: 0 }}
                   />
                 </div>
@@ -340,7 +348,7 @@ const WorkflowNode = ({ data, selected }) => {
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-colors"
+          className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-all z-50"
         />
       )}
 
@@ -349,7 +357,7 @@ const WorkflowNode = ({ data, selected }) => {
           type="source"
           position={Position.Top}
           id="to-agent"
-          className="!w-3 !h-3 !bg-violet-400 !border-2 !border-card hover:!bg-violet-500 transition-colors"
+          className="!w-3 !h-3 !bg-violet-400 !border-2 !border-card hover:!bg-violet-500 transition-all z-50"
         />
       )}
 
@@ -365,11 +373,13 @@ const WorkflowNode = ({ data, selected }) => {
 
       <StatusIndicator status={status} />
 
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-colors"
-      />
+      {!isSubComponent && (
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-3 !h-3 !bg-muted-foreground/40 !border-2 !border-card hover:!bg-primary transition-all z-50"
+        />
+      )}
     </div>
   );
 };
