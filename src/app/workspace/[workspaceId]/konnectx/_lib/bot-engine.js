@@ -137,7 +137,7 @@ export class WhatsAppBotEngine {
     }
 
     async executeNode(nodeId, context) {
-        const { nodes, edges, from, messageText, workspaceId, userId, visited } = context;
+        const { nodes, edges, workspaceId, userId, visited } = context;
         if (visited.has(nodeId) || visited.size > 25) return;
         visited.add(nodeId);
 

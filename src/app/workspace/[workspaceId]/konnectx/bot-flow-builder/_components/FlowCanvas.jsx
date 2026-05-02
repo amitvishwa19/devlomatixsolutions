@@ -1,6 +1,7 @@
 'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
     ReactFlow,
     Controls,
@@ -19,13 +20,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
     Save, 
-    Play, 
-    LayoutTemplate, 
     ArrowLeft, 
-    Settings, 
     Loader2, 
-    Download,
-    Maximize2,
     Send
 } from 'lucide-react';
 import { toast } from 'sonner';

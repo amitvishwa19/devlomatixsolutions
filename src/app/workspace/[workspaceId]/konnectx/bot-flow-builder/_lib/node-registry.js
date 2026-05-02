@@ -1,20 +1,16 @@
-import { 
-    Zap, 
+import {
     MessageSquare, 
     Image, 
     FileText, 
     GitBranch, 
     Clock, 
     Globe, 
-    Database,
     Play,
-    Settings,
     ShoppingBag,
     ShoppingCart,
     Truck,
     CreditCard,
-    Package,
-    Bot
+    Package
 } from 'lucide-react';
 
 /**

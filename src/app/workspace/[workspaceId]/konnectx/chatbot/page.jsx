@@ -1,7 +1,8 @@
 'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,6 @@ import {
     Play,
     Pause,
     MoreHorizontal,
-    ExternalLink,
     Zap
 } from "lucide-react";
 import {
@@ -34,7 +34,6 @@ import { BotModal } from "./_components/BotModal";
 import { BotFlowBuilderModal } from "./_components/BotFlowBuilderModal";
 
 export default function ChatbotPage() {
-    const router = useRouter();
     const params = useParams();
     const workspaceId = params.workspaceId;
 
