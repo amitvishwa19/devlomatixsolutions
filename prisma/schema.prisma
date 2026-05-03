@@ -60,6 +60,7 @@ model User {
   ecommerceOrders           ECommerceOrder[]
   ecommerceProducts         ECommerceProduct[]
   ecommerceAbandonedCarts   ECommerceAbandonedCart[]
+  ecommerceCarts            ECommerceCart[]
   waJobs                    WhatsAppJob[]
   waDeliveryLogs            WhatsAppDeliveryLog[]
   agentModels               AgentModel[]
@@ -1130,6 +1131,7 @@ model ECommerceStore {
   orders         ECommerceOrder[]
   products       ECommerceProduct[]
   abandonedCarts ECommerceAbandonedCart[]
+  carts         ECommerceCart[]
 
   @@index([userId])
   @@index([name])
@@ -1188,10 +1190,34 @@ model ECommerceProduct {
   @@index([userId])
 }
 
+model ECommerceCart {
+  id            String           @id @default(cuid())
+  storeId       String
+  guestId       String?          // Guest identifier (for logged out users)
+  userId        String?          // User ID (for logged in users)
+  items         Json             // Cart items array
+  totalAmount   Float            @default(0)
+  currency      String           @default("INR")
+  status        String           @default("active") // active, converted, abandoned
+  convertedToOrderId String?     // If cart converted to order
+  metadata      Json?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  store         ECommerceStore   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user          User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, guestId])
+  @@unique([storeId, userId])
+  @@index([storeId])
+  @@index([guestId])
+  @@index([userId])
+}
+
 model ECommerceAbandonedCart {
   id             String         @id @default(cuid())
   storeId        String
   externalCartId String         @unique
+  guestId        String?        // Guest user identifier
   checkoutUrl    String?
   totalAmount    Float
   currency       String         @default("INR")
@@ -1209,6 +1235,7 @@ model ECommerceAbandonedCart {
 
   @@index([storeId])
   @@index([userId])
+  @@index([guestId])
 }
 
 model EmailAssignment {

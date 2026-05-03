@@ -52,7 +52,6 @@ async function validateStore(apiKey, storeSlug) {
 }
 
 export async function GET(request) {
-    export async function GET(request) {
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
         return new NextResponse(null, { headers: corsHeaders() });
@@ -161,6 +160,7 @@ export async function POST(request) {
             customerName,
             customerEmail,
             customerPhone,
+            guestId,
             items,
         } = body;
 
@@ -183,7 +183,7 @@ export async function POST(request) {
                 customerEmail,
                 customerPhone,
                 userId: validation.store.userId,
-                metadata: JSON.stringify({ items }),
+                metadata: JSON.stringify({ items, guestId }),
             },
         });
 

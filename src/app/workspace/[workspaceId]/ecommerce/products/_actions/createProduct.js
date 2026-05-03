@@ -12,7 +12,7 @@ export async function createProduct(formData) {
     }
 
     try {
-        const { title, description, sku, price, discount, quantity, status, category, imageUrl, longDescription } = formData;
+        const { title, description, sku, price, discount, quantity, status, category, imageUrl, longDescription, productType, digitalFileUrl, duration, servings, nutritionalInfo, requirements, deliveryMethod, images } = formData;
 
         const product = await db.eCommerceProduct.create({
             data: {
@@ -27,7 +27,15 @@ export async function createProduct(formData) {
                 userId: session.user.userId,
                 metadata: { 
                     category: category || "crystals",
-                    longDescription: longDescription || ""
+                    longDescription: longDescription || "",
+                    productType: productType || "physical",
+                    digitalFileUrl: digitalFileUrl || "",
+                    duration: duration || "",
+                    servings: servings || "",
+                    nutritionalInfo: nutritionalInfo || "",
+                    requirements: requirements || "",
+                    deliveryMethod: deliveryMethod || "manual",
+                    images: images || []
                 }
             }
         });
