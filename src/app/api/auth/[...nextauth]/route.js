@@ -1,7 +1,5 @@
-import NextAuthImport from "next-auth"
+import NextAuth from "next-auth"
 import { authOptions } from "./options"
-
-const NextAuth = NextAuthImport.default || NextAuthImport
 
 const handler = NextAuth(authOptions)
 
