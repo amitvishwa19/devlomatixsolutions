@@ -21,7 +21,7 @@ const COUPONS = {
 };
 
 export default function CrystalAuraCheckoutPage() {
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice, clearCart, guestId } = useCart();
   const { addOrder } = useOrders();
   const { data: session } = useSession();
   const router = useRouter();
@@ -95,6 +95,7 @@ export default function CrystalAuraCheckoutPage() {
 
       const result = await createOrder({
         userId: session.user.userId,
+        guestId: guestId,
         items: orderItems,
         shippingAddress: {
           name: form.name,
@@ -123,10 +124,11 @@ export default function CrystalAuraCheckoutPage() {
           discount: couponDiscount,
         };
         addOrder(localOrder);
-        clearCart();
+        clearCart(true);
         router.push("/order-success");
       } else {
-        toast({ title: "Order failed", description: result.error, variant: "destructive" });
+        console.error("[ORDER_FAILED]", result);
+        toast({ title: "Order failed", description: result.error || "Unknown error", variant: "destructive" });
       }
     } catch (error) {
       console.error("[ORDER_ERROR]", error);

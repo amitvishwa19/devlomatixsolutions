@@ -13,7 +13,7 @@ const CartDrawer = () => {
   const router = useRouter();
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen} model={false}>
       <SheetContent className="crystal-aura bg-background border-white/10 w-full sm:max-w-md flex flex-col p-0 overflow-hidden">
         <SheetHeader className="p-6 border-b border-white/5 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />

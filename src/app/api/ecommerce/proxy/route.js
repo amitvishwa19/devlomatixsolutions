@@ -34,6 +34,7 @@ export async function GET(request) {
 
         // Build the target URL
         const targetUrl = `${backendUrl.replace(/\/$/, '')}/api/ecommerce/public/${endpoint}?limit=1`;
+        console.log('[PROXY] Target URL:', targetUrl);
 
         // Make the request to backend
         const response = await fetch(targetUrl, {
@@ -44,6 +45,13 @@ export async function GET(request) {
                 'x-store-slug': storeSlug,
             },
         });
+
+        // Check if response is OK
+        if (!response.ok) {
+            console.log('[PROXY] Response status:', response.status);
+            console.log('[PROXY] Response text:', await response.text());
+            return NextResponse.json({ success: false, error: `Backend returned status ${response.status}` }, { status: response.status });
+        }
 
         const data = await response.json();
 

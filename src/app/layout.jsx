@@ -41,9 +41,9 @@ export const metadata = {
     },
     description: 'Authentic gemstones, healing crystals, and spiritual guidance for your journey.',
     icon: {
-        icon: ['/fevicon.png?v=1'],
-        apple: ['/fevicon.png?v=4'],
-        shortcut: ['/fevicon.png?v=4']
+        icon: ['/fevicon.png?v=5'],
+        apple: ['/fevicon.png?v=5'],
+        shortcut: ['/fevicon.png?v=5']
     },
     manifest: '/site.webmanifest'
 }

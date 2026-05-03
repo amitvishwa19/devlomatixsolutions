@@ -1,6 +1,0 @@
-export { getProducts } from './getProducts'
-export { getProduct } from './getProduct'
-export { createProduct } from './createProduct'
-export { updateProduct } from './updateProduct'
-export { deleteProduct } from './deleteProduct'
-export { updateProductStatus } from './updateProductStatus'

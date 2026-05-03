@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { syncCart, clearCartOnOrder } from "@/lib/ecommerce";
+import { useSession } from "next-auth/react";
 
 // --- THEME CONTEXT ---
 const ThemeContext = createContext(undefined);
@@ -35,28 +37,89 @@ export const useTheme = () => {
 
 // --- CART CONTEXT ---
 const CartContext = createContext(undefined);
+
+const generateGuestId = () => 'guest_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+
 export const CartProvider = ({ children }) => {
+  const { data: session } = useSession();
   const [items, setItems] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [guestId, setGuestId] = useState(null);
+  const [cartCreatedAt, setCartCreatedAt] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+
+  // Sync cart to backend when items change
+  useEffect(() => {
+    const userId = session?.user?.userId;
+    if (!userId && !guestId) return;
+    if (items.length === 0) return;
+    
+    // Debounce sync
+    const timeout = setTimeout(async () => {
+      setSyncing(true);
+      const totalAmount = items.reduce((sum, i) => sum + (i.product?.priceNum || i.product?.price || 0) * i.quantity, 0);
+      const cartItems = items.map(i => ({
+        productId: i.product.id,
+        title: i.product.title,
+        price: i.product.priceNum || i.product.price || 0,
+        quantity: i.quantity,
+        image: i.product.image,
+      }));
+      
+      try {
+        await syncCart(userId, {
+          guestId,
+          userId: userId || null,
+          items: cartItems,
+          totalAmount,
+        });
+      } catch (err) {
+        // Silent fail - no backend configured
+      } finally {
+        setSyncing(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [items, guestId, session?.user?.userId]);
 
   useEffect(() => {
     const stored = localStorage.getItem("crystal-aura-cart");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        const validItems = parsed.filter((item) => item.product && item.product.id);
+        const validItems = parsed.items?.filter((item) => item.product && item.product.id) || [];
         setItems(validItems);
+        setGuestId(parsed.guestId || generateGuestId());
+        setCartCreatedAt(parsed.createdAt || new Date().toISOString());
       } catch {
         setItems([]);
+        setGuestId(generateGuestId());
+        setCartCreatedAt(new Date().toISOString());
       }
+    } else {
+      setGuestId(generateGuestId());
+      setCartCreatedAt(new Date().toISOString());
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("crystal-aura-cart", JSON.stringify(items));
-  }, [items]);
+    if (items.length > 0 || guestId) {
+      localStorage.setItem("crystal-aura-cart", JSON.stringify({
+        items,
+        guestId,
+        createdAt: cartCreatedAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }));
+    }
+  }, [items, guestId, cartCreatedAt]);
 
   const addItem = (product) => {
+    if (!guestId) {
+      const newGuestId = generateGuestId();
+      setGuestId(newGuestId);
+      setCartCreatedAt(new Date().toISOString());
+    }
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
@@ -83,8 +146,18 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  const clearCart = () => {
+  const clearCart = async (convertToOrder = false) => {
+    const userId = session?.user?.userId;
+    
+    // If converting to order, clear from backend too
+    if (convertToOrder && (userId || guestId)) {
+      await clearCartOnOrder(userId, guestId, userId);
+    }
+    
     setItems([]);
+    const newGuestId = generateGuestId();
+    setGuestId(newGuestId);
+    setCartCreatedAt(new Date().toISOString());
     localStorage.removeItem("crystal-aura-cart");
   };
 
@@ -99,7 +172,9 @@ export const CartProvider = ({ children }) => {
       value={{ 
         items, addItem, removeItem, updateQuantity, clearCart, 
         totalItems: getTotalItems(), 
-        totalPrice: getTotalPrice(), 
+        totalPrice: getTotalPrice(),
+        guestId,
+        cartCreatedAt, 
         isOpen, setIsOpen,
         isInCart,
         getItemQuantity

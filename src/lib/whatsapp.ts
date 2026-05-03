@@ -15,7 +15,6 @@ export interface WAMessageHistory {
 
 class WhatsAppManager {
     constructor() {
-        console.log('[WA] NEW WhatsAppManager Instance Created (V15) BINGO');
     }
     private sock: ReturnType<typeof makeWASocket> | null = null;
     private state: 'welcome' | 'connecting' | 'qr' | 'open' | 'close' = 'welcome';

@@ -7,6 +7,7 @@ import { z } from "zod";
 
 const CreateOrderSchema = z.object({
     userId: z.string(),
+    guestId: z.string().optional(),
     items: z.array(z.object({
         productId: z.string(),
         title: z.string(),
@@ -40,7 +41,16 @@ export async function createOrder(data) {
 
         const config = configResult.data[0];
         const backendUrl = config.backendUrl;
-        const apiKey = symmetricDecrypt(config.apiKey);
+        
+        // Try to decrypt API key, fallback to plain if failed
+        let apiKey;
+        try {
+            apiKey = symmetricDecrypt(config.apiKey);
+        } catch (e) {
+            // If decryption fails, use as-is (for backwards compatibility)
+            apiKey = config.apiKey;
+        }
+        
         const storeSlug = config.storeName;
 
         // Calculate totals
@@ -60,6 +70,7 @@ export async function createOrder(data) {
             customerName: validated.shippingAddress.name,
             customerEmail: validated.shippingAddress.email,
             customerPhone: validated.shippingAddress.phone,
+            guestId: validated.guestId || null,
             items: validated.items,
         };
 
@@ -119,6 +130,6 @@ export async function createOrder(data) {
         };
     } catch (error) {
         console.error("[CREATE_ORDER_ERROR]", error);
-        return { success: false, error: error.message || "Failed to create order" };
+        return { success: false, error: error.message || "Failed to create order", details: error.toString() };
     }
 }

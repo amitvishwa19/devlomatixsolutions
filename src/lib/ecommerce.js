@@ -81,6 +81,95 @@ export async function createOrder(userId, orderData) {
     });
 }
 
+// Cart sync functions
+export async function syncCart(userId, cartData) {
+    try {
+        const config = await getBackendConfig(userId);
+        if (!config) return { success: false, skip: true };
+
+        const { backendUrl, apiKey, storeName } = config;
+        
+        // Skip if no valid backend URL
+        if (!backendUrl || !apiKey || !storeName) {
+            return { success: false, skip: true };
+        }
+
+        const { guestId, items, totalAmount } = cartData;
+
+        const response = await fetch(`${backendUrl.replace(/\/$/, '')}/api/ecommerce/public/cart`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'x-store-slug': storeName,
+            },
+            body: JSON.stringify({
+                guestId,
+                items,
+                totalAmount,
+            }),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        // Silent fail for network errors - don't throw
+        return { success: false, skip: true };
+    }
+}
+
+export async function getCart(userId, guestId, userIdParam) {
+    const config = await getBackendConfig(userId);
+    if (!config) return { success: false, error: 'No backend configuration' };
+
+    const { backendUrl, apiKey, storeName } = config;
+
+    try {
+        const response = await fetch(`${backendUrl.replace(/\/$/, '')}/api/ecommerce/public/cart`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'x-store-slug': storeName,
+                'x-guest-id': guestId || '',
+                'x-user-id': userIdParam || '',
+            },
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('[GET_CART_ERROR]', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function clearCartOnOrder(userId, guestId, userIdParam) {
+    const config = await getBackendConfig(userId);
+    if (!config) return { success: false, error: 'No backend configuration' };
+
+    const { backendUrl, apiKey, storeName } = config;
+
+    try {
+        const response = await fetch(`${backendUrl.replace(/\/$/, '')}/api/ecommerce/public/cart`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'x-store-slug': storeName,
+                'x-guest-id': guestId || '',
+                'x-user-id': userIdParam || '',
+            },
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('[CLEAR_CART_ERROR]', error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function getAccountStats(userId) {
     try {
         const [productsData, ordersData] = await Promise.all([
