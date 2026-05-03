@@ -24,6 +24,45 @@ const UpdateStore = z.object({
         apiKey: z.string().optional(),
         apiSecret: z.string().optional(),
         status: z.string().optional(),
+        paymentOptions: z.object({
+            card: z.boolean().optional(),
+            upi: z.boolean().optional(),
+            netbanking: z.boolean().optional(),
+            cod: z.boolean().optional(),
+        }).optional(),
+        codMinAmount: z.number().optional(),
+        codMaxAmount: z.number().optional(),
+        
+        // Shipping
+        defaultShippingCost: z.number().optional(),
+        freeShippingThreshold: z.number().nullable().optional(),
+        shippingMethod: z.string().optional(),
+        
+        // Tax
+        taxPercentage: z.number().optional(),
+        taxInclusive: z.boolean().optional(),
+        
+        // Order
+        autoFulfillOrders: z.boolean().optional(),
+        orderPrefix: z.string().optional(),
+        sendConfirmationEmail: z.boolean().optional(),
+        
+        // Inventory
+        trackInventory: z.boolean().optional(),
+        lowStockThreshold: z.number().optional(),
+        
+        // Checkout
+        guestCheckout: z.boolean().optional(),
+        requirePhone: z.boolean().optional(),
+        requireAddress: z.boolean().optional(),
+        
+        // Notifications
+        orderEmailAlerts: z.boolean().optional(),
+        lowStockAlerts: z.boolean().optional(),
+        
+        // Sync
+        syncInterval: z.number().optional(),
+        webhooksEnabled: z.boolean().optional(),
     }),
 });
 
@@ -66,6 +105,40 @@ const handler = async (data) => {
         if (formData.apiKey !== undefined) updateData.apiKey = formData.apiKey || null;
         if (formData.apiSecret !== undefined) updateData.apiSecret = formData.apiSecret || null;
         if (formData.status !== undefined) updateData.status = formData.status;
+        if (formData.paymentOptions !== undefined) updateData.paymentOptions = formData.paymentOptions;
+        if (formData.codMinAmount !== undefined) updateData.codMinAmount = formData.codMinAmount;
+        if (formData.codMaxAmount !== undefined) updateData.codMaxAmount = formData.codMaxAmount;
+        
+        // Shipping
+        if (formData.defaultShippingCost !== undefined) updateData.defaultShippingCost = formData.defaultShippingCost;
+        if (formData.freeShippingThreshold !== undefined) updateData.freeShippingThreshold = formData.freeShippingThreshold;
+        if (formData.shippingMethod !== undefined) updateData.shippingMethod = formData.shippingMethod;
+        
+        // Tax
+        if (formData.taxPercentage !== undefined) updateData.taxPercentage = formData.taxPercentage;
+        if (formData.taxInclusive !== undefined) updateData.taxInclusive = formData.taxInclusive;
+        
+        // Order
+        if (formData.autoFulfillOrders !== undefined) updateData.autoFulfillOrders = formData.autoFulfillOrders;
+        if (formData.orderPrefix !== undefined) updateData.orderPrefix = formData.orderPrefix;
+        if (formData.sendConfirmationEmail !== undefined) updateData.sendConfirmationEmail = formData.sendConfirmationEmail;
+        
+        // Inventory
+        if (formData.trackInventory !== undefined) updateData.trackInventory = formData.trackInventory;
+        if (formData.lowStockThreshold !== undefined) updateData.lowStockThreshold = formData.lowStockThreshold;
+        
+        // Checkout
+        if (formData.guestCheckout !== undefined) updateData.guestCheckout = formData.guestCheckout;
+        if (formData.requirePhone !== undefined) updateData.requirePhone = formData.requirePhone;
+        if (formData.requireAddress !== undefined) updateData.requireAddress = formData.requireAddress;
+        
+        // Notifications
+        if (formData.orderEmailAlerts !== undefined) updateData.orderEmailAlerts = formData.orderEmailAlerts;
+        if (formData.lowStockAlerts !== undefined) updateData.lowStockAlerts = formData.lowStockAlerts;
+        
+        // Sync
+        if (formData.syncInterval !== undefined) updateData.syncInterval = formData.syncInterval;
+        if (formData.webhooksEnabled !== undefined) updateData.webhooksEnabled = formData.webhooksEnabled;
 
         const store = await db.eCommerceStore.update({
             where: { id: storeId },

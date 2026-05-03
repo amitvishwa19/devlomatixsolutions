@@ -162,8 +162,9 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
 
     return (
         <Sheet open={open} onOpenChange={onClose}>
-            <SheetContent className="w-full sm:max-w-2xl flex flex-col p-2 bg-transparent border-0">
-                <div className='border bg-card rounded-md h-full overflow-hidden'>
+            <SheetContent className="w-full max-w-4xl flex flex-col p-2 bg-transparent border-0">
+
+                <div className='border bg-card rounded-md h-full overflow-hidden w-full'>
                     <SheetHeader className="border-b pb-4 pr-8">
                         <SheetTitle className="flex items-center gap-2">
                             <Package className="w-5 h-5 text-primary" />
@@ -192,8 +193,8 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
 
                                 <div className="space-y-2">
                                     <Label className="text-xs">Category *</Label>
-                                    <Select 
-                                        value={formData.category} 
+                                    <Select
+                                        value={formData.category}
                                         onValueChange={(v) => handleChange('category', v)}
                                         disabled={loadingCategories}
                                     >
@@ -214,8 +215,8 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                                                     <SelectItem key={cat.id} value={cat.name} className="focus:bg-accent focus:text-accent-foreground">
                                                         <div className="flex items-center gap-2">
                                                             {cat.color && (
-                                                                <div 
-                                                                    className="w-2 h-2 rounded-full" 
+                                                                <div
+                                                                    className="w-2 h-2 rounded-full"
                                                                     style={{ backgroundColor: cat.color }}
                                                                 />
                                                             )}

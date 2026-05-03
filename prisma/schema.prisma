@@ -1087,6 +1087,41 @@ model ECommerceStore {
   apiSecret      String?
   webhookSecret  String?
   status         String                   @default("connected")
+  paymentOptions Json?                    // { card: true, upi: true, netbanking: true, cod: true }
+  codMinAmount   Int?                     // Minimum amount for COD
+  codMaxAmount   Int?                     // Maximum amount for COD
+  
+  // Shipping
+  defaultShippingCost    Float?          @default(0)      // Default shipping cost
+  freeShippingThreshold  Float?          // Free shipping above this amount
+  shippingMethod         String?         @default("flat") // flat | calculated | free
+  
+  // Tax
+  taxPercentage          Float?          @default(0)      // Tax percentage
+  taxInclusive           Boolean         @default(false)  // Prices include tax
+  
+  // Order
+  autoFulfillOrders      Boolean         @default(false) // Auto-fulfill orders
+  orderPrefix            String?         @default("ORD") // Order number prefix
+  sendConfirmationEmail  Boolean         @default(true)  // Send order confirmation
+  
+  // Inventory
+  trackInventory         Boolean         @default(true)  // Track inventory
+  lowStockThreshold      Int?            // Low stock alert threshold
+  
+  // Checkout
+  guestCheckout          Boolean         @default(true)  // Allow guest checkout
+  requirePhone           Boolean         @default(true)  // Phone required
+  requireAddress         Boolean         @default(true)  // Address required
+  
+  // Notifications
+  orderEmailAlerts       Boolean         @default(true)  // Email alerts for new orders
+  lowStockAlerts         Boolean         @default(false) // Low stock email alerts
+  
+  // Sync
+  syncInterval           Int?            // Sync interval in minutes
+  webhooksEnabled        Boolean         @default(true)  // Webhooks enabled
+  
   lastSyncAt     DateTime?
   metadata       Json?
   createdAt      DateTime                 @default(now())

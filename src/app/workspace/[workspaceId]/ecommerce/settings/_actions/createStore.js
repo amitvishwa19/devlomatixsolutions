@@ -27,6 +27,45 @@ const CreateStore = z.object({
         accessToken: z.string().optional(),
         apiKey: z.string().optional(),
         apiSecret: z.string().optional(),
+        paymentOptions: z.object({
+            card: z.boolean().optional(),
+            upi: z.boolean().optional(),
+            netbanking: z.boolean().optional(),
+            cod: z.boolean().optional(),
+        }).optional(),
+        codMinAmount: z.number().optional(),
+        codMaxAmount: z.number().optional(),
+        
+        // Shipping
+        defaultShippingCost: z.number().optional(),
+        freeShippingThreshold: z.number().nullable().optional(),
+        shippingMethod: z.string().optional(),
+        
+        // Tax
+        taxPercentage: z.number().optional(),
+        taxInclusive: z.boolean().optional(),
+        
+        // Order
+        autoFulfillOrders: z.boolean().optional(),
+        orderPrefix: z.string().optional(),
+        sendConfirmationEmail: z.boolean().optional(),
+        
+        // Inventory
+        trackInventory: z.boolean().optional(),
+        lowStockThreshold: z.number().optional(),
+        
+        // Checkout
+        guestCheckout: z.boolean().optional(),
+        requirePhone: z.boolean().optional(),
+        requireAddress: z.boolean().optional(),
+        
+        // Notifications
+        orderEmailAlerts: z.boolean().optional(),
+        lowStockAlerts: z.boolean().optional(),
+        
+        // Sync
+        syncInterval: z.number().optional(),
+        webhooksEnabled: z.boolean().optional(),
     }),
 });
 
@@ -63,6 +102,41 @@ const handler = async (data) => {
                 apiKey: formData.apiKey || encryptedApiKey,
                 apiSecret: formData.apiSecret || null,
                 status: "connected",
+                paymentOptions: formData.paymentOptions || { card: true, upi: true, netbanking: true, cod: true },
+                codMinAmount: formData.codMinAmount || 0,
+                codMaxAmount: formData.codMaxAmount || 5000,
+                
+                // Shipping
+                defaultShippingCost: formData.defaultShippingCost ?? 0,
+                freeShippingThreshold: formData.freeShippingThreshold ?? null,
+                shippingMethod: formData.shippingMethod || "flat",
+                
+                // Tax
+                taxPercentage: formData.taxPercentage ?? 0,
+                taxInclusive: formData.taxInclusive ?? false,
+                
+                // Order
+                autoFulfillOrders: formData.autoFulfillOrders ?? false,
+                orderPrefix: formData.orderPrefix || "ORD",
+                sendConfirmationEmail: formData.sendConfirmationEmail ?? true,
+                
+                // Inventory
+                trackInventory: formData.trackInventory ?? true,
+                lowStockThreshold: formData.lowStockThreshold ?? 10,
+                
+                // Checkout
+                guestCheckout: formData.guestCheckout ?? true,
+                requirePhone: formData.requirePhone ?? true,
+                requireAddress: formData.requireAddress ?? true,
+                
+                // Notifications
+                orderEmailAlerts: formData.orderEmailAlerts ?? true,
+                lowStockAlerts: formData.lowStockAlerts ?? false,
+                
+                // Sync
+                syncInterval: formData.syncInterval ?? 30,
+                webhooksEnabled: formData.webhooksEnabled ?? true,
+                
                 metadata: {
                     apiKeyPublic: apiKey.substring(0, 12) + '...',
                     createdAt: new Date().toISOString()
