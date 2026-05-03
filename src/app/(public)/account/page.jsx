@@ -5,16 +5,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
     Package, ShoppingBag, Heart, User, MapPin, Settings, LogOut, 
     ChevronRight, Clock, CreditCard, Bell, Shield, Edit2, Trash2,
-    Box, Star, Download, Mail, Phone, Calendar, Plus, X, Check, Eye, EyeOff
+    Box, Star, Download, Mail, Phone, Calendar, Plus, X, Check, Eye, EyeOff, Loader2
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useOrders, useWishlist, useCart } from "../_context/CrystalAuraProviders";
+import { saveEcommerceConfig, getEcommerceConfig } from "./_actions";
+import { testConnection } from "@/lib/ecommerce";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 const statusColors = {
     confirmed: "bg-primary/10 text-primary border-primary/20 shadow-sm",
@@ -66,7 +69,7 @@ const mockUserInfo = {
 };
 
 export default function AccountPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const { orders } = useOrders();
     const { items: wishlistItems, removeItem } = useWishlist();
     const { addItem } = useCart();
@@ -84,14 +87,88 @@ export default function AccountPage() {
     });
 
     const [apiSettings, setApiSettings] = useState({
-        backendUrl: localStorage.getItem('backendUrl') || '',
-        apiKey: localStorage.getItem('apiKey') || '',
+        backendUrl: '',
+        apiKey: '',
+        storeName: '',
     });
     const [showApiKey, setShowApiKey] = useState(false);
+    const [loadingConfig, setLoadingConfig] = useState(true);
+    const [savingConfig, setSavingConfig] = useState(false);
+    const [testingConnection, setTestingConnection] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState(null);
 
-    const handleSaveApiSettings = () => {
-        localStorage.setItem('backendUrl', apiSettings.backendUrl);
-        localStorage.setItem('apiKey', apiSettings.apiKey);
+    useEffect(() => {
+        // Redirect to home if not logged in (unauthenticated)
+        if (status === 'unauthenticated') {
+            window.location.href = '/';
+            return;
+        }
+    }, [status]);
+
+    useEffect(() => {
+        async function loadConfig() {
+            if (session?.user?.userId) {
+                const result = await getEcommerceConfig(session.user.id);
+                if (result.success && result.data.length > 0) {
+                    const config = result.data[0];
+                    setApiSettings({
+                        backendUrl: config.backendUrl || '',
+                        apiKey: config.apiKey || '',
+                        storeName: config.storeName || '',
+                    });
+                }
+            }
+            setLoadingConfig(false);
+        }
+        loadConfig();
+    }, [session?.user?.userId]);
+
+    const handleSaveApiSettings = async () => {
+        if (!session?.user?.userId) {
+            toast.error("Please sign in to save configuration");
+            return;
+        }
+        if (!apiSettings.storeName || !apiSettings.backendUrl || !apiSettings.apiKey) {
+            toast.error("Please fill all fields");
+            return;
+        }
+        
+        setSavingConfig(true);
+        const result = await saveEcommerceConfig({
+            userId: session.user.userId,
+            storeName: apiSettings.storeName,
+            backendUrl: apiSettings.backendUrl,
+            apiKey: apiSettings.apiKey,
+        });
+        
+        if (result.success) {
+            toast.success("Configuration saved successfully");
+        } else {
+            toast.error(result.error || "Failed to save configuration");
+        }
+        setSavingConfig(false);
+    };
+
+    const handleTestConnection = async () => {
+        if (!session?.user?.userId) {
+            toast.error("Please sign in to test connection");
+            return;
+        }
+        
+        setTestingConnection(true);
+        setConnectionStatus(null);
+        
+        const result = await testConnection(session.user.userId);
+        
+        if (result.success) {
+            setConnectionStatus({ success: true, message: result.message });
+            toast.success(result.message);
+        } else {
+            setConnectionStatus({ success: false, message: result.error });
+            toast.error(result.error);
+        }
+        
+        setTestingConnection(false);
     };
     
     const [profileForm, setProfileForm] = useState({
@@ -236,7 +313,7 @@ export default function AccountPage() {
                                             </div>
                                             <p className="text-muted-foreground font-light mb-1">No orders yet</p>
                                             <p className="text-muted-foreground/40 text-xs mb-6">Start your spiritual journey with us</p>
-                                            <Link href="/crystalaura/shop">
+                                            <Link href="/shop">
                                                 <Button className="bg-gold-gradient text-white px-6 py-2 rounded-xl text-xs font-medium">
                                                     Browse Shop
                                                 </Button>
@@ -325,7 +402,7 @@ export default function AccountPage() {
                                             </div>
                                             <p className="text-muted-foreground font-light mb-1">Your wishlist is empty</p>
                                             <p className="text-muted-foreground/40 text-xs mb-6">Save your favorites for later</p>
-                                            <Link href="/crystalaura/shop">
+                                            <Link href="/shop">
                                                 <Button className="bg-gold-gradient text-white px-6 py-2 rounded-xl text-xs font-medium">
                                                     Browse Shop
                                                 </Button>
@@ -341,12 +418,12 @@ export default function AccountPage() {
                                                     transition={{ delay: idx * 0.03 }}
                                                     className="border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-all"
                                                 >
-                                                    <Link href={`/crystalaura/shop/${item.id}`}>
+                                                    <Link href={`/shop/${item.id}`}>
                                                         <div className="aspect-square rounded-xl overflow-hidden mb-3">
                                                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                                                         </div>
                                                     </Link>
-                                                    <Link href={`/crystalaura/shop/${item.id}`}>
+                                                    <Link href={`/shop/${item.id}`}>
                                                         <p className="text-foreground text-sm truncate hover:text-primary transition-colors">{item.title}</p>
                                                     </Link>
                                                     <p className="text-primary font-serif mt-1">₹{item.priceNum?.toLocaleString("en-IN") || item.price?.toLocaleString("en-IN")}</p>
@@ -656,14 +733,26 @@ export default function AccountPage() {
                                             <div className="flex items-center gap-3 mb-4">
                                                 <Settings className="w-4 h-4 text-primary" />
                                                 <p className="text-foreground font-medium">API Configuration</p>
+                                                {loadingConfig && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
                                             </div>
                                             <div className="space-y-4">
+                                                <div>
+                                                    <Label className="text-muted-foreground/50 text-xs uppercase">Store ID</Label>
+                                                    <Input 
+                                                        value={apiSettings.storeName}
+                                                        onChange={(e) => setApiSettings({...apiSettings, storeName: e.target.value})}
+                                                        placeholder="my-store"
+                                                        disabled={loadingConfig}
+                                                        className="mt-1 bg-transparent border-white/10"
+                                                    />
+                                                </div>
                                                 <div>
                                                     <Label className="text-muted-foreground/50 text-xs uppercase">Backend URL</Label>
                                                     <Input 
                                                         value={apiSettings.backendUrl}
                                                         onChange={(e) => setApiSettings({...apiSettings, backendUrl: e.target.value})}
                                                         placeholder="https://api.example.com"
+                                                        disabled={loadingConfig}
                                                         className="mt-1 bg-transparent border-white/10"
                                                     />
                                                 </div>
@@ -675,6 +764,7 @@ export default function AccountPage() {
                                                             value={apiSettings.apiKey}
                                                             onChange={(e) => setApiSettings({...apiSettings, apiKey: e.target.value})}
                                                             placeholder="Enter your API key"
+                                                            disabled={loadingConfig}
                                                             className="bg-transparent border-white/10 pr-10"
                                                         />
                                                         <button
@@ -686,12 +776,46 @@ export default function AccountPage() {
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <Button 
-                                                    onClick={handleSaveApiSettings}
-                                                    className="bg-gold-gradient text-white text-xs"
-                                                >
-                                                    Save API Settings
-                                                </Button>
+                                                <div className="flex gap-2">
+                                                    <Button 
+                                                        onClick={handleSaveApiSettings}
+                                                        disabled={savingConfig || loadingConfig}
+                                                        className="bg-gold-gradient text-white text-xs"
+                                                    >
+                                                        {savingConfig ? (
+                                                            <>
+                                                                <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                                                Saving...
+                                                            </>
+                                                        ) : (
+                                                            'Save Settings'
+                                                        )}
+                                                    </Button>
+                                                    <Button 
+                                                        onClick={handleTestConnection}
+                                                        disabled={testingConnection || loadingConfig}
+                                                        variant="outline"
+                                                        className="text-xs border-white/10"
+                                                    >
+                                                        {testingConnection ? (
+                                                            <>
+                                                                <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                                                Testing...
+                                                            </>
+                                                        ) : (
+                                                            'Test Connection'
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                                {connectionStatus && (
+                                                    <div className={`p-3 rounded-lg text-xs ${
+                                                        connectionStatus.success 
+                                                            ? 'bg-green-500/10 border border-green-500/20 text-green-400' 
+                                                            : 'bg-red-500/10 border border-red-500/20 text-red-400'
+                                                    }`}>
+                                                        {connectionStatus.message}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

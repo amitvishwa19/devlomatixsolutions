@@ -22,7 +22,7 @@ export default function CrystalAuraNotFound() {
           "The treasure you seek has returned to the earth, or the path has been veiled."
         </p>
         
-        <Link href="/crystalaura">
+        <Link href="/">
           <Button className="bg-gold-gradient text-white px-10 py-7 rounded-2xl font-medium text-sm hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
             <ArrowLeft className="w-4 h-4 mr-3" />
             Return to Home

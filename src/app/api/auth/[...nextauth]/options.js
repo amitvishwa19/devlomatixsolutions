@@ -51,13 +51,14 @@ export const authOptions = {
                     return null;
                 }
 
-                const user = await db.user.upsert({
+const user = await db.user.upsert({
                     where: {
                         email: payload.email,
                     },
                     update: {
                         displayName: payload.name ?? undefined,
                         avatar: payload.picture ?? undefined,
+                        isActive: true, // Re-activate on login
                     },
                     create: {
                         email: payload.email,
@@ -65,11 +66,17 @@ export const authOptions = {
                         avatar: payload.picture ?? "",
                         webDeviceToken: "deviceToken",
                         uuid: uuid(),
+                        isActive: true,
                         profile: { create: {} },
                         setting: { create: {} },
                         credit: { create: { value: 0 } },
                     },
                 });
+
+                // Check if user is inactive
+                if (!user.isActive) {
+                    return null;
+                }
 
                 let server = await db.server.findFirst({
                     where: { userId: user.id },
@@ -124,7 +131,12 @@ export const authOptions = {
                     return Promise.reject(new Error("USER_NOT_FOUND"));
                 }
 
-                // 3. HAS NO PASSWORD (Google/Github user)
+                // 3. USER INACTIVE
+                if (!user.isActive) {
+                    return Promise.reject(new Error("USER_INACTIVE"));
+                }
+
+                // 4. HAS NO PASSWORD (Google/Github user)
                 if (!user.password) {
                     return Promise.reject(new Error("NO_PASSWORD"));
                 }
@@ -159,6 +171,7 @@ export const authOptions = {
                 update: {
                     displayName: user.name ?? undefined,
                     avatar: user.picture ?? undefined,
+                    isActive: true, // Re-activate on login
                 },
                 create: {
                     email: user.email,
@@ -166,11 +179,17 @@ export const authOptions = {
                     avatar: user.picture ?? "",
                     webDeviceToken: "deviceToken",
                     uuid: uuid(),
+                    isActive: true,
                     profile: { create: {} },
                     setting: { create: {} },
                     credit: { create: { value: 0 } },
                 },
             });
+
+            // Check if user is inactive
+            if (!usr?.isActive) {
+                return false;
+            }
 
             //Removed the server and caannel creation
 
@@ -210,7 +229,8 @@ export const authOptions = {
         },
 
         async session({ session, token }) {
-            if (token) {
+            if (token?.userId) {
+                // Token has userId from JWT callback - just assign it
                 session.user.userId = token.userId;
                 session.user.displayName = token.displayName;
                 session.user.avatar = token.avatar;
@@ -231,22 +251,22 @@ export const authOptions = {
                 try {
                     const usr = await db.user.findUnique({
                         where: { email: token.email },
-                        include: {
+                        select: { 
+                            id: true, 
+                            displayName: true, 
+                            avatar: true, 
+                            role: true, 
+                            isActive: true,
                             members: {
-                                select: {
-                                    serverId: true,
-                                    role: true
-                                }
+                                select: { serverId: true, role: true }
                             },
                             roles: {
-                                include: {
-                                    permissions: true
-                                }
+                                include: { permissions: true }
                             }
                         }
                     });
 
-                    if (usr) {
+                    if (usr && usr.isActive) {
                         token.userId = usr.id;
                         token.displayName = usr.displayName;
                         token.avatar = usr.avatar;

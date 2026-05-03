@@ -41,7 +41,7 @@ export default function CrystalAuraWishlistPage() {
             </div>
             <p className="text-muted-foreground font-light text-lg mb-2">Your wishlist is currently empty</p>
             <p className="text-muted-foreground/40 text-xs font-medium mb-10">Discover your next sacred companion</p>
-            <Link href="/crystalaura/shop">
+            <Link href="/shop">
               <Button className="bg-gold-gradient text-white px-10 py-7 rounded-2xl font-medium text-sm hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
                 <Search className="w-4 h-4 mr-2" />
                 Browse Shop

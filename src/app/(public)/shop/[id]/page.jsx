@@ -39,7 +39,7 @@ export default function CrystalAuraProductDetailPage() {
           <ShoppingBag className="w-16 h-16 text-muted-foreground/20 mx-auto mb-6" />
           <h1 className="font-serif text-4xl text-foreground mb-6">Sacred Product Not Found</h1>
           <p className="text-muted-foreground font-light mb-8">The treasure you seek might have been moved or returned to the earth.</p>
-          <Link href="/crystalaura/shop">
+          <Link href="/shop">
             <Button className="bg-gold-gradient text-white px-8 py-6 rounded-xl font-medium text-sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Shop
@@ -95,9 +95,9 @@ export default function CrystalAuraProductDetailPage() {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-12">
-          <Link href="/crystalaura" className="hover:text-primary transition-colors">Home</Link>
+          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <span className="opacity-30">/</span>
-          <Link href="/crystalaura/shop" className="hover:text-primary transition-colors">Shop</Link>
+          <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
           <span className="opacity-30">/</span>
           <span className="text-foreground">{product.title}</span>
         </nav>

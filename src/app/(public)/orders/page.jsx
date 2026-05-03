@@ -42,7 +42,7 @@ export default function CrystalAuraOrdersPage() {
             </div>
             <p className="text-muted-foreground font-light text-lg mb-2">No orders found yet</p>
             <p className="text-muted-foreground/40 text-[10px] uppercase font-bold tracking-widest mb-10">Start your collection today</p>
-            <Link href="/crystalaura/shop">
+            <Link href="/shop">
               <Button className="bg-gold-gradient text-white px-10 py-7 rounded-2xl font-sans tracking-[0.2em] font-black uppercase text-[10px] hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
                 <Search className="w-4 h-4 mr-2" />
                 Browse Shop

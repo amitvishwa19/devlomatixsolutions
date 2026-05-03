@@ -113,7 +113,7 @@ const CartDrawer = () => {
                   Free shipping on orders above ₹999
                 </p>
                 <Button
-                  onClick={() => { setIsOpen(false); router.push("/crystalaura/checkout"); }}
+                  onClick={() => { setIsOpen(false); router.push("/checkout"); }}
                   className="w-full bg-gold-gradient text-white font-medium text-sm py-6 rounded-xl hover:bg-gold-gradient-hover transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 group"
                 >
                   <span className="relative z-10">Proceed to Checkout</span>

@@ -55,12 +55,12 @@ export default function CrystalAuraOrderSuccessPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/crystalaura/shop">
+            <Link href="/shop">
               <Button className="w-full sm:w-auto bg-gold-gradient text-white font-sans tracking-[0.2em] font-black uppercase text-[10px] px-10 py-7 rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-primary/20">
                 Continue Shopping <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link href="/crystalaura">
+            <Link href="/">
               <Button variant="outline" className="w-full sm:w-auto border-white/10 text-muted-foreground font-sans tracking-[0.2em] font-black uppercase text-[10px] px-10 py-7 rounded-2xl hover:bg-white/5 hover:border-white/20 transition-all">
                 Back to Home
               </Button>

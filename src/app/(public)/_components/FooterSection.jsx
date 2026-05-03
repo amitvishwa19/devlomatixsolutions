@@ -37,7 +37,7 @@ const FooterSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-14">
           <div className="md:col-span-1">
-            <Link href="/crystalaura" className="flex items-center gap-2.5 mb-5 group">
+            <Link href="/" className="flex items-center gap-2.5 mb-5 group">
               <Gem className="w-6 h-6 text-primary group-hover:rotate-12 transition-transform" />
               <span className="font-serif text-2xl shimmer-text font-semibold">Crystal Aura</span>
             </Link>
@@ -50,17 +50,17 @@ const FooterSection = () => {
           <div>
             <h4 className="font-sans text-xs font-medium text-foreground mb-5">Shop</h4>
             <ul className="space-y-3 text-muted-foreground text-sm font-light">
-              <li><Link href="/crystalaura/shop" className="hover:text-primary transition-colors duration-300">All Products</Link></li>
-              <li><Link href="/crystalaura/crystals" className="hover:text-primary transition-colors duration-300">Crystal Guide</Link></li>
-              <li><Link href="/crystalaura/vastu" className="hover:text-primary transition-colors duration-300">Vastu Stones</Link></li>
+              <li><Link href="/shop" className="hover:text-primary transition-colors duration-300">All Products</Link></li>
+              <li><Link href="/crystals" className="hover:text-primary transition-colors duration-300">Crystal Guide</Link></li>
+              <li><Link href="/vastu" className="hover:text-primary transition-colors duration-300">Vastu Stones</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-sans text-xs font-medium text-foreground mb-5">Company</h4>
             <ul className="space-y-3 text-muted-foreground text-sm font-light">
-              <li><Link href="/crystalaura/about" className="hover:text-primary transition-colors duration-300">About Us</Link></li>
-              <li><Link href="/crystalaura/contact" className="hover:text-primary transition-colors duration-300">Contact</Link></li>
+              <li><Link href="/about" className="hover:text-primary transition-colors duration-300">About Us</Link></li>
+              <li><Link href="/contact" className="hover:text-primary transition-colors duration-300">Contact</Link></li>
               <li><Link href="#" className="hover:text-primary transition-colors duration-300">Privacy Policy</Link></li>
             </ul>
           </div>

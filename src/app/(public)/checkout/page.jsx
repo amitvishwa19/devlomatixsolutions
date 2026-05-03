@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useCart, useOrders, useTheme } from "../_context/CrystalAuraProviders";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { CreditCard, Wallet, Smartphone, Building2, Lock, Tag, CheckCircle2, Arr
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { createOrder } from "./_actions/createOrder";
 
 const COUPONS = {
   CRYSTAL10: { discount: 10, type: "percent", label: "10% off" },
@@ -21,6 +23,7 @@ const COUPONS = {
 export default function CrystalAuraCheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const { addOrder } = useOrders();
+  const { data: session } = useSession();
   const router = useRouter();
   const { toast } = useToast();
   const [processing, setProcessing] = useState(false);
@@ -74,33 +77,73 @@ export default function CrystalAuraCheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    setProcessing(true);
-    await new Promise((r) => setTimeout(r, 2000));
+    if (!session?.user?.userId) {
+      toast({ title: "Please sign in to place order", variant: "destructive" });
+      return;
+    }
 
-    const order = {
-      id: `CA-${Date.now().toString(36).toUpperCase()}`,
-      items: [...items],
-      total,
-      date: new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }),
-      status: "confirmed",
-      paymentMethod: paymentMethod === "card" ? "Credit/Debit Card" : paymentMethod === "upi" ? "UPI" : paymentMethod === "netbanking" ? "Net Banking" : "Cash on Delivery",
-      shippingAddress: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}`,
-      discount: couponDiscount,
-      couponCode: appliedCoupon || undefined,
-    };
-    addOrder(order);
-    clearCart();
-    router.push("/crystalaura/order-success");
+    setProcessing(true);
+
+    try {
+      const orderItems = items.map(item => ({
+        productId: item.product.id || item.id,
+        title: item.product.title,
+        price: item.product.priceNum || item.product.price,
+        quantity: item.quantity,
+        image: item.product.image,
+      }));
+
+      const result = await createOrder({
+        userId: session.user.userId,
+        items: orderItems,
+        shippingAddress: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode,
+        },
+        paymentMethod: paymentMethod,
+        couponCode: appliedCoupon || undefined,
+        discount: couponDiscount,
+      });
+
+      if (result.success) {
+        // Also save to local context for quick access
+        const localOrder = {
+          id: result.order.id,
+          items: result.order.items,
+          total: result.order.total,
+          date: new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }),
+          status: result.order.status,
+          paymentMethod: paymentMethod === "card" ? "Credit/Debit Card" : paymentMethod === "upi" ? "UPI" : paymentMethod === "netbanking" ? "Net Banking" : "Cash on Delivery",
+          shippingAddress: result.order.shippingAddress,
+          discount: couponDiscount,
+        };
+        addOrder(localOrder);
+        clearCart();
+        router.push("/order-success");
+      } else {
+        toast({ title: "Order failed", description: result.error, variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("[ORDER_ERROR]", error);
+      toast({ title: "Order failed", description: "Something went wrong. Please try again.", variant: "destructive" });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (items.length === 0) {
     return (
        <div className="min-h-screen bg-transparent flex items-center justify-center p-6 bg-[#0a0a0a]">
-        <div className="text-center p-12 glass-card rounded-3xl max-w-lg">
+        <div className="text-center p-12  rounded-3xl max-w-lg">
           <ShoppingBag className="w-16 h-16 text-muted-foreground/20 mx-auto mb-6" />
           <h1 className="font-serif text-4xl text-foreground mb-6">Your Cart is Empty</h1>
           <p className="text-muted-foreground font-light mb-8">You haven't selected any sacred treasures yet.</p>
-          <Link href="/crystalaura/shop">
+          <Link href="/shop">
             <Button className="bg-gold-gradient text-white px-8 py-6 rounded-xl font-sans tracking-widest uppercase font-black text-[10px]">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Continue Shopping
@@ -122,9 +165,9 @@ export default function CrystalAuraCheckoutPage() {
     <div className="min-h-screen bg-transparent pt-12 pb-24 px-6 overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <nav className="flex items-center gap-2 text-[10px] font-sans text-muted-foreground mb-12 uppercase tracking-[0.2em] font-black">
-          <Link href="/crystalaura" className="hover:text-primary transition-colors">Home</Link>
+          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <span className="opacity-30">/</span>
-          <Link href="/crystalaura/shop" className="hover:text-primary transition-colors">Shop</Link>
+          <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
           <span className="opacity-30">/</span>
           <span className="text-foreground">Checkout</span>
         </nav>
@@ -140,7 +183,7 @@ export default function CrystalAuraCheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-10">
             {/* Shipping */}
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-3xl p-10">
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className=" rounded-3xl p-10">
               <h2 className="font-serif text-3xl text-foreground mb-10">Shipping Details</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -175,7 +218,7 @@ export default function CrystalAuraCheckoutPage() {
             </motion.div>
 
             {/* Payment */}
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-3xl p-10">
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className=" rounded-3xl p-10">
               <h2 className="font-serif text-3xl text-foreground mb-10">Payment Method</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
                 {paymentMethods.map((pm) => (
@@ -232,7 +275,7 @@ export default function CrystalAuraCheckoutPage() {
 
           {/* Order Summary */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-1">
-            <div className="glass-card rounded-3xl p-8 sticky top-28 bg-white/[0.02]">
+            <div className=" rounded-3xl p-8 sticky top-28 bg-white/[0.02]">
               <h2 className="font-serif text-3xl text-foreground mb-10">Summary</h2>
 
               <div className="space-y-6 mb-10 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">

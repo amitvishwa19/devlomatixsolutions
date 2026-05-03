@@ -1067,3 +1067,18 @@ model EmailAssignment {
   @@unique([workspaceId, event])
   @@index([workspaceId])
 }
+
+model EcommerceConfig {
+  id          String   @id @default(cuid())
+  userId      String
+  storeName   String
+  backendUrl  String
+  apiKey      String   // Encrypted
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, storeName])
+  @@index([userId])
+  @@index([storeName])
+}

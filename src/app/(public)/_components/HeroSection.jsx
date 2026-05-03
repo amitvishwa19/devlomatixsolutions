@@ -12,7 +12,7 @@ const HeroSection = () => {
             {/* Background image with parallax feel */}
             <div className="absolute inset-0">
                 <img
-                    src="/crystalaura/hero-crystals.jpg"
+                    src="/hero-crystals.jpg"
                     alt="Collection of healing crystals and gemstones"
                     className="w-full h-full object-cover opacity-30 scale-110"
                 />
@@ -80,13 +80,13 @@ const HeroSection = () => {
                     transition={{ duration: 0.8, delay: 0.7 }}
                     className="flex flex-col sm:flex-row gap-4 justify-center"
                 >
-                    <Link href="/crystalaura/shop">
+                    <Link href="/shop">
                         <Button size="lg" className="bg-gold-gradient text-white font-medium text-sm px-10 py-7 hover:opacity-90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 group rounded-xl">
                             Explore Collection
                             <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                         </Button>
                     </Link>
-                    <Link href="/crystalaura/about">
+                    <Link href="/about">
                         <Button size="lg" variant="outline" className="border-white/10 text-foreground font-medium text-sm px-10 py-7 hover:bg-white/5 hover:border-white/20 transition-all duration-300 rounded-xl">
                             Our Story
                         </Button>

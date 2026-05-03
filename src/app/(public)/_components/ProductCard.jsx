@@ -86,7 +86,7 @@ const ProductCard = ({ id, image, title, description, price, delay = 0 }) => {
   );
 
   if (id) {
-    return <Link href={`/crystalaura/shop/${id}`}>{cardContent}</Link>;
+    return <Link href={`/shop/${id}`}>{cardContent}</Link>;
   }
 
   return cardContent;

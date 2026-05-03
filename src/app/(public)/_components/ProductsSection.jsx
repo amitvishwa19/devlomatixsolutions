@@ -29,7 +29,7 @@ const ProductsSection = () => {
               Sacred <span className="text-gold-gradient font-semibold">Treasures</span>
             </h2>
           </div>
-          <Link href="/crystalaura/shop">
+          <Link href="/shop">
             <Button variant="outline" className="border-white/10 text-foreground font-medium text-sm hover:bg-white/5 hover:border-white/20 group py-6 px-8 rounded-xl transition-all duration-300">
               View All
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
