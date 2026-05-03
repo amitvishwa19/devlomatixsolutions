@@ -12,6 +12,7 @@ const UpdateStore = z.object({
     storeId: z.string(),
     formData: z.object({
         name: z.string().optional(),
+        slug: z.string().optional(),
         description: z.string().optional(),
         platform: z.string().optional(),
         storeUrl: z.string().optional(),
@@ -53,6 +54,7 @@ const handler = async (data) => {
 
         const updateData = {};
         if (formData.name !== undefined) updateData.name = formData.name;
+        if (formData.slug !== undefined) updateData.slug = formData.slug.toLowerCase().trim();
         if (formData.description !== undefined) updateData.description = formData.description || null;
         if (formData.platform !== undefined) updateData.platform = formData.platform;
         if (formData.storeUrl !== undefined) updateData.storeUrl = formData.storeUrl;

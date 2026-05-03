@@ -17,6 +17,7 @@ const CreateStore = z.object({
     workspaceId: z.string(),
     formData: z.object({
         name: z.string().min(1, "Name is required"),
+        slug: z.string().min(1, "Slug is required"),
         description: z.string().optional(),
         platform: z.string().min(1, "Platform is required"),
         storeUrl: z.string().min(1, "Store URL is required"),
@@ -50,6 +51,7 @@ const handler = async (data) => {
             data: {
                 userId,
                 name: formData.name,
+                slug: formData.slug.toLowerCase().trim(),
                 description: formData.description || null,
                 platform: formData.platform,
                 storeUrl: formData.storeUrl,

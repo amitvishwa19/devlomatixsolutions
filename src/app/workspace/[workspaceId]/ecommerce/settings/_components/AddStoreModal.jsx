@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { createStore } from '../_actions/createStore'
 import { updateStore } from '../_actions/updateStore'
+import { uploadStoreLogo } from '../_actions/uploadStoreLogo'
 import { toast } from 'sonner'
-import { ShoppingCart, Loader2, Upload, X, ImagePlus, Store } from 'lucide-react'
+import { ShoppingCart, Loader2, Upload, X, ImagePlus, Store, Key } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 const PLATFORMS = [
@@ -28,6 +29,7 @@ const CURRENCIES = [
 
 const INITIAL_DATA = {
     name: '',
+    slug: '',
     description: '',
     platform: 'manual',
     storeUrl: '',
@@ -39,17 +41,68 @@ const INITIAL_DATA = {
     apiSecret: '',
 }
 
+const generateSlug = (name) => {
+    // "Crystal Aura" -> "crystal-aura" (replace space with hyphen)
+    // "CrystalAura" -> "crystalaura" (just lowercase, no hyphen)
+    const hasSpace = name.includes(' ');
+    
+    let slug = name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '');
+    
+    if (hasSpace) {
+        // Replace space with hyphen: "Crystal Aura" -> "crystal-aura"
+        slug = slug.replace(/\s+/g, '-');
+    }
+    // else: "CrystalAura" -> "crystalaura" (just lowercase)
+    
+    return slug;
+}
+
 export function AddStoreModal({ open, onClose, store, onSuccess, workspaceId }) {
     const [loading, setLoading] = useState(false)
+    const [uploading, setUploading] = useState(false)
     const [formData, setFormData] = useState(INITIAL_DATA)
     const fileInputRef = useRef(null)
 
     const isEdit = !!store?.id
 
+    const handleLogoUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('File size must be less than 5MB');
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const formDataObj = new FormData();
+            formDataObj.append('file', file);
+            
+            const result = await uploadStoreLogo(formDataObj);
+            
+            if (result.success) {
+                handleChange('logo', result.url);
+                toast.success('Logo uploaded successfully');
+            } else {
+                toast.error(result.message || 'Failed to upload logo');
+            }
+        } catch (error) {
+            console.error('[LOGO_UPLOAD_ERROR]', error);
+            toast.error('Failed to upload logo');
+        } finally {
+            setUploading(false);
+        }
+    }
+
     useEffect(() => {
         if (store) {
             setFormData({
                 name: store.name || '',
+                slug: store.slug || '',
                 description: store.description || '',
                 platform: store.platform || 'manual',
                 storeUrl: store.storeUrl || '',
@@ -66,10 +119,18 @@ export function AddStoreModal({ open, onClose, store, onSuccess, workspaceId }) 
     }, [store, open])
 
     const handleChange = (field, value) => {
-        setFormData(prev => ({ 
-            ...prev, 
-            [field]: value === undefined ? '' : value 
-        }))
+        if (field === 'name') {
+            setFormData(prev => ({ 
+                ...prev, 
+                name: value,
+                slug: generateSlug(value)
+            }))
+        } else {
+            setFormData(prev => ({ 
+                ...prev, 
+                [field]: value === undefined ? '' : value 
+            }))
+        }
     }
 
     const [showApiKey, setShowApiKey] = useState(null);
@@ -136,6 +197,18 @@ export function AddStoreModal({ open, onClose, store, onSuccess, workspaceId }) 
                                         className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                                         required
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Store Slug *</Label>
+                                    <Input
+                                        value={formData.slug}
+                                        onChange={(e) => handleChange('slug', e.target.value.toLowerCase().trim())}
+                                        placeholder="my-online-store"
+                                        className="bg-background border-border text-foreground placeholder:text-muted-foreground font-mono"
+                                        required
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Used to connect from external frontend</p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -242,9 +315,16 @@ export function AddStoreModal({ open, onClose, store, onSuccess, workspaceId }) 
                                         type="file"
                                         ref={fileInputRef}
                                         accept="image/*"
+                                        onChange={handleLogoUpload}
+                                        disabled={uploading}
                                         className="hidden"
                                     />
-                                    {formData.logo ? (
+                                    {uploading ? (
+                                        <div className="w-full h-24 rounded-lg border border-border flex flex-col items-center justify-center gap-2 bg-muted">
+                                            <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                                            <p className="text-xs text-muted-foreground">Uploading...</p>
+                                        </div>
+                                    ) : formData.logo ? (
                                         <div className="relative w-full h-24 rounded-lg border border-border overflow-hidden bg-muted">
                                             <img src={formData.logo} alt="Store Logo" className="w-full h-full object-contain" />
                                             <Button
@@ -267,6 +347,18 @@ export function AddStoreModal({ open, onClose, store, onSuccess, workspaceId }) 
                                         </div>
                                     )}
                                 </div>
+
+                                {isEdit && (
+                                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                                        <div className="flex items-center gap-2 text-primary">
+                                            <Key className="w-4 h-4" />
+                                            <p className="text-sm font-medium">API Key</p>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground mt-1">
+                                            Click "API Key" button in the store list to view or regenerate your API key.
+                                        </p>
+                                    </div>
+                                )}
 
                                 {showApiKey && (
                                     <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 space-y-2">

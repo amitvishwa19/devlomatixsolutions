@@ -1,7 +1,11 @@
 "use client";
 
 import React, { use, useState, useEffect, useCallback } from 'react';
-import { Settings, ArrowLeft, RefreshCw, Plus, Trash2, ExternalLink, ShieldCheck, Database, ShoppingCart, List, Grid, MoreVertical, Edit2 } from "lucide-react";
+import { Settings, ArrowLeft, RefreshCw, Plus, Trash2, ExternalLink, ShieldCheck, Database, ShoppingCart, List, Grid, MoreVertical, Edit2, Key, Copy, Check, Webhook } from "lucide-react";
+
+const getWebhookUrl = (slug) => {
+    return `${process.env.NEXT_PUBLIC_URL || 'https://dev.devlomatix.com'}/api/ecommerce/webhook/${slug}`;
+};
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
@@ -15,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 import { AddStoreModal } from './_components/AddStoreModal';
+import { ApiKeyModal } from './_components/ApiKeyModal';
 import { getStores, deleteStore, regenerateApiKey } from './_actions';
 import { useAction } from "@/hooks/use-action";
 
@@ -25,6 +30,16 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedStore, setSelectedStore] = useState(null);
     const [viewMode, setViewMode] = useState('list');
+    const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+    const [apiKeyStore, setApiKeyStore] = useState(null);
+    const [copiedSlug, setCopiedSlug] = useState(null);
+
+    const handleCopySlug = (slug, storeId) => {
+        navigator.clipboard.writeText(slug);
+        setCopiedSlug(storeId);
+        toast.success('Slug copied to clipboard');
+        setTimeout(() => setCopiedSlug(null), 2000);
+    };
 
     const { execute: fetchStores, data: storesData, isLoading: loadingStores } = useAction(getStores, {
         onSuccess: (data) => {},
@@ -97,6 +112,13 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                 onClose={() => setModalOpen(false)} 
                 store={selectedStore} 
                 onSuccess={handleSuccess}
+                workspaceId={workspaceId}
+            />
+
+            <ApiKeyModal 
+                open={apiKeyModalOpen} 
+                onClose={() => { setApiKeyModalOpen(false); setApiKeyStore(null); }}
+                store={apiKeyStore}
                 workspaceId={workspaceId}
             />
 
@@ -179,7 +201,35 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                                                 )}
                                             </div>
                                             <h4 className="text-sm font-bold text-white line-clamp-1">{store.name}</h4>
-                                            <p className="text-[10px] text-muted-foreground truncate">{store.storeUrl}</p>
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <span className="text-[10px] text-muted-foreground">Store ID:</span>
+                                                <code className="text-[10px] font-mono text-primary">{store.slug}</code>
+                                                <button 
+                                                    onClick={() => handleCopySlug(store.slug, store.id)}
+                                                    className="text-muted-foreground hover:text-primary"
+                                                >
+                                                    {copiedSlug === store.id ? (
+                                                        <Check className="w-3 h-3 text-green-500" />
+                                                    ) : (
+                                                        <Copy className="w-3 h-3" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <Webhook className="w-3 h-3 text-muted-foreground" />
+                                                <code className="text-[10px] font-mono text-muted-foreground truncate">{getWebhookUrl(store.slug)}</code>
+                                                <button 
+                                                    onClick={() => handleCopySlug(getWebhookUrl(store.slug), `webhook-${store.id}`)}
+                                                    className="text-muted-foreground hover:text-primary"
+                                                >
+                                                    {copiedSlug === `webhook-${store.id}` ? (
+                                                        <Check className="w-3 h-3 text-green-500" />
+                                                    ) : (
+                                                        <Copy className="w-3 h-3" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground truncate mt-1">{store.storeUrl}</p>
                                             <div className="flex items-center justify-between mt-3">
                                                 <Badge className={`text-[9px] font-bold uppercase ${getStatusColor(store.status)} border`}>
                                                     {store.status}
@@ -195,12 +245,11 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                                                             <Edit2 className="w-3 h-3" /> Edit Store
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem 
-                                                            onClick={() => regenApiKey({ workspaceId, storeId: store.id })}
-                                                            disabled={regeneratingKey}
+                                                            onClick={() => { setApiKeyStore(store); setApiKeyModalOpen(true); }}
                                                             className="gap-2 text-xs"
                                                         >
-                                                            <RefreshCw className={`w-3 h-3 ${regeneratingKey ? 'animate-spin' : ''}`} /> 
-                                                            {regeneratingKey ? 'Generating...' : 'Regenerate API Key'}
+                                                            <Key className="w-3 h-3" /> 
+                                                            View API Key
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator className="bg-white/10" />
                                                         <DropdownMenuItem onClick={() => handleDelete(store.id)} className="gap-2 text-xs text-rose-400">
@@ -229,9 +278,42 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                                                                 <Badge variant="outline" className="text-[8px] border-primary/50 text-primary">Default</Badge>
                                                             )}
                                                         </div>
-                                                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                            {store.storeUrl} <ExternalLink className="w-3 h-3" />
-                                                        </p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                                                {store.storeUrl} <ExternalLink className="w-3 h-3" />
+                                                            </p>
+                                                            <span className="text-muted-foreground">|</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-xs text-muted-foreground">Store ID:</span>
+                                                                <code className="text-xs font-mono text-primary">{store.slug}</code>
+                                                                <button 
+                                                                    onClick={() => handleCopySlug(store.slug, store.id)}
+                                                                    className="text-muted-foreground hover:text-primary"
+                                                                >
+                                                                    {copiedSlug === store.id ? (
+                                                                        <Check className="w-3 h-3 text-green-500" />
+                                                                    ) : (
+                                                                        <Copy className="w-3 h-3" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="flex items-center gap-1">
+                                                                <Webhook className="w-3 h-3 text-muted-foreground" />
+                                                                <code className="text-xs font-mono text-muted-foreground">{getWebhookUrl(store.slug)}</code>
+                                                                <button 
+                                                                    onClick={() => handleCopySlug(getWebhookUrl(store.slug), `webhook-${store.id}`)}
+                                                                    className="text-muted-foreground hover:text-primary"
+                                                                >
+                                                                    {copiedSlug === `webhook-${store.id}` ? (
+                                                                        <Check className="w-3 h-3 text-green-500" />
+                                                                    ) : (
+                                                                        <Copy className="w-3 h-3" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                         {store.description && (
                                                             <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{store.description}</p>
                                                         )}
@@ -241,9 +323,9 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                                                     <Button variant="outline" size="sm" className="gap-2 border-white/5 hover:bg-white/5">
                                                         <RefreshCw className="w-3.5 h-3.5" /> Sync
                                                     </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => regenApiKey({ workspaceId, storeId: store.id })} disabled={regeneratingKey} className="gap-2 text-muted-foreground hover:text-white">
-                                                        <RefreshCw className={`w-3.5 h-3.5 ${regeneratingKey ? 'animate-spin' : ''}`} /> 
-                                                        {regeneratingKey ? 'Generating...' : 'API Key'}
+                                                    <Button variant="ghost" size="sm" onClick={() => { setApiKeyStore(store); setApiKeyModalOpen(true); }} className="gap-2 text-muted-foreground hover:text-white">
+                                                        <Key className="w-3.5 h-3.5" /> 
+                                                        API Key
                                                     </Button>
                                                     <Button variant="ghost" size="icon" onClick={() => handleEdit(store)} className="text-muted-foreground hover:text-white transition-colors">
                                                         <Settings className="w-4 h-4" />

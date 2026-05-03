@@ -522,7 +522,6 @@ model WhatsAppDeliveryLog {
   @@index([status])
 }
 
-
 model WhatsAppFlow {
   id          String   @id @default(cuid())
   workspaceId String
@@ -629,24 +628,24 @@ model Category {
 }
 
 model Credentials {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   platform    String
   profile     String?
   type        String?
   credentials Json?
   userId      String
   workspaceId String?
-  expired     Boolean   @default(false)
-  status      String    @default("disconnected")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  expired     Boolean    @default(false)
+  status      String     @default("disconnected")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   avatar      String?
   userInfo    Json?
   expiresAt   DateTime?
-  environment String    @default("PROD")
-  isDefault   Boolean   @default(false)
-  verified    Boolean   @default(false)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environment String     @default("PROD")
+  isDefault   Boolean    @default(false)
+  verified    Boolean    @default(false)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   campaigns   Campaign[]
 
   @@index([userId])
@@ -1076,6 +1075,7 @@ model ECommerceStore {
   userId         String
   platform       String                   @default("shopify") // shopify | woocommerce | manual
   name           String
+  slug           String
   description    String?
   storeUrl       String
   logo           String?
@@ -1097,6 +1097,9 @@ model ECommerceStore {
   abandonedCarts ECommerceAbandonedCart[]
 
   @@index([userId])
+  @@index([name])
+  @@index([slug])
+  @@index([apiKey])
 }
 
 model ECommerceOrder {
@@ -1127,24 +1130,24 @@ model ECommerceOrder {
 }
 
 model ECommerceProduct {
-  id                String         @id @default(cuid())
+  id                String          @id @default(cuid())
   storeId           String?
-  externalProductId String?        @unique
-  sku               String?        @unique
+  externalProductId String?         @unique
+  sku               String?         @unique
   title             String
   description       String?
   price             Float
-  discount          Float?         @default(0)
-  currency          String         @default("INR")
+  discount          Float?          @default(0)
+  currency          String          @default("INR")
   imageUrl          String?
   status            String
   inventoryCount    Int?
   metadata          Json?
   userId            String
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
   store             ECommerceStore? @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([storeId])
   @@index([userId])
