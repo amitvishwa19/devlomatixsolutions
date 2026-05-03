@@ -1074,14 +1074,20 @@ enum SystemCronStatus {
 model ECommerceStore {
   id             String                   @id @default(cuid())
   userId         String
-  platform       String                   @default("shopify") // shopify | woocommerce
+  platform       String                   @default("shopify") // shopify | woocommerce | manual
   name           String
+  description    String?
   storeUrl       String
+  logo           String?
+  currency       String                   @default("INR")
+  timezone       String                   @default("Asia/Kolkata")
+  isDefault      Boolean                  @default(false)
   accessToken    String?
   apiKey         String?
   apiSecret      String?
   webhookSecret  String?
   status         String                   @default("connected")
+  lastSyncAt     DateTime?
   metadata       Json?
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt

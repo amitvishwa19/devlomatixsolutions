@@ -1,24 +1,105 @@
 "use client";
 
-import React, { use, useState } from 'react';
-import { Settings, ArrowLeft, RefreshCw, Plus, Trash2, ExternalLink, ShieldCheck, Database, ShoppingCart } from "lucide-react";
+import React, { use, useState, useEffect, useCallback } from 'react';
+import { Settings, ArrowLeft, RefreshCw, Plus, Trash2, ExternalLink, ShieldCheck, Database, ShoppingCart, List, Grid, MoreVertical, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from 'sonner';
+import { AddStoreModal } from './_components/AddStoreModal';
+import { getStores, deleteStore, regenerateApiKey } from './_actions';
+import { useAction } from "@/hooks/use-action";
 
 export default function EcommerceSettingsPage({ params: paramsPromise }) {
     const params = use(paramsPromise);
     const workspaceId = params.workspaceId;
+    
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedStore, setSelectedStore] = useState(null);
+    const [viewMode, setViewMode] = useState('list');
 
-    // Simulation of connected stores
-    const [stores, setStores] = useState([
-        { id: '1', name: 'Main Shopify Store', platform: 'shopify', url: 'devlomatix-main.myshopify.com', status: 'Connected', lastSync: '2 hours ago' },
-        { id: '2', name: 'Secondary Woo', platform: 'woocommerce', url: 'shop.devlomatix.com', status: 'Sync Error', lastSync: '1 day ago' }
-    ]);
+    const { execute: fetchStores, data: storesData, isLoading: loadingStores } = useAction(getStores, {
+        onSuccess: (data) => {},
+        onError: (error) => {
+            toast.error("Failed to load stores");
+        }
+    });
+
+    const { execute: removeStore, isLoading: deletingStore } = useAction(deleteStore, {
+        onSuccess: (data) => {
+            toast.success("Store deleted");
+            fetchStores({ workspaceId });
+        },
+        onError: (error) => {
+            toast.error(error || "Failed to delete store");
+        }
+    });
+
+    const { execute: regenApiKey, isLoading: regeneratingKey } = useAction(regenerateApiKey, {
+        onSuccess: (data) => {
+            toast.success('New API key generated!');
+            navigator.clipboard.writeText(data.apiKey);
+            fetchStores({ workspaceId });
+            toast.info('New API key copied to clipboard');
+        },
+        onError: (error) => {
+            toast.error(error || "Failed to regenerate API key");
+        }
+    });
+
+    useEffect(() => {
+        fetchStores({ workspaceId });
+    }, [workspaceId, fetchStores]);
+
+    const stores = storesData?.stores || [];
+
+    const handleAdd = () => {
+        setSelectedStore(null);
+        setModalOpen(true);
+    };
+
+    const handleEdit = (store) => {
+        setSelectedStore(store);
+        setModalOpen(true);
+    };
+
+    const handleDelete = (storeId) => {
+        if (confirm('Are you sure you want to delete this store? All associated data will be lost.')) {
+            removeStore({ workspaceId, storeId });
+        }
+    };
+
+    const handleSuccess = () => {
+        fetchStores({ workspaceId });
+    };
+
+    const getStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'connected': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            case 'disconnected': return 'bg-destructive/10 text-destructive border-destructive/20';
+            case 'sync_error': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+            default: return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+        }
+    };
 
     return (
         <div className="space-y-4 animate-in fade-in duration-700 pb-10 p-4">
+            <AddStoreModal 
+                open={modalOpen} 
+                onClose={() => setModalOpen(false)} 
+                store={selectedStore} 
+                onSuccess={handleSuccess}
+                workspaceId={workspaceId}
+            />
+
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -37,7 +118,25 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button className="gap-2 shadow-lg shadow-primary/20">
+                    <div className="flex items-center border border-white/10 rounded-md overflow-hidden">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className={`rounded-none h-8 w-8 ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'}`}
+                            onClick={() => setViewMode('list')}
+                        >
+                            <List className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className={`rounded-none h-8 w-8 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'}`}
+                            onClick={() => setViewMode('grid')}
+                        >
+                            <Grid className="w-4 h-4" />
+                        </Button>
+                    </div>
+                    <Button onClick={handleAdd} className="gap-2 shadow-lg shadow-primary/20">
                         <Plus className="w-4 h-4" /> Add New Store
                     </Button>
                 </div>
@@ -48,52 +147,126 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                 <div className="lg:col-span-2 space-y-6">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2 px-2">
                         <Database className="w-5 h-5 text-primary" />
-                        Connected Stores
+                        Connected Stores ({stores.length})
                     </h3>
 
-                    {stores.map((store) => (
-                        <Card key={store.id} className="bg-card border-white/5 hover:border-white/10 transition-all overflow-hidden group">
-                            <CardContent className="p-0">
-                                <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-inner ${store.platform === 'shopify' ? 'bg-[#95BF47]/10 border border-[#95BF47]/20 text-[#95BF47]' : 'bg-[#7F54B3]/10 border border-[#7F54B3]/20 text-[#7F54B3]'}`}>
-                                            <ShoppingCart className="w-7 h-7" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-lg font-bold text-white">{store.name}</h4>
-                                                <Badge className={`text-[10px] font-bold uppercase ${store.status === 'Connected' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}`}>
+                    {loadingStores ? (
+                        <div className="space-y-4">
+                            {[1, 2].map(i => (
+                                <Card key={i} className="bg-card border-white/5 h-32 animate-pulse" />
+                            ))}
+                        </div>
+                    ) : stores.length === 0 ? (
+                        <Card className="bg-card border-white/5 p-12 text-center">
+                            <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">No stores connected yet.</p>
+                            <Button onClick={handleAdd} className="mt-4 gap-2">
+                                <Plus className="w-4 h-4" /> Add Your First Store
+                            </Button>
+                        </Card>
+                    ) : (
+                        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-4"}>
+                            {stores.map((store) => (
+                                viewMode === 'grid' ? (
+                                    <Card key={store.id} className="bg-card border-white/5 hover:border-white/10 transition-all overflow-hidden group">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${store.platform === 'shopify' ? 'bg-[#95BF47]/10 border border-[#95BF47]/20 text-[#95BF47]' : store.platform === 'woocommerce' ? 'bg-[#7F54B3]/10 border border-[#7F54B3]/20 text-[#7F54B3]' : 'bg-primary/10 border border-primary/20 text-primary'}`}>
+                                                    <ShoppingCart className="w-5 h-5" />
+                                                </div>
+                                                {store.isDefault && (
+                                                    <Badge variant="outline" className="text-[8px] border-primary/50 text-primary">Default</Badge>
+                                                )}
+                                            </div>
+                                            <h4 className="text-sm font-bold text-white line-clamp-1">{store.name}</h4>
+                                            <p className="text-[10px] text-muted-foreground truncate">{store.storeUrl}</p>
+                                            <div className="flex items-center justify-between mt-3">
+                                                <Badge className={`text-[9px] font-bold uppercase ${getStatusColor(store.status)} border`}>
                                                     {store.status}
                                                 </Badge>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="w-6 h-6 text-muted-foreground hover:text-white">
+                                                            <MoreVertical className="w-3 h-3" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-40 bg-black/80 backdrop-blur-xl border-white/10">
+                                                        <DropdownMenuItem onClick={() => handleEdit(store)} className="gap-2 text-xs">
+                                                            <Edit2 className="w-3 h-3" /> Edit Store
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            onClick={() => regenApiKey({ workspaceId, storeId: store.id })}
+                                                            disabled={regeneratingKey}
+                                                            className="gap-2 text-xs"
+                                                        >
+                                                            <RefreshCw className={`w-3 h-3 ${regeneratingKey ? 'animate-spin' : ''}`} /> 
+                                                            {regeneratingKey ? 'Generating...' : 'Regenerate API Key'}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator className="bg-white/10" />
+                                                        <DropdownMenuItem onClick={() => handleDelete(store.id)} className="gap-2 text-xs text-rose-400">
+                                                            <Trash2 className="w-3 h-3" /> Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
-                                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                {store.url} <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Button variant="outline" size="sm" className="gap-2 border-white/5 hover:bg-white/5">
-                                            <RefreshCw className="w-3.5 h-3.5" /> Sync Data
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white transition-colors">
-                                            <Settings className="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive/50 hover:text-destructive transition-colors">
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div className="bg-white/2 p-3 px-6 border-t border-white/5 flex items-center justify-between">
-                                    <p className="text-[10px] text-muted-foreground">
-                                        Last successful sync: <span className="text-white">{store.lastSync}</span>
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                        <ShieldCheck className="w-3 h-3 text-emerald-500" /> Secure Token Active
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                        </CardContent>
+                                    </Card>
+                                ) : (
+                                    <Card key={store.id} className="bg-card border-white/5 hover:border-white/10 transition-all overflow-hidden group">
+                                        <CardContent className="p-0">
+                                            <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner ${store.platform === 'shopify' ? 'bg-[#95BF47]/10 border border-[#95BF47]/20 text-[#95BF47]' : store.platform === 'woocommerce' ? 'bg-[#7F54B3]/10 border border-[#7F54B3]/20 text-[#7F54B3]' : 'bg-primary/10 border border-primary/20 text-primary'}`}>
+                                                        <ShoppingCart className="w-6 h-6" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <h4 className="text-base font-bold text-white">{store.name}</h4>
+                                                            <Badge className={`text-[10px] font-bold uppercase ${getStatusColor(store.status)} border`}>
+                                                                {store.status}
+                                                            </Badge>
+                                                            {store.isDefault && (
+                                                                <Badge variant="outline" className="text-[8px] border-primary/50 text-primary">Default</Badge>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                                            {store.storeUrl} <ExternalLink className="w-3 h-3" />
+                                                        </p>
+                                                        {store.description && (
+                                                            <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{store.description}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button variant="outline" size="sm" className="gap-2 border-white/5 hover:bg-white/5">
+                                                        <RefreshCw className="w-3.5 h-3.5" /> Sync
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={() => regenApiKey({ workspaceId, storeId: store.id })} disabled={regeneratingKey} className="gap-2 text-muted-foreground hover:text-white">
+                                                        <RefreshCw className={`w-3.5 h-3.5 ${regeneratingKey ? 'animate-spin' : ''}`} /> 
+                                                        {regeneratingKey ? 'Generating...' : 'API Key'}
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(store)} className="text-muted-foreground hover:text-white transition-colors">
+                                                        <Settings className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(store.id)} className="text-destructive/50 hover:text-destructive transition-colors">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white/2 p-2 px-4 border-t border-white/5 flex items-center justify-between">
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    Last sync: <span className="text-white">{store.lastSyncAt ? new Date(store.lastSyncAt).toLocaleString() : 'Never'}</span>
+                                                </p>
+                                                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                    <ShieldCheck className="w-3 h-3 text-emerald-500" /> Secure
+                                                </p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Integration Options */}

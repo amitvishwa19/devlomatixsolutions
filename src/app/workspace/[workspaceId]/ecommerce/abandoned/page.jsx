@@ -1,34 +1,58 @@
 "use client";
 
-import React, { use, useState, useEffect } from 'react';
-import { ShoppingBag, MessageSquare, AlertTriangle, ArrowLeft, RefreshCw, Send, CheckCircle2 } from "lucide-react";
+import React, { use, useState, useEffect, useCallback } from 'react';
+import { ShoppingBag, MessageSquare, AlertTriangle, ArrowLeft, RefreshCw, Send, CheckCircle2, Search, Grid, List, MoreVertical, Mail, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function EcommerceAbandonedPage({ params: paramsPromise }) {
     const params = use(paramsPromise);
     const workspaceId = params.workspaceId;
     const [carts, setCarts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState('list');
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
 
-    useEffect(() => {
-        const fetchCarts = async () => {
-            try {
-                const res = await fetch(`/api/workspace/${workspaceId}/ecommerce/abandoned`);
-                const data = await res.json();
-                if (data.success) setCarts(data.abandonedCarts);
-            } catch (err) {
-                console.error("Failed to fetch abandoned carts:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchCarts();
+    const fetchCarts = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/workspace/${workspaceId}/ecommerce/abandoned`);
+            const data = await res.json();
+            if (data.success) setCarts(data.abandonedCarts);
+        } catch (err) {
+            console.error("Failed to fetch abandoned carts:", err);
+        } finally {
+            setLoading(false);
+        }
     }, [workspaceId]);
 
+    useEffect(() => {
+        fetchCarts();
+    }, [fetchCarts]);
+
     const totalPotentialLoss = carts.reduce((acc, cart) => acc + (cart.totalAmount || 0), 0);
+
+    const filteredCarts = carts.filter(cart => {
+        const matchesSearch = search === '' || 
+            cart.customerEmail?.toLowerCase().includes(search.toLowerCase()) ||
+            cart.customerPhone?.includes(search) ||
+            cart.externalCartId?.slice(-6).includes(search);
+        const matchesStatus = statusFilter === 'all' || 
+            (statusFilter === 'recovered' && cart.recovered) ||
+            (statusFilter === 'pending' && !cart.recovered);
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="space-y-4 animate-in fade-in duration-700 pb-10 p-4">
@@ -50,123 +74,265 @@ export default function EcommerceAbandonedPage({ params: paramsPromise }) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <div className="flex items-center border border-white/10 rounded-md overflow-hidden">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className={`rounded-none h-8 w-8 ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'}`}
+                            onClick={() => setViewMode('list')}
+                        >
+                            <List className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className={`rounded-none h-8 w-8 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'}`}
+                            onClick={() => setViewMode('grid')}
+                        >
+                            <Grid className="w-4 h-4" />
+                        </Button>
+                    </div>
                     <Button variant="outline" size="sm" className="gap-2 border-white/10 hover:bg-white/5 transition-all">
-                        <RefreshCw className="w-4 h-4" /> Sync Carts
+                        <RefreshCw className="w-4 h-4" /> Sync
                     </Button>
                 </div>
             </div>
 
             {/* Recovery Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-destructive/5 border-destructive/20 border-dashed">
-                    <CardContent className="p-6 flex items-center gap-6">
-                        <div className="w-12 h-12 rounded-xl bg-destructive flex items-center justify-center shadow-lg shadow-destructive/20 shrink-0">
-                            <AlertTriangle className="w-6 h-6 text-white" />
+                    <CardContent className="p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-destructive flex items-center justify-center shrink-0">
+                            <AlertTriangle className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Potential Loss</p>
-                            <h3 className="text-2xl font-black text-white leading-none mt-1">₹{totalPotentialLoss.toLocaleString()}</h3>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Potential Loss</p>
+                            <h3 className="text-xl font-black text-white leading-none mt-1">₹{totalPotentialLoss.toLocaleString()}</h3>
                         </div>
                     </CardContent>
                 </Card>
                 <Card className="bg-primary/5 border-primary/20 border-dashed">
-                    <CardContent className="p-6 flex items-center gap-6">
-                        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-                            <MessageSquare className="w-6 h-6 text-white" />
+                    <CardContent className="p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                            <MessageSquare className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Reminders Sent</p>
-                            <h3 className="text-2xl font-black text-white leading-none mt-1">{carts.filter(c => c.reminderCount > 0).length}</h3>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Reminders Sent</p>
+                            <h3 className="text-xl font-black text-white leading-none mt-1">{carts.filter(c => c.reminderCount > 0).length}</h3>
                         </div>
                     </CardContent>
                 </Card>
                 <Card className="bg-emerald-500/5 border-emerald-500/20 border-dashed">
-                    <CardContent className="p-6 flex items-center gap-6">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-                            <CheckCircle2 className="w-6 h-6 text-white" />
+                    <CardContent className="p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Recovered</p>
-                            <h3 className="text-2xl font-black text-white leading-none mt-1">{carts.filter(c => c.recovered).length}</h3>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Recovered</p>
+                            <h3 className="text-xl font-black text-white leading-none mt-1">{carts.filter(c => c.recovered).length}</h3>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Abandoned Carts List */}
-            <Card className="bg-card border-white/5 shadow-2xl">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-white/5 bg-white/2">
-                                <th className="p-4 text-xs uppercase font-bold text-muted-foreground tracking-widest">Cart Reference</th>
-                                <th className="p-4 text-xs uppercase font-bold text-muted-foreground tracking-widest">Customer Details</th>
-                                <th className="p-4 text-xs uppercase font-bold text-muted-foreground tracking-widest">Store</th>
-                                <th className="p-4 text-xs uppercase font-bold text-muted-foreground tracking-widest text-right">Cart Value</th>
-                                <th className="p-4 text-xs uppercase font-bold text-muted-foreground tracking-widest text-center">Reminders</th>
-                                <th className="p-4 text-xs uppercase font-bold text-muted-foreground tracking-widest text-center">Status</th>
-                                <th className="p-4 text-xs uppercase font-bold text-muted-foreground tracking-widest text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {loading ? (
-                                [1, 2, 3, 4, 5].map(i => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={7} className="p-8 h-16 bg-white/1" />
-                                    </tr>
-                                ))
-                            ) : carts.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="p-12 text-center text-sm text-muted-foreground italic">
-                                        No abandoned carts detected. Keep up the high service standards!
-                                    </td>
-                                </tr>
-                            ) : (
-                                carts.map((cart) => (
-                                    <tr key={cart.id} className="hover:bg-white/2 transition-colors group">
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500">
-                                                    <ShoppingBag className="w-4 h-4" />
-                                                </div>
-                                                <span className="font-bold text-sm text-white">#{cart.externalCartId.slice(-6)}</span>
+            {/* Filter Bar */}
+            <Card className="bg-card/50 border-white/5 backdrop-blur-sm">
+                <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-center">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by email, phone or cart ID..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-9 bg-black/20 border-white/10 focus:border-primary/50 transition-all"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <Button 
+                            variant={statusFilter === 'all' ? 'default' : 'ghost'} 
+                            size="sm" 
+                            className="text-xs font-medium"
+                            onClick={() => setStatusFilter('all')}
+                        >
+                            All
+                        </Button>
+                        <Button 
+                            variant={statusFilter === 'pending' ? 'default' : 'ghost'} 
+                            size="sm" 
+                            className="text-xs font-medium"
+                            onClick={() => setStatusFilter('pending')}
+                        >
+                            Pending
+                        </Button>
+                        <Button 
+                            variant={statusFilter === 'recovered' ? 'default' : 'ghost'} 
+                            size="sm" 
+                            className="text-xs font-medium"
+                            onClick={() => setStatusFilter('recovered')}
+                        >
+                            Recovered
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Abandoned Carts Grid/List */}
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-3"}>
+                {loading ? (
+                    viewMode === 'grid' ? (
+                        [1, 2, 3, 4, 5, 6].map(i => (
+                            <Card key={i} className="bg-card border-white/5 h-[240px] animate-pulse" />
+                        ))
+                    ) : (
+                        [1, 2, 3, 4, 5].map(i => (
+                            <Card key={i} className="bg-card border-white/5 h-20 animate-pulse" />
+                        ))
+                    )
+                ) : filteredCarts.length === 0 ? (
+                    <div className="col-span-full py-20 text-center text-muted-foreground border-2 border-dashed border-white/5 rounded-xl">
+                        No abandoned carts found.
+                    </div>
+                ) : (
+                    filteredCarts.map((cart) => (
+                        viewMode === 'grid' ? (
+                            <Card key={cart.id} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group">
+                                <CardHeader className="p-3 pb-0">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                                                <ShoppingBag className="w-4 h-4 text-amber-500" />
                                             </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <p className="text-sm font-medium text-white">{cart.customerEmail || 'Guest'}</p>
-                                            <p className="text-[10px] text-muted-foreground">{cart.customerPhone || 'N/A'}</p>
-                                        </td>
-                                        <td className="p-4">
-                                            <Badge variant="ghost" className="text-[10px] bg-white/5 border-white/10 uppercase tracking-tighter">
-                                                {cart.store?.platform}
-                                            </Badge>
-                                        </td>
-                                        <td className="p-4 text-right font-bold text-destructive/80 text-sm">₹{cart.totalAmount.toLocaleString()}</td>
-                                        <td className="p-4 text-center">
+                                            <div>
+                                                <CardTitle className="text-xs font-bold text-white">
+                                                    #{cart.externalCartId.slice(-6)}
+                                                </CardTitle>
+                                                <p className="text-[9px] text-muted-foreground">
+                                                    {new Date(cart.createdAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Badge className={`text-[8px] px-1.5 font-bold uppercase border ${cart.recovered ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                            {cart.recovered ? 'Recovered' : 'Pending'}
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-3 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-3 h-3 text-muted-foreground" />
+                                        <p className="text-[10px] text-muted-foreground truncate">{cart.customerEmail || 'Guest'}</p>
+                                    </div>
+                                    {cart.customerPhone && (
+                                        <div className="flex items-center gap-2">
+                                            <Phone className="w-3 h-3 text-muted-foreground" />
+                                            <p className="text-[10px] text-muted-foreground">{cart.customerPhone}</p>
+                                        </div>
+                                    )}
+                                    {cart.metadata?.shippingAddress && (
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="w-3 h-3 text-muted-foreground mt-0.5" />
+                                            <p className="text-[9px] text-muted-foreground line-clamp-2">
+                                                {cart.metadata.shippingAddress.city}, {cart.metadata.shippingAddress.state}
+                                            </p>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                        <div>
+                                            <p className="text-sm font-black text-destructive/80">₹{cart.totalAmount?.toLocaleString()}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="flex items-center gap-1">
+                                                <div className={`w-2 h-2 rounded-full ${cart.reminderCount > 0 ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                                                <span className="text-[9px] text-muted-foreground">{cart.reminderCount} reminders</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {!cart.recovered && (
+                                        <Button size="sm" className="w-full h-7 gap-1 text-[10px] font-bold">
+                                            <Send className="w-3 h-3" /> Send Recovery
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <Card key={cart.id} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group">
+                                <div className="flex items-center gap-4 p-3">
+                                    <div className="w-10 h-10 rounded-md bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shrink-0">
+                                        <ShoppingBag className="w-5 h-5 text-amber-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-6 gap-2">
+                                        <div className="md:col-span-1">
+                                            <p className="text-sm font-bold text-white">#{cart.externalCartId.slice(-6)}</p>
+                                            <p className="text-[9px] text-muted-foreground">{new Date(cart.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                        <div className="md:col-span-1">
+                                            <p className="text-xs font-medium text-white truncate">{cart.customerEmail || 'Guest'}</p>
+                                            {cart.customerPhone && (
+                                                <p className="text-[9px] text-muted-foreground flex items-center gap-1">
+                                                    <Phone className="w-2 h-2" /> {cart.customerPhone}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="md:col-span-1">
+                                            {cart.metadata?.shippingAddress ? (
+                                                <div className="flex items-start gap-1">
+                                                    <MapPin className="w-3 h-3 text-muted-foreground mt-0.5 shrink-0" />
+                                                    <p className="text-[9px] text-muted-foreground line-clamp-2">
+                                                        {cart.metadata.shippingAddress.city}, {cart.metadata.shippingAddress.state} - {cart.metadata.shippingAddress.pincode}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <p className="text-[9px] text-muted-foreground">No address</p>
+                                            )}
+                                        </div>
+                                        <div className="md:col-span-1 text-center">
+                                            <p className="text-sm font-black text-destructive/80">₹{cart.totalAmount?.toLocaleString()}</p>
+                                        </div>
+                                        <div className="md:col-span-1 text-center">
                                             <div className="flex items-center justify-center gap-1">
                                                 <div className={`w-2 h-2 rounded-full ${cart.reminderCount > 0 ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
-                                                <span className="text-xs font-medium text-white">{cart.reminderCount}</span>
+                                                <span className="text-[9px] text-muted-foreground">{cart.reminderCount}</span>
                                             </div>
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            <Badge className={`text-[9px] px-1.5 font-bold uppercase border ${cart.recovered ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
-                                                {cart.recovered ? 'RECOVERED' : 'PENDING'}
+                                        </div>
+                                        <div className="md:col-span-1 flex items-center justify-center">
+                                            <Badge className={`text-[8px] px-1.5 font-bold uppercase border ${cart.recovered ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                                {cart.recovered ? 'Recovered' : 'Pending'}
                                             </Badge>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            {!cart.recovered && (
-                                                <Button size="sm" variant="outline" className="h-8 gap-2 border-primary/30 hover:bg-primary transition-all group/btn text-[11px] font-bold">
-                                                    <Send className="w-3 h-3 text-primary group-hover/btn:text-white" /> Recover WA
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        {!cart.recovered ? (
+                                            <Button size="sm" variant="outline" className="h-8 gap-1 border-primary/30 hover:bg-primary text-[10px] font-bold">
+                                                <Send className="w-3 h-3 text-primary group-hover:text-white" />
+                                            </Button>
+                                        ) : (
+                                            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                                        )}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md text-muted-foreground hover:text-white hover:bg-white/10 transition-all">
+                                                    <MoreVertical className="w-4 h-4" />
                                                 </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </Card>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-40 bg-black/80 backdrop-blur-xl border-white/10">
+                                                <DropdownMenuItem className="gap-2 text-xs cursor-pointer focus:bg-white/10">
+                                                    <Send className="w-3 h-3" /> Send Reminder
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="gap-2 text-xs cursor-pointer focus:bg-white/10">
+                                                    <MessageSquare className="w-3 h-3" /> WhatsApp
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator className="bg-white/10" />
+                                                <DropdownMenuItem className="gap-2 text-xs cursor-pointer focus:bg-white/10">
+                                                    View Details
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+                            </Card>
+                        )
+                    ))
+                )}
+            </div>
         </div>
     );
 }
