@@ -15,6 +15,7 @@ import { db } from "@/lib/db";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AccessProvider } from "@/providers/AccessProvider";
 import CookieConsent from "@/components/global/CookieConsent";
+import AnalyticsProvider from "@/providers/AnalyticsProvider";
 
 
 
@@ -64,11 +65,13 @@ export default async function RootLayout({ children }) {
 
 
                                         <Providers>
-                                            {/* <OrgModalProvider /> */}
+                                            <AnalyticsProvider>
+                                                {/* <OrgModalProvider /> */}
 
-                                            {children}
-                                            <CookieConsent />
+                                                {children}
+                                                <CookieConsent />
 
+                                            </AnalyticsProvider>
                                         </Providers>
 
 

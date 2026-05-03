@@ -41,7 +41,15 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     const stored = localStorage.getItem("crystal-aura-cart");
-    if (stored) setItems(JSON.parse(stored));
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const validItems = parsed.filter((item) => item.product && item.product.id);
+        setItems(validItems);
+      } catch {
+        setItems([]);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -56,7 +64,7 @@ export const CartProvider = ({ children }) => {
           i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1, addedAt: new Date().toISOString() }];
     });
     setIsOpen(true);
   };
@@ -75,14 +83,27 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    localStorage.removeItem("crystal-aura-cart");
+  };
 
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = items.reduce((sum, i) => sum + i.product.priceNum * i.quantity, 0);
+  const getTotalItems = () => items.reduce((sum, i) => sum + i.quantity, 0);
+  const getTotalPrice = () => items.reduce((sum, i) => sum + (i.product?.priceNum || 0) * i.quantity, 0);
+  
+  const isInCart = (productId) => items.some((i) => i.product.id === productId);
+  const getItemQuantity = (productId) => items.find((i) => i.product.id === productId)?.quantity || 0;
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, isOpen, setIsOpen }}
+      value={{ 
+        items, addItem, removeItem, updateQuantity, clearCart, 
+        totalItems: getTotalItems(), 
+        totalPrice: getTotalPrice(), 
+        isOpen, setIsOpen,
+        isInCart,
+        getItemQuantity
+      }}
     >
       {children}
     </CartContext.Provider>
@@ -109,7 +130,12 @@ export const WishlistProvider = ({ children }) => {
   }, [items]);
 
   const addItem = (product) => {
-    setItems((prev) => prev.some((p) => p.id === product.id) ? prev : [...prev, product]);
+    setItems((prev) => {
+      const exists = prev.some((p) => p.id === product.id);
+      if (exists) return prev;
+      const updated = [product, ...prev];
+      return updated.slice(0, 50);
+    });
   };
 
   const removeItem = (productId) => {
@@ -132,6 +158,42 @@ export const WishlistProvider = ({ children }) => {
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (!context) throw new Error("useWishlist must be used within WishlistProvider");
+  return context;
+};
+
+// --- RECENTLY VIEWED CONTEXT ---
+const RecentlyViewedContext = createContext(undefined);
+export const RecentlyViewedProvider = ({ children }) => {
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("crystal-aura-recently-viewed");
+    if (stored) setItems(JSON.parse(stored));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("crystal-aura-recently-viewed", JSON.stringify(items));
+  }, [items]);
+
+  const addItem = (product) => {
+    setItems((prev) => {
+      const filtered = prev.filter((p) => p.id !== product.id);
+      const updated = [product, ...filtered];
+      return updated.slice(0, 20);
+    });
+  };
+
+  const clear = () => setItems([]);
+
+  return (
+    <RecentlyViewedContext.Provider value={{ items, addItem, clear }}>
+      {children}
+    </RecentlyViewedContext.Provider>
+  );
+};
+export const useRecentlyViewed = () => {
+  const context = useContext(RecentlyViewedContext);
+  if (!context) throw new Error("useRecentlyViewed must be used within RecentlyViewedProvider");
   return context;
 };
 
@@ -169,9 +231,11 @@ export const CrystalAuraProviders = ({ children }) => {
     <ThemeProvider>
       <CartProvider>
         <WishlistProvider>
-          <OrderProvider>
-            {children}
-          </OrderProvider>
+          <RecentlyViewedProvider>
+            <OrderProvider>
+              {children}
+            </OrderProvider>
+          </RecentlyViewedProvider>
         </WishlistProvider>
       </CartProvider>
     </ThemeProvider>

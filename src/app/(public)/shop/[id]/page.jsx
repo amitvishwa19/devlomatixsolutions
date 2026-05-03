@@ -4,17 +4,20 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { products } from "../../_data/products";
-import { useCart, useWishlist } from "../../_context/CrystalAuraProviders";
+import { useCart, useWishlist, useRecentlyViewed } from "../../_context/CrystalAuraProviders";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ShoppingBag, ArrowLeft, Shield, Truck, Sparkles, Minus, Plus, Heart, Share2, Star, Check } from "lucide-react";
 import ProductCard from "../../_components/ProductCard";
 import { useToast } from "@/hooks/use-toast";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export default function CrystalAuraProductDetailPage() {
   const { id } = useParams();
-  const { addItem } = useCart();
+  const { addItem, isInCart, getItemQuantity } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { addItem: addToRecentlyViewed } = useRecentlyViewed();
+  const { trackProductView, trackAddToCart } = useAnalytics();
   const { toast } = useToast();
   
   const product = products.find((p) => p.id === id);
@@ -23,6 +26,10 @@ export default function CrystalAuraProductDetailPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (product) {
+      addToRecentlyViewed(product);
+      trackProductView(product.id, product.title, product.category, product.priceNum);
+    }
   }, [id]);
 
   if (!product) {

@@ -5,14 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
     Package, ShoppingBag, Heart, User, MapPin, Settings, LogOut, 
     ChevronRight, Clock, CreditCard, Bell, Shield, Edit2, Trash2,
-    Box, Star, Download, Mail, Phone, Calendar
+    Box, Star, Download, Mail, Phone, Calendar, Plus, X, Check, Eye, EyeOff
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useOrders, useWishlist, useCart } from "../_context/CrystalAuraProviders";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 const statusColors = {
     confirmed: "bg-primary/10 text-primary border-primary/20 shadow-sm",
@@ -66,14 +68,68 @@ const mockUserInfo = {
 export default function AccountPage() {
     const { data: session } = useSession();
     const { orders } = useOrders();
-    const { items: wishlistItems } = useWishlist();
-    const { totalItems } = useCart();
+    const { items: wishlistItems, removeItem } = useWishlist();
+    const { addItem } = useCart();
     const [activeTab, setActiveTab] = useState("orders");
     const [addresses, setAddresses] = useState(mockAddresses);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [showAddAddress, setShowAddAddress] = useState(false);
+    const [editingAddress, setEditingAddress] = useState(null);
+    const [settings, setSettings] = useState({
+        emailNotifications: true,
+        smsNotifications: false,
+        orderUpdates: true,
+        promotionalEmails: false,
+        newsletter: true,
+    });
+
+    const [apiSettings, setApiSettings] = useState({
+        backendUrl: localStorage.getItem('backendUrl') || '',
+        apiKey: localStorage.getItem('apiKey') || '',
+    });
+    const [showApiKey, setShowApiKey] = useState(false);
+
+    const handleSaveApiSettings = () => {
+        localStorage.setItem('backendUrl', apiSettings.backendUrl);
+        localStorage.setItem('apiKey', apiSettings.apiKey);
+    };
+    
+    const [profileForm, setProfileForm] = useState({
+        displayName: session?.user?.name || "John Doe",
+        email: session?.user?.email || "john.doe@example.com",
+        phone: "+91 98765 43210",
+    });
+
     const user = session?.user || mockUserInfo;
 
     const handleSignOut = () => {
         signOut({ callbackUrl: "/" });
+    };
+
+    const handleAddToCartFromWishlist = (product) => {
+        addItem(product);
+    };
+
+    const handleSaveProfile = () => {
+        setIsEditingProfile(false);
+    };
+
+    const handleSaveAddress = (address) => {
+        if (editingAddress) {
+            setAddresses(addresses.map(a => a.id === address.id ? address : a));
+        } else {
+            setAddresses([...addresses, { ...address, id: Date.now().toString() }]);
+        }
+        setShowAddAddress(false);
+        setEditingAddress(null);
+    };
+
+    const handleDeleteAddress = (id) => {
+        setAddresses(addresses.filter(a => a.id !== id));
+    };
+
+    const handleSetDefaultAddress = (id) => {
+        setAddresses(addresses.map(a => ({ ...a, isDefault: a.id === id })));
     };
 
     return (
@@ -101,7 +157,7 @@ export default function AccountPage() {
                         transition={{ delay: 0.2 }}
                         className="lg:col-span-1"
                     >
-                        <div className="glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 sticky top-24">
+                        <div className="border border-white/5 bg-[#0a0a0a]/50 rounded-3xl p-6 sticky top-24">
                             <div className="text-center mb-8">
                                 <div className="w-20 h-20 rounded-full bg-white/[0.05] border-2 border-primary/30 mx-auto mb-4 flex items-center justify-center">
                                     {user?.avatar || user?.image ? (
@@ -152,7 +208,7 @@ export default function AccountPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="lg:col-span-3"
+                        className="lg:col-span-3 relative z-10"
                     >
                         <AnimatePresence mode="wait">
                             {activeTab === "orders" && (
@@ -161,7 +217,7 @@ export default function AccountPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 md:p-8"
+                                    className="border border-white/5 bg-[#0a0a0a]/50 rounded-3xl p-6 md:p-8"
                                 >
                                     <div className="flex items-center justify-between mb-8">
                                         <div>
@@ -250,7 +306,7 @@ export default function AccountPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 md:p-8"
+                                    className="border border-white/5 bg-[#0a0a0a]/50 rounded-3xl p-6 md:p-8"
                                 >
                                     <div className="flex items-center justify-between mb-8">
                                         <div>
@@ -285,14 +341,32 @@ export default function AccountPage() {
                                                     transition={{ delay: idx * 0.03 }}
                                                     className="border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-all"
                                                 >
-                                                    <div className="aspect-square rounded-xl overflow-hidden mb-3">
-                                                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                                                    </div>
-                                                    <p className="text-foreground text-sm truncate">{item.title}</p>
+                                                    <Link href={`/crystalaura/shop/${item.id}`}>
+                                                        <div className="aspect-square rounded-xl overflow-hidden mb-3">
+                                                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    </Link>
+                                                    <Link href={`/crystalaura/shop/${item.id}`}>
+                                                        <p className="text-foreground text-sm truncate hover:text-primary transition-colors">{item.title}</p>
+                                                    </Link>
                                                     <p className="text-primary font-serif mt-1">₹{item.priceNum?.toLocaleString("en-IN") || item.price?.toLocaleString("en-IN")}</p>
-                                                    <Button className="w-full mt-3 bg-gold-gradient text-white py-2 rounded-xl text-xs">
-                                                        Add to Cart
-                                                    </Button>
+                                                    <div className="flex gap-2 mt-3">
+                                                        <Button 
+                                                            onClick={() => handleAddToCartFromWishlist(item)}
+                                                            className="flex-1 bg-gold-gradient text-white py-2 rounded-xl text-xs"
+                                                        >
+                                                            <ShoppingBag className="w-3 h-3 mr-1" />
+                                                            Add
+                                                        </Button>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="icon"
+                                                            onClick={() => removeItem(item.id)}
+                                                            className="h-8 w-8 border-white/10 text-muted-foreground hover:text-destructive"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </Button>
+                                                    </div>
                                                 </motion.div>
                                             ))}
                                         </div>
@@ -306,16 +380,29 @@ export default function AccountPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 md:p-8"
+                                    className="border border-white/5 bg-[#0a0a0a]/50 rounded-3xl p-6 md:p-8"
                                 >
                                     <div className="flex items-center justify-between mb-8">
                                         <div>
                                             <h2 className="text-foreground font-serif text-2xl">Profile Information</h2>
                                             <p className="text-muted-foreground/50 text-sm mt-1">Manage your account details</p>
                                         </div>
-                                        <Button variant="outline" className="border-white/10 text-xs px-4 py-2">
-                                            <Edit2 className="w-3 h-3 mr-2" />
-                                            Edit
+                                        <Button 
+                                            variant="outline" 
+                                            className="border-white/10 text-xs px-4 py-2"
+                                            onClick={() => isEditingProfile ? handleSaveProfile() : setIsEditingProfile(true)}
+                                        >
+                                            {isEditingProfile ? (
+                                                <>
+                                                    <Check className="w-3 h-3 mr-2" />
+                                                    Save
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Edit2 className="w-3 h-3 mr-2" />
+                                                    Edit
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
 
@@ -326,7 +413,15 @@ export default function AccountPage() {
                                                     <User className="w-4 h-4 text-primary" />
                                                     <p className="text-muted-foreground/50 text-xs uppercase tracking-wider">Full Name</p>
                                                 </div>
-                                                <p className="text-foreground">{user?.displayName || user?.name || "Not set"}</p>
+                                                {isEditingProfile ? (
+                                                    <Input 
+                                                        value={profileForm.displayName}
+                                                        onChange={(e) => setProfileForm({...profileForm, displayName: e.target.value})}
+                                                        className="bg-transparent border-white/10"
+                                                    />
+                                                ) : (
+                                                    <p className="text-foreground">{user?.displayName || user?.name || "Not set"}</p>
+                                                )}
                                             </div>
 
                                             <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5">
@@ -342,7 +437,15 @@ export default function AccountPage() {
                                                     <Phone className="w-4 h-4 text-primary" />
                                                     <p className="text-muted-foreground/50 text-xs uppercase tracking-wider">Phone</p>
                                                 </div>
-                                                <p className="text-foreground">+91 98765 43210</p>
+                                                {isEditingProfile ? (
+                                                    <Input 
+                                                        value={profileForm.phone}
+                                                        onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                                                        className="bg-transparent border-white/10"
+                                                    />
+                                                ) : (
+                                                    <p className="text-foreground">+91 98765 43210</p>
+                                                )}
                                             </div>
 
                                             <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5">
@@ -363,52 +466,80 @@ export default function AccountPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 md:p-8"
+                                    className="border border-white/5 bg-[#0a0a0a]/50 rounded-3xl p-6 md:p-8"
                                 >
                                     <div className="flex items-center justify-between mb-8">
                                         <div>
                                             <h2 className="text-foreground font-serif text-2xl">Saved Addresses</h2>
                                             <p className="text-muted-foreground/50 text-sm mt-1">Manage your delivery addresses</p>
                                         </div>
-                                        <Button className="bg-gold-gradient text-white px-4 py-2 rounded-xl text-xs">
+                                        <Button 
+                                            className="bg-gold-gradient text-white px-4 py-2 rounded-xl text-xs"
+                                            onClick={() => { setShowAddAddress(true); setEditingAddress(null); }}
+                                        >
                                             + Add New
                                         </Button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {addresses.map((address, idx) => (
-                                            <motion.div
-                                                key={address.id}
-                                                initial={{ opacity: 0, scale: 0.98 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: idx * 0.05 }}
-                                                className="border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all relative"
-                                            >
-                                                {address.isDefault && (
-                                                    <Badge className="absolute top-3 right-3 bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full text-[10px]">
-                                                        Default
-                                                    </Badge>
-                                                )}
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <MapPin className="w-4 h-4 text-primary" />
-                                                    <p className="text-foreground font-medium">{address.name}</p>
-                                                </div>
-                                                <p className="text-foreground text-sm">{address.fullName}</p>
-                                                <p className="text-muted-foreground/60 text-sm mt-1">{address.address}</p>
-                                                <p className="text-muted-foreground/60 text-sm">{address.city}, {address.state} - {address.pincode}</p>
-                                                <p className="text-muted-foreground/60 text-sm mt-2">{address.phone}</p>
-                                                <div className="flex gap-2 mt-4">
-                                                    <Button variant="outline" className="border-white/10 text-xs px-3 py-1 flex-1">
-                                                        <Edit2 className="w-3 h-3 mr-1" />
-                                                        Edit
-                                                    </Button>
-                                                    <Button variant="outline" className="border-white/10 text-red-400 text-xs px-3 py-1">
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </Button>
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </div>
+                                    {showAddAddress || editingAddress ? (
+                                        <AddressForm 
+                                            address={editingAddress}
+                                            onSave={handleSaveAddress}
+                                            onCancel={() => { setShowAddAddress(false); setEditingAddress(null); }}
+                                        />
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {addresses.map((address, idx) => (
+                                                <motion.div
+                                                    key={address.id}
+                                                    initial={{ opacity: 0, scale: 0.98 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    transition={{ delay: idx * 0.05 }}
+                                                    className="border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all relative"
+                                                >
+                                                    {address.isDefault && (
+                                                        <Badge className="absolute top-3 right-3 bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full text-[10px]">
+                                                            Default
+                                                        </Badge>
+                                                    )}
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <MapPin className="w-4 h-4 text-primary" />
+                                                        <p className="text-foreground font-medium">{address.name}</p>
+                                                    </div>
+                                                    <p className="text-foreground text-sm">{address.fullName}</p>
+                                                    <p className="text-muted-foreground/60 text-sm mt-1">{address.address}</p>
+                                                    <p className="text-muted-foreground/60 text-sm">{address.city}, {address.state} - {address.pincode}</p>
+                                                    <p className="text-muted-foreground/60 text-sm mt-2">{address.phone}</p>
+                                                    <div className="flex gap-2 mt-4">
+                                                        <Button 
+                                                            variant="outline" 
+                                                            className="border-white/10 text-xs px-3 py-1 flex-1"
+                                                            onClick={() => setEditingAddress(address)}
+                                                        >
+                                                            <Edit2 className="w-3 h-3 mr-1" />
+                                                            Edit
+                                                        </Button>
+                                                        {!address.isDefault && (
+                                                            <Button 
+                                                                variant="outline" 
+                                                                className="border-white/10 text-xs px-3 py-1"
+                                                                onClick={() => handleSetDefaultAddress(address.id)}
+                                                            >
+                                                                Set Default
+                                                            </Button>
+                                                        )}
+                                                        <Button 
+                                                            variant="outline" 
+                                                            className="border-white/10 text-red-400 text-xs px-3 py-1"
+                                                            onClick={() => handleDeleteAddress(address.id)}
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </Button>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </motion.div>
                             )}
 
@@ -418,57 +549,151 @@ export default function AccountPage() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 md:p-8"
+                                    className="border border-white/5 bg-[#0a0a0a]/80 rounded-3xl p-6 md:p-8 backdrop-blur-0"
                                 >
                                     <div className="mb-8">
                                         <h2 className="text-foreground font-serif text-2xl">Account Settings</h2>
                                         <p className="text-muted-foreground/50 text-sm mt-1">Customize your preferences</p>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5 hover:border-white/10 transition-all">
-                                            <div className="flex items-center gap-3">
+                                    <div className="space-y-6">
+                                        <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5 pointer-events-auto">
+                                            <div className="flex items-center gap-3 mb-4">
                                                 <Bell className="w-4 h-4 text-primary" />
-                                                <div className="text-left">
-                                                    <p className="text-foreground text-sm">Notifications</p>
-                                                    <p className="text-muted-foreground/50 text-xs">Manage email & push notifications</p>
-                                                </div>
+                                                <p className="text-foreground font-medium">Notification Preferences</p>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
-                                        </button>
+                                            <div className="space-y-4">
+                                                {[
+                                                    { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive updates via email' },
+                                                    { key: 'smsNotifications', label: 'SMS Notifications', desc: 'Receive updates via SMS' },
+                                                    { key: 'orderUpdates', label: 'Order Updates', desc: 'Track your order status' },
+                                                ].map((item) => (
+                                                    <div key={item.key} className="flex items-center justify-between pointer-events-auto">
+                                                        <div>
+                                                            <p className="text-foreground text-sm">{item.label}</p>
+                                                            <p className="text-muted-foreground/40 text-xs">{item.desc}</p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={settings[item.key]}
+                                                            onCheckedChange={(checked) => setSettings({...settings, [item.key]: checked})}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
 
-                                        <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5 hover:border-white/10 transition-all">
-                                            <div className="flex items-center gap-3">
+                                        <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5 pointer-events-auto">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <Mail className="w-4 h-4 text-primary" />
+                                                <p className="text-foreground font-medium">Marketing Preferences</p>
+                                            </div>
+                                            <div className="space-y-4">
+                                                {[
+                                                    { key: 'promotionalEmails', label: 'Promotional Emails', desc: 'Receive offers and discounts' },
+                                                    { key: 'newsletter', label: 'Newsletter', desc: 'Weekly spiritual insights' },
+                                                ].map((item) => (
+                                                    <div key={item.key} className="flex items-center justify-between pointer-events-auto">
+                                                        <div>
+                                                            <p className="text-foreground text-sm">{item.label}</p>
+                                                            <p className="text-muted-foreground/40 text-xs">{item.desc}</p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={settings[item.key]}
+                                                            onCheckedChange={(checked) => setSettings({...settings, [item.key]: checked})}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5 pointer-events-auto">
+                                            <div className="flex items-center gap-3 mb-4">
                                                 <Shield className="w-4 h-4 text-primary" />
-                                                <div className="text-left">
-                                                    <p className="text-foreground text-sm">Privacy & Security</p>
-                                                    <p className="text-muted-foreground/50 text-xs">Password and 2FA settings</p>
-                                                </div>
+                                                <p className="text-foreground font-medium">Privacy & Security</p>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
-                                        </button>
-
-                                        <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5 hover:border-white/10 transition-all">
-                                            <div className="flex items-center gap-3">
-                                                <CreditCard className="w-4 h-4 text-primary" />
-                                                <div className="text-left">
-                                                    <p className="text-foreground text-sm">Payment Methods</p>
-                                                    <p className="text-muted-foreground/50 text-xs">Manage saved cards</p>
-                                                </div>
+                                            <div className="space-y-3">
+                                                <button type="button" className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer pointer-events-auto">
+                                                    <div className="text-left">
+                                                        <p className="text-foreground text-sm">Change Password</p>
+                                                        <p className="text-muted-foreground/40 text-xs">Update your password</p>
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
+                                                </button>
+                                                <button type="button" className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer pointer-events-auto">
+                                                    <div className="text-left">
+                                                        <p className="text-foreground text-sm">Two-Factor Authentication</p>
+                                                        <p className="text-muted-foreground/40 text-xs">Add extra security</p>
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
+                                                </button>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
-                                        </button>
+                                        </div>
 
-                                        <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5 hover:border-white/10 transition-all">
-                                            <div className="flex items-center gap-3">
+                                        <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5 pointer-events-auto">
+                                            <div className="flex items-center gap-3 mb-4">
                                                 <Download className="w-4 h-4 text-primary" />
-                                                <div className="text-left">
-                                                    <p className="text-foreground text-sm">Download Data</p>
-                                                    <p className="text-muted-foreground/50 text-xs">Export your account data</p>
-                                                </div>
+                                                <p className="text-foreground font-medium">Data Management</p>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
-                                        </button>
+                                            <div className="space-y-3">
+                                                <button type="button" className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer pointer-events-auto">
+                                                    <div className="text-left">
+                                                        <p className="text-foreground text-sm">Download My Data</p>
+                                                        <p className="text-muted-foreground/40 text-xs">Export your account data</p>
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
+                                                </button>
+                                                <button type="button" className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer pointer-events-auto text-red-400">
+                                                    <div className="text-left">
+                                                        <p className="text-sm">Delete Account</p>
+                                                        <p className="text-muted-foreground/40 text-xs">Permanently delete your account</p>
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5 pointer-events-auto">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <Settings className="w-4 h-4 text-primary" />
+                                                <p className="text-foreground font-medium">API Configuration</p>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <Label className="text-muted-foreground/50 text-xs uppercase">Backend URL</Label>
+                                                    <Input 
+                                                        value={apiSettings.backendUrl}
+                                                        onChange={(e) => setApiSettings({...apiSettings, backendUrl: e.target.value})}
+                                                        placeholder="https://api.example.com"
+                                                        className="mt-1 bg-transparent border-white/10"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-muted-foreground/50 text-xs uppercase">API Key</Label>
+                                                    <div className="relative mt-1">
+                                                        <Input 
+                                                            type={showApiKey ? "text" : "password"}
+                                                            value={apiSettings.apiKey}
+                                                            onChange={(e) => setApiSettings({...apiSettings, apiKey: e.target.value})}
+                                                            placeholder="Enter your API key"
+                                                            className="bg-transparent border-white/10 pr-10"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowApiKey(!showApiKey)}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+                                                        >
+                                                            {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <Button 
+                                                    onClick={handleSaveApiSettings}
+                                                    className="bg-gold-gradient text-white text-xs"
+                                                >
+                                                    Save API Settings
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}
@@ -477,5 +702,123 @@ export default function AccountPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+function AddressForm({ address, onSave, onCancel }) {
+    const [formData, setFormData] = useState({
+        id: address?.id || '',
+        name: address?.name || 'Home',
+        fullName: address?.fullName || '',
+        address: address?.address || '',
+        city: address?.city || '',
+        state: address?.state || '',
+        pincode: address?.pincode || '',
+        phone: address?.phone || '',
+        isDefault: address?.isDefault || false,
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 sm:col-span-1">
+                    <Label className="text-muted-foreground/50 text-xs uppercase">Address Type</Label>
+                    <select 
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        className="w-full mt-1 p-3 rounded-xl bg-white/[0.02] border border-white/10 text-foreground"
+                    >
+                        <option value="Home">Home</option>
+                        <option value="Office">Office</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                    <Label className="text-muted-foreground/50 text-xs uppercase">Set as Default</Label>
+                    <div className="mt-2 flex items-center gap-2">
+                        <input 
+                            type="checkbox" 
+                            checked={formData.isDefault}
+                            onChange={(e) => setFormData({...formData, isDefault: e.target.checked})}
+                            className="w-4 h-4 accent-primary"
+                        />
+                        <span className="text-foreground text-sm">Default address</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <Label className="text-muted-foreground/50 text-xs uppercase">Full Name</Label>
+                <Input 
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                    className="mt-1 bg-transparent border-white/10"
+                    required
+                />
+            </div>
+            <div>
+                <Label className="text-muted-foreground/50 text-xs uppercase">Address</Label>
+                <Input 
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                    className="mt-1 bg-transparent border-white/10"
+                    required
+                />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label className="text-muted-foreground/50 text-xs uppercase">City</Label>
+                    <Input 
+                        value={formData.city}
+                        onChange={(e) => setFormData({...formData, city: e.target.value})}
+                        className="mt-1 bg-transparent border-white/10"
+                        required
+                    />
+                </div>
+                <div>
+                    <Label className="text-muted-foreground/50 text-xs uppercase">State</Label>
+                    <Input 
+                        value={formData.state}
+                        onChange={(e) => setFormData({...formData, state: e.target.value})}
+                        className="mt-1 bg-transparent border-white/10"
+                        required
+                    />
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label className="text-muted-foreground/50 text-xs uppercase">Pincode</Label>
+                    <Input 
+                        value={formData.pincode}
+                        onChange={(e) => setFormData({...formData, pincode: e.target.value})}
+                        className="mt-1 bg-transparent border-white/10"
+                        required
+                    />
+                </div>
+                <div>
+                    <Label className="text-muted-foreground/50 text-xs uppercase">Phone</Label>
+                    <Input 
+                        value={formData.phone}
+                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        className="mt-1 bg-transparent border-white/10"
+                        required
+                    />
+                </div>
+            </div>
+            <div className="flex gap-2 pt-4">
+                <Button type="submit" className="bg-gold-gradient text-white">
+                    <Check className="w-4 h-4 mr-2" />
+                    Save Address
+                </Button>
+                <Button type="button" variant="outline" onClick={onCancel}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                </Button>
+            </div>
+        </form>
     );
 }
