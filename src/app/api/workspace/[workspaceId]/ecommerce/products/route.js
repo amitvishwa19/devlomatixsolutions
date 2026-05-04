@@ -14,13 +14,20 @@ export async function GET(req, { params }) {
 
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get("limit") || "100");
+        const storeId = searchParams.get("storeId");
+
+        // Build filter based on userId and optionally storeId
+        const where = { userId: workspaceId };
+        if (storeId) {
+            where.storeId = storeId;
+        }
 
         // Use workspaceId directly for products
         const products = await db.eCommerceProduct.findMany({
-            where: { userId: workspaceId },
+            where,
             include: {
                 store: {
-                    select: { name: true, platform: true }
+                    select: { id: true, name: true, platform: true }
                 }
             },
             orderBy: { createdAt: 'desc' },
@@ -47,7 +54,18 @@ export async function POST(req, { params }) {
         }
 
         const body = await req.json();
-        const { title, description, sku, price, discount, quantity, status, category, imageUrl } = body;
+        const { title, description, sku, price, discount, quantity, status, category, imageUrl, storeId } = body;
+
+        // If storeId is provided, verify it belongs to this user
+        let validStoreId = storeId;
+        if (storeId) {
+            const store = await db.eCommerceStore.findFirst({
+                where: { id: storeId, userId: session.user.userId }
+            });
+            if (!store) {
+                return NextResponse.json({ message: "Invalid store ID" }, { status: 400 });
+            }
+        }
 
         const product = await db.eCommerceProduct.create({
             data: {
@@ -60,7 +78,7 @@ export async function POST(req, { params }) {
                 status: status || "active",
                 imageUrl,
                 userId: session.user.userId,
-                // Optional: Store category in metadata or another field if available
+                storeId: validStoreId,
                 metadata: { category }
             }
         });

@@ -33,15 +33,25 @@ function loadGoogleIdentityScript(onReady) {
   document.head.appendChild(script);
 }
 
-export default function GoogleOneTapLogin({ clientId }) {
+export default function GoogleOneTapLogin({ clientId, autoPrompt = true }) {
   const router = useRouter();
   const { status } = useSession();
   const signingInRef = useRef(false);
   const [scriptReady, setScriptReady] = useState(false);
+  const [hasPrompted, setHasPrompted] = useState(false);
 
   useEffect(() => {
     loadGoogleIdentityScript(() => setScriptReady(true));
   }, []);
+
+  useEffect(() => {
+    if (autoPrompt && scriptReady && !hasPrompted && status === 'unauthenticated') {
+      setHasPrompted(true);
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('crystal-aura:google-one-tap'));
+      }, 100);
+    }
+  }, [autoPrompt, scriptReady, hasPrompted, status]);
 
   const promptOneTap = useCallback((event) => {
     if (!clientId || status !== 'unauthenticated' || !scriptReady || !window.google?.accounts?.id) return;

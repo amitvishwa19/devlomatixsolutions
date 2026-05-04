@@ -1,329 +1,265 @@
-'use client';
-
-import React, { useState, useEffect } from "react";
-import { Gem, ShoppingBag, Menu, X, Heart, History, User, LogOut, ChevronDown, ShoppingCart } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+"use client"
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
-import { useCart, useWishlist } from "../_context/CrystalAuraProviders";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Heart, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
+import { useCart } from "../_contexts/CartContext";
+import { useWishlist } from "../_contexts/WishlistContext";
+import { motion, AnimatePresence } from "framer-motion";
+import ThemeToggle from "./ThemeToggle";
+import CurrencySwitcher from "./CurrencySwitcher";
 
-const navLinks = [
-    { label: "Home", path: "/" },
-    { label: "Shop", path: "/shop" },
-    { label: "Crystals", path: "/crystals" },
-    { label: "Vastu", path: "/vastu" },
-    { label: "Blog", path: "/blog" },
-    { label: "FAQ", path: "/faq" },
-    { label: "About", path: "/about" },
-    { label: "Contact", path: "/contact" },
+const navItems = [
+  { type: "link", name: "Home", path: "/" },
+  { type: "link", name: "Shop", path: "/shop" },
+  {
+    type: "group",
+    name: "Discover",
+    children: [
+      { name: "Crystals", path: "/crystals", desc: "Browse our curated catalog" },
+      { name: "Glossary A–Z", path: "/glossary", desc: "Encyclopedia of crystals" },
+      { name: "Birthstones", path: "/birthstones", desc: "Find your birth crystal" },
+      { name: "Moon Calendar", path: "/moon-calendar", desc: "Phases & rituals" },
+      { name: "Vastu", path: "/vastu", desc: "Crystals for your space" },
+      { name: "Crystal Care", path: "/crystal-care", desc: "Cleansing & charging" },
+    ],
+  },
+  {
+    type: "group",
+    name: "Resources",
+    children: [
+      { name: "Blog", path: "/blog", desc: "Articles & guides" },
+      { name: "FAQ", path: "/faq", desc: "Common questions" },
+    ],
+  },
+  {
+    type: "group",
+    name: "About",
+    children: [
+      { name: "Our Story", path: "/about", desc: "About CrystalAura" },
+      { name: "Contact", path: "/contact", desc: "Get in touch" },
+    ],
+  },
 ];
 
-const openGoogleOneTapLogin = () => {
-    window.dispatchEvent(new Event("crystal-aura:google-one-tap"));
-};
+const isGroupActive = (group, pathname) =>
+  group.children?.some((c) => c.path === pathname);
 
 const Navbar = () => {
-    const pathname = usePathname();
-    const { data: session, status } = useSession();
-    const [mobileOpen, setMobileOpen] = useState(false);
-    const { totalItems, setIsOpen } = useCart();
-    const { items: wishlistItems } = useWishlist();
-    const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState(null); // desktop hover/click
+  const [openMobileGroup, setOpenMobileGroup] = useState(null);
+  const { totalItems, setIsCartOpen } = useCart();
+  const { wishlistIds } = useWishlist();
+  const pathname = usePathname();
 
-    useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="font-serif text-xl font-bold text-foreground tracking-wide">
+              Crystal<span className="text-gold">Aura</span>
+            </span>
+          </Link>
 
-    const user = session?.user;
-    const userName = user?.displayName || user?.name || "Account";
-    const userEmail = user?.email || "";
-    const userAvatar = user?.avatar || user?.image;
-    const userInitial = (userName || userEmail || "U").charAt(0).toUpperCase();
-    const isLoggedIn = status === "authenticated";
+          <div className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              if (item.type === "link") {
+                const active = pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      active
+                        ? "text-foreground border border-border"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              }
 
-    return (
-        <motion.nav
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
-                ? "glass border-b border-white/10 shadow-lg"
-                : "bg-transparent"
-                }`}
-        >
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="relative">
-                        <Gem className="w-6 h-6 text-primary transition-transform duration-300 group-hover:rotate-12" />
-                        <div className="absolute inset-0 blur-lg bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                    <span className="font-serif text-2xl shimmer-text font-semibold">Crystal Aura</span>
-                </Link>
-
-                <ul className="hidden lg:flex items-center gap-1 text-sm font-sans tracking-wide">
-                    {navLinks.map((link) => (
-                        <li key={link.path}>
-                            <Link
-                                href={link.path}
-                                className={`relative px-3 py-2 rounded-full transition-all duration-300 ${pathname === link.path
-                                    ? "text-primary bg-primary/10"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                                    }`}
-                            >
-                                {link.label}
-                                {pathname === link.path && (
-                                    <motion.div
-                                        layoutId="navbar-indicator"
-                                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                                        transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-                                    />
+              const isOpen = openGroup === item.name;
+              const active = isGroupActive(item, pathname);
+              return (
+                <div
+                  key={item.name}
+                  className="relative"
+                  onMouseEnter={() => setOpenGroup(item.name)}
+                  onMouseLeave={() => setOpenGroup(null)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenGroup(isOpen ? null : item.name)}
+                    className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      active || isOpen
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {item.name}
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute left-0 top-full pt-2 w-72"
+                      >
+                        <div className="rounded-lg border border-border bg-popover/95 backdrop-blur-md shadow-xl overflow-hidden">
+                          {item.children.map((c) => {
+                            const isActive = pathname === c.path;
+                            return (
+                              <Link
+                                key={c.path}
+                                href={c.path}
+                                onClick={() => setOpenGroup(null)}
+                                className={`block px-4 py-3 text-sm transition-colors ${
+                                  isActive
+                                    ? "bg-secondary text-gold"
+                                    : "text-foreground hover:bg-secondary"
+                                }`}
+                              >
+                                <div className="font-medium">{c.name}</div>
+                                {c.desc && (
+                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                    {c.desc}
+                                  </div>
                                 )}
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-
-                <div className="flex items-center gap-2">
-                    {/* Wishlist */}
-                    <Link
-                        href="/wishlist"
-                        className="relative p-2.5 rounded-full bg-white/5 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300"
-                    >
-                        <Heart className="w-4 h-4" />
-                        {wishlistItems?.length > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                                {wishlistItems.length}
-                            </span>
-                        )}
-                    </Link>
-
-                    
-
-                    
-                    {/* Cart */}
-                    <button
-                        onClick={() => setIsOpen(true)}
-                        className="relative p-2.5 rounded-full bg-white/5 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 group"
-                    >
-                        {/* <ShoppingBag className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" /> */}
-                        <ShoppingCart className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
-                        {totalItems > 0 && (
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gold-gradient text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg"
-                            >
-                                {totalItems}
-                            </motion.span>
-                        )}
-                    </button>
-
-                    {isLoggedIn && (
-                        <DropdownMenu modal={false}>
-                            <DropdownMenuTrigger asChild>
-                                <button
-                                    className="hidden sm:flex items-center gap-2 rounded-full bg-white/5 px-2 py-1.5 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
-                                    aria-label="Open account menu"
-                                >
-                                    <Avatar className="h-8 w-8 border border-white/10">
-                                        <AvatarImage src={userAvatar} alt={userName} />
-                                        <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
-                                            {userInitial}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                className="w-64 border-white/10 bg-[#121214] text-white shadow-2xl"
-                            >
-                                <DropdownMenuLabel className="flex items-center gap-3 p-3">
-                                    <Avatar className="h-10 w-10 border border-white/10">
-                                        <AvatarImage src={userAvatar} alt={userName} />
-                                        <AvatarFallback className="bg-primary/15 text-primary font-semibold">
-                                            {userInitial}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold">{userName}</p>
-                                        {userEmail && (
-                                            <p className="truncate text-xs font-normal text-white/55">{userEmail}</p>
-                                        )}
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-white/10" />
-                                <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10 focus:text-white">
-                                    <Link href="/account" className="flex items-center gap-2">
-                                        <User className="h-4 w-4" />
-                                        Account
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-white/10" />
-                                <DropdownMenuItem
-                                    onSelect={() => signOut({ callbackUrl: "/" })}
-                                    className="cursor-pointer text-red-300 focus:bg-red-500/10 focus:text-red-200"
-                                >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    Logout
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
                     )}
-
-                    {!isLoggedIn && status !== "loading" && (
-                        <DropdownMenu modal={false}>
-                            <DropdownMenuTrigger asChild>
-                                <button
-                                    className="hidden sm:flex items-center gap-2 rounded-full bg-white/5 px-2.5 py-2 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
-                                    aria-label="Open login menu"
-                                >
-                                    <User className="h-4 w-4" />
-                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                className="w-48 border-white/10 bg-[#121214] text-white shadow-2xl"
-                            >
-                                <DropdownMenuLabel className="px-3 py-2 text-xs font-medium text-white/55">
-                                    Account
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-white/10" />
-                                <DropdownMenuItem
-                                    onSelect={openGoogleOneTapLogin}
-                                    className="cursor-pointer focus:bg-white/10 focus:text-white"
-                                >
-                                    <User className="mr-2 h-4 w-4" />
-                                    Login
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-
-                    <button
-                        className="lg:hidden p-2.5 rounded-full bg-white/5 text-foreground hover:bg-primary/10 transition-all duration-300"
-                        onClick={() => setMobileOpen(!mobileOpen)}
-                    >
-                        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                    </button>
+                  </AnimatePresence>
                 </div>
-            </div>
+              );
+            })}
+          </div>
 
-            <AnimatePresence>
-                {mobileOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="lg:hidden glass border-b border-white/10 overflow-hidden"
+          <div className="flex items-center gap-3">
+            <CurrencySwitcher />
+            <ThemeToggle />
+            <Link href="/wishlist" aria-label="Wishlist" className="text-muted-foreground hover:text-foreground transition-colors relative">
+              <Heart className="w-5 h-5" />
+              {wishlistIds.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                  {wishlistIds.length}
+                </span>
+              )}
+            </Link>
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors relative"
+              aria-label="Open cart"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+            <Link href="/account" aria-label="Account" className="text-muted-foreground hover:text-foreground transition-colors">
+              <User className="w-5 h-5" />
+            </Link>
+            <button
+              className="md:hidden text-foreground"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-t border-border bg-background"
+          >
+            <div className="px-4 py-4 space-y-1">
+              {navItems.map((item) => {
+                if (item.type === "link") {
+                  const active = pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      href={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={`block px-3 py-2 text-sm rounded-md ${
+                        active
+                          ? "text-gold bg-secondary"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
                     >
-                        <ul className="flex flex-col gap-1 px-6 py-4 text-sm font-sans tracking-wide">
-                            {navLinks.map((link, i) => (
-                                <motion.li
-                                    key={link.path}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.05 }}
-                                >
-                                    <Link
-                                        href={link.path}
-                                        onClick={() => setMobileOpen(false)}
-                                        className={`block py-3 px-4 rounded-lg transition-all duration-300 ${pathname === link.path
-                                            ? "text-primary bg-primary/10"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                                            }`}
-                                    >
-                                        {link.label}
-                                    </Link>
-                                </motion.li>
-                            ))}
-                            {isLoggedIn && (
-                                <motion.li
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: navLinks.length * 0.05 }}
-                                >
-                                    <Link
-                                        href="/account"
-                                        onClick={() => setMobileOpen(false)}
-                                        className={`flex items-center gap-2 py-3 px-4 rounded-lg transition-all duration-300 ${pathname === "/account"
-                                            ? "text-primary bg-primary/10"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                                            }`}
-                                    >
-                                        <User className="w-4 h-4" />
-                                        Account
-                                    </Link>
-                                </motion.li>
-                            )}
-                            {isLoggedIn && (
-                                <motion.li
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: (navLinks.length + 1) * 0.05 }}
-                                    className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-10 w-10 border border-white/10">
-                                            <AvatarImage src={userAvatar} alt={userName} />
-                                            <AvatarFallback className="bg-primary/15 text-primary font-semibold">
-                                                {userInitial}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-                                            {userEmail && (
-                                                <p className="truncate text-xs text-muted-foreground">{userEmail}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => signOut({ callbackUrl: "/" })}
-                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm font-medium text-red-200 hover:bg-red-500/20 transition-colors"
-                                    >
-                                        <LogOut className="w-4 h-4" />
-                                        Logout
-                                    </button>
-                                </motion.li>
-                            )}
-                            {!isLoggedIn && status !== "loading" && (
-                                <motion.li
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: navLinks.length * 0.05 }}
-                                >
-                                    <button
-                                        onClick={() => {
-                                            setMobileOpen(false);
-                                            openGoogleOneTapLogin();
-                                        }}
-                                        className="flex w-full items-center gap-2 py-3 px-4 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-300"
-                                    >
-                                        <User className="w-4 h-4" />
-                                        Login
-                                    </button>
-                                </motion.li>
-                            )}
-                        </ul>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </motion.nav>
-    );
+                      {item.name}
+                    </Link>
+                  );
+                }
+                const isOpen = openMobileGroup === item.name;
+                return (
+                  <div key={item.name}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenMobileGroup(isOpen ? null : item.name)}
+                      className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md text-muted-foreground hover:text-foreground"
+                    >
+                      <span>{item.name}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden pl-3 border-l border-border ml-3"
+                        >
+                          {item.children.map((c) => {
+                            const isActive = pathname === c.path;
+                            return (
+                              <Link
+                                key={c.path}
+                                href={c.path}
+                                onClick={() => setMobileOpen(false)}
+                                className={`block px-3 py-2 text-sm rounded-md ${
+                                  isActive
+                                    ? "text-gold bg-secondary"
+                                    : "text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                {c.name}
+                              </Link>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
 };
 
 export default Navbar;

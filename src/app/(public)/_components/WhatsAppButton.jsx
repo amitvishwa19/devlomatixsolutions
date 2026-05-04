@@ -1,38 +1,29 @@
-'use client';
-
-import React from "react";
+"use client"
+import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import Link from "next/link";
 
-const WhatsAppButton = () => {
-  const phoneNumber = "919876543210"; // Replace with actual number
-  const message = encodeURIComponent("Hi! I'm interested in your crystal products. Can you help me?");
-  const url = `https://wa.me/${phoneNumber}?text=${message}`;
+const WHATSAPP_NUMBER = "919999999999";
+
+export default function WhatsAppButton() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
 
   return (
-    <motion.a
-      href={url}
+    <Link
+      href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20CrystalAura`}
       target="_blank"
       rel="noopener noreferrer"
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ delay: 1, type: "spring", stiffness: 200 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-shadow hover:shadow-xl group"
-      style={{ background: "#25D366" }}
+      className="fixed bottom-24 right-6 z-40 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110"
       aria-label="Chat on WhatsApp"
     >
-      <MessageCircle className="w-6 h-6 text-white" />
-      <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping opacity-75" />
-      <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full" />
-      <div className="absolute inset-x-0 -top-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-        <div className="bg-zinc-900 border border-white/10 text-white text-[10px] px-3 py-1.5 rounded-full whitespace-nowrap shadow-xl">
-           Chat with Us
-        </div>
-      </div>
-    </motion.a>
+      <MessageCircle className="w-6 h-6" />
+    </Link>
   );
-};
-
-export default WhatsAppButton;
+}

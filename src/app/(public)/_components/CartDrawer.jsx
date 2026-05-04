@@ -1,130 +1,172 @@
-'use client';
-
-import React from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { useCart } from "../_context/CrystalAuraProviders";
-import { useRouter } from "next/navigation";
-import { Minus, Plus, Trash2, ShoppingBag, Sparkles } from "lucide-react";
+"use client"
+import { useState } from "react";
+import Link from "next/link";
+import { X, Plus, Minus, Trash2, Tag, Check } from "lucide-react";
+import { useCart } from "../_contexts/CartContext";
+import { useCurrency } from "../_contexts/CurrencyContext";
 import { motion, AnimatePresence } from "framer-motion";
 
+const PROMO_CODES = {
+  AURA10: { type: "percent", value: 10, label: "10% off" },
+  WELCOME100: { type: "flat", value: 100, label: "₹100 off" },
+  CRYSTAL20: { type: "percent", value: 20, label: "20% off" },
+};
+
 const CartDrawer = () => {
-  const { items, isOpen, setIsOpen, updateQuantity, removeItem, totalPrice, totalItems } = useCart();
-  const router = useRouter();
+  const { items, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
+  const { format } = useCurrency();
+  const [promoInput, setPromoInput] = useState("");
+  const [applied, setApplied] = useState(null);
+  const [error, setError] = useState("");
+
+  const apply = () => {
+    const code = promoInput.trim().toUpperCase();
+    setError("");
+    if (!code) return setError("Enter a code");
+    const promo = PROMO_CODES[code];
+    if (!promo) { setApplied(null); return setError("Invalid code"); }
+    setApplied({ code, ...promo });
+  };
+
+  const discount = applied
+    ? applied.type === "percent"
+      ? Math.round((totalPrice * applied.value) / 100)
+      : Math.min(applied.value, totalPrice)
+    : 0;
+  const subtotalAfter = Math.max(0, totalPrice - discount);
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen} model={false}>
-      <SheetContent className="crystal-aura bg-background border-white/10 w-full sm:max-w-md flex flex-col p-0 overflow-hidden">
-        <SheetHeader className="p-6 border-b border-white/5 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          <SheetTitle className="font-serif text-2xl text-foreground flex items-center gap-3 relative z-10">
-            <div className="relative">
-              <ShoppingBag className="w-5 h-5 text-primary" />
-              <div className="absolute inset-0 blur-sm bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+    <AnimatePresence>
+      {isCartOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-50"
+            onClick={() => setIsCartOpen(false)}
+          />
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border z-50 flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="font-serif text-xl">Your Cart ({totalItems})</h2>
+              <button onClick={() => setIsCartOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <span className="shimmer-text font-semibold">Your Cart</span>
-            <span className="text-muted-foreground text-base font-light">({totalItems})</span>
-          </SheetTitle>
-        </SheetHeader>
 
-        {items.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-center p-6 relative">
-            <div className="absolute inset-0 noise-overlay" />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative z-10"
-            >
-              <div className="relative inline-block mb-6">
-                <ShoppingBag className="w-16 h-16 text-muted-foreground/20" />
-                <Sparkles className="absolute -top-2 -right-2 w-5 h-5 text-primary/40" />
-              </div>
-              <p className="text-foreground font-serif text-xl mb-2">Your cart is empty</p>
-              <p className="text-muted-foreground text-sm font-light">Add some sacred treasures to begin your journey</p>
-            </motion.div>
-          </div>
-        ) : (
-          <>
-            <div className="flex-1 overflow-y-auto space-y-4 p-6 relative">
-              <div className="absolute inset-0 noise-overlay pointer-events-none" />
-              <AnimatePresence mode="popLayout">
-                {items.map((item, index) => (
-                  <motion.div
-                    key={item.product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: 100 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex gap-4 glass-card rounded-xl p-3 relative group"
-                  >
-                    <div className="w-20 h-20 relative rounded-lg overflow-hidden bg-muted/30">
-                      <img
-                        src={item.product.image}
-                        alt={item.product.title}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent" />
-                    </div>
-                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                      <div>
-                        <h4 className="font-serif text-foreground text-sm truncate group-hover:text-primary transition-colors duration-300">
-                          {item.product.title}
-                        </h4>
-                        <p className="text-primary text-lg font-serif font-semibold mt-1">₹{item.product.priceNum.toLocaleString('en-IN')}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 bg-white/[0.03] rounded-lg p-1 border border-white/5">
-                          <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                            className="w-7 h-7 rounded-md border border-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/10 transition-all duration-300"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-foreground text-sm w-6 text-center font-medium">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            className="w-7 h-7 rounded-md border border-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/10 transition-all duration-300"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {items.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">
+                  <p className="font-serif text-lg mb-2">Your cart is empty</p>
+                  <p className="text-sm">Discover our sacred collection</p>
+                </div>
+              ) : (
+                items.map((item) => (
+                  <div key={item.product.id} className="flex gap-4 glass-card rounded-lg p-3">
+                    <img
+                      src={item.product.image}
+                      alt={item.product.name}
+                      className="w-20 h-20 object-cover rounded-md"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium truncate">{item.product.name}</h4>
+                      <p className="text-gold text-sm mt-1">{format(item.product.price)}</p>
+                      <div className="flex items-center gap-2 mt-2">
                         <button
-                          onClick={() => removeItem(item.product.id)}
-                          className="ml-auto text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-all duration-300"
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          className="w-6 h-6 flex items-center justify-center border border-border rounded text-xs hover:bg-secondary"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-sm w-6 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          className="w-6 h-6 flex items-center justify-center border border-border rounded text-xs hover:bg-secondary"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => removeFromCart(item.product.id)}
+                          className="ml-auto text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                  </div>
+                ))
+              )}
             </div>
 
-            <div className="p-6 border-t border-white/5 bg-gradient-to-b from-white/[0.02] to-background relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
-              <div className="space-y-4 relative z-10">
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-muted-foreground font-sans text-xs">Subtotal</span>
-                  <span className="text-foreground font-serif text-2xl font-semibold shimmer-text">₹{totalPrice.toLocaleString("en-IN")}</span>
+            {items.length > 0 && (
+              <div className="p-6 border-t border-border space-y-3">
+                {/* Coupon */}
+                <div>
+                  {applied ? (
+                    <div className="flex items-center justify-between bg-secondary border border-border rounded-lg px-3 py-2 text-sm">
+                      <span className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className="font-medium">{applied.code}</span>
+                        <span className="text-muted-foreground text-xs">({applied.label})</span>
+                      </span>
+                      <button onClick={() => { setApplied(null); setPromoInput(""); }} className="text-xs text-muted-foreground hover:text-destructive">Remove</button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="text"
+                            value={promoInput}
+                            onChange={(e) => { setPromoInput(e.target.value); setError(""); }}
+                            placeholder="Coupon code"
+                            className="w-full bg-secondary border border-border rounded-lg pl-9 pr-3 py-2 text-sm uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                        </div>
+                        <button onClick={apply} className="px-4 py-2 rounded-lg text-sm font-medium border border-gold text-gold hover:bg-gold/10 transition-colors">Apply</button>
+                      </div>
+                      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+                    </>
+                  )}
                 </div>
-                <p className="text-muted-foreground/40 text-xs font-light flex items-center gap-2">
-                  <Sparkles className="w-3 h-3 text-primary/50" />
-                  Free shipping on orders above ₹999
-                </p>
-                <Button
-                  onClick={() => { setIsOpen(false); router.push("/checkout"); }}
-                  className="w-full bg-gold-gradient text-white font-medium text-sm py-6 rounded-xl hover:bg-gold-gradient-hover transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 group"
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{format(totalPrice)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Discount</span>
+                    <span className="text-green-400">−{format(discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg pt-2 border-t border-border">
+                  <span>Total</span>
+                  <span className="text-gold font-semibold">{format(subtotalAfter)}</span>
+                </div>
+                {totalPrice >= 999 && (
+                  <p className="text-xs text-green-400">✓ Free shipping on this order!</p>
+                )}
+                <Link
+                  href="/checkout"
+                  onClick={() => setIsCartOpen(false)}
+                  className="block w-full gold-gradient text-primary-foreground text-center py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
                 >
-                  <span className="relative z-10">Proceed to Checkout</span>
-                  <div className="absolute inset-0 rounded-xl bg-white/0 group-hover:bg-white/10 transition-colors duration-300" />
-                </Button>
+                  Proceed to Checkout
+                </Link>
               </div>
-            </div>
-          </>
-        )}
-      </SheetContent>
-    </Sheet>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 

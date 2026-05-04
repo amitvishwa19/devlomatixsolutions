@@ -1,5 +1,4 @@
 import "@/css/globals.css";
-import "@/css/custom.css";
 import { Inter, Unbounded, Geist, Geist_Mono, Outfit } from "next/font/google";
 import SessionWrapper from "@/providers/SessionWrapper";
 import { AppProvider } from "@/providers/AppProvider";
@@ -53,36 +52,27 @@ export default async function RootLayout({ children }) {
 
 
     return (
-        <html lang="en">
-            <body className={`${outfit.className} `} suppressHydrationWarning={true}>
+        <html lang="en" className="light">
+            <body className={`${outfit.className}`} suppressHydrationWarning={true}>
                 <SessionWrapper>
-                    {/* <SocketProvider> */}
                     <QueryProvider>
                         <AppProvider>
-                            <AppThemeProvider>
-                                <ThemeProvider>
-                                    <AuthProvider>
+                            <AuthProvider>
 
+                                <Providers>
+                                    <AnalyticsProvider>
 
-                                        <Providers>
-                                            <AnalyticsProvider>
-                                                {/* <OrgModalProvider /> */}
+                                        {children}
+                                        <CookieConsent />
 
-                                                {children}
-                                                <CookieConsent />
+                                    </AnalyticsProvider>
+                                </Providers>
 
-                                            </AnalyticsProvider>
-                                        </Providers>
-
-
-                                    </AuthProvider>
-                                </ThemeProvider>
-                            </AppThemeProvider>
+                            </AuthProvider>
                         </AppProvider>
                     </QueryProvider>
-                    {/* </SocketProvider> */}
                 </SessionWrapper>
-                <Toaster position="top-right" className="dark:bg-sky-600" />
+                <Toaster position="top-right" />
             </body>
         </html>
     );

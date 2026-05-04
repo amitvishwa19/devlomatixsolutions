@@ -1,149 +1,252 @@
-'use client';
-
-import React, { useState } from "react";
+"use client"
+import { useState } from "react";
+import { Mail, Phone, MapPin, Clock, Send, Instagram, Facebook, Twitter, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import SEO from "../_components/SEO";
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100, "Name too long"),
-  email: z.string().trim().email("Invalid email address").max(255),
-  subject: z.string().trim().min(1, "Subject is required").max(200, "Subject too long"),
-  message: z.string().trim().min(1, "Message is required").max(2000, "Message too long"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name too long"),
+  email: z.string().trim().email("Please enter a valid email").max(255),
+  subject: z.string().trim().min(3, "Subject too short").max(200),
+  message: z.string().trim().min(10, "Message must be at least 10 characters").max(2000, "Message too long"),
 });
 
-const contactInfo = [
-  { icon: Mail, label: "Email", value: "hello@crystalaura.com" },
-  { icon: Phone, label: "Phone", value: "+91 98765 43210" },
-  { icon: MapPin, label: "Address", value: "Mumbai, Maharashtra, India" },
-  { icon: Clock, label: "Hours", value: "Mon – Sat, 10am – 7pm IST" },
+const TOPICS = ["General Inquiry", "Order & Shipping", "Crystal Guidance", "Vastu Consultation", "Wholesale", "Partnership"];
+
+const FAQS = [
+  { q: "How long does shipping take?", a: "Pan-India delivery in 3–5 business days. International shipping in 7–14 days." },
+  { q: "Are your crystals authentic?", a: "Yes — every crystal is ethically sourced and authenticity-verified by our gemologists." },
+  { q: "Do you offer crystal consultations?", a: "Absolutely. Book a 1-on-1 session via the form below or WhatsApp us." },
+  { q: "What is your return policy?", a: "30-day hassle-free returns on unopened items. Read our full policy in FAQ." },
 ];
 
-export default function CrystalAuraContactPage() {
-  const { toast } = useToast();
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+const ContactPage = () => {
+  const [form, setForm] = useState({ name: "", email: "", subject: "", topic: TOPICS[0], message: "" });
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const result = contactSchema.safeParse(form);
     if (!result.success) {
-      const fieldErrors = {};
-      result.error.errors.forEach((err) => {
-        if (err.path[0]) fieldErrors[err.path[0]] = err.message;
-      });
-      setErrors(fieldErrors);
+      const flat = {};
+      result.error.issues.forEach((i) => { flat[i.path[0]] = i.message; });
+      setErrors(flat);
       return;
     }
     setErrors({});
-    toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
-    setForm({ name: "", email: "", subject: "", message: "" });
+    setSubmitting(true);
+    await new Promise((r) => setTimeout(r, 700));
+    setSubmitting(false);
+    setSubmitted(true);
+    setForm({ name: "", email: "", subject: "", topic: TOPICS[0], message: "" });
   };
 
-  return (
-    <div className="min-h-screen bg-transparent pt-12 pb-24 px-6 overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-16"
-        >
-          <p className="text-primary text-xs font-medium mb-4">
-            ✦ Get In Touch ✦
-          </p>
-          <h1 className="font-serif text-5xl md:text-7xl text-foreground mb-6">
-            <span className="text-gold-gradient font-semibold">Contact</span> Us
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
-            Have questions about crystals, Vastu placement, or your order? Reach out and our spiritual guides will assist you.
-          </p>
-          <div className="section-divider w-48 mx-auto mt-8" />
-        </motion.div>
+  const inputClass = (field) =>
+    `w-full bg-secondary border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+      errors[field] ? "border-destructive" : "border-border"
+    }`;
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
-          {/* Contact Info */}
+  const contactCards = [
+    { icon: Mail, label: "EMAIL", value: "hello@crystalaura.com", href: "mailto:hello@crystalaura.com" },
+    { icon: Phone, label: "PHONE", value: "+91 98765 43210", href: "tel:+919876543210" },
+    { icon: MessageCircle, label: "WHATSAPP", value: "Chat with us instantly", href: "https://wa.me/919876543210" },
+    { icon: MapPin, label: "ADDRESS", value: "Bandra West, Mumbai 400050, India" },
+    { icon: Clock, label: "HOURS", value: "Mon – Sat · 10AM – 7PM IST" },
+  ];
+
+  return (
+    <div className="pt-20">
+      <SEO title="Contact Us" description="Get in touch with CrystalAura for crystal guidance, Vastu consultations, orders or partnership inquiries." path="/contact" />
+      <section className="py-16 text-center">
+        <p className="text-gold text-sm mb-2">✦ Get In Touch ✦</p>
+        <h1 className="font-serif text-5xl md:text-7xl mb-4">
+          <span className="text-gold">Contact</span> Us
+        </h1>
+        <p className="text-muted-foreground max-w-xl mx-auto px-4">
+          Have questions about crystals, Vastu placement, or your order? Reach out and our spiritual guides will assist you.
+        </p>
+        <div className="w-20 h-1 bg-gold mx-auto mt-6 rounded-full" />
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-2 space-y-3">
+            {contactCards.map((item, i) => {
+              const Wrapper = item.href ? "a" : "div";
+              return (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                >
+                  <Wrapper
+                    {...(item.href ? { href: item.href, target: item.href.startsWith("http") ? "_blank" : undefined, rel: "noopener noreferrer" } : {})}
+                    className="glass-card rounded-xl p-5 flex items-center gap-4 hover:border-primary/40 transition-colors block"
+                  >
+                    <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                      <item.icon className="w-5 h-5 text-gold" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground tracking-wider">{item.label}</p>
+                      <p className="font-semibold text-sm tracking-wide truncate">{item.value}</p>
+                    </div>
+                  </Wrapper>
+                </motion.div>
+              );
+            })}
+
+            <div className="glass-card rounded-xl p-5">
+              <p className="text-xs text-muted-foreground tracking-wider mb-3">FOLLOW US</p>
+              <div className="flex gap-2">
+                {[
+                  { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+                  { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
+                  { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+                ].map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+                  >
+                    <s.icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:col-span-2 space-y-4"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="glass-card rounded-xl p-6 md:p-8 lg:col-span-3"
           >
-            {contactInfo.map((item, i) => (
-              <div key={item.label} className="flex items-center gap-6 glass-card border-white/5 bg-white/[0.02] rounded-3xl p-6 hover:border-primary/20 transition-all group">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <item.icon className="w-6 h-6 text-primary" />
+            <h2 className="font-serif text-2xl mb-6">Send us a message</h2>
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="text-xs text-muted-foreground tracking-wider mb-1 block">NAME *</label>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    maxLength={100}
+                    className={inputClass("name")}
+                  />
+                  {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
                 </div>
                 <div>
-                  <p className="text-muted-foreground/40 text-[10px] uppercase font-black tracking-widest mb-1">{item.label}</p>
-                  <p className="text-foreground text-sm font-bold uppercase tracking-widest">{item.value}</p>
+                  <label className="text-xs text-muted-foreground tracking-wider mb-1 block">EMAIL *</label>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    maxLength={255}
+                    className={inputClass("email")}
+                  />
+                  {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
                 </div>
               </div>
-            ))}
-          </motion.div>
 
-          {/* Form */}
-          <motion.form
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            onSubmit={handleSubmit}
-            className="lg:col-span-3 glass-card border-white/5 bg-white/[0.02] rounded-[2.5rem] p-10 md:p-14 space-y-8"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Name</label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Seer's Name"
-                  className="bg-white/[0.03] border-white/5 py-7 rounded-2xl placeholder:text-muted-foreground/20"
-                />
-                {errors.name && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.name}</p>}
+              <div>
+                <label className="text-xs text-muted-foreground tracking-wider mb-1 block">TOPIC</label>
+                <select
+                  value={form.topic}
+                  onChange={(e) => setForm({ ...form, topic: e.target.value })}
+                  className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Email</label>
-                <Input
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="spirit@guide.com"
-                  className="bg-white/[0.03] border-white/5 py-7 rounded-2xl placeholder:text-muted-foreground/20"
+
+              <div>
+                <label className="text-xs text-muted-foreground tracking-wider mb-1 block">SUBJECT *</label>
+                <input
+                  type="text"
+                  placeholder="Brief subject line"
+                  value={form.subject}
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                  maxLength={200}
+                  className={inputClass("subject")}
                 />
-                {errors.email && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.email}</p>}
+                {errors.subject && <p className="text-xs text-destructive mt-1">{errors.subject}</p>}
               </div>
-            </div>
-            <div className="space-y-3">
-              <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Subject</label>
-              <Input
-                value={form.subject}
-                onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                placeholder="Topic of Inquiry"
-                className="bg-white/[0.03] border-white/5 py-7 rounded-2xl placeholder:text-muted-foreground/20"
-              />
-              {errors.subject && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.subject}</p>}
-            </div>
-            <div className="space-y-3">
-              <label className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest px-1">Message</label>
-              <Textarea
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
-                placeholder="Share your thoughts..."
-                rows={6}
-                className="bg-white/[0.03] border-white/5 rounded-2xl resize-none placeholder:text-muted-foreground/20 p-6"
-              />
-              {errors.message && <p className="text-destructive text-[10px] uppercase tracking-widest font-bold mt-2 px-1">{errors.message}</p>}
-            </div>
-            <Button type="submit" className="w-full sm:w-auto bg-gold-gradient text-white font-sans tracking-[0.25em] font-black uppercase text-[10px] px-12 py-8 rounded-2xl hover:opacity-90 shadow-xl shadow-primary/20 transition-all">
-              <Send className="w-5 h-5 mr-3" />
-              Send Message
-            </Button>
-          </motion.form>
+
+              <div>
+                <label className="text-xs text-muted-foreground tracking-wider mb-1 block">
+                  MESSAGE * <span className="text-muted-foreground/60">({form.message.length}/2000)</span>
+                </label>
+                <textarea
+                  placeholder="Share your thoughts..."
+                  rows={6}
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  maxLength={2000}
+                  className={`${inputClass("message")} resize-none`}
+                />
+                {errors.message && <p className="text-xs text-destructive mt-1">{errors.message}</p>}
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="gold-gradient text-primary-foreground px-8 py-3 rounded-lg font-medium flex items-center gap-2 hover:opacity-90 transition-opacity tracking-wider text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+                {submitting ? "SENDING..." : "SEND MESSAGE"}
+              </button>
+            </form>
+          </motion.div>
         </div>
-      </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 pb-20">
+        <div className="text-center mb-10">
+          <p className="text-gold text-sm mb-2">✦ Quick Answers ✦</p>
+          <h2 className="font-serif text-3xl md:text-4xl">Frequently Asked</h2>
+        </div>
+        <div className="max-w-3xl mx-auto space-y-3">
+          {FAQS.map((faq, i) => (
+            <div key={i} className="glass-card rounded-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                className="w-full px-6 py-4 flex items-center justify-between text-left"
+              >
+                <span className="font-medium text-sm">{faq.q}</span>
+                <span className={`text-gold text-xl transition-transform ${openFaq === i ? "rotate-45" : ""}`}>+</span>
+              </button>
+              {openFaq === i && (
+                <div className="px-6 pb-4 text-sm text-muted-foreground">{faq.a}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 pb-20">
+        <div className="glass-card rounded-xl overflow-hidden">
+          <iframe
+            title="CrystalAura Mumbai location"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=72.81%2C19.04%2C72.86%2C19.08&layer=mapnik&marker=19.0596%2C72.8295"
+            className="w-full h-[400px] border-0"
+            loading="lazy"
+          />
+        </div>
+      </section>
     </div>
   );
-}
+};
+
+export default ContactPage;

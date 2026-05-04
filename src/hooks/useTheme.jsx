@@ -7,9 +7,11 @@ const AppThemeContext = createContext(undefined);
 export function AppThemeProvider({ children }) {
     const [theme, setTheme] = useState(() => {
         if (typeof window !== "undefined") {
-            return (localStorage.getItem("theme")) || "system";
+            const stored = localStorage.getItem("theme");
+            if (stored && stored !== "system") return stored;
+            return "light";
         }
-        return "system";
+        return "light";
     });
 
     const [resolvedTheme, setResolvedTheme] = useState("light");

@@ -1,40 +1,28 @@
-import React from 'react';
-import './_styles/crystals.css';
-import { CrystalAuraProviders } from './_context/CrystalAuraProviders';
-import Navbar from './_components/Navbar';
-import FooterSection from './_components/FooterSection';
-import CartDrawer from './_components/CartDrawer';
-import WhatsAppButton from './_components/WhatsAppButton';
-import GoogleOneTapLogin from './_components/GoogleOneTapLogin';
-
-export const metadata = {
-  title: 'Crystal Aura | Sacred Gemstones & Healing Crystals',
-  description: 'Discover our curated collection of authentic healing crystals, gemstones, and spiritual tools. Expertly sourced for your spiritual journey.',
-};
+import { Providers } from "./_components/Providers";
+import Navbar from "./_components/Navbar";
+import Footer from "./_components/Footer";
+import CartDrawer from "./_components/CartDrawer";
+import MobileBottomNav from "./_components/MobileBottomNav";
+import CompareBar from "./_components/CompareBar";
+import WhatsAppButton from "./_components/WhatsAppButton";
+import NewsletterPopup from "./_components/NewsletterPopup";
+import GoogleOneTapLogin from "./_components/GoogleOneTapLogin";
+import "./_styles/crystals.css";
 
 export default function CrystalAuraLayout({ children }) {
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_ID;
-
   return (
-    <div className="crystal-aura min-h-screen relative font-sans">
-      <CrystalAuraProviders>
-        <div className="crystal-aura-root flex flex-col min-h-screen">
-          <GoogleOneTapLogin clientId={googleClientId} />
-          {/* Background effects */}
-          <div className="fixed inset-0 bg-[#0a0a0a] pointer-events-none -z-10" />
-          <div className="fixed inset-0 noise-overlay pointer-events-none opacity-20 -z-10" />
-
-          <Navbar />
-          <CartDrawer />
-          <WhatsAppButton />
-
-          <main className="grow pt-20">
-            {children}
-          </main>
-
-          <FooterSection />
-        </div>
-      </CrystalAuraProviders>
-    </div>
+    <Providers>
+      <GoogleOneTapLogin clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID} autoPrompt={false} />
+      <div className="min-h-screen bg-background text-foreground">
+        <Navbar />
+        <main>{children}</main>
+        <Footer />
+        <CartDrawer />
+        <MobileBottomNav />
+        <CompareBar />
+        <WhatsAppButton />
+        <NewsletterPopup />
+      </div>
+    </Providers>
   );
 }

@@ -1,6 +1,13 @@
-import NextAuth from "next-auth"
-import { authOptions } from "./options"
+import NextAuthImport from "next-auth"
 
-const handler = NextAuth(authOptions)
+const NextAuth = NextAuthImport.default || NextAuthImport
 
-export { handler as GET, handler as POST }
+export async function GET(request) {
+  const { authOptions } = await import("./options")
+  return NextAuth(authOptions)(request)
+}
+
+export async function POST(request) {
+  const { authOptions } = await import("./options")
+  return NextAuth(authOptions)(request)
+}
