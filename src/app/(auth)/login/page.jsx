@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,7 +15,8 @@ export default function Login() {
     const [data, setData] = useState({ email: '', password: '' })
     const [msg, setMsg] = useState('')
     const router = useRouter()
-
+    const searchParams = useSearchParams()
+    const callbackUrl = searchParams.get('callbackUrl') || '/account'
 
     const login = async (e) => {
         e?.preventDefault();
@@ -54,13 +55,13 @@ export default function Login() {
 
         // Success
         toast.success("Login successful! Redirecting...", { id: "login" });
-        router.replace("/");
+        router.replace(callbackUrl);
     };
 
     const handleGoogleLogin = () => {
         const deviceToken = 'wola token'
         document.cookie = `deviceToken=${deviceToken}; path=/`;
-        signIn('google', { callbackUrl: '/' })
+        signIn('google', { callbackUrl })
     }
 
     const handleGithubLogin = () => {
@@ -68,6 +69,7 @@ export default function Login() {
     }
 
     return (
+        <>
         <div className="w-full">
             <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
                 <div className="flex flex-col space-y-2 text-center mb-5">
@@ -178,5 +180,6 @@ export default function Login() {
                 </div>
             </div>
         </div>
+        </>
     )
 }

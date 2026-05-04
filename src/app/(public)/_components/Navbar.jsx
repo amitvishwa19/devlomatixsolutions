@@ -1,8 +1,9 @@
 "use client"
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
+import { Heart, ShoppingCart, User, Menu, X, ChevronDown, LogOut, Settings } from "lucide-react";
+import { useSession, signOut } from "next-auth/react"
 import { useCart } from "../_contexts/CartContext";
 import { useWishlist } from "../_contexts/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,9 +50,22 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState(null); // desktop hover/click
   const [openMobileGroup, setOpenMobileGroup] = useState(null);
+  const [userOpen, setUserOpen] = useState(false);
+  const userRef = useRef(null);
+  const { data: session } = useSession({ required: false })
   const { totalItems, setIsCartOpen } = useCart();
   const { wishlistIds } = useWishlist();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userRef.current && !userRef.current.contains(e.target)) {
+        setUserOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
@@ -169,9 +183,73 @@ const Navbar = () => {
                 </span>
               )}
             </button>
-            <Link href="/account" aria-label="Account" className="text-muted-foreground hover:text-foreground transition-colors">
-              <User className="w-5 h-5" />
-            </Link>
+            {/* User Dropdown */}
+            <div className="relative" ref={userRef}>
+              <button
+                onClick={() => setUserOpen(!userOpen)}
+                className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                aria-label="User menu"
+              >
+                {session?.user?.image ? (
+                  <img 
+                    src={session.user.image} 
+                    alt={session.user.name || "User"} 
+                    className="w-6 h-6 rounded-full"
+                  />
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
+              </button>
+              <AnimatePresence>
+                {userOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="absolute right-0 top-full pt-2 w-56"
+                  >
+                    <div className="rounded-lg border border-border bg-popover/95 backdrop-blur-md shadow-xl overflow-hidden">
+                      {session?.user ? (
+                        <>
+                          <div className="px-4 py-3 border-b border-border">
+                            <p className="font-medium text-sm text-foreground">{session.user.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
+                          </div>
+                          <div className="py-1">
+                            <Link
+                              href="/account"
+                              onClick={() => setUserOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                            >
+                              <Settings className="w-4 h-4" />
+                              My Account
+                            </Link>
+                            <button
+                              onClick={() => { setUserOpen(false); signOut({ callbackUrl: "/" }); }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                            >
+                              <LogOut className="w-4 h-4" />
+                              Sign Out
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="py-1">
+                          <Link
+                            href="/login"
+                            onClick={() => setUserOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                          >
+                            <User className="w-4 h-4" />
+                            Login
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <button
               className="md:hidden text-foreground"
               onClick={() => setMobileOpen(!mobileOpen)}

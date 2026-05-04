@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
     "email": "email dev --dir src/emails",
-    "fast": "next dev --turbo"
+    "fast": "next dev"
   },
   "dependencies": {
     "@faker-js/faker": "^10.1.0",

@@ -290,7 +290,7 @@ export default function HomePage() {
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="text-white text-sm">
-                    ♥ {Math.floor(Math.random() * 300 + 100)}
+                    ♥ 250
                   </span>
                 </div>
               </motion.a>
