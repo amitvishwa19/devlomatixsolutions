@@ -161,6 +161,9 @@ const Navbar = () => {
                     </div>
 
 
+                    <ThemeSwitcher />
+
+
                     {/* Mobile */}
                     <div className="flex md:hidden items-center gap-3">
                         {/* <ThemeToggle /> */}
