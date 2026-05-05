@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -21,7 +22,12 @@ import {
 } from "lucide-react";
 import { useWishlist } from "../_contexts/WishlistContext";
 import { products } from "../_data/products";
-import { useSession } from "next-auth/react"
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { saveEcommerceConfig } from "../account/_actions";
+import SettingsSection from "./_components/SettingsSection";
 
 const menu = [
   { id: "orders", label: "Orders", icon: Package },
@@ -40,15 +46,17 @@ const AccountPage = () => {
   const [active, setActive] = useState("orders");
   const { wishlistIds } = useWishlist();
   const wishlistedProducts = products.filter((p) => wishlistIds.includes(p.id));
-  const {data:session} = useSession()
+  const { data: session } = useSession();
 
-  console.log('session from account page',session)
+  console.log("session from account page", session);
 
   return (
     <div className="pt-24 pb-20 min-h-screen">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-          <aside className="glass-card rounded-2xl p-6 h-fit">
+
+
+          <aside className="glass-card rounded-lg p-6 h-fit">
             <div className="flex flex-col items-center text-center pb-6 border-b border-border">
               <div className="w-20 h-20 rounded-full border-2 border-gold flex items-center justify-center mb-3">
                 <User className="w-9 h-9 text-gold" />
@@ -62,29 +70,26 @@ const AccountPage = () => {
                 const Icon = item.icon;
                 const isActive = active === item.id;
                 return (
-                  <button
+                  <Button
                     key={item.id}
+                    variant={isActive ? "secondary" : "ghost"}
+                    className="w-full justify-between"
                     onClick={() => setActive(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      isActive
-                        ? "bg-gold/10 text-gold border border-gold/30"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                    }`}
                   >
                     <span className="flex items-center gap-3">
                       <Icon className="w-4 h-4" />
                       {item.label}
                     </span>
                     <ChevronRight className="w-4 h-4 opacity-60" />
-                  </button>
+                  </Button>
                 );
               })}
             </nav>
 
-            <button className="mt-6 pt-4 border-t border-border w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors">
-              <LogOut className="w-4 h-4" />
+            <Button variant="ghost" className="mt-6 pt-4 border-t border-border w-full justify-start text-destructive hover:text-destructive">
+              <LogOut className="w-4 h-4 mr-3" />
               Sign Out
-            </button>
+            </Button>
           </aside>
 
           <motion.section
@@ -116,11 +121,11 @@ const AccountPage = () => {
                     Start your crystal journey with us
                   </p>
                   <Link
-                    href="/shop"
-                    className="gold-gradient text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-                  >
-                    Browse Shop
-                  </Link>
+                      href="/shop"
+                      className="gold-gradient text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                    >
+                      Browse Shop
+                    </Link>
                 </div>
               </>
             )}
@@ -195,9 +200,9 @@ const AccountPage = () => {
                     </div>
                   ))}
                 </div>
-                <button className="mt-6 gold-gradient text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                <Button className="mt-6">
                   Save Changes
-                </button>
+                </Button>
               </>
             )}
 
@@ -215,14 +220,14 @@ const AccountPage = () => {
                   <p className="text-sm text-muted-foreground mb-5">
                     Add an address for faster checkout
                   </p>
-                  <button className="gold-gradient text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
-                    + Add New Address
-                  </button>
+                  <Button>
+                      + Add New Address
+                    </Button>
                 </div>
               </>
             )}
 
-            {active === "settings" && <SettingsPanel />}
+            {active === "settings" && <SettingsSection />}
           </motion.section>
         </div>
       </div>
@@ -230,218 +235,6 @@ const AccountPage = () => {
   );
 };
 
-const Toggle = ({ checked, onChange }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={checked}
-    onClick={() => onChange(!checked)}
-    className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${checked ? "bg-gold" : "bg-secondary border border-border"}`}
-  >
-    <span
-      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-background shadow transition-transform ${checked ? "translate-x-5" : ""}`}
-    />
-  </button>
-);
 
-const Row = ({ title, desc, right, danger }) => (
-  <div className="flex items-center justify-between gap-4 py-3">
-    <div>
-      <p className={`text-sm font-medium ${danger ? "text-destructive" : ""}`}>
-        {title}
-      </p>
-      <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-    </div>
-    {right}
-  </div>
-);
-
-const SettingsCard = ({ icon: Icon, title, children }) => (
-  <div className="border border-border rounded-xl p-5 bg-secondary/30">
-    <div className="flex items-center gap-2 mb-3">
-      <Icon className="w-4 h-4 text-gold" />
-      <h3 className="font-serif text-base">{title}</h3>
-    </div>
-    <div className="divide-y divide-border">{children}</div>
-  </div>
-);
-
-const SettingsPanel = () => {
-  const [prefs, setPrefs] = useState({
-    email: true,
-    sms: false,
-    orders: true,
-    promo: false,
-    newsletter: true,
-  });
-  const [api, setApi] = useState({
-    storeId: "my-store",
-    url: "https://api.example.com",
-    key: "",
-  });
-  const [showKey, setShowKey] = useState(false);
-
-  return (
-    <>
-      <div className="mb-6">
-        <h2 className="font-serif text-2xl">Account Settings</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Customize your preferences
-        </p>
-      </div>
-
-      <div className="space-y-5 max-w-3xl">
-        <SettingsCard icon={Bell} title="Notification Preferences">
-          <Row
-            title="Email Notifications"
-            desc="Receive updates via email"
-            right={
-              <Toggle
-                checked={prefs.email}
-                onChange={(v) => setPrefs({ ...prefs, email: v })}
-              />
-            }
-          />
-          <Row
-            title="SMS Notifications"
-            desc="Receive updates via SMS"
-            right={
-              <Toggle
-                checked={prefs.sms}
-                onChange={(v) => setPrefs({ ...prefs, sms: v })}
-              />
-            }
-          />
-          <Row
-            title="Order Updates"
-            desc="Track your order status"
-            right={
-              <Toggle
-                checked={prefs.orders}
-                onChange={(v) => setPrefs({ ...prefs, orders: v })}
-              />
-            }
-          />
-        </SettingsCard>
-
-        <SettingsCard icon={Mail} title="Marketing Preferences">
-          <Row
-            title="Promotional Emails"
-            desc="Receive offers and discounts"
-            right={
-              <Toggle
-                checked={prefs.promo}
-                onChange={(v) => setPrefs({ ...prefs, promo: v })}
-              />
-            }
-          />
-          <Row
-            title="Newsletter"
-            desc="Weekly spiritual insights"
-            right={
-              <Toggle
-                checked={prefs.newsletter}
-                onChange={(v) => setPrefs({ ...prefs, newsletter: v })}
-              />
-            }
-          />
-        </SettingsCard>
-
-        <SettingsCard icon={Shield} title="Privacy & Security">
-          <button className="w-full text-left">
-            <Row
-              title="Change Password"
-              desc="Update your password"
-              right={<ChevronRight className="w-4 h-4 text-muted-foreground" />}
-            />
-          </button>
-          <button className="w-full text-left">
-            <Row
-              title="Two-Factor Authentication"
-              desc="Add extra security"
-              right={<ChevronRight className="w-4 h-4 text-muted-foreground" />}
-            />
-          </button>
-        </SettingsCard>
-
-        <SettingsCard icon={Download} title="Data Management">
-          <button className="w-full text-left">
-            <Row
-              title="Download My Data"
-              desc="Export your account data"
-              right={<ChevronRight className="w-4 h-4 text-muted-foreground" />}
-            />
-          </button>
-          <button className="w-full text-left">
-            <Row
-              danger
-              title="Delete Account"
-              desc="Permanently delete your account"
-              right={<ChevronRight className="w-4 h-4 text-destructive" />}
-            />
-          </button>
-        </SettingsCard>
-
-        <SettingsCard icon={Cog} title="API Configuration">
-          <div className="py-3 space-y-4">
-            <div>
-              <label className="text-xs text-muted-foreground tracking-wider mb-1 block">
-                STORE ID
-              </label>
-              <input
-                value={api.storeId}
-                onChange={(e) => setApi({ ...api, storeId: e.target.value })}
-                className="w-full bg-secondary border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground tracking-wider mb-1 block">
-                BACKEND URL
-              </label>
-              <input
-                value={api.url}
-                onChange={(e) => setApi({ ...api, url: e.target.value })}
-                className="w-full bg-secondary border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground tracking-wider mb-1 block">
-                API KEY
-              </label>
-              <div className="relative">
-                <input
-                  type={showKey ? "text" : "password"}
-                  value={api.key}
-                  onChange={(e) => setApi({ ...api, key: e.target.value })}
-                  placeholder="Enter your API key"
-                  className="w-full bg-secondary border border-border rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(!showKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showKey ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <div className="flex gap-3 pt-1">
-              <button className="gold-gradient text-primary-foreground px-5 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
-                Save Settings
-              </button>
-              <button className="border border-gold text-gold px-5 py-2 rounded-lg text-sm font-medium hover:bg-gold/10 transition-colors">
-                Test Connection
-              </button>
-            </div>
-          </div>
-        </SettingsCard>
-      </div>
-    </>
-  );
-};
 
 export default AccountPage;

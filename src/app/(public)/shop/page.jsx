@@ -10,6 +10,9 @@ import { useCurrency } from "../_contexts/CurrencyContext";
 import { ProductCardSkeleton } from "../_components/Skeleton";
 import SEO from "../_components/SEO";
 import { useState, useMemo, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 
 const filterTabs = ["All Products", "Crystals", "Jewelry", "Meditation", "Vastu"];
 
@@ -80,9 +83,13 @@ const ShopPage = () => {
           <input type="text" placeholder="Search crystals, bracelets, pyramids..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-card border border-border rounded-xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
         </div>
         <div className="flex flex-wrap justify-center gap-2 mb-6">
-          {filterTabs.map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab ? "gold-gradient text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>{tab}</button>
-          ))}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              {filterTabs.map((tab) => (
+                <TabsTrigger key={tab} value={tab}>{tab}</TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-4">

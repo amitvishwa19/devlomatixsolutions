@@ -20,9 +20,9 @@ const renderParagraph = (line, i) => {
   );
 };
 
-const BlogPostPage = ({ params }) => {
+const BlogPostPage = () => {
   const params = useParams();
-const slug = params.slug;
+  const slug = params.slug;
   const post = blogPosts.find((p) => p.slug === slug);
 
   if (!post) {

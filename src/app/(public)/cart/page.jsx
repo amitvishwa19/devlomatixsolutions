@@ -6,6 +6,8 @@ import { ShoppingCart, Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
 import { useCart } from "../_contexts/CartContext";
 import { useCurrency } from "../_contexts/CurrencyContext";
 import SEO from "../_components/SEO";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 
 const CartPage = () => {
   const pathname = usePathname();

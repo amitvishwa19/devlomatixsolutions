@@ -3,22 +3,32 @@
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
 
-export async function getEcommerceConfig(userId) {
+export async function getEcommerceConfig() {
     try {
-        const configs = await db.ecommerceConfig.findMany({
+        const appIdentifier = process.env.ENCRYPTION_KEY;
+        
+        if (!appIdentifier) {
+            return { success: false, error: "App identifier not configured" };
+        }
+
+        const config = await db.ecommerceConfig.findFirst({
             where: {
-                userId,
+                appIdentifier: appIdentifier,
                 isActive: true,
             },
             orderBy: { updatedAt: 'desc' },
         });
 
-        const decryptedConfigs = configs.map(config => ({
+        if (!config) {
+            return { success: true, data: null };
+        }
+
+        const decryptedConfig = {
             ...config,
             apiKey: symmetricDecrypt(config.apiKey),
-        }));
+        };
 
-        return { success: true, data: decryptedConfigs };
+        return { success: true, data: decryptedConfig };
     } catch (error) {
         console.error("[GET_ECOMMERCE_CONFIG_ERROR]", error);
         return { success: false, error: "Failed to fetch configuration" };

@@ -7,6 +7,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useCart } from "../_contexts/CartContext";
 import { useWishlist } from "../_contexts/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
 import CurrencySwitcher from "./CurrencySwitcher";
 
@@ -82,17 +83,15 @@ const Navbar = () => {
               if (item.type === "link") {
                 const active = pathname === item.path;
                 return (
-                  <Link
+                  <Button
                     key={item.path}
-                    href={item.path}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      active
-                        ? "text-foreground border border-border"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    variant={active ? "secondary" : "ghost"}
+                    asChild
                   >
-                    {item.name}
-                  </Link>
+                    <Link href={item.path}>
+                      {item.name}
+                    </Link>
+                  </Button>
                 );
               }
 
@@ -105,20 +104,16 @@ const Navbar = () => {
                   onMouseEnter={() => setOpenGroup(item.name)}
                   onMouseLeave={() => setOpenGroup(null)}
                 >
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     onClick={() => setOpenGroup(isOpen ? null : item.name)}
-                    className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      active || isOpen
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className={active || isOpen ? "bg-secondary" : ""}
                   >
                     {item.name}
                     <ChevronDown
                       className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
                     />
-                  </button>
+                  </Button>
                   <AnimatePresence>
                     {isOpen && (
                       <motion.div
@@ -163,18 +158,22 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             <CurrencySwitcher />
             <ThemeToggle />
-            <Link href="/wishlist" aria-label="Wishlist" className="text-muted-foreground hover:text-foreground transition-colors relative">
-              <Heart className="w-5 h-5" />
-              {wishlistIds.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                  {wishlistIds.length}
-                </span>
-              )}
-            </Link>
-            <button
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/wishlist" aria-label="Wishlist" className="relative">
+                <Heart className="w-5 h-5" />
+                {wishlistIds.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                    {wishlistIds.length}
+                  </span>
+                )}
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsCartOpen(true)}
-              className="text-muted-foreground hover:text-foreground transition-colors relative"
               aria-label="Open cart"
+              className="relative"
             >
               <ShoppingCart className="w-5 h-5" />
               {totalItems > 0 && (
@@ -182,12 +181,13 @@ const Navbar = () => {
                   {totalItems}
                 </span>
               )}
-            </button>
+            </Button>
             {/* User Dropdown */}
             <div className="relative" ref={userRef}>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setUserOpen(!userOpen)}
-                className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 aria-label="User menu"
               >
                 {session?.user?.image ? (
@@ -199,7 +199,7 @@ const Navbar = () => {
                 ) : (
                   <User className="w-5 h-5" />
                 )}
-              </button>
+              </Button>
               <AnimatePresence>
                 {userOpen && (
                   <motion.div
@@ -224,13 +224,14 @@ const Navbar = () => {
                               <Settings className="w-4 h-4" />
                               My Account
                             </Link>
-                            <button
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start"
                               onClick={() => { setUserOpen(false); signOut({ callbackUrl: "/" }); }}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
                             >
-                              <LogOut className="w-4 h-4" />
+                              <LogOut className="w-4 h-4 mr-2" />
                               Sign Out
-                            </button>
+                            </Button>
                           </div>
                         </>
                       ) : (
@@ -250,13 +251,15 @@ const Navbar = () => {
                 )}
               </AnimatePresence>
             </div>
-            <button
-              className="md:hidden text-foreground"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -274,33 +277,31 @@ const Navbar = () => {
                 if (item.type === "link") {
                   const active = pathname === item.path;
                   return (
-                    <Link
+                    <Button
                       key={item.path}
-                      href={item.path}
-                      onClick={() => setMobileOpen(false)}
-                      className={`block px-3 py-2 text-sm rounded-md ${
-                        active
-                          ? "text-gold bg-secondary"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
+                      variant={active ? "secondary" : "ghost"}
+                      className="w-full justify-start"
+                      asChild
                     >
-                      {item.name}
-                    </Link>
+                      <Link href={item.path} onClick={() => setMobileOpen(false)}>
+                        {item.name}
+                      </Link>
+                    </Button>
                   );
                 }
                 const isOpen = openMobileGroup === item.name;
                 return (
                   <div key={item.name}>
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between"
                       onClick={() => setOpenMobileGroup(isOpen ? null : item.name)}
-                      className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md text-muted-foreground hover:text-foreground"
                     >
                       <span>{item.name}</span>
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
                       />
-                    </button>
+                    </Button>
                     <AnimatePresence>
                       {isOpen && (
                         <motion.div

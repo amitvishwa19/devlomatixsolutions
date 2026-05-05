@@ -5,22 +5,36 @@ import { symmetricEncrypt } from "@/lib/encryption";
 import { z } from "zod";
 
 const SaveEcommerceConfigSchema = z.object({
-    userId: z.string(),
     storeName: z.string().min(1).transform(val => val.toLowerCase().trim()),
-    backendUrl: z.string().url(),
+    storeId: z.string().min(1).optional(),
+    webhookUrl: z.string().url().optional(),
+    backendUrl: z.string().url().optional(),
     apiKey: z.string().min(1),
-});
+}).transform((data) => ({
+    storeName: data.storeName,
+    storeId: data.storeId,
+    webhookUrl: data.webhookUrl || data.backendUrl || "",
+    apiKey: data.apiKey,
+}));
 
 export async function saveEcommerceConfig(data) {
     try {
         const validated = SaveEcommerceConfigSchema.parse(data);
+        const appIdentifier = process.env.ENCRYPTION_KEY;
+
+        if (!appIdentifier) {
+            return { success: false, error: "App identifier not configured" };
+        }
+
+        if (!validated.webhookUrl) {
+            return { success: false, error: "Webhook URL is required" };
+        }
 
         const encryptedApiKey = symmetricEncrypt(validated.apiKey);
 
         const existing = await db.ecommerceConfig.findFirst({
             where: {
-                userId: validated.userId,
-                storeName: validated.storeName,
+                appIdentifier: appIdentifier,
             },
         });
 
@@ -28,7 +42,9 @@ export async function saveEcommerceConfig(data) {
             const updated = await db.ecommerceConfig.update({
                 where: { id: existing.id },
                 data: {
-                    backendUrl: validated.backendUrl,
+                    storeName: validated.storeName,
+                    storeId: validated.storeId || "",
+                    webhookUrl: validated.webhookUrl,
                     apiKey: encryptedApiKey,
                     isActive: true,
                     updatedAt: new Date(),
@@ -39,9 +55,10 @@ export async function saveEcommerceConfig(data) {
 
         const created = await db.ecommerceConfig.create({
             data: {
-                userId: validated.userId,
+                appIdentifier: appIdentifier,
                 storeName: validated.storeName,
-                backendUrl: validated.backendUrl,
+                storeId: validated.storeId || "",
+                webhookUrl: validated.webhookUrl,
                 apiKey: encryptedApiKey,
                 isActive: true,
             },

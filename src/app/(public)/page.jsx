@@ -5,6 +5,10 @@ import { categories, testimonials } from "./_data/products";
 import Link from "next/link";
 import { ArrowRight, Shield, Sparkles, Truck, Compass, Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import CrystalOfTheDay from "./_components/CrystalOfTheDay";
 import QuizSection from "./_components/QuizSection";
 import ChakraDiagram from "./_components/ChakraDiagram";
@@ -55,10 +59,10 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
           <motion.div {...fadeUp}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border mb-8 text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4 text-gold" /> Healing Energy &
-              Spiritual Wellness <Sparkles className="w-4 h-4 text-gold" />
-            </div>
+            <Badge variant="outline" className="mb-8">
+              <Sparkles className="w-4 h-4 text-gold mr-2" /> Healing Energy &
+              Spiritual Wellness <Sparkles className="w-4 h-4 text-gold ml-2" />
+            </Badge>
           </motion.div>
           <motion.h1
             {...fadeUp}
@@ -88,18 +92,16 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Link
-              href="/shop"
-              className="gold-gradient text-primary-foreground px-8 py-3 rounded-lg font-medium inline-flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-            >
-              Explore Collection <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/about"
-              className="border border-border px-8 py-3 rounded-lg font-medium hover:bg-secondary transition-colors text-center"
-            >
-              Our Story
-            </Link>
+            <Button asChild size="lg">
+              <Link href="/shop">
+                Explore Collection <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/about">
+                Our Story
+              </Link>
+            </Button>
           </motion.div>
         </div>
       </section>
@@ -133,29 +135,28 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
               >
-                <Link
-                  href={`/shop?category=${cat.slug}`}
-                  className="group block glass-card rounded-xl overflow-hidden hover:border-primary/30 transition-all"
-                >
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white font-medium">View</span>
+                <Link href={`/shop?category=${cat.slug}`}>
+                  <Card className="group overflow-hidden hover:border-primary/30 transition-all">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white font-medium">View</span>
+                      </div>
+                      <Badge variant="secondary" className="absolute top-3 right-3">
+                        From ₹{cat.startingPrice.toLocaleString()}
+                      </Badge>
                     </div>
-                    <span className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm text-gold text-xs px-3 py-1 rounded-full">
-                      From ₹{cat.startingPrice.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-serif font-semibold">{cat.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {cat.description}
-                    </p>
-                  </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-serif font-semibold">{cat.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {cat.description}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </Link>
               </motion.div>
             ))}
@@ -199,13 +200,16 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="glass-card rounded-xl p-6 text-center"
               >
-                <item.icon className="w-10 h-10 text-gold mx-auto mb-4" />
-                <h3 className="font-serif text-lg font-semibold mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <item.icon className="w-10 h-10 text-gold mx-auto mb-4" />
+                    <h3 className="font-serif text-lg font-semibold mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
@@ -232,27 +236,32 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="glass-card rounded-xl p-6"
               >
-                <div className="flex mb-3">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-gold fill-current" />
-                  ))}
-                </div>
-                <p className="text-muted-foreground text-sm italic mb-4">
-                  "{t.text}"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-gold font-semibold">
-                    {t.initial}
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t.location}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex mb-3">
+                      {[...Array(5)].map((_, j) => (
+                        <Star key={j} className="w-4 h-4 text-gold fill-current" />
+                      ))}
+                    </div>
+                    <p className="text-muted-foreground text-sm italic mb-4">
+                      "{t.text}"
                     </p>
-                  </div>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarFallback className="bg-secondary text-gold font-semibold">
+                          {t.initial}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.location}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
@@ -297,14 +306,15 @@ export default function HomePage() {
             ))}
           </div>
           <div className="text-center mt-8">
-            <a
-              href="https://instagram.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-border px-6 py-3 rounded-lg text-sm hover:bg-secondary transition-colors"
-            >
-              Follow us on Instagram
-            </a>
+            <Button asChild variant="outline">
+              <a
+                href="https://instagram.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Follow us on Instagram
+              </a>
+            </Button>
           </div>
         </div>
       </section>
