@@ -12,6 +12,7 @@ import { createProduct } from '../_actions/createProduct'
 import { updateProduct } from '../_actions/updateProduct'
 import { uploadProductImage } from '../_actions/uploadProductImage'
 import { getEcommerceCategories } from '../_actions/getEcommerceCategories'
+import { getStores } from '../../settings/_actions/getStores'
 import { toast } from 'sonner'
 import { Package, Tag, Loader2, Upload, X, ImagePlus, ShoppingBag, Download, Briefcase, GraduationCap, Utensils, Layers, Plus } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -35,6 +36,7 @@ const INITIAL_DATA = {
     discount: '',
     quantity: '0',
     status: 'active',
+    storeId: '',
     category: [],
     imageUrl: '',
     images: [],
@@ -60,22 +62,23 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
     const activeProductType = PRODUCT_TYPES.find(t => t.id === formData.productType) || PRODUCT_TYPES[0]
     const ActiveIcon = activeProductType.icon
 
-    const { execute: fetchCategories, data: categoriesData, isLoading: loadingCategories } = useAction(getEcommerceCategories, {
-        onSuccess: (data) => {
-            // categories loaded
-        },
-        onError: (error) => {
-            console.error('[FETCH_CATEGORIES_ERROR]', error)
-        }
-    })
+    const { execute: fetchCategories, data: categoriesData, isLoading: loadingCategories } = useAction(getEcommerceCategories)
+    const { execute: fetchStores, data: storesData, isLoading: loadingStores } = useAction(getStores)
 
     useEffect(() => {
         if (workspaceId && open) {
             fetchCategories({ workspaceId })
+            fetchStores({ workspaceId })
         }
-    }, [workspaceId, open, fetchCategories])
+    }, [workspaceId, open, fetchCategories, fetchStores])
 
-    const categories = categoriesData?.categories || []
+    const allCategories = categoriesData?.categories || []
+    const stores = storesData?.stores || []
+    
+    // Filter categories by selected store
+    const categories = formData.storeId 
+        ? allCategories.filter(c => c.storeId === formData.storeId) 
+        : []
 
     useEffect(() => {
         if (product) {
@@ -97,6 +100,7 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                 discount: product.discount?.toString() || '',
                 quantity: product.inventoryCount?.toString() || '0',
                 status: product.status || 'active',
+                storeId: product.storeId || '',
                 category: existingCategories,
                 imageUrl: product.imageUrls?.cover || product.imageUrl || '',
                 images: existingImages,
@@ -126,6 +130,12 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        
+        if (!formData.storeId) {
+            toast.error('Please select a store')
+            return
+        }
+
         setLoading(true)
 
         try {
@@ -318,15 +328,39 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs">Categories *</Label>
-                                    <MultiSelect
-                                        options={categories}
-                                        selected={categories.filter(cat => Array.isArray(formData.category) && formData.category.includes(cat.name))}
-                                        onChange={(selectedItems) => handleChange('category', selectedItems.map(item => item.name))}
-                                        placeholder={loadingCategories ? "Loading..." : "Select categories..."}
-                                    />
+                                <div className="space-y-6">
+                            <div className="space-y-2">
+                                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Store *</Label>
+                                <Select value={formData.storeId} onValueChange={(val) => {
+                                    handleChange('storeId', val);
+                                    handleChange('category', []); // Reset categories when store changes
+                                }}>
+                                    <SelectTrigger className="w-full bg-muted/50 border-border/50 h-10">
+                                        <SelectValue placeholder={loadingStores ? "Loading stores..." : "Select store"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {stores.map(store => (
+                                            <SelectItem key={store.id} value={store.id}>
+                                                {store.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Categories</Label>
                                 </div>
+                                <MultiSelect
+                                    options={categories}
+                                    selected={categories.filter(cat => Array.isArray(formData.category) && formData.category.includes(cat.name))}
+                                    onChange={(selectedItems) => handleChange('category', selectedItems.map(item => item.name))}
+                                    placeholder={!formData.storeId ? "Select a store first..." : loadingCategories ? "Loading..." : "Select categories..."}
+                                    disabled={!formData.storeId}
+                                />
+                            </div>
+                        </div>
 
                                 <div className="space-y-2">
                                     <Label className="text-xs">Short Description</Label>

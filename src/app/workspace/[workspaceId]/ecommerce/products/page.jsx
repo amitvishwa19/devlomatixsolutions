@@ -15,9 +15,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from 'sonner';
 import { AddProductModal } from './_components/AddProductModal';
-import { deleteProduct } from './_actions/deleteProduct'
+import { deleteProduct } from './_actions/deleteProduct';
+import { getStores } from '../settings/_actions/getStores';
+import { useAction } from '@/hooks/use-action';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -40,6 +43,17 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState(null);
     const [viewMode, setViewMode] = useState('list');
+    const [selectedStore, setSelectedStore] = useState('all');
+
+    const { execute: fetchStores, data: storesData } = useAction(getStores);
+
+    useEffect(() => {
+        if (workspaceId) {
+            fetchStores({ workspaceId });
+        }
+    }, [workspaceId, fetchStores]);
+
+    const stores = storesData?.stores || [];
 
     const fetchProducts = useCallback(async () => {
         setLoading(true);
@@ -153,7 +167,18 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Select value={selectedStore} onValueChange={setSelectedStore}>
+                        <SelectTrigger className="w-[180px] h-8 text-xs bg-muted/50 border-border/50">
+                            <SelectValue placeholder="Filter by store" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Stores</SelectItem>
+                            {stores.map(store => (
+                                <SelectItem key={store.id} value={store.id}>{store.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <div className="flex items-center border border-white/10 rounded-md overflow-hidden">
                         <Button 
                             variant="ghost" 
@@ -216,7 +241,9 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                         No products found. Connect a store to sync your catalog.
                     </div>
                 ) : (
-                    products.map((product) => (
+                    products
+                        .filter(p => selectedStore === 'all' || p.storeId === selectedStore)
+                        .map((product) => (
                         viewMode === 'grid' ? (
                             <Card key={product.id} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group shadow-lg hover:shadow-primary/5">
                                 <div className="aspect-square bg-white/3 relative overflow-hidden flex items-center justify-center p-3 grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500">
