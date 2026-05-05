@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
-import Handlebars from "handlebars";
+import * as Handlebars from "handlebars";
 import { db } from '@/lib/db';
 
 export async function AppMailer(workspaceId, { to, subject, templateName, templateData, from }) {

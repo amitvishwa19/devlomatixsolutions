@@ -11,6 +11,8 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 
+type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "gold"
+
 function Calendar({
   className,
   classNames,
@@ -21,7 +23,7 @@ function Calendar({
   components,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
-  buttonVariant?: React.ComponentProps<typeof Button>["variant"]
+  buttonVariant?: ButtonVariant
 }) {
   const defaultClassNames = getDefaultClassNames()
 

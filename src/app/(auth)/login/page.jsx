@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { cn } from "@/lib/utils"
@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { Loader } from 'lucide-react'
 import { useSession, signIn, signOut } from "next-auth/react"
 
-export default function Login() {
+function LoginForm() {
     const [loading, setLoading] = useState(false)
     const [data, setData] = useState({ email: '', password: '' })
     const [msg, setMsg] = useState('')
@@ -181,5 +181,13 @@ export default function Login() {
             </div>
         </div>
         </>
+    )
+}
+
+export default function Login() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+            <LoginForm />
+        </Suspense>
     )
 }

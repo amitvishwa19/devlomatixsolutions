@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Handlebars from "handlebars";
+import * as Handlebars from "handlebars";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { db } from "@/lib/db";

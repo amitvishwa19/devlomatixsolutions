@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { GLOSSARY } from "../_data/glossary";
 import SEO from "../_components/SEO";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const CHAKRAS = ["All", "Root", "Sacral", "Solar Plexus", "Heart", "Throat", "Third Eye", "Crown"];

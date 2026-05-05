@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getMoonPhase, PHASE_INFO } from "../_data/glossary";
 import SEO from "../_components/SEO";
+import { Badge } from "@/components/ui/badge";
 
 const MoonCalendarPage = () => {
   const today = new Date();
