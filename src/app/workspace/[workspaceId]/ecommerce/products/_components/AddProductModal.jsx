@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { createProduct } from '../_actions/createProduct'
 import { updateProduct } from '../_actions/updateProduct'
@@ -34,7 +35,7 @@ const INITIAL_DATA = {
     discount: '',
     quantity: '0',
     status: 'active',
-    category: '',
+    category: [],
     imageUrl: '',
     images: [],
     productType: 'physical',
@@ -78,7 +79,15 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
 
     useEffect(() => {
         if (product) {
-            const existingImages = product.metadata?.images || []
+            const existingImages = product.imageUrls?.images || product.metadata?.images || []
+            
+            let existingCategories = []
+            if (Array.isArray(product.metadata?.category)) {
+                existingCategories = product.metadata.category
+            } else if (typeof product.metadata?.category === 'string' && product.metadata.category !== '') {
+                existingCategories = [product.metadata.category]
+            }
+
             setFormData({
                 title: product.title || '',
                 description: product.description || '',
@@ -88,8 +97,8 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                 discount: product.discount?.toString() || '',
                 quantity: product.inventoryCount?.toString() || '0',
                 status: product.status || 'active',
-                category: product.metadata?.category || '',
-                imageUrl: product.imageUrl || '',
+                category: existingCategories,
+                imageUrl: product.imageUrls?.cover || product.imageUrl || '',
                 images: existingImages,
                 productType: product.metadata?.productType || 'physical',
                 digitalFileUrl: product.metadata?.digitalFileUrl || '',
@@ -143,7 +152,8 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
     }
 
     const generateSKU = () => {
-        const prefix = formData.category?.substring(0, 3).toUpperCase() || 'PRD'
+        const catName = Array.isArray(formData.category) && formData.category.length > 0 ? formData.category[0] : 'PRD'
+        const prefix = catName.substring(0, 3).toUpperCase()
         const timestamp = Date.now().toString(36).toUpperCase()
         handleChange('sku', `${prefix}-${timestamp}`)
     }
@@ -205,6 +215,7 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
         setLocalPreviews(prev => [...prev, ...newLocalPreviews])
 
         try {
+            const uploadedUrls = []
             for (const file of files) {
                 const formDataObj = new FormData()
                 formDataObj.append('file', file)
@@ -212,10 +223,18 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                 const result = await uploadProductImage(formDataObj)
 
                 if (result.success) {
-                    handleChange('images', [...formData.images, result.url])
+                    uploadedUrls.push(result.url)
                 }
             }
-            toast.success(`${files.length} image(s) uploaded`)
+            
+            if (uploadedUrls.length > 0) {
+                setFormData(prev => ({
+                    ...prev,
+                    images: [...prev.images, ...uploadedUrls]
+                }))
+            }
+            
+            toast.success(`${uploadedUrls.length} image(s) uploaded`)
         } catch (error) {
             console.error('[MULTIPLE_UPLOAD_ERROR]', error)
             toast.error('Failed to upload images')
@@ -300,41 +319,13 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-xs">Category *</Label>
-                                    <Select
-                                        value={formData.category}
-                                        onValueChange={(v) => handleChange('category', v)}
-                                        disabled={loadingCategories}
-                                    >
-                                        <SelectTrigger className="bg-background border-border text-foreground">
-                                            <SelectValue placeholder={loadingCategories ? "Loading..." : "Select category"} />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-popover border-border text-popover-foreground">
-                                            {loadingCategories ? (
-                                                <div className="flex items-center justify-center p-2">
-                                                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                                                </div>
-                                            ) : categories.length === 0 ? (
-                                                <div className="p-2 text-xs text-muted-foreground text-center">
-                                                    No categories found
-                                                </div>
-                                            ) : (
-                                                categories.map(cat => (
-                                                    <SelectItem key={cat.id} value={cat.name} className="focus:bg-accent focus:text-accent-foreground">
-                                                        <div className="flex items-center gap-2">
-                                                            {cat.color && (
-                                                                <div
-                                                                    className="w-2 h-2 rounded-full"
-                                                                    style={{ backgroundColor: cat.color }}
-                                                                />
-                                                            )}
-                                                            <p className="font-medium">{cat.name}</p>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
+                                    <Label className="text-xs">Categories *</Label>
+                                    <MultiSelect
+                                        options={categories}
+                                        selected={categories.filter(cat => Array.isArray(formData.category) && formData.category.includes(cat.name))}
+                                        onChange={(selectedItems) => handleChange('category', selectedItems.map(item => item.name))}
+                                        placeholder={loadingCategories ? "Loading..." : "Select categories..."}
+                                    />
                                 </div>
 
                                 <div className="space-y-2">

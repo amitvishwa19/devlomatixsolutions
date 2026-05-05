@@ -220,8 +220,8 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                         viewMode === 'grid' ? (
                             <Card key={product.id} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group shadow-lg hover:shadow-primary/5">
                                 <div className="aspect-square bg-white/3 relative overflow-hidden flex items-center justify-center p-3 grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500">
-                                    {product.imageUrl ? (
-                                        <img src={product.imageUrl} alt={product.title} className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700" />
+                                    {product.imageUrls?.cover ? (
+                                        <img src={product.imageUrls.cover} alt={product.title} className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700" />
                                     ) : (
                                         <Package className="w-8 h-8 text-muted-foreground/30" />
                                     )}
@@ -239,7 +239,7 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                                 <CardHeader className="p-2 space-y-1">
                                     <CardTitle className="text-xs font-bold text-white line-clamp-1 leading-tight">{product.title}</CardTitle>
                                     <CardDescription className="text-[9px] text-muted-foreground line-clamp-1">
-                                        {product.description || product.metadata?.category || 'No description'}
+                                        {product.description || (Array.isArray(product.metadata?.category) ? product.metadata.category.join(', ') : product.metadata?.category) || 'No description'}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="p-2 pt-0 space-y-1 border-t border-white/5">
@@ -285,8 +285,8 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                             <Card key={product.id} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group">
                                 <div className="flex items-center gap-4 p-3">
                                     <div className="w-20 h-20 rounded-md bg-white/3 relative overflow-hidden flex items-center justify-center shrink-0 grayscale-[0.3] group-hover:grayscale-0 transition-all">
-                                        {product.imageUrl ? (
-                                            <img src={product.imageUrl} alt={product.title} className="object-cover w-full h-full" />
+                                        {product.imageUrls?.cover ? (
+                                            <img src={product.imageUrls.cover} alt={product.title} className="object-cover w-full h-full" />
                                         ) : (
                                             <Package className="w-8 h-8 text-muted-foreground/30" />
                                         )}
@@ -303,10 +303,16 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
                                         <div className="md:col-span-2">
                                             <CardTitle className="text-sm font-bold text-white line-clamp-1">{product.title}</CardTitle>
                                             <CardDescription className="text-[10px] text-muted-foreground line-clamp-1">
-                                                {product.description || product.metadata?.category || 'No description'}
+                                                {product.description || (Array.isArray(product.metadata?.category) ? product.metadata.category.join(', ') : product.metadata?.category) || 'No description'}
                                             </CardDescription>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <Badge variant="outline" className="text-[9px]">{product.metadata?.category || 'Uncategorized'}</Badge>
+                                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                {Array.isArray(product.metadata?.category) && product.metadata.category.length > 0 ? (
+                                                    product.metadata.category.map((cat, idx) => (
+                                                        <Badge key={idx} variant="outline" className="text-[9px]">{cat}</Badge>
+                                                    ))
+                                                ) : (
+                                                    <Badge variant="outline" className="text-[9px]">{product.metadata?.category || 'Uncategorized'}</Badge>
+                                                )}
                                                 <span className="text-[9px] text-muted-foreground font-mono">{product.sku || 'No SKU'}</span>
                                             </div>
                                         </div>

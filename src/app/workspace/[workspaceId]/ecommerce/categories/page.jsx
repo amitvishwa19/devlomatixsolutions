@@ -191,6 +191,11 @@ export default function EcommerceCategoryPage() {
                     )}
                 </div>
             </td>
+            <td className="px-6 py-5 whitespace-nowrap text-center font-mono">
+                <Badge variant="secondary" className="px-2 py-0.5 rounded text-[10px] bg-background/50 border-border/50">
+                    {category.productCount || 0}
+                </Badge>
+            </td>
             <td className="px-6 py-5 whitespace-nowrap text-right">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -302,6 +307,7 @@ export default function EcommerceCategoryPage() {
                                     <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Meta Identity</th>
                                     <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Identifier</th>
                                     <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Registry Schema</th>
+                                    <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap text-center">Products</th>
                                     <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap text-right pr-12">Actions</th>
                                 </tr>
                             </thead>

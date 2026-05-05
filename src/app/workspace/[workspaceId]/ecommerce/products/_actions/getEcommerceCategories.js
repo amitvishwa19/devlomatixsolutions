@@ -12,31 +12,13 @@ const handler = async (data) => {
     try {
         const { workspaceId } = data;
 
-        const ecommerceParent = await db.category.findFirst({
-            where: {
-                workspaceId,
-                slug: {
-                    equals: "ecommerce",
-                    mode: "insensitive",
-                },
-            },
-        });
-
-        if (!ecommerceParent) {
-            return { data: { categories: [] } };
-        }
-
         const categories = await db.category.findMany({
             where: {
                 workspaceId,
-                parentId: ecommerceParent.id,
+                parentId: { not: null },
+                storeId: { not: null }
             },
             orderBy: { name: 'asc' },
-            include: {
-                children: {
-                    orderBy: { name: 'asc' },
-                },
-            },
         });
 
         return { data: { categories } };

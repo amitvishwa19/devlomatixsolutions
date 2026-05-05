@@ -18,15 +18,18 @@ export async function createProduct(formData) {
             data: {
                 title,
                 description,
-                sku,
+                sku: sku || null,
                 price: parseFloat(price) || 0,
                 discount: parseFloat(discount) || 0,
                 inventoryCount: parseInt(quantity) || 0,
                 status: status || "active",
-                imageUrl,
+                imageUrls: {
+                    cover: imageUrl || "",
+                    images: images || []
+                },
                 userId: session.user.userId,
                 metadata: { 
-                    category: category || "crystals",
+                    category: Array.isArray(category) ? category : (category ? [category] : []),
                     longDescription: longDescription || "",
                     productType: productType || "physical",
                     digitalFileUrl: digitalFileUrl || "",
@@ -34,8 +37,7 @@ export async function createProduct(formData) {
                     servings: servings || "",
                     nutritionalInfo: nutritionalInfo || "",
                     requirements: requirements || "",
-                    deliveryMethod: deliveryMethod || "manual",
-                    images: images || []
+                    deliveryMethod: deliveryMethod || "manual"
                 }
             }
         });

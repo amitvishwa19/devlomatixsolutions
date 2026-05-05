@@ -1180,7 +1180,7 @@ model ECommerceProduct {
   price             Float
   discount          Float?          @default(0)
   currency          String          @default("INR")
-  imageUrl          String?
+  imageUrls         Json?
   status            String
   inventoryCount    Int?
   metadata          Json?
