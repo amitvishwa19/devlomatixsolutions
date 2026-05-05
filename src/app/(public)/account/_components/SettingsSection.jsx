@@ -130,7 +130,7 @@ const SettingsSection = () => {
     };
 
     const handleTestConnection = async () => {
-        console.log('handleTestConnection called with', testUrl)
+    
         setLoading(true);
         try {
             const res = await axios.post(testUrl, api)
@@ -159,9 +159,6 @@ const SettingsSection = () => {
             </div>
 
             <div className="space-y-5 max-w-3xl">
-
-
-
 
                 <SettingsCard icon={Bell} title="API Configuration">
                     <div className="py-3 space-y-4">
