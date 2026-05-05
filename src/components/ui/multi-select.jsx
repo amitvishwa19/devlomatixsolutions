@@ -64,7 +64,7 @@ export function MultiSelect({
                             <>
                                 {displayedItems?.map((item, index) => (
                                     <Badge key={item.id} className={'dark:bg-darkFocusColor  border dark:border-white/10 dark:text-white py-1 px-2 flex flex-row items-center gap-2'}>
-                                        <span className="dark:text-white/80">{item.name}</span>
+                                        <span className="dark:text-white/80">{item.displayName || item.name}</span>
                                         <CircleX size={14} className="cursor-pointer" onClick={(e) => {
                                             handleRemove(item, e)
                                         }} />
@@ -117,6 +117,9 @@ export function MultiSelect({
                                         onSelect={() => handleSelect(option)}
                                         className="cursor-pointer"
                                     >
+                                        {option.depth > 0 && (
+                                            <div style={{ width: `${option.depth * 16}px` }} />
+                                        )}
                                         <div
                                             className={cn(
                                                 "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary transition-colors",
@@ -127,7 +130,7 @@ export function MultiSelect({
                                         >
                                             {isSelected && <Check className="h-3 w-3" />}
                                         </div>
-                                        <span>{option?.name}</span>
+                                        <span>{option?.displayName || option?.name}</span>
                                     </CommandItem>
                                 );
                             })}
