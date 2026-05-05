@@ -25,7 +25,7 @@ export const symmetricEncrypt = (data) => {
 export const symmetricDecrypt = (encrypted) => {
     const key = process.env.ENCRYPTION_KEY
 
-    console.log('@decryption key', key)
+    //console.log('@decryption key', key)
     if (!key) {
         throw new Error('Encryption key is not set')
     }
