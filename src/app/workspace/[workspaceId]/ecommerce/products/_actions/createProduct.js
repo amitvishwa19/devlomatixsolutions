@@ -14,6 +14,18 @@ export async function createProduct(formData) {
     try {
         const { title, description, sku, price, discount, quantity, status, category, imageUrl, longDescription, productType, digitalFileUrl, duration, servings, nutritionalInfo, requirements, deliveryMethod, images } = formData;
 
+        let productStoreId = null;
+        if (category && category.length > 0) {
+            const firstCatName = category[0];
+            const foundCat = await db.category.findFirst({
+                where: { name: firstCatName },
+                select: { storeId: true }
+            });
+            if (foundCat && foundCat.storeId) {
+                productStoreId = foundCat.storeId;
+            }
+        }
+
         const product = await db.eCommerceProduct.create({
             data: {
                 title,
@@ -23,6 +35,7 @@ export async function createProduct(formData) {
                 discount: parseFloat(discount) || 0,
                 inventoryCount: parseInt(quantity) || 0,
                 status: status || "active",
+                storeId: productStoreId,
                 imageUrls: {
                     cover: imageUrl || "",
                     images: images || []

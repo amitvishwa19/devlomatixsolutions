@@ -92,7 +92,20 @@ const handler = async (data) => {
         }
 
         const updateData = {};
-        if (formData.name !== undefined) updateData.name = formData.name;
+        if (formData.name !== undefined) {
+            updateData.name = formData.name;
+            if (existingStore.name !== formData.name) {
+                // Sync the root store category name
+                try {
+                    await db.category.updateMany({
+                        where: { storeId: storeId, type: "STORE" },
+                        data: { name: formData.name }
+                    });
+                } catch (catErr) {
+                    console.error("[SYNC_CATEGORY_NAME_ERROR]", catErr);
+                }
+            }
+        }
         if (formData.slug !== undefined) updateData.slug = formData.slug.toLowerCase().trim();
         if (formData.description !== undefined) updateData.description = formData.description || null;
         if (formData.platform !== undefined) updateData.platform = formData.platform;

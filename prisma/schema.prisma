@@ -622,7 +622,7 @@ model Category {
   children    Category[]      @relation("CategoryHierarchy")
   posts       Post[]
   jobs        Job[]
-  store       ECommerceStore? @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  store       ECommerceStore? @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, name])
   @@unique([workspaceId, slug])
@@ -1136,6 +1136,7 @@ model ECommerceStore {
   abandonedCarts ECommerceAbandonedCart[]
   carts          ECommerceCart[]
   categories     Category[]
+  configs        EcommerceConfig[]
 
   @@index([userId])
   @@index([name])
@@ -1445,6 +1446,7 @@ model EcommerceConfig {
   appIdentifier String
   storeName     String
   storeId       String
+  store         ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
   webhookUrl    String
   apiKey        String // Encrypted
   isActive      Boolean  @default(true)
@@ -1453,4 +1455,5 @@ model EcommerceConfig {
 
   @@unique([storeName])
   @@index([storeName])
+  @@index([storeId])
 }

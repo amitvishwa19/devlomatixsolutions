@@ -14,16 +14,29 @@ export async function updateProduct(productId, formData) {
     try {
         const { title, description, sku, price, discount, quantity, status, category, imageUrl, longDescription, productType, digitalFileUrl, duration, servings, nutritionalInfo, requirements, deliveryMethod, images } = formData;
 
+        let productStoreId = undefined;
+        if (category && category.length > 0) {
+            const firstCatName = category[0];
+            const foundCat = await db.category.findFirst({
+                where: { name: firstCatName },
+                select: { storeId: true }
+            });
+            if (foundCat && foundCat.storeId) {
+                productStoreId = foundCat.storeId;
+            }
+        }
+
         const product = await db.eCommerceProduct.update({
             where: { id: productId },
             data: {
                 title,
                 description,
                 sku: sku || null,
-                price: parseFloat(price) || 0,
-                discount: parseFloat(discount) || 0,
-                inventoryCount: parseInt(quantity) || 0,
-                status: status || "active",
+                price: price ? parseFloat(price) : undefined,
+                discount: discount !== undefined ? parseFloat(discount) : undefined,
+                inventoryCount: quantity !== undefined ? parseInt(quantity) : undefined,
+                status,
+                storeId: productStoreId,
                 imageUrls: {
                     cover: imageUrl || "",
                     images: images || []

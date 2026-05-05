@@ -166,7 +166,7 @@ const handler = async (data) => {
                 data: {
                     name: formData.name,
                     slug: `${formData.slug.toLowerCase().trim()}`,
-                    type: "GENERAL",
+                    type: "STORE",
                     color: "#3b82f6",
                     workspaceId,
                     storeId: store.id
