@@ -32,9 +32,10 @@ export const getSidebarNavItems = (workspaceId) => {
             parent: { title: "eCommerce", icon: "shopping-cart", url: baseEcommercePath },
             child: [
                 { title: "Dashboard", icon: "layout-dashboard", url: baseEcommercePath },
+                { title: "Categories", icon: "tag", url: `${baseEcommercePath}/categories` },
+                { title: "Products", icon: "package", url: `${baseEcommercePath}/products` },
                 { title: "Clients", icon: "users", url: `${baseEcommercePath}/clients` },
                 { title: "Orders", icon: "shopping-bag", url: `${baseEcommercePath}/orders` },
-                { title: "Products", icon: "package", url: `${baseEcommercePath}/products` },
                 { title: "Abandoned", icon: "shopping-cart", url: `${baseEcommercePath}/abandoned` },
                 { title: "Settings", icon: "settings", url: `${baseEcommercePath}/settings` },
             ],
@@ -45,7 +46,7 @@ export const getSidebarNavItems = (workspaceId) => {
             parent: { title: "KonnectX", icon: "message-circle-more", url: baseWhatsappCloudApiPath },
             child: [
                 { title: "Dashboard", icon: "message-circle-more", url: baseWhatsappCloudApiPath },
-                { title: "Chats", icon: "message-square", url: `${baseWhatsappCloudApiPath}/chats` },
+                { title: "Chats", icon: "square-stack", url: `${baseWhatsappCloudApiPath}/chats` },
                 { title: "Contacts", icon: "users", url: `${baseWhatsappCloudApiPath}/contacts` },
                 { title: "Templates", icon: "zap", url: `${baseWhatsappCloudApiPath}/template` },
                 { title: "Campaigns", icon: "megaphone", url: `${baseWhatsappCloudApiPath}/campaigns` },

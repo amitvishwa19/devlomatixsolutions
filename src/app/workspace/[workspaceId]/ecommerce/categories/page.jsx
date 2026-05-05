@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useParams } from 'next/navigation';
-import axios from '@/utils/axios';
-import { useModal } from '@/hooks/useModal';
-import { AlertModal } from '@/components/global/AlertModal';
+import { getCategories } from './_actions/getCategories';
+import { deleteCategory } from './_actions/deleteCategory';
+import { getStores } from '../settings/_actions/getStores';
+import { toast } from 'sonner';
+import { CategoryModal } from './_components/CategoryModal';
+import { DeleteCategoryModal } from './_components/DeleteCategoryModal';
 import {
     Loader2,
     Plus,
@@ -32,33 +35,37 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from 'sonner';
 
-// Local Components
-import { AddCategoryModal } from './_components/AddCategoryModal';
-
-export default function CategoryManagementPage() {
+export default function EcommerceCategoryPage() {
     const params = useParams();
     const workspaceId = params.workspaceId;
-    const { onOpen } = useModal();
 
     const [categories, setCategories] = useState([]);
+    const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [expandedCategories, setExpandedCategories] = useState({});
 
-    const [isDeletingModalOpen, setIsDeletingModalOpen] = useState(false);
+    // Modals state
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [defaultParentId, setDefaultParentId] = useState(null);
+
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`/api/workspace/${workspaceId}/management/category`);
-            setCategories(res.data);
+            const [fetchedStores, fetchedCategories] = await Promise.all([
+                getStores({ workspaceId }),
+                getCategories({ workspaceId })
+            ]);
+            setStores(fetchedStores?.data?.stores || []);
+            setCategories(fetchedCategories?.data?.categories || []);
         } catch (error) {
             console.error(error);
-            toast.error("Failed to load categories");
+            toast.error("Failed to load data");
         } finally {
             setLoading(false);
         }
@@ -68,27 +75,21 @@ export default function CategoryManagementPage() {
         fetchData();
     }, [fetchData]);
 
-    const handleDeleteCategory = async () => {
-        if (!categoryToDelete) return;
-
-        setIsDeleting(true);
-        try {
-            await axios.delete(`/api/workspace/${workspaceId}/management/category/${categoryToDelete.id}`);
-            toast.success("Category removed successfully");
-            setIsDeletingModalOpen(false);
-            setCategoryToDelete(null);
-            fetchData();
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to delete category");
-        } finally {
-            setIsDeleting(false);
-        }
+    const handleEdit = (category) => {
+        setSelectedCategory(category);
+        setDefaultParentId(null);
+        setModalOpen(true);
     };
 
-    const confirmDelete = (category) => {
+    const handleCreateSubCategory = (category) => {
+        setSelectedCategory(null);
+        setDefaultParentId(category.id);
+        setModalOpen(true);
+    };
+
+    const handleDeleteClick = (category) => {
         setCategoryToDelete(category);
-        setIsDeletingModalOpen(true);
+        setDeleteModalOpen(true);
     };
 
     const toggleExpand = (categoryId) => {
@@ -98,9 +99,31 @@ export default function CategoryManagementPage() {
         }));
     };
 
-    const parentCategories = categories.filter(c => !c.parentId);
+    // Build hierarchical tree
+    const buildTree = (cats) => {
+        const catIds = new Set(cats.map(c => c.id));
+        const catMap = {};
+        cats.forEach(c => {
+            catMap[c.id] = { ...c, children: [] };
+        });
 
-    const filteredCategories = parentCategories.filter(c =>
+        const topLevel = [];
+        cats.forEach(c => {
+            if (!catIds.has(c.parentId)) {
+                // If parent is not in this list (because it's the hidden store root)
+                topLevel.push(catMap[c.id]);
+            } else {
+                if (catMap[c.parentId]) {
+                    catMap[c.parentId].children.push(catMap[c.id]);
+                }
+            }
+        });
+        return topLevel;
+    };
+
+    const tree = buildTree(categories);
+
+    const filteredTree = tree.filter(c =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
         c.slug.toLowerCase().includes(search.toLowerCase()) ||
         c.description?.toLowerCase().includes(search.toLowerCase()) ||
@@ -178,14 +201,14 @@ export default function CategoryManagementPage() {
                     <DropdownMenuContent align="end" className="w-56 rounded-md shadow-2xl border-border/40 p-2 bg-card/95 backdrop-blur-xl">
                         <DropdownMenuLabel className="   text-muted-foreground/40 px-3 py-3">Category Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => onOpen('addCategory', { workspaceId, category, parentCategories: categories, onApply: fetchData })}
+                            onClick={() => handleEdit(category)}
                             className="cursor-pointer px-3 py-3 rounded-md gap-3 text-xs"
                         >
                             <Edit2 className="w-4 h-4 text-primary" /> Edit Properties
                         </DropdownMenuItem>
                         {!isChild && (
                             <DropdownMenuItem
-                                onClick={() => onOpen('addCategory', { workspaceId, parentCategories: categories, parentId: category.id, onApply: fetchData })}
+                                onClick={() => handleCreateSubCategory(category)}
                                 className="cursor-pointer px-3 py-3 rounded-md gap-3 text-xs"
                             >
                                 <Plus className="w-4 h-4 text-emerald-500" /> Create Sub-Category
@@ -193,8 +216,8 @@ export default function CategoryManagementPage() {
                         )}
                         <DropdownMenuSeparator className="bg-border/10 my-2" />
                         <DropdownMenuItem
-                            onClick={() => confirmDelete(category)}
-                            className="cursor-pointer px-3  rounded-md text-rose-500 hover:bg-rose-500/10 transition-colors gap-3"
+                            onClick={() => handleDeleteClick(category)}
+                            className="cursor-pointer px-3  rounded-md text-rose-500 hover:bg-rose-500/10 transition-colors gap-3 py-3"
                         >
                             <Trash2 className="w-4 h-4" /> Terminate Category
                         </DropdownMenuItem>
@@ -206,8 +229,6 @@ export default function CategoryManagementPage() {
 
     return (
         <div className="animate-in fade-in duration-700 p-4 space-y-6">
-            {/* Local Modal */}
-            <AddCategoryModal />
 
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-black/5 overflow-hidden relative group">
@@ -225,8 +246,8 @@ export default function CategoryManagementPage() {
                 </div>
                 <div className="flex gap-3 relative z-10">
                     <Button
-                        onClick={() => onOpen('addCategory', { workspaceId, parentCategories: categories, onApply: fetchData })}
-                        className='bg-primary hover:bg-primary/90  rounded-md  px-8  transition-all active:scale-95'
+                        onClick={() => { setSelectedCategory(null); setDefaultParentId(null); setModalOpen(true); }}
+                        className='bg-primary hover:bg-primary/90  rounded-md  px-8 shadow-lg  transition-all active:scale-95'
                     >
                         <Plus className="w-5 h-5 " /> New Hierarchy
                     </Button>
@@ -259,7 +280,7 @@ export default function CategoryManagementPage() {
                         <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin shadow-lg shadow-primary/20" />
                         <p className="text-[10px]     text-muted-foreground   animate-pulse">Syncing Hierarchy...</p>
                     </div>
-                ) : categories.length === 0 ? (
+                ) : filteredTree.length === 0 ? (
                     <div className="text-center py-32 px-6 flex flex-col items-center justify-center space-y-6">
                         <div className="w-20 h-20 bg-muted/20 rounded-md flex items-center justify-center border border-border/20 shadow-inner group">
                             <Tags className="w-10 h-10 text-muted-foreground/30 group-hover:scale-110 transition-transform" />
@@ -285,7 +306,7 @@ export default function CategoryManagementPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/10 text-xs">
-                                {categories.map((category) => (
+                                {filteredTree.map((category) => (
                                     <Fragment key={category.id}>
                                         {renderCategoryRow(category)}
                                         {expandedCategories[category.id] && category.children?.map(child =>
@@ -304,13 +325,23 @@ export default function CategoryManagementPage() {
                 )}
             </div>
 
-            <AlertModal
-                isOpen={isDeletingModalOpen}
-                onClose={() => setIsDeletingModalOpen(false)}
-                onConfirm={handleDeleteCategory}
-                loading={isDeleting}
-                title="Delete Category?"
-                description={`This action cannot be undone.`}
+            <CategoryModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                workspaceId={workspaceId}
+                stores={stores}
+                categories={categories}
+                initialData={selectedCategory}
+                defaultParentId={defaultParentId}
+                onSuccess={() => fetchData()}
+            />
+
+            <DeleteCategoryModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                workspaceId={workspaceId}
+                category={categoryToDelete}
+                onSuccess={() => fetchData()}
             />
         </div>
     );

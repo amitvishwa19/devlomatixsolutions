@@ -196,12 +196,12 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
         if (files.length === 0) return
 
         setUploading(true)
-        
+
         const newLocalPreviews = files.map(file => ({
             file,
             preview: URL.createObjectURL(file)
         }))
-        
+
         setLocalPreviews(prev => [...prev, ...newLocalPreviews])
 
         try {
@@ -286,7 +286,7 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                             </p>
                         </div>
 
-                        <ScrollArea className="h-[65vh]  px-4">
+                        <ScrollArea className="h-[74vh]  px-4">
                             <div className="space-y-4 py-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs">Product Title *</Label>
@@ -724,9 +724,20 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                             </div>
                         </ScrollArea>
 
-                        <SheetFooter className="border-t pt-4 pr-8">
-                            <Button type="button" variant="outline" onClick={onClose} className="border-border hover:bg-accent">Cancel</Button>
-                            <Button type="submit" disabled={loading || !formData.title || !formData.price} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <SheetFooter className="border-t flex flex-row items-center justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
+                                className="border-border hover:bg-accent"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={loading || !formData.title || !formData.price}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                            >
                                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 {isEdit ? 'Update Product' : 'Create Product'}
                             </Button>
