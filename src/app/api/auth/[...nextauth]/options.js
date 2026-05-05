@@ -141,6 +141,11 @@ export const authOptions = {
         },
 
         async session({ session, token }) {
+            if (token?.invalidUser) {
+                console.log(`[NextAuth] Invalidating session for ${token.email} - User not found in DB`);
+                return null; // This will effectively sign the user out
+            }
+
             if (token) {
                 session.user.userId = token.userId;
                 session.user.displayName = token.displayName;
@@ -153,13 +158,17 @@ export const authOptions = {
         },
 
         async jwt({ token, user, trigger, session }) {
+            // 1. Initial sign in - capture provider/authorize data
             if (user) {
                 token.userId = user.id;
                 token.role = user.role;
             }
 
-            // Production Grade: Fetch roles and extra info on sign-in or when an update is triggered
-            if (!token.roles || trigger === "signIn" || trigger === "update") {
+            // 2. Continuous Enrichment & Validation
+            // We verify against the DB on sign-in, update, or if crucial info is missing
+            const needsEnrichment = !token.roles || trigger === "signIn" || trigger === "update";
+
+            if (needsEnrichment && token.email) {
                 try {
                     const usr = await db.user.findUnique({
                         where: { email: token.email },
@@ -179,16 +188,22 @@ export const authOptions = {
                     });
 
                     if (usr) {
+                        // Force the internal Prisma ID into the token
                         token.userId = usr.id;
                         token.displayName = usr.displayName;
                         token.avatar = usr.avatar;
                         token.role = usr.role;
                         token.roles = usr.roles;
                         token.workspaces = usr.members.map(m => m.serverId);
+                        token.invalidUser = false;
+                    } else {
+                        // User was deleted or not found
+                        console.warn(`[NextAuth] User ${token.email} not found in database during JWT enrichment.`);
+                        token.invalidUser = true;
                     }
                 } catch (error) {
                     console.error("[NextAuth Security Layer] Failed to enrich session token:", error);
-                    // On error, we keep the original token to prevent a full lockout
+                    // On error, we don't invalidate immediately to avoid lockouts during DB downtime
                 }
             }
 

@@ -42,8 +42,19 @@ export const WorkspaceProvider = ({ children }) => {
     const fetchSettings = useCallback(async () => {
         setSettingsLoading(true);
         try {
-            if (workspaceId && workspaceId !== '[workspaceId]' && workspaceId !== 'undefined') {
+            if (workspaceId && workspaceId !== '[workspaceId]' && workspaceId !== 'undefined' && workspaceId !== 'null') {
                 const response = await fetch(`/api/workspace/${workspaceId}/system/settings`, { cache: 'no-store' });
+                
+                if (response.status === 404) {
+                    console.warn(`Settings for workspace ${workspaceId} not found. Falling back to branding.`);
+                    const brandingRes = await fetch('/api/branding', { cache: 'no-store' });
+                    if (brandingRes.ok) {
+                        const brandingData = await brandingRes.json();
+                        setSettings({ branding: brandingData });
+                        return;
+                    }
+                }
+
                 if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
                 
                 const contentType = response.headers.get("content-type");

@@ -21,6 +21,7 @@ const handler = async (data) => {
 
         const { workspaceId, storeId } = data;
         const userId = session.user.userId;
+        console.log("[DELETE_STORE] storeId:", storeId, "userId:", userId);
 
         const existingStore = await db.eCommerceStore.findFirst({
             where: { id: storeId, userId }
@@ -38,7 +39,7 @@ const handler = async (data) => {
         return { data: { message: "Store deleted" } };
     } catch (error) {
         console.error("[DELETE_STORE_ERROR]", error);
-        return { error: "Failed to delete store" };
+        return { error: error.message || "Failed to delete store" };
     }
 };
 

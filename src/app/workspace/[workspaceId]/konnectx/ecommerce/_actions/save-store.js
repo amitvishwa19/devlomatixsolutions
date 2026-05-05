@@ -22,10 +22,13 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
         const store = await db.eCommerceStore.create({
             data: {
                 userId,
                 name,
+                slug,
                 platform,
                 storeUrl,
                 apiKey,
@@ -35,8 +38,24 @@ const handler = async (data) => {
             }
         });
 
-        return { success: true, store };
+        try {
+            const category = await db.category.create({
+                data: {
+                    name: name,
+                    slug: `${slug}-category`,
+                    type: "GENERAL",
+                    color: "#3b82f6",
+                    workspaceId,
+                    storeId: store.id
+                }
+            });
+            return { success: true, store, category };
+        } catch (catError) {
+            console.error("Category creation error:", catError);
+            return { success: true, store, categoryError: catError.message };
+        }
     } catch (error) {
+        console.error("Store creation error:", error);
         return { error: error.message || "Failed to save store" };
     }
 };

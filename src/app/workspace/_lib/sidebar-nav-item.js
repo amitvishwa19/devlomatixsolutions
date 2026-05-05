@@ -32,6 +32,7 @@ export const getSidebarNavItems = (workspaceId) => {
             parent: { title: "eCommerce", icon: "shopping-cart", url: baseEcommercePath },
             child: [
                 { title: "Dashboard", icon: "layout-dashboard", url: baseEcommercePath },
+                { title: "Clients", icon: "users", url: `${baseEcommercePath}/clients` },
                 { title: "Orders", icon: "shopping-bag", url: `${baseEcommercePath}/orders` },
                 { title: "Products", icon: "package", url: `${baseEcommercePath}/products` },
                 { title: "Abandoned", icon: "shopping-cart", url: `${baseEcommercePath}/abandoned` },

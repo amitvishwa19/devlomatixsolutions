@@ -3,9 +3,9 @@
 import React, { use } from 'react';
 import { ShoppingCart, LayoutDashboard, Settings, Plus, RefreshCw, BarChart3, Package, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import EcommerceStats from "./_components/EcommerceStats";
-import RecentOrders from "./_components/RecentOrders";
-import AbandonedCarts from "./_components/AbandonedCarts";
+// import EcommerceStats from "./_components/EcommerceStats";
+// import RecentOrders from "./_components/RecentOrders";
+// import AbandonedCarts from "./_components/AbandonedCarts";
 
 export default function EcommercePage({ params: paramsPromise }) {
     const params = use(paramsPromise);
@@ -37,13 +37,13 @@ export default function EcommercePage({ params: paramsPromise }) {
             </div>
 
             {/* Premium Stats Grid */}
-            <EcommerceStats workspaceId={workspaceId} />
+            {/* <EcommerceStats workspaceId={workspaceId} /> */}
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 {/* Left Column: Orders and Products Overview */}
                 <div className="xl:col-span-2 space-y-8">
-                    <RecentOrders workspaceId={workspaceId} />
+                    {/* <RecentOrders workspaceId={workspaceId} /> */}
 
                     {/* Placeholder for Product Catalog/Analytics */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,7 +62,7 @@ export default function EcommercePage({ params: paramsPromise }) {
 
                 {/* Right Column: Recovery and Quick Actions */}
                 <div className="space-y-8">
-                    <AbandonedCarts workspaceId={workspaceId} />
+                    {/* <AbandonedCarts workspaceId={workspaceId} /> */}
 
                     {/* Store Connections Quick View */}
                     <div className="p-5 rounded-xl border border-white/5 bg-card/50 backdrop-blur-sm">
