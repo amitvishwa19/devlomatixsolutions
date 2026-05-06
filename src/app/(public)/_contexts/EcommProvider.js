@@ -2,14 +2,22 @@
 
 import axios from "@/utils/axios";
 import { data } from "autoprefixer";
-import React, { createContext, useContext, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const EcommContext = createContext(null);
 
-export const EcommProvider = ({ children,appConfig}) => {
-     
-    
+export const EcommProvider = ({ children, appIdentifier }) => {
+
+    const [appConfig, setAppConfig] = useState(null);
+
+    useEffect(() => {
+        if (appIdentifier) {
+
+        }
+    }, [appIdentifier]);
+
+
     const value = useMemo(() => {
         return {
             appConfig,
@@ -21,20 +29,20 @@ export const EcommProvider = ({ children,appConfig}) => {
         storeInf()
     }, [appConfig]);
 
-    const storeInf=async() =>{
+    const storeInf = async () => {
         try {
-            const res= await axios.post(appConfig?.webhookUrl,appConfig)
-                console.log('App config stored:', res.data);
+            const res = await axios.post(appConfig?.webhookUrl, appConfig)
+            console.log('App config stored:', res.data);
         } catch (error) {
             toast.error("Failed to connect  to store, Invalid Configuration");
         }
-        
+
     }
-    
 
 
 
-    console.log('app-config',value)
+
+    console.log('app-config', value)
 
     return (
         <EcommContext.Provider value={value} appConfig={appConfig}>
