@@ -25,6 +25,7 @@ const getBaseDb = () => {
         !globalThis.prismaGlobal.whatsAppFlow ||
         !globalThis.prismaGlobal.role || 
         !globalThis.prismaGlobal.permission ||
+        !globalThis.prismaGlobal.ecommerceConfig ||
         globalThis.prismaGlobal._schemaVersion !== SCHEMA_VERSION
     );
 

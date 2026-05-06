@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 export async function GET(req, { params }) {
     try {
         const { storeId } = await params;
+        console.log('[CATALOG_FETCH] storeId:', storeId);
 
         if (!storeId) {
             return NextResponse.json({ success: false, message: "storeId is required" }, { status: 400 });
@@ -19,17 +20,19 @@ export async function GET(req, { params }) {
             }
         });
 
+        console.log('[CATALOG_FETCH] Store found:', !!store);
+
         if (!store) {
             return NextResponse.json({ success: false, message: "Store not found" }, { status: 404 });
         }
 
         // 2. Fetch products for this store
-        // Note: Make sure your products have the storeId assigned in the database!
         const products = await db.eCommerceProduct.findMany({
             where: { storeId: storeId },
-            include: { variants: true },
             orderBy: { createdAt: 'desc' }
         });
+
+        console.log('[CATALOG_FETCH] Products found:', products.length);
 
         // 3. Group products and build category tree
         const attachProducts = (category) => {
@@ -108,7 +111,11 @@ export async function GET(req, { params }) {
         }, { status: 200 });
 
     } catch (error) {
-        console.error("[TEST_CATALOG_QUERY_ERROR]", error);
-        return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+        console.error("[CATALOG_FETCH_ERROR]", error);
+        return NextResponse.json({ 
+            success: false, 
+            message: error.message || "Internal server error",
+            stack: error.stack 
+        }, { status: 500 });
     }
 }

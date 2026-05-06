@@ -1,74 +1,50 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
 
-
 export async function GET(request, { params }) {
-
-    const { appIdentifier } = await params;
-    let decryptedApiKey
-    let store
-
     try {
+        const { appIdentifier } = await params;
+        
+        if (!appIdentifier) {
+            return NextResponse.json({ success: false, message: "App Identifier is required" }, { status: 400 });
+        }
+
         const configData = await db.ecommerceConfig.findFirst({
-           where:{
-            appIdentifier:appIdentifier
-           }
-        })
+            where: { appIdentifier: appIdentifier }
+        });
 
-       
         if (!configData) {
-            return NextResponse.json({ success: false, message: "Unauthorized access" }, { status: 401 });
+            return NextResponse.json({ success: false, message: "Configuration not found for this app" }, { status: 404 });
         }
 
-       
-
-        if(configData){
-            decryptedApiKey = symmetricDecrypt(configData?.apiKey); 
-           if(!decryptedApiKey){
-            return NextResponse.json({ success: false, message: "Unauthorized access" }, { status: 401 });
-           }
+        let decryptedApiKey = null;
+        try {
+            decryptedApiKey = symmetricDecrypt(configData.apiKey);
+        } catch (decryptError) {
+            console.error("[DECRYPTION_ERROR]", decryptError);
+            // We still return the config, but without the decrypted key if it fails
         }
 
-         
-        console.log('configData-apikey',configData.apiKey)
-        console.log('decryptedApiKey',decryptedApiKey)
+        return NextResponse.json({ 
+            success: true, 
+            message: "Configuration Retrieved Successfully", 
+            config: {
+                ...configData,
+                decryptedApiKey
+            }
+        }, { status: 200 });
 
-
-        // if(!store){
-        //     return NextResponse.json({ success: false, message: "Unauthorized access" }, { status: 401 });
-        // }
-
-        // if(store.status !== 'connected'){
-        //     return NextResponse.json({ success: false, message: "Store is not connected" }, { status: 403 });
-        // }
-
-
-
-        return NextResponse.json({ success: true, message: "Connection Successfull", config: configData }, { status: 202 });
     } catch (error) {
-        console.log(error)
-        return NextResponse.json({ success: false, message: "Invalid API Key format or decryption failed" }, { status: 400 });
+        console.error("[CONFIG_RETRIEVAL_ERROR]", error);
+        return NextResponse.json({ 
+            success: false, 
+            message: error.message || "Internal server error",
+            stack: error.stack 
+        }, { status: 500 });
     }
 }
 
-
-export async function POST(request, { params }) {
-
-    
-    try {
-        
-
-
-
-
-        
-
-        return NextResponse.json({ success: true, message: "Connection Successfull" }, { status: 202 });
-    } catch (error) {
-        console.log(error)
-        return NextResponse.json({ success: false, message: "Invalid API Key format or decryption failed" }, { status: 400 });
-    }
+export async function POST(request) {
+    return NextResponse.json({ success: false, message: "Method not allowed" }, { status: 405 });
 }
