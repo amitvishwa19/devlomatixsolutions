@@ -80,6 +80,16 @@ const nextConfig = {
         },
       },
     });
+
+    config.stats = {
+      warningsFilter: (warning) => {
+        if (warning.message && warning.message.includes('handlebars')) {
+          return false;
+        }
+        return true;
+      },
+    };
+
     return config;
   },
 };
