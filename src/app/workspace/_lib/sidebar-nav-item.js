@@ -36,6 +36,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Products", icon: "package", url: `${baseEcommercePath}/products` },
                 { title: "Clients", icon: "users", url: `${baseEcommercePath}/clients` },
                 { title: "Orders", icon: "shopping-bag", url: `${baseEcommercePath}/orders` },
+                { title: "Coupons", icon: "ticket", url: `${baseEcommercePath}/marketing/coupons` },
+                { title: "Reviews", icon: "star", url: `${baseEcommercePath}/marketing/reviews` },
                 { title: "Abandoned", icon: "shopping-cart", url: `${baseEcommercePath}/abandoned` },
                 { title: "Settings", icon: "settings", url: `${baseEcommercePath}/settings` },
             ],

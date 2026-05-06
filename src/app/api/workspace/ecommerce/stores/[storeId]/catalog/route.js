@@ -27,6 +27,7 @@ export async function GET(req, { params }) {
         // Note: Make sure your products have the storeId assigned in the database!
         const products = await db.eCommerceProduct.findMany({
             where: { storeId: storeId },
+            include: { variants: true },
             orderBy: { createdAt: 'desc' }
         });
 

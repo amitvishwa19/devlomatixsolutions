@@ -15,6 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
+import { OrderDetailModal } from './_components/OrderDetailModal';
 
 export default function EcommerceOrdersPage({ params: paramsPromise }) {
     const params = use(paramsPromise);
@@ -24,6 +25,7 @@ export default function EcommerceOrdersPage({ params: paramsPromise }) {
     const [viewMode, setViewMode] = useState('list');
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedOrder, setSelectedOrder] = useState(null);
 
     const fetchOrders = useCallback(async () => {
         setLoading(true);
@@ -184,7 +186,7 @@ export default function EcommerceOrdersPage({ params: paramsPromise }) {
                 ) : (
                     filteredOrders.map((order) => (
                         viewMode === 'grid' ? (
-                            <Card key={order.id} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group">
+                            <Card key={order.id} onClick={() => setSelectedOrder(order)} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group cursor-pointer">
                                 <CardHeader className="p-3 pb-0">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-2">
@@ -243,7 +245,7 @@ export default function EcommerceOrdersPage({ params: paramsPromise }) {
                                 </CardContent>
                             </Card>
                         ) : (
-                            <Card key={order.id} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group">
+                            <Card key={order.id} onClick={() => setSelectedOrder(order)} className="bg-card border-white/5 hover:border-primary/30 transition-all overflow-hidden group cursor-pointer">
                                 <div className="flex items-center gap-4 p-3">
                                     <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
                                         <Package className="w-5 h-5 text-primary" />
@@ -304,14 +306,14 @@ export default function EcommerceOrdersPage({ params: paramsPromise }) {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-40 bg-black/80 backdrop-blur-xl border-white/10">
-                                                <DropdownMenuItem className="gap-2 text-xs cursor-pointer focus:bg-white/10">
+                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} className="gap-2 text-xs cursor-pointer focus:bg-white/10">
                                                     <Edit2 className="w-3 h-3" /> Update Status
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem className="gap-2 text-xs cursor-pointer focus:bg-white/10">
+                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} className="gap-2 text-xs cursor-pointer focus:bg-white/10">
                                                     <Truck className="w-3 h-3" /> Dispatch
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator className="bg-white/10" />
-                                                <DropdownMenuItem className="gap-2 text-xs cursor-pointer focus:bg-white/10">
+                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} className="gap-2 text-xs cursor-pointer focus:bg-white/10">
                                                     <ExternalLink className="w-3 h-3" /> View Details
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -323,6 +325,14 @@ export default function EcommerceOrdersPage({ params: paramsPromise }) {
                     ))
                 )}
             </div>
+
+            <OrderDetailModal 
+                open={!!selectedOrder} 
+                onClose={() => setSelectedOrder(null)} 
+                order={selectedOrder}
+                workspaceId={workspaceId}
+                onSuccess={fetchOrders}
+            />
         </div>
     );
 }

@@ -31,13 +31,16 @@ const INITIAL_DATA = {
     title: '',
     description: '',
     longDescription: '',
+    slug: '',
     sku: '',
     price: '',
     discount: '',
     quantity: '0',
+    weight: '',
     status: 'active',
     storeId: '',
     category: [],
+    variants: [],
     imageUrl: '',
     images: [],
     productType: 'physical',
@@ -47,6 +50,8 @@ const INITIAL_DATA = {
     nutritionalInfo: '',
     requirements: '',
     deliveryMethod: 'manual',
+    metaTitle: '',
+    metaDescription: '',
 }
 
 export function AddProductModal({ open, onClose, product, onSuccess, workspaceId }) {
@@ -95,13 +100,20 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                 title: product.title || '',
                 description: product.description || '',
                 longDescription: product.metadata?.longDescription || '',
+                slug: product.slug || '',
                 sku: product.sku || '',
                 price: product.price?.toString() || '',
                 discount: product.discount?.toString() || '',
                 quantity: product.inventoryCount?.toString() || '0',
+                weight: product.weight?.toString() || '',
                 status: product.status || 'active',
                 storeId: product.storeId || '',
                 category: existingCategories,
+                variants: product.variants ? product.variants.map(v => ({
+                    ...v,
+                    price: v.price?.toString() || '',
+                    quantity: v.inventoryCount?.toString() || '0'
+                })) : [],
                 imageUrl: product.imageUrls?.cover || product.imageUrl || '',
                 images: existingImages,
                 productType: product.metadata?.productType || 'physical',
@@ -111,6 +123,8 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                 nutritionalInfo: product.metadata?.nutritionalInfo || '',
                 requirements: product.metadata?.requirements || '',
                 deliveryMethod: product.metadata?.deliveryMethod || 'manual',
+                metaTitle: product.metadata?.metaTitle || '',
+                metaDescription: product.metadata?.metaDescription || ''
             })
             setLocalPreview(null)
             setLocalPreviews([])
@@ -257,11 +271,37 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
     }
 
     const handleRemoveMultipleImage = (index, previewUrl) => {
-        URL.revokeObjectURL(previewUrl)
-        const updatedImages = formData.images.filter((_, i) => i !== index)
-        const updatedPreviews = localPreviews.filter((_, i) => i !== index)
-        handleChange('images', updatedImages)
-        setLocalPreviews(updatedPreviews)
+        if (previewUrl && previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(previewUrl)
+            setLocalPreviews(prev => prev.filter((_, i) => i !== index))
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                images: prev.images.filter((img, i) => i !== (index - localPreviews.length))
+            }))
+        }
+    }
+
+    const handleAddVariant = () => {
+        setFormData(prev => ({
+            ...prev,
+            variants: [...prev.variants, { id: null, name: '', sku: '', price: '', quantity: '0', weight: '' }]
+        }))
+    }
+
+    const handleUpdateVariant = (index, field, value) => {
+        setFormData(prev => {
+            const newVariants = [...prev.variants]
+            newVariants[index] = { ...newVariants[index], [field]: value }
+            return { ...prev, variants: newVariants }
+        })
+    }
+
+    const handleRemoveVariant = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            variants: prev.variants.filter((_, i) => i !== index)
+        }))
     }
 
     const handleSetCoverImage = (imageUrl) => {
@@ -443,6 +483,18 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                                 </div>
 
                                 <div className="space-y-2">
+                                    <Label className="text-xs">Weight (kg)</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.weight}
+                                        onChange={(e) => handleChange('weight', e.target.value)}
+                                        placeholder="0.00"
+                                        className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
                                     <Label className="text-xs">Status</Label>
                                     <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
                                         <SelectTrigger className="bg-background border-border text-foreground">
@@ -454,6 +506,54 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                                             <SelectItem value="archived">Archived</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+
+                                <div className="space-y-4 border-t border-b py-4 my-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label className="text-sm font-semibold">Product Variants</Label>
+                                            <p className="text-[10px] text-muted-foreground">Add sizes, colors, or materials.</p>
+                                        </div>
+                                        <Button type="button" variant="outline" size="sm" onClick={handleAddVariant} className="h-8">
+                                            <Plus className="w-3 h-3 mr-1" /> Add Variant
+                                        </Button>
+                                    </div>
+                                    {formData.variants.length > 0 && (
+                                        <div className="space-y-3">
+                                            {formData.variants.map((variant, idx) => (
+                                                <div key={idx} className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg border border-border">
+                                                    <div className="flex justify-between items-center">
+                                                        <Label className="text-xs font-semibold">Variant {idx + 1}</Label>
+                                                        <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10" onClick={() => handleRemoveVariant(idx)}>
+                                                            <X className="w-3 h-3" />
+                                                        </Button>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">Name (e.g. Small / Red) *</Label>
+                                                            <Input className="h-7 text-xs" value={variant.name} onChange={(e) => handleUpdateVariant(idx, 'name', e.target.value)} placeholder="Variant Name" required />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">SKU</Label>
+                                                            <Input className="h-7 text-xs font-mono" value={variant.sku} onChange={(e) => handleUpdateVariant(idx, 'sku', e.target.value)} placeholder="SKU" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">Price (Leave blank for default)</Label>
+                                                            <Input type="number" className="h-7 text-xs" value={variant.price} onChange={(e) => handleUpdateVariant(idx, 'price', e.target.value)} placeholder="Base Price" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">Inventory</Label>
+                                                            <Input type="number" className="h-7 text-xs" value={variant.quantity} onChange={(e) => handleUpdateVariant(idx, 'quantity', e.target.value)} placeholder="0" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">Weight (kg)</Label>
+                                                            <Input type="number" step="0.01" className="h-7 text-xs" value={variant.weight} onChange={(e) => handleUpdateVariant(idx, 'weight', e.target.value)} placeholder="0.00" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -746,6 +846,45 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                                         </p>
                                     </div>
                                 )}
+
+                                <div className="border-t pt-4 mt-6">
+                                    <Label className="text-sm font-semibold flex items-center gap-2 mb-4 text-white">
+                                        SEO & URL Configuration
+                                    </Label>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">URL Slug</Label>
+                                            <Input
+                                                value={formData.slug}
+                                                onChange={(e) => handleChange('slug', e.target.value)}
+                                                placeholder="e.g., my-awesome-product"
+                                                className="bg-background border-border text-foreground placeholder:text-muted-foreground font-mono text-xs"
+                                            />
+                                            <p className="text-[10px] text-muted-foreground">Used for clean URLs (leave blank to auto-generate from title)</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Meta Title</Label>
+                                            <Input
+                                                value={formData.metaTitle}
+                                                onChange={(e) => handleChange('metaTitle', e.target.value)}
+                                                placeholder="SEO Meta Title (max 60 chars)"
+                                                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                                maxLength={60}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Meta Description</Label>
+                                            <Textarea
+                                                rows="2"
+                                                value={formData.metaDescription}
+                                                onChange={(e) => handleChange('metaDescription', e.target.value)}
+                                                placeholder="SEO Meta Description (max 160 chars)"
+                                                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                                maxLength={160}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </ScrollArea>
 

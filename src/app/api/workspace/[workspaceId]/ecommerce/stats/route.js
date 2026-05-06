@@ -1,55 +1,66 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
-import { db } from "@/lib/db";
 
 export async function GET(req, { params }) {
     try {
-        const { workspaceId } = await params;
         const session = await getServerSession(authOptions);
-
         if (!session) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        // Get Orders Stats
-        const orderStats = await db.eCommerceOrder.aggregate({
-            where: { userId: session.user.userId },
-            _sum: { totalAmount: true },
-            _count: { id: true }
-        });
+        const { workspaceId } = await params;
 
-        // Get Abandoned Cart Stats
-        const abandonedStats = await db.eCommerceAbandonedCart.aggregate({
-            where: { userId: session.user.userId },
-            _sum: { totalAmount: true },
-            _count: { id: true }
+        // Fetch all stores in the workspace first
+        const stores = await db.eCommerceStore.findMany({
+            where: { userId: workspaceId },
+            select: { id: true }
         });
+        const storeIds = stores.map(s => s.id);
 
-        // Get Store Connections
-        const stores = await db.eCommerceStore.count({
-            where: { userId: session.user.userId, status: 'connected' }
-        });
+        if (storeIds.length === 0) {
+            return NextResponse.json({
+                success: true,
+                stats: {
+                    totalRevenue: 0,
+                    totalOrders: 0,
+                    averageOrderValue: 0,
+                    totalProducts: 0
+                }
+            });
+        }
 
-        // Get recent items for trending data (last 30 days vs previous 30 days could be added later)
-        
+        // Fetch aggregated stats
+        const [ordersAgg, totalProducts] = await Promise.all([
+            db.eCommerceOrder.aggregate({
+                where: {
+                    storeId: { in: storeIds },
+                    status: { not: 'cancelled' } // only count non-cancelled
+                },
+                _sum: {
+                    totalAmount: true
+                },
+                _count: {
+                    id: true
+                }
+            }),
+            db.eCommerceProduct.count({
+                where: { storeId: { in: storeIds } }
+            })
+        ]);
+
+        const totalRevenue = ordersAgg._sum.totalAmount || 0;
+        const totalOrders = ordersAgg._count.id || 0;
+        const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
         return NextResponse.json({
             success: true,
             stats: {
-                revenue: {
-                    total: orderStats._sum.totalAmount || 0,
-                    count: orderStats._count.id || 0
-                },
-                abandoned: {
-                    total: abandonedStats._sum.totalAmount || 0,
-                    count: abandonedStats._count.id || 0
-                },
-                stores: {
-                    active: stores
-                },
-                conversion: {
-                    rate: orderStats._count.id > 0 ? ((orderStats._count.id / (orderStats._count.id + abandonedStats._count.id)) * 100).toFixed(1) : 0
-                }
+                totalRevenue,
+                totalOrders,
+                averageOrderValue,
+                totalProducts
             }
         });
 

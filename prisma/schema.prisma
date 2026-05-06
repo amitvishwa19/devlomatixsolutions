@@ -1137,11 +1137,34 @@ model ECommerceStore {
   carts          ECommerceCart[]
   categories     Category[]
   configs        EcommerceConfig[]
+  coupons        ECommerceCoupon[]
 
   @@index([userId])
   @@index([name])
   @@index([slug])
   @@index([apiKey])
+}
+
+model ECommerceCoupon {
+  id             String         @id @default(cuid())
+  storeId        String
+  code           String
+  type           String         // "PERCENTAGE" or "FIXED"
+  value          Float          // e.g., 20 for 20% or 500 for ₹500 off
+  minOrderAmount Float?         // Minimum order amount to apply the coupon
+  maxDiscount    Float?         // Maximum discount amount (for percentage coupons)
+  usageLimit     Int?           // Total number of times this coupon can be used
+  usedCount      Int            @default(0) // How many times it has been used
+  expiryDate     DateTime?      // When the coupon expires
+  isActive       Boolean        @default(true)
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  store          ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, code])
+  @@index([storeId])
+  @@index([code])
 }
 
 model ECommerceOrder {
@@ -1157,6 +1180,8 @@ model ECommerceOrder {
   customerName      String?
   customerEmail     String?
   customerPhone     String?
+  trackingNumber    String?
+  carrier           String?
   contactId         String? // Link to internal Contact if exists
   metadata          Json?
   userId            String
@@ -1176,6 +1201,7 @@ model ECommerceProduct {
   storeId           String?
   externalProductId String?         @unique
   sku               String?         @unique
+  slug              String?         @unique
   title             String
   description       String?
   price             Float
@@ -1184,15 +1210,59 @@ model ECommerceProduct {
   imageUrls         Json?
   status            String
   inventoryCount    Int?
+  weight            Float?
+  dimensions        Json?
   metadata          Json?
   userId            String
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   store             ECommerceStore? @relation(fields: [storeId], references: [id], onDelete: Cascade)
   user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variants          ECommerceProductVariant[]
+  reviews           ECommerceReview[]
 
   @@index([storeId])
   @@index([userId])
+  @@index([slug])
+}
+
+model ECommerceReview {
+  id             String           @id @default(cuid())
+  productId      String
+  rating         Int              // 1 to 5
+  title          String?
+  comment        String?
+  customerName   String?          // Display name
+  customerEmail  String?
+  isVerified     Boolean          @default(false) // True if they bought it
+  status         String           @default("pending") // pending, approved, rejected
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  product        ECommerceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([rating])
+  @@index([status])
+}
+
+model ECommerceProductVariant {
+  id             String           @id @default(cuid())
+  productId      String
+  name           String           // e.g., "Small / Red"
+  sku            String?
+  price          Float?           // If null, falls back to product price
+  inventoryCount Int              @default(0)
+  weight         Float?
+  dimensions     Json?
+  imageUrls      Json?            // Variant-specific images
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  product        ECommerceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([sku])
 }
 
 model ECommerceCart {

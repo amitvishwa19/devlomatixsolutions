@@ -12,16 +12,18 @@ export async function createProduct(formData) {
     }
 
     try {
-        const { title, description, sku, price, discount, quantity, status, category, storeId, imageUrl, longDescription, productType, digitalFileUrl, duration, servings, nutritionalInfo, requirements, deliveryMethod, images } = formData;
+        const { title, description, slug, sku, price, discount, quantity, status, category, storeId, imageUrl, longDescription, productType, digitalFileUrl, duration, servings, nutritionalInfo, requirements, deliveryMethod, images, variants, weight, metaTitle, metaDescription } = formData;
 
         const product = await db.eCommerceProduct.create({
             data: {
                 title,
                 description,
+                slug: slug || null,
                 sku: sku || null,
                 price: parseFloat(price) || 0,
                 discount: parseFloat(discount) || 0,
                 inventoryCount: parseInt(quantity) || 0,
+                weight: weight ? parseFloat(weight) : null,
                 status: status || "active",
                 storeId: storeId || null,
                 imageUrls: {
@@ -38,8 +40,19 @@ export async function createProduct(formData) {
                     servings: servings || "",
                     nutritionalInfo: nutritionalInfo || "",
                     requirements: requirements || "",
-                    deliveryMethod: deliveryMethod || "manual"
-                }
+                    deliveryMethod: deliveryMethod || "manual",
+                    metaTitle: metaTitle || "",
+                    metaDescription: metaDescription || ""
+                },
+                variants: variants && variants.length > 0 ? {
+                    create: variants.map(v => ({
+                        name: v.name,
+                        sku: v.sku || null,
+                        price: v.price ? parseFloat(v.price) : null,
+                        inventoryCount: parseInt(v.quantity) || 0,
+                        weight: v.weight ? parseFloat(v.weight) : null
+                    }))
+                } : undefined
             }
         });
 

@@ -20,7 +20,8 @@ export async function GET(req, { params }) {
             include: {
                 store: {
                     select: { name: true, platform: true }
-                }
+                },
+                variants: true
             },
             orderBy: { createdAt: 'desc' },
             take: limit
