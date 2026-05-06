@@ -120,16 +120,17 @@ export async function GET(request, { params }) {
             });
         }
 
-        console.log('getting store details -catalogTree', catalogTree)
+        console.log('getting store details -catalogTree', JSON.stringify(catalogTree, null, 2));
 
         return NextResponse.json({
             success: true,
             store: {
                 id: store.id,
                 name: store.name,
-                totalProducts: products.length
+                totalProducts: products.length,
+                catalog: catalogTree
             },
-            catalog: catalogTree
+           
         }, { status: 200 });
 
     } catch (error) {
