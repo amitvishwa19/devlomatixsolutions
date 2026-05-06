@@ -369,45 +369,17 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
 
 
 
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <div className="flex items-center gap-1">
-                                                                <Webhook className="w-3 h-3 text-muted-foreground" />
-                                                                <code className="text-xs font-mono text-muted-foreground">{getWebhookUrl()}</code>
-                                                                <button
-                                                                    onClick={() => handleCopySlug(getWebhookUrl(), `api-${store.id}`)}
-                                                                    className="text-muted-foreground hover:text-primary"
-                                                                >
-                                                                    {copiedSlug === `api-${store.id}` ? (
-                                                                        <Check className="w-3 h-3 text-green-500" />
-                                                                    ) : (
-                                                                        <Copy className="w-3 h-3" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                                        
                                                         <div className="flex flex-col items-start gap-3 mt-2">
-                                                            <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-md">
-                                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap uppercase tracking-wider">Webhook:</span>
-                                                                <code className="text-xs font-mono text-muted-foreground">{getWebhookUrl()}</code>
-                                                                <button
-                                                                    onClick={() => handleCopySlug(getWebhookUrl(), `webhook-${store.id}`)}
-                                                                    className="text-muted-foreground hover:text-primary ml-1"
-                                                                >
-                                                                    {copiedSlug === `webhook-${store.id}` ? (
-                                                                        <Check className="w-3 h-3 text-green-500" />
-                                                                    ) : (
-                                                                        <Copy className="w-3 h-3" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
+                                                            
                                                             <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-md">
                                                                 <span className="text-[10px] text-muted-foreground whitespace-nowrap uppercase tracking-wider">Store Name:</span>
                                                                 <code className="text-xs font-mono text-primary">{store.name}</code>
                                                                 <button
-                                                                    onClick={() => handleCopySlug(store.slug, `slug-${store.id}`)}
+                                                                    onClick={() => handleCopySlug(store.name, `name-${store.id}`)}
                                                                     className="text-muted-foreground hover:text-primary ml-1"
                                                                 >
-                                                                    {copiedSlug === `slug-${store.id}` ? (
+                                                                    {copiedSlug === `name-${store.id}` ? (
                                                                         <Check className="w-3 h-3 text-green-500" />
                                                                     ) : (
                                                                         <Copy className="w-3 h-3" />
@@ -422,6 +394,20 @@ export default function EcommerceSettingsPage({ params: paramsPromise }) {
                                                                     className="text-muted-foreground hover:text-primary ml-1"
                                                                 >
                                                                     {copiedSlug === `id-${store.id}` ? (
+                                                                        <Check className="w-3 h-3 text-green-500" />
+                                                                    ) : (
+                                                                        <Copy className="w-3 h-3" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-md">
+                                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap uppercase tracking-wider">Webhook:</span>
+                                                                <code className="text-xs font-mono text-muted-foreground">{getWebhookUrl()}</code>
+                                                                <button
+                                                                    onClick={() => handleCopySlug(getWebhookUrl(), `webhook-${store.id}`)}
+                                                                    className="text-muted-foreground hover:text-primary ml-1"
+                                                                >
+                                                                    {copiedSlug === `webhook-${store.id}` ? (
                                                                         <Check className="w-3 h-3 text-green-500" />
                                                                     ) : (
                                                                         <Copy className="w-3 h-3" />

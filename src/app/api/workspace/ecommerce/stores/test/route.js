@@ -20,7 +20,7 @@ export async function POST(request, { params }) {
         const store = await db.eCommerceStore.findFirst({
             where: {
                 id: storeId,
-                apiKey: decryptedApiKey
+                apiKey: apiKey
             },
         });
 
