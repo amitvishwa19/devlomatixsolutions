@@ -2,31 +2,36 @@
 
 @layer base {
   :root {
-    --background: 40 30% 97%;
-    --foreground: 270 25% 15%;
-    --card: 40 30% 99%;
-    --card-foreground: 270 25% 15%;
-    --popover: 40 30% 99%;
-    --popover-foreground: 270 25% 15%;
-    --primary: 40 65% 48%;
-    --primary-foreground: 40 30% 98%;
-    --secondary: 40 25% 92%;
-    --secondary-foreground: 270 25% 15%;
-    --muted: 40 20% 90%;
-    --muted-foreground: 270 12% 40%;
-    --accent: 270 50% 55%;
-    --accent-foreground: 40 30% 98%;
-    --destructive: 0 75% 52%;
-    --destructive-foreground: 40 30% 98%;
-    --border: 40 20% 86%;
-    --input: 40 20% 86%;
-    --ring: 40 65% 48%;
-    --radius: 0.5rem;
-    --gold: 40 65% 48%;
-    --glass-bg: 40 30% 100% / 0.7;
-    --glass-border: 40 25% 84%;
-    --scrollbar-track: 40 25% 94%;
-    --scrollbar-thumb: 40 35% 65%;
+    --background: 270 40% 99%; /* Clean white with a hint of purple */
+    --foreground: 270 45% 10%; /* Deep vibrant purple-black */
+    --card: 0 0% 100%;
+    --card-foreground: 270 45% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 270 45% 10%;
+    --primary: 40 90% 50%; /* Vibrant Gold */
+    --primary-foreground: 270 10% 98%;
+    --secondary: 270 30% 96%; /* Soft Amethyst Tint */
+    --secondary-foreground: 270 45% 10%;
+    --muted: 270 10% 94%;
+    --muted-foreground: 270 20% 40%;
+    --accent: 280 80% 60%; /* Vibrant Amethyst Purple */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 270 20% 92%;
+    --input: 270 20% 92%;
+    --ring: 40 90% 50%;
+    --radius: 0.75rem;
+    --gold: 40 90% 50%;
+    --glass-bg: 0 0% 100% / 0.8;
+    --glass-border: 270 30% 90%;
+    --scrollbar-track: 270 10% 98%;
+    --scrollbar-thumb: 280 40% 70%;
+    
+    /* Vibrant Tints */
+    --tint-rose: 340 80% 90%;
+    --tint-blue: 200 80% 90%;
+    --tint-purple: 270 80% 92%;
   }
 
   .dark {
@@ -90,13 +95,16 @@
   .border-gold {
     border-color: hsl(var(--gold) / 0.3);
   }
-  .gold-gradient {
-    background: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--accent)));
+  .vibrant-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   }
-  .glass-card {
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(10px);
-    border: 1px solid hsl(var(--glass-border));
+  .crystal-mesh {
+    background-color: hsl(var(--background));
+    background-image: 
+      radial-gradient(at 0% 0%, hsl(var(--tint-rose)) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsl(var(--tint-blue)) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsl(var(--tint-purple)) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsl(var(--tint-rose)) 0px, transparent 50%);
   }
 }
 

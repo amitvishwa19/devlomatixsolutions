@@ -52,7 +52,7 @@ export default async function RootLayout({ children }) {
 
 
     return (
-        <html lang="en" className="light">
+        <html lang="en" className="dark">
             <body className={`${outfit.className}`} suppressHydrationWarning={true}>
                 <SessionWrapper>
                     <QueryProvider>

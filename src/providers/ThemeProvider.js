@@ -19,7 +19,7 @@ export function ThemeProvider({ children }) {
 
 
     if (mounted) {
-        const effectiveTheme = theme === 'system' ? 'light' : (theme || 'light');
+        const effectiveTheme = theme === 'system' ? 'dark' : (theme || 'dark');
         return (
             <div className={effectiveTheme}>{children}</div>
         )

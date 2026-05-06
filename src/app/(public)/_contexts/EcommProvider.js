@@ -9,43 +9,46 @@ const EcommContext = createContext(null);
 
 export const EcommProvider = ({ children, appIdentifier }) => {
 
-    const [appConfig, setAppConfig] = useState(null);
+    const [appConfig, setAppConfig] = useState({id:'',appIdentifier:'',storeName:'',storeId:'',webhookUrl:'',apiKey:''});
+    const [storeInfo,setStoreInfo] = useState(null);
 
     useEffect(() => {
         if (appIdentifier) {
-
+            //fetchConfig();
         }
     }, [appIdentifier]);
 
-
-    const value = useMemo(() => {
-        return {
-            appConfig,
-        };
-    }, [appConfig]);
-
-    useEffect(() => {
-        console.log('EcommProvider mounted with config:', appConfig);
-        storeInf()
-    }, [appConfig]);
-
-    const storeInf = async () => {
+    const fetchConfig = async () => {
         try {
-            const res = await axios.post(appConfig?.webhookUrl, appConfig)
-            console.log('App config stored:', res.data);
+            const res = await axios.get(`/api/workspace/ecommerce/config/${appIdentifier}`);
+            console.log('Ecomm Config Response:', res.data);
+            if (res.data.success) {
+                setAppConfig(res.data.config);
+                // After getting config, fetch store info if needed
+                if (res.data.config.webhookUrl) {
+                    fetchStoreInfo(res.data.config);
+                }
+            }
         } catch (error) {
-            toast.error("Failed to connect  to store, Invalid Configuration");
+            console.error('Failed to fetch config:', error);
+            toast.error("Failed to load store configuration");
         }
+    };
 
-    }
-
-
-
-
-    console.log('app-config', value)
+    const fetchStoreInfo = async (config) => {
+        try {
+            const res = await axios.post(config.webhookUrl, config);
+            if (res.data.success) {
+                setStoreInfo(res.data.store);
+            }
+        } catch (error) {
+            console.error('Failed to fetch store info:', error);
+            // toast.error("Failed to connect to store engine");
+        }
+    };
 
     return (
-        <EcommContext.Provider value={value} appConfig={appConfig}>
+        <EcommContext.Provider value={{ storeInfo, appConfig,appIdentifier }}>
             {children}
         </EcommContext.Provider>
     );

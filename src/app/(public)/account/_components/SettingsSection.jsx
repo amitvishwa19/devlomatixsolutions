@@ -57,7 +57,7 @@ const SettingsSection = () => {
         newsletter: true,
     });
 
-    const { appConfig } = useEcomm()
+    const { appConfig,appIdentifier } = useEcomm()
 
 
 
@@ -66,12 +66,14 @@ const SettingsSection = () => {
         storeId: appConfig?.storeId || "",
         webhookUrl: appConfig?.webhookUrl || "",
         apiKey: appConfig?.apiKey || "",
+        appIdentifier: appConfig?.appIdentifier || appIdentifier,
     });
     const [errors, setErrors] = useState({});
     const [showKey, setShowKey] = useState(false);
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(false)
-    const testUrl = appConfig?.webhookUrl ? `${appConfig.webhookUrl}/test` : null;
+    const testUrl = `${api.webhookUrl}/test`;
+    const saveUrl = `${api.webhookUrl}/config`;
 
     const handleChange = (field, value) => {
         setApi((prev) => ({ ...prev, [field]: value === undefined ? "" : value }));
@@ -111,17 +113,17 @@ const SettingsSection = () => {
         }
         setSaving(true);
         try {
-            const result = await saveEcommerceConfig({
-                storeName: api.storeName,
-                storeId: api.storeId,
-                webhookUrl: api.webhookUrl,
-                apiKey: api.apiKey,
-            });
-            if (result.success) {
+
+            console.log(api)
+
+            const res = await axios.post(saveUrl, {...api,})
+            console.log('Save Configuration Response:', res);
+
+            if(res.status===202){
                 toast.success("Configuration saved successfully!");
-            } else {
-                toast.error(result.error || "Failed to save configuration");
             }
+           
+          
         } catch (error) {
             toast.error("An error occurred while saving");
         } finally {
@@ -130,10 +132,12 @@ const SettingsSection = () => {
     };
 
     const handleTestConnection = async () => {
-    
         setLoading(true);
+        console.log('api' ,testUrl,api)
         try {
             const res = await axios.post(testUrl, api)
+            console.log('Test Connection Response:', res);
+
             if(res.status===404){
                 toast.error("Test endpoint not found. Please ensure your webhook URL is correct and the server is configured to handle test requests.");
             }
@@ -143,6 +147,7 @@ const SettingsSection = () => {
             }
 
         } catch (error) {
+            console.log(error)
             toast.error("Test endpoint not found. Please ensure your webhook URL is correct and the server is configured to handle test requests.");
         } finally {
             setLoading(false)

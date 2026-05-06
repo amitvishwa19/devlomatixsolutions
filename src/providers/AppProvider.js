@@ -74,7 +74,7 @@ export const AppProvider = ({ children }) => {
 
 
     //Handelling app theme
-    const [theme, setTheme] = useState("light")
+    const [theme, setTheme] = useState("dark")
 
     const themeToggle = () => {
         setTheme(prev => {
