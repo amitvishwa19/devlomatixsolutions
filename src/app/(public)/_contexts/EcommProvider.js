@@ -11,6 +11,8 @@ export const EcommProvider = ({ children, appIdentifier,storeConfigUrl }) => {
 
     const [appConfig, setAppConfig] = useState({id:'',appIdentifier:'',storeName:'',storeId:'',webhookUrl:'',apiKey:''});
     const [storeInfo,setStoreInfo] = useState(null);
+    const [loading,setLoading] = useState(true);
+    const [showError,setShowError] = useState(false);
 
     const path = `${storeConfigUrl}/${appIdentifier}`
 
@@ -34,14 +36,17 @@ export const EcommProvider = ({ children, appIdentifier,storeConfigUrl }) => {
                 return toast.error('Failed  to connect target store , please try again later');
             }
 
-            if(res.status === 202){
-                return toast.success(res.data.message || 'Config fetched successfully');
+            if(res.status === 200){
+                setAppConfig(res.data)
+                setLoading(false);
             }
 
             console.log('fetching details', res.status);
         } catch (error) {
-            console.error('Failed to fetch config:', error);
-            // toast.error("Failed to load store configuration");
+            setLoading(false)
+            setShowError(true)
+        }finally{
+            setLoading(false)
         }
     };
 
@@ -64,7 +69,7 @@ export const EcommProvider = ({ children, appIdentifier,storeConfigUrl }) => {
     };
 
     return (
-        <EcommContext.Provider value={{ storeInfo, appConfig,appIdentifier }}>
+        <EcommContext.Provider value={{ storeInfo, appConfig, appIdentifier, loading }}>
             {children}
         </EcommContext.Provider>
     );

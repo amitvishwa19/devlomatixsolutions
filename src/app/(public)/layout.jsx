@@ -8,8 +8,7 @@ import WhatsAppButton from "./_components/WhatsAppButton";
 import NewsletterPopup from "./_components/NewsletterPopup";
 import "./_styles/crystals.css";
 import { EcommProvider } from "./_contexts/EcommProvider";
-import axios from "@/utils/axios";
-import { db } from "@/lib/db";
+import AppLoader from "./_components/AppLoader";
 
 export default async function CrystalAuraLayout({ children }) {
   const appIdentifier = process.env.ENCRYPTION_KEY;
@@ -25,7 +24,7 @@ export default async function CrystalAuraLayout({ children }) {
           <CartDrawer />
           <MobileBottomNav />
           <CompareBar />
-
+          <AppLoader />
           <NewsletterPopup />
         </div>
       </Providers>
