@@ -66,6 +66,9 @@ const CreateStore = z.object({
         // Sync
         syncInterval: z.number().optional(),
         webhooksEnabled: z.boolean().optional(),
+
+        // Social
+        socialLinks: z.any().optional(),
     }),
 });
 
@@ -155,7 +158,8 @@ const handler = async (data) => {
 
                 metadata: {
                     apiKeyPublic: apiKey.substring(0, 12) + '...',
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    socialLinks: formData.socialLinks || null
                 }
             }
         });

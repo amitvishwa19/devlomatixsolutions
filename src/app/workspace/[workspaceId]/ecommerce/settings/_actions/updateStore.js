@@ -63,6 +63,9 @@ const UpdateStore = z.object({
         // Sync
         syncInterval: z.number().optional(),
         webhooksEnabled: z.boolean().optional(),
+
+        // Social
+        socialLinks: z.any().optional(),
     }),
 });
 
@@ -152,6 +155,14 @@ const handler = async (data) => {
         // Sync
         if (formData.syncInterval !== undefined) updateData.syncInterval = formData.syncInterval;
         if (formData.webhooksEnabled !== undefined) updateData.webhooksEnabled = formData.webhooksEnabled;
+
+        // Social
+        if (formData.socialLinks !== undefined) {
+            updateData.metadata = {
+                ...(existingStore.metadata || {}),
+                socialLinks: formData.socialLinks
+            };
+        }
 
         const store = await db.eCommerceStore.update({
             where: { id: storeId },
