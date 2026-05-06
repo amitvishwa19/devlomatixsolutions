@@ -13,9 +13,10 @@ import { db } from "@/lib/db";
 
 export default async function CrystalAuraLayout({ children }) {
   const appIdentifier = process.env.ENCRYPTION_KEY;
+  const storeConfigUrl = process.env.STORE_CONFIG_URL
 
   return (
-    <EcommProvider appIdentifier={appIdentifier}>
+    <EcommProvider appIdentifier={appIdentifier} storeConfigUrl={storeConfigUrl}>
       <Providers>
         <div className="min-h-screen bg-background text-foreground">
           <Navbar />

@@ -7,10 +7,14 @@ import { toast } from "sonner";
 
 const EcommContext = createContext(null);
 
-export const EcommProvider = ({ children, appIdentifier }) => {
+export const EcommProvider = ({ children, appIdentifier,storeConfigUrl }) => {
 
     const [appConfig, setAppConfig] = useState({id:'',appIdentifier:'',storeName:'',storeId:'',webhookUrl:'',apiKey:''});
     const [storeInfo,setStoreInfo] = useState(null);
+
+    const path = `${storeConfigUrl}/${appIdentifier}`
+
+   
 
     useEffect(() => {
         if (appIdentifier) {
@@ -20,16 +24,21 @@ export const EcommProvider = ({ children, appIdentifier }) => {
 
     const fetchConfig = async () => {
         try {
-            const res = await axios.get(`https://dev.devlomatix.com/api/workspace/ecommerce/stores/config/${appIdentifier}`);
-            console.log('Ecomm Config Response:', res.data);
-            if (res.data.success) {
-                console.log('Setting App Config:', res.data.config);
-                setAppConfig(res.data.config);
-                // After getting config, fetch store catalog
-                if (res.data.config.storeId && res.data.config.webhookUrl) {
-                    fetchCatalog(res.data.config);
+            const res = await axios.get(path, {
+                validateStatus: function (status) {
+                    return status < 500; // Resolve only if the status code is less than 500
                 }
+            });
+
+            if(res.status !== 200){
+                return toast.error('Failed  to connect target store , please try again later');
             }
+
+            if(res.status === 202){
+                return toast.success(res.data.message || 'Config fetched successfully');
+            }
+
+            console.log('fetching details', res.status);
         } catch (error) {
             console.error('Failed to fetch config:', error);
             // toast.error("Failed to load store configuration");
