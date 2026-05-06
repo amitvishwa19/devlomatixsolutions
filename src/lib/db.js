@@ -1,17 +1,20 @@
-import { Pool } from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client'
+// Dummy db object to prevent compilation errors during migration to Devlomatix API
+// All Prisma models will return empty or throw when called if not handled.
 
-const prismaClientSingleton = () => {
-    const connectionString = process.env.APP_MODE === 'prod' ? process.env.DATABASE_URL : process.env.DIRECT_URL
-    const pool = new Pool({ connectionString })
-    const adapter = new PrismaPg(pool)
-    return new PrismaClient({ adapter })
-}
+const dummyProxy = new Proxy({}, {
+  get: function(target, prop) {
+    if (prop === 'then') return undefined; // Promise chaining fix
+    return new Proxy({}, {
+      get: function(target2, prop2) {
+        if (prop2 === 'then') return undefined;
+        return async () => {
+          console.warn(`[Mock DB] Attempted to access db.${prop}.${prop2} after Prisma removal.`);
+          return null; // Return null or [] depending on expectation
+        };
+      }
+    });
+  }
+});
 
-global.prismaGlobal = global.prismaGlobal || prismaClientSingleton();
-
-export const db = global.prismaGlobal;
-
-if (process.env.APP_MODE !== 'prod') globalThis.prismaGlobal = db
-// Cache Busting: 2026-03-29T13:42:00
+export const db = dummyProxy;
+export const prisma = dummyProxy;

@@ -27,6 +27,32 @@ export const authOptions = {
         })
     ],
     callbacks: {
+        async signIn({ user, account, profile }) {
+            if (account?.provider === "google") {
+                try {
+                    // Send user data to Devlomatix eCommerce backend to save the user
+                    const apiUrl = process.env.NEXT_PUBLIC_DEVLOMATIX_API_URL || "http://localhost:3001";
+                    const response = await fetch(`${apiUrl}/api/auth/register-sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: user.email,
+                            name: user.name,
+                            image: user.image,
+                            provider: 'google',
+                            providerAccountId: account.providerAccountId,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        console.error('Failed to sync user with Devlomatix backend:', await response.text());
+                    }
+                } catch (error) {
+                    console.error('Error syncing user with Devlomatix backend:', error);
+                }
+            }
+            return true;
+        },
         async session({ session, token }) {
             if (token) {
                 session.user.id = token.sub
