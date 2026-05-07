@@ -368,31 +368,68 @@ async function testGooglePlaces(credentials) {
  * Required keys: access_token (or accessToken)
  */
 async function testGoogle(credentials) {
-    const token = credentials.access_token || credentials.accessToken || credentials.token;
+    const apiKey = (credentials.apiKey || credentials.api_key || '').trim();
+    const cx = (credentials.cx || credentials.searchEngineId || '').trim();
+    const rawToken = (credentials.accessToken || credentials.access_token || credentials.token || '').trim();
+    
+    // If apiKey looks like a Google OAuth token (starts with ya29.), treat it as a token
+    const token = (rawToken || (apiKey.startsWith('ya29.') ? apiKey : '')).trim();
+    
     const clientId = credentials.clientId || credentials.client_id || credentials.clientid;
     const secret = credentials.secret || credentials.client_secret || credentials.clientSecret;
 
-    // If we have an access token, verify the account identity
+    // 1. If we have an access token, verify identity
     if (token) {
-        const { ok, data } = await fetchWithTimeout(
+        // Try userinfo first
+        const userRes = await fetchWithTimeout(
             'https://www.googleapis.com/oauth2/v2/userinfo',
             { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (ok && data?.email) {
+        
+        if (userRes.ok && userRes.data?.email) {
             return { 
                 success: true, 
-                message: `Connected as ${data.email}`, 
+                message: `Connected as ${userRes.data.email}`, 
                 data: {
-                    ...data,
-                    profileName: data.name || data.email,
-                    profileImage: data.picture
+                    ...userRes.data,
+                    profileName: userRes.data.name || userRes.data.email,
+                    profileImage: userRes.data.picture
                 } 
             };
         }
-        return { success: false, message: data?.error?.message || 'Connection failed', data };
+
+        // Fallback to tokeninfo (often contains email if scope was granted)
+        const tokenRes = await fetchWithTimeout(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`);
+        if (tokenRes.ok) {
+            const email = tokenRes.data?.email || tokenRes.data?.email_address;
+            return { 
+                success: true, 
+                message: email ? `Connected as ${email}` : 'Google Token Valid', 
+                data: {
+                    ...tokenRes.data,
+                    email: email,
+                    profileName: email || 'Google Account'
+                } 
+            };
+        }
+        
+        return { success: false, message: 'Invalid or expired Google Token', data: { userinfo: userRes.data, tokeninfo: tokenRes.data } };
     }
 
-    // If we only have Client ID and Secret, verify their presence
+    // 2. If we have an API Key
+    if (apiKey) {
+        if (cx) {
+            const { ok, data } = await fetchWithTimeout(`https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=test`);
+            if (ok) return { success: true, message: 'Google API Key & Search ID Verified', data };
+            return { success: false, message: data?.error?.message || 'Google API Key or Search ID invalid', data };
+        }
+        
+        if (apiKey.length > 20) {
+            return { success: true, message: 'Google API Key format looks valid', data: { profileName: 'Google API Key' } };
+        }
+    }
+
+    // 3. If we only have Client ID and Secret
     if (clientId && secret) {
         return {
             success: true,
@@ -404,7 +441,7 @@ async function testGoogle(credentials) {
         };
     }
 
-    return { success: false, message: 'Missing access_token or clientId/secret in credentials' };
+    return { success: false, message: 'Missing API Key, Access Token, or Client Credentials' };
 }
 
 /**
@@ -443,13 +480,11 @@ async function testGemini(credentials) {
             } 
         };
     } catch (err) {
-        try {
-            // Debugging Gemini locally
-        } catch(e) {}
         console.error("[TEST_GEMINI_ERROR]", err);
         return { success: false, message: err.message || 'Invalid Gemini API key', data: err };
     }
 }
+
 
 /**
  * OpenRouter AI API
