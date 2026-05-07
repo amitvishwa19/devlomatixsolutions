@@ -147,7 +147,7 @@ export const GeneralSettings = () => {
                 <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:border-primary/30 transition-colors">
                     <CardHeader className="pb-4 border-b border-white/5">
                         <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-primary/10 rounded-lg border border-primary/20">
+                            <div className=" bg-primary/10 rounded-lg border border-primary/20">
                                 <LayoutGrid className="w-5 h-5 text-primary" />
                             </div>
                             <div>

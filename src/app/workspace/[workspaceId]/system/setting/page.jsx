@@ -10,111 +10,177 @@ import { AdvancedSettings } from './_components/AdvancedSettings';
 import { PrivacySettings } from './_components/PrivacySettings';
 import { DeveloperSettings } from './_components/DeveloperSettings';
 import { DangerZone } from './_components/DangerZone';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Shield, Bell, AlertTriangle, Puzzle, Cpu, ShieldCheck, Terminal } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Settings,
+  Shield,
+  Bell,
+  AlertTriangle,
+  Puzzle,
+  Cpu,
+  ShieldCheck,
+  Terminal,
+  ChevronRight,
+  Search,
+  Activity,
+} from 'lucide-react';
+
+const settingTabs = [
+  { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
+  { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
+  { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
+  { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
+  { id: 'advanced', label: 'Advanced', icon: Cpu, color: 'text-amber-500' },
+  { id: 'privacy', label: 'Privacy', icon: ShieldCheck, color: 'text-indigo-500' },
+  { id: 'developer', label: 'Developer', icon: Terminal, color: 'text-fuchsia-500' },
+];
+
+const settingDescriptions = {
+  general: 'Configure workspace identity, branding, and social presence.',
+  security: 'Manage authentication policies and access controls.',
+  notifications: 'Configure alert channels and notification preferences.',
+  integrations: 'Connect external services, webhooks, and APIs.',
+  advanced: 'System configuration, code injection, and data portability.',
+  privacy: 'Data governance, GDPR compliance, and audit settings.',
+  developer: 'API keys, webhooks, and developer tools.',
+};
 
 export default function SettingPage() {
-    const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState('general');
+  const [searchQuery, setSearchQuery] = useState('');
 
-    return (
-        <WorkspaceProvider>
-            <div className="p-2 space-y-4 animate-in fade-in duration-500">
-                {/* Minimalist Header */}
-                <div className="rounded-md border border-border/50 p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-3">
-                                <div className="p-1.5 bg-primary/5 rounded-md border border-primary/10">
-                                    <Settings className="w-4 h-4 text-primary" />
-                                </div>
-                                <h1 className="text-base font-bold tracking-tight text-foreground">Workspace Settings</h1>
-                            </div>
-                            <p className="text-[11px] text-muted-foreground font-medium">
-                                Configure your workspace identity and manage security protocols.
-                            </p>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 px-2 py-1 rounded-md border border-emerald-500/20">
-                            <span className="relative flex h-1.5 w-1.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                            </span>
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-500/80">Operational</span>
-                        </div>
-                    </div>
+  const filteredTabs = searchQuery
+    ? settingTabs.filter(tab =>
+      tab.label.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    : settingTabs;
+
+  return (
+    <WorkspaceProvider>
+      <div className="min-h-screen ">
+
+
+        <div className="flex">
+          <motion.aside
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="w-72 border-r border-white/5  backdrop-blur-xl sticky top-0 h-screen overflow-y-auto"
+          >
+            <div className="p-4 border-b border-white/5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+                  <Settings className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white">Workspace Settings</h2>
+                  <p className="text-[10px] text-zinc-500">Configuration & Control</p>
+                </div>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Search settings..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary/50"
+                />
+              </div>
+            </div>
+
+            <nav className="p-3 space-y-1 text-sm">
+              {filteredTabs.map((tab, index) => (
+                <motion.button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${activeTab === tab.id
+                    ? 'bg-primary/20 text-primary border border-primary/30'
+                    : 'hover:bg-white/5 text-zinc-400 hover:text-white'
+                    }`}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ x: 4 }}
+                >
+                  <tab.icon className={`w-5 h-5 flex-shrink-0 ${activeTab === tab.id ? tab.color : ''}`} />
+                  <span className="font-medium text-sm">{tab.label}</span>
+                  {activeTab === tab.id && (
+                    <ChevronRight className="w-4 h-4 ml-auto text-primary" />
+                  )}
+                </motion.button>
+              ))}
+
+              <div className="my-3 border-t border-white/5" />
+
+              <motion.button
+                key="danger"
+                onClick={() => setActiveTab('danger')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${activeTab === 'danger'
+                  ? 'bg-rose-500/20 text-rose-500 border border-rose-500/30'
+                  : 'hover:bg-rose-500/5 text-rose-500/70 hover:text-rose-500'
+                  }`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: filteredTabs.length * 0.05 }}
+              >
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium text-sm">Danger Zone</span>
+              </motion.button>
+            </nav>
+
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-[#0a0a0a]/80">
+              <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">Operational</span>
+              </div>
+            </div>
+          </motion.aside>
+
+          <main className="flex-1 p-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className=" mx-auto"
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                    {React.createElement(
+                      settingTabs.find(t => t.id === activeTab)?.icon || Settings,
+                      { className: 'w-6 h-6 text-primary' }
+                    )}
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-white">
+                      {settingTabs.find(t => t.id === activeTab)?.label || 'Danger Zone'} Settings
+                    </h1>
+                    <p className="text-sm text-zinc-500">
+                      {settingDescriptions[activeTab] || 'Critical workspace operations.'}
+                    </p>
+                  </div>
                 </div>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 items-start">
-                    {/* Navigation Sidebar */}
-                    <TabsList className="bg-transparent border border-border/50 p-1 rounded-md flex flex-col h-auto w-full gap-1 sticky top-6">
-                        {[
-                            { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
-                            { id: 'security', label: 'Security', icon: Shield, color: 'text-blue-500' },
-                            { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
-                            { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
-                            { id: 'advanced', label: 'Advanced', icon: Cpu, color: 'text-amber-500' },
-                            { id: 'privacy', label: 'Privacy', icon: ShieldCheck, color: 'text-indigo-500' },
-                            { id: 'developer', label: 'Developer', icon: Terminal, color: 'text-fuchsia-500' },
-                        ].map((tab) => (
-                            <TabsTrigger
-                                key={tab.id}
-                                value={tab.id}
-                                className="relative w-full justify-start rounded-md py-1.5 px-2.5 data-[state=active]:text-foreground data-[state=active]:bg-transparent transition-all gap-2 group"
-                            >
-                                <tab.icon className={`w-3.5 h-3.5 transition-all duration-300 ${activeTab === tab.id ? tab.color : 'text-muted-foreground'}`} />
-                                <span className="text-[11px] font-bold transition-all duration-300">{tab.label}</span>
-                                
-                                {activeTab === tab.id && (
-                                    <motion.div 
-                                        layoutId="settings-active-pill"
-                                        className="absolute inset-0 bg-primary/5 rounded-md -z-10 border border-primary/20"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
-                            </TabsTrigger>
-                        ))}
-                        
-                        <div className="my-1 border-t border-border/20 mx-2"></div>
-                        
-                        <TabsTrigger
-                            value="danger"
-                            className="relative w-full justify-start rounded-md py-1.5 px-2.5 data-[state=active]:bg-rose-500 data-[state=active]:text-white transition-all gap-2 text-rose-500 group"
-                        >
-                            <AlertTriangle className="w-3.5 h-3.5 group-hover:animate-pulse" />
-                            <span className="text-[11px] font-bold">Danger Zone</span>
-                        </TabsTrigger>
-                    </TabsList>
-
-                    {/* Content Area */}
-                    <div className="min-w-0 border border-border/50 rounded-md p-4 min-h-[500px] relative">
-                        <TabsContent value="general" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <GeneralSettings />
-                        </TabsContent>
-                        <TabsContent value="security" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <SecuritySettings />
-                        </TabsContent>
-                        <TabsContent value="notifications" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <NotificationSettings />
-                        </TabsContent>
-                        <TabsContent value="integrations" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <IntegrationSettings />
-                        </TabsContent>
-                        <TabsContent value="advanced" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <AdvancedSettings />
-                        </TabsContent>
-                        <TabsContent value="privacy" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <PrivacySettings />
-                        </TabsContent>
-                        <TabsContent value="developer" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <DeveloperSettings />
-                        </TabsContent>
-                        <TabsContent value="danger" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-2 duration-300">
-                            <DangerZone />
-                        </TabsContent>
-                    </div>
-                </Tabs>
-            </div>
-        </WorkspaceProvider>
-    );
+                <div className="space-y-6">
+                  {activeTab === 'general' && <GeneralSettings />}
+                  {activeTab === 'security' && <SecuritySettings />}
+                  {activeTab === 'notifications' && <NotificationSettings />}
+                  {activeTab === 'integrations' && <IntegrationSettings />}
+                  {activeTab === 'advanced' && <AdvancedSettings />}
+                  {activeTab === 'privacy' && <PrivacySettings />}
+                  {activeTab === 'developer' && <DeveloperSettings />}
+                  {activeTab === 'danger' && <DangerZone />}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
+    </WorkspaceProvider>
+  );
 }

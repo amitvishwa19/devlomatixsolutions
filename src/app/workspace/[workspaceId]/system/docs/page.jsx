@@ -309,7 +309,7 @@ export default function DocumentationPage() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.2 }}
-                            className="max-w-4xl mx-auto"
+                            className=" mx-auto"
                         >
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
