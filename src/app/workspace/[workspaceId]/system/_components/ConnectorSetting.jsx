@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { fetchCredentialsAction } from './_connectors/_actions/actions';
+import { fetchCredentialsAction, deleteCredentialAction } from './_connectors/_actions/actions';
 
 import WhatsappCloudForm from './_connectors/_whatsapp_cloud/WhatsappCloudForm';
 import SupabaseForm from './_connectors/_supabase/SupabaseForm';
@@ -69,7 +69,9 @@ export default function ConnectorSetting() {
 
     const [credentials, setCredentials] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [editingAccount, setEditingAccount] = useState(null); // null or account object
+    const [editingAccount, setEditingAccount] = useState(null);
+    const [deletingAccountId, setDeletingAccountId] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [showNewFormFor, setShowNewFormFor] = useState(null); // null or 'WHATSAPP_CLOUD', 'SUPABASE', 'SOCIAL'
 
     const fetchCredentials = async () => {
@@ -96,6 +98,25 @@ export default function ConnectorSetting() {
         fetchCredentials();
         setEditingAccount(null);
         setShowNewFormFor(null);
+    };
+
+    const handleDeleteCredential = async (id) => {
+        setIsDeleting(true);
+        const toastId = toast.loading('Deleting credential...');
+        try {
+            const result = await deleteCredentialAction(workspaceId, id);
+            if (result.success) {
+                toast.success('Credential deleted', { id: toastId });
+                fetchCredentials();
+                setDeletingAccountId(null);
+            } else {
+                toast.error(result.message || 'Failed to delete', { id: toastId });
+            }
+        } catch (e) {
+            toast.error('An error occurred', { id: toastId });
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     if (loading) {
@@ -171,6 +192,14 @@ export default function ConnectorSetting() {
                                                             onClick={() => setEditingAccount(account)}
                                                         >
                                                             <Settings2 className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-zinc-500 hover:text-red-400"
+                                                            onClick={() => setDeletingAccountId(account.id)}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -277,6 +306,14 @@ export default function ConnectorSetting() {
                                                         >
                                                             <Settings2 className="w-4 h-4" />
                                                         </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-zinc-500 hover:text-red-400"
+                                                            onClick={() => setDeletingAccountId(account.id)}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -381,6 +418,14 @@ export default function ConnectorSetting() {
                                                             onClick={() => setEditingAccount(account)}
                                                         >
                                                             <Settings2 className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-zinc-500 hover:text-red-400"
+                                                            onClick={() => setDeletingAccountId(account.id)}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -503,6 +548,14 @@ export default function ConnectorSetting() {
                                                         >
                                                             <Settings2 className="w-4 h-4" />
                                                         </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-zinc-500 hover:text-red-400"
+                                                            onClick={() => setDeletingAccountId(account.id)}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -528,7 +581,52 @@ export default function ConnectorSetting() {
                 </AccordionItem>
             </Accordion>
 
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {deletingAccountId && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                        >
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                    <Trash2 className="w-6 h-6 text-red-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">Delete Credential?</h3>
+                                    <p className="text-sm text-zinc-400">This action cannot be undone and will remove all associated data.</p>
+                                </div>
+                            </div>
 
+                            <div className="flex items-center gap-3 justify-end mt-8">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setDeletingAccountId(null)}
+                                    disabled={isDeleting}
+                                    className="text-zinc-400 hover:text-white hover:bg-white/5"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => handleDeleteCredential(deletingAccountId)}
+                                    disabled={isDeleting}
+                                    className="bg-red-500 hover:bg-red-600 text-white min-w-[100px]"
+                                >
+                                    {isDeleting ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        'Confirm Delete'
+                                    )}
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
-}
+};

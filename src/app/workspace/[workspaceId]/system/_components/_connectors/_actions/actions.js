@@ -61,3 +61,21 @@ export async function fetchCredentialsAction(workspaceId) {
         return [];
     }
 }
+export async function deleteCredentialAction(workspaceId, credentialId) {
+    try {
+        const userId = await getUserId();
+        
+        await db.credentials.delete({
+            where: {
+                id: credentialId,
+                workspaceId,
+                // userId // Optional: restricted to owner or workspace admin
+            }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("[DELETE_CREDENTIAL_ERROR]", error.message);
+        return { success: false, message: error.message };
+    }
+}
