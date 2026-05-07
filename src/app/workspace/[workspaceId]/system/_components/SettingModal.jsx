@@ -30,6 +30,7 @@ import { AdvancedSettings } from './AdvancedSettings';
 import { PrivacySettings } from './PrivacySettings';
 import { DeveloperSettings } from './DeveloperSettings';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ConnectorSetting from './ConnectorSetting';
 
 
 const settingTabs = [
@@ -192,6 +193,7 @@ export default function SettingModal({ open, onClose }) {
                                     {activeTab === 'security' && <SecuritySettings />}
                                     {activeTab === 'notifications' && <NotificationSettings />}
                                     {activeTab === 'integrations' && <IntegrationSettings />}
+                                    {activeTab === 'connectors' && <ConnectorSetting />}
                                     {activeTab === 'advanced' && <AdvancedSettings />}
                                     {activeTab === 'privacy' && <PrivacySettings />}
                                     {activeTab === 'developer' && <DeveloperSettings />}
