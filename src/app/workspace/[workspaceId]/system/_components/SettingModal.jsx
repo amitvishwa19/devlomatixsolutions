@@ -38,7 +38,7 @@ const settingTabs = [
     { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
     { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
-    { id: 'connectors', label: 'Connectors', icon: Unplug, color: 'text-fuchsia-500' },
+    { id: 'connectors', label: 'Connectors', icon: Unplug, color: 'text-primary-500' },
     { id: 'advanced', label: 'Advanced', icon: Cpu, color: 'text-amber-500' },
     { id: 'privacy', label: 'Privacy', icon: ShieldCheck, color: 'text-indigo-500' },
     { id: 'developer', label: 'Developer', icon: Terminal, color: 'text-fuchsia-500' },

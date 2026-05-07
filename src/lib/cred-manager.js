@@ -40,12 +40,15 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
  * Required keys: accessToken (or access_token)
  */
 async function testFacebook(credentials) {
-    const token = credentials.accessToken || credentials.access_token || credentials.token;
-    if (!token) return { success: false, message: 'Missing accessToken in credentials' };
+    const token = credentials.apiKey || credentials.accessToken || credentials.access_token || credentials.token;
+    const pageId = credentials.apiSecret || credentials.pageId || 'me';
+
+    if (!token) return { success: false, message: 'Missing Access Token in credentials' };
 
     const { ok, data } = await fetchWithTimeout(
-        `https://graph.facebook.com/me?access_token=${token}&fields=id,name,picture.type(large)`
+        `https://graph.facebook.com/v19.0/${pageId}?access_token=${token}&fields=id,name,picture.type(large)`
     );
+    
     if (ok && data?.id) {
         return { 
             success: true, 
@@ -57,7 +60,7 @@ async function testFacebook(credentials) {
             } 
         };
     }
-    return { success: false, message: data?.error?.message || 'Connection failed', data };
+    return { success: false, message: data?.error?.message || 'Facebook connection failed', data };
 }
 
 /**
@@ -65,20 +68,16 @@ async function testFacebook(credentials) {
  * Required keys: accessToken
  */
 async function testInstagram(credentials) {
-    // Be more flexible with key names (e.g. accessToken, access_token, TOKEN, etc.)
-    const token = credentials.accessToken || credentials.access_token || credentials.token || 
-                  credentials['access-token'] || credentials.AccessToken;
-    const igUserId = credentials.igUserId || credentials.ig_user_id || credentials.IGUserId ||
-                     credentials['ig-user-id'] || credentials.userId;
+    const token = credentials.apiKey || credentials.accessToken || credentials.access_token || credentials.token;
+    const igUserId = credentials.apiSecret || credentials.igUserId || credentials.ig_user_id || credentials.userId;
 
-    if (!token) return { success: false, message: 'Missing "accessToken" field. Please ensure the key name is correct.' };
+    if (!token) return { success: false, message: 'Missing Access Token in credentials' };
 
-    // If igUserId is provided, test the Business/Graph API (preferred for publishing)
+    // If igUserId is provided, test the Business/Graph API
     if (igUserId) {
-        const testUrlValue = `https://graph.facebook.com/v18.0/${igUserId}?fields=id,username,name,profile_picture_url&access_token=${encodeURIComponent(token)}`;
-        console.log(`[INSTAGRAM_TEST_DEBUG] URL: ${testUrlValue.replace(token, 'REDACTED')}`);
-        
-        const { ok, status, data } = await fetchWithTimeout(testUrlValue);
+        const { ok, data } = await fetchWithTimeout(
+            `https://graph.facebook.com/v19.0/${igUserId}?fields=id,username,name,profile_picture_url&access_token=${token}`
+        );
         if (ok && data?.id) {
             return { 
                 success: true, 
@@ -90,29 +89,24 @@ async function testInstagram(credentials) {
                 } 
             };
         }
-        console.error("[INSTAGRAM_TEST_ERROR_BUSINESS]", status, JSON.stringify(data));
         return { success: false, message: data?.error?.message || 'Instagram Business API connection failed', data };
     }
 
-    // Fallback: Test the Basic Display API (if only token is available)
-    console.log("[INSTAGRAM_TEST_DEBUG] Testing Basic Display API fallback...");
-    const { ok, status, data } = await fetchWithTimeout(
-        `https://graph.instagram.com/me?fields=id,username&access_token=${encodeURIComponent(token)}`
+    // Fallback: Test the Basic Display API
+    const { ok, data } = await fetchWithTimeout(
+        `https://graph.instagram.com/me?fields=id,username&access_token=${token}`
     );
     if (ok && data?.id) {
         return { 
             success: true, 
-            message: `Connected to Basic API as @${data.username}. Note: Business ID (igUserId) is required for publishing.`, 
-            data 
+            message: `Connected as @${data.username}`, 
+            data: {
+                ...data,
+                profileName: data.username
+            } 
         };
     }
-    
-    console.error("[INSTAGRAM_TEST_ERROR_BASIC]", status, JSON.stringify(data));
-    return { 
-        success: false, 
-        message: 'Instagram connection failed. For publishing, please provide "igUserId" (Business Account ID).', 
-        data 
-    };
+    return { success: false, message: data?.error?.message || 'Instagram Basic API connection failed', data };
 }
 
 /**
@@ -206,10 +200,10 @@ async function testTwitter(credentials) {
  * Required keys: accessToken
  */
 async function testLinkedIn(credentials) {
-    const token = (credentials.accessToken || credentials.access_token || credentials.token || '').trim();
-    const orgUrnOrId = (credentials.organizationUrn || credentials.organization_urn || '').trim();
+    const token = (credentials.apiKey || credentials.accessToken || credentials.access_token || credentials.token || '').trim();
+    const orgUrnOrId = (credentials.apiSecret || credentials.organizationUrn || credentials.organization_urn || '').trim();
 
-    if (!token) return { success: false, message: 'Missing accessToken in credentials' };
+    if (!token) return { success: false, message: 'Missing LinkedIn Access Token in credentials' };
 
     const headers = { 
         'Authorization': `Bearer ${token}`,
@@ -560,39 +554,72 @@ const PLATFORM_TESTERS = {
  * Required keys: supabaseUrl, supabaseKey
  */
 async function testSupabase(credentials) {
-    const url = (credentials.supabaseUrl || '').trim();
-    const key = (credentials.supabaseKey || '').trim();
+    let url = (credentials.supabaseUrl || '').trim();
+    const anonKey = (credentials.supabaseAnonKey || '').trim();
+    const serviceKey = (credentials.supabaseServiceKey || '').trim();
 
-    if (!url || !key) return { success: false, message: 'Missing supabaseUrl or supabaseKey' };
+    if (!url) return { success: false, message: 'Missing supabaseUrl' };
+    if (!anonKey && !serviceKey) return { success: false, message: 'Missing at least one Supabase key' };
 
-    // Clean URL
+    // Ensure protocol
+    if (!url.startsWith('http')) {
+        url = `https://${url}`;
+    }
     const baseUrl = url.replace(/\/$/, '');
 
-    const { ok, status, data } = await fetchWithTimeout(
-        `${baseUrl}/rest/v1/`,
-        {
-            headers: {
-                'apikey': key,
-                'Authorization': `Bearer ${key}`
-            }
-        }
-    );
+    // 1. Test Service Role Key first (for CRUD capabilities)
+    if (serviceKey) {
+        try {
+            const { ok, status, data } = await fetchWithTimeout(
+                `${baseUrl}/rest/v1/`,
+                {
+                    headers: {
+                        'apikey': serviceKey,
+                        'Authorization': `Bearer ${serviceKey}`
+                    }
+                }
+            );
 
-    if (ok) {
-        return { 
-            success: true, 
-            message: 'Supabase connection verified (REST API)', 
-            data: { 
-                profileName: 'Supabase Cloud',
-                ...data 
-            } 
-        };
+            if (ok) {
+                return { 
+                    success: true, 
+                    message: 'Supabase verified with Service Role Key (Full CRUD enabled)', 
+                    data: { profileName: 'Supabase (Admin)' } 
+                };
+            }
+            // If service key fails, we'll try anon key below
+        } catch (err) {
+            console.error("[TEST_SUPABASE_SERVICE_ERR]", err.message);
+        }
     }
 
-    if (status === 401) return { success: false, message: 'Invalid Supabase API key', data };
-    if (status === 404) return { success: false, message: 'Invalid Supabase URL (PostgREST not found)', data };
-    
-    return { success: false, message: `Supabase connection failed (Status: ${status})`, data };
+    // 2. Test Anon Key (as fallback or primary)
+    if (anonKey) {
+        try {
+            const { ok, status, data } = await fetchWithTimeout(
+                `${baseUrl}/auth/v1/health`,
+                {
+                    headers: {
+                        'apikey': anonKey,
+                        'Authorization': `Bearer ${anonKey}`
+                    }
+                }
+            );
+
+            if (ok) {
+                return { 
+                    success: true, 
+                    message: 'Supabase verified with Anon Key (Limited access)', 
+                    data: { profileName: 'Supabase (Public)' } 
+                };
+            }
+            return { success: false, message: `Anon key validation failed (Status: ${status})`, data };
+        } catch (err) {
+            return { success: false, message: `Connection error: ${err.message}` };
+        }
+    }
+
+    return { success: false, message: 'Service key failed and no anon key provided.' };
 }
 
 /**

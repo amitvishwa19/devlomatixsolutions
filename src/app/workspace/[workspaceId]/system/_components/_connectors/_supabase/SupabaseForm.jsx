@@ -5,22 +5,19 @@ import { useParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
     Trash2,
     Zap,
     RefreshCw,
-    CheckCircle2,
-    AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-    testWhatsAppCloudAction,
-    saveWhatsAppCloudAction,
-    deleteWhatsAppCloudAction
-} from './_actions/whatsappActions';
+    testSupabaseAction,
+    saveSupabaseAction,
+    deleteSupabaseAction
+} from './_actions/supabaseActions';
 
-export default function WhatsappCloudForm({ initialData, onSuccess }) {
+export default function SupabaseForm({ initialData, onSuccess }) {
     const params = useParams();
     const workspaceId = params?.workspaceId;
 
@@ -30,18 +27,18 @@ export default function WhatsappCloudForm({ initialData, onSuccess }) {
 
     const [formData, setFormData] = useState({
         profileName: initialData?.profileName || '',
-        accessToken: initialData?.details?.accessToken || '',
-        phoneNumberId: initialData?.details?.phoneNumberId || '',
-        wabaId: initialData?.details?.wabaId || '',
+        supabaseUrl: initialData?.details?.supabaseUrl || '',
+        supabaseAnonKey: initialData?.details?.supabaseAnonKey || '',
+        supabaseServiceKey: initialData?.details?.supabaseServiceKey || '',
     });
 
     useEffect(() => {
         if (initialData) {
             setFormData({
                 profileName: initialData.profileName || '',
-                accessToken: initialData.details?.accessToken || '',
-                phoneNumberId: initialData.details?.phoneNumberId || '',
-                wabaId: initialData.details?.wabaId || '',
+                supabaseUrl: initialData.details?.supabaseUrl || '',
+                supabaseAnonKey: initialData.details?.supabaseAnonKey || '',
+                supabaseServiceKey: initialData.details?.supabaseServiceKey || '',
             });
         }
     }, [initialData]);
@@ -50,18 +47,18 @@ export default function WhatsappCloudForm({ initialData, onSuccess }) {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const isFormValid = formData.profileName && formData.accessToken && formData.phoneNumberId && formData.wabaId;
+    const isFormValid = formData.profileName && formData.supabaseUrl && (formData.supabaseAnonKey || formData.supabaseServiceKey);
 
     const handleTestConnection = async () => {
         if (!workspaceId) return;
         setIsTesting(true);
-        const toastId = toast.loading('Testing WhatsApp Cloud connection...');
+        const toastId = toast.loading('Testing Supabase connection...');
 
         try {
-            const result = await testWhatsAppCloudAction(workspaceId, initialData?.id || 'new', {
-                accessToken: formData.accessToken,
-                phoneNumberId: formData.phoneNumberId,
-                wabaId: formData.wabaId
+            const result = await testSupabaseAction(workspaceId, initialData?.id || 'new', {
+                supabaseUrl: formData.supabaseUrl,
+                supabaseAnonKey: formData.supabaseAnonKey,
+                supabaseServiceKey: formData.supabaseServiceKey
             });
 
             if (result.success) {
@@ -79,10 +76,10 @@ export default function WhatsappCloudForm({ initialData, onSuccess }) {
     const handleSave = async () => {
         if (!workspaceId) return;
         setIsSaving(true);
-        const toastId = toast.loading('Saving WhatsApp Cloud credentials...');
+        const toastId = toast.loading('Saving Supabase credentials...');
 
         try {
-            const result = await saveWhatsAppCloudAction(workspaceId, initialData?.id, formData);
+            const result = await saveSupabaseAction(workspaceId, initialData?.id, formData);
 
             if (result.success) {
                 toast.success('Credentials saved successfully', { id: toastId });
@@ -99,11 +96,11 @@ export default function WhatsappCloudForm({ initialData, onSuccess }) {
 
     const handleDelete = async () => {
         if (!initialData?.id || !workspaceId) return;
-        if (!confirm('Are you sure you want to delete WhatsApp Cloud credentials?')) return;
+        if (!confirm('Are you sure you want to delete Supabase credentials?')) return;
 
         setIsDeleting(true);
         try {
-            const result = await deleteWhatsAppCloudAction(workspaceId, initialData.id);
+            const result = await deleteSupabaseAction(workspaceId, initialData.id);
             if (result.success) {
                 toast.success('Credentials deleted');
                 onSuccess?.();
@@ -123,40 +120,45 @@ export default function WhatsappCloudForm({ initialData, onSuccess }) {
                 <div className="space-y-1.5 md:col-span-2">
                     <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Connection Name</Label>
                     <Input
-                        placeholder="e.g. My Marketing WhatsApp"
+                        placeholder="e.g. Supabase Production"
                         value={formData.profileName}
                         onChange={(e) => handleChange('profileName', e.target.value)}
                         className=" border-white/10 text-xs h-9 focus:border-primary/50"
                     />
                 </div>
 
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Phone Number ID</Label>
+                <div className="space-y-1.5 md:col-span-2">
+                    <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Supabase URL</Label>
                     <Input
-                        placeholder="10923..."
-                        value={formData.phoneNumberId}
-                        onChange={(e) => handleChange('phoneNumberId', e.target.value)}
+                        placeholder="https://xyz.supabase.co"
+                        value={formData.supabaseUrl}
+                        onChange={(e) => handleChange('supabaseUrl', e.target.value)}
                         className=" border-white/10 text-xs h-9 focus:border-primary/50"
                     />
                 </div>
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">WhatsApp Business Account ID (WABA ID)</Label>
-                    <Input
-                        placeholder="12345..."
-                        value={formData.wabaId}
-                        onChange={(e) => handleChange('wabaId', e.target.value)}
-                        className=" border-white/10 text-xs h-9 focus:border-primary/50"
-                    />
-                </div>
-                <div className="space-y-1.5  md:col-span-2">
-                    <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Access Token</Label>
+
+                <div className="space-y-1.5 md:col-span-2">
+                    <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Supabase Anon Key</Label>
                     <Input
                         type="password"
-                        placeholder="EAAB..."
-                        value={formData.accessToken}
-                        onChange={(e) => handleChange('accessToken', e.target.value)}
+                        placeholder="eyJhbGciOiJIUzI1NiIsInR5..."
+                        value={formData.supabaseAnonKey}
+                        onChange={(e) => handleChange('supabaseAnonKey', e.target.value)}
                         className=" border-white/10 text-xs h-9 focus:border-primary/50"
                     />
+                    <p className="text-[10px] text-zinc-500 ml-1">Public access key (respects RLS)</p>
+                </div>
+
+                <div className="space-y-1.5 md:col-span-2">
+                    <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Supabase Service Role Key</Label>
+                    <Input
+                        type="password"
+                        placeholder="eyJhbGciOiJIUzI1NiIsInR5..."
+                        value={formData.supabaseServiceKey}
+                        onChange={(e) => handleChange('supabaseServiceKey', e.target.value)}
+                        className=" border-white/10 text-xs h-9 focus:border-primary/50"
+                    />
+                    <p className="text-[10px] text-zinc-500 ml-1">Secret key for full CRUD operations (bypasses RLS)</p>
                 </div>
             </div>
 
