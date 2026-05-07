@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
 import { ShieldCheck, Lock, Fingerprint, ShieldAlert, History } from 'lucide-react';
 
 export const SecuritySettings = () => {
@@ -36,107 +35,87 @@ export const SecuritySettings = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-            >
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:border-sky-500/30 transition-colors">
-                    <CardHeader className="pb-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-sky-500/10 rounded-lg border border-sky-500/20">
-                                <ShieldCheck className="w-5 h-5 text-sky-500" />
+        <div className="space-y-3">
+            <Card className="bg-white/5 border-white/10">
+                <CardHeader className="pb-3 px-3 border-b border-white/5">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-sky-500/10 rounded-lg border border-sky-500/20">
+                            <ShieldCheck className="w-3.5 h-3.5 text-sky-500" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xs font-bold text-white">Security & Governance</CardTitle>
+                            <CardDescription className="text-[10px] text-zinc-500">
+                                Authentication requirements and policies.
+                            </CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-2.5 pt-3 px-3">
+                    <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-white/5 border border-white/10">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-primary/10 rounded-lg border border-primary/20">
+                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
                             </div>
-                            <div>
-                                <CardTitle className="text-base font-bold text-white">Security & Governance</CardTitle>
-                                <CardDescription className="text-xs text-zinc-500">
-                                    Authentication requirements and policies.
-                                </CardDescription>
+                            <div className="space-y-0.5">
+                                <Label className="text-xs font-semibold text-white">Multi-Factor Authentication</Label>
+                                <p className="text-[10px] text-zinc-500">Require TOTP/SMS for all team members.</p>
                             </div>
                         </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4 pt-4">
-                        <motion.div
-                            className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
-                            whileHover={{ x: 4 }}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-primary/10 rounded-lg border border-primary/20">
-                                    <Fingerprint className="w-5 h-5 text-primary" />
-                                </div>
-                                <div className="space-y-0.5">
-                                    <Label className="text-sm font-semibold text-white">Multi-Factor Authentication</Label>
-                                    <p className="text-xs text-zinc-500">Require TOTP/SMS for all team members.</p>
-                                </div>
-                            </div>
-                            <Switch
-                                disabled={saving}
-                                checked={localSecurity.mfaEnabled}
-                                onCheckedChange={handleToggleMFA}
-                                className="data-[state=checked]:bg-sky-500"
-                            />
-                        </motion.div>
-
-                        <div className="grid gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Session Idle Timeout</Label>
-                                <motion.div
-                                    className="flex gap-4 items-center p-4 rounded-xl bg-white/5 border border-white/10"
-                                    whileHover={{ x: 4 }}
-                                >
-                                    <History className="w-5 h-5 text-zinc-500" />
-                                    <div className="flex-1">
-                                        <span className="text-sm font-semibold text-white">Current Policy</span>
-                                        <p className="text-xs text-zinc-500">{Math.floor(localSecurity.sessionTimeout / 60)} minutes</p>
-                                    </div>
-                                    <Button variant="ghost" size="sm" className="rounded-lg bg-white/5 border border-white/10 text-xs font-semibold h-9 px-4" disabled>
-                                        Adjust
-                                    </Button>
-                                </motion.div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Password Strength</Label>
-                                <motion.div
-                                    className="flex gap-4 items-center p-4 rounded-xl bg-white/5 border border-white/10"
-                                    whileHover={{ x: 4 }}
-                                >
-                                    <Lock className="w-5 h-5 text-zinc-500" />
-                                    <div className="flex-1">
-                                        <span className="text-sm font-semibold text-white">Current Level</span>
-                                        <p className="text-xs text-zinc-500 uppercase">{localSecurity.passwordPolicy}</p>
-                                    </div>
-                                    <Button variant="ghost" size="sm" className="rounded-lg bg-white/5 border border-white/10 text-xs font-semibold h-9 px-4" disabled>
-                                        Change
-                                    </Button>
-                                </motion.div>
-                            </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-4">
-                        <Button
-                            onClick={handleSave}
+                        <Switch
                             disabled={saving}
-                            className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold h-11"
-                        >
-                            {saving ? "Saving..." : "Update Security"}
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </motion.div>
+                            checked={localSecurity.mfaEnabled}
+                            onCheckedChange={handleToggleMFA}
+                            className="data-[state=checked]:bg-sky-500 scale-90"
+                        />
+                    </div>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex gap-3 items-center"
-            >
-                <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
-                <p className="text-sm text-zinc-400">
+                    <div className="grid gap-2">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Session Idle Timeout</Label>
+                            <div className="flex gap-2 items-center p-2 rounded-lg bg-white/5 border border-white/10">
+                                <History className="w-3.5 h-3.5 text-zinc-500" />
+                                <div className="flex-1">
+                                    <span className="text-xs font-semibold text-white">Current Policy</span>
+                                    <p className="text-[10px] text-zinc-500">{Math.floor(localSecurity.sessionTimeout / 60)} minutes</p>
+                                </div>
+                                <Button variant="ghost" size="sm" className="rounded-lg bg-white/5 border border-white/10 text-[10px] font-semibold h-7 px-2" disabled>
+                                    Adjust
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Password Strength</Label>
+                            <div className="flex gap-2 items-center p-2 rounded-lg bg-white/5 border border-white/10">
+                                <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                                <div className="flex-1">
+                                    <span className="text-xs font-semibold text-white">Current Level</span>
+                                    <p className="text-[10px] text-zinc-500 uppercase">{localSecurity.passwordPolicy}</p>
+                                </div>
+                                <Button variant="ghost" size="sm" className="rounded-lg bg-white/5 border border-white/10 text-[10px] font-semibold h-7 px-2" disabled>
+                                    Change
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter className="border-t border-white/5 pt-3 px-3">
+                    <Button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-8"
+                    >
+                        {saving ? "Saving..." : "Update Security"}
+                    </Button>
+                </CardFooter>
+            </Card>
+
+            <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 flex gap-2 items-center">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <p className="text-[10px] text-zinc-400">
                     Changing security policies will notify all administrators.
                 </p>
-            </motion.div>
+            </div>
         </div>
     );
 };

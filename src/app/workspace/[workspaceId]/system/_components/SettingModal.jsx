@@ -20,6 +20,7 @@ import {
     ChevronRight,
     Search,
     Activity,
+    Unplug,
 } from 'lucide-react';
 import { GeneralSettings } from './GeneralSettings';
 import { SecuritySettings } from './SecuritySettings';
@@ -36,6 +37,7 @@ const settingTabs = [
     { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
     { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
+    { id: 'connectors', label: 'Connectors', icon: Unplug, color: 'text-fuchsia-500' },
     { id: 'advanced', label: 'Advanced', icon: Cpu, color: 'text-amber-500' },
     { id: 'privacy', label: 'Privacy', icon: ShieldCheck, color: 'text-indigo-500' },
     { id: 'developer', label: 'Developer', icon: Terminal, color: 'text-fuchsia-500' },
@@ -46,6 +48,7 @@ const settingDescriptions = {
     security: 'Manage authentication policies and access controls.',
     notifications: 'Configure alert channels and notification preferences.',
     integrations: 'Connect external services, webhooks, and APIs.',
+    connectors: 'Connect external services, webhooks, and APIs.',
     advanced: 'System configuration, code injection, and data portability.',
     privacy: 'Data governance, GDPR compliance, and audit settings.',
     developer: 'API keys, webhooks, and developer tools.',
@@ -146,7 +149,7 @@ export default function SettingModal({ open, onClose }) {
                             </motion.button>
                         </nav>
 
-                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-[#0a0a0a]/80">
+                        <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-white/5">
                             <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -157,7 +160,7 @@ export default function SettingModal({ open, onClose }) {
                         </div>
                     </motion.aside>
 
-                    <main className="flex-1 p-4">
+                    <main className="flex-1 p-0">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}
@@ -167,7 +170,7 @@ export default function SettingModal({ open, onClose }) {
                                 transition={{ duration: 0.2 }}
                                 className=" mx-auto"
                             >
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2 border-b p-2">
                                     <div className="p-1 text-xs rounded-xl bg-white/5 border border-white/10">
                                         {React.createElement(
                                             settingTabs.find(t => t.id === activeTab)?.icon || Settings,
@@ -184,7 +187,7 @@ export default function SettingModal({ open, onClose }) {
                                     </div>
                                 </div>
 
-                                <ScrollArea className="space-y-2 h-[70vh] pr-4">
+                                <ScrollArea className="space-y-2 h-[73vh] p-2">
                                     {activeTab === 'general' && <GeneralSettings />}
                                     {activeTab === 'security' && <SecuritySettings />}
                                     {activeTab === 'notifications' && <NotificationSettings />}
@@ -192,7 +195,7 @@ export default function SettingModal({ open, onClose }) {
                                     {activeTab === 'advanced' && <AdvancedSettings />}
                                     {activeTab === 'privacy' && <PrivacySettings />}
                                     {activeTab === 'developer' && <DeveloperSettings />}
-                                    {activeTab === 'danger' && <DangerZons />}
+                                    {activeTab === 'danger' && <DangerZone />}
                                 </ScrollArea>
                             </motion.div>
                         </AnimatePresence>
