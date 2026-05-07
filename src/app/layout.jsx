@@ -10,7 +10,6 @@ import { Toaster } from "sonner";
 import { AppThemeProvider } from "@/hooks/useTheme";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
-import { db } from "@/lib/db";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AccessProvider } from "@/providers/AccessProvider";
 import CookieConsent from "@/components/global/CookieConsent";

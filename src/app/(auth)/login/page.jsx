@@ -147,7 +147,7 @@ function LoginForm() {
                         </div>
                     </div>
 
-                    <div className='flex justify-evenly w-full mt-2'>
+                    <div className='flex justify-evenly w-full mt-2 gap-4'>
                         <Button
                             type="button"
                             disabled={false}
@@ -161,6 +161,15 @@ function LoginForm() {
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
                             Google
+                        </Button>
+                        <Button
+                            type="button"
+                            disabled={false}
+                            onClick={handleGithubLogin}
+                            className='w-full flex items-center justify-center gap-2 py-2 cursor-pointer px-4 bg-transparent border border-white/10 hover:border-white/20 hover:bg-white/5 text-white transition-all h-11 rounded-lg'
+                        >
+                            <Icons.gitHub className="w-5 h-5 fill-white" />
+                            GitHub
                         </Button>
                     </div>
 
