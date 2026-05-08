@@ -48,7 +48,7 @@ export const getSidebarNavItems = (workspaceId) => {
             parent: { title: "KonnectX", icon: "message-circle-more", url: baseWhatsappCloudApiPath },
             child: [
                 { title: "Dashboard", icon: "message-circle-more", url: baseWhatsappCloudApiPath },
-                { title: "Chats", icon: "square-stack", url: `${baseWhatsappCloudApiPath}/chats` },
+                { title: "Messages", icon: "bot-message-square", url: `${baseWhatsappCloudApiPath}/chats` },
                 { title: "Contacts", icon: "users", url: `${baseWhatsappCloudApiPath}/contacts` },
                 { title: "Templates", icon: "zap", url: `${baseWhatsappCloudApiPath}/template` },
                 { title: "Campaigns", icon: "megaphone", url: `${baseWhatsappCloudApiPath}/campaigns` },
