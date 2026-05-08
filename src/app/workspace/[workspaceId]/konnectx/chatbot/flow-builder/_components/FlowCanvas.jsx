@@ -18,17 +18,18 @@ import { PropertyPanel } from './PropertyPanel';
 import { NodeSidebar } from './NodeSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-    Save, 
-    ArrowLeft, 
-    Loader2, 
+import {
+    Save,
+    ArrowLeft,
+    Loader2,
     Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
 import { useAction } from "@/hooks/use-action";
-import { getBotDetails } from "../../chatbot/_actions/get-bot-details";
-import { saveBot } from "../../chatbot/_actions/save-bot";
+import { getBotDetails } from "../../_actions/get-bot-details";
+import { saveBot } from "../../_actions/save-bot";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import '@xyflow/react/dist/style.css';
 
@@ -63,6 +64,7 @@ const initialEdges = [
         id: 'start_node-welcome_reply',
         source: 'start_node',
         target: 'welcome_reply',
+        type: 'step',
         animated: true,
         style: { stroke: '#10b981', strokeWidth: 2 }
     }
@@ -71,10 +73,11 @@ const initialEdges = [
 let idCount = 1;
 const getNextId = (type) => `${type}_${Date.now()}_${idCount++}`;
 
-export const FlowCanvas = ({ flowId }) => {
-    const { workspaceId } = useParams();
+export const FlowCanvas = ({ flowId, standalone = false }) => {
+    const params = useParams();
     const router = useRouter();
-    
+    const wsId = standalone ? params?.workspaceId : params?.workspaceId;
+
     const { screenToFlowPosition, fitView } = useReactFlow();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -109,7 +112,6 @@ export const FlowCanvas = ({ flowId }) => {
         onError: (err) => toast.error(err || "Save failed")
     });
 
-    // Load Flow Data
     useEffect(() => {
         if (!flowId) {
             setNodes(initialNodes);
@@ -119,12 +121,13 @@ export const FlowCanvas = ({ flowId }) => {
         }
 
         setIsLoading(true);
-        executeGetDetails({ workspaceId, id: flowId });
-    }, [flowId, workspaceId]);
+        executeGetDetails({ workspaceId: wsId, id: flowId });
+    }, [flowId, wsId]);
 
     const onConnect = useCallback(
         (params) => setEdges((eds) => addEdge({
             ...params,
+            type: 'step',
             animated: true,
             style: { stroke: '#10b981', strokeWidth: 2 }
         }, eds)),
@@ -198,7 +201,7 @@ export const FlowCanvas = ({ flowId }) => {
 
     const handleSave = () => {
         if (!flowId) return;
-        executeSaveBot({ workspaceId, id: flowId, nodes, edges });
+        executeSaveBot({ workspaceId: wsId, id: flowId, nodes, edges });
     };
 
     const interpolatePreview = (text) => {
@@ -238,17 +241,36 @@ export const FlowCanvas = ({ flowId }) => {
 
     if (isLoading) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-[#0f0f1a]">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Loading Canvas...</p>
+            <div className="flex-1 w-full h-full flex bg-background">
+                <div className="w-80 border-r border-white/10 bg-background p-6 space-y-8">
+                    <Skeleton className="h-8 w-32 bg-white/5" />
+                    <Skeleton className="h-10 w-full bg-white/5" />
+                    <div className="space-y-6">
+                        <Skeleton className="h-6 w-24 bg-white/5" />
+                        <div className="space-y-3">
+                            <Skeleton className="h-16 w-full bg-white/5" />
+                            <Skeleton className="h-16 w-full bg-white/5" />
+                        </div>
+                    </div>
+                    <div className="space-y-6">
+                        <Skeleton className="h-6 w-20 bg-white/5" />
+                        <div className="space-y-3">
+                            <Skeleton className="h-16 w-full bg-white/5" />
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-6">
+                        <Skeleton className="h-64 w-64 rounded-xl bg-white/5" />
+                        <Skeleton className="h-4 w-48 bg-white/5" />
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex-1 w-full h-full flex bg-[#0f0f1a] relative overflow-hidden">
+        <div className="flex-1 w-full h-full flex bg-background relative overflow-hidden">
             <NodeSidebar />
 
             <div className="flex-1 relative h-full">
@@ -267,10 +289,15 @@ export const FlowCanvas = ({ flowId }) => {
                     className="bg-dot-white/[0.05]"
                     minZoom={0.2}
                     maxZoom={1.5}
+                    defaultEdgeOptions={{
+                        type: 'step',
+                        style: { stroke: '#10b981', strokeWidth: 2 },
+                        animated: true
+                    }}
                 >
                     <Background color="#10b981" gap={20} size={1} className="opacity-10" />
                     <Controls className="bg-[#1e1e2e] border-white/10 rounded-xl shadow-2xl [&>button]:border-white/5" />
-                    <MiniMap 
+                    <MiniMap
                         className="bg-[#1e1e2e] border-white/10 rounded-xl shadow-2xl"
                         nodeColor={(n) => {
                             if (n.type === 'triggerNode') return '#f59e0b';
@@ -280,7 +307,6 @@ export const FlowCanvas = ({ flowId }) => {
                         maskColor="rgba(0,0,0,0.5)"
                     />
 
-                    {/* Top Panel Actions */}
                     <Panel position="top-right" className="flex items-center gap-4 m-6">
                         <div className="flex flex-col items-end mr-4">
                             <h1 className="text-sm font-black text-white leading-none capitalize">
@@ -292,10 +318,10 @@ export const FlowCanvas = ({ flowId }) => {
                             </span>
                         </div>
 
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={handleSave} 
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSave}
                             disabled={isSaving}
                             className="bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/20 h-10 px-6 rounded-xl font-bold transition-all active:scale-95"
                         >
@@ -304,12 +330,11 @@ export const FlowCanvas = ({ flowId }) => {
                         </Button>
                     </Panel>
 
-                    {/* Bottom Utility Panel */}
                     <Panel position="bottom-left" className="m-6 flex gap-2">
-                         <Button
+                        <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(`/workspace/${workspaceId}/konnectx/chatbot`)}
+                            onClick={() => router.push(`/workspace/${wsId}/konnectx/chatbot`)}
                             className="bg-white/5 border-white/10 text-white rounded-xl h-10 px-4 font-bold text-[10px] uppercase hover:bg-white/10"
                         >
                             <ArrowLeft size={14} className="mr-2" /> Exit Builder
@@ -349,7 +374,7 @@ export const FlowCanvas = ({ flowId }) => {
 
                 {selectedNode && (
                     <div className="absolute right-0 top-0 bottom-0 z-50">
-                        <PropertyPanel 
+                        <PropertyPanel
                             selectedNode={selectedNode}
                             updateNodeData={updateNodeData}
                             deleteNode={deleteNode}

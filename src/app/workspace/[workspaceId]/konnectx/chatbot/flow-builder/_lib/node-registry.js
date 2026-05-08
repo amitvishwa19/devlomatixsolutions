@@ -17,7 +17,6 @@ import {
  * WhatsApp Node Registry: The declarative "Source of Truth" for all WhatsApp Bot nodes.
  */
 export const WA_NODE_REGISTRY = {
-    // TRIGGERS
     welcomeTrigger: {
         displayName: 'Welcome Trigger',
         name: 'welcome',
@@ -87,8 +86,6 @@ export const WA_NODE_REGISTRY = {
         description: 'Triggered when order shipping status changes',
         properties: []
     },
-
-    // MESSAGES
     textMessage: {
         displayName: 'Send Text',
         name: 'textMessage',
@@ -152,8 +149,6 @@ export const WA_NODE_REGISTRY = {
             }
         ]
     },
-
-    // LOGIC
     conditionNode: {
         displayName: 'Condition',
         name: 'condition',
@@ -203,8 +198,6 @@ export const WA_NODE_REGISTRY = {
             }
         ]
     },
-
-    // ACTIONS
     httpRequest: {
         displayName: 'HTTP Request',
         name: 'http',

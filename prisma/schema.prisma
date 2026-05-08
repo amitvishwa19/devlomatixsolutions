@@ -465,6 +465,28 @@ model BotFlowStep {
   @@index([botFlowId])
 }
 
+model BotExecution {
+  id           String    @id @default(cuid())
+  botFlowId    String?
+  workspaceId  String
+  phone        String
+  message      String
+  triggeredAt  DateTime  @default(now())
+  completedAt  DateTime?
+  status       String    @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
+  error        String?
+  nodesVisited Json      @default("[]")
+  responses    Json      @default("[]")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  botFlow      BotFlow?  @relation(fields: [botFlowId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([botFlowId])
+  @@index([phone])
+  @@index([status])
+}
+
 model WhatsAppSessionKey {
   id             String       @id @default(cuid())
   whatsappAuthId String

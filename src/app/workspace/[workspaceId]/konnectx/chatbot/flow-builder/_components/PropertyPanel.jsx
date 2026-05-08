@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { WA_NODE_REGISTRY } from '../_lib/node-registry';
+import { WA_NODE_REGISTRY } from "../_lib/node-registry";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Settings2, Trash2, Info } from 'lucide-react';
+import { X, Trash2, Info } from 'lucide-react';
 import { 
     Select, 
     SelectContent, 
@@ -33,7 +33,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
     };
 
     return (
-        <div className="w-96 h-full border-l border-white/10 bg-[#0f0f1a] flex flex-col shadow-2xl z-20">
+        <div className="w-96 h-full border-l border-white/10 bg-background flex flex-col shadow-2xl z-20">
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-primary/10 text-primary">
@@ -51,7 +51,6 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
             <ScrollArea className="flex-1 p-6">
                 <div className="space-y-8">
-                    {/* Common Metadata Section */}
                     <div className="space-y-4">
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Core Configuration</h3>
                         <div className="space-y-2">
@@ -64,7 +63,6 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                         </div>
                     </div>
 
-                    {/* Dynamic Properties Section */}
                     {nodeDef.properties.length > 0 && (
                         <div className="space-y-6 pt-6 border-t border-white/5">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Node Properties</h3>
@@ -116,7 +114,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                             <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-[#0f0f1a] border-white/10">
+                                            <SelectContent className="bg-background border-white/10">
                                                 {prop.options.map((opt, oIdx) => (
                                                     <SelectItem key={oIdx} value={opt.value} className="text-xs">
                                                         {opt.name}

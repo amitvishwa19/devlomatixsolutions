@@ -67,6 +67,7 @@ const handler = async (data) => {
                 id: 'start_node-auto_reply',
                 source: 'start_node',
                 target: 'auto_reply',
+                type: 'step',
                 animated: true,
                 style: { stroke: '#10b981', strokeWidth: 2 }
             }
@@ -118,6 +119,7 @@ const handler = async (data) => {
                     id: 'start_node-auto_reply',
                     source: 'start_node',
                     target: 'auto_reply',
+                    type: 'step',
                     animated: true,
                     style: { stroke: '#10b981', strokeWidth: 2 }
                 }
