@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, configured }) => {
     return (
         <div className={cn(
-            "relative rounded-sm border transition-all duration-300 min-w-[220px]  border",
+            "relative rounded-sm border transition-all duration-300 min-w-[250px]  border bg-card  dark:bg-[#1e1e2e]/90",
             selected ? "ring-1 ring-primary border-primary/50 -translate-y-1 shadow-primary/10" : "hover:border-primary/40"
         )}>
             <div className="flex items-center justify-between p-2">

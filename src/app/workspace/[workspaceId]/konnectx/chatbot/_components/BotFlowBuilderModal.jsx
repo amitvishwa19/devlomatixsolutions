@@ -17,7 +17,7 @@ export const BotFlowBuilderModal = ({ isOpen, onClose, flowId }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-[95vw] min-w-[95vw] w-full min-h-[95vh] h-[95vh] p-0 gap-0  border overflow-hidden flex flex-col s">
+            <DialogContent className="max-w-[95vw] min-w-[95vw] w-full min-h-[95vh] h-[95vh] p-0 gap-0  border overflow-hidden flex flex-col">
                 <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0  backdrop-blur-md">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-primary/10 text-primary">

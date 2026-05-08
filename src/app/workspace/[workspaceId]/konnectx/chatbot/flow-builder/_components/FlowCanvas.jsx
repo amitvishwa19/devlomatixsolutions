@@ -295,56 +295,47 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                         animated: true
                     }}
                 >
-                    <Background color="#10b981" gap={20} size={1} className="opacity-10" />
-                    <Controls className="bg-[#1e1e2e] border-white/10 rounded-xl shadow-2xl [&>button]:border-white/5" />
-                    <MiniMap
-                        className="bg-[#1e1e2e] border-white/10 rounded-xl shadow-2xl"
+                    <Background gap={14} size={1.5} className="opacity-[0.2]" />
+                    <Controls className=" border rounded-md shadow-md " />
+                    {/* <MiniMap
+                        className="border rounded-md"
                         nodeColor={(n) => {
                             if (n.type === 'triggerNode') return '#f59e0b';
                             if (n.type === 'messageNode') return '#10b981';
                             return '#3b82f6';
                         }}
                         maskColor="rgba(0,0,0,0.5)"
-                    />
+                    /> */}
 
                     <Panel position="top-right" className="flex items-center gap-4 m-6">
                         <div className="flex flex-col items-end mr-4">
                             <h1 className="text-sm font-black text-white leading-none capitalize">
                                 {flowData?.name || 'New Workflow'}
                             </h1>
-                            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5 pt-1">
+                            <span className="text-xs font-bold text-emerald-500 text-xs text-xs flex items-center gap-1.5 pt-1">
                                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 Interactive Canvas
                             </span>
                         </div>
 
                         <Button
-                            variant="outline"
+                            variant="default"
                             size="sm"
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/20 h-10 px-6 rounded-xl font-bold transition-all active:scale-95"
+
                         >
                             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save size={18} className="mr-2" />}
                             Sync Changes
                         </Button>
                     </Panel>
 
-                    <Panel position="bottom-left" className="m-6 flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/workspace/${wsId}/konnectx/chatbot`)}
-                            className="bg-white/5 border-white/10 text-white rounded-xl h-10 px-4 font-bold text-[10px] uppercase hover:bg-white/10"
-                        >
-                            <ArrowLeft size={14} className="mr-2" /> Exit Builder
-                        </Button>
-                    </Panel>
+
 
                     <Panel position="bottom-right" className="m-6 w-80">
-                        <div className="rounded-xl border border-white/10 bg-[#1e1e2e]/90 shadow-2xl backdrop-blur-md p-4 space-y-3">
+                        <div className="rounded-xl border border-white/10 bg-card dark:bg-[#1e1e2e]/90 shadow-2xl backdrop-blur-md p-4 space-y-3">
                             <div>
-                                <h3 className="text-xs font-black text-white uppercase tracking-widest">Test Auto Reply</h3>
+                                <h3 className="text-xs font-black text-white text-xs text-xs">Test Auto Reply</h3>
                                 <p className="text-[10px] text-muted-foreground mt-1">Preview the reply without sending a WhatsApp message.</p>
                             </div>
                             <div className="flex gap-2">
