@@ -1,19 +1,19 @@
 import { google } from 'googleapis';
 import { db } from './db.js';
-import fs from 'fs';
+import { symmetricEncrypt, symmetricDecrypt } from './encryption.js';
 
-const REDIRECT_URI = `${process.env.NEXTAUTH_URL}/api/workspace/callback/google`;
+const REDIRECT_URI = `${process.env.NEXTAUTH_URL}/api/connect/google/callback`;
 
 /**
  * Get a Google OAuth2 client
  */
-export const getOAuth2Client = (workspaceId) => {
+export function getOAuth2Client() {
     return new google.auth.OAuth2(
         process.env.GOOGLE_ID,
         process.env.GOOGLE_SECRET,
         REDIRECT_URI
     );
-};
+}
 
 export const getGmailClient = async (userId = null, credentialId = null) => {
     const whereClause = {
@@ -32,11 +32,27 @@ export const getGmailClient = async (userId = null, credentialId = null) => {
     });
 
     if (!credential || !credential.credentials) {
+        console.error("[GMAIL_CLIENT_ERROR] No credential or tokens found for:", { userId, credentialId });
         throw new Error('GMAIL_NOT_CONNECTED');
     }
 
-    // Handle encrypted vs plain credentials based on our db.js logic
-    const tokens = credential.credentials.enc ? await decryptTokens(credential.credentials) : credential.credentials;
+    let tokens;
+    try {
+        if (credential.credentials.enc) {
+            const decrypted = symmetricDecrypt(credential.credentials.enc);
+            tokens = JSON.parse(decrypted);
+        } else {
+            tokens = credential.credentials;
+        }
+    } catch (e) {
+        console.error("[GMAIL_DECRYPT_ERROR]", e.message);
+        throw new Error('GMAIL_DECRYPTION_FAILED');
+    }
+
+    if (!tokens || !tokens.access_token) {
+        console.error("[GMAIL_CLIENT_ERROR] Invalid tokens after decryption:", tokens);
+        throw new Error('GMAIL_INVALID_TOKENS');
+    }
 
     const oauth2Client = new google.auth.OAuth2(
         process.env.GOOGLE_ID,
@@ -50,55 +66,17 @@ export const getGmailClient = async (userId = null, credentialId = null) => {
     oauth2Client.on('tokens', async (newTokens) => {
         if (newTokens.refresh_token) {
             // Update DB with new tokens
-            const encrypted = await encryptTokens(newTokens);
+            const mergedTokens = { ...tokens, ...newTokens };
+            const encrypted = symmetricEncrypt(JSON.stringify(mergedTokens));
             await db.credentials.update({
                 where: { id: credential.id },
-                data: { credentials: encrypted }
+                data: { credentials: { enc: encrypted } }
             });
         }
     });
 
     return google.gmail({ version: 'v1', auth: oauth2Client });
 };
-
-// Internal helpers for encryption (syncing with accounts/route.js logic)
-async function decryptTokens(storedData) {
-    const key = process.env.ENCRYPTION_KEY;
-    if (!key) return storedData;
-    
-    try {
-        const crypto = await import('crypto');
-        const ALG = 'aes-256-cbc';
-        const parts = storedData.enc.split(':');
-        const ivBuffer = Buffer.from(parts[0], 'hex');
-        const encText = Buffer.from(parts.slice(1).join(':'), 'hex');
-        const decipher = crypto.createDecipheriv(ALG, Buffer.from(key, 'hex'), ivBuffer);
-        let decrypted = decipher.update(encText);
-        decrypted = Buffer.concat([decrypted, decipher.final()]);
-        return JSON.parse(decrypted.toString());
-    } catch (e) {
-        console.error("[GMAIL_DECRYPT_FAILED]", e.message);
-        return storedData;
-    }
-}
-
-async function encryptTokens(dataObj) {
-    const key = process.env.ENCRYPTION_KEY;
-    if (!key) return dataObj;
-    
-    try {
-        const crypto = await import('crypto');
-        const ALG = 'aes-256-cbc';
-        const iv = crypto.randomBytes(16);
-        const cipher = crypto.createCipheriv(ALG, Buffer.from(key, 'hex'), iv);
-        let encrypted = cipher.update(JSON.stringify(dataObj));
-        encrypted = Buffer.concat([encrypted, cipher.final()]);
-        return { enc: iv.toString('hex') + ':' + encrypted.toString('hex') };
-    } catch (e) {
-        console.error("[GMAIL_ENCRYPT_FAILED]", e.message);
-        return dataObj;
-    }
-}
 
 /**
  * Format Gmail message details

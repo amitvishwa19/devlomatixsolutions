@@ -52,12 +52,11 @@ export const MailSidebar = ({
 
  const userLabels = labels.filter(l => l.type ==='user');
 
- const handleConnect = () => {
- const apiPath = window.location.pathname.startsWith('/workspace')
- ? `/api${window.location.pathname}/auth`
- : `/api/workspace/callback/google`;
- window.location.href = apiPath;
- };
+  const handleConnect = () => {
+    const parts = window.location.pathname.split('/');
+    const wId = parts[2];
+    window.location.href = `/api/connect/google?workspaceId=${wId}&returnTo=${window.location.pathname}`;
+  };
 
  return (
  <div className="w-64 h-full flex flex-col bg-card/10 backdrop-blur-xl border-r border-border/40 p-4 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
@@ -101,7 +100,7 @@ export const MailSidebar = ({
  >
  <Avatar className="w-10 border-2 border-background shadow-md">
  <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(account.email)}&background=random`} />
- <AvatarFallback className="font-bold text-xs">{account.email.substring(0, 2).toUpperCase()}</AvatarFallback>
+  <AvatarFallback className="font-bold text-xs">{(account.email || '??').substring(0, 2).toUpperCase()}</AvatarFallback>
  </Avatar>
  <div className="flex flex-col min-w-0">
  <span className="text-[11px] font-bold truncate leading-tight">{account.email}</span>

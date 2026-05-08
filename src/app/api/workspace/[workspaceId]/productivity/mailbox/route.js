@@ -39,9 +39,10 @@ export async function GET(req, { params }) {
         console.log(`[MAILBOX_DB_DIAGNOSTIC] Connected Gmail Accounts Found: ${connectedAccounts.length}`);
 
         if (connectedAccounts.length === 0) {
+            console.log(`[MAILBOX_API] No Gmail accounts found for workspace ${workspaceId}`);
             return NextResponse.json({ 
                 connected: false, 
-                message: "No Gmail accounts connected",
+                message: "No Gmail accounts connected. Please connect your Google account in Settings > Connectors.",
                 debug_userId: userId
             });
         }
@@ -56,10 +57,13 @@ export async function GET(req, { params }) {
                 // Try each account until one works
                 for (const acc of connectedAccounts) {
                     try {
+                        console.log(`[MAILBOX_API] Attempting to load Gmail client for account: ${acc.profile}`);
                         gmail = await getGmailClient(null, acc.id);
                         activeAccountId = acc.id;
+                        console.log(`[MAILBOX_API] Successfully loaded Gmail client for: ${acc.profile}`);
                         break;
                     } catch (e) {
+                        console.error(`[MAILBOX_API] Failed to load Gmail client for ${acc.profile}:`, e.message);
                         continue;
                     }
                 }

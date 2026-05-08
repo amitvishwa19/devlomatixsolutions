@@ -49,13 +49,13 @@ export async function GET(request) {
 
         // 3. Encrypt and Save to Database
         const details = {
-            accessToken: tokens.access_token,
-            refreshToken: tokens.refresh_token,
-            expiresIn: tokens.expires_in,
-            tokenType: tokens.token_type,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            expiry_date: tokens.expiry_date || (Date.now() + (tokens.expires_in * 1000)),
+            token_type: tokens.token_type,
             scope: tokens.scope,
-            clientId: process.env.GOOGLE_ID,
-            clientSecret: process.env.GOOGLE_SECRET,
+            client_id: process.env.GOOGLE_ID,
+            client_secret: process.env.GOOGLE_SECRET,
             email: profile.email,
             name: profile.name,
             picture: profile.picture

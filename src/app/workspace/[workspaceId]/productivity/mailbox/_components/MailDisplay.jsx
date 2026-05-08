@@ -29,7 +29,11 @@ import {
  TooltipProvider,
  TooltipTrigger,
 } from"@/components/ui/tooltip";
-import axios from'@/utils/axios';
+import { 
+  getMailDetailAction, 
+  executeMailActionAction, 
+  summarizeEmailAction 
+} from'../../../system/_actions/mailbox';
 import { useParams } from'next/navigation';
 import TipTap from'@/components/global/TipTap';
 import { cn } from'@/lib/utils';
@@ -56,38 +60,36 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
  return;
  }
 
- const fetchMessage = async () => {
- setLoading(true);
- setSummary(null);
- try {
- const res = await axios.get(`/api/workspace/${workspaceId}/productivity/mailbox/${messageId}`, {
- params: { accountId }
- });
- setMessage(res.data);
- } catch (error) {
- console.error(error);
- } finally {
- setLoading(false);
- }
- };
+  const fetchMessage = async () => {
+    setLoading(true);
+    setSummary(null);
+    try {
+      const res = await getMailDetailAction(workspaceId, messageId, accountId);
+      if (res.error) throw new Error(res.error);
+      setMessage(res);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
  fetchMessage();
  }, [messageId, workspaceId, accountId]);
 
- const handleSummarize = async () => {
- if (summaryLoading) return;
- setSummaryLoading(true);
- try {
- const res = await axios.post(`/api/workspace/${workspaceId}/productivity/mailbox/${messageId}/summarize`, {
- accountId
- });
- setSummary(res.data.summary);
- } catch (error) {
- console.error(error);
- } finally {
- setSummaryLoading(false);
- }
- };
+  const handleSummarize = async () => {
+    if (summaryLoading) return;
+    setSummaryLoading(true);
+    try {
+      const res = await summarizeEmailAction(accountId, messageId);
+      if (res.error) throw new Error(res.error);
+      setSummary(res.summary);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
  const handleReply = () => {
  setReplyTo(message.from);
@@ -105,21 +107,22 @@ export const MailDisplay = ({ messageId, accountId, onAction }) => {
  setIsReplying(false);
  };
 
- const sendResponse = async () => {
- try {
- await axios.post(`/api/workspace/${workspaceId}/productivity/mailbox/${messageId}`, {
- action: isReplying ?'reply':'forward',
- accountId,
- to: replyTo,
- subject: replySubject,
- body: replyBody
- });
- setIsReplying(false);
- setIsForwarding(false);
- } catch (error) {
- console.error(error);
- }
- };
+  const sendResponse = async () => {
+    try {
+      const res = await executeMailActionAction(workspaceId, accountId, messageId, {
+        action: isReplying ? 'reply' : 'forward',
+        to: replyTo,
+        subject: replySubject,
+        body: replyBody
+      });
+      if (res.error) throw new Error(res.error);
+      
+      setIsReplying(false);
+      setIsForwarding(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
  if (!messageId) {
  return (

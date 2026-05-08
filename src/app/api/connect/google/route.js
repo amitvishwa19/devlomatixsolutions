@@ -24,6 +24,9 @@ export async function GET(request) {
     const scopes = [
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.modify',
         'openid'
     ].join(' ');
 
@@ -39,7 +42,7 @@ export async function GET(request) {
     googleAuthUrl.searchParams.append('response_type', 'code');
     googleAuthUrl.searchParams.append('scope', scopes);
     googleAuthUrl.searchParams.append('access_type', 'offline');
-    googleAuthUrl.searchParams.append('prompt', 'select_account consent'); // Shows account chooser + requests refresh token
+    googleAuthUrl.searchParams.append('prompt', 'consent select_account'); // Shows account chooser + requests refresh token
     googleAuthUrl.searchParams.append('state', Buffer.from(state).toString('base64'));
 
     return NextResponse.redirect(googleAuthUrl.toString());
