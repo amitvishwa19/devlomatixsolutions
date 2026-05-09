@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
     ChevronRight,
     Info,
@@ -11,8 +11,7 @@ import {
     ShieldCheck,
     Fingerprint,
     Mail,
-    ArrowUp,
-    Clock
+    ArrowUp
 } from 'lucide-react';
 
 const sections = [
@@ -66,51 +65,27 @@ const PrivacyPage = () => {
 
     return (
         <main className="flex-grow bg-background">
-            {/* Hero Section */}
-            <section className="relative py-24 overflow-hidden border-b border-border/50 bg-card/10">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_-20%,hsl(var(--primary)/0.15),transparent_50%)]" />
-                <div className="container relative mx-auto p-2 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        <h1 className="text-xl md:text-xl font-display font-bold text-foreground mb-6 bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
-                            Privacy Policy
-                        </h1>
-                        <p className="text-muted-foreground text-sm max-w-2xl mx-auto leading-relaxed">
-                            Transparency and trust are the foundation of Devlomatix Solutions. Learn how we handle your data with the highest security standards.
-                        </p>
-
-                    </motion.div>
-                </div>
-            </section>
-
-            <section className="py-20 relative">
+            <section className="py-16 relative">
                 <div className="container mx-auto px-6">
-                    <div className="flex flex-col lg:flex-row gap-16">
+
+                    <div className="flex flex-col lg:flex-row gap-12">
 
                         {/* Sidebar Navigation */}
                         <aside className="lg:w-72 shrink-0">
-                            <div className="sticky top-28 space-y-4">
-                                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/50 px-4">Navigation</h3>
+                            <div className="sticky top-24 space-y-4">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 px-4 mb-4">Privacy Policy</h3>
                                 <nav className="space-y-1">
                                     {sections.map((section) => (
                                         <button
                                             key={section.id}
                                             onClick={() => scrollToSection(section.id)}
-                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${activeSection === section.id
-                                                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]'
+                                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${activeSection === section.id
+                                                ? 'bg-primary/10 text-primary font-semibold'
                                                 : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                                                 }`}
                                         >
-                                            <section.icon size={18} className={activeSection === section.id ? 'opacity-100' : 'opacity-50 group-hover:opacity-100'} />
-                                            <span className="text-sm font-medium">{section.title.split('. ')[1]}</span>
-                                            {activeSection === section.id && (
-                                                <motion.div layoutId="active-nav-privacy" className="ml-auto">
-                                                    <ChevronRight size={14} />
-                                                </motion.div>
-                                            )}
+                                            <section.icon size={16} className={activeSection === section.id ? 'opacity-100' : 'opacity-50'} />
+                                            <span className="text-sm">{section.title.split('. ')[1]}</span>
                                         </button>
                                     ))}
                                 </nav>
@@ -119,6 +94,12 @@ const PrivacyPage = () => {
 
                         {/* Content Area */}
                         <div className="flex-grow max-w-4xl space-y-20">
+                            <div className='mt-10 w-full text-center'>
+                                <h1 className="text-3xl font-bold text-foreground mb-8">Privacy Policy</h1>
+                            </div>
+
+
+
 
                             <motion.section
                                 id="introduction"
@@ -134,7 +115,7 @@ const PrivacyPage = () => {
                                     </div>
                                     1. Introduction
                                 </h2>
-                                <p className="text-muted-foreground leading-relaxed text-lg text-balance">
+                                <p className="text-muted-foreground leading-relaxed text-md text-balance">
                                     Welcome to Devlomatix Solutions. We are committed to protecting your personal data and your right to privacy. This policy explains what information we collect, how we use it, and what rights you have in relation to it.
                                 </p>
                             </motion.section>
@@ -292,19 +273,14 @@ const PrivacyPage = () => {
             </section>
 
             {/* Scroll to top button */}
-            <AnimatePresence>
-                {showScrollTop && (
-                    <motion.button
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.5 }}
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                        className="fixed bottom-8 right-8 p-3 rounded-full bg-primary text-primary-foreground shadow-2xl z-50 hover:bg-primary/90 transition-colors"
-                    >
-                        <ArrowUp size={24} />
-                    </motion.button>
-                )}
-            </AnimatePresence>
+            {showScrollTop && (
+                <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="fixed bottom-8 right-8 p-3 rounded-full bg-primary text-primary-foreground shadow-2xl z-50 hover:bg-primary/90 transition-colors"
+                >
+                    <ArrowUp size={24} />
+                </button>
+            )}
         </main>
     );
 };
