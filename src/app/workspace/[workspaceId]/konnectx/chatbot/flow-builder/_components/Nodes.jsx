@@ -11,16 +11,25 @@ import {
     Clock,
     Play,
     CheckCircle2,
-    AlertCircle,
+    AlertCircle
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, configured }) => {
+const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, configured, data, id }) => {
+    const handleContextMenu = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        data?.onContextMenu?.(e, id);
+    };
+
     return (
-        <div className={cn(
-            "relative rounded-sm border transition-all duration-300 min-w-[250px]  border bg-card  dark:bg-[#1e1e2e]/90",
-            selected ? "ring-1 ring-primary border-primary/50 -translate-y-1 shadow-primary/10" : "hover:border-primary/40"
-        )}>
+        <div
+            className={cn(
+                "relative rounded-sm border transition-all duration-300 min-w-[250px] border border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
+                selected ? " border-primary/60 -translate-y-1 shadow-primary/10" : "hover:border-primary/40"
+            )}
+            onContextMenu={handleContextMenu}
+        >
             <div className="flex items-center justify-between p-2">
                 <div className="flex items-center gap-2">
                     <div className={cn("p-1.5 rounded-lg bg-primary/10 text-primary")}>
@@ -50,6 +59,8 @@ export const TriggerNode = memo(({ id, data, selected }) => {
                 icon={data.type === 'welcome' ? Play : Zap}
                 colorClass="amber-500"
                 configured={true}
+                data={data}
+                id={id}
             >
                 <div className="text-sm font-semibold text-white">{data.label || 'Start Flow'}</div>
                 <div className="text-[10px] text-muted-foreground italic">
@@ -74,6 +85,8 @@ export const MessageNode = memo(({ id, data, selected }) => {
                 icon={isImage ? Image : isTemplate ? FileText : MessageSquare}
                 colorClass="emerald-500"
                 configured={!!(data.text || data.imageUrl || data.templateName)}
+                data={data}
+                id={id}
             >
                 <div className="text-sm font-semibold text-white truncate">{data.label || 'Send Message'}</div>
                 <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 italic">
@@ -97,6 +110,8 @@ export const LogicNode = memo(({ id, data, selected }) => {
                 icon={isDelay ? Clock : GitBranch}
                 colorClass="blue-500"
                 configured={true}
+                data={data}
+                id={id}
             >
                 <div className="text-sm font-semibold text-white">{data.label}</div>
                 <div className="text-[10px] text-muted-foreground">

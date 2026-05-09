@@ -22,7 +22,9 @@ import {
     Save,
     ArrowLeft,
     Loader2,
-    Send
+    Send,
+    Edit2,
+    Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
@@ -88,6 +90,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
     const [selectedNode, setSelectedNode] = useState(null);
     const [testMessage, setTestMessage] = useState('hello');
     const [testPreview, setTestPreview] = useState('');
+    const [contextMenu, setContextMenu] = useState(null);
 
     const { execute: executeGetDetails } = useAction(getBotDetails, {
         onSuccess: (data) => {
@@ -275,7 +278,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
 
             <div className="flex-1 relative h-full">
                 <ReactFlow
-                    nodes={nodes}
+                    nodes={nodes.map(n => ({ ...n, data: { ...n.data, setNodes, setEdges, onContextMenu: (e, id) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, nodeId: id }); } } }))}
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
@@ -283,7 +286,8 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                     onDrop={onDrop}
                     onDragOver={onDragOver}
                     onNodeClick={onNodeClick}
-                    onPaneClick={() => setSelectedNode(null)}
+                    onNodeContextMenu={(e, node) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, nodeId: node.id }); }}
+                    onPaneClick={() => { setSelectedNode(null); setContextMenu(null); }}
                     nodeTypes={nodeTypes}
                     fitView
                     className="bg-dot-white/[0.05]"
@@ -291,7 +295,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                     maxZoom={1.5}
                     defaultEdgeOptions={{
                         type: 'step',
-                        style: { stroke: '#10b981', strokeWidth: 2 },
+                        style: { stroke: '#10b981', strokeWidth: 1 },
                         animated: true
                     }}
                 >
@@ -371,6 +375,35 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                             deleteNode={deleteNode}
                             closePanel={() => setSelectedNode(null)}
                         />
+                    </div>
+                )}
+
+                {contextMenu && (
+                    <div
+                        className="fixed z-50 bg-background border border-white/10 rounded shadow-lg py-1 min-w-[120px]"
+                        style={{ left: contextMenu.x, top: contextMenu.y }}
+                    >
+                        <button
+                            onClick={() => {
+                                const node = nodes.find(n => n.id === contextMenu.nodeId);
+                                if (node) setSelectedNode(node);
+                                setContextMenu(null);
+                            }}
+                            className="w-full px-4 py-2 text-xs text-left hover:bg-white/5 flex items-center gap-2"
+                        >
+                            <Edit2 size={14} />
+                            Edit
+                        </button>
+                        <button
+                            onClick={() => {
+                                deleteNode(contextMenu.nodeId);
+                                setContextMenu(null);
+                            }}
+                            className="w-full px-4 py-2 text-xs text-left hover:bg-white/5 flex items-center gap-2 text-rose-500"
+                        >
+                            <Trash2 size={14} />
+                            Delete
+                        </button>
                     </div>
                 )}
             </div>

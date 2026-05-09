@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    ChevronRight, 
-    Info, 
-    Database, 
-    Activity, 
-    Share2, 
-    ShieldCheck, 
-    Fingerprint, 
+import {
+    ChevronRight,
+    Info,
+    Database,
+    Activity,
+    Share2,
+    ShieldCheck,
+    Fingerprint,
     Mail,
     ArrowUp,
     Clock
@@ -69,22 +69,19 @@ const PrivacyPage = () => {
             {/* Hero Section */}
             <section className="relative py-24 overflow-hidden border-b border-border/50 bg-card/10">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_-20%,hsl(var(--primary)/0.15),transparent_50%)]" />
-                <div className="container relative mx-auto px-6 text-center">
+                <div className="container relative mx-auto p-2 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        <h1 className="text-5xl md:text-6xl font-display font-bold text-foreground mb-6 bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
+                        <h1 className="text-xl md:text-xl font-display font-bold text-foreground mb-6 bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
                             Privacy Policy
                         </h1>
-                        <p className="text-muted-foreground text-xl max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-muted-foreground text-sm max-w-2xl mx-auto leading-relaxed">
                             Transparency and trust are the foundation of Devlomatix Solutions. Learn how we handle your data with the highest security standards.
                         </p>
-                        <div className="mt-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold backdrop-blur-sm">
-                            <Clock size={16} />
-                            Last Updated: {lastUpdated}
-                        </div>
+
                     </motion.div>
                 </div>
             </section>
@@ -92,7 +89,7 @@ const PrivacyPage = () => {
             <section className="py-20 relative">
                 <div className="container mx-auto px-6">
                     <div className="flex flex-col lg:flex-row gap-16">
-                        
+
                         {/* Sidebar Navigation */}
                         <aside className="lg:w-72 shrink-0">
                             <div className="sticky top-28 space-y-4">
@@ -102,11 +99,10 @@ const PrivacyPage = () => {
                                         <button
                                             key={section.id}
                                             onClick={() => scrollToSection(section.id)}
-                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
-                                                activeSection === section.id 
-                                                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]' 
+                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${activeSection === section.id
+                                                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]'
                                                 : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                                            }`}
+                                                }`}
                                         >
                                             <section.icon size={18} className={activeSection === section.id ? 'opacity-100' : 'opacity-50 group-hover:opacity-100'} />
                                             <span className="text-sm font-medium">{section.title.split('. ')[1]}</span>
@@ -123,8 +119,8 @@ const PrivacyPage = () => {
 
                         {/* Content Area */}
                         <div className="flex-grow max-w-4xl space-y-20">
-                            
-                            <motion.section 
+
+                            <motion.section
                                 id="introduction"
                                 initial={{ opacity: 0, x: 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -143,7 +139,7 @@ const PrivacyPage = () => {
                                 </p>
                             </motion.section>
 
-                            <motion.section 
+                            <motion.section
                                 id="collection"
                                 initial={{ opacity: 0, x: 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -175,7 +171,7 @@ const PrivacyPage = () => {
                                 </div>
                             </motion.section>
 
-                            <motion.section 
+                            <motion.section
                                 id="usage"
                                 initial={{ opacity: 0, x: 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -205,7 +201,7 @@ const PrivacyPage = () => {
                                 </ul>
                             </motion.section>
 
-                            <motion.section 
+                            <motion.section
                                 id="sharing"
                                 initial={{ opacity: 0, x: 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -224,7 +220,7 @@ const PrivacyPage = () => {
                                 </p>
                             </motion.section>
 
-                            <motion.section 
+                            <motion.section
                                 id="security"
                                 initial={{ opacity: 0, x: 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -243,7 +239,7 @@ const PrivacyPage = () => {
                                 </p>
                             </motion.section>
 
-                            <motion.section 
+                            <motion.section
                                 id="rights"
                                 initial={{ opacity: 0, x: 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -265,7 +261,7 @@ const PrivacyPage = () => {
                                 </div>
                             </motion.section>
 
-                            <motion.section 
+                            <motion.section
                                 id="contact"
                                 initial={{ opacity: 0, x: 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -282,8 +278,8 @@ const PrivacyPage = () => {
                                 <p className="text-muted-foreground leading-relaxed mb-8">
                                     If you have questions or comments about this policy, we're ready to provide the answers you need.
                                 </p>
-                                <a 
-                                    href="mailto:support@devlomatixsolutions.com" 
+                                <a
+                                    href="mailto:support@devlomatixsolutions.com"
                                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
                                 >
                                     Contact Support <ChevronRight size={18} />

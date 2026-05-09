@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Trash2, Info } from 'lucide-react';
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -55,8 +55,8 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Core Configuration</h3>
                         <div className="space-y-2">
                             <Label className="text-[11px] text-muted-foreground">Label</Label>
-                            <Input 
-                                value={config.label || ''} 
+                            <Input
+                                value={config.label || ''}
                                 onChange={(e) => onChange('label', e.target.value)}
                                 className="bg-white/5 border-white/10 text-xs rounded-xl"
                             />
@@ -82,14 +82,14 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
                                     {prop.type === 'string' && (
                                         prop.typeOptions?.rows > 1 ? (
-                                            <Textarea 
-                                                value={config[prop.name] || prop.default} 
+                                            <Textarea
+                                                value={config[prop.name] || prop.default}
                                                 onChange={(e) => onChange(prop.name, e.target.value)}
                                                 className="bg-white/5 border-white/10 text-xs rounded-xl min-h-[120px]"
                                             />
                                         ) : (
-                                            <Input 
-                                                value={config[prop.name] || prop.default} 
+                                            <Input
+                                                value={config[prop.name] || prop.default}
                                                 onChange={(e) => onChange(prop.name, e.target.value)}
                                                 className="bg-white/5 border-white/10 text-xs rounded-xl"
                                                 placeholder={prop.placeholder}
@@ -98,17 +98,17 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     )}
 
                                     {prop.type === 'number' && (
-                                        <Input 
+                                        <Input
                                             type="number"
-                                            value={config[prop.name] || prop.default} 
+                                            value={config[prop.name] || prop.default}
                                             onChange={(e) => onChange(prop.name, parseInt(e.target.value))}
                                             className="bg-white/5 border-white/10 text-xs rounded-xl"
                                         />
                                     )}
 
                                     {prop.type === 'options' && (
-                                        <Select 
-                                            value={config[prop.name] || prop.default} 
+                                        <Select
+                                            value={config[prop.name] || prop.default}
                                             onValueChange={(val) => onChange(prop.name, val)}
                                         >
                                             <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
@@ -131,8 +131,8 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
             </ScrollArea>
 
             <div className="p-6 border-t border-white/5 bg-white/[0.02]">
-                <Button 
-                    variant="ghost" 
+                <Button
+                    variant="ghost"
                     className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl font-bold text-xs gap-2"
                     onClick={() => deleteNode(selectedNode.id)}
                 >

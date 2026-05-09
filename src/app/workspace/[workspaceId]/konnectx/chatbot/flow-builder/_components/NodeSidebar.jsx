@@ -29,7 +29,7 @@ export const NodeSidebar = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
-                <Accordion type="multiple" defaultValue={categories.map(cat => cat.category)} className="w-full space-y-2">
+                <Accordion type="multiple" className="w-full space-y-2">
                     {categories.map((cat, idx) => {
                         const filteredItems = cat.items.filter(item =>
                             item.displayName.toLowerCase().includes(search.toLowerCase())
