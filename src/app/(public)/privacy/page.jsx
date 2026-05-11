@@ -93,10 +93,8 @@ const PrivacyPage = () => {
                         </aside>
 
                         {/* Content Area */}
-                        <div className="flex-grow max-w-4xl space-y-20">
-                            <div className='mt-10 w-full text-center'>
-                                <h1 className="text-3xl font-bold text-foreground mb-8">Privacy Policy</h1>
-                            </div>
+                        <div className="flex-grow max-w-4xl space-y-20 mt-10">
+
 
 
 
