@@ -46,20 +46,31 @@ const handler = async (data) => {
         }
 
         let stored = cred.credentials;
+        let decryptedObj = null;
         if (typeof stored === 'string' && stored.includes(':')) {
             try {
-                const decrypted = symmetricDecrypt(stored);
-                stored = JSON.parse(decrypted);
-                console.log("[GetDecryptedCredentials] Decryption successful.");
-                console.log("[GetDecryptedCredentials] Extracted values:", {
-                    hasToken: !!stored.accessToken,
-                    phoneId: stored.phoneNumberId,
-                    wabaId: stored.wabaId
-                });
+                decryptedObj = JSON.parse(symmetricDecrypt(stored));
             } catch (e) {
-                console.error("[GetDecryptedCredentials] Decryption failed:", e.message);
-                return { error: 'Failed to decrypt credentials' };
+                console.error("[GetDecryptedCredentials] String Decryption failed:", e.message);
             }
+        } else if (typeof stored === 'object' && stored?.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+            try {
+                decryptedObj = JSON.parse(symmetricDecrypt(stored.enc));
+            } catch (e) {
+                console.error("[GetDecryptedCredentials] Object Decryption failed:", e.message);
+            }
+        } else if (typeof stored === 'object') {
+            decryptedObj = stored;
+        }
+
+        if (decryptedObj) {
+            console.log("[GetDecryptedCredentials] Decryption successful.");
+            console.log("[GetDecryptedCredentials] Extracted values:", {
+                hasToken: !!decryptedObj.accessToken,
+                phoneId: decryptedObj.phoneNumberId,
+                wabaId: decryptedObj.wabaId
+            });
+            stored = decryptedObj;
         }
 
         return {

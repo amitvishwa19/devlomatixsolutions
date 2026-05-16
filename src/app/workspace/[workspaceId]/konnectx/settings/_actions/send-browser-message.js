@@ -35,13 +35,19 @@ const handler = async (data) => {
 
         let cloudCreds = null;
         const stored = credential.credentials;
-        if (typeof stored === 'string' && stored.includes(':')) {
-            cloudCreds = JSON.parse(symmetricDecrypt(stored));
-        } else if (typeof stored === 'string') {
-            cloudCreds = JSON.parse(stored);
-        } else {
-            cloudCreds = stored;
+        if (stored) {
+            if (typeof stored === 'string' && stored.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
+            } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored.enc)); } catch (e) { }
+            } else if (typeof stored === 'object') {
+                cloudCreds = stored;
+            } else {
+                try { cloudCreds = JSON.parse(stored); } catch (e) { }
+            }
         }
+
+        if (!cloudCreds || !cloudCreds.accessToken) return { error: "Failed to decrypt or find access token" };
 
         const phone = to.replace(/\D/g, '');
         let result;

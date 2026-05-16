@@ -17,10 +17,17 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // 1. Find Default Credential
-        const defaultCredential = await db.credentials.findFirst({
+        // 1. Find Credential (with fallback to latest if no default is set)
+        let defaultCredential = await db.credentials.findFirst({
             where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
         });
+
+        if (!defaultCredential) {
+            defaultCredential = await db.credentials.findFirst({
+                where: { userId, platform: 'WHATSAPP_CLOUD' },
+                orderBy: { updatedAt: 'desc' }
+            });
+        }
 
         if (!defaultCredential) {
             return { data: { success: true, conversations: [] } };
@@ -39,6 +46,7 @@ const handler = async (data) => {
             try { cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc)); } catch (e) { }
         }
         const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+        console.log(`[getConversations] Fetching messages for PhoneID: ${activePhoneId} (User: ${userId})`);
 
         // 2. Fetch all messages for this user associated with the ACTIVE phone ID
         const [messages, contacts] = await Promise.all([

@@ -30,33 +30,65 @@ const handler = async (data) => {
             const oldAccount = await db.credentials.findUnique({ where: { id } });
             if (!oldAccount) return { error: "Account not found" };
 
-            let finalAccessToken = accessToken;
-            // Robust check: if new token is empty, null, or just whitespace, preserve the old one
-            if (!finalAccessToken || finalAccessToken.trim() === '') {
-                const oldCredsRaw = oldAccount.credentials;
-                if (typeof oldCredsRaw === 'string' && oldCredsRaw.includes(':')) {
+            const oldCredsRaw = oldAccount.credentials;
+            let oldDecrypted = null;
+
+            if (typeof oldCredsRaw === 'string') {
+                if (oldCredsRaw.includes(':')) {
                     try {
-                        const decrypted = JSON.parse(symmetricDecrypt(oldCredsRaw));
-                        finalAccessToken = decrypted.accessToken;
-                        console.log("[SaveCloudCredentials] Preserved existing token for account:", profile);
+                        oldDecrypted = JSON.parse(symmetricDecrypt(oldCredsRaw));
                     } catch (e) {
-                        console.error("[SaveCloudCredentials] Failed to decrypt old token for preservation:", e.message);
+                        console.error("[SaveCloudCredentials] Decryption failed:", e.message);
                     }
+                } else {
+                    try {
+                        oldDecrypted = JSON.parse(oldCredsRaw);
+                    } catch (e) { }
+                }
+            } else if (typeof oldCredsRaw === 'object' && oldCredsRaw !== null) {
+                // Handle { enc: "..." } format or direct object format
+                if (oldCredsRaw.enc && typeof oldCredsRaw.enc === 'string' && oldCredsRaw.enc.includes(':')) {
+                    try {
+                        oldDecrypted = JSON.parse(symmetricDecrypt(oldCredsRaw.enc));
+                    } catch (e) {
+                        console.error("[SaveCloudCredentials] Decryption of .enc failed:", e.message);
+                    }
+                } else {
+                    oldDecrypted = oldCredsRaw;
+                }
+            }
+
+            let finalAccessToken = accessToken;
+            if (!finalAccessToken || String(finalAccessToken).trim() === '') {
+                console.log("[SaveCloudCredentials] Access token is empty in request, attempting preservation...");
+                if (oldDecrypted) {
+                    console.log("[SaveCloudCredentials] Decrypted old credentials keys:", Object.keys(oldDecrypted));
+                    // Try common keys for access tokens
+                    const token = oldDecrypted.accessToken || oldDecrypted.system_access_token || oldDecrypted.token;
+                    if (token) {
+                        finalAccessToken = token;
+                        console.log("[SaveCloudCredentials] Preserved existing token for account:", profile);
+                    } else {
+                        console.warn("[SaveCloudCredentials] No token found in old decrypted credentials!");
+                    }
+                } else {
+                    console.error("[SaveCloudCredentials] oldDecrypted is null! Cannot preserve token.");
                 }
             }
 
             const credObj = {
                 accessToken: finalAccessToken,
-                phoneNumberId,
-                wabaId
+                phoneNumberId: phoneNumberId || oldDecrypted?.phoneNumberId || oldDecrypted?.phone_number_id,
+                wabaId: wabaId || oldDecrypted?.wabaId || oldDecrypted?.waba_id
             };
+            console.log("[SaveCloudCredentials] Final credential object prepared (has token:", !!credObj.accessToken, ")");
             finalEncrypted = symmetricEncrypt(JSON.stringify(credObj));
 
             account = await db.credentials.update({
                 where: { id },
                 data: {
                     profile,
-                    credentials: finalEncrypted,
+                    credentials: { enc: finalEncrypted },
                     status: 'connected'
                 }
             });
@@ -69,14 +101,20 @@ const handler = async (data) => {
             };
             finalEncrypted = symmetricEncrypt(JSON.stringify(credObj));
 
+            // Check if any other WHATSAPP_CLOUD credentials exist for this user
+            const existingCreds = await db.credentials.findFirst({
+                where: { userId, platform: 'WHATSAPP_CLOUD' }
+            });
+
             account = await db.credentials.create({
                 data: {
                     userId,
                     workspaceId,
                     platform: 'WHATSAPP_CLOUD',
                     profile,
-                    credentials: finalEncrypted,
-                    status: 'connected'
+                    credentials: { enc: finalEncrypted },
+                    status: 'connected',
+                    isDefault: !existingCreds // Set as default if it's the first one
                 }
             });
         }

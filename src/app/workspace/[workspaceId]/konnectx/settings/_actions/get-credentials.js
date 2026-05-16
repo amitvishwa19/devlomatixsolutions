@@ -31,21 +31,33 @@ const handler = async (data) => {
         const processedCredentials = credentials.map(cred => {
             let phoneNumberId = '';
             let wabaId = '';
+            let accessToken = '';
             
-            if (cred.credentials && typeof cred.credentials === 'string' && cred.credentials.includes(':')) {
-                try {
-                    const decrypted = JSON.parse(symmetricDecrypt(cred.credentials));
-                    phoneNumberId = decrypted.phoneNumberId;
-                    wabaId = decrypted.wabaId;
-                } catch (e) {
-                    console.error("Failed to decrypt credentials for", cred.id);
+            const stored = cred.credentials;
+            if (stored) {
+                let decrypted = null;
+                if (typeof stored === 'string' && stored.includes(':')) {
+                    try {
+                        decrypted = JSON.parse(symmetricDecrypt(stored));
+                    } catch (e) { }
+                } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                    try {
+                        decrypted = JSON.parse(symmetricDecrypt(stored.enc));
+                    } catch (e) { }
+                }
+
+                if (decrypted) {
+                    phoneNumberId = decrypted.phoneNumberId || decrypted.phone_number_id;
+                    wabaId = decrypted.wabaId || decrypted.waba_id;
+                    accessToken = decrypted.accessToken || decrypted.system_access_token || decrypted.token;
                 }
             }
 
             return {
                 ...JSON.parse(JSON.stringify(cred)),
                 phoneNumberId,
-                wabaId
+                wabaId,
+                accessToken
             };
         });
 
