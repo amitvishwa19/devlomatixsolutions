@@ -18,10 +18,18 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // 1. Fetch ONLY the Default (Active) Cloud API Credential
-        const credentials = await db.credentials.findMany({
+        // 1. Fetch Credentials (with fallback to latest if no default is set)
+        let credentials = await db.credentials.findMany({
             where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
         });
+
+        if (credentials.length === 0) {
+            const fallback = await db.credentials.findFirst({
+                where: { userId, platform: 'WHATSAPP_CLOUD' },
+                orderBy: { updatedAt: 'desc' }
+            });
+            if (fallback) credentials = [fallback];
+        }
 
         if (credentials.length === 0) {
             return { error: "No WhatsApp Cloud credentials found" };
@@ -34,16 +42,20 @@ const handler = async (data) => {
             let cloudCredentials = null;
             const stored = credential.credentials;
 
-            if (typeof stored === 'string' && stored.includes(':')) {
-                try {
-                    cloudCredentials = JSON.parse(symmetricDecrypt(stored));
-                } catch (e) { continue; }
-            } else if (typeof stored === 'string') {
-                try {
-                    cloudCredentials = JSON.parse(stored);
-                } catch (e) { continue; }
-            } else {
-                cloudCredentials = stored;
+            if (stored) {
+                if (typeof stored === 'string' && stored.includes(':')) {
+                    try { cloudCredentials = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
+                } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                    try { cloudCredentials = JSON.parse(symmetricDecrypt(stored.enc)); } catch (e) { }
+                } else if (typeof stored === 'object') {
+                    cloudCredentials = stored;
+                } else {
+                    try { cloudCredentials = JSON.parse(stored); } catch (e) { }
+                }
+            }
+
+            if (cloudCredentials?.enc) {
+                try { cloudCredentials = JSON.parse(symmetricDecrypt(cloudCredentials.enc)); } catch (e) { }
             }
 
             if (!cloudCredentials || !cloudCredentials.accessToken || !cloudCredentials.wabaId) continue;
@@ -81,7 +93,7 @@ const handler = async (data) => {
                         },
                         isDefault: true,
                         platform: 'WHATSAPP_CLOUD',
-                        phoneNumberId: cloudCredentials.phoneNumberId
+                        phoneNumberId: String(cloudCredentials.phoneNumberId || cloudCredentials.phone_number_id || "")
                     };
 
                     const existing = await db.messageTemplate.findFirst({

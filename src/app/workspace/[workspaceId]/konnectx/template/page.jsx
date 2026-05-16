@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Plus, 
-    Search, 
-    Smartphone, 
-    MessageSquare, 
-    Loader2, 
-    LayoutGrid, 
-    List, 
-    RefreshCw 
+import {
+    Plus,
+    Search,
+    Smartphone,
+    MessageSquare,
+    Loader2,
+    LayoutGrid,
+    List,
+    RefreshCw
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ import { checkTemplateStatus } from "./_actions/check-template-status";
 import { getContacts as getContactsAction } from "../contacts/_actions/get-contacts";
 import { sendMessage as sendMessageAction } from "../chats/_actions/send-message";
 import { getWaMetadata } from "../settings/_actions/get-wa-metadata";
+import AccountSwitcher from '../_components/AccountSwitcher';
 
 export default function TemplatePage() {
     const params = useParams();
@@ -225,7 +226,7 @@ export default function TemplatePage() {
 
     const { execute: executeSendTest, isLoading: isSendingTest } = useAction(sendMessageAction, {
         onSuccess: () => {
-             // We need to track successes for multiple recipients
+            // We need to track successes for multiple recipients
         },
         onError: (err) => toast.error(err || "Failed to send test message")
     });
@@ -272,7 +273,7 @@ export default function TemplatePage() {
             return;
         }
         setIsSaving(true);
-        
+
         executeSaveTemplate({
             workspaceId,
             id: editingId,
@@ -307,12 +308,12 @@ export default function TemplatePage() {
         setTestRecipient("");
         setSelectedContactIds([]);
         setMediaUrl(template.metadata?.mediaUrl || '');
-        
+
         // Detect variables from body and header
         const bodyVars = [...(template.body || "").matchAll(/{{(\d+)}}/g)].map(m => m[1]);
         const headerText = template.metadata?.headerText || "";
         const headerVars = [...headerText.matchAll(/{{(\d+)}}/g)].map(m => m[1]);
-        
+
         // Detect variables in buttons
         let buttonVars = [];
         if (template.buttons && Array.isArray(template.buttons)) {
@@ -322,10 +323,10 @@ export default function TemplatePage() {
                 buttonVars = [...buttonVars, ...vars];
             });
         }
-        
+
         const uniqueVars = Array.from(new Set([...headerVars, ...bodyVars, ...buttonVars])).sort((a, b) => parseInt(a) - parseInt(b));
         setDetectedVariables(uniqueVars);
-        
+
         const initialMapping = {};
         uniqueVars.forEach(v => initialMapping[v] = '');
         setVariableMappings(initialMapping);
@@ -363,7 +364,7 @@ export default function TemplatePage() {
 
         const buildComponents = () => {
             const components = [];
-            
+
             // Handle Header (Text or Media)
             if (headerVars.length > 0) {
                 components.push({
@@ -375,21 +376,21 @@ export default function TemplatePage() {
                 if (finalMediaUrl) {
                     const mediaType = testingTemplate.type.toLowerCase();
                     const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4'); // Meta IDs/Handles are usually digits or start with 4
-                    
+
                     components.push({
                         type: 'HEADER',
                         parameters: [
                             {
                                 type: mediaType,
-                                [mediaType]: isHandle 
-                                    ? { id: finalMediaUrl } 
+                                [mediaType]: isHandle
+                                    ? { id: finalMediaUrl }
                                     : { link: finalMediaUrl }
                             }
                         ]
                     });
                 }
             } else if (testingTemplate.metadata?.headerText && !headerVars.length) {
-                 // Static text header - usually doesn't need component parameter if no variables
+                // Static text header - usually doesn't need component parameter if no variables
             }
 
             // Handle Body
@@ -425,7 +426,7 @@ export default function TemplatePage() {
         };
 
         const components = buildComponents();
-        
+
         console.log("[TEMPLATE_TEST_PAYLOAD]", {
             template: testingTemplate.templateName || testingTemplate.name,
             language: testingTemplate.language || 'en_US',
@@ -454,7 +455,7 @@ export default function TemplatePage() {
             success: "Test messages dispatched!",
             error: (err) => `Error: ${err.message || "Failed to send"}`
         });
-        
+
         setIsTestModalOpen(false);
     };
 
@@ -497,6 +498,7 @@ export default function TemplatePage() {
                         <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm gap-2">
                             <Plus className="w-4 h-4 " /> Create Template
                         </Button>
+                        <AccountSwitcher />
                     </div>
                 </div>
 
@@ -528,29 +530,29 @@ export default function TemplatePage() {
                         <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12" : "flex flex-col gap-3 pb-12"}>
                             {filteredTemplates.map((template) => (
                                 viewMode === 'grid' ? (
-                                    <TemplatePreviewCard 
-                                        key={template.id} 
-                                        template={template} 
-                                        onEdit={handleOpenBuilder} 
-                                        onDelete={handleDelete} 
-                                        onClone={handleClone} 
-                                        onTest={openTestModal} 
+                                    <TemplatePreviewCard
+                                        key={template.id}
+                                        template={template}
+                                        onEdit={handleOpenBuilder}
+                                        onDelete={handleDelete}
+                                        onClone={handleClone}
+                                        onTest={openTestModal}
                                         onPreview={openPreviewModal}
-                                        onSubmit={handleSubmitToMeta} 
+                                        onSubmit={handleSubmitToMeta}
                                         onCheckStatus={handleCheckStatus}
                                         isSubmittingId={isSubmittingId}
                                         isDeletingId={isDeletingId}
                                     />
                                 ) : (
-                                    <TemplateListRow 
-                                        key={template.id} 
-                                        template={template} 
-                                        onEdit={handleOpenBuilder} 
-                                        onDelete={handleDelete} 
-                                        onClone={handleClone} 
-                                        onTest={openTestModal} 
+                                    <TemplateListRow
+                                        key={template.id}
+                                        template={template}
+                                        onEdit={handleOpenBuilder}
+                                        onDelete={handleDelete}
+                                        onClone={handleClone}
+                                        onTest={openTestModal}
                                         onPreview={openPreviewModal}
-                                        onSubmit={handleSubmitToMeta} 
+                                        onSubmit={handleSubmitToMeta}
                                         onCheckStatus={handleCheckStatus}
                                         isSubmittingId={isSubmittingId}
                                         isDeletingId={isDeletingId}
@@ -596,7 +598,7 @@ export default function TemplatePage() {
                     setMediaUrl={setMediaUrl}
                 />
 
-                <TemplatePreview 
+                <TemplatePreview
                     isModal={true}
                     isOpen={isPreviewModalOpen}
                     onClose={() => setIsPreviewModalOpen(false)}

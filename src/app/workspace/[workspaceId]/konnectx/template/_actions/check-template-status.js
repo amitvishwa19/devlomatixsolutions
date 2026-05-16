@@ -27,22 +27,32 @@ const handler = async (data) => {
             return { error: "Template not submitted or not found" };
         }
 
-        // 2. Fetch Credentials
-        const credential = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD' },
-            orderBy: { updatedAt: 'desc' }
+        // 2. Fetch Credentials (with fallback)
+        let credential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
         });
+
+        if (!credential) {
+            credential = await db.credentials.findFirst({
+                where: { userId, platform: 'WHATSAPP_CLOUD' },
+                orderBy: { updatedAt: 'desc' }
+            });
+        }
 
         if (!credential) return { error: "Credentials not found" };
 
         let cloudCreds = null;
         const stored = credential.credentials;
-        if (typeof stored === 'string' && stored.includes(':')) {
-            cloudCreds = JSON.parse(symmetricDecrypt(stored));
-        } else if (typeof stored === 'string') {
-            cloudCreds = JSON.parse(stored);
-        } else {
-            cloudCreds = stored;
+        if (stored) {
+            if (typeof stored === 'string' && stored.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
+            } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored.enc)); } catch (e) { }
+            } else if (typeof stored === 'object') {
+                cloudCreds = stored;
+            } else {
+                try { cloudCreds = JSON.parse(stored); } catch (e) { }
+            }
         }
 
         // 3. Fetch from Meta

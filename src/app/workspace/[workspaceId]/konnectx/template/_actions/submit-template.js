@@ -27,11 +27,17 @@ const handler = async (data) => {
             return { error: "Template not found" };
         }
 
-        // 2. Fetch Cloud API Credentials
-        const credential = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD' },
-            orderBy: { updatedAt: 'desc' }
+        // 2. Fetch Cloud API Credentials (with fallback)
+        let credential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
         });
+
+        if (!credential) {
+            credential = await db.credentials.findFirst({
+                where: { userId, platform: 'WHATSAPP_CLOUD' },
+                orderBy: { updatedAt: 'desc' }
+            });
+        }
 
         if (!credential) {
             return { error: "WhatsApp Cloud credentials not found" };
@@ -39,22 +45,16 @@ const handler = async (data) => {
 
         let cloudCreds = null;
         const stored = credential.credentials;
-
-        if (typeof stored === 'string' && stored.includes(':')) {
-            try {
-                const decryptedStr = symmetricDecrypt(stored);
-                cloudCreds = JSON.parse(decryptedStr);
-            } catch (e) {
-                return { error: "Failed to decrypt WhatsApp credentials." };
+        if (stored) {
+            if (typeof stored === 'string' && stored.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
+            } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored.enc)); } catch (e) { }
+            } else if (typeof stored === 'object') {
+                cloudCreds = stored;
+            } else {
+                try { cloudCreds = JSON.parse(stored); } catch (e) { }
             }
-        } else if (typeof stored === 'string') {
-            try {
-                cloudCreds = JSON.parse(stored);
-            } catch (e) {
-                return { error: "Invalid credentials format." };
-            }
-        } else {
-            cloudCreds = stored;
         }
 
         // 3. Prepare Meta Template Data

@@ -17,10 +17,17 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // 1. Find Default Credential
-        const defaultCredential = await db.credentials.findFirst({
+        // 1. Find Credential (with fallback to latest if no default is set)
+        let defaultCredential = await db.credentials.findFirst({
             where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
         });
+
+        if (!defaultCredential) {
+            defaultCredential = await db.credentials.findFirst({
+                where: { userId, platform: 'WHATSAPP_CLOUD' },
+                orderBy: { updatedAt: 'desc' }
+            });
+        }
 
         if (!defaultCredential) {
             return { data: { success: true, templates: [] } };
@@ -29,11 +36,17 @@ const handler = async (data) => {
         // Extract active Phone ID
         let cloudCreds = null;
         const stored = defaultCredential.credentials;
-        if (typeof stored === 'string' && stored.includes(':')) {
-            try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
-        } else if (typeof stored === 'string') {
-            try { cloudCreds = JSON.parse(stored); } catch (e) { }
-        } else { cloudCreds = stored; }
+        if (stored) {
+            if (typeof stored === 'string' && stored.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
+            } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                try { cloudCreds = JSON.parse(symmetricDecrypt(stored.enc)); } catch (e) { }
+            } else if (typeof stored === 'object') {
+                cloudCreds = stored;
+            } else {
+                try { cloudCreds = JSON.parse(stored); } catch (e) { }
+            }
+        }
         
         if (cloudCreds?.enc) {
             try { cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc)); } catch (e) { }
@@ -44,7 +57,7 @@ const handler = async (data) => {
         const templates = await db.messageTemplate.findMany({
             where: { 
                 userId,
-                phoneNumberId: activePhoneId
+                phoneNumberId: activePhoneId ? activePhoneId : { in: [null, ""] }
             },
             orderBy: { createdAt: 'desc' }
         });

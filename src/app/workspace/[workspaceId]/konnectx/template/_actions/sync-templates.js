@@ -38,23 +38,26 @@ const handler = async (data) => {
             let cloudCredentials = null;
             const stored = credential.credentials;
 
-            if (typeof stored === 'string' && stored.includes(':')) {
-                try {
-                    const decrypted = symmetricDecrypt(stored);
-                    cloudCredentials = JSON.parse(decrypted);
-                } catch (e) {
-                    console.error(`[Template Sync Action] Decryption failed for ${credential.profile}:`, e);
-                    continue;
+            if (stored) {
+                if (typeof stored === 'string' && stored.includes(':')) {
+                    try {
+                        cloudCredentials = JSON.parse(symmetricDecrypt(stored));
+                    } catch (e) {
+                        console.error(`[Template Sync Action] String decryption failed for ${credential.profile}:`, e);
+                    }
+                } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                    try {
+                        cloudCredentials = JSON.parse(symmetricDecrypt(stored.enc));
+                    } catch (e) {
+                        console.error(`[Template Sync Action] Object decryption failed for ${credential.profile}:`, e);
+                    }
+                } else if (typeof stored === 'object') {
+                    cloudCredentials = stored;
+                } else {
+                    try {
+                        cloudCredentials = JSON.parse(stored);
+                    } catch (e) { }
                 }
-            } else if (typeof stored === 'string') {
-                try {
-                    cloudCredentials = JSON.parse(stored);
-                } catch (e) {
-                    console.error(`[Template Sync Action] JSON parse failed for ${credential.profile}:`, e);
-                    continue;
-                }
-            } else {
-                cloudCredentials = stored;
             }
 
             if (!cloudCredentials || !cloudCredentials.accessToken || !cloudCredentials.wabaId) {
