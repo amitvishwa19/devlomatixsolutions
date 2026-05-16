@@ -13,17 +13,26 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
 export function CloudAccountModal({
     open,
     onOpenChange,
     tempCreds,
     setTempCreds,
     onSave,
-    loading
+    loading,
+    templates = []
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className=" p-0 rounded-lg  overflow-hidden border card-glass">
+            <DialogContent className=" p-0 rounded-lg  overflow-hidden border card-glass max-w-lg">
                 <div className="p-4 space-y-4">
                     <DialogHeader className=" flex-row items-start gap-4">
                         <div className="p-3 bg-primary/10 w-fit rounded-xl">
@@ -34,8 +43,8 @@ export function CloudAccountModal({
                             <DialogDescription className="text-xs font-medium text-muted-foreground">Link your official Meta business account</DialogDescription>
                         </div>
                     </DialogHeader>
-                    <div className="grid gap-5 py-2">
-                        <div className="grid gap-2">
+                    <div className="grid grid-cols-2 gap-5 py-2">
+                        <div className="grid gap-2 col-span-2">
                             <Label className="text-xs font-medium text-muted-foreground ml-1">Account Nickname</Label>
                             <Input
                                 className="bg-muted/5  text-sm font-medium rounded-md px-4 border"
@@ -62,7 +71,7 @@ export function CloudAccountModal({
                                 placeholder="92837..."
                             />
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid gap-2 col-span-2">
                             <Label className="text-xs font-medium text-muted-foreground ml-1">System Access Token</Label>
                             <Input
                                 className="bg-muted/5  text-sm font-medium rounded-md px-4 border"
@@ -71,6 +80,34 @@ export function CloudAccountModal({
                                 onChange={(e) => setTempCreds({ ...tempCreds, accessToken: e.target.value })}
                                 placeholder={tempCreds.id ? "•••••••• (Token is stored. Leave blank to keep existing.)" : "EAAG..."}
                             />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label className="text-xs font-medium text-muted-foreground ml-1">Google Places ID</Label>
+                            <Input
+                                className="bg-muted/5  text-sm font-medium rounded-md px-4 border"
+                                value={tempCreds.googlePlaceId || ''}
+                                onChange={(e) => setTempCreds({ ...tempCreds, googlePlaceId: e.target.value })}
+                                placeholder="ChIJa5S5..."
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label className="text-xs font-medium text-muted-foreground ml-1">Default Template</Label>
+                            <Select
+                                value={tempCreds.defaultTemplateId || 'none'}
+                                onValueChange={(val) => setTempCreds({ ...tempCreds, defaultTemplateId: val === 'none' ? null : val })}
+                            >
+                                <SelectTrigger className="bg-muted/5 text-sm font-medium rounded-md border h-10">
+                                    <SelectValue placeholder="Select Template" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">None</SelectItem>
+                                    {templates.map(t => (
+                                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 </div>

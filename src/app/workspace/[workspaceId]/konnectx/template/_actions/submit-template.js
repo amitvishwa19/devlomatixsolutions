@@ -58,7 +58,7 @@ const handler = async (data) => {
         }
 
         // 3. Prepare Meta Template Data
-        const sanitizedName = template.name
+        const sanitizedName = (template.templateName || template.name)
             .toLowerCase()
             .trim()
             .replace(/\s+/g, '_')
@@ -73,7 +73,28 @@ const handler = async (data) => {
         const components = [];
 
         // HEADER
-        if (template.metadata?.headerText) {
+        if (template.type === 'location') {
+            components.push({
+                type: "HEADER",
+                format: "LOCATION",
+                location: {
+                    latitude: template.metadata?.latitude || "0.0",
+                    longitude: template.metadata?.longitude || "0.0",
+                    name: template.metadata?.locationName || template.name,
+                    address: template.metadata?.address || ""
+                }
+            });
+        } else if (['image', 'video', 'audio', 'document'].includes(template.type)) {
+            const format = template.type.toUpperCase();
+            const mediaComp = {
+                type: "HEADER",
+                format: format,
+            };
+            if (template.metadata?.mediaUrl) {
+                mediaComp.example = { header_handle: [template.metadata.mediaUrl] };
+            }
+            components.push(mediaComp);
+        } else if (template.metadata?.headerText) {
             const headerText = template.metadata.headerText.trim();
             const headerExamples = getExampleSamples(headerText);
             const headerComp = {
@@ -132,6 +153,8 @@ const handler = async (data) => {
             components: components
         };
 
+        console.log("[SubmitTemplate] Meta Payload:", JSON.stringify(metaPayload, null, 2));
+
         // 4. Submit to Meta
         const response = await fetch(
             `https://graph.facebook.com/v17.0/${cloudCreds.wabaId}/message_templates`,
@@ -146,6 +169,7 @@ const handler = async (data) => {
         );
 
         const result = await response.json();
+        console.log("[SubmitTemplate] Meta Result:", JSON.stringify(result, null, 2));
 
         if (!response.ok || result.error) {
             return {

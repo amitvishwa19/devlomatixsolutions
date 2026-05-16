@@ -62,10 +62,22 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                     </svg>
                 </div>
 
-                {/* Media */}
-                {['image', 'video', 'document', 'audio'].includes(template.type) && (
+                {/* Media/Location */}
+                {['image', 'video', 'document', 'audio', 'location'].includes(template.type) && (
                     <div className="p-1">
                         <div className="rounded-xl overflow-hidden bg-zinc-100 border border-black/5">
+                            {template.type === 'location' && (
+                                <div className="aspect-video bg-zinc-50 flex flex-col items-center justify-center p-4 text-center">
+                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                                        <Smartphone className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div className="text-[12px] font-bold text-zinc-800 line-clamp-1">{metadata.locationName || 'Location Name'}</div>
+                                    <div className="text-[10px] text-zinc-500 line-clamp-2 mt-0.5">{metadata.address || 'Address not provided'}</div>
+                                    <div className="text-[8px] text-zinc-400 mt-2 uppercase font-mono tracking-tighter">
+                                        {metadata.latitude || '0.0'}, {metadata.longitude || '0.0'}
+                                    </div>
+                                </div>
+                            )}
                             {template.type === 'image' && (
                                 <div className="aspect-square flex items-center justify-center bg-zinc-50">
                                     {metadata.mediaUrl ? (

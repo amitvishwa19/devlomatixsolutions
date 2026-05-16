@@ -13,10 +13,12 @@ const SaveCloudCredentialsSchema = z.object({
     phoneNumberId: z.string(),
     wabaId: z.string(),
     accessToken: z.string().optional().nullable(),
+    googlePlaceId: z.string().optional().nullable(),
+    defaultTemplateId: z.string().optional().nullable(),
 });
 
 const handler = async (data) => {
-    const { workspaceId, id, profile, phoneNumberId, wabaId, accessToken } = data;
+    const { workspaceId, id, profile, phoneNumberId, wabaId, accessToken, googlePlaceId, defaultTemplateId } = data;
 
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
@@ -79,7 +81,9 @@ const handler = async (data) => {
             const credObj = {
                 accessToken: finalAccessToken,
                 phoneNumberId: phoneNumberId || oldDecrypted?.phoneNumberId || oldDecrypted?.phone_number_id,
-                wabaId: wabaId || oldDecrypted?.wabaId || oldDecrypted?.waba_id
+                wabaId: wabaId || oldDecrypted?.wabaId || oldDecrypted?.waba_id,
+                googlePlaceId: googlePlaceId || oldDecrypted?.googlePlaceId,
+                defaultTemplateId: defaultTemplateId || oldDecrypted?.defaultTemplateId
             };
             console.log("[SaveCloudCredentials] Final credential object prepared (has token:", !!credObj.accessToken, ")");
             finalEncrypted = symmetricEncrypt(JSON.stringify(credObj));
@@ -97,7 +101,9 @@ const handler = async (data) => {
             const credObj = {
                 accessToken,
                 phoneNumberId,
-                wabaId
+                wabaId,
+                googlePlaceId,
+                defaultTemplateId
             };
             finalEncrypted = symmetricEncrypt(JSON.stringify(credObj));
 

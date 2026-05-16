@@ -57,6 +57,19 @@ export function GeneralTab({
 
     // Analytics States (Moved here from page.jsx for modularity)
     const [processingNumber, setProcessingNumber] = useState(null);
+    const [templates, setTemplates] = useState([]);
+
+    const { execute: executeGetTemplates } = useAction(getTemplates, {
+        onSuccess: (data) => {
+            setTemplates(data.templates || []);
+        }
+    });
+
+    useEffect(() => {
+        if (workspaceId) {
+            executeGetTemplates({ workspaceId });
+        }
+    }, [workspaceId]);
 
     const { execute: executeGetCreds } = useAction(getCredentials, {
         onSuccess: (data) => {
@@ -443,6 +456,7 @@ export function GeneralTab({
                 setTempCreds={setTempCreds}
                 onSave={handleSaveCloudCreds}
                 loading={cloudLoading}
+                templates={templates}
             />
 
             <DeleteAccountModal

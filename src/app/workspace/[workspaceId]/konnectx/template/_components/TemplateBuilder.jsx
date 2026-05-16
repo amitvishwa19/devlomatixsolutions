@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-    Plus, 
-    X, 
-    Trash2, 
-    Sparkles, 
-    Smartphone, 
-    ImageIcon, 
+import {
+    Plus,
+    X,
+    Trash2,
+    Sparkles,
+    Smartphone,
+    ImageIcon,
     Video,
+    List,
+    MapPin,
     Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,38 +19,38 @@ import { getTemplateAiSuggestion } from '../_actions/get-template-ai-suggestion'
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/components/ui/select";
-import { 
-    Sheet, 
-    SheetContent, 
-    SheetDescription, 
-    SheetHeader, 
-    SheetTitle 
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle
 } from "@/components/ui/sheet";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useModal } from '@/hooks/useModal';
 import TemplatePreview from './TemplatePreview';
 
-export default function TemplateBuilder({ 
-    isOpen, 
-    onClose, 
-    formData, 
-    setFormData, 
-    onSave, 
-    editingId, 
+export default function TemplateBuilder({
+    isOpen,
+    onClose,
+    formData,
+    setFormData,
+    onSave,
+    editingId,
     isSaving,
     isSubmittingId,
     workspaceId
 }) {
     const { onOpen } = useModal();
     const [aiPrompt, setAiPrompt] = useState('');
-    
+
     const { execute: executeGetAiSuggestion, isLoading: isAiGenerating } = useAction(getTemplateAiSuggestion, {
         onSuccess: (data, context) => {
             if (context.type === 'translate' && data.success) {
@@ -92,6 +94,8 @@ export default function TemplateBuilder({
         <Sheet open={isOpen} onOpenChange={onClose}>
             <SheetContent className="w-[620px] sm:max-w-[620px] p-0 flex flex-col gap-0 border-l border-border bg-card shadow-2xl">
                 <div className='flex flex-col h-full'>
+
+
                     {/* Panel Header */}
                     <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30 text-left">
                         <SheetTitle className="text-lg font-semibold text-foreground">
@@ -119,9 +123,9 @@ export default function TemplateBuilder({
                                     {isAiGenerating ? (
                                         <Loader2 className="w-4 h-4 text-primary animate-spin" />
                                     ) : (
-                                        <Button 
-                                            size="sm" 
-                                            variant="ghost" 
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
                                             className="h-7 text-[11px] font-bold text-primary hover:bg-primary/10"
                                             onClick={() => {
                                                 if (!aiPrompt) return;
@@ -133,7 +137,7 @@ export default function TemplateBuilder({
                                     )}
                                 </div>
                                 <div className="relative z-10">
-                                    <Input 
+                                    <Input
                                         placeholder="Describe your template (e.g. 'Flash sale for weekend')..."
                                         className="h-9 bg-background/50 border-primary/10 text-xs focus-visible:ring-primary/20"
                                         value={aiPrompt}
@@ -198,17 +202,17 @@ export default function TemplateBuilder({
                                     <div className="flex-1">
                                         <label className="text-sm font-semibold text-foreground mb-1.5 flex items-center justify-between">
                                             Language
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 className="h-5 px-1 text-[9px] text-primary hover:bg-primary/5 uppercase font-bold"
                                                 onClick={() => {
                                                     if (!formData.body) return;
-                                                    executeGetAiSuggestion({ 
+                                                    executeGetAiSuggestion({
                                                         workspaceId,
-                                                        type: 'translate', 
-                                                        text: formData.body, 
-                                                        targetLanguage: formData.language 
+                                                        type: 'translate',
+                                                        text: formData.body,
+                                                        targetLanguage: formData.language
                                                     }, { type: 'translate' });
                                                 }}
                                             >
@@ -230,7 +234,7 @@ export default function TemplateBuilder({
                                     </div>
                                 </div>
 
-                                {(!editingId && !formData.templateName) && (
+                                {!editingId && (
                                     <div>
                                         <label className="text-sm font-semibold text-foreground mb-1.5 block">Message Type</label>
                                         <Select
@@ -240,6 +244,9 @@ export default function TemplateBuilder({
                                                 if (v === 'interactive-group' && (!newMetadata.listSections || newMetadata.listSections.length === 0)) {
                                                     newMetadata.listSections = [{ title: 'Options', rows: [{ title: '', description: '' }] }];
                                                     newMetadata.listButton = 'Select Option';
+                                                }
+                                                if (v === 'carousel' && (!newMetadata.cards || newMetadata.cards.length === 0)) {
+                                                    newMetadata.cards = [{ body: '', buttons: [''] }];
                                                 }
                                                 setFormData({ ...formData, type: v, metadata: newMetadata });
                                             }}>
@@ -265,7 +272,7 @@ export default function TemplateBuilder({
                             <hr className="border-border" />
 
                             {/* Media/Location Sections (extracted for brevity in this example but would be present fully) */}
-                             {['image', 'video', 'audio', 'document'].includes(formData.type) && (
+                            {['image', 'video', 'audio', 'document'].includes(formData.type) && (
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-semibold text-foreground capitalize">{formData.type} URL</label>
@@ -277,51 +284,296 @@ export default function TemplateBuilder({
                                                 workspaceId,
                                                 onSelect: (url) => setFormData({
                                                     ...formData,
-                                                    metadata: { ...formData.metadata, mediaUrl: url }
+                                                    metadata: { ...(formData.metadata || {}), mediaUrl: url }
                                                 })
                                             })}
                                         >
                                             Choose from Hub
                                         </Button>
                                     </div>
-                                    <Input
-                                        placeholder="https://..."
-                                        value={formData.metadata?.mediaUrl || ''}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            metadata: { ...formData.metadata, mediaUrl: e.target.value }
-                                        })} />
+                                    <div className="relative group/input">
+                                        <Input
+                                            placeholder="https://..."
+                                            value={formData.metadata?.mediaUrl || ''}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                metadata: { ...(formData.metadata || {}), mediaUrl: e.target.value }
+                                            })}
+                                            className="pr-10"
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                                            onClick={() => onOpen('mediaLibrary', {
+                                                workspaceId,
+                                                onSelect: (url) => setFormData({
+                                                    ...formData,
+                                                    metadata: { ...(formData.metadata || {}), mediaUrl: url }
+                                                })
+                                            })}
+                                        >
+                                            <ImageIcon className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {formData.type === 'location' && (
+                                <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border">
+                                    <div className="flex items-center gap-2 mb-2 text-primary">
+                                        <Smartphone className="w-4 h-4" />
+                                        <h4 className="text-xs font-bold uppercase tracking-wider">Location Metadata</h4>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Latitude</label>
+                                            <Input
+                                                placeholder="e.g. 28.6139"
+                                                value={formData.metadata?.latitude || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    metadata: { ...(formData.metadata || {}), latitude: e.target.value }
+                                                })}
+                                                className="h-9 bg-background"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Longitude</label>
+                                            <Input
+                                                placeholder="e.g. 77.2090"
+                                                value={formData.metadata?.longitude || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    metadata: { ...(formData.metadata || {}), longitude: e.target.value }
+                                                })}
+                                                className="h-9 bg-background"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Location Name</label>
+                                        <Input
+                                            placeholder="e.g. Devlomatix Solutions"
+                                            value={formData.metadata?.locationName || ''}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                metadata: { ...(formData.metadata || {}), locationName: e.target.value }
+                                            })}
+                                            className="h-9 bg-background"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Address</label>
+                                        <Input
+                                            placeholder="Full address..."
+                                            value={formData.metadata?.address || ''}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                metadata: { ...(formData.metadata || {}), address: e.target.value }
+                                            })}
+                                            className="h-9 bg-background"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block text-primary">Google Places ID (Optional)</label>
+                                        <Input
+                                            placeholder="ChIJa5S5..."
+                                            value={formData.metadata?.googlePlaceId || ''}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                metadata: { ...(formData.metadata || {}), googlePlaceId: e.target.value }
+                                            })}
+                                            className="h-9 bg-background border-primary/20 focus-visible:ring-primary/30"
+                                        />
+                                    </div>
                                 </div>
                             )}
 
                             {/* Header Text Section */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-sm font-semibold text-foreground mb-1.5 block">Header Text (Optional)</label>
-                                    <Input
-                                        placeholder="Add a bold title..."
-                                        value={formData.metadata?.headerText || ''}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            metadata: { ...formData.metadata, headerText: e.target.value }
-                                        })}
-                                        className="bg-background border-border font-bold" />
+                            {(['text', 'interactive-button', 'interactive-group', 'carousel'].includes(formData.type) || !formData.type) && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Header Text (Optional)</label>
+                                        <Input
+                                            placeholder="Add a bold title..."
+                                            value={formData.metadata?.headerText || ''}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                metadata: { ...(formData.metadata || {}), headerText: e.target.value }
+                                            })}
+                                            className="bg-background border-border font-bold" />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Interactive Group / List Section */}
+                            {formData.type === 'interactive-group' && (
+                                <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                                    <div className="flex items-center gap-2 mb-2 text-primary">
+                                        <List className="w-4 h-4" />
+                                        <h4 className="text-xs font-bold uppercase tracking-wider">List Configuration</h4>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Menu Button Text</label>
+                                        <Input
+                                            placeholder="e.g. Select Option"
+                                            value={formData.metadata?.listButton || 'Select Option'}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                metadata: { ...(formData.metadata || {}), listButton: e.target.value }
+                                            })}
+                                            className="h-9 bg-background"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Sections & Rows</label>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 text-[10px] text-primary"
+                                                onClick={() => {
+                                                    const sections = [...(formData.metadata?.listSections || [])];
+                                                    sections.push({ title: 'New Section', rows: [{ title: 'New Row', description: '' }] });
+                                                    setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
+                                                }}
+                                            >
+                                                Add Section
+                                            </Button>
+                                        </div>
+
+                                        {(formData.metadata?.listSections || []).map((section, sIdx) => (
+                                            <div key={sIdx} className="space-y-2 p-3 bg-background rounded-lg border border-border">
+                                                <div className="flex items-center gap-2">
+                                                    <Input
+                                                        placeholder="Section Title"
+                                                        value={section.title}
+                                                        onChange={(e) => {
+                                                            const sections = [...formData.metadata.listSections];
+                                                            sections[sIdx].title = e.target.value;
+                                                            setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
+                                                        }}
+                                                        className="h-8 text-xs font-bold"
+                                                    />
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
+                                                        const sections = formData.metadata.listSections.filter((_, i) => i !== sIdx);
+                                                        setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
+                                                    }}><Trash2 className="w-3 h-3" /></Button>
+                                                </div>
+
+                                                <div className="pl-4 space-y-2 border-l-2 border-primary/20">
+                                                    {section.rows.map((row, rIdx) => (
+                                                        <div key={rIdx} className="flex gap-2 items-start">
+                                                            <div className="flex-1 space-y-1">
+                                                                <Input
+                                                                    placeholder="Row Title"
+                                                                    value={row.title}
+                                                                    onChange={(e) => {
+                                                                        const sections = [...formData.metadata.listSections];
+                                                                        sections[sIdx].rows[rIdx].title = e.target.value;
+                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
+                                                                    }}
+                                                                    className="h-8 text-xs"
+                                                                />
+                                                                <Input
+                                                                    placeholder="Description (Optional)"
+                                                                    value={row.description}
+                                                                    onChange={(e) => {
+                                                                        const sections = [...formData.metadata.listSections];
+                                                                        sections[sIdx].rows[rIdx].description = e.target.value;
+                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
+                                                                    }}
+                                                                    className="h-7 text-[10px]"
+                                                                />
+                                                            </div>
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => {
+                                                                const sections = [...formData.metadata.listSections];
+                                                                sections[sIdx].rows = sections[sIdx].rows.filter((_, i) => i !== rIdx);
+                                                                setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
+                                                            }}><X className="w-3 h-3" /></Button>
+                                                        </div>
+                                                    ))}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 text-[9px] text-primary"
+                                                        onClick={() => {
+                                                            const sections = [...formData.metadata.listSections];
+                                                            sections[sIdx].rows.push({ title: 'New Item', description: '' });
+                                                            setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
+                                                        }}
+                                                    >
+                                                        + Add Row
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Carousel Section */}
+                            {formData.type === 'carousel' && (
+                                <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                                    <div className="flex items-center gap-2 mb-2 text-primary">
+                                        <Smartphone className="w-4 h-4" />
+                                        <h4 className="text-xs font-bold uppercase tracking-wider">Carousel Cards</h4>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {(formData.metadata?.cards || []).map((card, cIdx) => (
+                                            <div key={cIdx} className="space-y-3 p-3 bg-background rounded-lg border border-border">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Card {cIdx + 1}</span>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
+                                                        const cards = formData.metadata.cards.filter((_, i) => i !== cIdx);
+                                                        setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                    }}><Trash2 className="w-3 h-3" /></Button>
+                                                </div>
+                                                <Textarea
+                                                    placeholder="Card body text..."
+                                                    value={card.body}
+                                                    onChange={(e) => {
+                                                        const cards = [...formData.metadata.cards];
+                                                        cards[cIdx].body = e.target.value;
+                                                        setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                    }}
+                                                    className="h-20 text-xs resize-none"
+                                                />
+                                            </div>
+                                        ))}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full h-8 text-[10px] border-dashed"
+                                            onClick={() => {
+                                                const cards = [...(formData.metadata?.cards || [])];
+                                                cards.push({ body: '', buttons: [''] });
+                                                setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                            }}
+                                        >
+                                            + Add Carousel Card
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Body & Footer */}
                             <div className="space-y-4">
-                                <div>
-                                    <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
-                                        Message Body
-                                        <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
-                                    </label>
-                                    <Textarea
-                                        rows='8'
-                                        value={formData.body || ''}
-                                        onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-                                        className="bg-background border-border resize-none" />
-                                </div>
+                                {formData.type !== 'carousel' && (
+                                    <div>
+                                        <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
+                                            Message Body
+                                            <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
+                                        </label>
+                                        <Textarea
+                                            rows='8'
+                                            value={formData.body || ''}
+                                            onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                                            className="bg-background border-border resize-none" />
+                                    </div>
+                                )}
 
                                 <div>
                                     <label className="text-sm font-semibold text-foreground mb-1.5 block">Footer (Optional)</label>
@@ -340,10 +592,10 @@ export default function TemplateBuilder({
                                             <span className="text-[10px] text-muted-foreground uppercase font-medium">Max 3</span>
                                         </label>
                                         {formData.buttons?.length < 3 && (
-                                            <Button 
+                                            <Button
                                                 type="button"
-                                                variant="ghost" 
-                                                size="sm" 
+                                                variant="ghost"
+                                                size="sm"
                                                 onClick={addButton}
                                                 className="h-7 text-[11px] text-primary hover:bg-primary/5 font-bold"
                                             >
@@ -351,7 +603,7 @@ export default function TemplateBuilder({
                                             </Button>
                                         )}
                                     </div>
-                                    
+
                                     <div className="space-y-2">
                                         {(formData.buttons || []).map((btn, idx) => {
                                             const label = typeof btn === 'object' ? (btn.text || '') : (btn || '');
@@ -385,7 +637,7 @@ export default function TemplateBuilder({
                             </div>
 
                             {/* Live Preview Integration */}
-                            <div className="mt-8 pt-6 border-t border-border">
+                            <div className="mt-4 pt-4 border-t border-border">
                                 <TemplatePreview template={formData} />
                             </div>
                         </div>
@@ -395,12 +647,21 @@ export default function TemplateBuilder({
                     <div className="px-6 py-4 border-t border-border bg-muted/30 flex items-center justify-between gap-3">
                         <Button variant="ghost" onClick={onClose} disabled={isSaving}>Cancel</Button>
                         <div className='flex gap-2'>
-                            <Button 
-                                onClick={() => onSave(false)} 
+                            <Button
+                                onClick={() => onSave(false)}
                                 disabled={isSaving}
-                                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                                variant="outline"
+                                className="font-bold shadow-sm"
                             >
                                 {isSaving ? "Saving..." : "Save as Draft"}
+                            </Button>
+                            <Button
+                                onClick={() => onSave(true)}
+                                disabled={isSaving || !formData.name?.trim() || (formData.type !== 'carousel' && !formData.body?.trim()) || (formData.type === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0))}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                                title={!formData.name?.trim() ? "Name is required" : (formData.type !== 'carousel' && !formData.body?.trim()) ? "Message body is required" : (formData.type === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0)) ? "At least one card is required" : ""}
+                            >
+                                {isSaving ? "Submitting..." : "Submit for Approval"}
                             </Button>
                         </div>
                     </div>

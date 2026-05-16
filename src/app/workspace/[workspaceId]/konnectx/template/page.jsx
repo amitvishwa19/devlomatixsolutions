@@ -32,6 +32,7 @@ import { syncTemplates } from "./_actions/sync-templates-v2";
 import { deleteTemplate } from "./_actions/delete-template";
 import { submitTemplate } from "./_actions/submit-template";
 import { checkTemplateStatus } from "./_actions/check-template-status";
+import { MediaLibraryModal } from "../../article/_components/MediaLibraryModal";
 import { getContacts as getContactsAction } from "../contacts/_actions/get-contacts";
 import { sendMessage as sendMessageAction } from "../chats/_actions/send-message";
 import { getWaMetadata } from "../settings/_actions/get-wa-metadata";
@@ -268,7 +269,7 @@ export default function TemplatePage() {
     };
 
     const handleSave = async (shouldSubmit = false) => {
-        if (!formData.name || !formData.body) {
+        if (!formData.name || (formData.type !== 'carousel' && !formData.body)) {
             toast.error("Name and Body are required");
             return;
         }
@@ -482,6 +483,7 @@ export default function TemplatePage() {
     return (
         <TooltipProvider>
             <div className="flex flex-col h-full gap-2 p-2 animate-in fade-in duration-500">
+                <MediaLibraryModal />
                 {/* Header */}
                 <div className="flex border border-border items-center justify-between bg-card p-2 rounded-md shadow-sm">
                     <div className="flex flex-row gap-2 items-center">
@@ -492,13 +494,14 @@ export default function TemplatePage() {
                         </div>
                     </div>
                     <div className='flex flex-row gap-2'>
+                        <AccountSwitcher />
                         <Button onClick={handleSyncCloud} variant="outline" className="border-primary/20 text-primary hover:bg-primary/5 shadow-sm gap-2" disabled={isSyncing}>
                             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /> Sync Meta
                         </Button>
                         <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm gap-2">
                             <Plus className="w-4 h-4 " /> Create Template
                         </Button>
-                        <AccountSwitcher />
+
                     </div>
                 </div>
 

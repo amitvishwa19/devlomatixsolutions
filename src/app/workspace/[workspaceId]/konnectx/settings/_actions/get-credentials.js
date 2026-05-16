@@ -32,6 +32,8 @@ const handler = async (data) => {
             let phoneNumberId = '';
             let wabaId = '';
             let accessToken = '';
+            let googlePlaceId = '';
+            let defaultTemplateId = '';
             
             const stored = cred.credentials;
             if (stored) {
@@ -50,6 +52,8 @@ const handler = async (data) => {
                     phoneNumberId = decrypted.phoneNumberId || decrypted.phone_number_id;
                     wabaId = decrypted.wabaId || decrypted.waba_id;
                     accessToken = decrypted.accessToken || decrypted.system_access_token || decrypted.token;
+                    googlePlaceId = decrypted.googlePlaceId || '';
+                    defaultTemplateId = decrypted.defaultTemplateId || '';
                 }
             }
 
@@ -57,7 +61,9 @@ const handler = async (data) => {
                 ...JSON.parse(JSON.stringify(cred)),
                 phoneNumberId,
                 wabaId,
-                accessToken
+                accessToken,
+                googlePlaceId,
+                defaultTemplateId
             };
         });
 
