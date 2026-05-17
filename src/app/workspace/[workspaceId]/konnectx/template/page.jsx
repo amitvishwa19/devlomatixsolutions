@@ -169,11 +169,17 @@ export default function TemplatePage() {
     };
 
     const { execute: executeSaveTemplate } = useAction(saveTemplate, {
-        onSuccess: (data) => {
+        onSuccess: (data, context) => {
             toast.success(editingId ? "Template updated!" : "Template created!");
             setIsBuilderOpen(false);
             executeGetTemplates({ workspaceId });
             setIsSaving(false);
+
+            if (context?.shouldSubmit && data.template?.id) {
+                toast.loading("Submitting template to Meta...", { id: "submit-toast" });
+                setIsSubmittingId(data.template.id);
+                executeSubmitTemplate({ workspaceId, templateId: data.template.id });
+            }
         },
         onError: (error) => {
             toast.error(error);
@@ -281,7 +287,7 @@ export default function TemplatePage() {
             ...formData,
             status: 'DRAFT',
             platform: formData.platform || 'WHATSAPP_CLOUD'
-        });
+        }, { shouldSubmit });
     };
 
     const handleDelete = (id) => {

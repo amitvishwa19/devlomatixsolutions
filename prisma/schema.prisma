@@ -342,6 +342,7 @@ model WhatsAppAuth {
 model MessageTemplate {
   id            String     @id @default(cuid())
   templateId    String?
+  workspaceId   String     @default("cmnbhifag000458ikwhv1zso2")
   userId        String
   name          String
   templateName  String?
@@ -363,8 +364,9 @@ model MessageTemplate {
   campaigns     Campaign[]
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, name, language, phoneNumberId], name: "unique_template_record")
+  @@unique([workspaceId, name, language, phoneNumberId], name: "unique_template_record")
   @@index([userId])
+  @@index([workspaceId])
 }
 
 model WhatsAppMessage {
@@ -435,17 +437,19 @@ model Contact {
 }
 
 model BotFlow {
-  id          String        @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
   description String?
   userId      String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  active      Boolean       @default(true)
-  nodes       Json          @default("[]")
-  edges       Json          @default("[]")
+  workspaceId String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  active      Boolean         @default(true)
+  nodes       Json            @default("[]")
+  edges       Json            @default("[]")
   steps       BotFlowStep[]
+  executions  BotExecution[]
 
   @@index([userId])
 }
