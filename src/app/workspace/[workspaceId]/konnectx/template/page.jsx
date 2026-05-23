@@ -283,7 +283,7 @@ export default function TemplatePage() {
 
         executeSaveTemplate({
             workspaceId,
-            id: editingId,
+            id: editingId || undefined,
             ...formData,
             status: 'DRAFT',
             platform: formData.platform || 'WHATSAPP_CLOUD'

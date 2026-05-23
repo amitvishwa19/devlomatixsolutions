@@ -8,7 +8,7 @@ import { symmetricDecrypt } from "@/lib/encryption";
 
 const SaveTemplateSchema = z.object({
     workspaceId: z.string(),
-    id: z.string().optional(),
+    id: z.string().optional().nullable(),
     name: z.string(),
     category: z.string().optional().nullable(),
     language: z.string().optional(),
@@ -66,7 +66,7 @@ const handler = async (data) => {
         if (id) {
             const existing = await db.messageTemplate.findUnique({ where: { id } });
             if (!existing || existing.workspaceId !== workspaceId) {
-                return { error: "Template not found or unauthorized" };
+                return { error: "Template not found or unauthorized", data: null };
             }
             const updated = await db.messageTemplate.update({
                 where: { id },
@@ -85,13 +85,13 @@ const handler = async (data) => {
                 }
             });
             console.log("[SaveTemplate] Update success:", updated.id);
-            return { success: true, template: updated };
+            return { data: { template: updated } };
         } else {
             const existingName = await db.messageTemplate.findFirst({ 
                 where: { workspaceId, name, language, phoneNumberId: phoneNumberId || null } 
             });
             if (existingName) {
-                return { error: "A template with this name and language already exists for this phone number." };
+                return { error: "A template with this name and language already exists for this phone number.", data: null };
             }
             const template = await db.messageTemplate.create({
                 data: {
@@ -111,14 +111,14 @@ const handler = async (data) => {
                 }
             });
             console.log("[SaveTemplate] Create success:", template.id);
-            return { success: true, template };
+            return { data: { template } };
         }
     } catch (error) {
         console.error("[SaveTemplate] Error:", error);
         if (error.code === 'P2002') {
-            return { error: "A template with this name/language already exists for this account." };
+            return { error: "A template with this name/language already exists for this account.", data: null };
         }
-        return { error: error.message || "Failed to save template" };
+        return { error: error.message || "Failed to save template", data: null };
     }
 };
 
