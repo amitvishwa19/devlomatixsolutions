@@ -78,6 +78,39 @@ const handler = async (data) => {
             totalMetaTemplates += metaTemplates.length;
             console.log(`[Template Sync Action] Fetched ${metaTemplates.length} templates for ${credential.profile}`);
 
+            // 1. Build a set of Meta template keys (name_language) for comparison
+            const metaTemplateKeys = new Set(
+                metaTemplates.map(t => `${t.name.toLowerCase()}_${t.language}`)
+            );
+
+            // 2. Fetch all local synchronized templates for this phone number and user
+            const currentPhoneId = String(cloudCredentials.phoneNumberId || cloudCredentials.phone_number_id || "");
+            const localTemplates = await db.messageTemplate.findMany({
+                where: {
+                    userId,
+                    phoneNumberId: currentPhoneId,
+                    isDefault: true,
+                    platform: 'WHATSAPP_CLOUD'
+                }
+            });
+
+            // 3. Identify and delete templates no longer on Meta Cloud
+            const templatesToDelete = localTemplates.filter(t => {
+                const key = `${t.name.toLowerCase()}_${t.language}`;
+                return !metaTemplateKeys.has(key);
+            });
+
+            if (templatesToDelete.length > 0) {
+                console.log(`[Template Sync] Deleting ${templatesToDelete.length} templates that were deleted on Meta:`, templatesToDelete.map(t => t.name));
+                await db.messageTemplate.deleteMany({
+                    where: {
+                        id: {
+                            in: templatesToDelete.map(t => t.id)
+                        }
+                    }
+                });
+            }
+
             // 3. Upsert into Database
             for (const metaT of metaTemplates) {
                 try {
@@ -89,6 +122,7 @@ const handler = async (data) => {
                     const templateData = {
                         userId,
                         templateId: metaT.id,
+                        workspaceId,
                         name: metaT.name,
                         templateName: metaT.name,
                         category: metaT.category,

@@ -126,6 +126,7 @@ export default function WhatsAppChatsPage() {
     const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState(false);
     const [selectedTemplateForSend, setSelectedTemplateForSend] = useState(null);
     const [templateVars, setTemplateVars] = useState({});
+    const [templateMediaUrl, setTemplateMediaUrl] = useState("");
 
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
@@ -361,6 +362,13 @@ export default function WhatsAppChatsPage() {
         const vars = {};
         matches.forEach(m => { vars[m] = ''; });
         setTemplateVars(vars);
+
+        // Extract default media URL from metadata if exists
+        let metadata = tpl.metadata;
+        if (typeof metadata === 'string') {
+            try { metadata = JSON.parse(metadata); } catch (e) {}
+        }
+        setTemplateMediaUrl(metadata?.mediaUrl || "");
     };
 
     const handleSendTemplate = async () => {
@@ -374,9 +382,47 @@ export default function WhatsAppChatsPage() {
             text: val || ' '
         }));
 
-        const components = bodyParams.length > 0
-            ? [{ type: 'body', parameters: bodyParams }]
-            : [];
+        const components = [];
+
+        // Handle Media Header if required by the template
+        const templateType = (selectedTemplateForSend.type || 'text').toUpperCase();
+        if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(templateType)) {
+            let finalMediaUrl = templateMediaUrl || '';
+            
+            // Fallback URLs if metadata mediaUrl is not defined
+            if (!finalMediaUrl) {
+                finalMediaUrl = {
+                    IMAGE: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809",
+                    VIDEO: "https://www.w3schools.com/html/mov_bbb.mp4",
+                    DOCUMENT: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+                }[templateType];
+            }
+
+            if (finalMediaUrl) {
+                const mediaType = templateType.toLowerCase();
+                const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4');
+
+                components.push({
+                    type: 'header',
+                    parameters: [
+                        {
+                            type: mediaType,
+                            [mediaType]: isHandle
+                                ? { id: finalMediaUrl }
+                                : { link: finalMediaUrl }
+                        }
+                    ]
+                });
+            }
+        }
+
+        // Add body parameters
+        if (bodyParams.length > 0) {
+            components.push({
+                type: 'body',
+                parameters: bodyParams
+            });
+        }
 
         // Build preview text for optimistic UI
         let previewText = selectedTemplateForSend.body || `[Template: ${templateName}]`;
@@ -993,6 +1039,25 @@ export default function WhatsAppChatsPage() {
                                             {fillTemplatePreview(selectedTemplateForSend.body, templateVars)}
                                         </p>
                                     </div>
+
+                                    {/* Media Header Input if required */}
+                                    {['IMAGE', 'VIDEO', 'DOCUMENT'].includes((selectedTemplateForSend.type || '').toUpperCase()) && (
+                                        <div className="flex flex-col gap-1.5 bg-primary/5 p-3 rounded-xl border border-primary/10">
+                                            <label className="text-[10px] font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+                                                <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                                {selectedTemplateForSend.type} Header Required
+                                            </label>
+                                            <Input
+                                                value={templateMediaUrl}
+                                                onChange={(e) => setTemplateMediaUrl(e.target.value)}
+                                                placeholder={`https://... or Meta Media ID`}
+                                                className="h-9 text-xs bg-background/60 border-border/40 focus-visible:ring-primary/20"
+                                            />
+                                            <p className="text-[9px] text-muted-foreground">
+                                                Provide a public URL (e.g. Supabase link) or Meta Media ID to change the image for this message.
+                                            </p>
+                                        </div>
+                                    )}
 
                                     {/* Variable Fields */}
                                     {Object.keys(templateVars).length > 0 ? (

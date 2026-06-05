@@ -197,11 +197,73 @@ function parseIncomingMessage(body) {
 }
 
 /**
+ * uploadMetaMedia
+ * Uploads a public media asset to Meta and returns a media_id
+ */
+async function uploadMetaMedia(credentials, mediaUrl) {
+    const { accessToken, phoneNumberId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${phoneNumberId}/media`;
+
+    try {
+        console.log("[uploadMetaMedia] Fetching media file from URL:", mediaUrl);
+        const res = await fetch(mediaUrl);
+        if (!res.ok) throw new Error(`Failed to fetch media file: ${res.statusText}`);
+        
+        const buffer = await res.arrayBuffer();
+        const contentType = res.headers.get('content-type') || 'image/jpeg';
+        const blob = new Blob([buffer], { type: contentType });
+        const fileName = mediaUrl.split('/').pop()?.split('?')[0] || 'media_file';
+
+        const formData = new FormData();
+        formData.append('messaging_product', 'whatsapp');
+        formData.append('file', blob, fileName);
+
+        console.log("[uploadMetaMedia] Uploading media to Meta...");
+        const uploadRes = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: formData
+        });
+
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) {
+            throw new Error(uploadData.error?.message || "Failed to upload media to Meta");
+        }
+
+        console.log("[uploadMetaMedia] Successfully uploaded. ID:", uploadData.id);
+        return uploadData.id;
+    } catch (error) {
+        console.error("[uploadMetaMedia] Failed to upload media on-the-fly:", error.message || error);
+        return null;
+    }
+}
+
+/**
  * 7. Message Dispatch (Media)
  * Supports image, video, audio, document
  */
 async function sendMediaMessage(credentials, to, type, mediaUrl, caption = "") {
-    const mediaPayload = { link: mediaUrl };
+    let mediaPayload = null;
+
+    // Check if mediaUrl is a remote URL
+    const isUrl = /^https?:\/\//i.test(String(mediaUrl));
+    if (isUrl) {
+        // Attempt to upload to Meta on-the-fly for guaranteed delivery
+        const mediaId = await uploadMetaMedia(credentials, mediaUrl);
+        if (mediaId) {
+            mediaPayload = { id: mediaId };
+        }
+    }
+
+    // Fallback: If not a URL, or upload failed, determine if it's a numeric ID or a link
+    if (!mediaPayload) {
+        const isId = /^\d+$/.test(String(mediaUrl)) || String(mediaUrl).startsWith('4:');
+        mediaPayload = isId ? { id: String(mediaUrl) } : { link: String(mediaUrl) };
+    }
+
     if (caption && (type === 'image' || type === 'video' || type === 'document')) {
         mediaPayload.caption = caption;
     }
@@ -397,5 +459,6 @@ export {
     createFlowMeta,
     updateFlowAssetMeta,
     publishFlowMeta,
-    deleteFlowMeta
+    deleteFlowMeta,
+    uploadMetaMedia
 };

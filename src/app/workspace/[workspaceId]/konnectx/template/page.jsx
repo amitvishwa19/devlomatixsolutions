@@ -45,7 +45,6 @@ export default function TemplatePage() {
     const [templates, setTemplates] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState('my_templates');
     const [viewMode, setViewMode] = useState('list');
 
     // Builder & Dialog State
@@ -247,7 +246,7 @@ export default function TemplatePage() {
     // UI Handlers
     const handleOpenBuilder = (template = null) => {
         if (template) {
-            setFormData({ ...template });
+            setFormData({ ...template, type: (template.type || 'text').toLowerCase() });
             setEditingId(template.id);
         } else {
             setFormData({
@@ -275,7 +274,7 @@ export default function TemplatePage() {
     };
 
     const handleSave = async (shouldSubmit = false) => {
-        if (!formData.name || (formData.type !== 'carousel' && !formData.body)) {
+        if (!formData.name || ((formData.type || '').toLowerCase() !== 'carousel' && !formData.body)) {
             toast.error("Name and Body are required");
             return;
         }
@@ -304,7 +303,8 @@ export default function TemplatePage() {
             isDefault: false,
             status: 'DRAFT',
             approved: false,
-            templateId: null
+            templateId: null,
+            type: (template.type || 'text').toLowerCase()
         });
         setEditingId(null);
         setIsBuilderOpen(true);
@@ -479,11 +479,8 @@ export default function TemplatePage() {
     };
 
     const filteredTemplates = templates.filter((t) => {
-        const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        return t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             t.body.toLowerCase().includes(searchTerm.toLowerCase());
-        if (filterType === 'my_templates') return matchesSearch && !t.isDefault;
-        if (filterType === 'cloud_api') return matchesSearch && t.platform === 'WHATSAPP_CLOUD' && t.isDefault;
-        return matchesSearch;
     });
 
     return (
@@ -512,20 +509,14 @@ export default function TemplatePage() {
                 </div>
 
                 {/* Toolbar */}
-                <div className="bg-card p-2 rounded-xl shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center border border-border/50">
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-80">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Search templates..." className="pl-9 bg-background/50 border-border h-10 ring-offset-background" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                        </div>
-                        <div className="flex gap-1 bg-muted/40 p-1 rounded-lg border border-border h-10">
-                            <Button variant="ghost" size="sm" className={`h-full px-3 ${filterType === 'my_templates' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`} onClick={() => setFilterType('my_templates')}>My Templates</Button>
-                            <Button variant="ghost" size="sm" className={`h-full px-3 ${filterType === 'cloud_api' ? 'bg-background shadow-sm text-primary font-bold' : 'text-muted-foreground'}`} onClick={() => setFilterType('cloud_api')}>All Templates</Button>
-                        </div>
-                        <div className="flex gap-1 bg-muted/30 p-1 rounded-lg border border-border/50 h-10 ml-auto">
-                            <Button variant={viewMode === 'grid' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
-                            <Button variant={viewMode === 'list' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
-                        </div>
+                <div className="bg-card p-2 rounded-xl shadow-sm flex flex-row gap-4 justify-between items-center border border-border/50">
+                    <div className="relative flex-1 max-w-xs md:max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Search templates..." className="pl-9 bg-background/50 border-border h-10 ring-offset-background" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    </div>
+                    <div className="flex gap-1 bg-muted/30 p-1 rounded-lg border border-border/50 h-10">
+                        <Button variant={viewMode === 'grid' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
+                        <Button variant={viewMode === 'list' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
                     </div>
                 </div>
 

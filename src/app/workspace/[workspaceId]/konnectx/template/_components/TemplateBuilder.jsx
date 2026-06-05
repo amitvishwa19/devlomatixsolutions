@@ -50,6 +50,7 @@ export default function TemplateBuilder({
 }) {
     const { onOpen } = useModal();
     const [aiPrompt, setAiPrompt] = useState('');
+    const normalizedType = (formData.type || 'text').toLowerCase();
 
     const { execute: executeGetAiSuggestion, isLoading: isAiGenerating } = useAction(getTemplateAiSuggestion, {
         onSuccess: (data, context) => {
@@ -238,7 +239,7 @@ export default function TemplateBuilder({
                                     <div>
                                         <label className="text-sm font-semibold text-foreground mb-1.5 block">Message Type</label>
                                         <Select
-                                            value={formData.type}
+                                            value={normalizedType}
                                             onValueChange={(v) => {
                                                 let newMetadata = { ...formData.metadata };
                                                 if (v === 'interactive-group' && (!newMetadata.listSections || newMetadata.listSections.length === 0)) {
@@ -272,10 +273,10 @@ export default function TemplateBuilder({
                             <hr className="border-border" />
 
                             {/* Media/Location Sections (extracted for brevity in this example but would be present fully) */}
-                            {['image', 'video', 'audio', 'document'].includes(formData.type) && (
+                            {['image', 'video', 'audio', 'document'].includes(normalizedType) && (
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm font-semibold text-foreground capitalize">{formData.type} URL</label>
+                                        <label className="text-sm font-semibold text-foreground capitalize">{normalizedType} URL</label>
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -319,7 +320,7 @@ export default function TemplateBuilder({
                                 </div>
                             )}
 
-                            {formData.type === 'location' && (
+                            {normalizedType === 'location' && (
                                 <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border">
                                     <div className="flex items-center gap-2 mb-2 text-primary">
                                         <Smartphone className="w-4 h-4" />
@@ -391,7 +392,7 @@ export default function TemplateBuilder({
                             )}
 
                             {/* Header Text Section */}
-                            {(['text', 'interactive-button', 'interactive-group', 'carousel'].includes(formData.type) || !formData.type) && (
+                            {(['text', 'interactive-button', 'interactive-group', 'carousel'].includes(normalizedType) || !normalizedType) && (
                                 <div className="space-y-4">
                                     <div>
                                         <label className="text-sm font-semibold text-foreground mb-1.5 block">Header Text (Optional)</label>
@@ -408,7 +409,7 @@ export default function TemplateBuilder({
                             )}
 
                             {/* Interactive Group / List Section */}
-                            {formData.type === 'interactive-group' && (
+                            {normalizedType === 'interactive-group' && (
                                 <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
                                     <div className="flex items-center gap-2 mb-2 text-primary">
                                         <List className="w-4 h-4" />
@@ -515,7 +516,7 @@ export default function TemplateBuilder({
                             )}
 
                             {/* Carousel Section */}
-                            {formData.type === 'carousel' && (
+                            {normalizedType === 'carousel' && (
                                 <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
                                     <div className="flex items-center gap-2 mb-2 text-primary">
                                         <Smartphone className="w-4 h-4" />
@@ -561,7 +562,7 @@ export default function TemplateBuilder({
 
                             {/* Body & Footer */}
                             <div className="space-y-4">
-                                {formData.type !== 'carousel' && (
+                                {normalizedType !== 'carousel' && (
                                     <div>
                                         <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
                                             Message Body
@@ -657,9 +658,9 @@ export default function TemplateBuilder({
                             </Button>
                             <Button
                                 onClick={() => onSave(true)}
-                                disabled={isSaving || !formData.name?.trim() || (formData.type !== 'carousel' && !formData.body?.trim()) || (formData.type === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0))}
+                                disabled={isSaving || !formData.name?.trim() || (normalizedType !== 'carousel' && !formData.body?.trim()) || (normalizedType === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0))}
                                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
-                                title={!formData.name?.trim() ? "Name is required" : (formData.type !== 'carousel' && !formData.body?.trim()) ? "Message body is required" : (formData.type === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0)) ? "At least one card is required" : ""}
+                                title={!formData.name?.trim() ? "Name is required" : (normalizedType !== 'carousel' && !formData.body?.trim()) ? "Message body is required" : (normalizedType === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0)) ? "At least one card is required" : ""}
                             >
                                 {isSaving ? "Submitting..." : "Submit for Approval"}
                             </Button>
