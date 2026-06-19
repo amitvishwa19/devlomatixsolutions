@@ -150,7 +150,7 @@ export default function Login() {
 
                     <div className='flex justify-evenly w-full mt-2'>
                         <Button
-                            type="button"
+                            type="defaults"
                             disabled={false}
                             onClick={handleGoogleLogin}
                             className='w-full flex items-center justify-center gap-2 py-2 cursor-pointer px-4 bg-transparent border  transition-all h-11 rounded-lg'

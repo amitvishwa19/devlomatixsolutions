@@ -15,14 +15,7 @@ import {
  * entry here + one new case in the switch below + (usually) one
  * new predicate in `@/lib/auth/roles`. Keeping the list closed
  * lets the compiler catch typos at every call site.
- */
-export type CanAction =
-  | "manage-members"
-  | "edit-settings"
-  | "send-messages"
-  | "view-only"
-  | "delete-account"
-  | "transfer-ownership";
+
 
 /**
  * Inline alternative to `<RequireRole>` for places that need a
@@ -37,9 +30,9 @@ export type CanAction =
  *   const canEdit = useCan("edit-settings");
  *   <Button disabled={!canEdit} title={canEdit ? "Save" : "Read-only"} />
  */
-export function useCan(action: CanAction): boolean {
-  const { profileLoading, accountRole } = useAuth();
-  if (profileLoading || !accountRole) return false;
+export function useCan(action) {
+  // const { profileLoading, accountRole } = useAuth();
+  //if (profileLoading || !accountRole) return false;
 
   switch (action) {
     case "manage-members":
@@ -60,7 +53,7 @@ export function useCan(action: CanAction): boolean {
       // to `never` in this branch. The runtime throw is unreachable
       // for valid inputs; it only fires if someone bypasses the
       // type system at the call site (e.g. with a wrong-typed cast).
-      const _exhaustive: never = action;
+      const _exhaustive = action;
       throw new Error(`Unknown CanAction: ${String(_exhaustive)}`);
     }
   }
