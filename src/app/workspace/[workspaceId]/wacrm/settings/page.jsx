@@ -59,6 +59,14 @@ export default function SettingsPage() {
         router.replace(`/settings?${params.toString()}`, { scroll: false });
     };
     return (
-        <div>page</div>
+        <div className='p-4'>
+            <div>
+                <h1 className="text-xl font-bold text-white">Settings</h1>
+                <p className="mt-1 text-xs ">
+                    Manage your profile, WhatsApp® integration, message templates, and
+                    tags.
+                </p>
+            </div>
+        </div>
     )
 }
