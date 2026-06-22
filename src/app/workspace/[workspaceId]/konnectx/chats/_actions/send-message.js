@@ -103,6 +103,33 @@ const handler = async (data) => {
                 break;
             case 'template':
                 if (!data.template?.name) return { error: "Missing template name" };
+
+                // Pre-process template components to convert media links to internal Meta media IDs
+                if (data.template.components && data.template.components.length > 0) {
+                    for (const comp of data.template.components) {
+                        if (comp.type === 'header' && comp.parameters) {
+                            for (const param of comp.parameters) {
+                                if (['image', 'video', 'document'].includes(param.type) && param[param.type]?.link) {
+                                    const mUrl = param[param.type].link;
+                                    const isUrl = /^https?:\/\//i.test(String(mUrl));
+                                    if (isUrl) {
+                                        try {
+                                            const mediaId = await cloudApi.uploadMetaMedia(cloudCredentials, mUrl);
+                                            if (mediaId) {
+                                                delete param[param.type].link;
+                                                param[param.type].id = mediaId;
+                                            }
+                                        } catch (uploadError) {
+                                            console.error("[SendMessage] Media Upload Failed for Template", uploadError);
+                                            // It will fallback to sending the link if upload fails
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 result = await cloudApi.sendTemplateMessage(
                     cloudCredentials, cleanTo,
                     data.template.name,
