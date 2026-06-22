@@ -204,7 +204,7 @@ const handler = async (data) => {
             }
             
             components.push(mediaComp);
-        } else if (template.metadata?.headerText) {
+        } else if (template.metadata?.headerText && templateType !== 'carousel') {
             const headerText = template.metadata.headerText.trim();
             const headerExamples = getExampleSamples(headerText);
             const headerComp = {
@@ -218,20 +218,87 @@ const handler = async (data) => {
             components.push(headerComp);
         }
 
-        // BODY
-        const bodyText = (template.body || "").trim();
-        const bodyExamples = getExampleSamples(bodyText);
-        const bodyComp = {
-            type: "BODY",
-            text: bodyText
-        };
-        if (bodyExamples) {
-            bodyComp.example = { body_text: [bodyExamples] };
+        // BODY (Top-level BODY is strictly required by Meta, even for Carousels)
+        let bodyText = (template.body || "").trim();
+        
+        // If it's a carousel and the body is empty (since the UI currently hides the body input for carousels),
+        // we must provide a fallback text, because Meta rejects empty BODY components and missing BODY components.
+        if (!bodyText && templateType === 'carousel') {
+            bodyText = "Please view the options below:";
         }
-        components.push(bodyComp);
+
+        if (bodyText) {
+            const bodyExamples = getExampleSamples(bodyText);
+            const bodyComp = {
+                type: "BODY",
+                text: bodyText
+            };
+            if (bodyExamples) {
+                bodyComp.example = { body_text: [bodyExamples] };
+            }
+            components.push(bodyComp);
+        }
+
+        // CAROUSEL
+        if (templateType === 'carousel' && template.metadata?.cards) {
+            let cardsData = [...template.metadata.cards];
+            
+            // Meta requires a minimum of 2 cards for a carousel
+            if (cardsData.length === 1) {
+                cardsData.push(cardsData[0]); // Duplicate the first card to satisfy the 2-card minimum
+            }
+
+            const cards = [];
+            const defaultImageUrl = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=800";
+            
+            // We must use header_handle, as Meta rejects header_url for carousel cards
+            const defaultHandle = await getMetaHeaderHandle(defaultImageUrl, cloudCreds.accessToken, 'IMAGE');
+
+            for (const cardData of cardsData) {
+                const cardComponents = [];
+                
+                // Card Header (Required by Meta)
+                if (defaultHandle) {
+                    cardComponents.push({
+                        type: "HEADER",
+                        format: "IMAGE",
+                        example: { header_handle: [defaultHandle] }
+                    });
+                }
+                
+                // Card Body
+                const cText = (cardData.body || "").trim();
+                const cBody = { type: "BODY", text: cText || "Carousel card details" };
+                const cBodyExamples = getExampleSamples(cBody.text);
+                if (cBodyExamples) cBody.example = { body_text: [cBodyExamples] };
+                cardComponents.push(cBody);
+                
+                // Card Buttons (Required by Meta, min 1)
+                const cButtons = [];
+                if (cardData.buttons && Array.isArray(cardData.buttons)) {
+                    cardData.buttons.forEach(bText => {
+                        const btnText = (bText || "").trim();
+                        if (btnText) cButtons.push({ type: "QUICK_REPLY", text: btnText });
+                    });
+                }
+                if (cButtons.length === 0) {
+                    cButtons.push({ type: "QUICK_REPLY", text: "Select Option" });
+                }
+                cardComponents.push({ type: "BUTTONS", buttons: cButtons });
+
+                cards.push({ components: cardComponents });
+            }
+
+            if (cards.length > 0) {
+                components.push({
+                    type: "CAROUSEL",
+                    cards: cards
+                });
+            }
+        }
 
         // FOOTER
-        if (template.footer) {
+        if (template.footer && templateType !== 'carousel') {
             components.push({
                 type: "FOOTER",
                 text: template.footer.trim()
@@ -239,7 +306,7 @@ const handler = async (data) => {
         }
 
         // BUTTONS
-        if (template.buttons && Array.isArray(template.buttons)) {
+        if (template.buttons && Array.isArray(template.buttons) && templateType !== 'carousel') {
             const validButtons = template.buttons
                 .map(btn => {
                     const b = typeof btn === 'string' ? { type: 'QUICK_REPLY', text: btn } : btn;
@@ -262,10 +329,15 @@ const handler = async (data) => {
             }
         }
 
+        let finalCategory = (template.category || "UTILITY").toUpperCase();
+        if (templateType === 'carousel') {
+            finalCategory = "MARKETING"; // Meta strictly requires MARKETING for Carousel templates
+        }
+
         const metaPayload = {
             name: sanitizedName,
             language: template.language || "en_US",
-            category: (template.category || "UTILITY").toUpperCase(),
+            category: finalCategory,
             components: components
         };
 
@@ -289,7 +361,10 @@ const handler = async (data) => {
 
         if (!response.ok || result.error) {
             return {
-                error: result.error?.message || "Meta API submission failed",
+                error: result.error?.error_user_msg 
+                       || result.error?.error_user_title 
+                       || result.error?.message 
+                       || "Meta API submission failed",
                 details: result.error
             };
         }

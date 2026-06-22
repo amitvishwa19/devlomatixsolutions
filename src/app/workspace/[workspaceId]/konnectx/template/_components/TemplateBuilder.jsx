@@ -93,8 +93,8 @@ export default function TemplateBuilder({
 
     return (
         <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent className="w-[620px] sm:max-w-[620px] p-0 flex flex-col gap-0 border-l border-border bg-card shadow-2xl">
-                <div className='flex flex-col h-full'>
+            <SheetContent className="w-[620px] sm:max-w-[620px] p-2 flex flex-col gap-0 border-0 border-border bg-transparent">
+                <div className='flex flex-col h-full border bg-card rounded-md'>
 
 
                     {/* Panel Header */}
@@ -108,9 +108,11 @@ export default function TemplateBuilder({
                     </SheetHeader>
 
                     <ScrollArea className='h-[85%]'>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+
                             {/* AI Assistant Section */}
-                            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3 relative overflow-hidden group">
+                            {/* <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3 relative overflow-hidden group">
                                 <div className="flex items-center justify-between relative z-10">
                                     <div className="flex items-center gap-2">
                                         <div className="bg-primary/10 p-1.5 rounded-lg">
@@ -146,9 +148,9 @@ export default function TemplateBuilder({
                                         onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
                                     />
                                 </div>
-                                {/* Glow Effect */}
+                                
                                 <div className="absolute -right-4 -top-4 w-12 h-12 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/30 transition-all duration-700" />
-                            </div>
+                            </div> */}
 
                             {/* Basic Info */}
                             <div className="space-y-4">
@@ -659,7 +661,7 @@ export default function TemplateBuilder({
                             <Button
                                 onClick={() => onSave(true)}
                                 disabled={isSaving || !formData.name?.trim() || (normalizedType !== 'carousel' && !formData.body?.trim()) || (normalizedType === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0))}
-                                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+
                                 title={!formData.name?.trim() ? "Name is required" : (normalizedType !== 'carousel' && !formData.body?.trim()) ? "Message body is required" : (normalizedType === 'carousel' && (!formData.metadata?.cards || formData.metadata.cards.length === 0)) ? "At least one card is required" : ""}
                             >
                                 {isSaving ? "Submitting..." : "Submit for Approval"}
