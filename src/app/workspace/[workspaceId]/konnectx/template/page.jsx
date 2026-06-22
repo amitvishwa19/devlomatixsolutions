@@ -369,14 +369,23 @@ export default function TemplatePage() {
             }
         }
 
+        // Add validation for media templates
+        if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(testingTemplate.type?.toUpperCase())) {
+            const finalMediaUrl = mediaUrl || testingTemplate.metadata?.mediaUrl;
+            if (!finalMediaUrl || finalMediaUrl.trim() === '') {
+                toast.error(`Please provide a Media URL for the ${testingTemplate.type} header.`);
+                return;
+            }
+        }
+
         const buildComponents = () => {
             const components = [];
 
             // Handle Header (Text or Media)
             if (headerVars.length > 0) {
                 components.push({
-                    type: 'HEADER',
-                    parameters: headerVars.map(v => ({ type: 'TEXT', text: variableMappings[v] || '' }))
+                    type: 'header',
+                    parameters: headerVars.map(v => ({ type: 'text', text: variableMappings[v] || '' }))
                 });
             } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(testingTemplate.type?.toUpperCase())) {
                 const finalMediaUrl = mediaUrl || testingTemplate.metadata?.mediaUrl;
@@ -385,7 +394,7 @@ export default function TemplatePage() {
                     const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4'); // Meta IDs/Handles are usually digits or start with 4
 
                     components.push({
-                        type: 'HEADER',
+                        type: 'header',
                         parameters: [
                             {
                                 type: mediaType,
@@ -403,8 +412,8 @@ export default function TemplatePage() {
             // Handle Body
             if (bodyVars.length > 0) {
                 components.push({
-                    type: 'BODY',
-                    parameters: bodyVars.map(v => ({ type: 'TEXT', text: variableMappings[v] || '' }))
+                    type: 'body',
+                    parameters: bodyVars.map(v => ({ type: 'text', text: variableMappings[v] || '' }))
                 });
             }
 
