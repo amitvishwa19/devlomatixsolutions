@@ -249,22 +249,24 @@ const handler = async (data) => {
             }
 
             const cards = [];
-            const defaultImageUrl = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=800";
-            
-            // We must use header_handle, as Meta rejects header_url for carousel cards
-            const defaultHandle = await getMetaHeaderHandle(defaultImageUrl, cloudCreds.accessToken, 'IMAGE');
 
             for (const cardData of cardsData) {
                 const cardComponents = [];
                 
-                // Card Header (Required by Meta)
-                if (defaultHandle) {
-                    cardComponents.push({
-                        type: "HEADER",
-                        format: "IMAGE",
-                        example: { header_handle: [defaultHandle] }
-                    });
+                // Get the image handle for this specific card
+                const cImageUrl = cardData.mediaUrl || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=800";
+                const cHeaderHandle = await getMetaHeaderHandle(cImageUrl, cloudCreds.accessToken, 'IMAGE');
+                
+                if (!cHeaderHandle) {
+                    return { error: `Failed to process image for Carousel Card ${cards.length + 1}. Ensure it is a valid public JPEG or PNG.` };
                 }
+
+                // Card Header (Required by Meta)
+                cardComponents.push({
+                    type: "HEADER",
+                    format: "IMAGE",
+                    example: { header_handle: [cHeaderHandle] }
+                });
                 
                 // Card Body
                 const cText = (cardData.body || "").trim();

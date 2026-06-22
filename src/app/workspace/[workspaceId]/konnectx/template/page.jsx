@@ -381,6 +381,70 @@ export default function TemplatePage() {
         const buildComponents = () => {
             const components = [];
 
+            if (testingTemplate.type === 'carousel' && testingTemplate.metadata?.cards) {
+                const carouselCards = [];
+                const cardsData = testingTemplate.metadata.cards;
+                const fallbackImageUrl = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=800";
+
+                cardsData.forEach((card, index) => {
+                    const cardComps = [];
+                    
+                    const cMediaUrl = card.mediaUrl || fallbackImageUrl;
+                    const isHandle = /^\d+$/.test(cMediaUrl.toString()) || cMediaUrl.toString().startsWith('4');
+                    cardComps.push({
+                        type: 'header',
+                        parameters: [
+                            {
+                                type: 'image',
+                                image: isHandle ? { id: cMediaUrl } : { link: cMediaUrl }
+                            }
+                        ]
+                    });
+                    
+                    // Add generic button payload to satisfy Meta requirements for carousel buttons
+                    cardComps.push({
+                        type: 'button',
+                        sub_type: 'quick_reply',
+                        index: '0',
+                        parameters: [
+                            {
+                                type: 'payload',
+                                payload: 'test_payload_card_' + index
+                            }
+                        ]
+                    });
+                    
+                    carouselCards.push({
+                        card_index: index,
+                        components: cardComps
+                    });
+                });
+
+                // Duplicate the first card if only 1 exists, as Meta expects at least 2 cards for carousels
+                if (carouselCards.length === 1) {
+                    carouselCards.push({
+                        card_index: 1,
+                        components: JSON.parse(JSON.stringify(carouselCards[0].components))
+                    });
+                }
+
+                components.push({
+                    type: 'carousel',
+                    cards: carouselCards
+                });
+
+                // Handle top-level body variables for carousel
+                if (bodyVars.length > 0) {
+                    components.push({
+                        type: 'body',
+                        parameters: bodyVars.map(v => ({ type: 'text', text: variableMappings[v] || '' }))
+                    });
+                }
+
+                return components;
+            }
+
+            // Handle Standard Templates
             // Handle Header (Text or Media)
             if (headerVars.length > 0) {
                 components.push({
@@ -391,7 +455,7 @@ export default function TemplatePage() {
                 const finalMediaUrl = mediaUrl || testingTemplate.metadata?.mediaUrl;
                 if (finalMediaUrl) {
                     const mediaType = testingTemplate.type.toLowerCase();
-                    const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4'); // Meta IDs/Handles are usually digits or start with 4
+                    const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4'); 
 
                     components.push({
                         type: 'header',

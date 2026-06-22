@@ -534,6 +534,33 @@ export default function TemplateBuilder({
                                                         setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                                     }}><Trash2 className="w-3 h-3" /></Button>
                                                 </div>
+                                                <div className="relative group/input">
+                                                    <Input
+                                                        placeholder="Card image URL (https://...)"
+                                                        value={card.mediaUrl || ''}
+                                                        onChange={(e) => {
+                                                            const cards = [...formData.metadata.cards];
+                                                            cards[cIdx].mediaUrl = e.target.value;
+                                                            setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                        }}
+                                                        className="h-8 text-xs pr-8"
+                                                    />
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                                        onClick={() => onOpen('mediaLibrary', {
+                                                            workspaceId,
+                                                            onSelect: (url) => {
+                                                                const cards = [...formData.metadata.cards];
+                                                                cards[cIdx].mediaUrl = url;
+                                                                setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                            }
+                                                        })}
+                                                    >
+                                                        <ImageIcon className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
                                                 <Textarea
                                                     placeholder="Card body text..."
                                                     value={card.body}
