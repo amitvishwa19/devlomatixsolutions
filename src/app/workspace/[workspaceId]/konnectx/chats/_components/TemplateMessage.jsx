@@ -7,11 +7,11 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
 
     // Extract template name from metadata
     const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
-    
+
     // Header Logic
     const headerComponent = templateDefinition?.metadata?.components?.find(c => c.type === 'HEADER');
     const headerType = headerComponent?.format || 'TEXT';
-    
+
     // Buttons Logic
     const buttons = templateDefinition?.buttons || [];
 
@@ -20,40 +20,62 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
 
     if (isCarousel) {
         return (
-            <div className="flex flex-col w-full max-w-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500">
-                {/* Optional top-level body for carousel */}
+            <div className={`flex flex-col w-full max-w-[420px] ${msg.fromMe ? 'items-end' : 'items-start'}`}>
+                {/* Top-level body for carousel */}
                 {msg.text && msg.text.trim() && (
-                    <div className="bg-card text-foreground text-sm p-3 rounded-2xl rounded-bl-none shadow-sm mb-2 w-fit border border-border/50">
-                        <p className="whitespace-pre-wrap">{msg.text}</p>
+                    <div className={`relative px-4 py-2.5 rounded-2xl shadow-sm text-[14px] mb-2 w-fit max-w-[85%] ${
+                        msg.fromMe 
+                            ? 'bg-primary text-primary-foreground rounded-tr-none' 
+                            : 'bg-card border border-border/50 rounded-tl-none'
+                    }`}>
+                        <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
+                        {/* Bubble Tail */}
+                        {msg.fromMe ? (
+                            <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
+                        ) : (
+                            <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-card border-l-8 border-l-transparent" />
+                        )}
                     </div>
                 )}
-                <div className="flex overflow-x-auto gap-2 pb-2 snap-x hide-scrollbar">
+
+                {/* Carousel Cards Container */}
+                <div
+                    className="flex overflow-x-auto gap-2 pb-2 snap-x hide-scrollbar w-full"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
                     {cards.map((card, cIdx) => (
-                        <div key={cIdx} className="flex-none w-[260px] snap-center bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+                        <div
+                            key={cIdx}
+                            className="flex-none w-[240px] snap-center bg-card border border-border/60 rounded-xl overflow-hidden shadow-sm flex flex-col"
+                        >
                             {/* Card Image */}
-                            <div className="relative aspect-[1.91/1] bg-muted flex items-center justify-center border-b border-border/20">
+                            <div className="relative aspect-[1.91/1] bg-muted/40 flex items-center justify-center border-b border-border/40">
                                 {card.mediaUrl ? (
-                                    <img src={card.mediaUrl} alt={`Card ${cIdx + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                                    <img
+                                        src={card.mediaUrl}
+                                        alt={`Card ${cIdx + 1}`}
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                    />
                                 ) : (
-                                    <ImageIcon className="w-8 h-8 text-muted-foreground opacity-20" />
+                                    <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
                                 )}
                             </div>
-                            
+
                             {/* Card Body */}
                             <div className="p-3.5 flex-grow">
-                                <p className="text-[13px] leading-relaxed text-foreground/90 whitespace-pre-wrap line-clamp-3">
+                                <p className="text-[13px] leading-snug text-foreground/90 whitespace-pre-wrap break-words">
                                     {card.body}
                                 </p>
                             </div>
-                            
+
                             {/* Card Buttons */}
                             {card.buttons && card.buttons.length > 0 && (
-                                <div className="flex flex-col border-t border-border/30 bg-muted/20 mt-auto">
+                                <div className="flex flex-col border-t border-border/40 bg-background/50">
                                     {card.buttons.map((btnText, bIdx) => (
                                         <button
                                             key={bIdx}
                                             disabled
-                                            className="flex items-center justify-center py-2 px-4 text-[13px] font-semibold text-primary border-b border-border/30 last:border-b-0 hover:bg-primary/5 transition-colors"
+                                            className="flex items-center justify-center py-2.5 px-4 text-[13px] font-medium text-primary border-b border-border/30 last:border-b-0"
                                         >
                                             {btnText}
                                         </button>
@@ -96,7 +118,7 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
                 )}
 
                 {/* Body Text */}
-                <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap break-words">
                     {msg.text}
                 </p>
 

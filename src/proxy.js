@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-export async function middleware(request) {
+export async function proxy(request) {
     const url = request.nextUrl.clone()
     const pathname = url.pathname
     const host = request.headers.get('host') || ''

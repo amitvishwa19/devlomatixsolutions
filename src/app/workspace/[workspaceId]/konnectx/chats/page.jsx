@@ -851,7 +851,7 @@ export default function WhatsAppChatsPage() {
                                                                     : 'bg-card border border-border/50 rounded-tl-none'
                                                                     }`}
                                                             >
-                                                                <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                                                <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
 
                                                                 {/* Source Tail (Bubble Hook) for regular text */}
                                                                 {msg.fromMe ? (
