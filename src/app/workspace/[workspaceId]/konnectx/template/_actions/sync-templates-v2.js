@@ -105,6 +105,31 @@ const handler = async (data) => {
                     const footerComp = metaT.components?.find(c => c.type === 'FOOTER');
                     const buttonComp = metaT.components?.find(c => c.type === 'BUTTONS');
                     const headerComp = metaT.components?.find(c => c.type === 'HEADER');
+                    const carouselComp = metaT.components?.find(c => c.type === 'CAROUSEL');
+
+                    let templateType = headerComp?.format || 'TEXT';
+                    let templateMetadata = {
+                        headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
+                        mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
+                            ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
+                            : null
+                    };
+
+                    if (carouselComp && carouselComp.cards) {
+                        templateType = 'CAROUSEL';
+                        const cardsData = carouselComp.cards.map(card => {
+                            const cHeader = card.components?.find(c => c.type === 'HEADER');
+                            const cBody = card.components?.find(c => c.type === 'BODY');
+                            const cButtons = card.components?.find(c => c.type === 'BUTTONS');
+                            
+                            return {
+                                mediaUrl: cHeader?.example?.header_handle?.[0] || cHeader?.example?.header_url?.[0] || '',
+                                body: cBody?.text || '',
+                                buttons: cButtons?.buttons?.map(b => b.text) || []
+                            };
+                        });
+                        templateMetadata.cards = cardsData;
+                    }
 
                     const templateData = {
                         userId,
@@ -114,16 +139,11 @@ const handler = async (data) => {
                         category: metaT.category,
                         language: metaT.language,
                         status: metaT.status,
-                        type: headerComp?.format || 'TEXT',
+                        type: templateType,
                         body: bodyComp?.text || "",
                         footer: footerComp?.text || null,
                         buttons: buttonComp?.buttons || [],
-                        metadata: {
-                            headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
-                            mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
-                                ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
-                                : null
-                        },
+                        metadata: templateMetadata,
                         isDefault: true,
                         platform: 'WHATSAPP_CLOUD',
                         phoneNumberId: String(cloudCredentials.phoneNumberId || cloudCredentials.phone_number_id || "")

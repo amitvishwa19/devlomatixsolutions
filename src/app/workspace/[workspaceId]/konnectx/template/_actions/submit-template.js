@@ -59,7 +59,8 @@ const getMetaHeaderHandle = async (mediaUrl, accessToken, format) => {
         console.log("[getMetaHeaderHandle] File details validated:", { fileName, fileLength, fileType });
 
         // 2. Start Meta resumable upload session
-        const initiateUrl = `https://graph.facebook.com/v17.0/${appId}/uploads?file_name=${encodeURIComponent(fileName)}&file_length=${fileLength}&file_type=${fileType}&access_token=${accessToken}`;
+        const apiVersion = process.env.FACEBOOK_API_VERSION || 'v25.0';
+        const initiateUrl = `https://graph.facebook.com/${apiVersion}/${appId}/uploads?file_name=${encodeURIComponent(fileName)}&file_length=${fileLength}&file_type=${fileType}&access_token=${accessToken}`;
         const initiateRes = await fetch(initiateUrl, { method: "POST" });
         const initiateData = await initiateRes.json();
         
@@ -70,7 +71,7 @@ const getMetaHeaderHandle = async (mediaUrl, accessToken, format) => {
         console.log("[getMetaHeaderHandle] Meta upload session initiated. Session ID:", uploadSessionId);
 
         // 3. Upload file binary data
-        const uploadUrl = `https://graph.facebook.com/v17.0/${uploadSessionId}`;
+        const uploadUrl = `https://graph.facebook.com/${apiVersion}/${uploadSessionId}`;
         const uploadRes = await fetch(uploadUrl, {
             method: "POST",
             headers: {

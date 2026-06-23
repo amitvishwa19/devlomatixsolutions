@@ -106,22 +106,29 @@ const handler = async (data) => {
 
                 // Pre-process template components to convert media links to internal Meta media IDs
                 if (data.template.components && data.template.components.length > 0) {
+                    // Helper to process parameters
+                    const processParameters = async (parameters) => {
+                        for (const param of parameters) {
+                            if (['image', 'video', 'document'].includes(param.type) && param[param.type]?.link) {
+                                const mediaUrl = param[param.type].link;
+                                const mediaId = await cloudApi.uploadMetaMedia(cloudCredentials, mediaUrl);
+                                if (mediaId) {
+                                    delete param[param.type].link;
+                                    param[param.type].id = mediaId;
+                                }
+                            }
+                        }
+                    };
+
                     for (const comp of data.template.components) {
                         if (comp.type === 'header' && comp.parameters) {
-                            for (const param of comp.parameters) {
-                                if (['image', 'video', 'document'].includes(param.type) && param[param.type]?.link) {
-                                    const mUrl = param[param.type].link;
-                                    const isUrl = /^https?:\/\//i.test(String(mUrl));
-                                    if (isUrl) {
-                                        try {
-                                            const mediaId = await cloudApi.uploadMetaMedia(cloudCredentials, mUrl);
-                                            if (mediaId) {
-                                                delete param[param.type].link;
-                                                param[param.type].id = mediaId;
-                                            }
-                                        } catch (uploadError) {
-                                            console.error("[SendMessage] Media Upload Failed for Template", uploadError);
-                                            // It will fallback to sending the link if upload fails
+                            await processParameters(comp.parameters);
+                        } else if (comp.type === 'carousel' && comp.cards) {
+                            for (const card of comp.cards) {
+                                if (card.components) {
+                                    for (const cardComp of card.components) {
+                                        if (cardComp.type === 'header' && cardComp.parameters) {
+                                            await processParameters(cardComp.parameters);
                                         }
                                     }
                                 }
@@ -129,6 +136,13 @@ const handler = async (data) => {
                         }
                     }
                 }
+                
+                console.log("[SendMessage] Final Template Components Payload:", JSON.stringify(data.template.components, null, 2));
+                require('fs').writeFileSync('d:\\Dev\\React\\devlomatix\\devlomatix-workspace\\devlomatix\\debug-payload.json', JSON.stringify({
+                    templateName: data.template.name,
+                    components: data.template.components,
+                    fullRequestData: data
+                }, null, 2));
 
                 result = await cloudApi.sendTemplateMessage(
                     cloudCredentials, cleanTo,

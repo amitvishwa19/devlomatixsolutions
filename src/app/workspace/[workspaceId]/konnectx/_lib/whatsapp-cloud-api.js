@@ -7,7 +7,7 @@
  * All functions return a standardized { success, data, error } object.
  */
 
-const DEFAULT_VERSION = process.env.NEXT_PUBLIC_META_API_VERSION || 'v21.0';
+const DEFAULT_VERSION = process.env.FACEBOOK_API_VERSION || process.env.NEXT_PUBLIC_META_API_VERSION || 'v25.0';
 const BASE_URL = 'https://graph.facebook.com';
 
 /**

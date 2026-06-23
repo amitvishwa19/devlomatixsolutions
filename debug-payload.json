@@ -1,0 +1,124 @@
+{
+  "templateName": "curexa_marketing_template",
+  "components": [
+    {
+      "type": "carousel",
+      "cards": [
+        {
+          "card_index": 0,
+          "components": [
+            {
+              "type": "header",
+              "parameters": [
+                {
+                  "type": "image",
+                  "image": {
+                    "id": "2014970495781241"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "card_index": 1,
+          "components": [
+            {
+              "type": "header",
+              "parameters": [
+                {
+                  "type": "image",
+                  "image": {
+                    "id": "1679361116609216"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "card_index": 2,
+          "components": [
+            {
+              "type": "header",
+              "parameters": [
+                {
+                  "type": "image",
+                  "image": {
+                    "id": "1012916305042098"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fullRequestData": {
+    "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
+    "to": "919712340450",
+    "type": "template",
+    "template": {
+      "name": "curexa_marketing_template",
+      "language": {
+        "code": "en_US"
+      },
+      "components": [
+        {
+          "type": "carousel",
+          "cards": [
+            {
+              "card_index": 0,
+              "components": [
+                {
+                  "type": "header",
+                  "parameters": [
+                    {
+                      "type": "image",
+                      "image": {
+                        "id": "2014970495781241"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "card_index": 1,
+              "components": [
+                {
+                  "type": "header",
+                  "parameters": [
+                    {
+                      "type": "image",
+                      "image": {
+                        "id": "1679361116609216"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "card_index": 2,
+              "components": [
+                {
+                  "type": "header",
+                  "parameters": [
+                    {
+                      "type": "image",
+                      "image": {
+                        "id": "1012916305042098"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

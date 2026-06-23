@@ -381,7 +381,7 @@ export default function TemplatePage() {
         const buildComponents = () => {
             const components = [];
 
-            if (testingTemplate.type === 'carousel' && testingTemplate.metadata?.cards) {
+            if (testingTemplate.type?.toLowerCase() === 'carousel' && testingTemplate.metadata?.cards) {
                 const carouselCards = [];
                 const cardsData = testingTemplate.metadata.cards;
                 const fallbackImageUrl = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=800";
@@ -397,19 +397,6 @@ export default function TemplatePage() {
                             {
                                 type: 'image',
                                 image: isHandle ? { id: cMediaUrl } : { link: cMediaUrl }
-                            }
-                        ]
-                    });
-                    
-                    // Add generic button payload to satisfy Meta requirements for carousel buttons
-                    cardComps.push({
-                        type: 'button',
-                        sub_type: 'quick_reply',
-                        index: '0',
-                        parameters: [
-                            {
-                                type: 'payload',
-                                payload: 'test_payload_card_' + index
                             }
                         ]
                     });
