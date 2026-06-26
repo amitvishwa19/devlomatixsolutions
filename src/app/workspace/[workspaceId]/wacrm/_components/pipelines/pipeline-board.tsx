@@ -18,8 +18,8 @@ import type { Deal, PipelineStage } from "@/types";
 import { DealCard } from "./deal-card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { formatCurrency } from "@/lib/currency";
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
+import { formatCurrency } from '@/app/workspace/[workspaceId]/wacrm/_lib/currency';
 
 interface PipelineBoardProps {
   stages: PipelineStage[];

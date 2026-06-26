@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
 import type { Conversation } from "@/types";
 
 /**

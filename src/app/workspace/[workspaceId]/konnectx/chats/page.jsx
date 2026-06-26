@@ -826,7 +826,7 @@ export default function WhatsAppChatsPage() {
                                                     key={msg.id}
                                                     className={`flex w-full mb-4 ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                                                 >
-                                                    <div className="relative group max-w-[85%]">
+                                                    <div className={`relative group max-w-[85%] ${msg.fromMe ? 'mr-2' : 'ml-2'}`}>
                                                         {isTemplate ? (
                                                             <div
                                                                 onClick={() => handleTemplateClick(msg)}

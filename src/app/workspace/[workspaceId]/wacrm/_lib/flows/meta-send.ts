@@ -6,14 +6,14 @@ import {
   type InteractiveButton,
   type InteractiveListSection,
   type MediaKind,
-} from '@/lib/whatsapp/meta-api'
-import { decrypt } from '@/lib/whatsapp/encryption'
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/whatsapp/meta-api'
+import { decrypt } from '@/app/workspace/[workspaceId]/wacrm/_lib/whatsapp/encryption'
 import {
   sanitizePhoneForMeta,
   isValidE164,
   phoneVariants,
   isRecipientNotAllowedError,
-} from '@/lib/whatsapp/phone-utils'
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/whatsapp/phone-utils'
 import { supabaseAdmin } from './admin-client'
 
 // ------------------------------------------------------------

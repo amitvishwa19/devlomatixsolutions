@@ -48,9 +48,9 @@ import { toast } from "sonner";
 import {
   validateFlowForActivation,
   type ValidationIssue,
-} from "@/lib/flows/validate";
-import { unlinkNodeReferences } from "@/lib/flows/edges";
-import type { FlowNodeRow, FlowRow } from "@/lib/flows/types";
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/validate';
+import { unlinkNodeReferences } from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/edges';
+import type { FlowNodeRow, FlowRow } from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/types';
 import { NODE_META, slugify, type BuilderNode, type NodeType } from "./shared";
 
 // ============================================================

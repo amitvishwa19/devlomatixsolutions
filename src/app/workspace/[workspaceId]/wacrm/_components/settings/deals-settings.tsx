@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Coins, Loader2 } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import { CURRENCIES } from "@/lib/currency";
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
+import { CURRENCIES } from '@/app/workspace/[workspaceId]/wacrm/_lib/currency';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {

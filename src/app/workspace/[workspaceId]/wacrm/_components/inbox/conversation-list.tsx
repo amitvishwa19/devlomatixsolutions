@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
 import type { Conversation, ConversationStatus } from "@/types";
 import { Search, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";

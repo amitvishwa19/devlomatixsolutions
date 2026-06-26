@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
 import { toast } from 'sonner';
 import type { Contact, Tag, ContactTag } from '@/types';
 import {
@@ -10,7 +10,7 @@ import {
   isExactMatch,
   isUniqueViolation,
   type ExistingContact,
-} from '@/lib/contacts/dedupe';
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/contacts/dedupe';
 import {
   Dialog,
   DialogContent,

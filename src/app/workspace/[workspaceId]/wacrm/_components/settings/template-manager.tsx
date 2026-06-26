@@ -12,8 +12,8 @@ import {
   Pencil,
   RotateCcw,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,11 +40,11 @@ import type {
   TemplateButton,
   TemplateSampleValues,
 } from '@/types';
-import { templateStatusConfig } from '@/lib/template-status';
+import { templateStatusConfig } from '@/app/workspace/[workspaceId]/wacrm/_lib/template-status';
 import {
   extractVariableIndices,
   TEMPLATE_LIMITS,
-} from '@/lib/whatsapp/template-validators';
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/whatsapp/template-validators';
 
 const CATEGORIES = ['Marketing', 'Utility', 'Authentication'] as const;
 type HeaderFormat = 'none' | 'text' | 'image' | 'video' | 'document';

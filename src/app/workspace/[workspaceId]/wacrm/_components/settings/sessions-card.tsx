@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Loader2, LogOut } from 'lucide-react';
 
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   Card,

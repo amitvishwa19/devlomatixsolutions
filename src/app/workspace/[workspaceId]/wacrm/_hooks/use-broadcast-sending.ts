@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
 import { Contact, MessageTemplate } from '@/types';
 
 export type CustomFieldOperator = 'is' | 'is_not' | 'contains';

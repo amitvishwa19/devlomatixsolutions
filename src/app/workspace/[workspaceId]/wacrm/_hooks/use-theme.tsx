@@ -14,7 +14,7 @@ import {
   STORAGE_KEY,
   isThemeId,
   type ThemeId,
-} from "@/lib/themes";
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/themes';
 
 /**
  * ThemeProvider — wraps the whole app, owns the active theme state.

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalizePhone, phonesMatch } from "@/lib/whatsapp/phone-utils";
+import { normalizePhone, phonesMatch } from '@/app/workspace/[workspaceId]/wacrm/_lib/whatsapp/phone-utils';
 
 /**
  * Contact de-duplication helpers, shared by the WhatsApp webhook, the

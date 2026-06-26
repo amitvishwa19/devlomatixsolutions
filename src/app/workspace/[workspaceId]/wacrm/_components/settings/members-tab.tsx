@@ -56,9 +56,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RequireRole } from '@/components/auth/require-role';
-import { useAuth } from '@/hooks/use-auth';
-import type { AccountRole } from '@/lib/auth/roles';
+import { RequireRole } from '@/app/workspace/[workspaceId]/wacrm/_components/auth/require-role';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
+import type { AccountRole } from '@/app/workspace/[workspaceId]/wacrm/_lib/auth/roles';
 import { InviteMemberDialog } from './invite-member-dialog';
 
 interface Member {

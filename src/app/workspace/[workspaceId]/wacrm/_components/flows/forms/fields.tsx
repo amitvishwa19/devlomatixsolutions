@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
 import { NODE_META, type BuilderNode } from "../shared";
 
 export function TextRow({

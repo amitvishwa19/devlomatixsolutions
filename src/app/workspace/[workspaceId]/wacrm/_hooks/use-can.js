@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
 import {
   canDeleteAccount,
   canEditSettings,
@@ -8,7 +8,7 @@ import {
   canSendMessages,
   canTransferOwnership,
   canViewOnly,
-} from "@/lib/auth/roles";
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/auth/roles';
 
 /**
  * Typed action keys for `useCan`. Adding a capability = one new

@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MessageSquare } from 'lucide-react'
-import type { ConversationsSeriesPoint } from '@/lib/dashboard/types'
+import type { ConversationsSeriesPoint } from '@/app/workspace/[workspaceId]/wacrm/_lib/dashboard/types'
 import { EmptyState } from './empty-state'
 import { Skeleton } from './skeleton'
-import { cn } from '@/lib/utils'
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils'
 
 type RangeDays = 7 | 30 | 90
 

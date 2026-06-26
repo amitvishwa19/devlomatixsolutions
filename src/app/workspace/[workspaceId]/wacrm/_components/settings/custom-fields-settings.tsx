@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { CustomFieldsPanel } from '@/components/contacts/custom-fields-manager';
+import { CustomFieldsPanel } from '@/app/workspace/[workspaceId]/wacrm/_components/contacts/custom-fields-manager';
 
 /**
  * Settings → Custom Fields. Manage the account-wide custom contact field

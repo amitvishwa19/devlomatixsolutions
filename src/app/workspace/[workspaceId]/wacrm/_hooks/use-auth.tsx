@@ -9,16 +9,16 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
 import type { User } from "@supabase/supabase-js";
-import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { DEFAULT_CURRENCY } from '@/app/workspace/[workspaceId]/wacrm/_lib/currency';
 import {
   canEditSettings as canEditSettingsFor,
   canManageMembers as canManageMembersFor,
   canSendMessages as canSendMessagesFor,
   isAccountRole,
   type AccountRole,
-} from "@/lib/auth/roles";
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/auth/roles';
 
 interface Profile {
   id: string;

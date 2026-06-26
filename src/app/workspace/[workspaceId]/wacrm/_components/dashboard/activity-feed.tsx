@@ -11,8 +11,8 @@ import {
   Inbox,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
-import type { ActivityItem, ActivityKind } from '@/lib/dashboard/types'
-import { cn } from '@/lib/utils'
+import type { ActivityItem, ActivityKind } from '@/app/workspace/[workspaceId]/wacrm/_lib/dashboard/types'
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils'
 import { EmptyState } from './empty-state'
 import { Skeleton } from './skeleton'
 

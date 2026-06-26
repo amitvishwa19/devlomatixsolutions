@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
-import { useTotalUnread } from "@/hooks/use-total-unread";
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
+import { useTotalUnread } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-total-unread';
 import {
   Crown,
   GitBranch,
@@ -23,7 +23,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import type { AccountRole } from "@/lib/auth/roles";
+import type { AccountRole } from '@/app/workspace/[workspaceId]/wacrm/_lib/auth/roles';
 
 // Per-role chip metadata used in the sidebar's account strip + the
 // Members tab roster. Keeping this near both consumers in a single

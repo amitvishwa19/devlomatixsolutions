@@ -24,8 +24,8 @@ import { FlowCanvas } from "./flow-canvas";
 import { FlowEditorProvider } from "./flow-editor-state";
 import { EditorHeader } from "./header";
 import { ValidationPanel } from "./validation-panel";
-import { cn } from "@/lib/utils";
-import type { FlowRow, FlowNodeRow } from "@/lib/flows/types";
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
+import type { FlowRow, FlowNodeRow } from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/types';
 
 /**
  * Below this viewport width we force list view and hide the toggle.

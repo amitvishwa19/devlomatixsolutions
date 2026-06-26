@@ -37,7 +37,7 @@ import {
 } from "recharts"
 import type { AxisDomain } from "recharts/types/util/types"
 
-import { cn as cx } from "@/lib/utils"
+import { cn as cx } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils'
 import {
   AvailableChartColors,
   type AvailableChartColorsKeys,

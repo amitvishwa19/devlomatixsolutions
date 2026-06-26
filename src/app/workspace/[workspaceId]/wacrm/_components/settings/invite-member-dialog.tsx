@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
 
 type InviteRole = 'admin' | 'agent' | 'viewer';
 

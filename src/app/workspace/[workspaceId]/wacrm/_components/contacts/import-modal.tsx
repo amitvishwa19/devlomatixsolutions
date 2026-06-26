@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
 import {
   dedupeByPhone,
   isUniqueViolation,
   normalizeKey,
-} from '@/lib/contacts/dedupe';
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/contacts/dedupe';
 import { toast } from 'sonner';
 import {
   Dialog,

@@ -18,8 +18,8 @@
  */
 
 import { CircleAlert, CircleCheck } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { ValidationIssue } from "@/lib/flows/validate";
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
+import type { ValidationIssue } from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/validate';
 import { useFlowEditor } from "./flow-editor-state";
 
 export function ValidationPanel() {

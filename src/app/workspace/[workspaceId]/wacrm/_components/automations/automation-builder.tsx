@@ -51,8 +51,8 @@ import type {
   MessageTemplate,
   Tag as TagRecord,
 } from "@/types"
-import { createClient } from "@/lib/supabase/client"
-import { cn } from "@/lib/utils"
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client'
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils'
 
 // ------------------------------------------------------------
 // Types (builder-local — mirror the flattened rows we POST)

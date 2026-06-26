@@ -1,9 +1,9 @@
 "use client"
 
 import { Clock } from 'lucide-react'
-import { DOW_SHORT_MON_FIRST } from '@/lib/dashboard/date-utils'
-import type { ResponseTimeSummary } from '@/lib/dashboard/types'
-import { BarChart } from '@/components/tremor/bar-chart'
+import { DOW_SHORT_MON_FIRST } from '@/app/workspace/[workspaceId]/wacrm/_lib/dashboard/date-utils'
+import type { ResponseTimeSummary } from '@/app/workspace/[workspaceId]/wacrm/_lib/dashboard/types'
+import { BarChart } from '@/app/workspace/[workspaceId]/wacrm/_components/tremor/bar-chart'
 import { EmptyState } from './empty-state'
 import { Skeleton } from './skeleton'
 

@@ -3,9 +3,9 @@
 import { useState, useRef, useCallback, KeyboardEvent } from "react";
 import { Send, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GatedButton } from "@/components/ui/gated-button";
-import { useCan } from "@/hooks/use-can";
-import { cn } from "@/lib/utils";
+import { GatedButton } from '@/app/workspace/[workspaceId]/wacrm/_components/ui/gated-button';
+import { useCan } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-can';
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
 import { ReplyQuote } from "./reply-quote";
 
 interface ReplyDraft {

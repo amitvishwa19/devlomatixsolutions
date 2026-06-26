@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
 import type { MessageTemplate } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
   LayoutTemplate,
   Loader2,
 } from "lucide-react";
-import { extractVariableIndices } from "@/lib/whatsapp/template-validators";
+import { extractVariableIndices } from '@/app/workspace/[workspaceId]/wacrm/_lib/whatsapp/template-validators';
 
 export interface TemplateSendValues {
   body: string[];

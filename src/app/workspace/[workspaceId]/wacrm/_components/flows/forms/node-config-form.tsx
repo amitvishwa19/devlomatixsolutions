@@ -44,8 +44,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
 import { slugify, type BuilderNode } from "../shared";
 import { NextNodeRow, NodeKeySelect, TextRow } from "./fields";
 

@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react'
 import type { ComponentType } from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils'
 
 interface MetricCardProps {
   title: string

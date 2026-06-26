@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
 import type { Pipeline, PipelineStage } from "@/types";
 import {
   Dialog,

@@ -5,7 +5,7 @@ import {
   outgoingSlots,
   unlinkNodeReferences,
 } from "./edges";
-import type { BuilderNode } from "@/components/flows/shared";
+import type { BuilderNode } from '@/app/workspace/[workspaceId]/wacrm/_components/flows/shared';
 
 function nodes(...ns: BuilderNode[]): BuilderNode[] {
   return ns;

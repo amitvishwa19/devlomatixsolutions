@@ -42,8 +42,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { type ValidationIssue } from "@/lib/flows/validate";
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
+import { type ValidationIssue } from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/validate';
 import {
   NODE_META,
   slugify,

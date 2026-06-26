@@ -58,7 +58,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Plus, Trash2 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -72,8 +72,8 @@ import {
   applyEdgeConnection,
   deriveCanvasEdges,
   outgoingSlots,
-} from "@/lib/flows/edges";
-import { autoLayout, shouldAutoLayout } from "@/lib/flows/layout";
+} from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/edges';
+import { autoLayout, shouldAutoLayout } from '@/app/workspace/[workspaceId]/wacrm/_lib/flows/layout';
 import {
   NODE_META,
   summarizeNode,

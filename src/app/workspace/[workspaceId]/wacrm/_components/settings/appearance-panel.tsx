@@ -2,9 +2,9 @@
 
 import { Check } from "lucide-react";
 
-import { useTheme } from "@/hooks/use-theme";
-import { THEMES, type ThemeId } from "@/lib/themes";
-import { cn } from "@/lib/utils";
+import { useTheme } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-theme';
+import { THEMES, type ThemeId } from '@/app/workspace/[workspaceId]/wacrm/_lib/themes';
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils';
 
 /**
  * Appearance panel — color-theme picker.

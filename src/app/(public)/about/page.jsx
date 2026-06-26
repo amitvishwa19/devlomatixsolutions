@@ -61,10 +61,10 @@ const values = [
 ];
 
 const stats = [
-    { value: "2016", label: "Founded" },
-    { value: "150+", label: "Projects Completed" },
-    { value: "50+", label: "Team Members" },
-    { value: "12", label: "Countries Served" },
+    { value: "2022", label: "Founded" },
+    { value: "40+", label: "Projects Completed" },
+    { value: "25+", label: "Team Members" },
+    { value: "4", label: "Countries Served" },
 ];
 
 const timeline = [

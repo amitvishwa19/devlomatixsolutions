@@ -1,8 +1,8 @@
 "use client"
 
 import { GitBranch } from 'lucide-react'
-import type { PipelineDonutData } from '@/lib/dashboard/types'
-import { formatCurrencyShort } from '@/lib/currency'
+import type { PipelineDonutData } from '@/app/workspace/[workspaceId]/wacrm/_lib/dashboard/types'
+import { formatCurrencyShort } from '@/app/workspace/[workspaceId]/wacrm/_lib/currency'
 import { EmptyState } from './empty-state'
 import { Skeleton } from './skeleton'
 

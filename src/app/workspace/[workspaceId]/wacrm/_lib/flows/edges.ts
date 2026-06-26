@@ -22,7 +22,7 @@
  *   - `true` / `false`    for condition branches
  */
 
-import type { BuilderNode } from "@/components/flows/shared";
+import type { BuilderNode } from '@/app/workspace/[workspaceId]/wacrm/_components/flows/shared';
 
 export interface CanvasEdge {
   /** Stable per-edge id — required by React-Flow. */

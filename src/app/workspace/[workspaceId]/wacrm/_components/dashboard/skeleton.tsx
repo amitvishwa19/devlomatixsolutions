@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/app/workspace/[workspaceId]/wacrm/_lib/utils'
 
 /**
  * Shared skeleton primitive — a pulsing slate block sized to whatever

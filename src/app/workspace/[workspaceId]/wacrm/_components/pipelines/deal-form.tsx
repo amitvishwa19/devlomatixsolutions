@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import { CURRENCIES } from "@/lib/currency";
+import { createClient } from '@/app/workspace/[workspaceId]/wacrm/_lib/supabase/client';
+import { useAuth } from '@/app/workspace/[workspaceId]/wacrm/_hooks/use-auth';
+import { CURRENCIES } from '@/app/workspace/[workspaceId]/wacrm/_lib/currency';
 import type {
   Contact,
   Conversation,
