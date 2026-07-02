@@ -18,8 +18,8 @@ const handler = async (data) => {
 
     try {
         const where = {};
+        if (userId) where.userId = userId;
         if (workspaceId) where.workspaceId = workspaceId;
-        else if (userId) where.userId = userId;
 
         const contacts = await db.contact.findMany({
             where,

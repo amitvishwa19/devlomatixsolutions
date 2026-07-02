@@ -65,24 +65,24 @@ export const getSidebarNavItems = (workspaceId) => {
             baseUrl: baseWhatsappCloudApiPath,
             permission: `navbar:KonnectX:Parent`
         },
-        {
-            parent: { title: "WA CRM", icon: "message-circle-more", url: baseWhatsappCrmPath },
-            child: [
-                { title: "Dashboard", icon: "message-circle-more", url: baseWhatsappCrmPath },
-                { title: "Inbox", icon: "bot-message-square", url: `${baseWhatsappCrmPath}/inbox` },
-                { title: "Contacts", icon: "users", url: `${baseWhatsappCrmPath}/contacts` },
-                { title: "Pipelines", icon: "zap", url: `${baseWhatsappCrmPath}/pipelines` },
-                { title: "Broadcasts", icon: "megaphone", url: `${baseWhatsappCrmPath}/broadcasts` },
-                { title: "Automations", icon: "megaphone", url: `${baseWhatsappCrmPath}/automations` },
-                // { title: "Analytics", icon: "line-chart", url: `${baseWhatsappCloudApiPath}/analytics` },
-                // { title: "Agents", icon: "bot", url: `${baseWhatsappCloudApiPath}/agents` },
-                // { title: "AI Assistant", icon: "sparkles", url: `${baseWhatsappCloudApiPath}/assistant` },
-                { title: "Flows", icon: "bot", url: `${baseWhatsappCrmPath}/flows` },
-                { title: "Settings", icon: "settings-2", url: `${baseWhatsappCrmPath}/settings` },
-            ],
-            baseUrl: baseWhatsappCrmPath,
-            permission: `navbar:wacrm:Parent`
-        },
+        // {
+        //     parent: { title: "WA CRM", icon: "message-circle-more", url: baseWhatsappCrmPath },
+        //     child: [
+        //         { title: "Dashboard", icon: "message-circle-more", url: baseWhatsappCrmPath },
+        //         { title: "Inbox", icon: "bot-message-square", url: `${baseWhatsappCrmPath}/inbox` },
+        //         { title: "Contacts", icon: "users", url: `${baseWhatsappCrmPath}/contacts` },
+        //         { title: "Pipelines", icon: "zap", url: `${baseWhatsappCrmPath}/pipelines` },
+        //         { title: "Broadcasts", icon: "megaphone", url: `${baseWhatsappCrmPath}/broadcasts` },
+        //         { title: "Automations", icon: "megaphone", url: `${baseWhatsappCrmPath}/automations` },
+        //         // { title: "Analytics", icon: "line-chart", url: `${baseWhatsappCloudApiPath}/analytics` },
+        //         // { title: "Agents", icon: "bot", url: `${baseWhatsappCloudApiPath}/agents` },
+        //         // { title: "AI Assistant", icon: "sparkles", url: `${baseWhatsappCloudApiPath}/assistant` },
+        //         { title: "Flows", icon: "bot", url: `${baseWhatsappCrmPath}/flows` },
+        //         { title: "Settings", icon: "settings-2", url: `${baseWhatsappCrmPath}/settings` },
+        //     ],
+        //     baseUrl: baseWhatsappCrmPath,
+        //     permission: `navbar:wacrm:Parent`
+        // },
         {
             parent: { title: "FlowGenix", icon: "bot-message-square", url: baseFlowgenixPath },
             child: [],
