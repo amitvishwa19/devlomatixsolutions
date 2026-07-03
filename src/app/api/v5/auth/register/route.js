@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 //import { sendEmail } from "@/utils/mailer";
 import bcryptjs from "bcryptjs";
 import { MemberRole } from "@prisma/client";
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
+import { SignJWT } from "jose";
 
 
 export async function POST(req) {
@@ -28,20 +29,28 @@ export async function POST(req) {
         })
 
         if (user) {
-            return NextResponse.json({ status: 500, error: 'user already exists' })
+            return NextResponse.json({ status: 409, error: 'user already exists' }, { status: 409 })
         }
 
 
         const hashedPassword = await bcryptjs.hash(password, 10)
         const displayName = email.split('@')[0]
+        const userId = uuidv4()
 
+        const secretKey = process.env.ENCRYPTION_KEY;
+        const key = new TextEncoder().encode(secretKey);
+        const accessToken = await new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+        const refreshToken = await new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
         user = await db.user.create({
             data: {
+                id: userId,
                 email,
                 password: hashedPassword,
                 displayName,
                 deviceToken,
+                accessToken,
+                refreshToken,
                 credit: {
                     create: {
                         type: 'virtual',
@@ -50,8 +59,10 @@ export async function POST(req) {
                 },
                 profile: {
                     create: {
-                        displayname: displayName,
-                        location: location
+                        info: {
+                            displayname: displayName,
+                            location: location
+                        }
                     }
                 }
             }
@@ -82,6 +93,7 @@ export async function POST(req) {
                 data: {
                     userId: user?.id,
                     name: user?.displayName,
+                    default: true,
                     inviteCode: uuidv4(),
                     selected: true,
                     channels: {
@@ -103,8 +115,9 @@ export async function POST(req) {
             //await sendEmail({ email, emailType: 'verify', userId: user.id })
         }
 
-        return NextResponse.json({ status: 200, message: "Registration success" })
+        return NextResponse.json({ status: 200, message: "Registration success" }, { status: 200 })
     } catch (error) {
-        return NextResponse.json({ error: error.message, status: 500 })
+        console.error("Registration error:", error);
+        return NextResponse.json({ error: error.message, status: 500 }, { status: 500 })
     }
 }

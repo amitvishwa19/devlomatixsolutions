@@ -4,7 +4,7 @@ import { Edit, Eye, Filter, MoreHorizontal, MoreVertical, Pencil, Plus, Search, 
 import React, { useMemo, useState } from 'react'
 import { useAccess } from '@/providers/WorkspaceProvider'
 import { Button } from '@/components/ui/button'
-import { ROLE } from '@prisma/client'
+
 import { UserFormDialog } from './UserFormDialog'
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -32,9 +32,7 @@ export default function Users() {
     });
 
 
-    const filteredUser = useMemo(() => users?.filter(usr => usr.role !== ROLE.PATIENT), [users])
-
-    const filteredUsers = filteredUser?.filter((user) => {
+    const filteredUsers = users?.filter((user) => {
         const matchesSearch =
             user?.displayName.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
             user?.email.toLowerCase().includes(userSearchQuery.toLowerCase())
@@ -337,7 +335,7 @@ export default function Users() {
                         user: null
                     })
                     if (user) {
-                        setUsers(users.filter((usr => usr.id !== user.id && user.role !== ROLE.PATIENT)))
+                        setUsers(users.filter((usr => usr.id !== user.id)))
                     }
                 }}
                 data={deletingUser.user}

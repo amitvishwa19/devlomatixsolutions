@@ -90,33 +90,38 @@ export const WorkspaceProvider = ({ children }) => {
         if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
         try {
             setAccessLoading(true);
-            
-            // Fetch from split endpoints (New Architecture)
-            const [usersRes, rolesRes, permissionsRes] = await Promise.all([
-                fetch(`/api/workspace/${workspaceId}/management/user`, { cache: 'no-store' }),
-                fetch(`/api/workspace/${workspaceId}/management/role`, { cache: 'no-store' }),
-                fetch(`/api/workspace/${workspaceId}/management/permission`, { cache: 'no-store' })
-            ]);
 
-            // Handle errors
-            if (!usersRes.ok || !rolesRes.ok || !permissionsRes.ok) {
-                console.error("Failed to fetch one or more access management resources");
-                return;
-            }
+            const fetchJson = async (url) => {
+                try {
+                    const res = await fetch(url, { cache: 'no-store' });
+                    if (!res.ok) {
+                        console.warn(`Failed to fetch ${url}: ${res.status}`);
+                        return null;
+                    }
+                    const contentType = res.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        const text = await res.text();
+                        console.warn(`Non-JSON response from ${url}:`, text.substring(0, 100));
+                        return null;
+                    }
+                    return await res.json();
+                } catch (e) {
+                    console.warn(`Error fetching ${url}:`, e);
+                    return null;
+                }
+            };
 
             const [usersData, rolesData, permissionsData] = await Promise.all([
-                usersRes.json(),
-                rolesRes.json(),
-                permissionsRes.json()
+                fetchJson(`/api/workspace/${workspaceId}/management/user`),
+                fetchJson(`/api/workspace/${workspaceId}/management/role`),
+                fetchJson(`/api/workspace/${workspaceId}/management/permission`)
             ]);
-            
-            setUsers(usersData || []);
-            setRoles(rolesData || []);
-            
-            // The permissions endpoint returns { all, grouped }
-            setPermissions(permissionsData.all || permissionsData || []);
-            
-            // Departments currently empty/missing in schema
+
+            if (usersData) setUsers(usersData);
+            if (rolesData) setRoles(rolesData);
+            if (permissionsData) {
+                setPermissions(permissionsData.all || permissionsData);
+            }
             setDepartments([]);
 
         } catch (error) {

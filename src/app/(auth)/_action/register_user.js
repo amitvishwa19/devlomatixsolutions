@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import bcryptjs from "bcryptjs";
 import { sendEmail } from "@/utils/mailer";
-import jwt from 'jsonwebtoken'
+import { SignJWT } from "jose";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Mail } from "@/utils/Mail";
@@ -42,11 +42,20 @@ const handler = async (data) => {
         }
 
 
+        const secretKey = process.env.ENCRYPTION_KEY;
+        const key = new TextEncoder().encode(secretKey);
+
         const hashedPassword = await bcryptjs.hash(password, 10)
+        const userId = uuidv4()
+
+        const accessToken = await new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+        const refreshToken = await new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
         user = await db.user.create({
             data: {
+                id: userId,
                 email, password: hashedPassword, displayName,
+                accessToken, refreshToken,
             }
         })
 
@@ -54,7 +63,7 @@ const handler = async (data) => {
         //console.log('user registration test', 'displayName', displayName)
 
         if (user) {
-            verifyToken = jwt.sign({ id: user.id }, process.env.ENCRYPTION_KEY, { expiresIn: '1d' })
+            verifyToken = await new SignJWT({ id: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("1d").sign(key);
             user = await db.user.update({
                 where: { email: email },
                 data: { verifyToken }

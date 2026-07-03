@@ -6,11 +6,10 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import ThemeToggle from "./ThemeToggle";
-import logo from '@/app/(public)/assets/acs_logo_1_nobg.png'
 import ThemeSwitcher from "@/components/global/ThemeSwitch";
 import { useSession } from "next-auth/react";
 import { AppLogo } from "@/components/global/AppLogo";
+import { AuthSelector } from "@/components/global/AuthSelector";
 
 
 const serviceLinks = [
@@ -159,7 +158,9 @@ const Navbar = () => {
                     </div>
 
 
-                    <ThemeSwitcher />
+                    {/* <ThemeSwitcher /> */}
+
+                    <AuthSelector   />
 
 
                     {/* Mobile */}

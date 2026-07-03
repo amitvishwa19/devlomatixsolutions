@@ -18,11 +18,6 @@ const handler = async (data) => {
                 workspaceId,
                 type: type.toUpperCase()
             },
-            include: {
-                _count: {
-                    select: { contacts: true }
-                }
-            },
             orderBy: { name: 'asc' }
         });
 

@@ -14,6 +14,7 @@ export async function GET(req, { params }) {
                 email: true,
                 avatar: true,
                 isActive: true,
+                role: true,
                 roles: {
                     select: {
                         id: true,

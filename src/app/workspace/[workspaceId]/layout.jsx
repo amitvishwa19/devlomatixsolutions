@@ -24,7 +24,7 @@ export default function WorkspaceLayout({ children }) {
 
                                 <ScrollArea className="h-full overflow-hidden relative">
                                     {children}
-                                    <ScrollBar orientation="horizontal" />
+                                    <ScrollBar orientation="vertical" />
                                 </ScrollArea>
                             </div>
                         </div>

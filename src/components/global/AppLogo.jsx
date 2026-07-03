@@ -42,7 +42,7 @@ export function AppLogo({ size = 130, height, width, link, className, border = t
                     height={height || size}
                     width={width || size}
                     className="object-contain"
-                    style={{ height: 'auto' }}
+                    style={{ width: 'auto', height: 'auto' }}
                     priority={false}
                 />
             </div>

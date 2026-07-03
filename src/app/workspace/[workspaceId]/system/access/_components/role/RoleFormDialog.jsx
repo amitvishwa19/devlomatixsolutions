@@ -26,7 +26,7 @@ import { NavigationPermissionForm } from "../permission/NavigationPermissionForm
 const roleSchema = z.object({
     id: z.string().optional(),
     title: z.string().min(2).max(50),
-    description: z.string().min(10).max(200),
+    description: z.string().max(200).optional(),
     color: z.string(),
     permissions: z.array(z.any()), // FULL permission objects
     parentId: z.string().optional().nullable(),
@@ -151,7 +151,9 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                     <div id='tabbed-content' className="flex-1 flex flex-col overflow-hidden">
                         <Form {...form}>
                             <form
-                                onSubmit={form.handleSubmit(handleSubmit)}
+                                onSubmit={form.handleSubmit(handleSubmit, () => {
+                                    toast.error("Please fix the form errors", { id: "role-data" });
+                                })}
                                 className="flex flex-col flex-1 overflow-hidden"
                             >
                                 <ScrollArea className="flex-1 h-[82vh]">

@@ -85,51 +85,51 @@ export async function POST(req) {
 
         // }
 
-        // const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
-        // const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
+        const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+        const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
-        // user = await db.user.update({
-        //     where: { id: user.id },
-        //     data: { accessToken, refreshToken }
-        // })
+        user = await db.user.update({
+            where: { id: user.id },
+            data: { accessToken, refreshToken }
+        })
 
 
 
-        // user = await db.user.findUnique({
-        //     where: { id: user.id },
-        //     include: {
-        //         roles: {
-        //             include: {
-        //                 permissions: true
-        //             }
-        //         },
-        //         servers: {
-        //             orderBy: {
-        //                 createdAt: "asc",
-        //             },
-        //             include: {
-        //                 members: {
-        //                     include: {
-        //                         user: {
-        //                             include: {
-        //                                 profile: true
-        //                             }
-        //                         }
-        //                     },
-        //                     orderBy: {
-        //                         role: "asc",
-        //                     }
-        //                 },
-        //                 channels: {
-        //                     orderBy: {
-        //                         createdAt: "asc",
-        //                     },
-        //                 }
-        //             },
-        //         },
-        //         profile: true
-        //     }
-        // })
+        user = await db.user.findUnique({
+            where: { id: user.id },
+            include: {
+                roles: {
+                    include: {
+                        permissions: true
+                    }
+                },
+                servers: {
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                    include: {
+                        members: {
+                            include: {
+                                user: {
+                                    include: {
+                                        profile: true
+                                    }
+                                }
+                            },
+                            orderBy: {
+                                role: "asc",
+                            }
+                        },
+                        channels: {
+                            orderBy: {
+                                createdAt: "asc",
+                            },
+                        }
+                    },
+                },
+                profile: true
+            }
+        })
 
         //console.log(user)
 

@@ -17,7 +17,9 @@ export async function encrypt(payload) {
 
 export async function decrypt(input) {
     try {
-        const { payload } = await jwtVerify(input, key, {
+        if (!input) return null;
+        const token = typeof input === 'string' && input.startsWith("Bearer ") ? input.substring(7) : input;
+        const { payload } = await jwtVerify(token, key, {
             algorithms: ["HS256"],
         });
         return payload;

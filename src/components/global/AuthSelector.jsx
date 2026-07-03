@@ -31,49 +31,32 @@ import { cn } from '@/lib/utils'
 
 export function AuthSelector({ name = false, classname }) {
     const [open, setOpen] = useState(false)
-    const [appUser, setAppUser] = useState(null)
     const router = useRouter()
     const { data: session, status } = useSession()
     const { onOpen } = useModal()
     const { orgId } = useParams()
 
-    //console.log('params', orgId)
-
-
-
-    const getUserInfo = async () => {
-        //const { userId } = await useAuth()
-    }
-
-    const onOpenchange = () => {
-        setOpen(!open)
-    }
-
     const handleOrg = () => {
-        //console.log('Org Clicked')
         router.push('/workspace')
-        onOpenchange()
+        setOpen(false)
     }
 
     const handleAdmin = () => {
-        onOpenchange()
+        setOpen(false)
         router.push('/admin')
     }
 
     const handleManageAccount = () => {
-        //console.log('handle manage account')
         onOpen("manageAccount", { orgId: 'params.orgId' })
     }
 
-
-    //const { user } = useAuth()
     return (
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 {
                     session ?
                         (
-                            <div role='button' className=' flex gap-2 items-center'>
+                            <div role='button' className=' flex gap-2 items-center cursor-pointer'>
                                 <Avatar className='h-8 w-8'>
                                     <AvatarImage src={session?.user?.avatar} alt={session?.user?.displayName} />
                                     <AvatarFallback className=' capitalize'>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>

@@ -1,6 +1,5 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import React, { useMemo, useState } from 'react'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import { DynamicIcon } from 'lucide-react/dynamic'
@@ -93,7 +92,7 @@ export default function Dashboard() {
                 </ButtonGroup>
             </div>
 
-            <ScrollArea className='grow'>
+            <div className='grow overflow-y-auto min-h-0'>
                 <div className='flex flex-col gap-4 h-full min-h-[400px]'>
                     {loading ? (
                         <AccessSkeleton />
@@ -101,7 +100,7 @@ export default function Dashboard() {
                         active.component
                     )}
                 </div>
-            </ScrollArea>
+            </div>
         </div>
 
 

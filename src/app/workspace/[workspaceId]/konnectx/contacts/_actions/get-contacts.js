@@ -5,29 +5,30 @@ import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 
 const GetContactsSchema = z.object({
-    userId: z.string().optional(),
-    workspaceId: z.string().optional(),
+    userId: z.string(),
 });
 
 const handler = async (data) => {
-    const { userId, workspaceId } = data;
-
-    if (!userId && !workspaceId) {
-        return { error: 'User ID or Workspace ID is required' };
-    }
+    const { userId } = data;
 
     try {
-        const where = {};
-        if (userId) where.userId = userId;
-        if (workspaceId) where.workspaceId = workspaceId;
+        console.log('[GET_CONTACTS] querying with userId:', userId);
 
         const contacts = await db.contact.findMany({
-            where,
+            where: { userId },
             include: { 
                 groups: true
             },
             orderBy: { createdAt: 'desc' }
         });
+
+        console.log('[GET_CONTACTS] found', contacts.length, 'contacts for user');
+        if (contacts.length > 0) {
+            console.log('[GET_CONTACTS] first contact:', JSON.stringify(contacts[0]));
+        }
+
+        const total = await db.contact.count();
+        console.log('[GET_CONTACTS] total contacts in DB:', total);
 
         return { data: contacts };
     } catch (error) {
