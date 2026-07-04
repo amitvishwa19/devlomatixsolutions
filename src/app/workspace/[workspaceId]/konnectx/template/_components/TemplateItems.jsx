@@ -11,7 +11,8 @@ import {
     Sparkles, 
     RefreshCw, 
     Loader2,
-    Eye
+    Eye,
+    Share2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ export const TemplatePreviewCard = ({
     onPreview,
     onSubmit, 
     onCheckStatus,
+    onShare,
     isSubmittingId,
     isDeletingId
 }) => {
@@ -146,6 +148,10 @@ export const TemplatePreviewCard = ({
                                     <Copy className="w-3.5 h-3.5 opacity-60" /> Clone Template
                                 </DropdownMenuItem>
 
+                                <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => onShare(template)}>
+                                    <Share2 className="w-3.5 h-3.5 opacity-60" /> Share
+                                </DropdownMenuItem>
+
                                 {template.platform === 'WHATSAPP_CLOUD' && (
                                     <>
                                         {(!template.status || template.status === 'DRAFT' || template.status === 'REJECTED') ? (
@@ -170,22 +176,20 @@ export const TemplatePreviewCard = ({
                                     </>
                                 )}
 
-                                {!template.isDefault && (
-                                    <>
-                                        <div className="h-px bg-border my-1" />
-                                        <DropdownMenuItem
-                                            className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onDelete(template.id);
-                                            }}
-                                            disabled={isDeletingId === template.id}
-                                        >
-                                            {isDeletingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 opacity-60" />}
-                                            {isDeletingId === template.id ? "Deleting..." : "Delete Template"}
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
+                                <>
+                                    <div className="h-px bg-border my-1" />
+                                    <DropdownMenuItem
+                                        className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(template.id);
+                                        }}
+                                        disabled={isDeletingId === template.id}
+                                    >
+                                        {isDeletingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 opacity-60" />}
+                                        {isDeletingId === template.id ? "Deleting..." : template.templateId ? "Delete from Meta" : "Delete Template"}
+                                    </DropdownMenuItem>
+                                </>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -204,6 +208,7 @@ export const TemplateListRow = ({
     onPreview,
     onSubmit, 
     onCheckStatus,
+    onShare,
     isSubmittingId,
     isDeletingId
 }) => {
@@ -323,6 +328,10 @@ export const TemplateListRow = ({
                             <Copy className="w-3.5 h-3.5 opacity-60" /> Clone Template
                         </DropdownMenuItem>
 
+                        <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => onShare(template)}>
+                            <Share2 className="w-3.5 h-3.5 opacity-60" /> Share
+                        </DropdownMenuItem>
+
                         {template.platform === 'WHATSAPP_CLOUD' && (
                             <>
                                 {(!template.status || template.status === 'DRAFT') ? (
@@ -347,22 +356,20 @@ export const TemplateListRow = ({
                             </>
                         )}
 
-                        {!template.isDefault && (
-                            <>
-                                <div className="h-px bg-border my-1" />
-                                <DropdownMenuItem
-                                    className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive focus:bg-destructive/10"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete(template.id);
-                                    }}
-                                    disabled={isDeletingId === template.id}
-                                >
-                                    {isDeletingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 opacity-60" />}
-                                    {isDeletingId === template.id ? "Deleting..." : "Delete Template"}
-                                </DropdownMenuItem>
-                            </>
-                        )}
+                        <>
+                            <div className="h-px bg-border my-1" />
+                            <DropdownMenuItem
+                                className="text-xs flex items-center gap-2 cursor-pointer py-2 text-destructive "
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(template.id);
+                                }}
+                                disabled={isDeletingId === template.id}
+                            >
+                                {isDeletingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 opacity-60" />}
+                                {isDeletingId === template.id ? "Deleting..." : template.templateId ? "Delete from Meta" : "Delete Template"}
+                            </DropdownMenuItem>
+                        </>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>

@@ -30,6 +30,8 @@ import {
 export default function TemplatePreview({ template, showHeader = true, isModal = false, isOpen = false, onClose }) {
     if (!template) return null;
 
+    const normalizedType = (template.type || '').toLowerCase();
+
     const getMetadata = () => {
         if (typeof template.metadata === 'string') {
             try { return JSON.parse(template.metadata); } catch (e) { return {}; }
@@ -49,10 +51,10 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
 
     const MessageBubble = () => (
         <motion.div
-            initial={isModal ? { opacity: 0, scale: 0.95, y: 10 } : false}
+            initial={isModal ? { opacity: 0, scale:1, y: 10 } : false}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: "spring", damping: 20, stiffness: 200 }}
-            className="relative z-10 self-start max-w-[90%]"
+            className="relative z-10 self-start max-w-[80%]"
         >
             <div className="relative bg-white rounded-xl rounded-tl-none shadow-[0_1px_2px_rgba(0,0,0,0.1)] overflow-hidden">
                 {/* Tail */}
@@ -62,90 +64,150 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                     </svg>
                 </div>
 
-                {/* Media/Location */}
-                {['image', 'video', 'document', 'audio', 'location'].includes(template.type) && (
-                    <div className="p-1">
-                        <div className="rounded-xl overflow-hidden bg-zinc-100 border border-black/5">
-                            {template.type === 'location' && (
-                                <div className="aspect-video bg-zinc-50 flex flex-col items-center justify-center p-4 text-center">
-                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                                        <Smartphone className="w-5 h-5 text-primary" />
-                                    </div>
-                                    <div className="text-[12px] font-bold text-zinc-800 line-clamp-1">{metadata.locationName || 'Location Name'}</div>
-                                    <div className="text-[10px] text-zinc-500 line-clamp-2 mt-0.5">{metadata.address || 'Address not provided'}</div>
-                                    <div className="text-[8px] text-zinc-400 mt-2 uppercase font-mono tracking-tighter">
-                                        {metadata.latitude || '0.0'}, {metadata.longitude || '0.0'}
+                {normalizedType === 'carousel' ? (
+                    <div className="p-2.5 pb-1.5 ">
+                        {metadata.headerText && (
+                            <div className="text-[13.5px] font-bold text-zinc-900 mb-2 leading-tight">
+                                {metadata.headerText}
+                            </div>
+                        )}
+                        {template.body && (
+                            <div className="text-sm leading-[1.4] text-zinc-800 wrap-break-word whitespace-pre-wrap mb-2">
+                                {template.body}
+                            </div>
+                        )}
+                        {/* Carousel Cards */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
+                            {(metadata.cards || []).map((card, idx) => (
+                                <div key={idx} className="min-w-[200px] rounded-xl overflow-hidden border border-zinc-200 bg-white shrink-0 snap-center">
+                                    {card.mediaUrl ? (
+                                        <div className="aspect-[4/3] overflow-hidden">
+                                            <img src={card.mediaUrl} className="w-[180px] h-[200px] object-cover" alt="" />
+                                        </div>
+                                    ) : (
+                                        <div className="aspect-[4/3] bg-zinc-50 flex items-center justify-center">
+                                            <ImageIcon className="w-8 h-8 text-zinc-300" />
+                                        </div>
+                                    )}
+                                    <div className="p-2.5">
+                                        <div className="text-[12px] leading-[1.3] text-zinc-800 whitespace-pre-wrap">
+                                            {card.body || <span className="text-zinc-400 italic">No content</span>}
+                                        </div>
+                                        {(card.buttons || []).filter(Boolean).length > 0 && (
+                                            <div className="mt-2 pt-2 border-t border-zinc-100">
+                                                {card.buttons.filter(Boolean).map((b, bi) => (
+                                                    <div key={bi} className="text-[11px] font-semibold text-[#007aff] text-center py-1">
+                                                        {typeof b === 'object' ? (b.text || 'Button') : b}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            )}
-                            {template.type === 'image' && (
-                                <div className="aspect-square flex items-center justify-center bg-zinc-50">
-                                    {metadata.mediaUrl ? (
-                                        <img src={metadata.mediaUrl} className="w-full h-full object-cover" alt="preview" />
-                                    ) : (
-                                        <ImageIcon className="w-10 h-10 text-zinc-300" />
+                            ))}
+                        </div>
+                        {template.footer && (
+                            <div className="text-[11px] text-zinc-400 mt-1 leading-tight italic">
+                                {template.footer}
+                            </div>
+                        )}
+                        <div className="flex justify-end items-center gap-1 mt-1">
+                            <span className="text-[9px] text-zinc-400 font-medium">
+                                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </span>
+                            <Check className="w-3 h-3 text-[#53bdeb]" />
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Media/Location */}
+                        {['image', 'video', 'document', 'audio', 'location'].includes(normalizedType) && (
+                            <div className="p-1">
+                                <div className="rounded-xl overflow-hidden bg-zinc-100 border border-black/5">
+                                    {normalizedType === 'location' && (
+                                        <div className="aspect-video bg-zinc-50 flex flex-col items-center justify-center p-4 text-center">
+                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                                                <Smartphone className="w-5 h-5 text-primary" />
+                                            </div>
+                                            <div className="text-[12px] font-bold text-zinc-800 line-clamp-1">{metadata.locationName || 'Location Name'}</div>
+                                            <div className="text-[10px] text-zinc-500 line-clamp-2 mt-0.5">{metadata.address || 'Address not provided'}</div>
+                                            <div className="text-[8px] text-zinc-400 mt-2 uppercase font-mono tracking-tighter">
+                                                {metadata.latitude || '0.0'}, {metadata.longitude || '0.0'}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {normalizedType === 'image' && (
+                                        <div className="w-full bg-zinc-50 overflow-hidden">
+                                            {metadata.mediaUrl ? (
+                                                <img src={metadata.mediaUrl} className="w-full h-[180px] object-cover" alt="preview" />
+                                            ) : (
+                                                <div className="h-[180px] flex items-center justify-center">
+                                                    <ImageIcon className="w-10 h-10 text-zinc-300" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {normalizedType === 'video' && (
+                                        <div className="aspect-video bg-zinc-900 flex items-center justify-center relative">
+                                            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+                                                <Video className="w-5 h-5 text-white" />
+                                            </div>
+                                        </div>
+                                    )}
+                                    {normalizedType === 'document' && (
+                                        <div className="p-3 bg-[#f0f2f5] flex items-center gap-3">
+                                            <div className="p-2 bg-blue-500 rounded-lg shadow-sm">
+                                                <File className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[12px] font-bold text-zinc-800 truncate">Project_File.pdf</span>
+                                                <span className="text-[9px] text-zinc-500 font-medium">128 KB • PDF</span>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-                            )}
-                            {template.type === 'video' && (
-                                <div className="aspect-video bg-zinc-900 flex items-center justify-center relative">
-                                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
-                                        <Video className="w-5 h-5 text-white" />
-                                    </div>
-                                </div>
-                            )}
-                            {template.type === 'document' && (
-                                <div className="p-3 bg-[#f0f2f5] flex items-center gap-3">
-                                    <div className="p-2 bg-blue-500 rounded-lg shadow-sm">
-                                        <File className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="text-[12px] font-bold text-zinc-800 truncate">Project_File.pdf</span>
-                                        <span className="text-[9px] text-zinc-500 font-medium">128 KB • PDF</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                            </div>
+                        )}
 
-                {/* Content */}
-                <div className="p-2.5 pb-1.5 px-3">
-                    {metadata.headerText && (
-                        <div className="text-[13.5px] font-bold text-zinc-900 mb-1 leading-tight">
-                            {metadata.headerText}
-                        </div>
-                    )}
-                    <div className="text-[13.5px] leading-[1.4] text-zinc-800 break-words whitespace-pre-wrap">
-                        {template.body || <span className="text-zinc-400 italic">No message content</span>}
-                    </div>
-                    {template.footer && (
-                        <div className="text-[11px] text-zinc-400 mt-1.5 leading-tight italic">
-                            {template.footer}
-                        </div>
-                    )}
-                    <div className="flex justify-end items-center gap-1 mt-1">
-                        <span className="text-[9px] text-zinc-400 font-medium">
-                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </span>
-                        <Check className="w-3 h-3 text-[#53bdeb]" />
-                    </div>
-                </div>
-
-                {/* Action Buttons */}
-                {buttons.length > 0 && buttons[0] !== '' && (
-                    <div className="border-t border-zinc-100 flex flex-col divide-y divide-zinc-100">
-                        {buttons.filter(Boolean).map((btn, idx) => {
-                            const btnText = typeof btn === 'object' ? (btn.text || "Button") : btn;
-                            const isUrl = typeof btn === 'object' && btn.type === 'URL';
-                            return (
-                                <div key={idx} className="p-2.5 flex items-center justify-center gap-2 hover:bg-zinc-50 transition-colors cursor-pointer active:scale-95 duration-75">
-                                    {isUrl ? <ExternalLink size={12} className="text-[#007aff]" /> : <MessageSquare size={12} className="text-[#007aff]" />}
-                                    <span className="text-[13px] font-semibold text-[#007aff]">{btnText}</span>
+                        {/* Content */}
+                        <div className="p-2.5 pb-1.5 px-3">
+                            {metadata.headerText && (
+                                <div className="text-[13.5px] font-bold text-zinc-900 mb-1 leading-tight">
+                                    {metadata.headerText}
                                 </div>
-                            );
-                        })}
-                    </div>
+                            )}
+                            <div className="text-[13.5px] leading-[1.4] text-zinc-800 break-words whitespace-pre-wrap">
+                                {template.body || <span className="text-zinc-400 italic">No message content</span>}
+                            </div>
+                            {template.footer && (
+                                <div className="text-[11px] text-zinc-400 mt-1.5 leading-tight italic">
+                                    {template.footer}
+                                </div>
+                            )}
+                            <div className="flex justify-end items-center gap-1 mt-1">
+                                <span className="text-[9px] text-zinc-400 font-medium">
+                                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                </span>
+                                <Check className="w-3 h-3 text-[#53bdeb]" />
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        {buttons.length > 0 && buttons[0] !== '' && (
+                            <div className="border-t border-zinc-100 flex flex-col divide-y divide-zinc-100">
+                                {buttons.filter(Boolean).map((btn, idx) => {
+                                    const btnText = typeof btn === 'object' ? (btn.text || "Button") : btn;
+                                    const isUrl = typeof btn === 'object' && btn.type === 'URL';
+                                    return (
+                                        <div key={idx} className="p-2.5 flex items-center justify-center gap-2 hover:bg-zinc-50 transition-colors cursor-pointer active:scale-95 duration-75">
+                                            {isUrl ? <ExternalLink size={12} className="text-[#007aff]" /> : <MessageSquare size={12} className="text-[#007aff]" />}
+                                            <span className="text-[13px] font-semibold text-[#007aff]">{btnText}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </motion.div>
@@ -153,7 +215,7 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
 
     if (!isModal) {
         return (
-            <div className="relative w-full rounded-2xl bg-[#efeae2] border border-black/5 overflow-hidden p-4 min-h-[150px]">
+            <div className="relative w-full rounded-2xl bg-[#efeae2] border border-black/5 overflow-hidden p-4 min-h-37.5">
                 <div className="absolute inset-0 z-0 opacity-[0.06] pointer-events-none grayscale brightness-50"
                     style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }} />
                 <MessageBubble />

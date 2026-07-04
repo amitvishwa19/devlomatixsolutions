@@ -19,6 +19,7 @@ import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
 import { DynamicIcon } from 'lucide-react/dynamic';
+import { AlertModal } from "@/components/global/AlertModal";
 
 // Modular Components
 import TemplateBuilder from './_components/TemplateBuilder';
@@ -37,6 +38,7 @@ import { getContacts as getContactsAction } from "../contacts/_actions/get-conta
 import { sendMessage as sendMessageAction } from "../chats/_actions/send-message";
 import { getWaMetadata } from "../settings/_actions/get-wa-metadata";
 import AccountSwitcher from '../_components/AccountSwitcher';
+import ShareTemplateDialog from './_components/ShareTemplateDialog';
 
 export default function TemplatePage() {
     const params = useParams();
@@ -86,6 +88,10 @@ export default function TemplatePage() {
     const [detectedVariables, setDetectedVariables] = useState([]);
     const [mediaUrl, setMediaUrl] = useState('');
     const [metadata, setMetadata] = useState({});
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+    const [selectedShareTemplate, setSelectedShareTemplate] = useState(null);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
 
@@ -187,13 +193,14 @@ export default function TemplatePage() {
     });
 
     const { execute: executeDeleteTemplate } = useAction(deleteTemplate, {
-        onSuccess: () => {
-            toast.success("Template deleted");
+        onSuccess: (data) => {
+            const msg = data.metaDeleted ? "Template deleted from Meta and local" : "Template deleted locally";
+            toast.success(msg, { id: "delete-toast" });
             setIsDeletingId(null);
             fetchTemplates();
         },
         onError: (error) => {
-            toast.error(error);
+            toast.error(error, { id: "delete-toast" });
             setIsDeletingId(null);
         }
     });
@@ -290,8 +297,17 @@ export default function TemplatePage() {
     };
 
     const handleDelete = (id) => {
-        setIsDeletingId(id);
-        executeDeleteTemplate({ workspaceId, id });
+        setDeleteTargetId(id);
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTargetId) return;
+        setIsDeletingId(deleteTargetId);
+        setIsDeleteConfirmOpen(false);
+        toast.loading("Deleting template...", { id: "delete-toast" });
+        executeDeleteTemplate({ workspaceId, id: deleteTargetId });
+        setDeleteTargetId(null);
     };
 
     const handleClone = (template) => {
@@ -345,6 +361,15 @@ export default function TemplatePage() {
         setIsPreviewModalOpen(true);
     };
 
+
+    const handleShare = (template) => {
+        setSelectedShareTemplate(template);
+        setIsShareDialogOpen(true);
+    };
+
+    const handleShareUpdate = () => {
+        fetchTemplates();
+    };
 
     const handleSendTest = async () => {
         const manualNumbers = testRecipient.split(',').map(n => n.trim()).filter(n => n);
@@ -600,6 +625,7 @@ export default function TemplatePage() {
                                         onPreview={openPreviewModal}
                                         onSubmit={handleSubmitToMeta}
                                         onCheckStatus={handleCheckStatus}
+                                        onShare={handleShare}
                                         isSubmittingId={isSubmittingId}
                                         isDeletingId={isDeletingId}
                                     />
@@ -614,6 +640,7 @@ export default function TemplatePage() {
                                         onPreview={openPreviewModal}
                                         onSubmit={handleSubmitToMeta}
                                         onCheckStatus={handleCheckStatus}
+                                        onShare={handleShare}
                                         isSubmittingId={isSubmittingId}
                                         isDeletingId={isDeletingId}
                                     />
@@ -663,6 +690,26 @@ export default function TemplatePage() {
                     isOpen={isPreviewModalOpen}
                     onClose={() => setIsPreviewModalOpen(false)}
                     template={selectedPreviewTemplate}
+                />
+
+                <ShareTemplateDialog
+                    isOpen={isShareDialogOpen}
+                    onOpenChange={setIsShareDialogOpen}
+                    template={selectedShareTemplate}
+                    workspaceId={workspaceId}
+                    currentUserId={userId}
+                    onShareUpdate={handleShareUpdate}
+                />
+
+                <AlertModal
+                    isOpen={isDeleteConfirmOpen}
+                    onClose={() => setIsDeleteConfirmOpen(false)}
+                    onConfirm={confirmDelete}
+                    loading={isDeletingId === deleteTargetId}
+                    title="Delete Template"
+                    description="This will permanently delete this template from your local database. If it was submitted to Meta, it will also be removed from Meta Cloud API."
+                    confirmText="Delete"
+                    variant="destructive"
                 />
             </div>
         </TooltipProvider>

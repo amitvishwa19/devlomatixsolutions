@@ -72,6 +72,8 @@ model User {
   agentChatThreads          AgentChatThread[]
   agentChatMessages         AgentChatMessage[]
   whatsAppFlows             WhatsAppFlow[]
+  templateShares            TemplateShare[]           @relation("SharedTemplateUser")
+  sharedTemplates           MessageTemplate[]          @relation("TemplateUsers")
 
   @@index([email])
   @@index([phone])
@@ -342,7 +344,6 @@ model WhatsAppAuth {
 model MessageTemplate {
   id            String     @id @default(cuid())
   templateId    String?
-  workspaceId   String     @default("cmnbhifag000458ikwhv1zso2")
   userId        String
   name          String
   templateName  String?
@@ -363,10 +364,10 @@ model MessageTemplate {
   phoneNumberId String?
   campaigns     Campaign[]
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sharedWith    TemplateShare[]
+  users         User[]             @relation("TemplateUsers")
 
-  @@unique([workspaceId, name, language, phoneNumberId], name: "unique_template_record")
   @@index([userId])
-  @@index([workspaceId])
 }
 
 model WhatsAppMessage {
@@ -1552,4 +1553,17 @@ model EcommerceConfig {
   @@unique([storeName])
   @@index([storeName])
   @@index([storeId])
+}
+
+model TemplateShare {
+  id                String          @id @default(cuid())
+  templateId        String
+  sharedWithUserId  String
+  createdAt         DateTime        @default(now())
+  template          MessageTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  sharedWith        User            @relation("SharedTemplateUser", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, sharedWithUserId])
+  @@index([sharedWithUserId])
+  @@index([templateId])
 }

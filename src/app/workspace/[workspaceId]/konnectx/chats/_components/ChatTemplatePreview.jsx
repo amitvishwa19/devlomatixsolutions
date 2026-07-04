@@ -27,6 +27,8 @@ import {
 export default function ChatTemplatePreview({ template, isOpen, onClose }) {
     if (!template) return null;
 
+    const normalizedType = (template.type || '').toLowerCase();
+
     // Helper to ensure metadata is an object
     const getMetadata = () => {
         if (typeof template.metadata === 'string') {
@@ -60,7 +62,7 @@ export default function ChatTemplatePreview({ template, isOpen, onClose }) {
 
                         <div className="flex-1 flex flex-col gap-4 relative custom-scrollbar overflow-y-auto min-h-[400px] bg-green-200">
                             {/* Preview Content Toggle */}
-                            {template.type === 'carousel' ? (
+                            {normalizedType === 'carousel' ? (
                                 <div className="space-y-4 animate-in fade-in duration-300">
                                     {/* Header Body Footer */}
                                     <div className="relative rounded-md rounded-tl-none p-3 shadow-md max-w-[280px] self-start bg-white text-[#111b21]">
@@ -71,11 +73,11 @@ export default function ChatTemplatePreview({ template, isOpen, onClose }) {
 
                                     {/* Horizontal Cards */}
                                     <div className="flex gap-3 overflow-x-auto pb-6 px-1 custom-scrollbar snap-x snap-mandatory">
-                                        {(metadata.carouselCards || []).map((card, idx) => (
+                                        {(metadata.cards || []).map((card, idx) => (
                                             <div key={idx} className="min-w-[240px] rounded-xl overflow-hidden shadow-lg snap-center flex flex-col border bg-white border-white/20">
                                                 <div className="bg-muted/10 flex items-center justify-center relative group">
-                                                    {card.imageUrl ? (
-                                                        <img src={card.imageUrl} className="w-full h-full object-cover" alt="card" />
+                                                    {card.mediaUrl ? (
+                                                        <img src={card.mediaUrl} className="w-full h-full object-cover" alt="card" />
                                                     ) : (
                                                         <ImageIcon className="w-10 h-10 opacity-10" />
                                                     )}
@@ -104,9 +106,9 @@ export default function ChatTemplatePreview({ template, isOpen, onClose }) {
                                     </div>
 
                                     {/* Media Rendering */}
-                                    {['image', 'video', 'document', 'audio'].includes(template.type) && (
+                                    {['image', 'video', 'document', 'audio'].includes(normalizedType) && (
                                         <div className="flex flex-col">
-                                            {template.type === 'image' && (
+                                            {normalizedType === 'image' && (
                                                 <div className="bg-muted/10 flex items-center justify-center relative overflow-hidden h-[180px]">
                                                     {metadata.mediaUrl ? (
                                                         <img src={metadata.mediaUrl} className="w-full h-full object-cover" alt="preview" />
@@ -115,14 +117,14 @@ export default function ChatTemplatePreview({ template, isOpen, onClose }) {
                                                     )}
                                                 </div>
                                             )}
-                                            {template.type === 'video' && (
+                                            {normalizedType === 'video' && (
                                                 <div className="h-[180px] bg-black/90 flex items-center justify-center text-white relative">
                                                     <div className="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
                                                         <Video className="w-6 opacity-80" />
                                                     </div>
                                                 </div>
                                             )}
-                                            {template.type === 'document' && (
+                                            {normalizedType === 'document' && (
                                                 <div className="p-3.5 flex items-center gap-3 border-b border-black/5 bg-[#f0f2f5]">
                                                     <div className="p-2.5 bg-blue-500/10 rounded-lg">
                                                         <File className="w-6 h-6 text-blue-500" />
@@ -133,7 +135,7 @@ export default function ChatTemplatePreview({ template, isOpen, onClose }) {
                                                     </div>
                                                 </div>
                                             )}
-                                            {template.type === 'audio' && (
+                                            {normalizedType === 'audio' && (
                                                 <div className="p-3 flex items-center gap-3 border-b border-black/5 bg-[#f0f2f5]">
                                                     <div className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white shadow-lg">
                                                         <Music className="w-5 h-5 ml-0.5" />

@@ -110,6 +110,21 @@ const handler = async (data) => {
                     phoneNumberId
                 }
             });
+
+            await db.templateShare.upsert({
+                where: {
+                    templateId_sharedWithUserId: {
+                        templateId: template.id,
+                        sharedWithUserId: userId
+                    }
+                },
+                update: {},
+                create: {
+                    templateId: template.id,
+                    sharedWithUserId: userId
+                }
+            });
+
             console.log("[SaveTemplate] Create success:", template.id);
             return { data: { template } };
         }

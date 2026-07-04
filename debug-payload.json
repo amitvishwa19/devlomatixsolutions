@@ -1,5 +1,5 @@
 {
-  "templateName": "curexa_marketing_template_copy",
+  "templateName": "carousel_image",
   "components": [
     {
       "type": "carousel",
@@ -13,7 +13,7 @@
                 {
                   "type": "image",
                   "image": {
-                    "id": "995230143507441"
+                    "id": "1556063322686594"
                   }
                 }
               ]
@@ -29,23 +29,7 @@
                 {
                   "type": "image",
                   "image": {
-                    "id": "970664295729701"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "card_index": 2,
-          "components": [
-            {
-              "type": "header",
-              "parameters": [
-                {
-                  "type": "image",
-                  "image": {
-                    "id": "1020224807189537"
+                    "id": "1719731069167782"
                   }
                 }
               ]
@@ -60,7 +44,7 @@
     "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "curexa_marketing_template_copy",
+      "name": "carousel_image",
       "language": {
         "code": "en_US"
       },
@@ -77,7 +61,7 @@
                     {
                       "type": "image",
                       "image": {
-                        "id": "995230143507441"
+                        "id": "1556063322686594"
                       }
                     }
                   ]
@@ -93,23 +77,7 @@
                     {
                       "type": "image",
                       "image": {
-                        "id": "970664295729701"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "card_index": 2,
-              "components": [
-                {
-                  "type": "header",
-                  "parameters": [
-                    {
-                      "type": "image",
-                      "image": {
-                        "id": "1020224807189537"
+                        "id": "1719731069167782"
                       }
                     }
                   ]

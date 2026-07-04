@@ -1,14 +1,47 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { decrypt } from "@/lib/auth";
+
+async function getUserIdFromRequest(request) {
+  try {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      console.warn('[getUserIdFromRequest] No authorization header found');
+      return null;
+    }
+    const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
+    const payload = await decrypt(token);
+    return payload?.userId || null;
+  } catch (error) {
+    console.error('[getUserIdFromRequest] Error decrypting token:', error);
+    return null;
+  }
+}
 
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
+    const userId = await getUserIdFromRequest(request);
 
-    const userId = searchParams.get("userId");
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const templates = await db.messageTemplate.findMany({
-      where: { ...(userId && { userId }) },
+      where: {
+        OR: [
+          { userId },
+          { sharedWith: { some: { sharedWithUserId: userId } } }
+        ]
+      },
+      include: {
+        sharedWith: {
+          include: {
+            sharedWith: {
+              select: { id: true, displayName: true, email: true }
+            }
+          }
+        }
+      },
       orderBy: { updatedAt: 'desc' },
     });
 
@@ -31,6 +64,12 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const userId = await getUserIdFromRequest(request);
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, category, language, type, body: templateBody, footer, buttons, metadata, platform, status } = body;
 
@@ -38,12 +77,9 @@ export async function POST(request) {
       return NextResponse.json({ error: "Name and body are required" }, { status: 400 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
     const template = await db.messageTemplate.create({
       data: {
-        ...(userId && { userId }),
+        userId,
         name,
         templateName: name.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
         category: category || 'UTILITY',

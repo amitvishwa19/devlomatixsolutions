@@ -131,7 +131,7 @@ export default function Login() {
                     </div>
 
                     <div className='flex justify-center text-sm text-slate-400 mt-2'>
-                        Don't have an account?
+                        Don&apos;t have an account?
                         <Link replace={true} href={'/register'}>
                             <span className='ml-2 font-bold text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors hover:underline underline-offset-4'>Sign Up</span>
                         </Link>
