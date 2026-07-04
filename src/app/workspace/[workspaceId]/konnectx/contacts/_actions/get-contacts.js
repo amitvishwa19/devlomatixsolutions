@@ -10,29 +10,33 @@ const GetContactsSchema = z.object({
 
 const handler = async (data) => {
     const { userId } = data;
-
     try {
-        console.log('[GET_CONTACTS] querying with userId:', userId);
-
+        console.log('[GET_CONTACTS] userId:', userId);
+        const shareCount = await db.contactShare.count({ where: { sharedWithUserId: userId } });
+        const allShareCount = await db.contactShare.count();
+        const contactCount = await db.contact.count();
+        console.log('[GET_CONTACTS] shareCount for user:', shareCount, 'total shares:', allShareCount, 'total contacts:', contactCount);
+        const allShares = await db.contactShare.findMany({ take: 3, include: { contact: { select: { name: true } } } });
+        console.log('[GET_CONTACTS] sample shares:', JSON.stringify(allShares));
         const contacts = await db.contact.findMany({
-            where: { userId },
-            include: { 
-                groups: true
+            where: {
+                sharedWith: { some: { sharedWithUserId: userId } }
+            },
+            include: {
+                groups: true,
+                sharedWith: {
+                    include: {
+                        sharedWith: {
+                            select: { id: true, displayName: true, email: true }
+                        }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
-
-        console.log('[GET_CONTACTS] found', contacts.length, 'contacts for user');
-        if (contacts.length > 0) {
-            console.log('[GET_CONTACTS] first contact:', JSON.stringify(contacts[0]));
-        }
-
         const total = await db.contact.count();
-        console.log('[GET_CONTACTS] total contacts in DB:', total);
-
         return { data: contacts };
     } catch (error) {
-        console.error('[GET_CONTACTS]', error);
         return { error: "Failed to fetch contacts" };
     }
 };

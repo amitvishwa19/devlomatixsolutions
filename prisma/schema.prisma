@@ -74,6 +74,7 @@ model User {
   whatsAppFlows             WhatsAppFlow[]
   templateShares            TemplateShare[]           @relation("SharedTemplateUser")
   sharedTemplates           MessageTemplate[]          @relation("TemplateUsers")
+  contactShares             ContactShare[]
 
   @@index([email])
   @@index([phone])
@@ -430,6 +431,7 @@ model Contact {
   location        Json?
   subscribed      Boolean          @default(true)
   verified        Boolean          @default(false)
+  sharedWith      ContactShare[]
 
   @@unique([workspaceId, phone])
   @@index([userId])
@@ -1566,4 +1568,17 @@ model TemplateShare {
   @@unique([templateId, sharedWithUserId])
   @@index([sharedWithUserId])
   @@index([templateId])
+}
+
+model ContactShare {
+  id                String   @id @default(cuid())
+  contactId         String
+  sharedWithUserId  String
+  createdAt         DateTime @default(now())
+  contact           Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  sharedWith        User     @relation(fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, sharedWithUserId])
+  @@index([sharedWithUserId])
+  @@index([contactId])
 }

@@ -118,6 +118,21 @@ const handler = async (data) => {
                 },
                 include: { groups: true }
             });
+
+            await db.contactShare.upsert({
+                where: {
+                    contactId_sharedWithUserId: {
+                        contactId: contact.id,
+                        sharedWithUserId: userId
+                    }
+                },
+                update: {},
+                create: {
+                    contactId: contact.id,
+                    sharedWithUserId: userId
+                }
+            });
+
             console.log('[SAVE_CONTACT] Upsert successful');
             return { data: contact };
         }

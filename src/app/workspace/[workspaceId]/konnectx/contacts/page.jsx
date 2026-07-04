@@ -12,7 +12,7 @@ import {
     ArrowUpDown, Download, Upload, RefreshCw, Tag, FileText,
     Filter, LayoutGrid, List, MoreVertical,
     Plus, Check, Star, ShieldCheck, Zap, Globe, MessageSquare,
-    ChevronRight, Bookmark, Settings2, ExternalLink, Layers
+    ChevronRight, Bookmark, Settings2, ExternalLink, Layers, Share2
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -46,6 +46,7 @@ import { bulkGroupContacts } from './_actions/bulk-group-contacts';
 import { bulkFormatContacts } from './_actions/bulk-format';
 import { importContacts } from './_actions/import-contacts';
 import { sendMessage } from './_actions/send-message';
+import { removeContactShare } from './_actions/remove-contact-share';
 
 // Modular Components
 import ManageCategoriesDialog from './_components/ManageCategoriesDialog';
@@ -59,6 +60,7 @@ import BulkCategoryDialog from './_components/BulkCategoryDialog';
 import BulkGroupDialog from './_components/BulkGroupDialog';
 import MessageDialog from './_components/MessageDialog';
 import ContactCard from './_components/ContactCard';
+import ShareContactDialog from './_components/ShareContactDialog';
 
 export default function ContactsPage() {
     const params = useParams();
@@ -108,6 +110,9 @@ export default function ContactsPage() {
     const [importReviewData, setImportReviewData] = useState([]);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [isBulkGroupOpen, setIsBulkGroupOpen] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
+    const [shareContact, setShareContact] = useState(null);
+    const [shareFilterInfo, setShareFilterInfo] = useState(null);
 
     // Computed: Filtered Contacts
     const filteredContacts = useMemo(() => {
@@ -186,16 +191,33 @@ export default function ContactsPage() {
 
     const { execute: executeBulkDelete } = useAction(bulkDeleteContacts, {
         onSuccess: () => {
-            shadToast({ title: "Success", description: "Contacts deleted" });
+            toast.success('Deleted successfully', { id: 'delete-toast' });
             setSelectedContacts([]);
             fetchInitialData(true);
         },
         onError: (err, previousContacts) => {
             if (previousContacts) setContacts(previousContacts);
-            shadToast({ title: "Error", description: err, variant: "destructive" });
+            toast.error(err || 'Failed to delete', { id: 'delete-toast' });
         },
         onComplete: () => setIsBulkProcessing(false)
     });
+
+    const { execute: executeRemoveShare } = useAction(removeContactShare, {
+        onSuccess: () => {
+            shadToast({ title: "Removed", description: "Contact removed from your view" });
+            fetchInitialData(true);
+        },
+        onError: (err) => shadToast({ title: "Error", description: err, variant: "destructive" })
+    });
+
+    const handleRemoveShare = (contact) => {
+        executeRemoveShare({ workspaceId, contactId: contact.id, sharedWithUserId: userId });
+    };
+
+    const handleShareFilter = (filterType, filterValue, count) => {
+        setShareFilterInfo({ type: filterType, value: filterValue, count });
+        setIsShareOpen(true);
+    };
 
     const { execute: executeBulkTag } = useAction(bulkTagContacts, {
         onSuccess: () => {
@@ -363,6 +385,7 @@ export default function ContactsPage() {
         setIsBulkProcessing(true);
         setIsDeleteConfirmOpen(false);
         const previousSnapshot = [...contacts];
+        toast.loading(selectedContacts.length > 1 ? 'Deleting contacts...' : 'Deleting contact...', { id: 'delete-toast' });
 
         // Optimistic Delete
         setContacts(curr => curr.filter(c => !selectedContacts.includes(c.id)));
@@ -615,11 +638,48 @@ export default function ContactsPage() {
                                                         </span>
                                                     </span>
                                                 </div>
+                                                <Share2
+                                                    className="w-3 h-3 text-muted-foreground/40 hover:text-purple-400 transition-opacity shrink-0"
+                                                    onClick={(e) => { e.stopPropagation(); handleShareFilter('category', catName, contacts.filter(c => c.category === catName).length); }}
+                                                />
                                             </div>
                                         </div>
                                     ))}
                                     {contacts.filter(c => c.category).length === 0 && (
                                         <p className="text-[10px] text-muted-foreground italic px-2">No categories found.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div id="tags" className="space-y-2">
+                                <div className="flex items-center justify-between px-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Tags</span>
+                                </div>
+                                <div className="space-y-1">
+                                    {allTags.map(tagName => (
+                                        <div key={tagName} className="relative group flex items-center pr-2">
+                                            <div
+                                                className={`w-full flex items-center justify-between transition-all cursor-pointer p-2 border border-transparent rounded-md ${activeSegment === `tag:${tagName}` ? 'bg-card border-primary/20' : 'hover:bg-card'}`}
+                                                onClick={() => setActiveSegment(`tag:${tagName}`)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Tag className="w-3 h-3 opacity-40" />
+                                                    <span className="flex items-center truncate max-w-[120px] text-xs gap-2">
+                                                        {tagName}
+                                                        <span className="text-[10px] opacity-40 font-mono">
+                                                            {contacts.filter(c => c.tags?.includes(tagName)).length}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <Share2
+                                                    className="w-3 h-3 text-muted-foreground/40 hover:text-purple-400 transition-opacity shrink-0"
+                                                    onClick={(e) => { e.stopPropagation(); handleShareFilter('tag', tagName, contacts.filter(c => c.tags?.includes(tagName)).length); }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {allTags.length === 0 && (
+                                        <p className="text-[10px] text-muted-foreground italic px-2">No tags found.</p>
                                     )}
                                 </div>
                             </div>
@@ -824,6 +884,12 @@ export default function ContactsPage() {
                                                 setSelectedContacts([contact.id]);
                                                 setIsDeleteConfirmOpen(true);
                                             }}
+                                            onShare={(c) => {
+                                                setShareContact(c);
+                                                setIsShareOpen(true);
+                                            }}
+                                            onRemoveShareFn={handleRemoveShare}
+                                            currentUserId={userId}
                                         />
                                     ))}
                                 </div>
@@ -975,6 +1041,16 @@ export default function ContactsPage() {
                     setData={setImportReviewData}
                     onImport={runImport}
                     isImporting={isImporting}
+                />
+
+                <ShareContactDialog
+                    isOpen={isShareOpen}
+                    onOpenChange={(open) => { setIsShareOpen(open); if (!open) setShareFilterInfo(null); }}
+                    contact={shareContact}
+                    filterInfo={shareFilterInfo}
+                    workspaceId={workspaceId}
+                    currentUserId={userId}
+                    onShareUpdate={fetchInitialData}
                 />
             </div>
         </div>

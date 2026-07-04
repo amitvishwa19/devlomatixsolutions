@@ -12,13 +12,15 @@ const BulkDeleteSchema = z.object({
 
 const handler = async (data) => {
     const { ids, workspaceId } = data;
-    await ensureWorkspaceAccess(workspaceId);
+    const session = await ensureWorkspaceAccess(workspaceId);
+    const userId = session?.user?.userId || session?.user?.id;
 
     try {
         await db.contact.deleteMany({
             where: {
                 id: { in: ids },
-                workspaceId // Ensure we only delete from this workspace
+                userId,  // Only owner can delete
+                workspaceId
             }
         });
 

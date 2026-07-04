@@ -3,7 +3,7 @@
 import React from 'react';
 import { 
     Phone, Mail, Layers, Trash2, MoreVertical, 
-    Pencil, Send, History 
+    Pencil, Send, History, Share2, X
 } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,8 +27,12 @@ export default function ContactCard({
     onEdit,
     onMessage,
     onHistory,
-    onDelete
+    onDelete,
+    onShare,
+    currentUserId,
+    onRemoveShareFn
 }) {
+    const isOwner = contact.userId === currentUserId;
     return (
         <Card
             id='contact-card'
@@ -87,17 +91,32 @@ export default function ContactCard({
                     </div>
 
                     <div className="flex items-center gap-1 opacity-100 group-hover:opacity-100 transition-opacity">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete();
-                            }}
-                        >
-                            <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {isOwner ? (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete();
+                                }}
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (typeof onRemoveShareFn === 'function') onRemoveShareFn(contact);
+                                }}
+                                title="Remove from my view"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </Button>
+                        )}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60">
@@ -114,10 +133,19 @@ export default function ContactCard({
                                 <DropdownMenuItem onClick={() => onHistory(contact)}>
                                     <History className="w-3.5 h-3.5 mr-2 text-blue-500" /> Interaction History
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive" onClick={onDelete}>
-                                    <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete Contact
+                                <DropdownMenuItem onClick={() => onShare(contact)}>
+                                    <Share2 className="w-3.5 h-3.5 mr-2 text-purple-500" /> Share Contact
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {isOwner ? (
+                                    <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+                                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete Contact
+                                    </DropdownMenuItem>
+                                ) : (
+                                    <DropdownMenuItem className="text-destructive" onClick={() => { if (typeof onRemoveShareFn === 'function') onRemoveShareFn(contact); }}>
+                                        <X className="w-3.5 h-3.5 mr-2" /> Remove from my view
+                                    </DropdownMenuItem>
+                                )}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

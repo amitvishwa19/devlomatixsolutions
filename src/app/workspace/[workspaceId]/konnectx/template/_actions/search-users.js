@@ -28,6 +28,7 @@ const handler = async (data) => {
             }
             : {};
 
+        console.log('[searchUsers] query:', query, 'where:', JSON.stringify(where));
         const users = await db.user.findMany({
             where,
             select: {
@@ -38,6 +39,7 @@ const handler = async (data) => {
             orderBy: { displayName: 'asc' },
             take: query ? 10 : undefined,
         });
+        console.log('[searchUsers] found users:', users.length, JSON.stringify(users.map(u => ({ id: u.id, email: u.email }))));
 
         return { data: users };
     } catch (error) {
