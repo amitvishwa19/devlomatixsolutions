@@ -48,31 +48,61 @@ const handler = async (data) => {
         const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
         console.log(`[getConversations] Fetching messages for PhoneID: ${activePhoneId} (User: ${userId})`);
 
-        // 2. Fetch all messages for this user associated with the ACTIVE phone ID
-        const [messages, contacts] = await Promise.all([
-            db.whatsAppMessage.findMany({
+        // 2. Find conversations assigned to this user
+        const assignedShares = await db.conversationShare.findMany({
+            where: { sharedWithUserId: userId, workspaceId }
+        });
+        const assignedJids = assignedShares.map(s => s.jid);
+
+        // 3. Fetch messages: own messages + messages from assigned conversations
+        const ownMessages = db.whatsAppMessage.findMany({
+            where: {
+                userId,
+                metadata: {
+                    path: ['phone_number_id'],
+                    equals: activePhoneId
+                }
+            },
+            orderBy: { timestamp: 'desc' }
+        });
+
+        const assignedMessages = assignedJids.length > 0
+            ? db.whatsAppMessage.findMany({
                 where: {
-                    userId,
+                    jid: { in: assignedJids },
                     metadata: {
                         path: ['phone_number_id'],
                         equals: activePhoneId
                     }
                 },
                 orderBy: { timestamp: 'desc' }
-            }),
-            db.contact.findMany({
-                where: { userId }
             })
-        ]);
+            : Promise.resolve([]);
+
+        const allContacts = db.contact.findMany({
+            where: { userId }
+        });
+
+        const [messages, assignedMsgs, contacts] = await Promise.all([ownMessages, assignedMessages, allContacts]);
+
+        // Also fetch contacts owned by assigning users for name resolution
+        const assigningUserIds = [...new Set(assignedShares.map(s => s.sharedByUserId))];
+        const assignorContacts = assigningUserIds.length > 0
+            ? await db.contact.findMany({ where: { userId: { in: assigningUserIds } } })
+            : [];
 
         const contactMap = {};
         contacts.forEach(c => {
             const cleanPhone = c.phone.replace(/\D/g, '');
             contactMap[cleanPhone] = c.name;
         });
+        assignorContacts.forEach(c => {
+            const cleanPhone = c.phone.replace(/\D/g, '');
+            if (!contactMap[cleanPhone]) contactMap[cleanPhone] = c.name;
+        });
 
         const conversationsMap = {};
-        messages.forEach(msg => {
+        const processMsg = (msg, isAssigned) => {
             const normalizedJid = msg.jid.replace(/\D/g, '').split('@')[0] + "@s.whatsapp.net";
             if (!conversationsMap[normalizedJid]) {
                 const cleanPhone = normalizedJid.split('@')[0];
@@ -89,20 +119,26 @@ const handler = async (data) => {
                     timestamp: Number(msg.timestamp),
                     fromMe: msg.fromMe,
                     unreadCount: 0,
-                    messages: []
+                    messages: [],
+                    assigned: isAssigned ? true : undefined
                 };
             }
-            conversationsMap[normalizedJid].messages.push({
-                id: msg.id,
-                jid: normalizedJid,
-                text: msg.text,
-                fromMe: msg.fromMe,
-                timestamp: Number(msg.timestamp),
-                status: msg.status,
-                metadata: JSON.parse(JSON.stringify(msg.metadata || {})),
-                createdAt: msg.createdAt.toISOString()
-            });
-        });
+            if (!conversationsMap[normalizedJid].messages.find(m => m.id === msg.id)) {
+                conversationsMap[normalizedJid].messages.push({
+                    id: msg.id,
+                    jid: normalizedJid,
+                    text: msg.text,
+                    fromMe: msg.fromMe,
+                    timestamp: Number(msg.timestamp),
+                    status: msg.status,
+                    metadata: JSON.parse(JSON.stringify(msg.metadata || {})),
+                    createdAt: msg.createdAt.toISOString()
+                });
+            }
+        };
+
+        messages.forEach(msg => processMsg(msg, false));
+        assignedMsgs.forEach(msg => processMsg(msg, true));
 
         const conversations = Object.values(conversationsMap).sort((a, b) => b.timestamp - a.timestamp);
 

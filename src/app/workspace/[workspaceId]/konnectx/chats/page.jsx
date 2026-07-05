@@ -21,13 +21,17 @@ import {
     Loader2,
     Sparkles,
     MessageSquare,
-    Trash2
+    Trash2, Share2, UserPlus, Eye, Mail, Tag, Info
 } from "lucide-react";
+import { useSession } from 'next-auth/react';
 import { useAction } from "@/hooks/use-action";
 import { getConversations } from "./_actions/get-conversations";
 import { sendMessage } from "./_actions/send-message";
 import { deleteConversation } from "./_actions/delete-conversation";
+import { assignConversation } from "./_actions/assign-conversation";
+import { removeConversationAssignment } from "./_actions/remove-conversation-assignment";
 import { getAiSuggestions } from "./_actions/get-ai-suggestions";
+import { searchUsers } from "../template/_actions/search-users";
 import { getContacts } from "../contacts/_actions/get-contacts";
 import { getGroups } from "../contacts/_actions/get-groups";
 import { getCategories } from "../contacts/_actions/get-categories";
@@ -37,11 +41,27 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Layers } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -112,6 +132,8 @@ const MessageStatus = ({ status }) => {
 
 export default function WhatsAppChatsPage() {
     const { workspaceId } = useParams();
+    const { data: session } = useSession();
+    const userId = session?.user?.userId || '';
     const [conversations, setConversations] = useState([]);
     const [selectedJid, setSelectedJid] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -136,6 +158,15 @@ export default function WhatsAppChatsPage() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [jidToDelete, setJidToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Assign Modal State
+    const [isAssignOpen, setIsAssignOpen] = useState(false);
+    const [jidToAssign, setJidToAssign] = useState(null);
+    const [assignUsers, setAssignUsers] = useState([]);
+
+    // View Contact Modal State
+    const [isViewContactOpen, setIsViewContactOpen] = useState(false);
+    const [viewContactJid, setViewContactJid] = useState(null);
 
     // Sidebar/Filter State
     const [groups, setGroups] = useState([]);
@@ -251,9 +282,38 @@ export default function WhatsAppChatsPage() {
         onSettled: () => setIsDeleting(false)
     });
 
+    const { execute: executeSearchUsers } = useAction(searchUsers, {
+        onSuccess: (data) => setAssignUsers(data || []),
+        onError: () => setAssignUsers([])
+    });
+
+    const { execute: executeAssign, isLoading: isAssigning } = useAction(assignConversation, {
+        onSuccess: (data) => {
+            toast.success(`Conversation assigned to ${data.user.displayName || data.user.email}`);
+            setIsAssignOpen(false);
+            setJidToAssign(null);
+        },
+        onError: (err) => toast.error(err)
+    });
+
+    const { execute: executeRemoveAssign } = useAction(removeConversationAssignment, {
+        onSuccess: () => toast.success("Assignment removed"),
+        onError: (err) => toast.error(err)
+    });
+
+    const handleAssignConversation = (jid) => {
+        setJidToAssign(jid);
+        setIsAssignOpen(true);
+        executeSearchUsers({ workspaceId, query: '' });
+    };
+
+    const confirmAssign = (email) => {
+        if (!jidToAssign || !email) return;
+        executeAssign({ workspaceId, jid: jidToAssign, email });
+    };
 
     const fetchConversations = () => executeConversations({ workspaceId });
-    const fetchContacts = () => { setIsFetchingContacts(true); executeGetContacts({ workspaceId }); };
+    const fetchContacts = () => { setIsFetchingContacts(true); executeGetContacts({ workspaceId, userId }); };
     const fetchTemplates = () => executeGetTemplates({ workspaceId });
     const fetchGroups = () => executeGetGroups({ workspaceId });
     const fetchCategories = () => executeGetCategories({ workspaceId, type: 'CONTACT' });
@@ -650,14 +710,17 @@ export default function WhatsAppChatsPage() {
                                             >
                                                 <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
                                                     <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                        {(chat.name || chat.jid).substring(0, 2).toUpperCase()}
+                                                        {(chat.name || chat.jid.split('@')[0]).substring(0, 2).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between mb-0.5">
                                                         <div className="flex items-center gap-2">
-                                                            <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid}</h3>
+                                                            <div className="flex flex-col">
+                                                                <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid.split('@')[0]}</h3>
+                                                                <span className="text-[9px] text-muted-foreground/50 truncate">{getContactForJid(chat.jid)?.phone || chat.jid.split('@')[0]}</span>
+                                                            </div>
                                                             {getContactForJid(chat.jid)?.category && (
                                                                 <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50 px-1">
                                                                     {getContactForJid(chat.jid).category}
@@ -667,12 +730,28 @@ export default function WhatsAppChatsPage() {
                                                         <span className="text-[9px] text-muted-foreground group-hover:hidden">
                                                             {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
                                                         </span>
-                                                        <button
-                                                            onClick={(e) => handleDeleteConversation(e, chat.jid)}
-                                                            className="hidden group-hover:flex p-1 hover:bg-red-100 hover:text-red-600 rounded-md transition-colors text-muted-foreground"
-                                                        >
-                                                            <Trash2 size={12} />
-                                                        </button>
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setViewContactJid(chat.jid); setIsViewContactOpen(true); }}
+                                                                className="p-1 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-colors text-muted-foreground opacity-40 hover:opacity-100"
+                                                                title="View contact details"
+                                                            >
+                                                                <Eye size={12} />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleAssignConversation(chat.jid); }}
+                                                                className="p-1 hover:bg-purple-100 hover:text-purple-600 rounded-md transition-colors text-muted-foreground opacity-40 hover:opacity-100"
+                                                                title="Assign conversation"
+                                                            >
+                                                                <Share2 size={12} />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => handleDeleteConversation(e, chat.jid)}
+                                                                className="p-1 hover:bg-red-100 hover:text-red-600 rounded-md transition-colors text-muted-foreground opacity-40 hover:opacity-100"
+                                                            >
+                                                                <Trash2 size={12} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground truncate opacity-70">
                                                         {chat.fromMe && <span className="text-[9px] uppercase font-bold mr-1 text-primary/60">You:</span>}
@@ -1137,6 +1216,124 @@ export default function WhatsAppChatsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Assign Conversation Dialog */}
+            <Dialog open={isAssignOpen} onOpenChange={(open) => { setIsAssignOpen(open); if (!open) setJidToAssign(null); }}>
+                <DialogContent className="bg-card border-border max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Share2 className="w-4 h-4" /> Assign Conversation
+                        </DialogTitle>
+                        <DialogDescription>
+                            Assign this conversation to another user. They will be able to view and reply to messages.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label>Select User</Label>
+                            <div className="flex gap-2">
+                                <Select value="" onValueChange={(email) => confirmAssign(email)}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Choose a user..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {assignUsers.map((user) => (
+                                            <SelectItem key={user.id} value={user.email}>
+                                                {user.displayName || user.email}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setIsAssignOpen(false); setJidToAssign(null); }}>
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* View Contact Dialog */}
+            <Dialog open={isViewContactOpen} onOpenChange={(open) => { setIsViewContactOpen(open); if (!open) setViewContactJid(null); }}>
+                <DialogContent className="bg-card border-border max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <User className="w-4 h-4" /> Contact Details
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        {(() => {
+                            const contact = viewContactJid ? getContactForJid(viewContactJid) : null;
+                            return (
+                                <>
+                                    {contact ? (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+                                                <Avatar className="w-12 h-12 border-2 border-background shadow-sm">
+                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                                                        {(contact.name || contact.phone || '?').substring(0, 2).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <h3 className="text-sm font-bold">{contact.name}</h3>
+                                                    <span className="text-xs text-muted-foreground/70">{viewContactJid?.split('@')[0]}</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <Phone className="w-3.5 h-3.5" /> {contact.phone}
+                                                </div>
+                                                {contact.email && (
+                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                        <Mail className="w-3.5 h-3.5" /> {contact.email}
+                                                    </div>
+                                                )}
+                                                {contact.category && (
+                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                        <Tag className="w-3.5 h-3.5" /> {contact.category}
+                                                    </div>
+                                                )}
+                                                {contact.tags?.length > 0 && (
+                                                    <div className="flex items-start gap-2 text-muted-foreground">
+                                                        <Tag className="w-3.5 h-3.5 mt-0.5" />
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {contact.tags.map(t => (
+                                                                <Badge key={t} variant="outline" className="text-[9px] h-4 px-1">{t}</Badge>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {contact.type && (
+                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                        <Info className="w-3.5 h-3.5" /> Type: {contact.type}
+                                                    </div>
+                                                )}
+                                                {contact.lastInteraction && (
+                                                    <div className="text-[11px] text-muted-foreground/50">
+                                                        Last interaction: {new Date(contact.lastInteraction).toLocaleString()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 text-muted-foreground">
+                                            <p className="text-sm">Contact not found in your contacts list.</p>
+                                            <p className="text-xs mt-1">JID: {viewContactJid?.split('@')[0]}</p>
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setIsViewContactOpen(false); setViewContactJid(null); }}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -75,6 +75,8 @@ model User {
   templateShares            TemplateShare[]           @relation("SharedTemplateUser")
   sharedTemplates           MessageTemplate[]          @relation("TemplateUsers")
   contactShares             ContactShare[]
+  conversationShares        ConversationShare[]     @relation("ConversationSharedWith")
+  conversationSharesBy      ConversationShare[]     @relation("ConversationSharedBy")
 
   @@index([email])
   @@index([phone])
@@ -1581,4 +1583,19 @@ model ContactShare {
   @@unique([contactId, sharedWithUserId])
   @@index([sharedWithUserId])
   @@index([contactId])
+}
+
+model ConversationShare {
+  id                String   @id @default(cuid())
+  jid               String
+  workspaceId       String
+  sharedWithUserId  String
+  sharedByUserId    String
+  createdAt         DateTime @default(now())
+  sharedWith        User     @relation("ConversationSharedWith", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  sharedBy          User     @relation("ConversationSharedBy", fields: [sharedByUserId], references: [id], onDelete: Cascade)
+
+  @@unique([jid, workspaceId, sharedWithUserId])
+  @@index([sharedWithUserId])
+  @@index([jid])
 }
