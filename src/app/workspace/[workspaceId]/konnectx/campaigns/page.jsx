@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Megaphone,
     Plus,
@@ -14,34 +14,14 @@ import {
 
     Edit,
     Trash,
-    Trash2,
     BarChart3,
-    Copy
+    Copy,
+    FolderOpen,
+    Tags
 } from
     'lucide-react';
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetFooter
-} from
-
-    "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle
-} from
-    "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
     Select,
@@ -67,7 +47,10 @@ import { triggerCampaign } from "./_actions/trigger-campaign";
 import { getTemplates } from "../template/_actions/get-templates";
 import { getContacts } from "../contacts/_actions/get-contacts";
 import { getGroups } from "../contacts/_actions/get-groups";
+import { getCategories } from "../contacts/_actions/get-categories";
 import { useParams } from "next/navigation";
+import NewCampaignSheet from "./_cpmponents/NewCampaignSheet";
+import DeleteCampaignDialog from "./_cpmponents/DeleteCampaignDialog";
 
 export default function CampaignsPage() {
     const params = useParams();
@@ -80,7 +63,15 @@ export default function CampaignsPage() {
     const [templates, setTemplates] = useState([]);
     const [contacts, setContacts] = useState([]);
     const [groups, setGroups] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [tags, setTags] = useState([]);
     const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+    const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+    const [selectedTagIds, setSelectedTagIds] = useState([]);
+    const [selectedContactCatNames, setSelectedContactCatNames] = useState([]);
+    const [selectedContactTagNames, setSelectedContactTagNames] = useState([]);
+    const contactCategoryNames = [...new Set(contacts.map(c => c.category).filter(Boolean))].sort();
+    const contactTagNames = [...new Set(contacts.flatMap(c => c.tags || []).filter(Boolean))].sort();
     const [recipientType, setRecipientType] = useState('contacts'); //'contacts'or'groups'
     const [statusFilter, setStatusFilter] = useState('All Statuses');
     const [loading, setLoading] = useState(false);
@@ -99,15 +90,28 @@ export default function CampaignsPage() {
     });
 
     const { execute: executeGetTemplates } = useAction(getTemplates, {
-        onSuccess: (data) => setTemplates(data.templates || []),
+        onSuccess: (data) => {
+            console.log('[CAMPAIGNS] Templates loaded:', data?.templates?.length);
+            setTemplates(data.templates || []);
+        },
+        onError: (err) => console.error('[CAMPAIGNS] Failed to load templates:', err)
     });
 
     const { execute: executeGetContacts } = useAction(getContacts, {
-        onSuccess: (data) => setContacts(data.contacts || []),
+        onSuccess: (data) => setContacts(data || []),
+        onError: (err) => console.error('[CAMPAIGNS] Failed to load contacts:', err)
     });
 
     const { execute: executeGetGroups } = useAction(getGroups, {
-        onSuccess: (data) => setGroups(data.groups || []),
+        onSuccess: (data) => setGroups(data || []),
+    });
+
+    const { execute: executeGetCategories } = useAction(getCategories, {
+        onSuccess: (data) => setCategories(data || []),
+    });
+
+    const { execute: executeGetTags } = useAction(getCategories, {
+        onSuccess: (data) => setTags(data || []),
     });
 
     const { execute: executeGetDetails } = useAction(getCampaignDetails, {
@@ -125,13 +129,23 @@ export default function CampaignsPage() {
 
     const { execute: executeSaveCampaign } = useAction(saveCampaign, {
         onSuccess: async () => {
+            if (savingToastRef.current) { toast.dismiss(savingToastRef.current); savingToastRef.current = null; }
             await fetchCampaigns();
             setEditDialogOpen(false);
             setActiveCampaign(null);
             setSelectedGroupIds([]);
+            setSelectedCategoryIds([]);
+            setSelectedTagIds([]);
+            setSelectedContactCatNames([]);
+            setSelectedContactTagNames([]);
+            setIsSaving(false);
             toast.success(activeCampaign ? 'Campaign updated successfully' : 'Campaign created successfully');
         },
-        onError: (err) => toast.error(err || "Failed to save campaign")
+        onError: (err) => {
+            if (savingToastRef.current) { toast.dismiss(savingToastRef.current); savingToastRef.current = null; }
+            setIsSaving(false);
+            toast.error(err || "Failed to save campaign");
+        }
     });
 
     const { execute: executeTriggerCampaign } = useAction(triggerCampaign, {
@@ -144,26 +158,45 @@ export default function CampaignsPage() {
 
     const { execute: executeDeleteCampaign } = useAction(deleteCampaign, {
         onSuccess: async () => {
+            console.log('[CAMPAIGNS] Delete success');
             await fetchCampaigns();
             setDeleteDialogOpen(false);
             setActiveCampaign(null);
+            setIsDeleting(false);
             toast.success("Campaign deleted");
         },
-        onError: (err) => toast.error(err || "Failed to delete campaign"),
-        onSettled: () => setIsDeleting(false)
+        onError: (err) => {
+            console.error('[CAMPAIGNS] Delete error:', err);
+            setDeleteDialogOpen(false);
+            setActiveCampaign(null);
+            setIsDeleting(false);
+            toast.error(err || "Failed to delete campaign");
+        }
     });
 
     const fetchCampaigns = () => { setLoading(true); executeGetCampaigns({ workspaceId }); };
     const fetchTemplates = () => executeGetTemplates({ workspaceId });
     const fetchContacts = () => executeGetContacts({ workspaceId });
     const fetchGroups = () => executeGetGroups({ workspaceId });
+    const fetchCategories = () => executeGetCategories({ workspaceId, type: 'CONTACT' });
+    const fetchTags = () => executeGetTags({ workspaceId, type: 'TAG' });
 
     React.useEffect(() => {
         fetchCampaigns();
         fetchTemplates();
         fetchContacts();
         fetchGroups();
+        fetchCategories();
+        fetchTags();
     }, [workspaceId]);
+
+    const hasActiveCampaigns = campaigns.some(c => c.status === 'RUNNING' || c.status === 'QUEUED');
+
+    React.useEffect(() => {
+        if (!hasActiveCampaigns) return;
+        const interval = setInterval(fetchCampaigns, 5000);
+        return () => clearInterval(interval);
+    }, [hasActiveCampaigns]);
 
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -184,6 +217,8 @@ export default function CampaignsPage() {
         intSections: JSON.stringify([{ title: 'Options', rows: [{ title: 'Option 1', id: 'opt1' }, { title: 'Option 2', id: 'opt2' }] }], null, 2)
     });
     const [isStarting, setIsStarting] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const savingToastRef = useRef(null);
     const [contactSelectorOpen, setContactSelectorOpen] = useState(false);
     const [selectedContactIds, setSelectedContactIds] = useState([]);
 
@@ -213,6 +248,10 @@ export default function CampaignsPage() {
 
     const saveEdit = () => {
         if (!editForm.name.trim()) { toast.error('Campaign name is required'); return; }
+        if (!editForm.templateId) { toast.error('Please select a template'); return; }
+
+        setIsSaving(true);
+        savingToastRef.current = toast.loading(activeCampaign ? 'Updating campaign...' : 'Creating campaign...');
 
         const recipients = editForm.phone ? editForm.phone.split('\n').map((line) => {
             const parts = line.split(',').map((p) => p.trim()).filter(Boolean);
@@ -220,14 +259,19 @@ export default function CampaignsPage() {
             return { phone: parts[0], variables: parts.reduce((acc, p, i) => i === 0 ? acc : ({ ...acc, [`v${i}`]: p }), {}) };
         }).filter(Boolean) : [];
 
+        if (!editForm.templateId) { toast.error('Please select a template'); return; }
+
         const buildTemplate = () => {
             if (editForm.messageType === 'interactive') {
                 let sections; try { sections = JSON.parse(editForm.intSections); } catch { sections = []; }
                 return { text: editForm.intBody, interactive: { body: editForm.intBody, footer: editForm.intFooter, buttonText: editForm.intButton, sections } };
             }
             const t = { text: editForm.template };
-            if (editForm.messageType === 'image') t.image = { url: editForm.mediaUrl };
-            if (editForm.messageType === 'document') t.document = { url: editForm.mediaUrl };
+            if (editForm.mediaUrl) {
+                if (editForm.messageType === 'image' || editForm.messageType === 'carousel') t.image = { url: editForm.mediaUrl };
+                else if (editForm.messageType === 'video') t.video = { url: editForm.mediaUrl };
+                else if (editForm.messageType === 'document') t.document = { url: editForm.mediaUrl };
+            }
             return t;
         };
 
@@ -237,15 +281,19 @@ export default function CampaignsPage() {
             name: editForm.name,
             status: editForm.status,
             messageTemplate: buildTemplate(),
-            templateId: editForm.templateId === 'custom' ? null : editForm.templateId || null,
+            templateId: editForm.templateId || null,
             recipients,
-            groupIds: selectedGroupIds
+            groupIds: selectedGroupIds,
+            categoryIds: selectedCategoryIds,
+            tagIds: selectedTagIds,
+            contactCategoryNames: selectedContactCatNames,
+            contactTagNames: selectedContactTagNames
         });
     };
 
     const handleToggleCampaign = (campaign) => {
         if (campaign.total === 0) { toast.error('Cannot run campaign with no recipients'); return; }
-        const isRunning = campaign.status === 'RUNNING';
+        const isRunning = campaign.status === 'RUNNING' || campaign.status === 'QUEUED';
         executeTriggerCampaign({ workspaceId, id: campaign.id, action: isRunning ? 'stop' : 'start' });
     };
 
@@ -257,9 +305,12 @@ export default function CampaignsPage() {
         if (!activeCampaign) return;
         setIsDeleting(true);
         executeDeleteCampaign({ workspaceId, id: activeCampaign.id });
+        setTimeout(() => setIsDeleting(false), 5000);
     };
 
     const getStatusBadge = (status) => {
+        const displayStatus = status === 'QUEUED' ? 'RUNNING' : status;
+        const label = status === 'QUEUED' ? 'Running' : displayStatus;
         const styles = {
             RUNNING: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
             DRAFT: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20',
@@ -279,9 +330,9 @@ export default function CampaignsPage() {
         };
 
         return (
-            <span className={`flex items-center text-xs font-medium px-2 py-1 rounded-full border ${styles[status]}`}>
-                {icons[status]}
-                {status}
+            <span className={`flex items-center text-xs font-medium px-2 py-1 rounded-full border ${styles[displayStatus] || ''}`}>
+                {icons[displayStatus]}
+                {label}
             </span>);
 
     };
@@ -314,14 +365,15 @@ export default function CampaignsPage() {
 
     const filteredCampaigns = campaigns.filter(c => {
         const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'All Statuses' || c.status === statusFilter.toUpperCase();
+        const filterStatus = statusFilter === 'All Statuses' ? null : statusFilter.toUpperCase();
+        const matchesStatus = !filterStatus || c.status === filterStatus || (filterStatus === 'RUNNING' && c.status === 'QUEUED');
         return matchesSearch && matchesStatus;
     });
 
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-500">
             {/* Header Area */}
-            <header className="flex-none p-6 pb-4 border-b border-border/40">
+            <header className="flex-none p-4 pb-4 border-b border-border/40">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold  from-foreground to-foreground/60 bg-clip-text text-transparent flex items-center gap-3">
@@ -337,7 +389,7 @@ export default function CampaignsPage() {
                         variant={'outline'}
                         onClick={() => {
                             setActiveCampaign(null);
-                            setEditForm({ name: '', status: 'DRAFT', template: '', phone: '', messageType: 'text', scheduledAt: '', mediaUrl: '', intBody: '', intFooter: '', intButton: 'Choose Option', intSections: JSON.stringify([{ title: 'Options', rows: [{ title: 'Option 1', id: 'opt1' }] }], null, 2) });
+                            setEditForm({ name: '', status: 'DRAFT', template: '', templateId: '', phone: '', messageType: 'text', scheduledAt: '', mediaUrl: '', intBody: '', intFooter: '', intButton: 'Choose Option', intSections: JSON.stringify([{ title: 'Options', rows: [{ title: 'Option 1', id: 'opt1' }] }], null, 2) });
                             setEditDialogOpen(true);
                         }}>
 
@@ -382,14 +434,14 @@ export default function CampaignsPage() {
                             <span className="font-medium">Active Now</span>
                         </div>
                         <p className="text-xl font-bold text-foreground">
-                            {campaigns.filter((c) => c.status === 'RUNNING').length}
+                            {campaigns.filter((c) => c.status === 'RUNNING' || c.status === 'QUEUED').length}
                         </p>
                     </div>
                 </div>
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 p-6 overflow-y-auto">
+            <main className="flex-1 p-4 overflow-y-auto">
                 {/* Tools Bar */}
                 <div className="flex justify-between items-center mb-6">
                     <div className="relative w-96">
@@ -419,11 +471,11 @@ export default function CampaignsPage() {
                     </div>
                 </div>
 
-                {loading &&
+                {/* {loading &&
                     <div className="flex h-[200px] items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
-                }
+                } */}
 
                 {/* Campaign Data Table */}
                 <div className="bg-card border rounded-md overflow-hidden shadow-sm">
@@ -438,10 +490,18 @@ export default function CampaignsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50">
-                            {filteredCampaigns.map((c) =>
-                                <tr key={c.id} className="hover:bg-muted/20 transition-colors group">
+                            {filteredCampaigns.map((c) => {
+                                const isActive = c.status === 'RUNNING' || c.status === 'QUEUED';
+                                return (
+                                <tr key={c.id} className={`hover:bg-muted/20 transition-colors group ${isActive ? 'bg-blue-500/[0.02] border-l-2 border-l-blue-500/40' : ''}`}>
                                     <td className="px-6 py-4 font-medium text-foreground">
-                                        {c.name}
+                                        <div className="flex items-center gap-2">
+                                            {isActive && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shrink-0" />}
+                                            <div>
+                                                <div>{c.name}</div>
+                                                <div className="text-[10px] text-muted-foreground font-normal">{c.templateName}</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         {getStatusBadge(c.status)}
@@ -454,7 +514,7 @@ export default function CampaignsPage() {
                                             </div>
                                             <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                                                 <div
-                                                    className={`h-full transition-all duration-500 ${c.status === 'RUNNING' ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`}
+                                                    className={`h-full transition-all duration-500 ${isActive ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`}
                                                     style={{ width: `${c.sent / c.total * 100 || 0}%` }} />
 
                                             </div>
@@ -468,10 +528,10 @@ export default function CampaignsPage() {
                                             <button
                                                 onClick={() => handleToggleCampaign(c)}
                                                 disabled={c.status === 'COMPLETED'}
-                                                title={c.status === 'RUNNING' ? "Pause Campaign" : "Start Campaign"}
-                                                className={`p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${c.status === 'RUNNING' ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
+                                                title={isActive ? "Pause Campaign" : "Start Campaign"}
+                                                className={`p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${isActive ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
 
-                                                {c.status === 'RUNNING' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                             </button>
                                             <button
                                                 onClick={() => handleCloneCampaign(c)}
@@ -497,7 +557,8 @@ export default function CampaignsPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            )}
+                                );
+                            })}
                         </tbody>
                     </table>
 
@@ -509,242 +570,37 @@ export default function CampaignsPage() {
                             </div>
                             <h3 className="text-lg font-medium text-foreground mb-1">No Campaigns Yet</h3>
                             <p className="text-xs text-muted-foreground max-w-sm">
-                                You haven't created any broadcast campaigns. Create your first campaign to start reaching your audience.
+                                You haven&apos;t created any broadcast campaigns. Create your first campaign to start reaching your audience.
                             </p>
                         </div>
                     }
                 </div>
 
-                {/* Edit / Create Campaign Sheet */}
-                <Sheet open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                    <SheetContent side="right" className="min-w-[620px] bg-transparent border-0 p-2 overflow-hidden">
+                <NewCampaignSheet
+                    open={editDialogOpen}
+                    onOpenChange={setEditDialogOpen}
+                    campaign={activeCampaign}
+                    editForm={editForm}
+                    setEditForm={setEditForm}
+                    templates={templates}
+                    onSave={saveEdit}
+                    isSaving={isSaving}
+                    onOpenContactSelector={() => setContactSelectorOpen(true)}
+                />
 
-                        <div className="bg-card border rounded-md h-full p-2 overflow-y-auto">
-                            <SheetHeader>
-                                <SheetTitle>{activeCampaign ? 'Edit Campaign' : 'New Campaign'}</SheetTitle>
-                            </SheetHeader>
-                            <ScrollArea className='h-[80vh]'>
-                                <div className="space-y-4 py-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-muted-foreground">Campaign Name</label>
-                                            <Input
-                                                placeholder="e.g., Summer Sale Blast"
-                                                value={editForm.name}
-                                                onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                                                className="bg-background" />
-
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-muted-foreground">Select Template</label>
-                                            <Select
-                                                value={editForm.templateId}
-                                                onValueChange={(val) => {
-                                                    const selected = templates.find((t) => t.id === val);
-                                                    if (selected) {
-                                                        setEditForm((prev) => ({
-                                                            ...prev,
-                                                            templateId: selected.id,
-                                                            messageType: (() => { if (selected.type === 'INTERACTIVE') return 'interactive-button'; if (selected.type === 'LIST') return 'interactive-group'; return selected.type.toLowerCase(); })(),
-                                                            template: selected.body,
-                                                            intBody: selected.body,
-                                                            intFooter: selected.footer || '',
-                                                            intButton: selected.type === 'LIST' ? selected.metadata?.listButton || 'Select' : selected.buttons?.[0] || 'Options',
-                                                            intSections: selected.type === 'LIST' ?
-                                                                JSON.stringify(selected.metadata?.listSections || [], null, 2) :
-                                                                JSON.stringify([{ title: 'Options', rows: (selected.buttons || []).map((b) => ({ title: b, id: b })) }], null, 2),
-                                                            mediaUrl: selected.metadata?.mediaUrl || ''
-                                                        }));
-                                                    }
-                                                }}>
-
-                                                <SelectTrigger className="bg-background">
-                                                    <SelectValue placeholder="Custom Message" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="custom">Custom (No Template)</SelectItem>
-                                                    {templates.map((t) =>
-                                                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-sm font-medium text-muted-foreground">Mobile Numbers</label>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-6 text-[10px] px-2"
-                                                    onClick={() => setContactSelectorOpen(true)}>
-
-                                                    <Users className="w-3 h-3 mr-1" />
-                                                    Select from Contacts
-                                                </Button>
-                                                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">One per line. Format: Phone, Var1, Var2</span>
-                                            </div>
-                                        </div>
-                                        <Textarea
-                                            value={editForm.phone}
-                                            rows={4}
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
-                                            placeholder="+1234567890, John, New York&#10;+19876543210, Sarah, London"
-                                            className="bg-background min-h-[100px] font-mono text-xs" />
-
-                                        <p className="text-[10px] text-muted-foreground italic">Use {"{{v1}}"}, {"{{v2}}"} in template to inject variables.</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-medium text-muted-foreground">Message Type</label>
-                                        <Select
-                                            value={editForm.messageType}
-                                            onValueChange={(val) => setEditForm((prev) => ({ ...prev, messageType: val }))}>
-
-                                            <SelectTrigger className="w-full bg-background">
-                                                <SelectValue placeholder="Select type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="text">Text</SelectItem>
-                                                <SelectItem value="image">Image</SelectItem>
-                                                <SelectItem value="document">Document</SelectItem>
-                                                <SelectItem value="interactive">Interactive</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {(editForm.messageType === 'image' || editForm.messageType === 'document') &&
-                                        <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                                            <label className="text-sm font-medium text-muted-foreground">{editForm.messageType === 'image' ? 'Image URL' : 'Document URL'}</label>
-                                            <Input
-                                                value={editForm.mediaUrl}
-                                                onChange={(e) => setEditForm((prev) => ({ ...prev, mediaUrl: e.target.value }))}
-                                                placeholder="https://example.com/file.jpg"
-                                                className="bg-background" />
-
-                                        </div>
-                                    }
-
-                                    {editForm.messageType === 'interactive' ?
-                                        <div className="space-y-4 animate-in fade-in duration-300 border border-border rounded-md p-4">
-                                            <p className="text-xs font-semibold text-muted-foreground tracking-wider">Interactive Message Builder</p>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-medium text-muted-foreground">Main Body Text</label>
-                                                <Textarea
-                                                    value={editForm.intBody}
-                                                    onChange={(e) => setEditForm((prev) => ({ ...prev, intBody: e.target.value }))}
-                                                    placeholder="Hello {{v1}}! Welcome to our service..."
-                                                    className="bg-background min-h-[100px] resize-none text-sm leading-relaxed" />
-
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium text-muted-foreground">Footer Text (Optional)</label>
-                                                    <Input
-                                                        value={editForm.intFooter}
-                                                        onChange={(e) => setEditForm((prev) => ({ ...prev, intFooter: e.target.value }))}
-                                                        placeholder="Powered by your brand"
-                                                        className="bg-background" />
-
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium text-muted-foreground">Menu Button Text</label>
-                                                    <Input
-                                                        value={editForm.intButton}
-                                                        onChange={(e) => setEditForm((prev) => ({ ...prev, intButton: e.target.value }))}
-                                                        placeholder="Choose Option"
-                                                        className="bg-background" />
-
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium text-muted-foreground">List Sections (JSON Array)</label>
-                                                <Textarea
-                                                    value={editForm.intSections}
-                                                    rows={4}
-                                                    onChange={(e) => setEditForm((prev) => ({ ...prev, intSections: e.target.value }))}
-                                                    className="bg-background min-h-[120px] font-mono text-xs resize-none"
-                                                    placeholder='[{"title":"Options","rows": [{"title":"Option 1","id":"opt1"}]}]' />
-
-                                            </div>
-                                        </div> :
-
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-muted-foreground">Message Template</label>
-                                            <Textarea
-                                                value={editForm.template}
-                                                rows={10}
-                                                onChange={(e) => setEditForm((prev) => ({ ...prev, template: e.target.value }))}
-                                                placeholder="Hello {{v1}}, your message here..."
-                                                className="bg-background min-h-[100px]" />
-
-                                        </div>
-                                    }
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-muted-foreground">Status</label>
-                                            <Select
-                                                value={editForm.status}
-                                                onValueChange={(val) => setEditForm((prev) => ({ ...prev, status: val }))}>
-
-                                                <SelectTrigger className="w-full bg-background">
-                                                    <SelectValue placeholder="Select status" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="RUNNING">RUNNING</SelectItem>
-                                                    <SelectItem value="DRAFT">DRAFT</SelectItem>
-                                                    <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-                                                    <SelectItem value="SCHEDULED">SCHEDULED</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-muted-foreground">Schedule Time (Optional)</label>
-                                            <Input
-                                                type="datetime-local"
-                                                value={editForm.scheduledAt}
-                                                onChange={(e) => setEditForm((prev) => ({ ...prev, scheduledAt: e.target.value }))}
-                                                className="bg-background" />
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </ScrollArea>
-                            <SheetFooter>
-                                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={saveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                                    Save
-                                </Button>
-                            </SheetFooter>
-                        </div>
-                    </SheetContent>
-                </Sheet>
-
-                {/* Delete Confirmation Alert Dialog */}
-                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Are you sure you want to delete <span className="font-semibold text-foreground">{activeCampaign?.name}</span>? This action cannot be undone.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/80 min-w-[80px]">
-                                {isDeleting ? <Trash2 className="w-4 h-4 animate-spin" /> : "Delete"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <DeleteCampaignDialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                    campaign={activeCampaign}
+                    isDeleting={isDeleting}
+                    onConfirm={confirmDelete}
+                />
             </main>
 
             {/* Contact Selector Dialog */}
             <Dialog open={contactSelectorOpen} onOpenChange={setContactSelectorOpen}>
                 <DialogContent className="max-w-xl bg-card border border-border/50 rounded-md p-0 overflow-hidden shadow-2xl">
-                    <DialogHeader className="p-6 border-b border-border bg-muted/10">
+                    <DialogHeader className="p-4 border-b border-border bg-muted/10">
                         <DialogTitle className="flex items-center gap-2">
                             <Users className="w-5 h-5 text-primary" />
                             Select Campaign Recipients
@@ -755,7 +611,7 @@ export default function CampaignsPage() {
                         <div className="px-6 pt-4">
                             <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="contacts">Individual Contacts</TabsTrigger>
-                                <TabsTrigger value="groups">Contact Groups</TabsTrigger>
+                                <TabsTrigger value="groups">Contact Group/Category/Tags</TabsTrigger>
                             </TabsList>
                         </div>
 
@@ -815,17 +671,13 @@ export default function CampaignsPage() {
                         <TabsContent value="groups">
                             <div className="px-6 py-2">
                                 <ScrollArea className="h-[340px]">
-                                    <div className="space-y-2">
-                                        {groups.length === 0 ?
-                                            <div className="p-12 text-center text-muted-foreground">
-                                                <Users className="w-12 h-12 mx-auto opacity-20 mb-4" />
-                                                <p>No groups found. Create groups in the Contacts page.</p>
-                                            </div> :
-
-                                            groups.map((group) =>
+                                    <div className="space-y-4">
+                                        {groups.length > 0 && <>
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Users className="w-3 h-3" /> Contact Groups</p>
+                                            {groups.map((group) =>
                                                 <div
                                                     key={group.id}
-                                                    className={`flex items-center gap-3 p-4 rounded-md border transition-all cursor-pointer ${selectedGroupIds.includes(group.id) ?
+                                                    className={`flex items-center gap-3 p-3 rounded-md border transition-all cursor-pointer ${selectedGroupIds.includes(group.id) ?
                                                         'border-primary bg-primary/5' :
                                                         'border-border/50 hover:bg-muted/50'}`
                                                     }
@@ -845,12 +697,120 @@ export default function CampaignsPage() {
                                                                 {group._count?.contacts || 0} contacts
                                                             </Badge>
                                                         </div>
-                                                        {group.description &&
-                                                            <p className="text-xs text-muted-foreground truncate">{group.description}</p>
-                                                        }
                                                     </div>
                                                 </div>
-                                            )
+                                            )}
+                                        </>}
+
+                                        {categories.length > 0 && <>
+                                            <div className="border-t border-border/40 pt-3" />
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><FolderOpen className="w-3 h-3" /> Categories</p>
+                                            {categories.map((cat) =>
+                                                <div
+                                                    key={cat.id}
+                                                    className={`flex items-center gap-3 p-3 rounded-md border transition-all cursor-pointer ${selectedCategoryIds.includes(cat.id) ?
+                                                        'border-primary bg-primary/5' :
+                                                        'border-border/50 hover:bg-muted/50'}`
+                                                    }
+                                                    onClick={() => {
+                                                        setSelectedCategoryIds((prev) =>
+                                                            prev.includes(cat.id) ?
+                                                                prev.filter((id) => id !== cat.id) :
+                                                                [...prev, cat.id]
+                                                        );
+                                                    }}>
+
+                                                    <Checkbox checked={selectedCategoryIds.includes(cat.id)} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold text-xs truncate">{cat.name}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>}
+
+                                        {tags.length > 0 && <>
+                                            <div className="border-t border-border/40 pt-3" />
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Tags className="w-3 h-3" /> Tags</p>
+                                            {tags.map((tag) =>
+                                                <div
+                                                    key={tag.id}
+                                                    className={`flex items-center gap-3 p-3 rounded-md border transition-all cursor-pointer ${selectedTagIds.includes(tag.id) ?
+                                                        'border-primary bg-primary/5' :
+                                                        'border-border/50 hover:bg-muted/50'}`
+                                                    }
+                                                    onClick={() => {
+                                                        setSelectedTagIds((prev) =>
+                                                            prev.includes(tag.id) ?
+                                                                prev.filter((id) => id !== tag.id) :
+                                                                [...prev, tag.id]
+                                                        );
+                                                    }}>
+
+                                                    <Checkbox checked={selectedTagIds.includes(tag.id)} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold text-xs truncate">{tag.name}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>}
+
+                                        {contactCategoryNames.length > 0 && <>
+                                            <div className="border-t border-border/40 pt-3" />
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><FolderOpen className="w-3 h-3" /> Contact Categories (from contacts)</p>
+                                            {contactCategoryNames.map((catName) =>
+                                                <div
+                                                    key={catName}
+                                                    className={`flex items-center gap-3 p-3 rounded-md border transition-all cursor-pointer ${selectedContactCatNames.includes(catName) ?
+                                                        'border-primary bg-primary/5' :
+                                                        'border-border/50 hover:bg-muted/50'}`
+                                                    }
+                                                    onClick={() => {
+                                                        setSelectedContactCatNames((prev) =>
+                                                            prev.includes(catName) ?
+                                                                prev.filter((n) => n !== catName) :
+                                                                [...prev, catName]
+                                                        );
+                                                    }}>
+
+                                                    <Checkbox checked={selectedContactCatNames.includes(catName)} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold text-xs truncate">{catName}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>}
+
+                                        {contactTagNames.length > 0 && <>
+                                            <div className="border-t border-border/40 pt-3" />
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Tags className="w-3 h-3" /> Contact Tags (from contacts)</p>
+                                            {contactTagNames.map((tagName) =>
+                                                <div
+                                                    key={tagName}
+                                                    className={`flex items-center gap-3 p-3 rounded-md border transition-all cursor-pointer ${selectedContactTagNames.includes(tagName) ?
+                                                        'border-primary bg-primary/5' :
+                                                        'border-border/50 hover:bg-muted/50'}`
+                                                    }
+                                                    onClick={() => {
+                                                        setSelectedContactTagNames((prev) =>
+                                                            prev.includes(tagName) ?
+                                                                prev.filter((n) => n !== tagName) :
+                                                                [...prev, tagName]
+                                                        );
+                                                    }}>
+
+                                                    <Checkbox checked={selectedContactTagNames.includes(tagName)} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold text-xs truncate">{tagName}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>}
+
+                                        {groups.length === 0 && categories.length === 0 && tags.length === 0 && contactCategoryNames.length === 0 && contactTagNames.length === 0 &&
+                                            <div className="p-12 text-center text-muted-foreground">
+                                                <Users className="w-12 h-12 mx-auto opacity-20 mb-4" />
+                                                <p>No groups, categories, or tags found.</p>
+                                            </div>
                                         }
                                     </div>
                                 </ScrollArea>
@@ -863,6 +823,10 @@ export default function CampaignsPage() {
                             setContactSelectorOpen(false);
                             setSelectedContactIds([]);
                             setSelectedGroupIds([]);
+                            setSelectedCategoryIds([]);
+                            setSelectedTagIds([]);
+                            setSelectedContactCatNames([]);
+                            setSelectedContactTagNames([]);
                         }}>
                             Cancel
                         </Button>
@@ -877,14 +841,14 @@ export default function CampaignsPage() {
                                     }));
                                     setSelectedContactIds([]);
                                 }
-                                // If groups, we just keep selectedGroupIds in state and use them on Save
+                                // If groups/categories/tags, we just keep selected IDs in state and use them on Save
                                 setContactSelectorOpen(false);
                             }}
                             className="bg-primary hover:bg-primary/90 min-w-[120px]">
 
                             {recipientType === 'contacts' ?
                                 `Add ${selectedContactIds.length} Contacts` :
-                                `Target ${selectedGroupIds.length} Groups`
+                                `Target ${selectedGroupIds.length} Groups, ${selectedCategoryIds.length + selectedContactCatNames.length} Categories, ${selectedTagIds.length + selectedContactTagNames.length} Tags`
                             }
                         </Button>
                     </DialogFooter>

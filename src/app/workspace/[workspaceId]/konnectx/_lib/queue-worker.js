@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { symmetricDecrypt } from '@/lib/encryption';
 import * as cloudApi from './whatsapp-cloud-api';
 
 /**
@@ -76,6 +77,100 @@ export class WhatsAppQueueWorker {
         }
     }
 
+    async resolveCredential(workspaceId) {
+        const cred = await db.credentials.findFirst({
+            where: { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        });
+        if (!cred?.credentials) return null;
+        const stored = cred.credentials;
+        let parsed;
+        if (typeof stored === 'string' && stored.includes(':')) {
+            parsed = JSON.parse(symmetricDecrypt(stored));
+        } else if (typeof stored === 'string') {
+            parsed = JSON.parse(stored);
+        } else {
+            parsed = stored;
+        }
+        if (parsed?.enc) {
+            parsed = JSON.parse(symmetricDecrypt(parsed.enc));
+        }
+        return parsed;
+    }
+
+    async buildTemplateComponents(template, messageTemplate, templateId, workspaceId) {
+        const components = [];
+        let resolved = template;
+
+        if (!resolved?.metadata && templateId) {
+            const fresh = await db.messageTemplate.findUnique({ where: { id: templateId } });
+            if (fresh) resolved = fresh;
+        }
+
+        if (!resolved?.metadata && templateId) {
+            const fresh = await db.messageTemplate.findFirst({
+                where: { OR: [{ id: templateId }, { templateName: templateId }] }
+            });
+            if (fresh) resolved = fresh;
+        }
+
+        // Third fallback: try fetching by actual template name stored in campaign
+        if (!resolved?.metadata && messageTemplate?.name) {
+            const fresh = await db.messageTemplate.findFirst({
+                where: { templateName: messageTemplate.name, workspaceId }
+            });
+            if (fresh) resolved = fresh;
+        }
+
+        const tType = (resolved?.type || '').toUpperCase();
+        const mediaUrl = resolved?.metadata?.mediaUrl || messageTemplate?.image?.url || messageTemplate?.video?.url || '';
+
+        console.log(`[WA_QUEUE] buildTemplateComponents: type=${tType}, hasMetadata=${!!resolved?.metadata}, mediaUrl=${mediaUrl?.slice(0, 50)}, templateId=${templateId}`);
+
+        if (tType === 'IMAGE' || tType === 'VIDEO') {
+            if (mediaUrl) {
+                const mediaType = tType === 'IMAGE' ? 'image' : 'video';
+                components.push({
+                    type: 'header',
+                    parameters: [{ type: mediaType, [mediaType]: { link: mediaUrl } }]
+                });
+            }
+            return components;
+        }
+
+        if (tType === 'CAROUSEL') {
+            let meta = resolved?.metadata;
+            if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch { meta = null; } }
+            let cards = meta?.cards || [];
+
+            if (cards.length === 0 && mediaUrl) {
+                cards = [{ mediaUrl, body: resolved?.body || messageTemplate?.text || '' }];
+            }
+
+            if (cards.length > 0) {
+                const carouselCards = cards.map((card, idx) => {
+                    const cardComponents = [];
+                    if (card.mediaUrl) {
+                        cardComponents.push({
+                            type: 'header',
+                            parameters: [{ type: 'image', image: { link: card.mediaUrl } }]
+                        });
+                    }
+                    if (card.body) {
+                        cardComponents.push({
+                            type: 'body',
+                            parameters: [{ type: 'text', text: card.body }]
+                        });
+                    }
+                    return { card_index: idx, components: cardComponents };
+                });
+                components.push({ type: 'carousel', cards: carouselCards });
+                return components;
+            }
+        }
+
+        return components;
+    }
+
     async handleCampaignJob(job) {
         const { campaignId, userId } = job.payload;
 
@@ -115,15 +210,44 @@ export class WhatsAppQueueWorker {
                     const phone = recipient.phone.replace(/\D/g, '');
                     
                     // Get Credential (assuming one per workspace for simplicity here, or store in job)
-                    const credential = await db.whatsAppCredential.findFirst({
-                        where: { workspaceId: job.workspaceId || campaign.workspaceId, isActive: true }
-                    });
+                    const credential = await this.resolveCredential(job.workspaceId || campaign.workspaceId);
 
                     if (!credential) throw new Error("No active Cloud API credential");
 
                     let result;
                     if (campaign.templateId) {
-                        result = await cloudApi.sendTemplateMessage(credential, phone, campaign.template.templateName);
+                        const components = await this.buildTemplateComponents(campaign.template, campaign.messageTemplate, campaign.templateId, job.workspaceId);
+
+                        // Upload media links to IDs (same as send-message.js)
+                        const processParameters = async (parameters) => {
+                            for (const param of parameters) {
+                                if (['image', 'video', 'document'].includes(param.type) && param[param.type]?.link) {
+                                    const mediaUrl = param[param.type].link;
+                                    const mediaId = await cloudApi.uploadMetaMedia(credential, mediaUrl);
+                                    if (mediaId) {
+                                        delete param[param.type].link;
+                                        param[param.type].id = mediaId;
+                                    }
+                                }
+                            }
+                        };
+                        for (const comp of components) {
+                            if (comp.type === 'header' && comp.parameters) {
+                                await processParameters(comp.parameters);
+                            } else if (comp.type === 'carousel' && comp.cards) {
+                                for (const card of comp.cards) {
+                                    if (card.components) {
+                                        for (const cardComp of card.components) {
+                                            if (cardComp.type === 'header' && cardComp.parameters) {
+                                                await processParameters(cardComp.parameters);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        result = await cloudApi.sendTemplateMessage(credential, phone, campaign.template.templateName, 'en_US', components);
                     } else {
                         result = await cloudApi.sendTextMessage(credential, phone, messageText);
                     }
@@ -179,9 +303,7 @@ export class WhatsAppQueueWorker {
     async handleSingleMessage(job) {
         const { phone, payload, userId, workspaceId } = job.payload;
         try {
-            const credential = await db.whatsAppCredential.findFirst({
-                where: { workspaceId, isActive: true }
-            });
+            const credential = await this.resolveCredential(workspaceId);
 
             if (!credential) throw new Error("No active Cloud API credential");
 

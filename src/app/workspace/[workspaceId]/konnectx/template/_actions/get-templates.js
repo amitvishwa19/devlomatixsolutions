@@ -27,7 +27,10 @@ const handler = async (data) => {
 
         const templates = await db.messageTemplate.findMany({
             where: {
-                sharedWith: { some: { sharedWithUserId: currentUserId } }
+                OR: [
+                    { userId: currentUserId },
+                    { sharedWith: { some: { sharedWithUserId: currentUserId } } }
+                ]
             },
             include: {
                 sharedWith: {

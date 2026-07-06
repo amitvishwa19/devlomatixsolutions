@@ -231,7 +231,7 @@ export default function TemplatePage() {
 
     const { execute: executeGetContacts } = useAction(getContactsAction, {
         onSuccess: (data) => {
-            setAllContacts(Array.isArray(data.contacts) ? data.contacts : []);
+            setAllContacts(Array.isArray(data) ? data : []);
             setIsFetchingContacts(false);
         },
         onError: () => setIsFetchingContacts(false)

@@ -65,7 +65,7 @@ const handler = async (data) => {
 
         if (id) {
             const existing = await db.messageTemplate.findUnique({ where: { id } });
-            if (!existing || existing.workspaceId !== workspaceId) {
+            if (!existing || existing.userId !== userId) {
                 return { error: "Template not found or unauthorized", data: null };
             }
             const updated = await db.messageTemplate.update({
@@ -88,7 +88,7 @@ const handler = async (data) => {
             return { data: { template: updated } };
         } else {
             const existingName = await db.messageTemplate.findFirst({ 
-                where: { workspaceId, name, language, phoneNumberId: phoneNumberId || null } 
+                where: { name, language, phoneNumberId: phoneNumberId || null } 
             });
             if (existingName) {
                 return { error: "A template with this name and language already exists for this phone number.", data: null };
@@ -96,7 +96,6 @@ const handler = async (data) => {
             const template = await db.messageTemplate.create({
                 data: {
                     userId,
-                    workspaceId,
                     name,
                     category: category || "UTILITY",
                     language: language || "en_US",

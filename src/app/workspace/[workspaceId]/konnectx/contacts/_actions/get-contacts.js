@@ -24,13 +24,15 @@ const handler = async (data) => {
             },
             include: {
                 groups: true,
-                sharedWith: {
-                    include: {
-                        sharedWith: {
-                            select: { id: true, displayName: true, email: true }
+                ...(userId ? {
+                    sharedWith: {
+                        include: {
+                            sharedWith: {
+                                select: { id: true, displayName: true, email: true }
+                            }
                         }
                     }
-                }
+                } : {})
             },
             orderBy: { createdAt: 'desc' }
         });

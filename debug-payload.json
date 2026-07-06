@@ -1,16 +1,40 @@
 {
-  "templateName": "hello_world",
-  "components": [],
+  "templateName": "devlomatix_intro",
+  "components": [
+    {
+      "type": "header",
+      "parameters": [
+        {
+          "type": "image",
+          "image": {
+            "id": "1800169174284033"
+          }
+        }
+      ]
+    }
+  ],
   "fullRequestData": {
     "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
-    "to": "919303101308@s.whatsapp.net",
+    "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "hello_world",
+      "name": "devlomatix_intro",
       "language": {
-        "code": "en_US"
+        "code": "en"
       },
-      "components": []
+      "components": [
+        {
+          "type": "header",
+          "parameters": [
+            {
+              "type": "image",
+              "image": {
+                "id": "1800169174284033"
+              }
+            }
+          ]
+        }
+      ]
     }
   }
 }
