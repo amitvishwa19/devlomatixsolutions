@@ -9,7 +9,9 @@ import {
     Music,
     Check,
     Smartphone,
-    ExternalLink
+    ExternalLink,
+    Phone,
+    Workflow
 } from 'lucide-react';
 import {
     Dialog,
@@ -182,17 +184,19 @@ export default function ChatTemplatePreview({ template, isOpen, onClose }) {
                                     {buttons.length > 0 && buttons[0] !== '' && (
                                         <div className="mt-1 border-t border-black/5 divide-y divide-black/5 bg-white">
                                             {buttons.filter(b => b).map((btn, idx) => {
-                                                const btnText = typeof btn === 'object' ? (btn.text || btn.url || "Button") : btn;
-                                                const isUrl = typeof btn === 'object' && btn.type === 'URL';
+                                                const b = typeof btn === 'object' ? btn : { type: 'QUICK_REPLY', text: btn };
+                                                const btnText = b.text || "Button";
 
                                                 return (
                                                     <div key={idx} className="py-3 px-4 text-center text-[14px] text-[#00a884] hover:bg-black/[0.02] active:bg-black/[0.05] transition-colors cursor-pointer flex items-center justify-center gap-2">
-                                                        {!isUrl && (
+                                                        {(!b.type || b.type === 'QUICK_REPLY') && (
                                                             <svg viewBox="0 0 24 24" width="16" height="16" className="opacity-70 rotate-180">
                                                                 <path fill="currentColor" d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-12.1z"></path>
                                                             </svg>
                                                         )}
-                                                        {isUrl && <ExternalLink className="w-3.5 h-3.5 opacity-70" />}
+                                                        {b.type === 'URL' && <ExternalLink className="w-3.5 h-3.5 opacity-70" />}
+                                                        {b.type === 'PHONE_NUMBER' && <Phone className="w-3.5 h-3.5 opacity-70" />}
+                                                        {b.type === 'FLOW' && <Workflow className="w-3.5 h-3.5 opacity-70" />}
                                                         <span className="font-semibold tracking-tight leading-none">{btnText}</span>
                                                     </div>
                                                 );

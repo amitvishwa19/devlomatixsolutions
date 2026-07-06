@@ -1,5 +1,5 @@
 {
-  "templateName": "devlomatix_intro",
+  "templateName": "devlomatix_business_online",
   "components": [
     {
       "type": "header",
@@ -7,7 +7,7 @@
         {
           "type": "image",
           "image": {
-            "id": "1800169174284033"
+            "id": "2266861547401984"
           }
         }
       ]
@@ -18,7 +18,7 @@
     "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "devlomatix_intro",
+      "name": "devlomatix_business_online",
       "language": {
         "code": "en"
       },
@@ -29,7 +29,7 @@
             {
               "type": "image",
               "image": {
-                "id": "1800169174284033"
+                "id": "2266861547401984"
               }
             }
           ]

@@ -17,7 +17,8 @@ import {
     MoreVertical,
     Phone,
     Plus,
-    Video as VideoIcon
+    Video as VideoIcon,
+    Workflow
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -196,11 +197,14 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                         {buttons.length > 0 && buttons[0] !== '' && (
                             <div className="border-t border-zinc-100 flex flex-col divide-y divide-zinc-100">
                                 {buttons.filter(Boolean).map((btn, idx) => {
-                                    const btnText = typeof btn === 'object' ? (btn.text || "Button") : btn;
-                                    const isUrl = typeof btn === 'object' && btn.type === 'URL';
+                                    const b = typeof btn === 'object' ? btn : { type: 'QUICK_REPLY', text: btn };
+                                    const btnText = b.text || "Button";
                                     return (
                                         <div key={idx} className="p-2.5 flex items-center justify-center gap-2 hover:bg-zinc-50 transition-colors cursor-pointer active:scale-95 duration-75">
-                                            {isUrl ? <ExternalLink size={12} className="text-[#007aff]" /> : <MessageSquare size={12} className="text-[#007aff]" />}
+                                            {b.type === 'URL' && <ExternalLink size={12} className="text-[#007aff]" />}
+                                            {b.type === 'PHONE_NUMBER' && <Phone size={12} className="text-[#007aff]" />}
+                                            {b.type === 'FLOW' && <Workflow size={12} className="text-[#007aff]" />}
+                                            {(!b.type || b.type === 'QUICK_REPLY') && <MessageSquare size={12} className="text-[#007aff]" />}
                                             <span className="text-[13px] font-semibold text-[#007aff]">{btnText}</span>
                                         </div>
                                     );

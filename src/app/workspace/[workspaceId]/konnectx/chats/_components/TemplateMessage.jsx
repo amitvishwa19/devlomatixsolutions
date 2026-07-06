@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Phone, MessageSquare, Image as ImageIcon, Film } from 'lucide-react';
+import { ExternalLink, Phone, MessageSquare, Workflow, Image as ImageIcon, Film } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const TemplateMessage = ({ msg, templateDefinition }) => {
@@ -162,6 +162,7 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
                             {btn.type === 'URL' && <ExternalLink className="w-3.5 h-3.5" />}
                             {btn.type === 'PHONE_NUMBER' && <Phone className="w-3.5 h-3.5" />}
                             {btn.type === 'QUICK_REPLY' && <MessageSquare className="w-3.5 h-3.5" />}
+                            {btn.type === 'FLOW' && <Workflow className="w-3.5 h-3.5" />}
                             {btn.text}
                         </button>
                     ))}

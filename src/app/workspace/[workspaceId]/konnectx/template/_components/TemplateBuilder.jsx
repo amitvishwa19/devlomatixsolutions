@@ -11,7 +11,11 @@ import {
     Video,
     List,
     MapPin,
-    Loader2
+    Loader2,
+    Globe,
+    Phone,
+    MessageSquare,
+    Workflow
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAction } from '@/hooks/use-action';
@@ -74,20 +78,30 @@ export default function TemplateBuilder({
         onError: (err) => toast.error(err || "AI Assistance failed")
     });
 
-    const handleButtonChange = (index, value) => {
+    const buttonTypes = [
+        { value: 'QUICK_REPLY', label: 'Custom', icon: MessageSquare },
+        { value: 'URL', label: 'Visit Website', icon: Globe },
+        { value: 'PHONE_NUMBER', label: 'Call Phone Number', icon: Phone },
+        { value: 'FLOW', label: 'Complete Flow', icon: Workflow },
+    ];
+
+    const handleButtonChange = (index, field, value) => {
         const newButtons = [...formData.buttons];
-        newButtons[index] = value;
+        const btn = typeof newButtons[index] === 'object' ? { ...newButtons[index] } : { type: 'QUICK_REPLY', text: newButtons[index] || '' };
+        btn[field] = value;
+        newButtons[index] = btn;
         setFormData({ ...formData, buttons: newButtons });
     };
 
     const addButton = () => {
         if (formData.buttons.length < 3) {
-            setFormData({ ...formData, buttons: [...formData.buttons, ''] });
+            setFormData({ ...formData, buttons: [...formData.buttons, { type: 'QUICK_REPLY', text: '' }] });
         }
     };
 
     const removeButton = (index) => {
         const newButtons = formData.buttons.filter((_, i) => i !== index);
+        if (newButtons.length === 0) newButtons.push({ type: 'QUICK_REPLY', text: '' });
         setFormData({ ...formData, buttons: newButtons });
     };
 
@@ -618,7 +632,7 @@ export default function TemplateBuilder({
                                 <div className="space-y-3 pt-2">
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                            Quick Reply Buttons
+                                            Buttons
                                             <span className="text-[10px] text-muted-foreground uppercase font-medium">Max 3</span>
                                         </label>
                                         {formData.buttons?.length < 3 && (
@@ -634,26 +648,82 @@ export default function TemplateBuilder({
                                         )}
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {(formData.buttons || []).map((btn, idx) => {
-                                            const label = typeof btn === 'object' ? (btn.text || '') : (btn || '');
+                                            const b = typeof btn === 'object' ? btn : { type: 'QUICK_REPLY', text: btn || '' };
+                                            const TypeIcon = buttonTypes.find(t => t.value === b.type)?.icon || MessageSquare;
                                             return (
-                                                <div key={idx} className="flex gap-2">
-                                                    <Input
-                                                        placeholder={`Button ${idx + 1} Label (e.g. Yes, please)`}
-                                                        value={label}
-                                                        onChange={(e) => handleButtonChange(idx, e.target.value)}
-                                                        className="h-9 bg-background border-border text-sm"
-                                                        maxLength={20}
-                                                    />
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-9 w-9 text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                                                        onClick={() => removeButton(idx)}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
+                                                <div key={idx} className="p-3 border rounded-lg bg-background space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <TypeIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                                                        <Select
+                                                            value={b.type || 'QUICK_REPLY'}
+                                                            onValueChange={(v) => handleButtonChange(idx, 'type', v)}
+                                                        >
+                                                            <SelectTrigger className="h-7 text-[11px] w-[160px] bg-muted/30 border-border">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {buttonTypes.map(t => (
+                                                                    <SelectItem key={t.value} value={t.value}>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <t.icon className="w-3.5 h-3.5" />
+                                                                            {t.label}
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 ml-auto text-muted-foreground hover:text-destructive shrink-0"
+                                                            onClick={() => removeButton(idx)}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        <Input
+                                                            placeholder="Button Label (max 20 chars)"
+                                                            value={b.text || ''}
+                                                            onChange={(e) => handleButtonChange(idx, 'text', e.target.value)}
+                                                            className="h-8 text-xs"
+                                                            maxLength={20}
+                                                        />
+                                                        {b.type === 'URL' && (
+                                                            <Input
+                                                                placeholder="Website URL (https://...)"
+                                                                value={b.url || ''}
+                                                                onChange={(e) => handleButtonChange(idx, 'url', e.target.value)}
+                                                                className="h-8 text-xs font-mono"
+                                                            />
+                                                        )}
+                                                        {b.type === 'PHONE_NUMBER' && (
+                                                            <Input
+                                                                placeholder="Phone Number (+1234567890)"
+                                                                value={b.phone_number || ''}
+                                                                onChange={(e) => handleButtonChange(idx, 'phone_number', e.target.value)}
+                                                                className="h-8 text-xs font-mono"
+                                                            />
+                                                        )}
+                                                        {b.type === 'FLOW' && (
+                                                            <>
+                                                                <Input
+                                                                    placeholder="Flow ID"
+                                                                    value={b.flow_id || ''}
+                                                                    onChange={(e) => handleButtonChange(idx, 'flow_id', e.target.value)}
+                                                                    className="h-8 text-xs font-mono"
+                                                                />
+                                                                <Input
+                                                                    placeholder="Flow CTA (e.g. Book Now)"
+                                                                    value={b.flow_cta || ''}
+                                                                    onChange={(e) => handleButtonChange(idx, 'flow_cta', e.target.value)}
+                                                                    className="h-8 text-xs"
+                                                                />
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             );
                                         })}

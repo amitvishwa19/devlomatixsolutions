@@ -314,15 +314,19 @@ const handler = async (data) => {
                 .map(btn => {
                     const b = typeof btn === 'string' ? { type: 'QUICK_REPLY', text: btn } : btn;
                     const type = (b.type || 'QUICK_REPLY').toUpperCase();
-                    const text = (b.text || b.url || '').trim();
-                    return {
-                        type: type,
-                        text: text,
-                        url: type === 'URL' ? b.url : undefined,
-                        phone_number: type === 'PHONE_NUMBER' ? b.phone_number : undefined
-                    };
+                    const text = (b.text || '').trim();
+                    const btnObj = { type, text };
+                    if (type === 'URL' && b.url) btnObj.url = b.url;
+                    if (type === 'PHONE_NUMBER' && b.phone_number) btnObj.phone_number = b.phone_number;
+                    if (type === 'FLOW') {
+                        btnObj.flow_id = b.flow_id || '';
+                        btnObj.flow_cta = b.flow_cta || '';
+                        btnObj.flow_action = b.flow_action || 'data_exchange';
+                        btnObj.flow_action_payload = b.flow_action_payload || {};
+                    }
+                    return text.length > 0 ? btnObj : null;
                 })
-                .filter(btn => btn.text.length > 0);
+                .filter(Boolean);
 
             if (validButtons.length > 0) {
                 components.push({
