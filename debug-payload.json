@@ -1,40 +1,16 @@
 {
-  "templateName": "devlomatix_business_online",
-  "components": [
-    {
-      "type": "header",
-      "parameters": [
-        {
-          "type": "image",
-          "image": {
-            "id": "2266861547401984"
-          }
-        }
-      ]
-    }
-  ],
+  "templateName": "live_test_button_message",
+  "components": [],
   "fullRequestData": {
     "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
     "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "devlomatix_business_online",
+      "name": "live_test_button_message",
       "language": {
-        "code": "en"
+        "code": "en_US"
       },
-      "components": [
-        {
-          "type": "header",
-          "parameters": [
-            {
-              "type": "image",
-              "image": {
-                "id": "2266861547401984"
-              }
-            }
-          ]
-        }
-      ]
+      "components": []
     }
   }
 }
