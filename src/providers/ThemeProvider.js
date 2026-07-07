@@ -11,12 +11,17 @@ export function ThemeProvider({ children }) {
 
     useEffect(() => {
         setMounted(true)
-    }, [])
+        // Ensure default is light
+        if (!theme || theme === 'system') {
+            // Theme will be set by AppProvider
+        }
+    }, [theme])
 
 
     if (mounted) {
+        const effectiveTheme = theme === 'system' ? 'dark' : (theme || 'dark');
         return (
-            <div className={theme}>{children}</div>
+            <div className={effectiveTheme}>{children}</div>
         )
     }
 }

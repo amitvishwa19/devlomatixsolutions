@@ -1,5 +1,4 @@
 import "@/css/globals.css";
-import "@/css/custom.css";
 import { Inter, Unbounded, Geist, Geist_Mono, Outfit } from "next/font/google";
 import SessionWrapper from "@/providers/SessionWrapper";
 import { AppProvider } from "@/providers/AppProvider";
@@ -11,10 +10,10 @@ import { Toaster } from "sonner";
 import { AppThemeProvider } from "@/hooks/useTheme";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
-import { db } from "@/lib/db";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AccessProvider } from "@/providers/AccessProvider";
 import CookieConsent from "@/components/global/CookieConsent";
+import AnalyticsProvider from "@/providers/AnalyticsProvider";
 
 
 
@@ -40,9 +39,9 @@ export const metadata = {
     },
     description: 'Authentic gemstones, healing crystals, and spiritual guidance for your journey.',
     icon: {
-        icon: ['/fevicon.png?v=1'],
-        apple: ['/fevicon.png?v=4'],
-        shortcut: ['/fevicon.png?v=4']
+        icon: ['/fevicon.png?v=5'],
+        apple: ['/fevicon.png?v=5'],
+        shortcut: ['/fevicon.png?v=5']
     },
     manifest: '/site.webmanifest'
 }
@@ -52,34 +51,27 @@ export default async function RootLayout({ children }) {
 
 
     return (
-        <html lang="en">
-            <body className={`${outfit.className} `} suppressHydrationWarning={true}>
+        <html lang="en" className="dark">
+            <body className={`${outfit.className}`} suppressHydrationWarning={true}>
                 <SessionWrapper>
-                    {/* <SocketProvider> */}
                     <QueryProvider>
                         <AppProvider>
-                            <AppThemeProvider>
-                                <ThemeProvider>
-                                    <AuthProvider>
+                            <AuthProvider>
 
+                                <Providers>
+                                    <AnalyticsProvider>
 
-                                        <Providers>
-                                            {/* <OrgModalProvider /> */}
+                                        {children}
+                                        <CookieConsent />
 
-                                            {children}
-                                            <CookieConsent />
+                                    </AnalyticsProvider>
+                                </Providers>
 
-                                        </Providers>
-
-
-                                    </AuthProvider>
-                                </ThemeProvider>
-                            </AppThemeProvider>
+                            </AuthProvider>
                         </AppProvider>
                     </QueryProvider>
-                    {/* </SocketProvider> */}
                 </SessionWrapper>
-                <Toaster position="top-right" className="dark:bg-sky-600" />
+                <Toaster position="top-right" />
             </body>
         </html>
     );

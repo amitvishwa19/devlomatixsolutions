@@ -1,9 +1,7 @@
 'use server'
 import { cookies } from 'next/headers';
 import React from 'react'
-import { prisma } from '../../prisma/prisma';
-import { redirect } from 'next/navigation';
-import { db } from '@/lib/db';
+import { getSession } from '@/lib/auth'
 import { getSession } from '@/lib/auth'
 
 async function useAuth() {
@@ -22,25 +20,10 @@ async function useAuth() {
         //const cookieValue = JSON.parse(cookie?.value)
 
 
-        const user = await prisma.user.findUnique({
-            where: { id: user_id },
-            include: {
-                servers: true
-            }
-        })
-
-        const userRoles = await db.user.findUnique({
-            where: { id: user_id },
-            include: {
-                roles: {
-                    include: {
-                        permissions: true
-                    }
-                }
-            }
-        })
-
-        roles = userRoles.roles
+        // Placeholder for roles and organizations, should be fetched from external API if needed
+        const userRoles = { roles: [] };
+        roles = userRoles.roles;
+        const user = { id: user_id, email: session?.data?.email, name: session?.data?.name };
 
 
         const organizations = user.organizations

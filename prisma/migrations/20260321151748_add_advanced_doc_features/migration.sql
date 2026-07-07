@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE "WorkspaceDocument" ADD COLUMN     "isStarred" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "status" TEXT NOT NULL DEFAULT 'APPROVED',
-ADD COLUMN     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];

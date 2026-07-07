@@ -1,0 +1,12 @@
+export const chakraData = [
+  { id: "crown", name: "Sahasrara", english: "Crown", color: "#9b59ff", cy: 60, sanskrit: "ॐ", element: "Thought", crystals: ["Amethyst", "Clear Quartz", "Selenite"], affirmation: "I am connected to the divine.", desc: "Seat of pure consciousness, spiritual connection, and unity with all that is." },
+  { id: "thirdeye", name: "Ajna", english: "Third Eye", color: "#5865f2", cy: 105, sanskrit: "ॐ", element: "Light", crystals: ["Lapis Lazuli", "Sodalite", "Amethyst"], affirmation: "I trust my inner wisdom.", desc: "Centre of intuition, insight, imagination, and inner knowing." },
+  { id: "throat", name: "Vishuddha", english: "Throat", color: "#3aa6ff", cy: 155, sanskrit: "हं", element: "Ether", crystals: ["Aquamarine", "Lapis Lazuli", "Turquoise"], affirmation: "I speak my truth with clarity.", desc: "Voice of authentic expression, truth, and clear communication." },
+  { id: "heart", name: "Anahata", english: "Heart", color: "#3ecf8e", cy: 215, sanskrit: "यं", element: "Air", crystals: ["Rose Quartz", "Green Aventurine", "Malachite"], affirmation: "I give and receive love freely.", desc: "Bridge between body and spirit — love, compassion, and emotional balance." },
+  { id: "solar", name: "Manipura", english: "Solar Plexus", color: "#f5c542", cy: 275, sanskrit: "रं", element: "Fire", crystals: ["Citrine", "Tiger Eye", "Pyrite"], affirmation: "I am confident and powerful.", desc: "Furnace of personal power, willpower, confidence, and self-esteem." },
+  { id: "sacral", name: "Svadhisthana", english: "Sacral", color: "#ff8c2b", cy: 330, sanskrit: "वं", element: "Water", crystals: ["Carnelian", "Sunstone", "Orange Calcite"], affirmation: "I embrace pleasure and creativity.", desc: "Wellspring of creativity, sensuality, emotion, and joy." },
+  { id: "root", name: "Muladhara", english: "Root", color: "#e23b3b", cy: 385, sanskrit: "लं", element: "Earth", crystals: ["Black Tourmaline", "Red Jasper", "Hematite"], affirmation: "I am safe, grounded, and stable.", desc: "Foundation of stability, safety, grounding, and physical vitality." },
+];
+
+export const getChakraById = (id) => chakraData.find(chakra => chakra.id === id);
+export const getDefaultChakra = () => chakraData[3]; // heart chakra

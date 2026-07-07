@@ -74,34 +74,25 @@ export const AppProvider = ({ children }) => {
 
 
     //Handelling app theme
-    const [theme, setTheme] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const value = localStorage.getItem('theme')
-            return value || 'dark';
-        }
-    })
+    const [theme, setTheme] = useState("dark")
 
     const themeToggle = () => {
-        console.log('App Theme Toggle')
-        setTheme(theme === 'light' ? 'dark' : 'light')
+        setTheme(prev => {
+            const newTheme = prev === 'light' ? 'dark' : 'light'
+            return newTheme
+        })
     }
 
     const setAppTheme = (value) => {
-        console.log('setting theme new function', value ? 'dark' : 'light')
         setTheme(value ? 'dark' : 'light')
     }
 
     useEffect(() => {
         localStorage.setItem('theme', theme)
-
-        if (theme === 'dark') {
-            document.querySelector('html').classList.add('dark')
-            document.querySelector('html').classList.remove('light')
-        } else {
-            document.querySelector('html').classList.add('light')
-            document.querySelector('html').classList.remove('dark')
-        }
-
+        
+        const html = document.querySelector('html')
+        html.classList.remove('light', 'dark')
+        html.classList.add(theme)
     }, [theme])
 
 

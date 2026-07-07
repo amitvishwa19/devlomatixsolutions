@@ -1,11 +1,8 @@
 'use client'
-import axios from 'axios'
 import { usePathname } from 'next/navigation'
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { useRouter, redirect } from 'next/navigation'
-import { useAction } from '@/hooks/use-action'
-import { getUser } from '@/app/(auth)/_action/get_user'
-import { getSession, setSession, userLogout, updateSession, getEncryptedSession, decryptSession } from '@/lib/auth'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { getSession, userLogout, getEncryptedSession, decryptSession } from '@/lib/auth'
 
 const AuthContext = createContext({})
 
@@ -29,21 +26,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
 
-    const { execute: getRefreshUser } = useAction(getUser, {
-        onSuccess: (data) => {
-            //console.log(data)
-            setUser(data?.user)
-            setOrganizations(data?.organizations)
-        },
-        onError: (error) => {
-            console.log(error)
-            setUser(null)
-        }
-    })
 
-    const updateUserData = () => {
-
-    }
 
     useEffect(() => {
         getUserFromSessionData()
