@@ -1,10 +1,10 @@
-import React from 'react';
-import './_styles/crystals.css';
-import { CrystalAuraProviders } from './_context/CrystalAuraProviders';
-import Navbar from './_components/Navbar';
-import FooterSection from './_components/FooterSection';
-import CartDrawer from './_components/CartDrawer';
-import WhatsAppButton from './_components/WhatsAppButton';
+import React from "react";
+import SiteNavbar from "./_components/SiteNavbar";
+import FooterSection from "./_components/FooterSection";
+import { CrystalAuraProviders } from "./_context/CrystalAuraProviders";
+
+// Import local premium stylesheet overrides
+import "./_styles/crystals.css";
 
 export const metadata = {
   title: 'Crystal Aura | Sacred Gemstones & Healing Crystals',
@@ -13,24 +13,27 @@ export const metadata = {
 
 export default function CrystalAuraLayout({ children }) {
   return (
-    <div className="crystal-aura min-h-screen relative font-sans">
-      <CrystalAuraProviders>
-        <div className="crystal-aura-root flex flex-col min-h-screen">
-          {/* Background effects */}
-          <div className="fixed inset-0 bg-[#0a0a0a] pointer-events-none -z-10" />
-          <div className="fixed inset-0 noise-overlay pointer-events-none opacity-20 -z-10" />
-
-          <Navbar />
-          <CartDrawer />
-          <WhatsAppButton />
-
-          <main className="grow pt-20">
-            {children}
-          </main>
-
-          <FooterSection />
+    <CrystalAuraProviders>
+      <div className="relative min-h-screen flex flex-col bg-[#06040a] text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        {/* 🔮 Background Floating Ambient Glowing Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-20">
+          <div className="absolute top-[10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[130px] orb-glow-primary opacity-50" />
+          <div className="absolute top-[45%] right-[-10%] w-[45vw] h-[45vw] rounded-full blur-[130px] orb-glow-accent opacity-45" />
+          <div className="absolute bottom-[10%] left-[10%] w-[50vw] h-[50vw] rounded-full blur-[130px] orb-glow-rose opacity-40" />
         </div>
-      </CrystalAuraProviders>
-    </div>
+
+        {/* 🧭 Site Navbar Header */}
+        <SiteNavbar />
+
+        {/* 🌌 Main Body Contents */}
+        <main className="flex-grow">
+          {children}
+        </main>
+
+        {/* 🧭 Site Footer Section */}
+        <FooterSection />
+      </div>
+    </CrystalAuraProviders>
   );
 }
+

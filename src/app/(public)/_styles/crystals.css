@@ -1,176 +1,122 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Raleway:wght@300;400;500;600&display=swap');
+/* Premium spiritual styling custom rules */
 
-@layer base {
-  .crystal-aura {
-    --background: 30 10% 6%;
-    --foreground: 40 30% 92%;
+/* Gold text shimmer effect */
+.shimmer-text {
+  background: linear-gradient(
+    to right,
+    #ffe29a 0%,
+    #dca028 30%,
+    #ffe29a 70%,
+    #dca028 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: goldShimmer 6s linear infinite;
+}
 
-    --card: 30 10% 10%;
-    --card-foreground: 40 30% 92%;
-
-    --popover: 30 10% 10%;
-    --popover-foreground: 40 30% 92%;
-
-    --primary: 40 65% 55%;
-    --primary-foreground: 30 10% 6%;
-
-    --secondary: 30 10% 14%;
-    --secondary-foreground: 40 30% 85%;
-
-    --muted: 30 8% 16%;
-    --muted-foreground: 40 15% 55%;
-
-    --accent: 280 40% 55%;
-    --accent-foreground: 40 30% 92%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 30 12% 18%;
-    --input: 30 12% 18%;
-    --ring: 40 65% 55%;
-
-    --radius: 0.75rem;
-
-    --gold-glow: 40 80% 50%;
-    --warm-cream: 40 30% 92%;
-    --deep-earth: 30 15% 4%;
-    --amethyst: 280 40% 55%;
-    --rose-quartz: 340 40% 65%;
-    
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: 'Raleway', sans-serif;
+@keyframes goldShimmer {
+  0% {
+    background-position: 0% center;
   }
-
-  .crystal-aura.light {
-    --background: 40 30% 96%;
-    --foreground: 30 15% 15%;
-
-    --card: 40 25% 98%;
-    --card-foreground: 30 15% 15%;
-
-    --popover: 40 25% 98%;
-    --popover-foreground: 30 15% 15%;
-
-    --primary: 40 65% 42%;
-    --primary-foreground: 40 30% 98%;
-
-    --secondary: 40 15% 90%;
-    --secondary-foreground: 30 15% 25%;
-
-    --muted: 40 10% 88%;
-    --muted-foreground: 30 10% 45%;
-
-    --accent: 280 40% 50%;
-    --accent-foreground: 40 30% 98%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 40 15% 85%;
-    --input: 40 15% 85%;
-    --ring: 40 65% 42%;
-
-    --gold-glow: 40 80% 45%;
-    --warm-cream: 30 15% 15%;
-    --deep-earth: 40 30% 96%;
-    --amethyst: 280 40% 50%;
-    --rose-quartz: 340 40% 60%;
+  100% {
+    background-position: 200% center;
   }
 }
 
-@layer base {
-  .crystal-aura h1, 
-  .crystal-aura h2, 
-  .crystal-aura h3, 
-  .crystal-aura h4, 
-  .crystal-aura h5, 
-  .crystal-aura h6 {
-    font-family: 'Cormorant Garamond', serif;
+/* Glassmorphism custom card borders and backdrops */
+.glass-card {
+  background: rgba(14, 11, 23, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(220, 160, 40, 0.25);
+  box-shadow: 0 30px 60px -15px rgba(220, 160, 40, 0.08);
+  transform: translateY(-4px);
+}
+
+/* Background Animated Glowing Orbs */
+.orb-glow-primary {
+  background: radial-gradient(circle, rgba(155, 89, 255, 0.15) 0%, rgba(155, 89, 255, 0) 70%);
+  animation: orbFloat 25s ease-in-out infinite alternate;
+}
+
+.orb-glow-accent {
+  background: radial-gradient(circle, rgba(220, 160, 40, 0.12) 0%, rgba(220, 160, 40, 0) 70%);
+  animation: orbFloatDouble 35s ease-in-out infinite alternate-reverse;
+}
+
+.orb-glow-rose {
+  background: radial-gradient(circle, rgba(255, 140, 43, 0.08) 0%, rgba(255, 140, 43, 0) 70%);
+  animation: orbFloat 40s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes orbFloat {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(80px, -50px) scale(1.15);
+  }
+  100% {
+    transform: translate(-40px, 60px) scale(0.9);
   }
 }
 
-@layer utilities {
-  .text-gold-gradient {
-    background: linear-gradient(135deg, hsl(40 70% 45%), hsl(40 80% 65%), hsl(40 70% 45%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+@keyframes orbFloatDouble {
+  0% {
+    transform: translate(0px, 0px) scale(1.1);
   }
+  50% {
+    transform: translate(-100px, 80px) scale(0.85);
+  }
+  100% {
+    transform: translate(60px, -70px) scale(1.05);
+  }
+}
 
-  .bg-gold-gradient {
-    background: linear-gradient(135deg, hsl(40 65% 42%), hsl(40 80% 55%), hsl(40 65% 42%));
-  }
+/* Premium Gold Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
 
-  .bg-gold-gradient-hover {
-    background: linear-gradient(135deg, hsl(40 65% 48%), hsl(40 80% 60%), hsl(40 65% 48%));
-  }
+::-webkit-scrollbar-track {
+  background: #06040a;
+}
 
-  .glow-gold {
-    box-shadow: 0 0 40px -8px hsl(40 80% 50% / 0.35), 0 0 80px -16px hsl(40 80% 50% / 0.15);
-  }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #dca028 0%, #1b0c2a 100%);
+  border-radius: 99px;
+  border: 1px solid #06040a;
+}
 
-  .glow-gold-sm {
-    box-shadow: 0 0 20px -4px hsl(40 80% 50% / 0.25);
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #ffe29a;
+}
 
-  .section-divider {
-    background: linear-gradient(90deg, transparent, hsl(40 65% 55% / 0.4), transparent);
-    height: 1px;
-  }
+/* Custom glow utility */
+.hover-glow-card {
+  transition: all 0.4s ease;
+}
+.hover-glow-card:hover {
+  box-shadow: 0 10px 30px -10px rgba(220, 160, 40, 0.35);
+  border-color: rgba(220, 160, 40, 0.4) !important;
+}
 
-  .glass {
-    background: hsl(var(--card) / 0.6);
-    backdrop-filter: blur(20px) saturate(1.5);
-    -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  }
+/* Standard Gold Color Theme Overrides */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #ffe29a 0%, #dca028 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-  .glass-card {
-    background: hsl(var(--card) / 0.5);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--primary) / 0.1);
-  }
-
-  .noise-overlay {
-    position: relative;
-  }
-  .noise-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .shimmer-text {
-    background: linear-gradient(
-      110deg,
-      hsl(40 65% 55%) 0%,
-      hsl(40 80% 70%) 40%,
-      hsl(40 65% 55%) 60%,
-      hsl(40 80% 70%) 100%
-    );
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: shimmer 3s ease-in-out infinite;
-  }
-
-  @keyframes shimmer {
-    from { background-position: 200% 0; }
-    to { background-position: -200% 0; }
-  }
-
-  .floating {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
-  }
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #dca028 0%, #a47614 100%);
 }

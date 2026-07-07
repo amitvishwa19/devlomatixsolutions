@@ -15,6 +15,7 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem("crystal-aura-theme", theme);
     document.documentElement.classList.toggle("light", theme === "light");
+    // Also toggle a specific class on a wrapper if needed
     const wrapper = document.querySelector('.crystal-aura-root');
     if (wrapper) wrapper.classList.toggle('light', theme === 'light');
   }, [theme]);

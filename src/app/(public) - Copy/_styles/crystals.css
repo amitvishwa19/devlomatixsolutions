@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Raleway:wght@300;400;500;600&display=swap');
+
+@layer base {
+  .crystal-aura {
+    --background: 30 10% 6%;
+    --foreground: 40 30% 92%;
+
+    --card: 30 10% 10%;
+    --card-foreground: 40 30% 92%;
+
+    --popover: 30 10% 10%;
+    --popover-foreground: 40 30% 92%;
+
+    --primary: 40 65% 55%;
+    --primary-foreground: 30 10% 6%;
+
+    --secondary: 30 10% 14%;
+    --secondary-foreground: 40 30% 85%;
+
+    --muted: 30 8% 16%;
+    --muted-foreground: 40 15% 55%;
+
+    --accent: 280 40% 55%;
+    --accent-foreground: 40 30% 92%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 30 12% 18%;
+    --input: 30 12% 18%;
+    --ring: 40 65% 55%;
+
+    --radius: 0.75rem;
+
+    --gold-glow: 40 80% 50%;
+    --warm-cream: 40 30% 92%;
+    --deep-earth: 30 15% 4%;
+    --amethyst: 280 40% 55%;
+    --rose-quartz: 340 40% 65%;
+    
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Raleway', sans-serif;
+  }
+
+  .crystal-aura.light {
+    --background: 40 30% 96%;
+    --foreground: 30 15% 15%;
+
+    --card: 40 25% 98%;
+    --card-foreground: 30 15% 15%;
+
+    --popover: 40 25% 98%;
+    --popover-foreground: 30 15% 15%;
+
+    --primary: 40 65% 42%;
+    --primary-foreground: 40 30% 98%;
+
+    --secondary: 40 15% 90%;
+    --secondary-foreground: 30 15% 25%;
+
+    --muted: 40 10% 88%;
+    --muted-foreground: 30 10% 45%;
+
+    --accent: 280 40% 50%;
+    --accent-foreground: 40 30% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 40 15% 85%;
+    --input: 40 15% 85%;
+    --ring: 40 65% 42%;
+
+    --gold-glow: 40 80% 45%;
+    --warm-cream: 30 15% 15%;
+    --deep-earth: 40 30% 96%;
+    --amethyst: 280 40% 50%;
+    --rose-quartz: 340 40% 60%;
+  }
+}
+
+@layer base {
+  .crystal-aura h1, 
+  .crystal-aura h2, 
+  .crystal-aura h3, 
+  .crystal-aura h4, 
+  .crystal-aura h5, 
+  .crystal-aura h6 {
+    font-family: 'Cormorant Garamond', serif;
+  }
+}
+
+@layer utilities {
+  .text-gold-gradient {
+    background: linear-gradient(135deg, hsl(40 70% 45%), hsl(40 80% 65%), hsl(40 70% 45%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, hsl(40 65% 42%), hsl(40 80% 55%), hsl(40 65% 42%));
+  }
+
+  .bg-gold-gradient-hover {
+    background: linear-gradient(135deg, hsl(40 65% 48%), hsl(40 80% 60%), hsl(40 65% 48%));
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 40px -8px hsl(40 80% 50% / 0.35), 0 0 80px -16px hsl(40 80% 50% / 0.15);
+  }
+
+  .glow-gold-sm {
+    box-shadow: 0 0 20px -4px hsl(40 80% 50% / 0.25);
+  }
+
+  .section-divider {
+    background: linear-gradient(90deg, transparent, hsl(40 65% 55% / 0.4), transparent);
+    height: 1px;
+  }
+
+  .glass {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  }
+
+  .glass-card {
+    background: hsl(var(--card) / 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--primary) / 0.1);
+  }
+
+  .noise-overlay {
+    position: relative;
+  }
+  .noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .shimmer-text {
+    background: linear-gradient(
+      110deg,
+      hsl(40 65% 55%) 0%,
+      hsl(40 80% 70%) 40%,
+      hsl(40 65% 55%) 60%,
+      hsl(40 80% 70%) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  .floating {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+}
+
+/* Premium scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, hsl(40 65% 42%), hsl(40 80% 55%));
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(40 80% 60%);
+}
+
+/* Glowing orbs utility */
+.orb-glow-primary {
+  background: radial-gradient(circle, hsl(40 65% 55% / 0.12) 0%, transparent 70%);
+}
+.orb-glow-accent {
+  background: radial-gradient(circle, hsl(280 40% 55% / 0.12) 0%, transparent 70%);
+}
+.orb-glow-rose {
+  background: radial-gradient(circle, hsl(340 40% 65% / 0.12) 0%, transparent 70%);
+}
+
+/* Hover glow card utility */
+.hover-glow-card {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-glow-card:hover {
+  border-color: hsl(var(--primary) / 0.25) !important;
+  box-shadow: 0 0 30px -5px hsl(var(--primary) / 0.12) !important;
+  transform: translateY(-3px);
+}
+

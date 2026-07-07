@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['lucide-react'],
+  allowedDevOrigins: ['dev.devlomatix.com'],
+
   reactStrictMode: false,
   images: {
     remotePatterns: [
