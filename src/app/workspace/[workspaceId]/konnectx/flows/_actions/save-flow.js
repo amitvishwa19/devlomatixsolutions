@@ -12,7 +12,8 @@ const SaveFlowSchema = z.object({
     description: z.string().optional(),
     categories: z.array(z.string()).optional(),
     endpointUrl: z.string().optional(),
-    screens: z.any().optional(), // JSON screens
+    screens: z.any().optional(),
+    metaValidationErrors: z.any().optional(),
 });
 
 const handler = async (data) => {

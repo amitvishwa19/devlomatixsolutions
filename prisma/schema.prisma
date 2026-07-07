@@ -555,20 +555,21 @@ model WhatsAppDeliveryLog {
 }
 
 model WhatsAppFlow {
-  id          String   @id @default(cuid())
-  workspaceId String
-  userId      String
-  name        String
-  description String?
-  flowId      String?  @unique // Meta Flow ID
-  status      String   @default("DRAFT") // DRAFT, PUBLISHED, DEPRECATED
-  categories  String[] @default([])
-  screens     Json     @default("[]") // Local screen definitions
-  definition  Json? // Final flow.json
-  endpointUrl String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String   @id @default(cuid())
+  workspaceId         String
+  userId              String
+  name                String
+  description         String?
+  flowId              String?  @unique
+  status              String   @default("DRAFT")
+  categories          String[] @default([])
+  screens             Json     @default("[]")
+  definition          Json?
+  endpointUrl         String?
+  metaValidationErrors Json?   @default("[]")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([userId])

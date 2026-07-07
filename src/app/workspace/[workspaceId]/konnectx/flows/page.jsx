@@ -21,7 +21,8 @@ import {
     ArrowLeft,
     Eye,
     Globe,
-    FileCode
+    FileCode,
+    AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useAction } from "@/hooks/use-action";
 import { testMetaApi } from "../settings/_actions/test-meta-api";
@@ -68,6 +70,20 @@ export default function FlowsPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [newFlowName, setNewFlowName] = useState('');
+    const [newFlowCategory, setNewFlowCategory] = useState('OTHER');
+    const [newFlowEndpoint, setNewFlowEndpoint] = useState('');
+
+    const FLOW_CATEGORIES = [
+        { value: 'OTHER', label: 'Other' },
+        { value: 'APPOINTMENT_BOOKING', label: 'Appointment Booking' },
+        { value: 'AUTO_REPLY', label: 'Auto Reply' },
+        { value: 'CUSTOMER_SUPPORT', label: 'Customer Support' },
+        { value: 'FEEDBACK', label: 'Feedback' },
+        { value: 'LEAD_GENERATION', label: 'Lead Generation' },
+        { value: 'ORDER_STATUS', label: 'Order Status' },
+        { value: 'SIGN_UP', label: 'Sign Up' },
+        { value: 'SURVEY', label: 'Survey' },
+    ];
 
     // Inline rename state
     const [isEditingName, setIsEditingName] = useState(false);
@@ -186,8 +202,12 @@ export default function FlowsPage() {
         executeSaveLocal({
             workspaceId,
             name: newFlowName.trim(),
+            categories: [newFlowCategory],
+            endpointUrl: newFlowEndpoint.trim() || null,
             screens: []
         });
+        setNewFlowCategory('OTHER');
+        setNewFlowEndpoint('');
     };
 
     const handleEditLocal = (flow) => {
@@ -211,6 +231,10 @@ export default function FlowsPage() {
                 error: 'Failed to save flow'
             }
         );
+    };
+
+    const flowValidationErrors = (flow) => {
+        return flow.validationErrors || flow.metaValidationErrors || [];
     };
 
     const getStatusBadge = (status) => {
@@ -282,6 +306,7 @@ export default function FlowsPage() {
                     <FlowBuilder 
                         initialScreens={selectedFlow?.screens || []} 
                         onSave={handleSaveFromBuilder}
+                        endpointUrl={selectedFlow?.endpointUrl || ''}
                     />
                 </div>
             </div>
@@ -378,6 +403,31 @@ export default function FlowsPage() {
                                                 <Badge key={cat} variant="outline" className="text-[9px] font-bold py-0 h-5 bg-muted/20 border-muted-foreground/10">{cat}</Badge>
                                             ))}
                                         </div>
+
+                                        {(() => {
+                                            const errs = (() => {
+                                                try {
+                                                    const raw = flow.metaValidationErrors;
+                                                    if (Array.isArray(raw)) return raw;
+                                                    if (typeof raw === 'string') return JSON.parse(raw);
+                                                    return [];
+                                                } catch { return []; }
+                                            })();
+                                            if (errs.length === 0) return null;
+                                            return (
+                                                <div className="space-y-1">
+                                                    {errs.slice(0, 2).map((err, i) => (
+                                                        <div key={i} className="flex items-start gap-1.5 text-[10px] text-red-500 bg-red-500/5 rounded-md p-2">
+                                                            <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                                                            <span>{err.message || JSON.stringify(err)}</span>
+                                                        </div>
+                                                    ))}
+                                                    {errs.length > 2 && (
+                                                        <p className="text-[10px] text-muted-foreground pl-5">+{errs.length - 2} more errors</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
 
                                         <div className="flex items-center gap-2 pt-2 border-t border-border/40">
                                             {activeTab === 'local' ? (
@@ -485,10 +535,10 @@ export default function FlowsPage() {
 
             {/* Create Local Flow Modal */}
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                <DialogContent className="sm:max-w-[425px] rounded-2xl">
+                <DialogContent className="sm:max-w-[480px] rounded-2xl">
                     <DialogHeader>
                         <DialogTitle>New Flow Draft</DialogTitle>
-                        <DialogDescription>Give your flow a name to start designing screens.</DialogDescription>
+                        <DialogDescription>Set up your flow details before designing screens.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -498,6 +548,31 @@ export default function FlowsPage() {
                                 onChange={(e) => setNewFlowName(e.target.value)}
                                 placeholder="e.g., Customer Feedback Form"
                                 className="h-11 rounded-xl"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Category</Label>
+                            <Select value={newFlowCategory} onValueChange={setNewFlowCategory}>
+                                <SelectTrigger className="h-11 rounded-xl">
+                                    <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {FLOW_CATEGORIES.map(cat => (
+                                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="flex items-center gap-1">
+                                Endpoint URL
+                                <span className="text-[10px] text-muted-foreground font-normal">(for data_exchange actions)</span>
+                            </Label>
+                            <Input
+                                value={newFlowEndpoint}
+                                onChange={(e) => setNewFlowEndpoint(e.target.value)}
+                                placeholder="https://your-api.com/webhook"
+                                className="h-11 rounded-xl font-mono text-sm"
                             />
                         </div>
                     </div>

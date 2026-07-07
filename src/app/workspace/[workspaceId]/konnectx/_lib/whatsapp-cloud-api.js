@@ -426,6 +426,45 @@ async function publishFlowMeta(credentials, flowId) {
     }
 }
 
+async function updateFlowMeta(credentials, flowId, updates) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${flowId}`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updates)
+        });
+        const data = await res.json();
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to update flow');
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function getFlowAssetMeta(credentials, flowId) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${flowId}/assets?asset_type=FLOW_JSON`;
+
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to fetch flow asset');
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
 async function deleteFlowMeta(credentials, flowId) {
     const { accessToken } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
@@ -457,8 +496,10 @@ export {
     getMediaUrl,
     fetchFlowsMeta,
     createFlowMeta,
+    updateFlowMeta,
     updateFlowAssetMeta,
     publishFlowMeta,
     deleteFlowMeta,
+    getFlowAssetMeta,
     uploadMetaMedia
 };

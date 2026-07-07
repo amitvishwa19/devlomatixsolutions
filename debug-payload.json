@@ -1,16 +1,92 @@
 {
-  "templateName": "live_test_button_message",
-  "components": [],
+  "templateName": "carousel_image",
+  "components": [
+    {
+      "type": "carousel",
+      "cards": [
+        {
+          "card_index": 0,
+          "components": [
+            {
+              "type": "header",
+              "parameters": [
+                {
+                  "type": "image",
+                  "image": {
+                    "id": "4440601872750220"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "card_index": 1,
+          "components": [
+            {
+              "type": "header",
+              "parameters": [
+                {
+                  "type": "image",
+                  "image": {
+                    "id": "3545693858942675"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "fullRequestData": {
     "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
     "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "live_test_button_message",
+      "name": "carousel_image",
       "language": {
         "code": "en_US"
       },
-      "components": []
+      "components": [
+        {
+          "type": "carousel",
+          "cards": [
+            {
+              "card_index": 0,
+              "components": [
+                {
+                  "type": "header",
+                  "parameters": [
+                    {
+                      "type": "image",
+                      "image": {
+                        "id": "4440601872750220"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "card_index": 1,
+              "components": [
+                {
+                  "type": "header",
+                  "parameters": [
+                    {
+                      "type": "image",
+                      "image": {
+                        "id": "3545693858942675"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }

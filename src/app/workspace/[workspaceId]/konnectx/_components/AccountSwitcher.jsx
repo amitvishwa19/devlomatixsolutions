@@ -62,14 +62,14 @@ export default function AccountSwitcher() {
         }
     });
 
-    const { execute: setAsDefault } = useAction(setDefaultCredential, {
+    const { execute: setAsDefault, isLoading: isSettingDefault } = useAction(setDefaultCredential, {
         onSuccess: () => {
-            toast.success("Active account switched");
+            toast.success("Active account switched", { id: 'switch-account' });
             window.dispatchEvent(new Event('wa-account-switched'));
             fetchCreds({ workspaceId });
         },
         onError: (err) => {
-            toast.error(err || "Failed to switch account");
+            toast.error(err || "Failed to switch account", { id: 'switch-account' });
         }
     });
 
@@ -185,6 +185,7 @@ export default function AccountSwitcher() {
                                     }`}
                                 onClick={() => {
                                     setActiveAccount(acc.id);
+                                    toast.loading("Switching account...", { id: 'switch-account' });
                                     setAsDefault({ workspaceId, id: acc.id });
                                     setIsOpen(false);
                                 }}

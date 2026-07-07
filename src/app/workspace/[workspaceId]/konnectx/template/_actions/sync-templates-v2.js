@@ -154,7 +154,7 @@ const handler = async (data) => {
                             userId,
                             name: metaT.name,
                             language: metaT.language,
-                            phoneNumberId: cloudCredentials.phoneNumberId
+                            phoneNumberId: currentPhoneId
                         }
                     });
 
