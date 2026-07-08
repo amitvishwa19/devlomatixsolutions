@@ -89,6 +89,8 @@ export default function NetworkBackground() {
             ref={canvasRef}
             className="absolute inset-0 pointer-events-none"
             style={{ opacity: 0.7 }}
+            suppressHydrationWarning={true}
         />
     )
 }
+

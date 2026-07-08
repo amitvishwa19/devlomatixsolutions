@@ -138,7 +138,7 @@ const SiteNavbar = () => {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: 10 }}
                                                 transition={{ duration: 0.2 }}
-                                                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-white/10 glass shadow-2xl p-2.5 flex flex-col gap-1"
+                                                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-white/10 bg-[#0e0b17]/95 backdrop-blur-xl shadow-2xl p-2.5 flex flex-col gap-1"
                                                 style={{ boxShadow: '0 10px 40px -10px rgba(220,160,40,0.15)' }}
                                             >
                                                 {item.submenu.map((subItem) => (
@@ -157,6 +157,7 @@ const SiteNavbar = () => {
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
+
                                 </li>
                             );
                         }
@@ -254,8 +255,9 @@ const SiteNavbar = () => {
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="md:hidden glass border-b border-white/10 overflow-hidden"
+                        className="md:hidden bg-[#0e0b17]/95 backdrop-blur-xl border-b border-white/10 overflow-hidden"
                     >
+
                         <ul className="flex flex-col gap-1.5 px-6 py-5 text-[10px] tracking-widest uppercase font-bold">
                             {navItems.map((item) => {
                                 if (item.submenu) {
