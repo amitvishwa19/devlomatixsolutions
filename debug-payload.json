@@ -1,92 +1,16 @@
 {
-  "templateName": "carousel_image",
-  "components": [
-    {
-      "type": "carousel",
-      "cards": [
-        {
-          "card_index": 0,
-          "components": [
-            {
-              "type": "header",
-              "parameters": [
-                {
-                  "type": "image",
-                  "image": {
-                    "id": "4440601872750220"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "card_index": 1,
-          "components": [
-            {
-              "type": "header",
-              "parameters": [
-                {
-                  "type": "image",
-                  "image": {
-                    "id": "3545693858942675"
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ],
+  "templateName": "manisha_onboarding",
+  "components": [],
   "fullRequestData": {
     "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
     "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "carousel_image",
+      "name": "manisha_onboarding",
       "language": {
-        "code": "en_US"
+        "code": "en"
       },
-      "components": [
-        {
-          "type": "carousel",
-          "cards": [
-            {
-              "card_index": 0,
-              "components": [
-                {
-                  "type": "header",
-                  "parameters": [
-                    {
-                      "type": "image",
-                      "image": {
-                        "id": "4440601872750220"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "card_index": 1,
-              "components": [
-                {
-                  "type": "header",
-                  "parameters": [
-                    {
-                      "type": "image",
-                      "image": {
-                        "id": "3545693858942675"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      "components": []
     }
   }
 }
