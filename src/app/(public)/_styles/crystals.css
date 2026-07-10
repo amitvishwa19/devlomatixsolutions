@@ -1,5 +1,91 @@
 /* Premium spiritual styling custom rules */
 
+.crystal-aura {
+  --background: 260 25% 7%;
+  --foreground: 40 25% 92%;
+
+  --card: 260 22% 11%;
+  --card-foreground: 40 25% 92%;
+
+  --popover: 260 22% 11%;
+  --popover-foreground: 40 25% 92%;
+
+  --primary: 41 56% 58%;
+  --primary-foreground: 260 25% 8%;
+
+  --secondary: 260 18% 15%;
+  --secondary-foreground: 40 25% 92%;
+
+  --muted: 260 15% 16%;
+  --muted-foreground: 40 12% 65%;
+
+  --accent: 270 55% 60%;
+  --accent-foreground: 40 25% 96%;
+
+  --destructive: 0 75% 55%;
+  --destructive-foreground: 40 25% 96%;
+
+  --border: 260 18% 20%;
+  --input: 260 18% 20%;
+  --ring: 41 56% 58%;
+
+  --gold: 41 56% 58%;
+  --glass-bg: 260 22% 11% / 0.75;
+  --glass-border: 41 30% 30% / 0.4;
+  --scrollbar-track: 260 25% 7%;
+  --scrollbar-thumb: 41 30% 35%;
+
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', sans-serif;
+}
+
+.crystal-aura h1, 
+.crystal-aura h2, 
+.crystal-aura h3, 
+.crystal-aura h4, 
+.crystal-aura h5, 
+.crystal-aura h6 {
+  font-family: 'Playfair Display', serif;
+}
+
+.crystal-aura.light {
+  --background: 40 30% 96%;
+  --foreground: 30 15% 15%;
+
+  --card: 40 25% 98%;
+  --card-foreground: 30 15% 15%;
+
+  --popover: 40 25% 98%;
+  --popover-foreground: 30 15% 15%;
+
+  --primary: 40 65% 42%;
+  --primary-foreground: 40 30% 98%;
+
+  --secondary: 40 15% 90%;
+  --secondary-foreground: 30 15% 25%;
+
+  --muted: 40 10% 88%;
+  --muted-foreground: 30 10% 45%;
+
+  --accent: 280 40% 50%;
+  --accent-foreground: 40 30% 98%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 40 15% 85%;
+  --input: 40 15% 85%;
+  --ring: 40 65% 42%;
+
+  --gold: 40 65% 42%;
+  --glass-bg: 40 30% 100% / 0.7;
+  --glass-border: 40 25% 84%;
+  --scrollbar-track: 40 25% 94%;
+  --scrollbar-thumb: 40 35% 65%;
+}
+
+
 /* Gold text shimmer effect */
 .shimmer-text {
   background: linear-gradient(
