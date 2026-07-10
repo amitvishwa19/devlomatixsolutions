@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { products } from "../_data/products";
+import { useImagePack } from "../_context/CrystalAuraProviders";
 
 // Inline SVG Icon components to completely bypass Next.js Turbopack lucide-react caching bugs
 const SparklesIcon = ({ className = "w-4 h-4" }) => (
@@ -13,8 +15,17 @@ const ArrowRightIcon = ({ className = "w-4 h-4" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
 );
 
+// Deterministic pick per day so it's stable for everyone for the day
+const dayIndex = () => {
+  const d = new Date();
+  const start = new Date(d.getFullYear(), 0, 0);
+  const diff = d - start;
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+};
+
 const SiteCrystalOfTheDay = () => {
   const [dateStr, setDateStr] = useState("");
+  const { getProductImage } = useImagePack();
 
   useEffect(() => {
     const formatted = new Date().toLocaleDateString("en-US", {
@@ -24,6 +35,17 @@ const SiteCrystalOfTheDay = () => {
     });
     setDateStr("✦ " + formatted);
   }, []);
+
+  const product = useMemo(() => {
+    // Cycle through first 9 products (p1 - p9) which have local image packs
+    const idx = dayIndex() % 9;
+    return products.find(p => p.id === `p${idx + 1}`);
+  }, []);
+
+  if (!product) return null;
+
+  const resolvedImage = getProductImage(product.id, product.image);
+  const priceVal = product.priceNum || product.price;
 
   return (
     <section className="py-24 px-6 relative bg-gradient-to-b from-[#06040a] to-[#0d091a]">
@@ -42,8 +64,8 @@ const SiteCrystalOfTheDay = () => {
           {/* Left Column: Image with Badge */}
           <div className="relative h-96 md:h-auto min-h-[400px] overflow-hidden group">
             <img 
-              src="https://images.unsplash.com/photo-1603344797033-f0f4f587ab60?w=800&h=800&fit=crop" 
-              alt="Moonstone Adjustable Ring" 
+              src={resolvedImage} 
+              alt={product.name} 
               className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105 filter brightness-[0.9]"
             />
             {/* Glassmorphic crystal of the day floating badge */}
@@ -64,26 +86,30 @@ const SiteCrystalOfTheDay = () => {
               Today's <span className="text-gold-gradient italic font-normal">Sacred</span> Item
             </h2>
             <h3 className="font-serif text-2xl text-foreground/90 mb-5 tracking-wide">
-              Moonstone Adjustable Ring
+              {product.name}
             </h3>
             <p className="text-muted-foreground/80 text-sm leading-relaxed mb-8 font-light">
-              Expertly handcrafted in sterling silver and crowned with an authentic, radiant rainbow moonstone. Resonating with the Crown and Third Eye chakras, this ring facilitates emotional balance, feminine intuition, and channels calming, celestial energy to the wearer.
+              {product.description}
             </p>
             
             <div className="flex items-center gap-4 mb-8">
               <div>
                 <p className="text-xs text-muted-foreground/60 uppercase tracking-widest font-sans font-bold">Special Price</p>
                 <div className="flex items-baseline gap-2.5 mt-1">
-                  <span className="text-3xl font-serif font-bold text-foreground">₹849</span>
-                  <span className="text-sm text-muted-foreground line-through font-light">₹1,199</span>
+                  <span className="text-3xl font-serif font-bold text-foreground">₹{priceVal}</span>
+                  {product.originalPrice && (
+                    <span className="text-sm text-muted-foreground line-through font-light">₹{product.originalPrice}</span>
+                  )}
                 </div>
               </div>
-              <div className="bg-primary/5 border border-primary/20 rounded-full px-3.5 py-1 text-[9px] font-sans font-black uppercase tracking-widest text-primary animate-pulse">
-                Save 30%
-              </div>
+              {product.originalPrice && (
+                <div className="bg-primary/5 border border-primary/20 rounded-full px-3.5 py-1 text-[9px] font-sans font-black uppercase tracking-widest text-primary animate-pulse">
+                  Save {Math.round((1 - priceVal / product.originalPrice) * 100)}%
+                </div>
+              )}
             </div>
             
-            <Link href="/shop" className="self-start">
+            <Link href={`/shop/${product.id}`} className="self-start">
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

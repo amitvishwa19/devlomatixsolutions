@@ -162,17 +162,56 @@ export const useOrders = () => {
   return context;
 };
 
+// --- IMAGE PACK CONTEXT ---
+const ImagePackContext = createContext(undefined);
+export const ImagePackProvider = ({ children }) => {
+  const [imagePack, setImagePack] = useState("pack-7"); // default to pack-7
+
+  useEffect(() => {
+    const stored = localStorage.getItem("crystal-aura-image-pack");
+    if (stored) setImagePack(stored);
+  }, []);
+
+  const changeImagePack = (pack) => {
+    localStorage.setItem("crystal-aura-image-pack", pack);
+    setImagePack(pack);
+  };
+
+  // Helper to resolve product image from the selected pack
+  const getProductImage = (productId, originalImage) => {
+    const match = String(productId).match(/^p([1-9])$/);
+    if (match) {
+      const num = match[1];
+      return `/crystalaura/products/${imagePack}/product_${num}.png`;
+    }
+    return originalImage;
+  };
+
+  return (
+    <ImagePackContext.Provider value={{ imagePack, changeImagePack, getProductImage }}>
+      {children}
+    </ImagePackContext.Provider>
+  );
+};
+export const useImagePack = () => {
+  const context = useContext(ImagePackContext);
+  if (!context) throw new Error("useImagePack must be used within ImagePackProvider");
+  return context;
+};
+
 // --- CONSOLIDATED PROVIDER ---
 export const CrystalAuraProviders = ({ children }) => {
   return (
     <ThemeProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <OrderProvider>
-            {children}
-          </OrderProvider>
-        </WishlistProvider>
-      </CartProvider>
+      <ImagePackProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <OrderProvider>
+              {children}
+            </OrderProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </ImagePackProvider>
     </ThemeProvider>
   );
 };

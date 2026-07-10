@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCart, useWishlist } from "../_context/CrystalAuraProviders";
+import { useCart, useWishlist, useImagePack } from "../_context/CrystalAuraProviders";
 import { products } from "../_data/products";
 
 // Inline SVG Icons for Lucide bypass
@@ -38,6 +38,7 @@ export default function ShopPage() {
 
   const { addItem: addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { getProductImage } = useImagePack();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 500);
@@ -210,7 +211,7 @@ export default function ShopPage() {
                         {/* Image Showcase */}
                         <div className="relative aspect-[4/5] overflow-hidden bg-white/5">
                           <img
-                            src={p.image}
+                            src={getProductImage(p.id, p.image)}
                             alt={p.name}
                             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                           />

@@ -1,6 +1,7 @@
 import React from "react";
 import SiteNavbar from "./_components/SiteNavbar";
 import FooterSection from "./_components/FooterSection";
+import ImagePackSelector from "./_components/ImagePackSelector";
 import { CrystalAuraProviders } from "./_context/CrystalAuraProviders";
 
 // Import local premium stylesheet overrides
@@ -32,6 +33,9 @@ export default function CrystalAuraLayout({ children }) {
 
         {/* 🧭 Site Footer Section */}
         <FooterSection />
+
+        {/* 🎨 Dynamic Image Pack Selector */}
+        <ImagePackSelector />
       </div>
     </CrystalAuraProviders>
   );

@@ -4,7 +4,7 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { products } from "../../_data/products";
-import { useCart, useWishlist } from "../../_context/CrystalAuraProviders";
+import { useCart, useWishlist, useImagePack } from "../../_context/CrystalAuraProviders";
 import ProductCard from "../../_components/ProductCard";
 import { toast } from "sonner";
 
@@ -58,6 +58,7 @@ export default function CrystalAuraProductDetailPage({ params: paramsPromise }) 
   const id = params.id;
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { getProductImage } = useImagePack();
 
   const product = products.find((p) => p.id === id);
   const [quantity, setQuantity] = useState(1);
@@ -153,7 +154,7 @@ export default function CrystalAuraProductDetailPage({ params: paramsPromise }) 
           >
             <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/5 aspect-square">
               <img
-                src={product.image}
+                src={getProductImage(product.id, product.image)}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />

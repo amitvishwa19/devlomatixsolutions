@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCart, useWishlist } from "../_context/CrystalAuraProviders";
+import { useCart, useWishlist, useImagePack } from "../_context/CrystalAuraProviders";
 
 // Inline SVG Icons for Wishlist
 const HeartIcon = ({ className = "w-5 h-5", fill = "none" }) => (
@@ -29,6 +29,7 @@ const XIcon = ({ className = "w-5 h-5" }) => (
 export default function WishlistPage() {
   const { items, toggleWishlist } = useWishlist();
   const { addItem: addToCart } = useCart();
+  const { getProductImage } = useImagePack();
   const [quickView, setQuickView] = useState(null);
 
   return (
@@ -85,7 +86,7 @@ export default function WishlistPage() {
                   >
                     <div className="relative overflow-hidden aspect-[4/5] bg-white/5">
                       <img
-                        src={p.image}
+                        src={getProductImage(p.id, p.image)}
                         alt={p.name}
                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       />
@@ -169,7 +170,7 @@ export default function WishlistPage() {
               <div className="glass-card rounded-3xl max-w-2xl w-full pointer-events-auto overflow-hidden grid grid-cols-1 md:grid-cols-2 border border-white/10 max-h-[85vh] overflow-y-auto">
                 <div className="relative aspect-square md:aspect-auto bg-white/5">
                   <img
-                    src={quickView.image}
+                    src={getProductImage(quickView.id, quickView.image)}
                     alt={quickView.name}
                     className="w-full h-full object-cover"
                   />

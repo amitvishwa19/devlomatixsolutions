@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useCart, useWishlist } from "../_context/CrystalAuraProviders";
+import { useCart, useWishlist, useImagePack } from "../_context/CrystalAuraProviders";
 import { products as allProducts } from "../_data/products";
 
 // Inline SVG Icons
@@ -22,9 +22,11 @@ const ShoppingBagIcon = ({ className = "w-4 h-4" }) => (
 const ProductCard = ({ id, image, title, description, price, delay = 0 }) => {
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { getProductImage } = useImagePack();
 
   const product = id ? allProducts.find((p) => p.id === id) : undefined;
   const wishlisted = id ? isWishlisted(id) : false;
+  const resolvedImage = id ? getProductImage(id, image) : image;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -48,7 +50,7 @@ const ProductCard = ({ id, image, title, description, price, delay = 0 }) => {
     >
       <div className="relative overflow-hidden rounded-2xl mb-4 bg-white/[0.03] border border-white/5 aspect-square">
         <img
-          src={image}
+          src={resolvedImage}
           alt={title}
           className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
         />
