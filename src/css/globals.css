@@ -285,7 +285,7 @@ html {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-body);
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   h1,
