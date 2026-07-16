@@ -130,7 +130,7 @@ export default function MailboxPage() {
     }
 
     return (
-        <div className="flex h-full overflow-hidden animate-in fade-in  duration-1000">
+        <div className="absolute inset-0 flex overflow-hidden animate-in fade-in  duration-1000">
             {/* Folder Sidebar */}
             <MailSidebar
                 activeFolder={activeFolder}

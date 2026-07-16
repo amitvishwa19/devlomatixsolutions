@@ -21,10 +21,7 @@ import Services from './_components/Services';
 
 export default function HomePage() {
     return (
-        <PageTransition className="min-h-screen overflow-hidden w-full ">
-
-
-
+        <div className="min-h-screen  w-full ">
             <Hero />
             <Services />
             <WhyChooseUs />
@@ -33,6 +30,6 @@ export default function HomePage() {
             <Testimonials />
             <FAQ />
             <CTA />
-        </PageTransition>
+        </div>
     )
 }

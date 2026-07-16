@@ -12,7 +12,7 @@ const font = Inter({ subsets: ["latin"] });
 
 export default function PublicLayout({ children }) {
     return (
-        <div className={`${font.className} flex flex-col min-h-screen overflow-x-auto pb-24`} >
+        <div className={`${font.className} flex flex-col min-h-screen pb-24`} >
             <div className=''>
                 <Navbar />
             </div>

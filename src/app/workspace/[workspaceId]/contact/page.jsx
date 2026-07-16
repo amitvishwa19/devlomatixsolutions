@@ -233,7 +233,7 @@ export default function ContactManagementPage() {
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden animate-in fade-in duration-700 ">
+        <div className="absolute inset-0 flex flex-col overflow-hidden animate-in fade-in duration-700 ">
             {/* --- TOP HUD --- */}
             <div className="p-6 pb-2 border-b border-white/5 backdrop-blur-xl bg-background/20 sticky top-0 z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -361,10 +361,10 @@ export default function ContactManagementPage() {
             </div>
 
             {/* --- MAIN WORKSPACE --- */}
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 min-h-0 overflow-hidden">
 
                 {/* DATA TABLE AREA */}
-                <div className="flex-1 flex flex-col min-w-0 bg-background/5">
+                <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-background/5">
                     {/* TABLE TOOLBAR */}
                     <div className="p-4 border-b border-white/5 flex items-center justify-between gap-4">
                         <div className="relative flex-1 max-w-md group">
@@ -399,7 +399,7 @@ export default function ContactManagementPage() {
                     </div>
 
                     {/* SCROLLABLE DATA */}
-                    <ScrollArea className="flex-1">
+                    <ScrollArea className="flex-1 min-h-0">
                         {loading ? (
                             <div className="p-6 space-y-4">
                                 {[...Array(6)].map((_, i) => (

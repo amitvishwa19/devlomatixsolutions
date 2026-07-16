@@ -6,7 +6,7 @@ import { AppLogo } from '@/components/global/AppLogo';
 
 const AuthLayout = ({ children }) => {
     return (
-        <div className="min-h-screen flex flex-row w-full bg-[#0B0F19] text-white overflow-hidden">
+        <div className="min-h-screen flex flex-row w-full bg-[#0B0F19] text-white overflow-y-auto">
             {/* Ambient Background Glows */}
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#00F0FF]/5 blur-[120px]" />
