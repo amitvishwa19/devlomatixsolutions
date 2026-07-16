@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { symmetricDecrypt } from "@/lib/encryption";
+import fs from 'fs';
 
 const SendMessageSchema = z.object({
     workspaceId: z.string(),
@@ -138,7 +139,7 @@ const handler = async (data) => {
                 }
                 
                 console.log("[SendMessage] Final Template Components Payload:", JSON.stringify(data.template.components, null, 2));
-                require('fs').writeFileSync('d:\\Dev\\React\\devlomatix\\devlomatix-workspace\\devlomatix\\debug-payload.json', JSON.stringify({
+                fs.writeFileSync('d:\\Dev\\React\\devlomatix\\devlomatix-workspace\\devlomatix\\debug-payload.json', JSON.stringify({
                     templateName: data.template.name,
                     components: data.template.components,
                     fullRequestData: data

@@ -152,7 +152,6 @@ export default function WhatsAppChatsPage() {
 
     const [allContacts, setAllContacts] = useState([]);
     const [activeTab, setActiveTab] = useState("chats");
-    const [isFetchingContacts, setIsFetchingContacts] = useState(false);
 
     // Delete Modal State
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -224,9 +223,7 @@ export default function WhatsAppChatsPage() {
     const { execute: executeGetContacts } = useAction(getContacts, {
         onSuccess: (data) => {
             setAllContacts(Array.isArray(data) ? data : []);
-            setIsFetchingContacts(false);
-        },
-        onError: () => setIsFetchingContacts(false)
+        }
     });
 
     const { execute: executeGetGroups } = useAction(getGroups, {
@@ -313,7 +310,7 @@ export default function WhatsAppChatsPage() {
     };
 
     const fetchConversations = () => executeConversations({ workspaceId });
-    const fetchContacts = () => { setIsFetchingContacts(true); executeGetContacts({ workspaceId, userId }); };
+    const fetchContacts = () => { executeGetContacts({ workspaceId, userId }); };
     const fetchTemplates = () => executeGetTemplates({ workspaceId });
     const fetchGroups = () => executeGetGroups({ workspaceId });
     const fetchCategories = () => executeGetCategories({ workspaceId, type: 'CONTACT' });
@@ -808,7 +805,7 @@ export default function WhatsAppChatsPage() {
                                             </div>
                                             <h3 className="text-sm font-bold text-zinc-800 mb-1">No Contacts Found</h3>
                                             <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                                                We couldn't find any contacts matching the selected filter.
+                                                We couldn&apos;t find any contacts matching the selected filter.
                                             </p>
                                         </div>
                                     ) : (

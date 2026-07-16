@@ -25,7 +25,14 @@ export default function DeleteCampaignDialog({ open, onOpenChange, campaign, isD
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isDeleting}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onConfirm} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/80 min-w-[80px]">
+                    <AlertDialogAction
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onConfirm();
+                        }}
+                        disabled={isDeleting}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/80 min-w-[80px]"
+                    >
                         {isDeleting ? <Trash2 className="w-4 h-4 animate-spin" /> : "Delete"}
                     </AlertDialogAction>
                 </AlertDialogFooter>

@@ -15,6 +15,8 @@ import { deleteCampaign as deleteCampaignAction } from "./campaigns/_actions/del
 import { toggleCampaignStatus as toggleCampaignStatusAction } from "./campaigns/_actions/toggle-campaign-status";
 import WhatsAppSettingModal from "./_components/WhatsAppSettingModal";
 import AccountSwitcher from "./_components/AccountSwitcher";
+import { toast } from "sonner";
+import DeleteCampaignDialog from "./campaigns/_cpmponents/DeleteCampaignDialog";
 
 
 
@@ -50,6 +52,10 @@ export default function DashboardPage() {
     const [error, setError] = useState(null);
     const [isWhatsappSettingOpen, setIsWhatsappSettingOpen] = useState(false);
     const handleWhatsappSettingClose = () => setIsWhatsappSettingOpen(false);
+
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [campaignToDelete, setCampaignToDelete] = useState(null);
 
     const { execute: executeGetCampaigns } = useAction(getCampaigns, {
         onSuccess: (data) => {
@@ -132,12 +138,34 @@ export default function DashboardPage() {
     };
 
     const { execute: executeDeleteCampaign } = useAction(deleteCampaignAction, {
-        onSuccess: () => refresh(),
-        onError: (error) => setError(error)
+        onSuccess: () => {
+            refresh();
+            setDeleteDialogOpen(false);
+            setCampaignToDelete(null);
+            setIsDeleting(false);
+            toast.success("Campaign deleted");
+        },
+        onError: (error) => {
+            setError(error);
+            setDeleteDialogOpen(false);
+            setCampaignToDelete(null);
+            setIsDeleting(false);
+            toast.error(error || "Failed to delete campaign");
+        }
     });
 
-    const deleteCampaign = (id) => {
-        executeDeleteCampaign({ workspaceId, id });
+    const handleDeleteClick = (id) => {
+        const campaign = campaigns.find((c) => c.id === id);
+        if (campaign) {
+            setCampaignToDelete(campaign);
+            setDeleteDialogOpen(true);
+        }
+    };
+
+    const confirmDelete = () => {
+        if (!campaignToDelete) return;
+        setIsDeleting(true);
+        executeDeleteCampaign({ workspaceId, id: campaignToDelete.id });
     };
 
     const { execute: executeSaveCampaign } = useAction(saveCampaign, {
@@ -242,7 +270,7 @@ export default function DashboardPage() {
                                     <MessageCircleDashed className="w-12 h-12 text-muted-foreground/50 mb-4" />
                                     <h3 className="text-lg font-medium text-foreground">No campaigns found</h3>
                                     <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                                        You haven't created any WhatsApp campaigns yet. Head to the Bulk Sender to start your first broadcast.
+                                        You haven&apos;t created any WhatsApp campaigns yet. Head to the Bulk Sender to start your first broadcast.
                                     </p>
                                     <Button variant="outline" className="mt-6" asChild>
                                         <a href={`/workspace/${workspaceId}/wa-cloud-api/bulk-sender`}>Go to Bulk Sender</a>
@@ -258,11 +286,7 @@ export default function DashboardPage() {
                                         setEditCampaign(c);
                                         setDialogOpen(true);
                                     }}
-                                    onDelete={(id) => {
-                                        if (window.confirm("Delete this campaign? This cannot be undone.")) {
-                                            deleteCampaign(id);
-                                        }
-                                    }} />
+                                    onDelete={handleDeleteClick} />
 
                     }
                 </div>
@@ -286,6 +310,14 @@ export default function DashboardPage() {
             <WhatsAppSettingModal
                 open={isWhatsappSettingOpen}
                 onClose={handleWhatsappSettingClose}
+            />
+
+            <DeleteCampaignDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                campaign={campaignToDelete}
+                isDeleting={isDeleting}
+                onConfirm={confirmDelete}
             />
 
 

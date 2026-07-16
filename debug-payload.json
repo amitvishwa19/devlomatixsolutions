@@ -1,0 +1,16 @@
+{
+  "templateName": "hello_world",
+  "components": [],
+  "fullRequestData": {
+    "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
+    "to": "919712340450",
+    "type": "template",
+    "template": {
+      "name": "hello_world",
+      "language": {
+        "code": "en_US"
+      },
+      "components": []
+    }
+  }
+}
