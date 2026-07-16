@@ -100,7 +100,24 @@ export default function TipTap({ data, onChange }) {
     });
 
     useEffect(() => {
-        editor?.commands.setContent(data);
+        if (!editor) return;
+
+        // If the editor is focused, we don't want to overwrite its content, 
+        // as the changes are originating from the user's active input.
+        if (editor.isFocused) return;
+
+        const currentHTML = editor.getHTML();
+        
+        // Normalize empty content to avoid false-positive mismatches (e.g. '' vs '<p></p>')
+        const normalize = (html) => {
+            if (!html) return '';
+            if (html === '<p></p>' || html === '<p><br></p>') return '';
+            return html;
+        };
+
+        if (normalize(currentHTML) !== normalize(data)) {
+            editor.commands.setContent(data, false);
+        }
     }, [data, editor]);
 
     if (!editor) return null;
@@ -120,11 +137,13 @@ export default function TipTap({ data, onChange }) {
     };
 
     return (
-        <div className="flex flex-col h-full w-full rounded-lg border overflow-hidden">
+        <div className="flex flex-col h-full w-full rounded-lg  overflow-hidden">
 
             {/* ✅ FULL FEATURED TOOLBAR (Google Docs style) */}
             <div className="sticky top-0 z-20 bg-background border-b">
                 <ScrollArea className="w-full">
+
+
                     <div className="flex items-center gap-1 p-2 whitespace-nowrap">
 
                         {/* Undo / Redo */}
@@ -298,10 +317,8 @@ export default function TipTap({ data, onChange }) {
 
 
             {/* ✅ SCROLLABLE EDITOR ONLY */}
-            <div className="flex-1 min-h-0">
-                <ScrollArea className="">
-                    <EditorContent editor={editor} />
-                </ScrollArea>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+                <EditorContent editor={editor} />
             </div>
 
         </div>

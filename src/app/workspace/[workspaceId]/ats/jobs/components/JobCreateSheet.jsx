@@ -34,6 +34,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import TipTap from '@/components/global/TipTap';
+import JoditRichEditor from '@/components/global/JoditRichEditor';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import useSWR from 'swr';
 
@@ -55,6 +56,7 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
     const [type, setType] = useState("");
     const [salaryRange, setSalaryRange] = useState("");
     const [description, setDescription] = useState('');
+    const [editorType, setEditorType] = useState('jodit');
 
     useEffect(() => {
         if (open) {
@@ -223,12 +225,44 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
 
                             {/* Editor Section */}
                             <div className="space-y-4">
-                                <div className="flex items-center gap-2   tracking-[0.2em] text-muted-foreground/40 mb-2">
-                                    <Layout className="w-3.5 h-3.5" />
-                                    Job Description
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                    <div className="flex items-center gap-2 tracking-[0.2em] text-muted-foreground/40">
+                                        <Layout className="w-3.5 h-3.5" />
+                                        Job Description
+                                    </div>
+                                    <div className="flex items-center gap-1 border border-border/40 rounded-lg p-0.5 bg-muted/10 text-[10px] font-bold">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditorType('jodit')}
+                                            className={`px-3 py-1 rounded-md transition-all ${
+                                                editorType === 'jodit'
+                                                    ? 'bg-primary text-white shadow-sm'
+                                                    : 'text-muted-foreground hover:text-foreground'
+                                            }`}
+                                        >
+                                            Classic Editor
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditorType('tiptap')}
+                                            className={`px-3 py-1 rounded-md transition-all ${
+                                                editorType === 'tiptap'
+                                                    ? 'bg-primary text-white shadow-sm'
+                                                    : 'text-muted-foreground hover:text-foreground'
+                                            }`}
+                                        >
+                                            TipTap Editor
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="min-h-[400px] border border-border/20 rounded-md overflow-hidden focus-within:border-primary/40 transition-colors bg-muted/5 shadow-inner">
-                                    <TipTap data={description} onChange={setDescription} />
+                                <div className="min-h-[400px]">
+                                    {editorType === 'jodit' ? (
+                                        <JoditRichEditor data={description} onChange={setDescription} />
+                                    ) : (
+                                        <div className="border border-border/20 rounded-md overflow-hidden focus-within:border-primary/40 transition-colors bg-muted/5 shadow-inner animate-in fade-in duration-300">
+                                            <TipTap data={description} onChange={setDescription} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
