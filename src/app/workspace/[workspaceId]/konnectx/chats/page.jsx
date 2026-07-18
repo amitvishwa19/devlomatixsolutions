@@ -21,7 +21,7 @@ import {
     Loader2,
     Sparkles,
     MessageSquare,
-    Trash2, Share2, UserPlus, Eye, Mail, Tag, Info
+    Trash2, Share2, UserPlus, Eye, Mail, Tag, Info, X
 } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import { useAction } from "@/hooks/use-action";
@@ -72,6 +72,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import MediaBubble from "./_components/MediaBubble";
 import TemplateMessage from "./_components/TemplateMessage";
 import AccountSwitcher from "../_components/AccountSwitcher";
@@ -162,6 +169,7 @@ export default function WhatsAppChatsPage() {
     const [isAssignOpen, setIsAssignOpen] = useState(false);
     const [jidToAssign, setJidToAssign] = useState(null);
     const [assignUsers, setAssignUsers] = useState([]);
+    const [selectedAssignEmail, setSelectedAssignEmail] = useState('');
 
     // View Contact Modal State
     const [isViewContactOpen, setIsViewContactOpen] = useState(false);
@@ -285,28 +293,63 @@ export default function WhatsAppChatsPage() {
     });
 
     const { execute: executeAssign, isLoading: isAssigning } = useAction(assignConversation, {
-        onSuccess: (data) => {
-            toast.success(`Conversation assigned to ${data.user.displayName || data.user.email}`);
-            setIsAssignOpen(false);
-            setJidToAssign(null);
+        onSuccess: (data, context) => {
+            toast.success(`Conversation shared with ${data.user.displayName || data.user.email}`);
+            setSelectedAssignEmail('');
+            setConversations(prev => prev.map(c => {
+                if (c.jid === context.jid) {
+                    const alreadyShared = c.sharedWith || [];
+                    if (!alreadyShared.some(s => s.sharedWithUserId === data.user.id)) {
+                        return {
+                            ...c,
+                            sharedWith: [...alreadyShared, {
+                                id: `temp_share_${Date.now()}`,
+                                sharedWithUserId: data.user.id,
+                                sharedByUserId: userId,
+                                sharedWith: {
+                                    id: data.user.id,
+                                    displayName: data.user.displayName,
+                                    email: data.user.email
+                                }
+                            }]
+                        };
+                    }
+                }
+                return c;
+            }));
         },
         onError: (err) => toast.error(err)
     });
 
-    const { execute: executeRemoveAssign } = useAction(removeConversationAssignment, {
-        onSuccess: () => toast.success("Assignment removed"),
+    const { execute: executeRemoveAssign, isLoading: isRemovingAssign } = useAction(removeConversationAssignment, {
+        onSuccess: (data, context) => {
+            toast.success("Share access removed");
+            setConversations(prev => prev.map(c => {
+                if (c.jid === context.jid) {
+                    return {
+                        ...c,
+                        sharedWith: (c.sharedWith || []).filter(s => s.sharedWithUserId !== context.sharedWithUserId)
+                    };
+                }
+                return c;
+            }));
+        },
         onError: (err) => toast.error(err)
     });
 
     const handleAssignConversation = (jid) => {
         setJidToAssign(jid);
+        setSelectedAssignEmail('');
         setIsAssignOpen(true);
         executeSearchUsers({ workspaceId, query: '' });
     };
 
-    const confirmAssign = (email) => {
-        if (!jidToAssign || !email) return;
-        executeAssign({ workspaceId, jid: jidToAssign, email });
+    const confirmAssign = () => {
+        if (!jidToAssign || !selectedAssignEmail) return;
+        executeAssign(
+            { workspaceId, jid: jidToAssign, email: selectedAssignEmail },
+            { jid: jidToAssign, email: selectedAssignEmail }
+        );
     };
 
     const fetchConversations = () => executeConversations({ workspaceId });
@@ -724,30 +767,41 @@ export default function WhatsAppChatsPage() {
                                                                 </Badge>
                                                             )}
                                                         </div>
-                                                        <span className="text-[9px] text-muted-foreground group-hover:hidden">
-                                                            {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
-                                                        </span>
-                                                        <div className="flex items-center gap-1">
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); setViewContactJid(chat.jid); setIsViewContactOpen(true); }}
-                                                                className="p-1 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-colors text-muted-foreground opacity-40 hover:opacity-100"
-                                                                title="View contact details"
-                                                            >
-                                                                <Eye size={12} />
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); handleAssignConversation(chat.jid); }}
-                                                                className="p-1 hover:bg-purple-100 hover:text-purple-600 rounded-md transition-colors text-muted-foreground opacity-40 hover:opacity-100"
-                                                                title="Assign conversation"
-                                                            >
-                                                                <Share2 size={12} />
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => handleDeleteConversation(e, chat.jid)}
-                                                                className="p-1 hover:bg-red-100 hover:text-red-600 rounded-md transition-colors text-muted-foreground opacity-40 hover:opacity-100"
-                                                            >
-                                                                <Trash2 size={12} />
-                                                            </button>
+                                                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                            <span className="text-[9px] text-muted-foreground group-hover:hidden">
+                                                                {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
+                                                            </span>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <button
+                                                                        className="p-1 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                                        title="More options"
+                                                                    >
+                                                                        <MoreVertical size={14} />
+                                                                    </button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-44">
+                                                                    <DropdownMenuItem
+                                                                        className="gap-2 cursor-pointer"
+                                                                        onClick={() => { setViewContactJid(chat.jid); setIsViewContactOpen(true); }}
+                                                                    >
+                                                                        <Eye size={13} /> View Contact
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        className="gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
+                                                                        onClick={() => handleAssignConversation(chat.jid)}
+                                                                    >
+                                                                        <Share2 size={13} /> Share / Delegate
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                                        onClick={(e) => handleDeleteConversation(e, chat.jid)}
+                                                                    >
+                                                                        <Trash2 size={13} /> Delete Chat
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
                                                         </div>
                                                     </div>
                                                     <p className="text-[11px] text-muted-foreground truncate opacity-70">
@@ -866,6 +920,16 @@ export default function WhatsAppChatsPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="rounded-full h-8 px-3 gap-1.5 text-xs opacity-80 hover:opacity-100 hover:bg-purple-100 hover:text-purple-700 transition-colors"
+                                        onClick={() => selectedJid && handleAssignConversation(selectedJid)}
+                                        title="Share this conversation"
+                                    >
+                                        <Share2 className="w-3.5 h-3.5" />
+                                        Share
+                                    </Button>
                                     <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
                                         <Video className="w-4 h-4" />
                                     </Button>
@@ -1219,36 +1283,80 @@ export default function WhatsAppChatsPage() {
                 <DialogContent className="bg-card border-border max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <Share2 className="w-4 h-4" /> Assign Conversation
+                            <Share2 className="w-4 h-4" /> Share Conversation
                         </DialogTitle>
                         <DialogDescription>
-                            Assign this conversation to another user. They will be able to view and reply to messages.
+                            Share this conversation with other users. They will be able to view and reply to messages.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-2">
-                        <div className="space-y-2">
-                            <Label>Select User</Label>
-                            <div className="flex gap-2">
-                                <Select value="" onValueChange={(email) => confirmAssign(email)}>
-                                    <SelectTrigger className="flex-1">
-                                        <SelectValue placeholder="Choose a user..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {assignUsers.map((user) => (
-                                            <SelectItem key={user.id} value={user.email}>
-                                                {user.displayName || user.email}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                    {(() => {
+                        const activeChat = conversations.find(c => c.jid === jidToAssign);
+                        const sharedWithList = activeChat?.sharedWith || [];
+                        return (
+                            <div className="space-y-4 py-2">
+                                <div className="space-y-2">
+                                    <Label>Select User</Label>
+                                    <div className="flex gap-2">
+                                        <Select value={selectedAssignEmail} onValueChange={setSelectedAssignEmail}>
+                                            <SelectTrigger className="flex-1">
+                                                <SelectValue placeholder="Choose a user..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {assignUsers.map((user) => {
+                                                    const isShared = new Set([
+                                                        ...sharedWithList.map(s => s.sharedWithUserId),
+                                                        ...(userId ? [userId] : [])
+                                                    ]).has(user.id);
+                                                    return (
+                                                        <SelectItem key={user.id} value={user.email} disabled={isShared}>
+                                                            {user.displayName || user.email} {isShared ? '(Already shared)' : ''}
+                                                        </SelectItem>
+                                                    );
+                                                })}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button onClick={confirmAssign} disabled={isAssigning || !selectedAssignEmail} className="gap-2">
+                                            {isAssigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                                            Share
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {sharedWithList.length > 0 && (
+                                    <div className="space-y-2">
+                                        <Label>Shared with</Label>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                                            {sharedWithList.map((share) => (
+                                                <div key={share.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 border border-border/50">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                                        <span className="text-sm truncate">{share.sharedWith?.displayName || share.sharedWith?.email}</span>
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="w-7 h-7 text-muted-foreground hover:text-destructive shrink-0"
+                                                        onClick={() => executeRemoveAssign(
+                                                            { workspaceId, jid: jidToAssign, sharedWithUserId: share.sharedWithUserId },
+                                                            { jid: jidToAssign, sharedWithUserId: share.sharedWithUserId }
+                                                        )}
+                                                        disabled={isRemovingAssign}
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    </div>
+                        );
+                    })()}
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => { setIsAssignOpen(false); setJidToAssign(null); }}>
-                            Cancel
+                            Close
                         </Button>
                     </DialogFooter>
                 </DialogContent>

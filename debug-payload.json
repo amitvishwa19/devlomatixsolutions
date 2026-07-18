@@ -1,16 +1,36 @@
 {
-  "templateName": "hello_world",
-  "components": [],
+  "templateName": "account_creation_confirmation_3",
+  "components": [
+    {
+      "type": "body",
+      "parameters": [
+        {
+          "type": "text",
+          "text": "hhhhhhhhh"
+        }
+      ]
+    }
+  ],
   "fullRequestData": {
     "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
     "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "hello_world",
+      "name": "account_creation_confirmation_3",
       "language": {
         "code": "en_US"
       },
-      "components": []
+      "components": [
+        {
+          "type": "body",
+          "parameters": [
+            {
+              "type": "text",
+              "text": "hhhhhhhhh"
+            }
+          ]
+        }
+      ]
     }
   }
 }

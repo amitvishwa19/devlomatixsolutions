@@ -1,23 +1,14 @@
-'use server'
+import { db } from './src/lib/db.js';
+import { symmetricDecrypt } from './src/lib/encryption.js';
 
-import { z } from "zod";
-import { createSafeAction } from "@/utils/CreateSafeAction";
-import { db } from "@/lib/db";
-import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+BigInt.prototype.toJSON = function() { return this.toString(); };
 
-const GetConversationsSchema = z.object({
-    workspaceId: z.string(),
-});
-
-const handler = async (data) => {
-    const { workspaceId } = data;
+async function run() {
+    const userId = 'cmorc8b0q0002m0ik8o8as06s';
+    const workspaceId = 'cmorc8bws0006m0ik2zrlvl3i';
 
     try {
-        const session = await ensureWorkspaceAccess(workspaceId);
-        const userId = session.user.userId || session.user.id;
-
-        // 1. Find Credential (with fallback to latest if no default is set)
+        console.log("--- 1. Find Credential ---");
         let defaultCredential = await db.credentials.findFirst({
             where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
         });
@@ -29,33 +20,35 @@ const handler = async (data) => {
             });
         }
 
+        console.log("Found credential:", defaultCredential ? defaultCredential.id : "none");
         if (!defaultCredential) {
-            return { data: { success: true, conversations: [] } };
+            console.log("No credential found.");
+            return;
         }
 
-        // Extract active Phone ID
         let cloudCreds = null;
         const stored = defaultCredential.credentials;
         if (typeof stored === 'string' && stored.includes(':')) {
-            try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
+            try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { console.error("Decryption error 1:", e); }
         } else if (typeof stored === 'string') {
-            try { cloudCreds = JSON.parse(stored); } catch (e) { }
+            try { cloudCreds = JSON.parse(stored); } catch (e) { console.error("JSON error 1:", e); }
         } else { cloudCreds = stored; }
         
         if (cloudCreds?.enc) {
-            try { cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc)); } catch (e) { }
+            try { cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc)); } catch (e) { console.error("Decryption error 2:", e); }
         }
         const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
-        console.log(`[getConversations] Fetching messages for PhoneID: ${activePhoneId} (User: ${userId})`);
+        console.log("Active Phone ID:", activePhoneId);
 
-        // 2. Find conversations assigned to this user
+        console.log("--- 2. Find assigned shares ---");
         const assignedShares = await db.conversationShare.findMany({
             where: { sharedWithUserId: userId, workspaceId }
         });
+        console.log("Assigned shares:", assignedShares);
         const assignedJids = assignedShares.map(s => s.jid);
 
-        // 3. Fetch messages: own messages + messages from assigned conversations
-        const ownMessages = db.whatsAppMessage.findMany({
+        console.log("--- 3. Fetch messages ---");
+        const ownMessages = await db.whatsAppMessage.findMany({
             where: {
                 userId,
                 metadata: {
@@ -65,9 +58,10 @@ const handler = async (data) => {
             },
             orderBy: { timestamp: 'desc' }
         });
+        console.log("Own messages count:", ownMessages.length);
 
         const assignedMessages = assignedJids.length > 0
-            ? db.whatsAppMessage.findMany({
+            ? await db.whatsAppMessage.findMany({
                 where: {
                     jid: { in: assignedJids },
                     metadata: {
@@ -77,56 +71,28 @@ const handler = async (data) => {
                 },
                 orderBy: { timestamp: 'desc' }
             })
-            : Promise.resolve([]);
+            : [];
+        console.log("Assigned messages count:", assignedMessages.length);
 
-        const allContacts = db.contact.findMany({
+        const allContacts = await db.contact.findMany({
             where: { userId }
         });
+        console.log("All contacts count:", allContacts.length);
 
-        const allShares = db.conversationShare.findMany({
-            where: { workspaceId },
-            include: {
-                sharedWith: {
-                    select: { id: true, displayName: true, email: true }
-                }
-            }
-        });
-
-        const [messages, assignedMsgs, contacts, shares] = await Promise.all([
-            ownMessages, 
-            assignedMessages, 
-            allContacts,
-            allShares
-        ]);
-
-        // Also fetch contacts owned by assigning users for name resolution
         const assigningUserIds = [...new Set(assignedShares.map(s => s.sharedByUserId))];
         const assignorContacts = assigningUserIds.length > 0
             ? await db.contact.findMany({ where: { userId: { in: assigningUserIds } } })
             : [];
+        console.log("Assignor contacts count:", assignorContacts.length);
 
         const contactMap = {};
-        contacts.forEach(c => {
+        allContacts.forEach(c => {
             const cleanPhone = c.phone.replace(/\D/g, '');
             contactMap[cleanPhone] = c.name;
         });
         assignorContacts.forEach(c => {
             const cleanPhone = c.phone.replace(/\D/g, '');
             if (!contactMap[cleanPhone]) contactMap[cleanPhone] = c.name;
-        });
-
-        const sharesMap = {};
-        shares.forEach(s => {
-            const normalizedJid = s.jid.replace(/\D/g, '').split('@')[0] + "@s.whatsapp.net";
-            if (!sharesMap[normalizedJid]) {
-                sharesMap[normalizedJid] = [];
-            }
-            sharesMap[normalizedJid].push({
-                id: s.id,
-                sharedWithUserId: s.sharedWithUserId,
-                sharedByUserId: s.sharedByUserId,
-                sharedWith: s.sharedWith
-            });
         });
 
         const conversationsMap = {};
@@ -148,8 +114,7 @@ const handler = async (data) => {
                     fromMe: msg.fromMe,
                     unreadCount: 0,
                     messages: [],
-                    assigned: isAssigned ? true : undefined,
-                    sharedWith: sharesMap[normalizedJid] || []
+                    assigned: isAssigned ? true : undefined
                 };
             }
             if (!conversationsMap[normalizedJid].messages.find(m => m.id === msg.id)) {
@@ -166,20 +131,20 @@ const handler = async (data) => {
             }
         };
 
-        messages.forEach(msg => processMsg(msg, false));
-        assignedMsgs.forEach(msg => processMsg(msg, true));
+        ownMessages.forEach(msg => processMsg(msg, false));
+        assignedMessages.forEach(msg => processMsg(msg, true));
 
         const conversations = Object.values(conversationsMap).sort((a, b) => b.timestamp - a.timestamp);
+        console.log("Conversations fetched count:", conversations.length);
+        console.log("Serialization test...");
+        JSON.stringify(conversations);
+        console.log("Serialization success!");
 
-        return { 
-            data: {
-                success: true, 
-                conversations: JSON.parse(JSON.stringify(conversations))
-            } 
-        };
-    } catch (error) {
-        return { error: error.message || "Failed to fetch conversations" };
+    } catch (e) {
+        console.error("CRITICAL ERROR:", e);
+    } finally {
+        await db.$disconnect();
     }
-};
+}
 
-export const getConversations = createSafeAction(GetConversationsSchema, handler);
+run();

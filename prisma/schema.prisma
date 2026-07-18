@@ -52,7 +52,8 @@ model User {
   setting                   Setting?
   systemCrons               SystemCron[]
   whatsAppAuths             WhatsAppAuth[]
-  waMessages                WhatsAppMessage[]
+  waMessages                WhatsAppMessage[]        @relation("UserWaMessages")
+  sharedMessages            WhatsAppMessage[]        @relation("MessageUsers")
   workflows                 Workflow[]
   workspaceDocuments        WorkspaceDocument[]
   roles                     Role[]                   @relation("RoleToUser")
@@ -72,11 +73,11 @@ model User {
   agentChatThreads          AgentChatThread[]
   agentChatMessages         AgentChatMessage[]
   whatsAppFlows             WhatsAppFlow[]
-  templateShares            TemplateShare[]           @relation("SharedTemplateUser")
-  sharedTemplates           MessageTemplate[]          @relation("TemplateUsers")
+  templateShares            TemplateShare[]          @relation("SharedTemplateUser")
+  sharedTemplates           MessageTemplate[]        @relation("TemplateUsers")
   contactShares             ContactShare[]
-  conversationShares        ConversationShare[]     @relation("ConversationSharedWith")
-  conversationSharesBy      ConversationShare[]     @relation("ConversationSharedBy")
+  conversationShares        ConversationShare[]      @relation("ConversationSharedWith")
+  conversationSharesBy      ConversationShare[]      @relation("ConversationSharedBy")
 
   @@index([email])
   @@index([phone])
@@ -345,46 +346,47 @@ model WhatsAppAuth {
 }
 
 model MessageTemplate {
-  id            String     @id @default(cuid())
+  id            String          @id @default(cuid())
   templateId    String?
   userId        String
   name          String
   templateName  String?
-  approved      Boolean    @default(false)
-  category      String     @default("UTILITY")
-  language      String     @default("en_US")
-  type          String     @default("TEXT")
+  approved      Boolean         @default(false)
+  category      String          @default("UTILITY")
+  language      String          @default("en_US")
+  type          String          @default("TEXT")
   body          String
   header        String?
   footer        String?
   buttons       Json?
   metadata      Json?
-  status        String     @default("DRAFT")
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  isDefault     Boolean    @default(false)
-  platform      String     @default("WHATSAPP_CLOUD")
+  status        String          @default("DRAFT")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  isDefault     Boolean         @default(false)
+  platform      String          @default("WHATSAPP_CLOUD")
   phoneNumberId String?
   campaigns     Campaign[]
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   sharedWith    TemplateShare[]
-  users         User[]             @relation("TemplateUsers")
+  users         User[]          @relation("TemplateUsers")
 
   @@index([userId])
 }
 
 model WhatsAppMessage {
-  id        String   @id @default(cuid())
-  waId      String?  @unique
-  userId    String
-  jid       String
-  text      String
-  fromMe    Boolean
-  timestamp BigInt
-  status    String   @default("SENT")
-  metadata  Json?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  waId        String?  @unique
+  userId      String
+  jid         String
+  text        String
+  fromMe      Boolean
+  timestamp   BigInt
+  sharedUsers User[]   @relation("MessageUsers")
+  status      String   @default("SENT")
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  user        User     @relation("UserWaMessages", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([jid])
@@ -442,17 +444,17 @@ model Contact {
 }
 
 model BotFlow {
-  id          String          @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   description String?
   userId      String
   workspaceId String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  active      Boolean         @default(true)
-  nodes       Json            @default("[]")
-  edges       Json            @default("[]")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  active      Boolean        @default(true)
+  nodes       Json           @default("[]")
+  edges       Json           @default("[]")
   steps       BotFlowStep[]
   executions  BotExecution[]
 
@@ -555,21 +557,21 @@ model WhatsAppDeliveryLog {
 }
 
 model WhatsAppFlow {
-  id                  String   @id @default(cuid())
-  workspaceId         String
-  userId              String
-  name                String
-  description         String?
-  flowId              String?  @unique
-  status              String   @default("DRAFT")
-  categories          String[] @default([])
-  screens             Json     @default("[]")
-  definition          Json?
-  endpointUrl         String?
-  metaValidationErrors Json?   @default("[]")
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String   @id @default(cuid())
+  workspaceId          String
+  userId               String
+  name                 String
+  description          String?
+  flowId               String?  @unique
+  status               String   @default("DRAFT")
+  categories           String[] @default([])
+  screens              Json     @default("[]")
+  definition           Json?
+  endpointUrl          String?
+  metaValidationErrors Json?    @default("[]")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([userId])
@@ -1181,13 +1183,13 @@ model ECommerceCoupon {
   id             String         @id @default(cuid())
   storeId        String
   code           String
-  type           String         // "PERCENTAGE" or "FIXED"
-  value          Float          // e.g., 20 for 20% or 500 for ₹500 off
-  minOrderAmount Float?         // Minimum order amount to apply the coupon
-  maxDiscount    Float?         // Maximum discount amount (for percentage coupons)
-  usageLimit     Int?           // Total number of times this coupon can be used
+  type           String // "PERCENTAGE" or "FIXED"
+  value          Float // e.g., 20 for 20% or 500 for ₹500 off
+  minOrderAmount Float? // Minimum order amount to apply the coupon
+  maxDiscount    Float? // Maximum discount amount (for percentage coupons)
+  usageLimit     Int? // Total number of times this coupon can be used
   usedCount      Int            @default(0) // How many times it has been used
-  expiryDate     DateTime?      // When the coupon expires
+  expiryDate     DateTime? // When the coupon expires
   isActive       Boolean        @default(true)
   metadata       Json?
   createdAt      DateTime       @default(now())
@@ -1229,16 +1231,16 @@ model ECommerceOrder {
 }
 
 model ECommerceProduct {
-  id                String          @id @default(cuid())
+  id                String                    @id @default(cuid())
   storeId           String?
-  externalProductId String?         @unique
-  sku               String?         @unique
-  slug              String?         @unique
+  externalProductId String?                   @unique
+  sku               String?                   @unique
+  slug              String?                   @unique
   title             String
   description       String?
   price             Float
-  discount          Float?          @default(0)
-  currency          String          @default("INR")
+  discount          Float?                    @default(0)
+  currency          String                    @default("INR")
   imageUrls         Json?
   status            String
   inventoryCount    Int?
@@ -1246,10 +1248,10 @@ model ECommerceProduct {
   dimensions        Json?
   metadata          Json?
   userId            String
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  store             ECommerceStore? @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  store             ECommerceStore?           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   variants          ECommerceProductVariant[]
   reviews           ECommerceReview[]
 
@@ -1259,19 +1261,19 @@ model ECommerceProduct {
 }
 
 model ECommerceReview {
-  id             String           @id @default(cuid())
-  productId      String
-  rating         Int              // 1 to 5
-  title          String?
-  comment        String?
-  customerName   String?          // Display name
-  customerEmail  String?
-  isVerified     Boolean          @default(false) // True if they bought it
-  status         String           @default("pending") // pending, approved, rejected
-  metadata       Json?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  product        ECommerceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id            String           @id @default(cuid())
+  productId     String
+  rating        Int // 1 to 5
+  title         String?
+  comment       String?
+  customerName  String? // Display name
+  customerEmail String?
+  isVerified    Boolean          @default(false) // True if they bought it
+  status        String           @default("pending") // pending, approved, rejected
+  metadata      Json?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  product       ECommerceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([rating])
@@ -1281,13 +1283,13 @@ model ECommerceReview {
 model ECommerceProductVariant {
   id             String           @id @default(cuid())
   productId      String
-  name           String           // e.g., "Small / Red"
+  name           String // e.g., "Small / Red"
   sku            String?
-  price          Float?           // If null, falls back to product price
+  price          Float? // If null, falls back to product price
   inventoryCount Int              @default(0)
   weight         Float?
   dimensions     Json?
-  imageUrls      Json?            // Variant-specific images
+  imageUrls      Json? // Variant-specific images
   metadata       Json?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -1544,16 +1546,16 @@ model AgentChatMessage {
 }
 
 model EcommerceConfig {
-  id            String   @id @default(cuid())
+  id            String         @id @default(cuid())
   appIdentifier String
   storeName     String
   storeId       String
   store         ECommerceStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
   webhookUrl    String
   apiKey        String // Encrypted
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@unique([storeName])
   @@index([storeName])
@@ -1561,12 +1563,12 @@ model EcommerceConfig {
 }
 
 model TemplateShare {
-  id                String          @id @default(cuid())
-  templateId        String
-  sharedWithUserId  String
-  createdAt         DateTime        @default(now())
-  template          MessageTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  sharedWith        User            @relation("SharedTemplateUser", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  id               String          @id @default(cuid())
+  templateId       String
+  sharedWithUserId String
+  createdAt        DateTime        @default(now())
+  template         MessageTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  sharedWith       User            @relation("SharedTemplateUser", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
 
   @@unique([templateId, sharedWithUserId])
   @@index([sharedWithUserId])
@@ -1574,12 +1576,12 @@ model TemplateShare {
 }
 
 model ContactShare {
-  id                String   @id @default(cuid())
-  contactId         String
-  sharedWithUserId  String
-  createdAt         DateTime @default(now())
-  contact           Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  sharedWith        User     @relation(fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  contactId        String
+  sharedWithUserId String
+  createdAt        DateTime @default(now())
+  contact          Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  sharedWith       User     @relation(fields: [sharedWithUserId], references: [id], onDelete: Cascade)
 
   @@unique([contactId, sharedWithUserId])
   @@index([sharedWithUserId])
@@ -1587,14 +1589,14 @@ model ContactShare {
 }
 
 model ConversationShare {
-  id                String   @id @default(cuid())
-  jid               String
-  workspaceId       String
-  sharedWithUserId  String
-  sharedByUserId    String
-  createdAt         DateTime @default(now())
-  sharedWith        User     @relation("ConversationSharedWith", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
-  sharedBy          User     @relation("ConversationSharedBy", fields: [sharedByUserId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  jid              String
+  workspaceId      String
+  sharedWithUserId String
+  sharedByUserId   String
+  createdAt        DateTime @default(now())
+  sharedWith       User     @relation("ConversationSharedWith", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  sharedBy         User     @relation("ConversationSharedBy", fields: [sharedByUserId], references: [id], onDelete: Cascade)
 
   @@unique([jid, workspaceId, sharedWithUserId])
   @@index([sharedWithUserId])
