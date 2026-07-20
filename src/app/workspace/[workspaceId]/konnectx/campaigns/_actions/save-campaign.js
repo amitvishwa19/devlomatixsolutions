@@ -42,9 +42,19 @@ const handler = async (data) => {
             credentialId: defaultCredential?.id || null,
         };
 
-        let allRecipients = recipients && Array.isArray(recipients) ? [...recipients] : [];
-
-        const existingPhones = new Set(allRecipients.map(r => typeof r === 'string' ? r : r.phone));
+        let allRecipients = [];
+        const existingPhones = new Set();
+        
+        if (recipients && Array.isArray(recipients)) {
+            recipients.forEach(r => {
+                const rawPhone = typeof r === 'string' ? r : r.phone;
+                const phone = String(rawPhone).replace(/\D/g, ''); // Normalize phone number
+                if (phone && !existingPhones.has(phone)) {
+                    allRecipients.push({ ...r, phone }); // Save normalized phone
+                    existingPhones.add(phone);
+                }
+            });
+        }
 
         // Fetch group contacts if groupIds provided
         if (groupIds && groupIds.length > 0) {
@@ -57,9 +67,10 @@ const handler = async (data) => {
             });
 
             groupContacts.forEach(gc => {
-                if (!existingPhones.has(gc.phone)) {
-                    allRecipients.push({ phone: gc.phone, name: gc.name });
-                    existingPhones.add(gc.phone);
+                const normalizedPhone = String(gc.phone).replace(/\D/g, '');
+                if (normalizedPhone && !existingPhones.has(normalizedPhone)) {
+                    allRecipients.push({ phone: normalizedPhone, name: gc.name });
+                    existingPhones.add(normalizedPhone);
                 }
             });
         }
@@ -82,9 +93,10 @@ const handler = async (data) => {
                 });
 
                 catContacts.forEach(gc => {
-                    if (!existingPhones.has(gc.phone)) {
-                        allRecipients.push({ phone: gc.phone, name: gc.name });
-                        existingPhones.add(gc.phone);
+                    const normalizedPhone = String(gc.phone).replace(/\D/g, '');
+                    if (normalizedPhone && !existingPhones.has(normalizedPhone)) {
+                        allRecipients.push({ phone: normalizedPhone, name: gc.name });
+                        existingPhones.add(normalizedPhone);
                     }
                 });
             }
@@ -101,9 +113,10 @@ const handler = async (data) => {
             });
 
             catNameContacts.forEach(gc => {
-                if (!existingPhones.has(gc.phone)) {
-                    allRecipients.push({ phone: gc.phone, name: gc.name });
-                    existingPhones.add(gc.phone);
+                const normalizedPhone = String(gc.phone).replace(/\D/g, '');
+                if (normalizedPhone && !existingPhones.has(normalizedPhone)) {
+                    allRecipients.push({ phone: normalizedPhone, name: gc.name });
+                    existingPhones.add(normalizedPhone);
                 }
             });
         }
@@ -119,9 +132,10 @@ const handler = async (data) => {
             });
 
             tagNameContacts.forEach(gc => {
-                if (!existingPhones.has(gc.phone)) {
-                    allRecipients.push({ phone: gc.phone, name: gc.name });
-                    existingPhones.add(gc.phone);
+                const normalizedPhone = String(gc.phone).replace(/\D/g, '');
+                if (normalizedPhone && !existingPhones.has(normalizedPhone)) {
+                    allRecipients.push({ phone: normalizedPhone, name: gc.name });
+                    existingPhones.add(normalizedPhone);
                 }
             });
         }
@@ -144,9 +158,10 @@ const handler = async (data) => {
                 });
 
                 tagContacts.forEach(gc => {
-                    if (!existingPhones.has(gc.phone)) {
-                        allRecipients.push({ phone: gc.phone, name: gc.name });
-                        existingPhones.add(gc.phone);
+                    const normalizedPhone = String(gc.phone).replace(/\D/g, '');
+                    if (normalizedPhone && !existingPhones.has(normalizedPhone)) {
+                        allRecipients.push({ phone: normalizedPhone, name: gc.name });
+                        existingPhones.add(normalizedPhone);
                     }
                 });
             }

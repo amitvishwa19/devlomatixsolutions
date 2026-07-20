@@ -26,10 +26,7 @@ const handler = async (data) => {
         const updated = await db.campaign.update({
             where: { id },
             data: {
-                status: 'DRAFT',
-                errorLog: null,
-                startedAt: null,
-                completedAt: null
+                status: 'DRAFT'
             }
         });
 

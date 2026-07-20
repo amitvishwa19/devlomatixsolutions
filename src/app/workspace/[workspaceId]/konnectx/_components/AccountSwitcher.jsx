@@ -159,7 +159,7 @@ export default function AccountSwitcher() {
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="outline"
-                        className="w-full h-10 bg-card border-border shadow-sm font-medium text-sm justify-between px-3"
+                        className="w-full  bg-card border-border shadow-sm font-medium text-sm justify-between px-3"
                     >
                         <div className="flex items-center gap-2 truncate">
                             <span className={`w-2 h-2 rounded-full shrink-0 ${activeProfile?.verified ? 'bg-emerald-500' : 'bg-red-500'}`} />

@@ -40,7 +40,8 @@ export class WhatsAppQueueWorker {
         this.isProcessing = true;
 
         try {
-            const job = await db.whatsAppJob.findFirst({
+            // Fetch highest priority pending job
+            const jobs = await db.whatsAppJob.findMany({
                 where: {
                     status: 'PENDING',
                     platform: 'WHATSAPP_CLOUD',
@@ -49,20 +50,32 @@ export class WhatsAppQueueWorker {
                 orderBy: [
                     { priority: 'desc' },
                     { createdAt: 'asc' }
-                ]
+                ],
+                take: 1
             });
 
-            if (!job) {
+            if (!jobs || jobs.length === 0) {
                 this.isProcessing = false;
                 return;
             }
 
-            console.log(`[WA_QUEUE] Processing Job ${job.id} (${job.type})`);
+            const jobToClaim = jobs[0];
 
-            await db.whatsAppJob.update({
-                where: { id: job.id },
+            // Atomic claim: Only claim if it is STILL 'PENDING'
+            // This prevents multiple hot-reloaded worker instances from processing the same job
+            const updateResult = await db.whatsAppJob.updateMany({
+                where: { id: jobToClaim.id, status: 'PENDING' },
                 data: { status: 'PROCESSING', startedAt: new Date() }
             });
+
+            if (updateResult.count === 0) {
+                this.isProcessing = false;
+                return;
+            }
+
+            const job = await db.whatsAppJob.findUnique({ where: { id: jobToClaim.id } });
+
+            console.log(`[WA_QUEUE] Processing Job ${job.id} (${job.type})`);
 
             if (job.type === 'CAMPAIGN') {
                 await this.handleCampaignJob(job);
@@ -196,6 +209,18 @@ export class WhatsAppQueueWorker {
                     return;
                 }
 
+                // ATOMIC RECIPIENT CLAIM:
+                // Prevents multiple concurrent jobs for the same campaign from sending to the same recipient.
+                const claimResult = await db.campaignRecipient.updateMany({
+                    where: { id: recipient.id, status: 'PENDING' },
+                    data: { status: 'PROCESSING' }
+                });
+
+                if (claimResult.count === 0) {
+                    console.log(`[WA_QUEUE] Recipient ${recipient.phone} already claimed or processed. Skipping.`);
+                    continue;
+                }
+
                 try {
                     let messageText = campaign.template?.body || campaign.messageTemplate['text'] || '';
                     const variables = recipient.variables || {};
@@ -281,14 +306,14 @@ export class WhatsAppQueueWorker {
                         }
                     });
 
-                    await db.campaignRecipient.update({
+                    await db.campaignRecipient.updateMany({
                         where: { id: recipient.id },
                         data: { status: 'SENT', sentAt: new Date() }
                     });
 
                 } catch (err) {
                     console.error(`[WA_QUEUE] Failed to send to ${recipient.phone}:`, err);
-                    await db.campaignRecipient.update({
+                    await db.campaignRecipient.updateMany({
                         where: { id: recipient.id },
                         data: { status: 'FAILED', errorLog: err.message }
                     });
