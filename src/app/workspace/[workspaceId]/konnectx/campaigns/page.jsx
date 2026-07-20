@@ -17,12 +17,19 @@ import {
     BarChart3,
     Copy,
     FolderOpen,
-    Tags
+    Tags,
+    RotateCcw
 } from
     'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
     Select,
     SelectContent,
@@ -301,6 +308,7 @@ export default function CampaignsPage() {
         setActiveCampaign(campaign);
         setDeleteDialogOpen(true);
     };
+
     const confirmDelete = () => {
         if (!activeCampaign) return;
         setIsDeleting(true);
@@ -371,6 +379,7 @@ export default function CampaignsPage() {
     });
 
     return (
+        <TooltipProvider>
         <div className="flex flex-col h-full animate-in fade-in duration-500">
             {/* Header Area */}
             <header className="flex-none p-4 pb-4 border-b border-border/40">
@@ -478,6 +487,7 @@ export default function CampaignsPage() {
                 } */}
 
                 {/* Campaign Data Table */}
+                <TooltipProvider delayDuration={200}>
                 <div className="bg-card border rounded-md overflow-hidden shadow-sm">
                     <table className="w-full text-xs text-left">
                         <thead className="text-xs text-muted-foreground bg-muted/30 border-b border-border/50">
@@ -526,32 +536,43 @@ export default function CampaignsPage() {
                                     <td className="px-6 py-4">
                                         <div className="flex justify-end gap-2">
                                             <button
+                                                title="Reset Campaign"
+                                                onClick={() => console.log('Reset clicked', c.id)}
+                                                disabled={c.status === 'RUNNING' || c.status === 'QUEUED'}
+                                                className="cursor-pointer p-2 text-muted-foreground hover:text-blue-500 hover:bg-muted rounded-md transition-colors disabled:opacity-40"
+                                            >
+                                                <RotateCcw className="w-4 h-4" />
+                                            </button>
+
+                                            <button
+                                                title={isActive ? "Pause Campaign" : "Start Campaign"}
                                                 onClick={() => handleToggleCampaign(c)}
                                                 disabled={c.status === 'COMPLETED'}
-                                                title={isActive ? "Pause Campaign" : "Start Campaign"}
-                                                className={`p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40 ${isActive ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
-
+                                                className={`cursor-pointer p-2 rounded-md transition-colors disabled:opacity-40 ${isActive ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
                                                 {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                             </button>
+
                                             <button
-                                                onClick={() => handleCloneCampaign(c)}
-                                                className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
                                                 title="Clone Campaign"
+                                                onClick={() => handleCloneCampaign(c)}
+                                                className="cursor-pointer p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-md transition-colors"
                                             >
                                                 <Copy className="w-4 h-4" />
                                             </button>
-                                            <button
-                                                onClick={() => openEditDialog(c)}
-                                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
-                                                aria-label="Edit campaign">
 
+                                            <button
+                                                title="Edit Campaign"
+                                                onClick={() => openEditDialog(c)}
+                                                className="cursor-pointer p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                                                aria-label="Edit campaign">
                                                 <Edit className="w-4 h-4" />
                                             </button>
-                                            <button
-                                                onClick={() => openDeleteDialog(c)}
-                                                className="p-2 text-muted-foreground hover:text-red-400 hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
-                                                aria-label="Delete campaign">
 
+                                            <button
+                                                title="Delete Campaign"
+                                                onClick={() => openDeleteDialog(c)}
+                                                className="cursor-pointer p-2 text-muted-foreground hover:text-red-400 hover:bg-muted rounded-md transition-colors"
+                                                aria-label="Delete campaign">
                                                 <Trash className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -575,6 +596,7 @@ export default function CampaignsPage() {
                         </div>
                     }
                 </div>
+                </TooltipProvider>
 
                 <NewCampaignSheet
                     open={editDialogOpen}
@@ -854,6 +876,7 @@ export default function CampaignsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>);
-
+        </div>
+        </TooltipProvider>
+    );
 }

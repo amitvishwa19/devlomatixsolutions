@@ -1,36 +1,16 @@
 {
-  "templateName": "account_creation_confirmation_3",
-  "components": [
-    {
-      "type": "body",
-      "parameters": [
-        {
-          "type": "text",
-          "text": "-"
-        }
-      ]
-    }
-  ],
+  "templateName": "job_application",
+  "components": [],
   "fullRequestData": {
     "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
     "to": "919712340450",
     "type": "template",
     "template": {
-      "name": "account_creation_confirmation_3",
+      "name": "job_application",
       "language": {
         "code": "en_US"
       },
-      "components": [
-        {
-          "type": "body",
-          "parameters": [
-            {
-              "type": "text",
-              "text": "-"
-            }
-          ]
-        }
-      ]
+      "components": []
     }
   }
 }

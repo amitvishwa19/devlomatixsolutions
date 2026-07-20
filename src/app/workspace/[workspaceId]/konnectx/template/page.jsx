@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from 'next-auth/react';
@@ -635,9 +636,10 @@ export default function TemplatePage() {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 space-y-4 overflow-y-auto">
-                    {isLoading ? (
-                        <div className="flex-1 flex flex-col items-center justify-center h-64 opacity-50"><Loader2 className="w-10 h-10 animate-spin text-primary mb-4" /><p className="text-sm font-medium">Loading templates...</p></div>
+                <ScrollArea className="flex-1 h-full">
+                    <div className="space-y-4 pr-4">
+                        {isLoading ? (
+                            <div className="flex-1 flex flex-col items-center justify-center h-64 opacity-50"><Loader2 className="w-10 h-10 animate-spin text-primary mb-4" /><p className="text-sm font-medium">Loading templates...</p></div>
                     ) : filteredTemplates.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-xl bg-card/10"><MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-6" /><h3 className="text-xl font-bold text-foreground">No templates found</h3><Button onClick={() => handleOpenBuilder()} className="mt-8 gap-2"><Plus className="w-4 h-4" /> Create Custom Template</Button></div>
                     ) : (
@@ -677,7 +679,8 @@ export default function TemplatePage() {
                             ))}
                         </div>
                     )}
-                </div>
+                    </div>
+                </ScrollArea>
 
                 {/* Modals & Builder */}
                 <TemplateBuilder

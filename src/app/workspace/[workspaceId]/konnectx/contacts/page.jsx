@@ -446,7 +446,7 @@ export default function ContactsPage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast({ title: "Export Started", description: `Exporting ${contacts.length} contacts.` });
+        toast.info("Export Started", { description: `Exporting ${contacts.length} contacts.` });
     };
 
     const handleSendMessage = () => {
@@ -474,7 +474,7 @@ export default function ContactsPage() {
             // Simple Client-side CSV Parser
             const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
             if (lines.length < 2) {
-                toast({ title: "Import Error", description: "CSV file is empty.", variant: "destructive" });
+                toast.error("Import Error", { description: "CSV file is empty." });
                 return;
             }
 
@@ -482,8 +482,8 @@ export default function ContactsPage() {
             const dataRows = lines.slice(1);
 
             const parsed = dataRows.map(row => {
-                const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-                const cleanValues = values.map(v => v.replace(/^"|"$/g, '').trim());
+                const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                const cleanValues = values.map(v => (v || '').replace(/^"|"$/g, '').trim());
                 const record = {};
                 headers.forEach((header, index) => {
                     record[header] = cleanValues[index] || '';
@@ -519,7 +519,7 @@ export default function ContactsPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        toast({ title: "Template Saved", description: "CSV template downloaded." });
+        toast.success("Template Saved", { description: "CSV template downloaded." });
     };
 
     // --- Helpers ---

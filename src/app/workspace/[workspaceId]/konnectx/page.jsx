@@ -197,26 +197,6 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground mt-1">Overview of your WhatsApp campaigns</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        className="gap-2"
-                        asChild>
-
-                        <a href={`/workspace/${workspaceId}/wa-cloud-api/contacts`}>
-                            <Users className="w-4 h-4" />
-                            <span className="hidden sm:inline">Contacts</span>
-                        </a>
-                    </Button>
-
-                    {/* WhatsApp Connection Status Badge */}
-                    <Button
-                        variant=""
-                        className="gap-2 cursor-pointer border"
-                        onClick={() => setIsWhatsappSettingOpen(true)}
-                    >
-                        <MessageCircleDashed className="w-4 h-4" />
-                        <span className="hidden sm:inline">Connect WA</span>
-                    </Button>
 
                     <AccountSwitcher />
                 </div>

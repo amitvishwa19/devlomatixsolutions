@@ -92,16 +92,16 @@ export class CampaignEngine {
                     let result;
                     if (campaign.templateId && campaign.template) {
                         // Send Template with variables
-                        const parameters = Object.keys(variables)
-                            .sort((a, b) => {
-                                const numA = parseInt(a.replace('v', ''));
-                                const numB = parseInt(b.replace('v', ''));
-                                return numA - numB;
-                            })
-                            .map(key => ({
+                        const expectedParamCount = new Set((campaign.template?.body || '').match(/\{\{(\d+)\}\}/g) || []).size;
+                        
+                        const parameters = [];
+                        for(let i = 1; i <= expectedParamCount; i++) {
+                            const val = variables[`v${i}`];
+                            parameters.push({
                                 type: 'text',
-                                text: String(variables[key])
-                            }));
+                                text: (val === null || val === undefined || String(val).trim() === '') ? '-' : String(val)
+                            });
+                        }
 
                         const components = parameters.length > 0 ? [{
                             type: 'body',

@@ -152,7 +152,11 @@ const handler = async (data) => {
                     const existing = await db.messageTemplate.findFirst({
                         where: {
                             userId,
-                            name: metaT.name,
+                            OR: [
+                                { templateId: metaT.id },
+                                { templateName: metaT.name },
+                                { name: metaT.name }
+                            ],
                             language: metaT.language,
                             phoneNumberId: currentPhoneId
                         }

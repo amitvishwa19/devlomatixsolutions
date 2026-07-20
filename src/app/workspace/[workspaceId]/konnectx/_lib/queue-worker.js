@@ -218,6 +218,22 @@ export class WhatsAppQueueWorker {
                     if (campaign.templateId) {
                         const components = await this.buildTemplateComponents(campaign.template, campaign.messageTemplate, campaign.templateId, job.workspaceId);
 
+                        const expectedParamCount = new Set((campaign.template?.body || '').match(/\{\{(\d+)\}\}/g) || []).size;
+                        const textParameters = [];
+                        for(let i = 1; i <= expectedParamCount; i++) {
+                            const val = variables[`v${i}`];
+                            textParameters.push({
+                                type: 'text',
+                                text: (val === null || val === undefined || String(val).trim() === '') ? '-' : String(val)
+                            });
+                        }
+                        if (textParameters.length > 0) {
+                            components.push({
+                                type: 'body',
+                                parameters: textParameters
+                            });
+                        }
+
                         // Upload media links to IDs (same as send-message.js)
                         const processParameters = async (parameters) => {
                             for (const param of parameters) {
