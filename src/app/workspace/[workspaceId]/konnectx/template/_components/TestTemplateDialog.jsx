@@ -23,6 +23,13 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { 
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 export default function TestTemplateDialog({
     isOpen,
@@ -133,12 +140,28 @@ export default function TestTemplateDialog({
                                         <label className="text-[11px] font-bold text-foreground opacity-70">
                                             Variable {"{{"}{v}{"}}"}
                                         </label>
-                                        <Input
-                                            placeholder={`Value for {{${v}}}`}
-                                            value={variableMappings[v] || ''}
-                                            onChange={(e) => setVariableMappings({ ...variableMappings, [v]: e.target.value })}
-                                            className="h-9 bg-background text-sm"
-                                        />
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder={`Value for {{${v}}}`}
+                                                value={variableMappings[v] || ''}
+                                                onChange={(e) => setVariableMappings({ ...variableMappings, [v]: e.target.value })}
+                                                className="h-9 bg-background text-sm flex-1"
+                                            />
+                                            <Select
+                                                onValueChange={(val) => setVariableMappings({ ...variableMappings, [v]: (variableMappings[v] || '') + `{{contact.${val}}}` })}
+                                            >
+                                                <SelectTrigger className="w-[120px] h-9 text-[11px] bg-muted/50 border-border">
+                                                    <SelectValue placeholder="Insert Field" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="name">Name</SelectItem>
+                                                    <SelectItem value="phone">Phone</SelectItem>
+                                                    <SelectItem value="email">Email</SelectItem>
+                                                    <SelectItem value="category">Category</SelectItem>
+                                                    <SelectItem value="whatsappName">WA Name</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

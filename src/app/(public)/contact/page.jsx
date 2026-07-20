@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle, Loader2 } from "lucide-react";
+import { Mail, Phone, Clock, Send, CheckCircle, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,12 +37,12 @@ const contactInfo = [
         details: "+91 97123 40450",
         description: "Mon-Fri from 9am to 6pm IST",
     },
-    {
-        icon: MapPin,
-        title: "Visit Us",
-        details: "Cyber Hub, DLF Phase 2",
-        description: "Gurugram, Haryana 122002",
-    },
+    // {
+    //     icon: MapPin,
+    //     title: "Visit Us",
+    //     details: "Cyber Hub, DLF Phase 2",
+    //     description: "Gurugram, Haryana 122002",
+    // },
     {
         icon: Clock,
         title: "Business Hours",
@@ -116,7 +116,7 @@ export default function ContactPage() {
                 {/* Contact Info Cards */}
                 <section className="py-12">
                     <div className="container mx-auto px-6">
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {contactInfo.map((info, index) => (
                                 <motion.div
                                     key={index}

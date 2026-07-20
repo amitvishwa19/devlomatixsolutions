@@ -373,10 +373,26 @@ export default function TemplatePage() {
 
     const handleSendTest = async () => {
         const manualNumbers = testRecipient.split(',').map(n => n.trim()).filter(n => n);
-        const contactNumbers = allContacts.filter(c => selectedContactIds.includes(c.id)).map(c => c.phone);
-        const recipients = Array.from(new Set([...manualNumbers, ...contactNumbers]));
+        const contactRecipients = allContacts.filter(c => selectedContactIds.includes(c.id));
+        
+        const recipientList = [];
+        
+        // Prioritize CRM contacts so they have their context attached
+        contactRecipients.forEach(contact => {
+            if (!recipientList.find(r => r.phone === contact.phone)) {
+                recipientList.push({ phone: contact.phone, contact });
+            }
+        });
+        
+        // Add manual numbers, looking up CRM contact if possible
+        manualNumbers.forEach(phone => {
+            if (!recipientList.find(r => r.phone === phone)) {
+                const existingContact = allContacts.find(c => c.phone === phone);
+                recipientList.push({ phone, contact: existingContact || null });
+            }
+        });
 
-        if (recipients.length === 0) {
+        if (recipientList.length === 0) {
             toast.error("No recipients selected");
             return;
         }
@@ -403,7 +419,20 @@ export default function TemplatePage() {
             }
         }
 
-        const buildComponents = () => {
+        const buildComponents = (recipientContext) => {
+            const interpolate = (val) => {
+                if (!val) return '-';
+                let interpolated = val;
+                if (recipientContext?.contact) {
+                    interpolated = val.replace(/\{\{contact\.([a-zA-Z0-9_]+)\}\}/g, (match, field) => {
+                        return recipientContext.contact[field] || '-';
+                    });
+                } else {
+                    interpolated = val.replace(/\{\{contact\.([a-zA-Z0-9_]+)\}\}/g, '-');
+                }
+                return interpolated.trim() === '' ? '-' : interpolated;
+            };
+
             const components = [];
 
             if (testingTemplate.type?.toLowerCase() === 'carousel' && testingTemplate.metadata?.cards) {
@@ -449,7 +478,7 @@ export default function TemplatePage() {
                 if (bodyVars.length > 0) {
                     components.push({
                         type: 'body',
-                        parameters: bodyVars.map(v => ({ type: 'text', text: variableMappings[v] || '' }))
+                        parameters: bodyVars.map(v => ({ type: 'text', text: interpolate(variableMappings[v] || '') }))
                     });
                 }
 
@@ -461,7 +490,7 @@ export default function TemplatePage() {
             if (headerVars.length > 0) {
                 components.push({
                     type: 'header',
-                    parameters: headerVars.map(v => ({ type: 'text', text: variableMappings[v] || '' }))
+                    parameters: headerVars.map(v => ({ type: 'text', text: interpolate(variableMappings[v] || '') }))
                 });
             } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(testingTemplate.type?.toUpperCase())) {
                 const finalMediaUrl = mediaUrl || testingTemplate.metadata?.mediaUrl;
@@ -489,7 +518,7 @@ export default function TemplatePage() {
             if (bodyVars.length > 0) {
                 components.push({
                     type: 'body',
-                    parameters: bodyVars.map(v => ({ type: 'text', text: variableMappings[v] || '' }))
+                    parameters: bodyVars.map(v => ({ type: 'text', text: interpolate(variableMappings[v] || '') }))
                 });
             }
 
@@ -517,18 +546,18 @@ export default function TemplatePage() {
             return components;
         };
 
-        const components = buildComponents();
-
-        console.log("[TEMPLATE_TEST_PAYLOAD]", {
+        // Let's build a sample for logging using the first recipient
+        console.log("[TEMPLATE_TEST_PAYLOAD_SAMPLE]", {
             template: testingTemplate.templateName || testingTemplate.name,
             language: testingTemplate.language || 'en_US',
-            components
+            components: buildComponents(recipientList[0])
         });
 
-        const sendPromises = recipients.map(async (to) => {
+        const sendPromises = recipientList.map(async (recipient) => {
+            const components = buildComponents(recipient);
             const result = await sendMessageAction({
                 workspaceId,
-                to,
+                to: recipient.phone,
                 type: 'template',
                 template: {
                     name: testingTemplate.templateName || testingTemplate.name,
@@ -543,7 +572,7 @@ export default function TemplatePage() {
         });
 
         toast.promise(Promise.all(sendPromises), {
-            loading: `Sending test to ${recipients.length} recipients...`,
+            loading: `Sending test to ${recipientList.length} recipients...`,
             success: "Test messages dispatched!",
             error: (err) => `Error: ${err.message || "Failed to send"}`
         });
