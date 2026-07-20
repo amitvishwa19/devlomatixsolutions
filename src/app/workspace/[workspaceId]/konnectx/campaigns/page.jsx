@@ -25,12 +25,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
     Select,
     SelectContent,
     SelectItem,
@@ -379,7 +373,6 @@ export default function CampaignsPage() {
     });
 
     return (
-        <TooltipProvider>
         <div className="flex flex-col h-full animate-in fade-in duration-500">
             {/* Header Area */}
             <header className="flex-none p-4 pb-4 border-b border-border/40">
@@ -487,7 +480,6 @@ export default function CampaignsPage() {
                 } */}
 
                 {/* Campaign Data Table */}
-                <TooltipProvider delayDuration={200}>
                 <div className="bg-card border rounded-md overflow-hidden shadow-sm">
                     <table className="w-full text-xs text-left">
                         <thead className="text-xs text-muted-foreground bg-muted/30 border-b border-border/50">
@@ -503,81 +495,88 @@ export default function CampaignsPage() {
                             {filteredCampaigns.map((c) => {
                                 const isActive = c.status === 'RUNNING' || c.status === 'QUEUED';
                                 return (
-                                <tr key={c.id} className={`hover:bg-muted/20 transition-colors group ${isActive ? 'bg-blue-500/[0.02] border-l-2 border-l-blue-500/40' : ''}`}>
-                                    <td className="px-6 py-4 font-medium text-foreground">
-                                        <div className="flex items-center gap-2">
-                                            {isActive && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shrink-0" />}
-                                            <div>
-                                                <div>{c.name}</div>
-                                                <div className="text-[10px] text-muted-foreground font-normal">{c.templateName}</div>
+                                    <tr key={c.id} className={`hover:bg-muted/20 transition-colors group ${isActive ? 'bg-blue-500/[0.02] border-l-2 border-l-blue-500/40' : ''}`}>
+                                        <td className="px-6 py-4 font-medium text-foreground">
+                                            <div className="flex items-center gap-2">
+                                                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shrink-0" />}
+                                                <div>
+                                                    <div>{c.name}</div>
+                                                    <div className="text-[10px] text-muted-foreground font-normal">{c.templateName}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {getStatusBadge(c.status)}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col gap-1.5 min-w-[140px]">
-                                            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                                <span>{c.sent} of {c.total} sent</span>
-                                                <span className="font-bold">{c.successRate}%</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {getStatusBadge(c.status)}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1.5 min-w-[140px]">
+                                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                                    <span>{c.sent} of {c.total} sent</span>
+                                                    <span className="font-bold">{c.successRate}%</span>
+                                                </div>
+                                                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                                    <div
+                                                        className={`h-full transition-all duration-500 ${isActive ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`}
+                                                        style={{ width: `${c.sent / c.total * 100 || 0}%` }} />
+
+                                                </div>
                                             </div>
-                                            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                                                <div
-                                                    className={`h-full transition-all duration-500 ${isActive ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`}
-                                                    style={{ width: `${c.sent / c.total * 100 || 0}%` }} />
+                                        </td>
+                                        <td className="px-6 py-4 text-muted-foreground text-xs whitespace-nowrap">
+                                            {c.scheduledAt ? new Date(c.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Not Scheduled'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex justify-end gap-2">
+                                                <div>
+                                                    {c.status === 'COMPLETED' ? (
+                                                        <button
+                                                            title="Reset Campaign"
+                                                            onClick={() => console.log('Reset clicked', c.id)}
+                                                            disabled={c.status === 'RUNNING' || c.status === 'QUEUED'}
+                                                            className="cursor-pointer p-2 text-muted-foreground hover:text-blue-500 hover:bg-muted rounded-md transition-colors disabled:opacity-40"
+                                                        >
+                                                            <RotateCcw className="w-4 h-4" />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            title={isActive ? "Pause Campaign" : "Start Campaign"}
+                                                            onClick={() => handleToggleCampaign(c)}
+                                                            disabled={c.status === 'COMPLETED'}
+                                                            className={`cursor-pointer p-2 rounded-md transition-colors disabled:opacity-40 ${isActive ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
+                                                            {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                        </button>
+                                                    )}
 
+
+
+                                                </div>
+
+                                                <button
+                                                    title="Clone Campaign"
+                                                    onClick={() => handleCloneCampaign(c)}
+                                                    className="cursor-pointer p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-md transition-colors"
+                                                >
+                                                    <Copy className="w-4 h-4" />
+                                                </button>
+
+                                                <button
+                                                    title="Edit Campaign"
+                                                    onClick={() => openEditDialog(c)}
+                                                    className="cursor-pointer p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                                                    aria-label="Edit campaign">
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+
+                                                <button
+                                                    title="Delete Campaign"
+                                                    onClick={() => openDeleteDialog(c)}
+                                                    className="cursor-pointer p-2 text-muted-foreground hover:text-red-400 hover:bg-muted rounded-md transition-colors"
+                                                    aria-label="Delete campaign">
+                                                    <Trash className="w-4 h-4" />
+                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-muted-foreground text-xs whitespace-nowrap">
-                                        {c.scheduledAt ? new Date(c.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Not Scheduled'}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            <button
-                                                title="Reset Campaign"
-                                                onClick={() => console.log('Reset clicked', c.id)}
-                                                disabled={c.status === 'RUNNING' || c.status === 'QUEUED'}
-                                                className="cursor-pointer p-2 text-muted-foreground hover:text-blue-500 hover:bg-muted rounded-md transition-colors disabled:opacity-40"
-                                            >
-                                                <RotateCcw className="w-4 h-4" />
-                                            </button>
-
-                                            <button
-                                                title={isActive ? "Pause Campaign" : "Start Campaign"}
-                                                onClick={() => handleToggleCampaign(c)}
-                                                disabled={c.status === 'COMPLETED'}
-                                                className={`cursor-pointer p-2 rounded-md transition-colors disabled:opacity-40 ${isActive ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}>
-                                                {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                                            </button>
-
-                                            <button
-                                                title="Clone Campaign"
-                                                onClick={() => handleCloneCampaign(c)}
-                                                className="cursor-pointer p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-md transition-colors"
-                                            >
-                                                <Copy className="w-4 h-4" />
-                                            </button>
-
-                                            <button
-                                                title="Edit Campaign"
-                                                onClick={() => openEditDialog(c)}
-                                                className="cursor-pointer p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                                                aria-label="Edit campaign">
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-
-                                            <button
-                                                title="Delete Campaign"
-                                                onClick={() => openDeleteDialog(c)}
-                                                className="cursor-pointer p-2 text-muted-foreground hover:text-red-400 hover:bg-muted rounded-md transition-colors"
-                                                aria-label="Delete campaign">
-                                                <Trash className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
                                 );
                             })}
                         </tbody>
@@ -596,7 +595,6 @@ export default function CampaignsPage() {
                         </div>
                     }
                 </div>
-                </TooltipProvider>
 
                 <NewCampaignSheet
                     open={editDialogOpen}
@@ -877,6 +875,5 @@ export default function CampaignsPage() {
                 </DialogContent>
             </Dialog>
         </div>
-        </TooltipProvider>
     );
 }
