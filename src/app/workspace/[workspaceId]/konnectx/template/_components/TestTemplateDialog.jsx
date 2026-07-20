@@ -74,6 +74,22 @@ export default function TestTemplateDialog({
         }
     };
 
+    const fieldsToCheck = [
+        { key: 'name', label: 'Name' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'email', label: 'Email' },
+        { key: 'category', label: 'Category' },
+        { key: 'whatsappName', label: 'WA Name' },
+    ];
+
+    const activeContacts = selectedContactIds.length > 0 
+        ? contacts.filter(c => selectedContactIds.includes(c.id))
+        : contacts;
+
+    const availableFields = fieldsToCheck.filter(field => 
+        activeContacts.some(c => c[field.key] !== null && c[field.key] !== undefined && c[field.key].toString().trim() !== '')
+    );
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[600px] gap-0 p-0 overflow-hidden bg-card border-border">
@@ -154,11 +170,13 @@ export default function TestTemplateDialog({
                                                     <SelectValue placeholder="Insert Field" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="name">Name</SelectItem>
-                                                    <SelectItem value="phone">Phone</SelectItem>
-                                                    <SelectItem value="email">Email</SelectItem>
-                                                    <SelectItem value="category">Category</SelectItem>
-                                                    <SelectItem value="whatsappName">WA Name</SelectItem>
+                                                    {availableFields.length > 0 ? (
+                                                        availableFields.map(f => (
+                                                            <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
+                                                        ))
+                                                    ) : (
+                                                        <SelectItem value="none" disabled>No valid fields</SelectItem>
+                                                    )}
                                                 </SelectContent>
                                             </Select>
                                         </div>
