@@ -107,7 +107,7 @@ export default function FlowsPage() {
             }
         },
         onError: (err) => toast.error(err),
-        onSettled: () => setIsUpdating(false)
+        onComplete: () => setIsUpdating(false)
     });
 
     const { execute: executeDeleteLocal } = useAction(deleteFlow, {
@@ -261,7 +261,7 @@ export default function FlowsPage() {
                         <div className="flex flex-col">
                             {isEditingName ? (
                                 <div className="flex items-center gap-2">
-                                    <input 
+                                    <input
                                         autoFocus
                                         value={tempName}
                                         onChange={(e) => setTempName(e.target.value)}
@@ -272,7 +272,7 @@ export default function FlowsPage() {
                                                     id: selectedFlow.id,
                                                     name: tempName.trim()
                                                 });
-                                                setSelectedFlow({...selectedFlow, name: tempName.trim()});
+                                                setSelectedFlow({ ...selectedFlow, name: tempName.trim() });
                                             }
                                             setIsEditingName(false);
                                         }}
@@ -287,7 +287,7 @@ export default function FlowsPage() {
                                     />
                                 </div>
                             ) : (
-                                <h2 
+                                <h2
                                     className="text-sm font-bold cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
                                     onClick={() => {
                                         setTempName(selectedFlow.name);
@@ -303,8 +303,8 @@ export default function FlowsPage() {
                     </div>
                 </div>
                 <div className="flex-1 overflow-hidden p-4">
-                    <FlowBuilder 
-                        initialScreens={selectedFlow?.screens || []} 
+                    <FlowBuilder
+                        initialScreens={selectedFlow?.screens || []}
                         onSave={handleSaveFromBuilder}
                         endpointUrl={selectedFlow?.endpointUrl || ''}
                     />
@@ -334,12 +334,12 @@ export default function FlowsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => executeSync({ workspaceId })}
-                            disabled={isSyncing}
-                        >
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => executeSync({ workspaceId })}
+                        disabled={isSyncing}
+                    >
                         <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing || isFetching ? 'animate-spin' : ''}`} />
                         Sync Meta
                     </Button>
@@ -362,17 +362,17 @@ export default function FlowsPage() {
                             placeholder="Search flows..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 h-11 bg-card shadow-sm border-muted-foreground/10 rounded-xl"
+                            className="pl-10 h-11 bg-card shadow-sm border-muted-foreground/10 rounded-md"
                         />
                     </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-                        <TabsList className="bg-muted/30 p-1 h-11 rounded-xl">
-                            <TabsTrigger value="local" className="rounded-lg gap-2 text-xs font-bold px-5">
+                        <TabsList className="bg-muted/30 p-1 h-11 rounded-lg border">
+                            <TabsTrigger value="local" className="rounded-md gap-2 text-sm font-bold px-5">
                                 <Layout className="w-3.5 h-3.5" />
                                 Local Drafts
                             </TabsTrigger>
-                            <TabsTrigger value="meta" className="rounded-lg gap-2 text-xs font-bold px-5">
+                            <TabsTrigger value="meta" className="rounded-md gap-2 text-sm font-bold px-5">
                                 <Globe className="w-3.5 h-3.5" />
                                 Synced from Meta
                             </TabsTrigger>
@@ -433,9 +433,9 @@ export default function FlowsPage() {
                                             {activeTab === 'local' ? (
                                                 <>
                                                     <Button
-                                                        variant="ghost"
+                                                        variant="default"
                                                         size="sm"
-                                                        className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-primary hover:bg-primary/5 transition-all"
+                                                        className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 transition-all"
                                                         onClick={() => handleEditLocal(flow)}
                                                     >
                                                         <Pencil className="w-3.5 h-3.5" />
@@ -443,9 +443,9 @@ export default function FlowsPage() {
                                                     </Button>
 
                                                     {!flow.flowId ? (
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm" 
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
                                                             className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-blue-500/5 text-blue-600 border-blue-500/20 hover:bg-blue-500/10"
                                                             onClick={() => executePush({ workspaceId, id: flow.id })}
                                                             disabled={isPushing}
@@ -454,9 +454,9 @@ export default function FlowsPage() {
                                                             Push
                                                         </Button>
                                                     ) : flow.status === 'DRAFT' ? (
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm" 
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
                                                             className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-green-500/5 text-green-600 border-green-500/20 hover:bg-green-500/10"
                                                             onClick={() => executePublish({ workspaceId, id: flow.id })}
                                                             disabled={isPublishing}
@@ -466,9 +466,9 @@ export default function FlowsPage() {
                                                         </Button>
                                                     ) : null}
 
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
                                                         className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-purple-500/5 text-purple-600 border-purple-500/20 hover:bg-purple-500/10"
                                                         onClick={() => executeClone({ workspaceId, id: flow.id })}
                                                         disabled={isCloning}
@@ -522,7 +522,7 @@ export default function FlowsPage() {
                                         {activeTab === 'local' ? "No local drafts" : "No flows found on Meta"}
                                     </h3>
                                     <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                                        {activeTab === 'local' 
+                                        {activeTab === 'local'
                                             ? "Click 'Design New Flow' to start building your interactive experience."
                                             : "Make sure your WhatsApp credentials are correctly configured in Settings."}
                                     </p>

@@ -170,7 +170,7 @@ export default function AccountSwitcher() {
                         </svg>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[280px] p-1" align="end">
+                <DropdownMenuContent className="w-70 p-1" align="end">
                     <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
                         WhatsApp Accounts
                     </DropdownMenuLabel>

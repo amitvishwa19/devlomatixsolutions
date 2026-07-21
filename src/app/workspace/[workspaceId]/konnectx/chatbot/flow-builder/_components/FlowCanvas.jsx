@@ -330,7 +330,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
 
                         >
                             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save size={18} className="mr-2" />}
-                            Sync Changes
+                            Save Changes
                         </Button>
                     </Panel>
 

@@ -268,12 +268,12 @@ export default function WhatsAppChatsPage() {
                 return conv;
             }));
         },
-        onSettled: () => setIsSending(false)
+        onComplete: () => setIsSending(false)
     });
 
     const { execute: executeAiSuggestions } = useAction(getAiSuggestions, {
         onSuccess: (data) => setAiSuggestions(data.suggestions || []),
-        onSettled: () => setIsAiLoading(false)
+        onComplete: () => setIsAiLoading(false)
     });
 
     const { execute: executeDeleteConversation } = useAction(deleteConversation, {
@@ -284,7 +284,7 @@ export default function WhatsAppChatsPage() {
             setIsDeleteDialogOpen(false);
         },
         onError: (err) => toast.error(err || "Failed to delete chat"),
-        onSettled: () => setIsDeleting(false)
+        onComplete: () => setIsDeleting(false)
     });
 
     const { execute: executeSearchUsers } = useAction(searchUsers, {

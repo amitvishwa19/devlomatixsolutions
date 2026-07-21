@@ -42,6 +42,7 @@ export const useAction = (
             } finally {
                 setIsLoading(false);
                 optionsRef.current.onComplete?.(context);
+                optionsRef.current.onSettled?.(context);
             }
         },
         [action]

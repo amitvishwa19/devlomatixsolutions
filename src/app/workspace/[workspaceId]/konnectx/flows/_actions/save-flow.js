@@ -9,9 +9,9 @@ const SaveFlowSchema = z.object({
     workspaceId: z.string(),
     id: z.string().optional(),
     name: z.string().min(1, "Name is required"),
-    description: z.string().optional(),
+    description: z.string().nullable().optional(),
     categories: z.array(z.string()).optional(),
-    endpointUrl: z.string().optional(),
+    endpointUrl: z.string().nullable().optional(),
     screens: z.any().optional(),
     metaValidationErrors: z.any().optional(),
 });

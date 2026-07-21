@@ -406,10 +406,10 @@ const FlowBuilder = ({ initialScreens = [], onSave, endpointUrl = '' }) => {
                     {/* Component-level action */}
                     <div className="space-y-3 pt-4 border-t">
                         <Label className="text-[11px] font-bold">On Click Action</Label>
-                        <Select value={c.action?.type || ''} onValueChange={(val) => updateComponent(c.id, { action: val ? { type: val, ...(val === 'open_url' ? { url: '' } : {}) } : null })}>
+                        <Select value={c.action?.type || 'none'} onValueChange={(val) => updateComponent(c.id, { action: (val && val !== 'none') ? { type: val, ...(val === 'open_url' ? { url: '' } : {}) } : null })}>
                             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">None</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
                                 {ACTION_TYPES.map(a => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
                             </SelectContent>
                         </Select>
