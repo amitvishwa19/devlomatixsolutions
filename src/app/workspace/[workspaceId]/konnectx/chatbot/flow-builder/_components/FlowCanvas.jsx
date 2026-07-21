@@ -16,11 +16,11 @@ import {
 import { nodeTypes } from './Nodes';
 import { PropertyPanel } from './PropertyPanel';
 import { NodeSidebar } from './NodeSidebar';
+import { DeletableEdge } from './DeletableEdge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Save,
-    ArrowLeft,
     Loader2,
     Send,
     Edit2,
@@ -34,6 +34,11 @@ import { saveBot } from "../../_actions/save-bot";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import '@xyflow/react/dist/style.css';
+
+const edgeTypes = {
+    step: DeletableEdge,
+};
+
 
 const initialNodes = [
     {
@@ -174,7 +179,13 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
     );
 
     const onNodeClick = (e, node) => {
-        setSelectedNode(node);
+        // Look up the clean node from state (not the ReactFlow-mapped one)
+        console.log('[FlowCanvas] onNodeClick — raw node.data from ReactFlow:', node.data);
+        setSelectedNode((prev) => {
+            const cleanNode = nodes.find((n) => n.id === node.id);
+            console.log('[FlowCanvas] onNodeClick — cleanNode from state:', cleanNode?.data);
+            return cleanNode || node;
+        });
     };
 
     const deleteNode = useCallback(
@@ -188,14 +199,11 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
     );
 
     const updateNodeData = (nodeId, dataUpdate) => {
+        console.log('[FlowCanvas] updateNodeData — nodeId:', nodeId, 'dataUpdate:', dataUpdate);
         setNodes((nds) =>
             nds.map((node) => {
                 if (node.id === nodeId) {
-                    const updatedNode = { ...node, data: { ...node.data, ...dataUpdate } };
-                    if (selectedNode && selectedNode.id === nodeId) {
-                        setSelectedNode(updatedNode);
-                    }
-                    return updatedNode;
+                    return { ...node, data: { ...node.data, ...dataUpdate } };
                 }
                 return node;
             })
@@ -278,7 +286,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
 
             <div className="flex-1 relative h-full">
                 <ReactFlow
-                    nodes={nodes.map(n => ({ ...n, data: { ...n.data, setNodes, setEdges, onContextMenu: (e, id) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, nodeId: id }); } } }))}
+                    nodes={nodes}
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
@@ -289,6 +297,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                     onNodeContextMenu={(e, node) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, nodeId: node.id }); }}
                     onPaneClick={() => { setSelectedNode(null); setContextMenu(null); }}
                     nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
                     fitView
                     className="bg-dot-white/[0.05]"
                     minZoom={0.2}

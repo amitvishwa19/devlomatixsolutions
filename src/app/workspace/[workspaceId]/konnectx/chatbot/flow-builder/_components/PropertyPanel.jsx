@@ -17,16 +17,35 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closePanel }) => {
-    const [config, setConfig] = useState(selectedNode?.data || {});
+    // Sanitize node data by extracting only plain, serializable values
+    const sanitize = (data) => {
+        if (!data) return {};
+        try {
+            const clean = JSON.parse(JSON.stringify(data));
+            console.log('[PropertyPanel] sanitize OK:', clean);
+            return clean;
+        } catch (err) {
+            console.error('[PropertyPanel] sanitize FAILED:', err, 'raw data:', data);
+            return { ...data };
+        }
+    };
+
+    const [config, setConfig] = useState(() => sanitize(selectedNode?.data));
     const nodeDef = WA_NODE_REGISTRY[selectedNode?.data?.subType] || WA_NODE_REGISTRY[selectedNode?.data?.type];
 
     useEffect(() => {
-        setConfig(selectedNode?.data || {});
-    }, [selectedNode]);
+        setConfig(sanitize(selectedNode?.data));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedNode?.id]);
 
     if (!selectedNode || !nodeDef) return null;
 
+    console.log('[PropertyPanel] render — selectedNode.id:', selectedNode?.id);
+    console.log('[PropertyPanel] render — config:', config);
+    console.log('[PropertyPanel] render — nodeDef:', nodeDef?.displayName, 'props:', nodeDef?.properties?.map(p => p.name));
+
     const onChange = (key, value) => {
+        console.log('[PropertyPanel] onChange key:', key, 'value:', value, 'type:', typeof value);
         const newConfig = { ...config, [key]: value };
         setConfig(newConfig);
         updateNodeData(selectedNode.id, newConfig);
@@ -83,13 +102,13 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     {prop.type === 'string' && (
                                         prop.typeOptions?.rows > 1 ? (
                                             <Textarea
-                                                value={config[prop.name] || prop.default}
+                                                value={config[prop.name] ?? prop.default ?? ''}
                                                 onChange={(e) => onChange(prop.name, e.target.value)}
                                                 className="bg-white/5 border-white/10 text-xs rounded-xl min-h-[120px]"
                                             />
                                         ) : (
                                             <Input
-                                                value={config[prop.name] || prop.default}
+                                                value={config[prop.name] ?? prop.default ?? ''}
                                                 onChange={(e) => onChange(prop.name, e.target.value)}
                                                 className="bg-white/5 border-white/10 text-xs rounded-xl"
                                                 placeholder={prop.placeholder}
@@ -100,7 +119,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     {prop.type === 'number' && (
                                         <Input
                                             type="number"
-                                            value={config[prop.name] || prop.default}
+                                            value={config[prop.name] ?? prop.default ?? ''}
                                             onChange={(e) => onChange(prop.name, parseInt(e.target.value))}
                                             className="bg-white/5 border-white/10 text-xs rounded-xl"
                                         />
@@ -108,7 +127,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
                                     {prop.type === 'options' && (
                                         <Select
-                                            value={config[prop.name] || prop.default}
+                                            value={config[prop.name] ?? prop.default ?? ''}
                                             onValueChange={(val) => onChange(prop.name, val)}
                                         >
                                             <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
