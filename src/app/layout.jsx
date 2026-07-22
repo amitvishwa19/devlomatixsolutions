@@ -14,6 +14,8 @@ import { getServerSession } from "next-auth";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { WorkspaceProvider } from "@/providers/WorkspaceProvider";
 import CookieConsent from "@/components/global/CookieConsent";
+import { VisitorTracker } from "@/components/global/VisitorTracker";
+import { Suspense } from "react";
 
 
 
@@ -66,6 +68,9 @@ export default async function RootLayout({ children }) {
 
                                                 {children}
                                                 <CookieConsent />
+                                                <Suspense fallback={null}>
+                                                    <VisitorTracker />
+                                                </Suspense>
 
                                             </Providers>
                                         </WorkspaceProvider>

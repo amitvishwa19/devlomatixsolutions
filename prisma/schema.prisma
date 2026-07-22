@@ -122,6 +122,36 @@ model AppSettings {
   updatedAt     DateTime @updatedAt
 }
 
+model VisitorLog {
+  id          String   @id @default(cuid())
+  workspaceId String?
+  sessionId   String?
+  ipAddress   String?
+  userAgent   String?
+  browser     String?
+  os          String?
+  device      String?
+  country     String?
+  countryCode String?
+  city        String?
+  region      String?
+  latitude    Float?
+  longitude   Float?
+  path        String
+  fullUrl     String?
+  referrer    String?
+  title       String?
+  duration    Int?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([ipAddress])
+  @@index([countryCode])
+  @@index([path])
+  @@index([createdAt])
+}
+
 model Server {
   id          String    @id @default(cuid())
   userId      String

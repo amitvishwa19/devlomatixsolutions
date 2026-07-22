@@ -104,7 +104,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
             const savedEdges = data.bot.edges;
             setNodes(savedNodes && Array.isArray(savedNodes) && savedNodes.length > 0 ? savedNodes : initialNodes);
             setEdges(savedEdges && Array.isArray(savedEdges) && savedEdges.length > 0 ? savedEdges : initialEdges);
-            setTimeout(() => fitView({ padding: 0.2 }), 100);
+            setTimeout(() => fitView({ padding: 0.25, maxZoom: 0.95 }), 100);
             setIsLoading(false);
         },
         onError: (err) => {
@@ -299,6 +299,8 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                     nodeTypes={nodeTypes}
                     edgeTypes={edgeTypes}
                     fitView
+                    fitViewOptions={{ padding: 0.25, maxZoom: 0.95 }}
+                    defaultViewport={{ x: 0, y: 0, zoom: 0.95 }}
                     className="bg-dot-white/[0.05]"
                     minZoom={0.2}
                     maxZoom={1.5}

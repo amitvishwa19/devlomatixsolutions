@@ -54,7 +54,10 @@ import {
     Hash,
     ArrowUpDown,
     X,
+    Globe,
+    Users,
 } from "lucide-react";
+import { VisitorsLogTab } from "./_components/VisitorsLogTab";
 import {
     Dialog,
     DialogContent,
@@ -96,7 +99,7 @@ const MODULE_CONFIG = {
 export default function LogPage() {
     const params = useParams();
     const workspaceId = params?.workspaceId;
-
+    const [activeTab, setActiveTab] = useState('system'); // 'system' | 'visitors'
     const [logs, setLogs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 1 });
@@ -284,20 +287,51 @@ export default function LogPage() {
     return (
         <div className="p-6 space-y-5 animate-fade-in bg-background/50 min-h-screen">
 
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-xl font-bold flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
-                            <Terminal className="text-primary w-5 h-5" />
+            {/* Main Tabs Navigation */}
+            <div className="flex items-center gap-2 border-b border-border/40 pb-3">
+                <Button
+                    variant={activeTab === 'system' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveTab('system')}
+                    className={`font-bold text-xs gap-2 rounded-lg transition-all ${
+                        activeTab === 'system' ? 'shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                    <Terminal size={14} />
+                    System Telemetry
+                </Button>
+
+                <Button
+                    variant={activeTab === 'visitors' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveTab('visitors')}
+                    className={`font-bold text-xs gap-2 rounded-lg transition-all ${
+                        activeTab === 'visitors' ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                    <Globe size={14} />
+                    Site Visitors
+                </Button>
+            </div>
+
+            {activeTab === 'visitors' ? (
+                <VisitorsLogTab />
+            ) : (
+                <>
+                    {/* Header */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl font-bold flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                    <Terminal className="text-primary w-5 h-5" />
+                                </div>
+                                System Telemetry Console
+                            </h1>
+                            <p className="text-xs text-muted-foreground font-medium mt-1.5 ml-12">
+                                Real-time diagnostics, event tracing, and observability infrastructure.
+                            </p>
                         </div>
-                        System Telemetry Console
-                    </h1>
-                    <p className="text-xs text-muted-foreground font-medium mt-1.5 ml-12">
-                        Real-time diagnostics, event tracing, and observability infrastructure.
-                    </p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                     {selectedLogIds.length > 0 && (
                         <div className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300">
                             <Badge variant="outline" className="px-3 h-8 font-mono tracking-widest text-[9px] border-border/60">
@@ -650,6 +684,8 @@ export default function LogPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            </>
+            )}
         </div>
     );
 }
