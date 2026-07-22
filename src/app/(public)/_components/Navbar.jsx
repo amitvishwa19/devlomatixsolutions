@@ -76,7 +76,7 @@ const Navbar = () => {
                 <div className="px-4 py-2.5 flex items-center justify-between">
                     {/* Left: Logo */}
                     <motion.div whileHover={{ scale: 1.02 }} className="shrink-0">
-                        <AppLogo link='/' size={100} height={60} width={150} />
+                        <AppLogo link='/' height={80} width={140} />
                     </motion.div>
 
                     {/* Center: Nav Links */}
@@ -160,7 +160,14 @@ const Navbar = () => {
 
                     {/* <ThemeSwitcher /> */}
 
-                    {/* <AuthSelector /> */}
+
+
+                    {
+                        session &&
+                        <div className="flex items-center gap-3">
+                            <AuthSelector />
+                        </div>
+                    }
 
 
                     {/* Mobile */}

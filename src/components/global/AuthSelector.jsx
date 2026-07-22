@@ -50,6 +50,8 @@ export function AuthSelector({ name = false, classname }) {
         onOpen("manageAccount", { orgId: 'params.orgId' })
     }
 
+
+
     return (
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
@@ -57,13 +59,18 @@ export function AuthSelector({ name = false, classname }) {
                     session ?
                         (
                             <div role='button' className=' flex gap-2 items-center cursor-pointer'>
-                                <Avatar className='h-8 w-8'>
+                                <Avatar className='h-10 w-10'>
                                     <AvatarImage src={session?.user?.avatar} alt={session?.user?.displayName} />
                                     <AvatarFallback className=' capitalize'>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>
                                     {/* {name && <AvatarFallback>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>} */}
                                 </Avatar>
                                 {
-                                    name && session?.user?.displayName && (<span className='text-white'> {session?.user?.displayName} </span>)
+                                    session?.user?.displayName && (
+                                        <div className='flex flex-col'>
+                                            <span className=''> {session?.user?.displayName} </span>
+                                            <span className='text-xs text-muted-foreground'> {session?.user?.email} </span>
+                                        </div>
+                                    )
                                 }
                             </div>
                         ) :

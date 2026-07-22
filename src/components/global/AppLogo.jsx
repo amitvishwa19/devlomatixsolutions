@@ -9,7 +9,7 @@ import { AppContext } from '@/providers/AppProvider'
 import { useSettings } from '@/providers/WorkspaceProvider'
 
 
-export function AppLogo({ size = 130, height, width, link, className, border = true }) {
+export function AppLogo({ size = 130, link, className, border = true }) {
 
     const { theme } = useContext(AppContext)
     const { settings } = useSettings()
