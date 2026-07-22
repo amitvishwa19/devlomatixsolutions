@@ -33,6 +33,31 @@ const CTA = () => {
                 <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] orb-secondary rounded-full blur-[120px] opacity-50" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] orb-tertiary rounded-full blur-[150px] opacity-40" />
 
+                {/* Animated rings */}
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-0 overflow-hidden">
+                    {[...Array(3)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className={`absolute rounded-full border-2 ${i === 1 ? "border-dashed border-primary/40 dark:border-primary/50" : "border-primary/30 dark:border-primary/40"
+                                }`}
+                            style={{
+                                width: 350 + i * 180,
+                                height: 350 + i * 180,
+                            }}
+                            animate={{
+                                scale: [1, 1.08, 1],
+                                opacity: [0.35, 0.65, 0.35],
+                                rotate: i % 2 === 0 ? [0, 360] : [360, 0],
+                            }}
+                            transition={{
+                                duration: 15 + i * 8,
+                                repeat: Infinity,
+                                ease: "linear",
+                            }}
+                        />
+                    ))}
+                </div>
+
                 <div className="container mx-auto px-6 relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 40 }}
@@ -88,7 +113,7 @@ const CTA = () => {
                                     variant="hero"
                                     size="xl"
                                     onClick={() => setIsProjectInquiryOpen(true)}
-                                    className="relative overflow-hidden group"
+                                    className="relative overflow-hidden group  cursor-pointer"
                                 >
                                     <motion.span
                                         className="absolute inset-0 bg-white/20"
@@ -105,30 +130,6 @@ const CTA = () => {
 
 
                     </motion.div>
-
-                    {/* Animated rings */}
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                        {[...Array(3)].map((_, i) => (
-                            <motion.div
-                                key={i}
-                                className="absolute rounded-full border border-primary/10"
-                                style={{
-                                    width: 300 + i * 150,
-                                    height: 300 + i * 150,
-                                }}
-                                animate={{
-                                    scale: [1, 1.1, 1],
-                                    opacity: [0.1, 0.2, 0.1],
-                                    rotate: [0, 180],
-                                }}
-                                transition={{
-                                    duration: 10 + i * 5,
-                                    repeat: Infinity,
-                                    ease: "linear",
-                                }}
-                            />
-                        ))}
-                    </div>
                 </div>
             </section>
 

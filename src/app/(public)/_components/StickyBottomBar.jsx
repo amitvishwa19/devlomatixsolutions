@@ -45,7 +45,7 @@ const StickyBottomBar = () => {
                 <div id='bottombar' className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <p className="text-sm text-muted-foreground">
-                            © {new Date().getFullYear()} {settings?.branding?.appName || process.env.NEXT_PUBLIC_APP_NAME || 'Devlomatix'}. All rights reserved.
+                            © 2022 {settings?.branding?.appName || process.env.NEXT_PUBLIC_APP_NAME || 'Devlomatix'}. All rights reserved.
                         </p>
 
                         {/* Dynamic Social Links */}

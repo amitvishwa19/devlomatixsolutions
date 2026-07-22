@@ -28,7 +28,7 @@ const contactInfo = [
     {
         icon: Mail,
         title: "Email Us",
-        details: "hello@devlomatixsolutions.com",
+        details: "hello@devlomatix.com",
         description: "We'll respond within 24 hours",
     },
     {
