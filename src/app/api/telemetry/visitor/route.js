@@ -151,3 +151,35 @@ export async function POST(req) {
         return NextResponse.json({ message: "Failed to record visitor telemetry" }, { status: 500 });
     }
 }
+
+export async function PATCH(req) {
+    try {
+        let id, duration;
+        const contentType = req.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+            const body = await req.json();
+            id = body.id;
+            duration = body.duration;
+        } else {
+            const text = await req.text();
+            const body = JSON.parse(text || "{}");
+            id = body.id;
+            duration = body.duration;
+        }
+
+        if (!id || duration === undefined) {
+            return NextResponse.json({ message: "ID and duration are required" }, { status: 400 });
+        }
+
+        await prisma.visitorLog.update({
+            where: { id },
+            data: { duration: parseInt(duration) }
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("PATCH Telemetry Visitor Error:", error);
+        return NextResponse.json({ message: "Failed to update visitor duration" }, { status: 500 });
+    }
+}

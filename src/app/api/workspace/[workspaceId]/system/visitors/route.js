@@ -91,13 +91,18 @@ export async function GET(req, { params }) {
                 country: true,
                 countryCode: true,
                 path: true,
-                device: true
+                device: true,
+                duration: true
             },
             take: 1000
         });
 
         // Unique Visitors (distinct sessionId or ipAddress)
         const uniqueSet = new Set(allLogsForStats.map(l => l.sessionId || l.ipAddress).filter(Boolean));
+
+        // Average Duration in seconds
+        const totalDuration = allLogsForStats.reduce((acc, l) => acc + (l.duration || 0), 0);
+        const avgDuration = allLogsForStats.length > 0 ? Math.round(totalDuration / allLogsForStats.length) : 0;
 
         // Country Counts
         const countryMap = {};
@@ -146,6 +151,7 @@ export async function GET(req, { params }) {
             stats: {
                 totalVisits: total,
                 uniqueVisitors: uniqueSet.size,
+                avgDuration,
                 topCountries,
                 topPages,
                 deviceStats

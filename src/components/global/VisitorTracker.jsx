@@ -7,7 +7,10 @@ export function VisitorTracker() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const params = useParams();
+
     const lastTracked = useRef(null);
+    const currentLogIdRef = useRef(null);
+    const startTimeRef = useRef(Date.now());
 
     useEffect(() => {
         if (!pathname) return;
@@ -24,11 +27,30 @@ export function VisitorTracker() {
 
         const fullPath = searchParams?.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
 
-        // Avoid duplicate logging for exact same path within 1 second
         if (lastTracked.current === fullPath) return;
         lastTracked.current = fullPath;
 
-        // Ensure persistent Session ID across tabs/session
+        // Send final duration update for previous page if available
+        if (currentLogIdRef.current) {
+            const timeSpent = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000));
+            const payload = JSON.stringify({ id: currentLogIdRef.current, duration: timeSpent });
+            if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+                navigator.sendBeacon('/api/telemetry/visitor', payload);
+            } else {
+                fetch('/api/telemetry/visitor', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                    keepalive: true
+                }).catch(() => {});
+            }
+        }
+
+        // Reset timer and log reference for new page
+        startTimeRef.current = Date.now();
+        currentLogIdRef.current = null;
+
+        // Ensure persistent Session ID
         let sessionId = '';
         try {
             sessionId = sessionStorage.getItem('visitor_session_id') || '';
@@ -46,7 +68,7 @@ export function VisitorTracker() {
         const screenWidth = typeof window !== 'undefined' ? window.innerWidth : null;
         const screenHeight = typeof window !== 'undefined' ? window.innerHeight : null;
 
-        // Send telemetry silently
+        // Send initial POST telemetry event
         fetch('/api/telemetry/visitor', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -57,11 +79,47 @@ export function VisitorTracker() {
                 referrer,
                 screenWidth,
                 screenHeight,
-                sessionId
+                sessionId,
+                duration: 1
             }),
-        }).catch(() => {
-            // Silently ignore background tracking errors
-        });
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data?.id) {
+                currentLogIdRef.current = data.id;
+            }
+        })
+        .catch(() => {});
+
+        // Periodic heartbeats every 8 seconds to continuously update dwell duration
+        const heartbeatInterval = setInterval(() => {
+            if (currentLogIdRef.current) {
+                const timeSpent = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000));
+                fetch('/api/telemetry/visitor', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: currentLogIdRef.current, duration: timeSpent })
+                }).catch(() => {});
+            }
+        }, 8000);
+
+        // Send final duration on tab close / navigation
+        const handleUnload = () => {
+            if (currentLogIdRef.current) {
+                const timeSpent = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000));
+                const payload = JSON.stringify({ id: currentLogIdRef.current, duration: timeSpent });
+                if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+                    navigator.sendBeacon('/api/telemetry/visitor', payload);
+                }
+            }
+        };
+
+        window.addEventListener('beforeunload', handleUnload);
+
+        return () => {
+            clearInterval(heartbeatInterval);
+            window.removeEventListener('beforeunload', handleUnload);
+        };
     }, [pathname, searchParams, params]);
 
     return null;

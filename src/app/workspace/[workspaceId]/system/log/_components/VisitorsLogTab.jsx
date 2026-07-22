@@ -51,7 +51,8 @@ import {
     X,
     Laptop,
     Chrome,
-    Activity
+    Activity,
+    Timer,
 } from "lucide-react";
 import {
     Dialog,
@@ -85,6 +86,20 @@ function getFlagEmoji(countryCode) {
     } catch (e) {
         return "🌐";
     }
+}
+
+// Format duration seconds to human readable string (e.g. 2m 15s)
+function formatDuration(seconds) {
+    if (seconds === undefined || seconds === null) return "< 5s";
+    const sec = parseInt(seconds);
+    if (isNaN(sec) || sec <= 0) return "< 5s";
+    if (sec < 60) return `${sec}s`;
+    const mins = Math.floor(sec / 60);
+    const remainingSecs = sec % 60;
+    if (mins < 60) return `${mins}m ${remainingSecs}s`;
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return `${hrs}h ${remMins}m`;
 }
 
 export function VisitorsLogTab() {
@@ -424,6 +439,7 @@ export function VisitorsLogTab() {
                                 <TableHead className="w-[140px] text-[9px] py-3.5 font-bold tracking-widest uppercase text-muted-foreground/70">Location</TableHead>
                                 <TableHead className="w-[130px] text-[9px] py-3.5 font-bold tracking-widest uppercase text-muted-foreground/70">IP Address</TableHead>
                                 <TableHead className="text-[9px] py-3.5 font-bold tracking-widest uppercase text-muted-foreground/70">Visited Path</TableHead>
+                                <TableHead className="w-[100px] text-[9px] py-3.5 font-bold tracking-widest uppercase text-muted-foreground/70">Time Spent</TableHead>
                                 <TableHead className="w-[140px] text-[9px] py-3.5 font-bold tracking-widest uppercase text-muted-foreground/70">Device / Browser</TableHead>
                                 <TableHead className="w-[150px] text-right text-[9px] py-3.5 font-bold tracking-widest uppercase text-muted-foreground/70">Timestamp</TableHead>
                                 <TableHead className="w-[80px] text-right py-3.5"></TableHead>
@@ -432,7 +448,7 @@ export function VisitorsLogTab() {
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-52 text-center">
+                                    <TableCell colSpan={8} className="h-52 text-center">
                                         <div className="flex flex-col items-center gap-3">
                                             <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
                                             <span className="text-[10px] tracking-[0.3em] text-muted-foreground/50 font-bold">LOADING VISITOR TELEMETRY...</span>
@@ -441,7 +457,7 @@ export function VisitorsLogTab() {
                                 </TableRow>
                             ) : displayedLogs.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-52 text-center">
+                                    <TableCell colSpan={8} className="h-52 text-center">
                                         <div className="flex flex-col items-center gap-3 opacity-30">
                                             <Globe className="w-12 h-12" />
                                             <span className="text-sm font-bold">No site visitor activity recorded yet</span>
@@ -485,6 +501,14 @@ export function VisitorsLogTab() {
                                                     <div className="text-[9px] text-muted-foreground truncate mt-0.5">{log.title}</div>
                                                 )}
                                             </div>
+                                        </TableCell>
+
+                                        {/* Time Spent */}
+                                        <TableCell className="py-3">
+                                            <Badge variant="outline" className="font-mono text-[10px] text-emerald-400 bg-emerald-500/10 border-emerald-500/20 gap-1 rounded-sm px-2">
+                                                <Timer size={10} />
+                                                {formatDuration(log.duration)}
+                                            </Badge>
                                         </TableCell>
 
                                         {/* Device / Browser */}
@@ -586,10 +610,17 @@ export function VisitorsLogTab() {
                             </DialogHeader>
 
                             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 scrollbar-hide">
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-4 gap-3">
                                     <div className="bg-muted/30 p-3 rounded-md border border-border/30">
                                         <span className="text-[8px] text-muted-foreground/60 font-bold tracking-widest uppercase block mb-1.5">IP Address</span>
                                         <div className="font-mono text-xs font-bold text-foreground">{selectedLog.ipAddress || '127.0.0.1'}</div>
+                                    </div>
+                                    <div className="bg-muted/30 p-3 rounded-md border border-border/30">
+                                        <span className="text-[8px] text-muted-foreground/60 font-bold tracking-widest uppercase block mb-1.5">Time Spent</span>
+                                        <div className="font-mono text-xs font-bold text-emerald-400 flex items-center gap-1">
+                                            <Timer size={12} />
+                                            {formatDuration(selectedLog.duration)}
+                                        </div>
                                     </div>
                                     <div className="bg-muted/30 p-3 rounded-md border border-border/30">
                                         <span className="text-[8px] text-muted-foreground/60 font-bold tracking-widest uppercase block mb-1.5">City / Region</span>
