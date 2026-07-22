@@ -82,7 +82,7 @@ export default function Dashboard() {
                             key={route.value}
                             variant='ghost'
                             size='sm'
-                            className={`border w-32 hover:bg-primary/20 hover:dark:bg-darkFocusColor ${active.value === route.value && 'text-primary bg-primary/10 dark:bg-darkFocusColor'}`}
+                            className={`border w-32   ${active.value === route.value && 'text-primary '}`}
                             onClick={() => { setActive(route) }}
                         >
                             <DynamicIcon name={route.icon} />
@@ -93,7 +93,7 @@ export default function Dashboard() {
             </div>
 
             <div className='grow overflow-y-auto min-h-0'>
-                <div className='flex flex-col gap-4 h-full min-h-[400px]'>
+                <div className='flex flex-col gap-4 h-full min-h-100'>
                     {loading ? (
                         <AccessSkeleton />
                     ) : (

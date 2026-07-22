@@ -40,6 +40,16 @@ export async function GET(req, { params }) {
         });
 
         // Merge with defaults
+        const defaultBranding = {
+            primaryColor: "#3b82f6",
+            logoUrl: workspace.imageUrl || "",
+            appName: "Devlomatix",
+            appDescription: "Your Productivity Platform",
+            workspaceUrl: `http://localhost:3000`
+        };
+
+        const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
+
         const settings = {
             general: {
                 name: workspace.name,
@@ -50,15 +60,10 @@ export async function GET(req, { params }) {
                 socialLinks: workspaceSettings?.general?.socialLinks || {}
             },
             branding: {
-                ...(globalSettings?.social || {
-                    primaryColor: "#3b82f6",
-                    logoUrl: workspace.imageUrl || "",
-                    appName: "Devlomatix",
-                    appDescription: "Your Productivity Platform",
-                    workspaceUrl: `http://localhost:3000`
-                }),
+                ...defaultBranding,
+                ...globalSocial,
                 // Also merge socialLinks into branding for components that expect it there
-                socialLinks: workspaceSettings?.general?.socialLinks || globalSettings?.social?.socialLinks || {}
+                socialLinks: workspaceSettings?.general?.socialLinks || globalSocial.socialLinks || {}
             },
             security: workspaceSettings?.security || {
                 mfaEnabled: false,
@@ -92,7 +97,7 @@ export async function GET(req, { params }) {
         return NextResponse.json(settings);
     } catch (error) {
         console.error("GET Settings Error:", error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
     }
 }
 

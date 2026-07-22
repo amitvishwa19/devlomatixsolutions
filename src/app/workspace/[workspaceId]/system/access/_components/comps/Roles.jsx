@@ -87,7 +87,7 @@ export default function Roles() {
                         className="pl-10"
                     />
                 </div>
-                <Button variant='save' size='sm' onClick={() => setRoleEditor({
+                <Button variant='primary' size='sm' onClick={() => setRoleEditor({
                     isOpen: true,
                     mode: 'add',
                     role: null

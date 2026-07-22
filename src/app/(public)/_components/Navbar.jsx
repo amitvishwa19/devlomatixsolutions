@@ -76,7 +76,7 @@ const Navbar = () => {
                 <div className="px-4 py-2.5 flex items-center justify-between">
                     {/* Left: Logo */}
                     <motion.div whileHover={{ scale: 1.02 }} className="shrink-0">
-                        <AppLogo link='/' size={200} height={80} width={180} />
+                        <AppLogo link='/' size={100} height={60} width={150} />
                     </motion.div>
 
                     {/* Center: Nav Links */}
@@ -160,7 +160,7 @@ const Navbar = () => {
 
                     {/* <ThemeSwitcher /> */}
 
-                    <AuthSelector   />
+                    {/* <AuthSelector /> */}
 
 
                     {/* Mobile */}
@@ -251,7 +251,7 @@ const Navbar = () => {
                                 </Link>
                             ) : !session ? (
                                 <Link href="/login" onClick={() => setIsOpen(false)} className="flex-1">
-                                    <Button variant="outline" className="w-full rounded-full">Login</Button>
+                                    {/* <Button variant="outline" className="w-full rounded-full">Login</Button> */}
                                 </Link>
                             ) : null}
                             <Link href="/contact" onClick={() => setIsOpen(false)} className="flex-1">
@@ -260,6 +260,7 @@ const Navbar = () => {
                         </div>
                     </motion.div>
                 )}
+
             </motion.nav>
         </div>
     );

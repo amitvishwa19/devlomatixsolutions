@@ -80,6 +80,15 @@ export const WorkspaceProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Fetch Settings Error:', error);
+            try {
+                const brandingRes = await fetch('/api/branding', { cache: 'no-store' });
+                if (brandingRes.ok) {
+                    const brandingData = await brandingRes.json();
+                    setSettings(prev => prev || { branding: brandingData });
+                }
+            } catch (fallbackError) {
+                console.error('Fallback Branding Fetch Error:', fallbackError);
+            }
         } finally {
             setSettingsLoading(false);
         }

@@ -9,23 +9,24 @@ const prismaClientSingleton = () => {
     return new PrismaClient({ adapter })
 }
 
+const SCHEMA_VERSION = 30; // Increment this to force a re-init in dev
+
 // Store the singleton on the global object to prevent multiple instances in dev
 const getBaseDb = () => {
     if (!globalThis.prismaGlobal) {
         globalThis.prismaGlobal = prismaClientSingleton();
-        globalThis.prismaGlobal._schemaVersion = 25;
+        globalThis.prismaGlobal._schemaVersion = SCHEMA_VERSION;
     }
     
     // Self-healing: If the client was initialized before the new models or fields existed
     // We check for some new models/fields to trigger re-initialization in development
-    const SCHEMA_VERSION = 30; // Increment this to force a re-init in dev
     const isStale = process.env.NODE_ENV !== 'production' && (
         !globalThis.prismaGlobal.agentModel || 
         !globalThis.prismaGlobal.contactGroup ||
         !globalThis.prismaGlobal.whatsAppFlow ||
         !globalThis.prismaGlobal.role || 
         !globalThis.prismaGlobal.permission ||
-        !globalThis.prismaGlobal.ecommerceConfig ||
+        !globalThis.prismaGlobal.eCommerceStore ||
         globalThis.prismaGlobal._schemaVersion !== SCHEMA_VERSION
     );
 
