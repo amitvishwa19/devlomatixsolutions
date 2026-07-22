@@ -9,7 +9,7 @@ import { AppContext } from '@/providers/AppProvider'
 import { useSettings } from '@/providers/WorkspaceProvider'
 
 
-export function AppLogo({ size = 130, link, className, border = true }) {
+export function AppLogo({ size = 130, width, height, link = '/', className, border = true }) {
 
     const { theme } = useContext(AppContext)
     const { settings } = useSettings()
@@ -27,25 +27,36 @@ export function AppLogo({ size = 130, link, className, border = true }) {
 
     }, [theme, settings])
 
+    const logoWidth = Number(width || size || 130)
+    const logoHeight = Number(height || size || 130)
 
-    const primaryColor = settings?.branding?.primaryColor
-
-    return (
-        <Link href={link}>
-            <div
-                className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-1 rounded-md", className)}
-
-            >
-                <Image
-                    src={logo}
-                    alt='logo'
-                    height={height || size}
-                    width={width || size}
-                    className="object-contain"
-                    style={{ width: 'auto', height: 'auto' }}
-                    priority={false}
-                />
-            </div>
-        </Link>
+    const content = (
+        <div
+            className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-1 rounded-md shrink-0", className)}
+        >
+            <Image
+                src={logo}
+                alt='logo'
+                width={logoWidth}
+                height={logoHeight}
+                className="object-contain"
+                style={{
+                    width: `${logoWidth}px`,
+                    height: height ? `${height}px` : 'auto',
+                    maxHeight: `${logoHeight}px`
+                }}
+                priority={false}
+            />
+        </div>
     )
+
+    if (link) {
+        return (
+            <Link href={link} className="inline-flex shrink-0">
+                {content}
+            </Link>
+        )
+    }
+
+    return content
 }

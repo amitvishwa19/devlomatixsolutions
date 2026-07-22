@@ -103,31 +103,7 @@ const CTA = () => {
 
                         </motion.div>
 
-                        {/* Trust Badges */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            transition={{ duration: 0.6, delay: 0.5 }}
-                            viewport={{ once: true }}
-                            className="mt-16 pt-16 border-t border-border/50"
-                        >
-                            <p className="text-sm text-muted-foreground mb-6">Trusted by innovative companies worldwide</p>
-                            <div className="flex flex-wrap items-center justify-center gap-8">
-                                {["TechCorp", "InnovateCo", "FutureStack", "DataFlow", "CloudSync"].map((company, index) => (
-                                    <motion.span
-                                        key={index}
-                                        className="font-display text-lg font-semibold text-muted-foreground/50 hover:text-primary transition-colors duration-300 cursor-pointer"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
-                                        viewport={{ once: true }}
-                                        whileHover={{ scale: 1.1, y: -2 }}
-                                    >
-                                        {company}
-                                    </motion.span>
-                                ))}
-                            </div>
-                        </motion.div>
+
                     </motion.div>
 
                     {/* Animated rings */}
