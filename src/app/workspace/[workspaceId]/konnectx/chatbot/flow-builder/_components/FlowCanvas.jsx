@@ -383,6 +383,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                             updateNodeData={updateNodeData}
                             deleteNode={deleteNode}
                             closePanel={() => setSelectedNode(null)}
+                            workspaceId={wsId}
                         />
                     </div>
                 )}

@@ -24,26 +24,27 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, config
 
     return (
         <div
+            style={{ width: '200px', maxWidth: '200px', minWidth: '200px' }}
             className={cn(
-                "relative rounded-sm border transition-all duration-300 min-w-[250px] border border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
+                "relative rounded-sm border transition-all duration-300 w-[200px] max-w-[200px] overflow-hidden border border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
                 selected ? " border-primary/60 -translate-y-1 shadow-primary/10" : "hover:border-primary/40"
             )}
             onContextMenu={handleContextMenu}
         >
-            <div className="flex items-center justify-between p-2">
-                <div className="flex items-center gap-2">
-                    <div className={cn("p-1.5 rounded-lg bg-primary/10 text-primary")}>
+            <div className="flex items-center justify-between p-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className={cn("p-1.5 rounded-lg bg-primary/10 text-primary shrink-0")}>
                         <Icon size={16} />
                     </div>
-                    <span className="text-xs font-bold text-muted-foreground">{title}</span>
+                    <span className="text-xs font-bold text-muted-foreground truncate">{title}</span>
                 </div>
                 {configured ? (
-                    <CheckCircle2 size={14} className="text-emerald-500" />
+                    <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
                 ) : (
-                    <AlertCircle size={14} className="text-amber-500 animate-pulse" />
+                    <AlertCircle size={14} className="text-amber-500 animate-pulse shrink-0" />
                 )}
             </div>
-            <div className="space-y-2 p-2">
+            <div className="space-y-2 p-2 min-w-0">
                 {children}
             </div>
         </div>
@@ -62,8 +63,8 @@ export const TriggerNode = memo(({ id, data, selected }) => {
                 data={data}
                 id={id}
             >
-                <div className="text-sm font-semibold text-white">{data.label || 'Start Flow'}</div>
-                <div className="text-[10px] text-muted-foreground italic">
+                <div className="text-sm font-semibold text-white truncate">{data.label || 'Start Flow'}</div>
+                <div className="text-[10px] text-muted-foreground italic truncate">
                     {data.type === 'welcome' ? 'Triggered on first contact' : `Keywords: ${data.keywords || '...'}`}
                 </div>
             </NodeWrapper>
@@ -89,8 +90,8 @@ export const MessageNode = memo(({ id, data, selected }) => {
                 id={id}
             >
                 <div className="text-sm font-semibold text-white truncate">{data.label || 'Send Message'}</div>
-                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 italic">
-                    {data.text || data.imageUrl || data.templateName || 'Click to configure...'}
+                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
+                    {data.text || data.imageUrl || (data.templateName ? `Template: ${data.templateName}` : 'Click to configure...')}
                 </div>
             </NodeWrapper>
             <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-emerald-500" />
@@ -113,8 +114,8 @@ export const LogicNode = memo(({ id, data, selected }) => {
                 data={data}
                 id={id}
             >
-                <div className="text-sm font-semibold text-white">{data.label}</div>
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-sm font-semibold text-white truncate">{data.label}</div>
+                <div className="text-[10px] text-muted-foreground truncate">
                     {isDelay ? `Wait for ${data.seconds || 5}s` : `Check: ${data.variable || '...'}`}
                 </div>
             </NodeWrapper>

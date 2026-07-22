@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Trash2, Info } from 'lucide-react';
+import { X, Trash2, Info, FileText, Loader2 } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -15,8 +15,9 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getTemplates } from "../../../template/_actions/get-templates";
 
-export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closePanel }) => {
+export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closePanel, workspaceId }) => {
     // Sanitize node data by extracting only plain, serializable values
     const sanitize = (data) => {
         if (!data) return {};
@@ -31,6 +32,9 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
     };
 
     const [config, setConfig] = useState(() => sanitize(selectedNode?.data));
+    const [templates, setTemplates] = useState([]);
+    const [loadingTemplates, setLoadingTemplates] = useState(false);
+
     const nodeDef = WA_NODE_REGISTRY[selectedNode?.data?.subType] || WA_NODE_REGISTRY[selectedNode?.data?.type];
 
     useEffect(() => {
@@ -38,11 +42,24 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedNode?.id]);
 
-    if (!selectedNode || !nodeDef) return null;
+    useEffect(() => {
+        if (!workspaceId) return;
+        let isMounted = true;
+        setLoadingTemplates(true);
+        getTemplates({ workspaceId })
+            .then(res => {
+                if (isMounted && res?.data?.templates) {
+                    setTemplates(res.data.templates);
+                }
+            })
+            .catch(err => console.error('[PropertyPanel] Error loading templates:', err))
+            .finally(() => {
+                if (isMounted) setLoadingTemplates(false);
+            });
+        return () => { isMounted = false; };
+    }, [workspaceId]);
 
-    console.log('[PropertyPanel] render — selectedNode.id:', selectedNode?.id);
-    console.log('[PropertyPanel] render — config:', config);
-    console.log('[PropertyPanel] render — nodeDef:', nodeDef?.displayName, 'props:', nodeDef?.properties?.map(p => p.name));
+    if (!selectedNode || !nodeDef) return null;
 
     const onChange = (key, value) => {
         console.log('[PropertyPanel] onChange key:', key, 'value:', value, 'type:', typeof value);
@@ -50,6 +67,46 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
         setConfig(newConfig);
         updateNodeData(selectedNode.id, newConfig);
     };
+
+    const getTemplateBodyText = (tpl) => {
+        if (!tpl) return '';
+        if (tpl.text) return tpl.text;
+        if (tpl.body) return tpl.body;
+        if (Array.isArray(tpl.components)) {
+            const bodyComp = tpl.components.find(c => c.type === 'BODY' || c.type === 'body');
+            if (bodyComp?.text) return bodyComp.text;
+        }
+        return '';
+    };
+
+    const onSelectTemplate = (template) => {
+        if (!template) return;
+        const bodyText = getTemplateBodyText(template);
+
+        const newConfig = {
+            ...config,
+            templateId: template.id,
+            templateName: template.name,
+            languageCode: template.language || 'en_US',
+            text: bodyText || config.text || '',
+            configured: true
+        };
+
+        if (!config.label || config.label === 'Send Message' || config.label === 'Official Template' || config.label.startsWith('Template:')) {
+            newConfig.label = `Template: ${template.name}`;
+        }
+
+        setConfig(newConfig);
+        updateNodeData(selectedNode.id, newConfig);
+    };
+
+    const isMessageOrTemplateNode = selectedNode?.data?.type === 'messageNode' || 
+        selectedNode?.data?.subType === 'templateMessage' || 
+        selectedNode?.data?.subType === 'textMessage' || 
+        selectedNode?.data?.subType === 'imageMessage' ||
+        nodeDef?.type === 'messageNode';
+
+    const selectedTemplateObj = templates.find(t => t.id === config.templateId || t.name === config.templateName);
 
     return (
         <div className="w-96 h-full border-l border-white/10 bg-background flex flex-col shadow-2xl z-20">
@@ -81,6 +138,66 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                             />
                         </div>
                     </div>
+
+                    {/* Select Existing Template Section */}
+                    {isMessageOrTemplateNode && (
+                        <div className="space-y-3 p-3.5 rounded-2xl bg-primary/5 border border-primary/15">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                                    <FileText size={13} />
+                                    Select Existing Template
+                                </Label>
+                                {loadingTemplates && <Loader2 size={12} className="animate-spin text-primary" />}
+                            </div>
+
+                            <Select
+                                value={config.templateId || (selectedTemplateObj ? selectedTemplateObj.id : '')}
+                                onValueChange={(templateId) => {
+                                    const found = templates.find(t => t.id === templateId || t.name === templateId);
+                                    if (found) onSelectTemplate(found);
+                                }}
+                            >
+                                <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                    <SelectValue placeholder={loadingTemplates ? "Loading templates..." : templates.length === 0 ? "No templates available" : "Choose existing template..."} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-background border-white/10 z-[100] max-h-60">
+                                    {templates.map((tpl) => (
+                                        <SelectItem key={tpl.id} value={tpl.id} className="text-xs">
+                                            <div className="flex items-center justify-between gap-3 w-full">
+                                                <span className="font-semibold">{tpl.name}</span>
+                                                <span className="text-[10px] text-muted-foreground">({tpl.language || 'en_US'})</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {selectedTemplateObj && (
+                                <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-bold text-white text-xs truncate max-w-[170px]">{selectedTemplateObj.name}</span>
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                            selectedTemplateObj.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                        }`}>
+                                            {selectedTemplateObj.status || 'APPROVED'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                        {selectedTemplateObj.category && <span>Cat: {selectedTemplateObj.category}</span>}
+                                        <span>•</span>
+                                        <span>Lang: {selectedTemplateObj.language || 'en_US'}</span>
+                                    </div>
+
+                                    {getTemplateBodyText(selectedTemplateObj) && (
+                                        <div className="text-[11px] text-muted-foreground line-clamp-3 italic bg-white/5 p-2 rounded-lg border border-white/5 leading-relaxed">
+                                            "{getTemplateBodyText(selectedTemplateObj)}"
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {nodeDef.properties.length > 0 && (
                         <div className="space-y-6 pt-6 border-t border-white/5">
