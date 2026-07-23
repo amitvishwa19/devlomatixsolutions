@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { v4 as uuidv4 } from 'uuid'
 import { ROLE } from "@prisma/client";
 import { slug } from "@/utils/functions";
+import bcryptjs from "bcryptjs";
 
 import { ensureAdmin } from "@/lib/auth-utils";
 
@@ -29,24 +30,36 @@ const handler = async (data) => {
       ? { id: formData.id } 
       : { email: formData.email };
 
+    // Hash password if provided
+    let hashedPassword = undefined;
+    if (formData.password && typeof formData.password === 'string' && formData.password.trim() !== '') {
+      hashedPassword = await bcryptjs.hash(formData.password.trim(), 10);
+    }
+
+    const createData = {
+      displayName: formData?.name,
+      email: formData?.email,
+      isActive: formData.status,
+      ...(hashedPassword && { password: hashedPassword }),
+      roles: {
+        connect: nroles
+      },
+    };
+
+    const updateData = {
+      displayName: formData?.name,
+      email: formData?.email,
+      isActive: formData.status,
+      ...(hashedPassword && { password: hashedPassword }),
+      roles: {
+        set: nroles
+      },
+    };
+
     user = await db.user.upsert({
       where: whereClause,
-      create: {
-        displayName: formData?.name,
-        email: formData?.email,
-        isActive: formData.status,
-        roles: {
-          connect: nroles
-        },
-      },
-      update: {
-        displayName: formData?.name,
-        email: formData?.email,
-        isActive: formData.status,
-        roles: {
-          set: nroles
-        },
-      },
+      create: createData,
+      update: updateData,
       include: {
         roles: true,
       },

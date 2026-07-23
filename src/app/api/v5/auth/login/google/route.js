@@ -46,44 +46,39 @@ export async function POST(req) {
                         value: 500
                     }
                 },
-                // profile: {
-                //     create: {
-                //         displayname: displayName,
-                //         // location: location
-                //     }
-                // }
+
             },
         })
 
-        // if (user) {
+        if (user) {
 
-        //     server = await db.server.findFirst({
-        //         where: { userId: user?.id }
-        //     })
+            server = await db.server.findFirst({
+                where: { userId: user?.id }
+            })
 
-        //     if (!server) {
-        //         server = await db.server.create({
-        //             data: {
-        //                 userId: user?.id,
-        //                 name: user?.displayName,
-        //                 inviteCode: uuidv4(),
-        //                 selected: true,
-        //                 channels: {
-        //                     create: [{ name: 'general', userId: user?.id }]
-        //                 },
-        //                 members: {
-        //                     create: [
-        //                         {
-        //                             userId: user?.id,
-        //                             role: MemberRole.ADMIN
-        //                         }
-        //                     ]
-        //                 }
-        //             }
-        //         })
-        //     }
+            if (!server) {
+                server = await db.server.create({
+                    data: {
+                        userId: user?.id,
+                        name: user?.displayName,
+                        inviteCode: uuidv4(),
+                        selected: true,
+                        channels: {
+                            create: [{ name: 'general', userId: user?.id }]
+                        },
+                        members: {
+                            create: [
+                                {
+                                    userId: user?.id,
+                                    role: MemberRole.ADMIN
+                                }
+                            ]
+                        }
+                    }
+                })
+            }
 
-        // }
+        }
 
         const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
         const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);

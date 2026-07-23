@@ -8,7 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { icons, Loader, Save, User } from 'lucide-react';
+import { Eye, EyeOff, icons, Loader, Save, User } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAction } from '@/hooks/use-action';
@@ -24,6 +24,7 @@ const userFormSchema = z.object({
     id: z.string(),
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
     email: z.string().email('Please enter a valid email address'),
+    password: z.string().optional(),
     roles: z.array(z.any()),
     status: z.boolean(),
 });
@@ -31,6 +32,7 @@ const userFormSchema = z.object({
 export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
     const { data: session, update } = useSession()
     const [loading, setloading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
     const isEditing = !!user;
     const { departments } = useAccess()
 
@@ -43,6 +45,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
             id: '',
             name: '',
             email: '',
+            password: '',
             roles: [],
             status: false,
         },
@@ -54,6 +57,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                 id: user.id || '',
                 name: user.displayName || '',
                 email: user.email || '',
+                password: '',
                 roles: user.roles?.map((p) =>
                     typeof p === 'string' ? p : p.id
                 ) ?? [],
@@ -64,10 +68,12 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                 id: '',
                 name: '',
                 email: '',
+                password: '',
                 roles: [],
                 status: false,
             });
         }
+        setShowPassword(false);
     }, [user, form, open]);
 
     useEffect(() => {
@@ -160,6 +166,40 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                                                             {...field}
                                                             className="bg-secondary/30 border-border/40 rounded-md focus:ring-primary/20"
                                                         />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="password"
+                                            render={({ field }) => (
+                                                <FormItem className="grid gap-2 p-1">
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">
+                                                        Password {isEditing ? "(Leave blank to keep unchanged)" : "(Set User Password)"}
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                        <div className="relative flex items-center">
+                                                            <Input
+                                                                type={showPassword ? "text" : "password"}
+                                                                placeholder={isEditing ? "••••••••" : "Enter password"}
+                                                                {...field}
+                                                                className="bg-secondary/30 border-border/40 rounded-md focus:ring-primary/20 pr-10"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    setShowPassword((prev) => !prev);
+                                                                }}
+                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-10 cursor-pointer p-1"
+                                                            >
+                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                            </button>
+                                                        </div>
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
