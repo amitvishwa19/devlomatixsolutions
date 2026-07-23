@@ -25,14 +25,8 @@ export async function POST(req) {
                 provider,
                 displayName,
                 avatar,
-                // deviceToken,
-                // expoPushToken,
-                // profile: {
-                //     update: {
-                //         displayname: displayName,
-                //         location: location,
-                //     }
-                // },
+                deviceToken,
+                expoPushToken,
             },
             create: {
                 uid,

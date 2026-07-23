@@ -4,13 +4,14 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LayoutDashboard, Layers, Cpu, TrendingDown, Activity, Zap, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Layers, Cpu, TrendingDown, Activity, Zap, ShieldCheck, MessageSquare } from 'lucide-react';
 
 import { OverviewTab } from './tabs/OverviewTab';
 import { CombosTab } from './tabs/CombosTab';
 import { ProvidersTab } from './tabs/ProvidersTab';
 import { CompressionTab } from './tabs/CompressionTab';
 import { LogsTab } from './tabs/LogsTab';
+import { ChatTab } from './tabs/ChatTab';
 
 export function OmniRouteDashboard({ workspaceId, userId }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -42,6 +43,9 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         <TabsTrigger value="combos" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Layers className="h-3.5 w-3.5" /> Combos
                         </TabsTrigger>
+                        <TabsTrigger value="chat" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                            <MessageSquare className="h-3.5 w-3.5" /> Chat
+                        </TabsTrigger>
                         <TabsTrigger value="providers" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Cpu className="h-3.5 w-3.5" /> Providers
                         </TabsTrigger>
@@ -65,6 +69,10 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
 
                         <TabsContent value="combos" className="mt-0">
                             <CombosTab />
+                        </TabsContent>
+
+                        <TabsContent value="chat" className="mt-0 h-full">
+                            <ChatTab workspaceId={workspaceId} />
                         </TabsContent>
 
                         <TabsContent value="providers" className="mt-0">

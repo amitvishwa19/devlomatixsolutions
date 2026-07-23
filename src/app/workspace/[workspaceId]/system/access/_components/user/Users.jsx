@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Eye, Filter, MoreHorizontal, MoreVertical, Pencil, Plus, Search, Trash2, UserMinus } from 'lucide-react'
+import { Edit, Eye, Filter, MoreHorizontal, MoreVertical, Pencil, Plus, Search, Trash2, UserMinus, Bell } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
 import { useAccess } from '@/providers/WorkspaceProvider'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { UserFormDialog } from './UserFormDialog'
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { UserDelete } from './UserDelete'
+import { UserFcmDialog } from './UserFcmDialog'
 import { Badge } from '@/components/ui/badge'
 import { DataTable } from '@/app/workspace/_components/DataTable'
 import { toast } from 'sonner'
@@ -28,6 +29,10 @@ export default function Users() {
     const [deletingUser, setDeletingUser] = useState({
         isOpen: false,
         mode: 'delete',
+        user: null
+    });
+    const [sendingFcmUser, setSendingFcmUser] = useState({
+        isOpen: false,
         user: null
     });
 
@@ -183,6 +188,18 @@ export default function Users() {
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete User
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setSendingFcmUser({
+                                        isOpen: true,
+                                        user: row.original
+                                    })
+                                }
+                                className="text-purple-500 "
+                            >
+                                <Bell className="mr-2 h-4 w-4" />
+                                Send Push Notification
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 )
@@ -327,21 +344,15 @@ export default function Users() {
 
             {/* User Delete Confirmation */}
             <UserDelete
-                open={deletingUser.isOpen}
-                onClose={(user) => {
-                    setDeletingUser({
-                        isOpen: false,
-                        mode: 'add',
-                        user: null
-                    })
-                    if (user) {
-                        setUsers(users.filter((usr => usr.id !== user.id)))
-                    }
-                }}
                 data={deletingUser.user}
                 onConfirm={handleDeleteUser}
             />
 
+            <UserFcmDialog
+                isOpen={sendingFcmUser.isOpen}
+                onClose={() => setSendingFcmUser({ isOpen: false, user: null })}
+                user={sendingFcmUser.user}
+            />
         </div>
     )
 }

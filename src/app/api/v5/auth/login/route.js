@@ -12,7 +12,7 @@ export async function POST(req) {
         const secretKey = process.env.ENCRYPTION_KEY;
         const key = new TextEncoder().encode(secretKey);
         const payload = await req.json();
-        const { email, password, deviceToken, location } = payload
+        const { email, password, deviceToken, expoPushToken, location } = payload
         let user
         let server
 
@@ -44,6 +44,7 @@ export async function POST(req) {
                 accessToken,
                 refreshToken,
                 deviceToken,
+                expoPushToken,
                 profile: {
                     update: {
                         location: location,
