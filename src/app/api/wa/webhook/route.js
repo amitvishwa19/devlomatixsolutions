@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
 import { getMediaUrl } from "@/app/workspace/[workspaceId]/konnectx/_lib/whatsapp-cloud-api";
+import { sendAndroidNotification } from "@/utils/fcm-notification";
 
 // The VERIFY_TOKEN is now strictly tied to the ENCRYPTION_KEY environment variable
 const VERIFY_TOKEN = process.env.ENCRYPTION_KEY;
@@ -39,6 +40,7 @@ export async function GET(req) {
  */
 export async function POST(req) {
     try {
+        console.log('WHatsapp cloud webhook route')
         const body = await req.json();
         console.log('🚀 [Webhook] Incoming Payload:', JSON.stringify(body, null, 2));
 
@@ -317,6 +319,41 @@ export async function POST(req) {
                             }
                         }
                     });
+
+                    // 4. Send Push Notification
+                    try {
+                        console.log("targetCred.workspaceId", targetCred.workspaceId)
+                        const workspaceId = targetCred.workspaceId;
+                        if (workspaceId) {
+                            // Find all users in this workspace to notify
+                            const workspaceUsers = await db.user.findMany({
+                                where: { members: { some: { serverId: workspaceId } } },
+                                select: { id: true, deviceToken: true, expoPushToken: true }
+                            });
+
+                            const pushPromises = [];
+                            for (const wsUser of workspaceUsers) {
+                                const pushToken = wsUser.deviceToken || wsUser.expoPushToken;
+                                if (pushToken) {
+                                    pushPromises.push(
+                                        sendAndroidNotification({
+                                            token: pushToken,
+                                            title: `WhatsApp from ${from}`,
+                                            body: textBody,
+                                            data: {
+                                                type: 'whatsapp_message',
+                                                sender: from,
+                                                workspaceId: workspaceId
+                                            }
+                                        }).catch(err => console.error('[Webhook] Push Notification Error:', err))
+                                    );
+                                }
+                            }
+                            await Promise.allSettled(pushPromises);
+                        }
+                    } catch (pushErr) {
+                        console.error('[Webhook] Failed to dispatch push notifications:', pushErr);
+                    }
                 }
             }
         }

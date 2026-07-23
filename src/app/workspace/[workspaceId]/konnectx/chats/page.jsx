@@ -386,9 +386,11 @@ export default function WhatsAppChatsPage() {
         };
         window.addEventListener('wa-account-switched', handleSwitch);
 
-        const interval = setInterval(fetchConversations, 5000);
+        // [TEMPORARILY DISABLED] - Continuous polling disabled for now
+        // const interval = setInterval(fetchConversations, 5000);
         return () => {
-            clearInterval(interval);
+            // [TEMPORARILY DISABLED]
+            // clearInterval(interval);
             window.removeEventListener('wa-account-switched', handleSwitch);
         };
     }, [workspaceId]);
@@ -466,7 +468,7 @@ export default function WhatsAppChatsPage() {
         // Extract default media URL from metadata if exists
         let metadata = tpl.metadata;
         if (typeof metadata === 'string') {
-            try { metadata = JSON.parse(metadata); } catch (e) {}
+            try { metadata = JSON.parse(metadata); } catch (e) { }
         }
         setTemplateMediaUrl(metadata?.mediaUrl || "");
     };
@@ -488,7 +490,7 @@ export default function WhatsAppChatsPage() {
         const templateType = (selectedTemplateForSend.type || 'text').toUpperCase();
         if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(templateType)) {
             let finalMediaUrl = templateMediaUrl || '';
-            
+
             // Fallback URLs if metadata mediaUrl is not defined
             if (!finalMediaUrl) {
                 finalMediaUrl = {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db as prisma } from "@/lib/db";
 import { waBotEngine } from "@/app/workspace/[workspaceId]/konnectx/_lib/bot-engine";
+import { sendAndroidNotification } from "@/utils/fcm-notification";
 
 export async function GET(req, { params }) {
     try {
@@ -68,10 +69,11 @@ export async function POST(req, { params }) {
 
                 try {
                     const users = await prisma.user.findMany({
-                        where: { workspaces: { some: { id: workspaceId } } },
-                        select: { id: true }
+                        where: { members: { some: { serverId: workspaceId } } },
+                        select: { id: true, deviceToken: true, expoPushToken: true }
                     });
 
+                    const pushPromises = [];
                     for (const user of users) {
                         await waBotEngine.processIncomingMessage(
                             user.id,
@@ -79,7 +81,24 @@ export async function POST(req, { params }) {
                             from,
                             text
                         );
+
+                        const pushToken = user.deviceToken || user.expoPushToken;
+                        if (pushToken) {
+                            pushPromises.push(
+                                sendAndroidNotification({
+                                    token: pushToken,
+                                    title: `WhatsApp from ${from}`,
+                                    body: text,
+                                    data: {
+                                        type: 'whatsapp_message',
+                                        sender: from,
+                                        workspaceId: workspaceId
+                                    }
+                                }).catch(err => console.error('[Webhook] Push Notification Error:', err))
+                            );
+                        }
                     }
+                    await Promise.allSettled(pushPromises);
 
                     await prisma.botExecution.updateMany({
                         where: {

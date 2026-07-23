@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { runAgent } from "../../../workspace/[workspaceId]/flowgenix/_lib/agent-runtime";
+import { runAgent } from "@/app/workspace/[workspaceId]/flowgenix/_lib/agent-runtime";
 
 export async function POST(req) {
     try {
