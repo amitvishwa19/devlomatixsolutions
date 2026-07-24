@@ -137,23 +137,24 @@ export function RoleCard({ role, onEdit, onDelete }) {
         </div>
       </div>
 
-        {/* Permissions section - Assigned permissions badges */}
+        {/* Permissions section - Grouped module name badges */}
         <div className="flex flex-wrap gap-1.5 overflow-hidden">
-          {resolvedPermissions.slice(0, 15).map((perm, idx) => (
+          {modules.slice(0, 10).map((mod) => (
             <Badge 
-              key={perm.id || idx} 
+              key={mod.key} 
               variant="outline" 
               className="bg-primary/5 border-primary/10 hover:border-primary/30 transition-colors text-[10px] py-0 px-2.5 h-6 flex items-center font-bold tracking-tight text-primary/80"
+              title={`${mod.count} active operation(s) in ${mod.name}`}
             >
-              {getPermissionLabel(perm)}
+              {mod.name} ({mod.count})
             </Badge>
           ))}
-          {permissionCount > 15 && (
+          {modules.length > 10 && (
             <span className="text-[10px] text-muted-foreground/60 px-1 py-1 font-medium italic">
-              +{permissionCount - 15} more permissions
+              +{modules.length - 10} more modules
             </span>
           )}
-          {permissionCount === 0 && (
+          {modules.length === 0 && (
             <p className="text-[10px] text-muted-foreground/40 italic py-2">
               No permissions associated with this role
             </p>
