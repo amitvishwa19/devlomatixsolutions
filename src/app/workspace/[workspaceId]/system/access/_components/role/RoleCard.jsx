@@ -7,7 +7,7 @@ import { titleCaseLabel } from '@/utils/functions';
 import { useAccess } from '@/providers/WorkspaceProvider';
 
 export function RoleCard({ role, onEdit, onDelete }) {
-  const { setPreviewRole, permissions: globalPermissions } = useAccess();
+  const { setPreviewRole, permissions: globalPermissions, users: globalUsers } = useAccess();
 
   // Resolve full permission objects whether role.permissions contains objects or string IDs
   const resolvedPermissions = useMemo(() => {
@@ -23,7 +23,19 @@ export function RoleCard({ role, onEdit, onDelete }) {
   }, [role?.permissions, globalPermissions]);
 
   const permissionCount = resolvedPermissions.length;
-  const userCount = role?.users?.length ?? 0;
+
+  // Calculate user count from role.users array OR globalUsers array
+  const userCount = useMemo(() => {
+    if (role?.users?.length) return role.users.length;
+    if (!globalUsers?.length || !role?.id) return 0;
+    return globalUsers.filter((u) => {
+      if (u.role === role.id) return true;
+      if (Array.isArray(u.roles)) {
+        return u.roles.some((r) => (typeof r === 'string' ? r === role.id : r.id === role.id));
+      }
+      return false;
+    }).length;
+  }, [role?.users, role?.id, globalUsers]);
 
   // Group permissions by category/module to display unique modules with count
   const modules = useMemo(() => {
@@ -88,13 +100,17 @@ export function RoleCard({ role, onEdit, onDelete }) {
         {/* Header section */}
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1 min-w-0">
-            <h3 className="text-base font-bold text-card-foreground line-clamp-1 flex items-center gap-2">
+            <h3 className="text-base font-bold text-card-foreground line-clamp-1 flex items-center gap-2 flex-wrap">
               {titleCaseLabel(role?.title)}
               {permissionCount > 0 && (
                 <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-primary/10 text-primary border-none font-bold">
-                  {permissionCount}
+                  {permissionCount} perms
                 </Badge>
               )}
+              <Badge variant="outline" className="h-5 px-2 text-[10px] bg-muted/40 text-foreground/80 border-primary/20 font-bold flex items-center gap-1">
+                <Users className="w-3 h-3 text-primary" />
+                {userCount} {userCount === 1 ? 'User' : 'Users'}
+              </Badge>
             </h3>
             <p className="text-xs text-muted-foreground/70 line-clamp-1 italic font-medium">
               {role?.description}
