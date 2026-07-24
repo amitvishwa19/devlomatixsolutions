@@ -51,10 +51,33 @@ const handler = async (data) => {
           }
         });
         perms.push({ id: existingPerm.id });
-      } else if (p.id && !p.id.startsWith('nav-')) {
+      } else if (p.id && !p.id.startsWith('nav-') && !p.id.startsWith('new-')) {
         perms.push({ id: p.id });
+      } else if (p.value) {
+        const existingPerm = await db.permission.upsert({
+          where: { value: p.value },
+          update: {
+            title: p.title || p.value,
+            category: p.category || (p.value.includes('.') ? p.value.split('.')[0] : 'general'),
+            type: p.type || "ACTION",
+            url: p.url || null,
+          },
+          create: {
+            value: p.value,
+            title: p.title || p.value,
+            description: p.description || `Permission for ${p.value}`,
+            category: p.category || (p.value.includes('.') ? p.value.split('.')[0] : 'general'),
+            type: p.type || "ACTION",
+            url: p.url || null,
+            status: true
+          }
+        });
+        perms.push({ id: existingPerm.id });
       }
     }
+
+    // Deduplicate permission IDs
+    const uniquePerms = Array.from(new Set(perms.map(p => p.id))).map(id => ({ id }));
 
     role = await db.role.upsert({
       where: {
@@ -66,7 +89,7 @@ const handler = async (data) => {
         color: formData?.color,
         parent: formData.parentId ? { connect: { id: formData.parentId } } : undefined,
         permissions: {
-          connect: perms
+          connect: uniquePerms
         }
       },
       update: {
@@ -75,7 +98,7 @@ const handler = async (data) => {
         color: formData?.color,
         parent: formData.parentId ? { connect: { id: formData.parentId } } : (formData.parentId === null ? { disconnect: true } : undefined),
         permissions: {
-          set: perms
+          set: uniquePerms
         }
       },
       include: {

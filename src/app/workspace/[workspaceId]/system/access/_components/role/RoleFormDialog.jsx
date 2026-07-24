@@ -60,8 +60,11 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
 
         if (role) {
             // EDIT MODE
-            const rolePermissionIds = new Set(
-                role.permissions.map((p) => (typeof p === "string" ? p : p.id))
+            const rolePermissionKeys = new Set(
+                role.permissions?.flatMap((p) => {
+                    if (typeof p === "string") return [p];
+                    return [p.id, p.value].filter(Boolean);
+                }) || []
             );
 
             form.reset({
@@ -71,7 +74,7 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                 color: role.color,
                 permissions: permissions.map((p) => ({
                     ...p,
-                    status: rolePermissionIds.has(p.id),
+                    status: rolePermissionKeys.has(p.id) || rolePermissionKeys.has(p.value),
                 })),
                 parentId: role.parentId || "none",
             });

@@ -1,6 +1,6 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, } from "@/components/ui/button-group"
 import { DynamicIcon } from 'lucide-react/dynamic'
 import AccessDashboard from './_components/AccessDashboard'
@@ -16,23 +16,39 @@ import { useAccess } from '@/providers/WorkspaceProvider'
 import { Loader2, MonitorSmartphone, X } from 'lucide-react'
 import AccessSkeleton from './_components/AccessSkeleton'
 
-
-
 export default function Dashboard() {
 
     const { loading, previewRole, setPreviewRole } = useAccess();
-
     const { data: session } = useSession();
 
-    const routes = [
+    const routes = useMemo(() => [
         { value: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard', component: <AccessDashboard user={session?.user} /> },
         { value: 'users', label: 'Users', icon: 'user', component: <Users /> },
         { value: 'roles', label: 'Roles', icon: 'shield-user', component: <Roles /> },
-        { value: 'permissions', label: 'Permissions', icon: 'key', component: < PermissionMatrix /> }
-    ]
-    const [active, setActive] = useState(routes[0])
+        { value: 'permissions', label: 'Permissions', icon: 'key', component: <PermissionMatrix /> }
+    ], [session?.user]);
 
+    const [activeTab, setActiveTab] = useState('dashboard');
 
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedTab = localStorage.getItem('system_access_tab');
+            if (savedTab && routes.some(r => r.value === savedTab)) {
+                setActiveTab(savedTab);
+            }
+        }
+    }, [routes]);
+
+    const activeRoute = useMemo(() => {
+        return routes.find(r => r.value === activeTab) || routes[0];
+    }, [routes, activeTab]);
+
+    const handleTabChange = (tabValue) => {
+        setActiveTab(tabValue);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('system_access_tab', tabValue);
+        }
+    };
 
     return (
 
@@ -82,8 +98,8 @@ export default function Dashboard() {
                             key={route.value}
                             variant='ghost'
                             size='sm'
-                            className={`border w-32   ${active.value === route.value && 'text-primary '}`}
-                            onClick={() => { setActive(route) }}
+                            className={`border w-32   ${activeRoute.value === route.value && 'text-primary '}`}
+                            onClick={() => handleTabChange(route.value)}
                         >
                             <DynamicIcon name={route.icon} />
                             <span>{route.label}</span>
@@ -97,7 +113,7 @@ export default function Dashboard() {
                     {loading ? (
                         <AccessSkeleton />
                     ) : (
-                        active.component
+                        activeRoute.component
                     )}
                 </div>
             </div>

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Users, Edit, Trash2, MonitorSmartphone } from 'lucide-react';
@@ -6,9 +7,74 @@ import { titleCaseLabel } from '@/utils/functions';
 import { useAccess } from '@/providers/WorkspaceProvider';
 
 export function RoleCard({ role, onEdit, onDelete }) {
-  const { setPreviewRole } = useAccess();
-  const permissionCount = role?.permissions?.length ?? 0;
+  const { setPreviewRole, permissions: globalPermissions } = useAccess();
+
+  // Resolve full permission objects whether role.permissions contains objects or string IDs
+  const resolvedPermissions = useMemo(() => {
+    if (!role?.permissions?.length) return [];
+    return role.permissions.map((p) => {
+      if (typeof p === 'object' && p !== null && p.title) return p;
+      const idOrVal = typeof p === 'string' ? p : (p?.id || p?.value);
+      const found = globalPermissions?.find(
+        (g) => g.id === idOrVal || g.value === idOrVal
+      );
+      return found || (typeof p === 'object' ? p : { id: p, title: p, value: p });
+    });
+  }, [role?.permissions, globalPermissions]);
+
+  const permissionCount = resolvedPermissions.length;
   const userCount = role?.users?.length ?? 0;
+
+  // Group permissions by category/module to display unique modules with count
+  const modules = useMemo(() => {
+    if (!resolvedPermissions.length) return [];
+    const uniqueModules = new Map();
+
+    resolvedPermissions.forEach((perm) => {
+      let categoryKey = perm.category;
+      if (!categoryKey && typeof perm.value === 'string' && perm.value.includes('.')) {
+        categoryKey = perm.value.split('.')[0];
+      }
+      categoryKey = categoryKey || 'general';
+
+      const formattedName = categoryKey
+        .replace(/[_-]+/g, " ")
+        .trim()
+        .split(/\s+/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+
+      if (!uniqueModules.has(categoryKey)) {
+        uniqueModules.set(categoryKey, { key: categoryKey, name: formattedName, count: 1 });
+      } else {
+        uniqueModules.get(categoryKey).count += 1;
+      }
+    });
+
+    return Array.from(uniqueModules.values());
+  }, [resolvedPermissions]);
+
+  const getPermissionLabel = (perm) => {
+    if (!perm) return '';
+    const title = perm.title || '';
+    const value = perm.value || '';
+
+    if (value.startsWith('navigation.')) {
+      const slug = value.split('.').pop();
+      return `Nav: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`;
+    }
+
+    if (value.includes('.')) {
+      const [category, action] = value.split('.');
+      const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1);
+      const formattedAction = action.charAt(0).toUpperCase() + action.slice(1);
+      if (title.toLowerCase() === category.toLowerCase() || title.toLowerCase() === formattedCategory.toLowerCase()) {
+        return `${formattedAction} ${formattedCategory}`;
+      }
+    }
+
+    return titleCaseLabel(title || value);
+  };
 
   return (
     <div className="group relative flex flex-col h-full overflow-hidden rounded-xl border border-border bg-card/50 backdrop-blur-small transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 animate-in fade-in slide-in-from-bottom-2">
@@ -71,15 +137,15 @@ export function RoleCard({ role, onEdit, onDelete }) {
         </div>
       </div>
 
-        {/* Permissions section - Badge row layout */}
+        {/* Permissions section - Assigned permissions badges */}
         <div className="flex flex-wrap gap-1.5 overflow-hidden">
-          {role?.permissions?.slice(0, 15).map((perm) => (
+          {resolvedPermissions.slice(0, 15).map((perm, idx) => (
             <Badge 
-              key={perm.id} 
+              key={perm.id || idx} 
               variant="outline" 
               className="bg-primary/5 border-primary/10 hover:border-primary/30 transition-colors text-[10px] py-0 px-2.5 h-6 flex items-center font-bold tracking-tight text-primary/80"
             >
-              {titleCaseLabel(perm.title)}
+              {getPermissionLabel(perm)}
             </Badge>
           ))}
           {permissionCount > 15 && (

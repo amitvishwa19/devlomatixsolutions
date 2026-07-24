@@ -9,13 +9,15 @@ import { ShieldCheck } from "lucide-react";
 
 export function GeneralRoleForm({ form }) {
 
-    // Group permissions into categories for easier visualization
+    // Group permissions into categories for easier visualization (filtering out navigation permissions)
     const permissionCategories = useMemo(() => {
         const groups = {};
-        form.getValues("permissions")?.forEach((p) => {
-            if (!groups[p.category]) groups[p.category] = [];
-            groups[p.category].push(p);
-        });
+        form.getValues("permissions")
+            ?.filter((p) => p.type !== "NAVIGATION" && !p.value?.startsWith("navigation."))
+            .forEach((p) => {
+                if (!groups[p.category]) groups[p.category] = [];
+                groups[p.category].push(p);
+            });
         return groups;
     }, [form.watch("permissions")]);
 
