@@ -79,6 +79,7 @@ model User {
   contactShares             ContactShare[]
   conversationShares        ConversationShare[]      @relation("ConversationSharedWith")
   conversationSharesBy      ConversationShare[]      @relation("ConversationSharedBy")
+  quotations                Quotation[]
 
   @@index([email])
   @@index([phone])
@@ -1635,4 +1636,23 @@ model ConversationShare {
   @@unique([jid, workspaceId, sharedWithUserId])
   @@index([sharedWithUserId])
   @@index([jid])
+}
+
+model Quotation {
+  id              String   @id @default(cuid())
+  userId          String
+  workspaceId     String?
+  quotationNumber String
+  clientName      String?
+  total           Float    @default(0)
+  status          String   @default("draft")
+  data            Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([quotationNumber])
 }

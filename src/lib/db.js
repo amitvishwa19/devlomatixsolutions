@@ -9,7 +9,7 @@ const prismaClientSingleton = () => {
     return new PrismaClient({ adapter })
 }
 
-const SCHEMA_VERSION = 30; // Increment this to force a re-init in dev
+const SCHEMA_VERSION = 31; // Increment this to force a re-init in dev
 
 // Store the singleton on the global object to prevent multiple instances in dev
 const getBaseDb = () => {
