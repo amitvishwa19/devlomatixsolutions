@@ -43,6 +43,7 @@ model User {
   sharedDocuments           DocumentAccess[]         @relation("UserToDocumentAccess")
   jobs                      Job[]
   kanbanActivities          KanbanActivity[]
+  kanbanColumns             KanbanColumn[]
   assignedTasks             KanbanTask[]             @relation("TaskAssignee")
   members                   Member[]
   messageTemplates          MessageTemplate[]
@@ -768,11 +769,14 @@ model KanbanColumn {
   title       String
   order       Int          @default(0)
   workspaceId String
+  userId      String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   tasks       KanbanTask[]
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
+  @@index([userId])
 }
 
 model KanbanTask {

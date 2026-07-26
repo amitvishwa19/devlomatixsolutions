@@ -122,6 +122,25 @@ export async function POST(req) {
 
         //console.log(user)
 
+        user = {
+            userId: user?.id,
+            name: user?.displayName,
+            displayName: user?.displayName,
+            email: user?.email,
+            avatar: user?.avatar,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            workspaceId: user?.servers[0]?.id,
+            workspaces: user?.servers,
+            deviceToken: user?.deviceToken,
+            expoPushToken: user?.expoPushToken,
+            webDeviceToken: user?.webDeviceToken,
+            roles: user?.roles,
+            profile: user?.profile
+        }
+
+        console.log('formatted user', user)
+
 
         return NextResponse.json({ status: 200, user: user })
     } catch (error) {

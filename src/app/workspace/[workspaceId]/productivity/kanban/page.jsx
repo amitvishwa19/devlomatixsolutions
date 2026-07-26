@@ -1,15 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 
 import {
   Search,
-  Filter,
   Plus,
-  LayoutGrid,
-  ListFilter,
-  Sparkles
+  Sparkles,
+  RefreshCw,
+  Kanban,
+  AlertTriangle,
+  Clock,
+  CheckCircle2,
+  ListTodo,
+  FilterX
 } from 'lucide-react';
 import {
   Select,
@@ -22,12 +26,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { KanbanColumn } from '../_components/KanbanColumn';
+import { KanbanSkeleton } from '../_components/KanbanSkeleton';
 import { AddKanbanColumnModal } from '../_components/AddKanbanColumnModal';
 import { AddKanbanTaskModal } from '../_components/AddKanbanTaskModal';
 import { useModal } from "@/hooks/useModal";
 import { toast } from "sonner";
-import axios from "@/utils/axios";
-
+import {
+  getKanbanDataAction,
+  updateTaskOrderAction,
+  deleteKanbanColumnAction,
+  deleteKanbanTaskAction
+} from './_actions/kanban-actions';
 
 export default function KanbanPage({ params }) {
   const { workspaceId } = React.use(params);
@@ -36,19 +45,24 @@ export default function KanbanPage({ params }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
+  const [filterDueStatus, setFilterDueStatus] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = async (showRefreshToast = false) => {
     try {
-      setLoading(true);
-      const response = await fetch(`/api/workspace/${workspaceId}/productivity/kanban`);
-      const columns = await response.json();
+      if (showRefreshToast) setIsRefreshing(true);
+      else setLoading(true);
 
-      if (!Array.isArray(columns)) {
-        console.error("Invalid kanban data received", columns);
-        setLoading(false);
+      const res = await getKanbanDataAction(workspaceId);
+
+      if (!res?.success || !Array.isArray(res?.columns)) {
+        console.error("Failed to fetch kanban data", res?.error);
+        if (showRefreshToast) toast.error("Failed to refresh board");
         return;
       }
+
+      const columns = res.columns;
 
       // Transform DB data to board state
       const tasksMap = {};
@@ -59,10 +73,10 @@ export default function KanbanPage({ params }) {
         columnsMap[col.id] = {
           id: col.id,
           title: col.title,
-          taskIds: col.tasks.sort((a, b) => a.order - b.order).map(t => t.id)
+          taskIds: (col.tasks || []).sort((a, b) => a.order - b.order).map(t => t.id)
         };
         columnOrder.push(col.id);
-        col.tasks.forEach(task => {
+        (col.tasks || []).forEach(task => {
           tasksMap[task.id] = {
             ...task,
           };
@@ -74,16 +88,47 @@ export default function KanbanPage({ params }) {
         columns: columnsMap,
         columnOrder
       });
+
+      if (showRefreshToast) toast.success("Board refreshed");
     } catch (error) {
       console.error("Failed to fetch kanban data", error);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchData();
   }, [workspaceId]);
+
+  // Compute Metrics Overview
+  const metrics = useMemo(() => {
+    const allTasks = Object.values(data.tasks);
+    const totalTasks = allTasks.length;
+    const urgentHighCount = allTasks.filter(t => t.priority === 'urgent' || t.priority === 'high').length;
+
+    const now = new Date();
+    const overdueCount = allTasks.filter(t => t.dueDate && new Date(t.dueDate) < now).length;
+
+    let totalChecklistItems = 0;
+    let completedChecklistItems = 0;
+    allTasks.forEach(t => {
+      if (Array.isArray(t.checklists)) {
+        totalChecklistItems += t.checklists.length;
+        completedChecklistItems += t.checklists.filter(c => c.completed).length;
+      }
+    });
+
+    return {
+      totalTasks,
+      urgentHighCount,
+      overdueCount,
+      checklistProgress: totalChecklistItems > 0 ? Math.round((completedChecklistItems / totalChecklistItems) * 100) : 0,
+      totalChecklistItems,
+      completedChecklistItems
+    };
+  }, [data.tasks]);
 
   const onDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
@@ -123,18 +168,13 @@ export default function KanbanPage({ params }) {
 
       setData(newState);
 
-      // Persist order change
+      // Persist order change via Server Action
       try {
-        await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${draggableId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({
-            order: destination.index,
-            columnId: start.id
-          })
-        });
+        await updateTaskOrderAction(draggableId, start.id, destination.index);
       } catch (error) {
         console.error("Failed to update task order", error);
         setData(oldData);
+        toast.error("Failed to update task position");
       }
       return;
     }
@@ -165,26 +205,21 @@ export default function KanbanPage({ params }) {
 
     setData(newState);
 
-    // Persist column and order change
+    // Persist column and order change via Server Action
     try {
-      await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${draggableId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          columnId: finish.id,
-          order: destination.index
-        })
-      });
+      await updateTaskOrderAction(draggableId, finish.id, destination.index);
     } catch (error) {
       console.error("Failed to update task status", error);
       setData(oldData);
+      toast.error("Failed to move task");
     }
   };
 
   const addColumn = async () => {
-    onOpen("addKanbanColumn", { 
-      workspaceId, 
+    onOpen("addKanbanColumn", {
+      workspaceId,
       order: data.columnOrder.length,
-      onApply: () => fetchData() 
+      onApply: () => fetchData()
     });
   };
 
@@ -204,9 +239,7 @@ export default function KanbanPage({ params }) {
 
   const onDeleteColumn = async (columnId) => {
     try {
-      await fetch(`/api/workspace/${workspaceId}/productivity/kanban/columns/${columnId}`, {
-        method: 'DELETE'
-      });
+      await deleteKanbanColumnAction(columnId);
       setData(prev => {
         const newColumns = { ...prev.columns };
         delete newColumns[columnId];
@@ -216,21 +249,20 @@ export default function KanbanPage({ params }) {
           columnOrder: prev.columnOrder.filter(id => id !== columnId)
         };
       });
+      toast.success("Column deleted");
     } catch (error) {
       console.error("Failed to delete column", error);
+      toast.error("Failed to delete column");
     }
   };
 
   const onDeleteTask = async (taskId) => {
     try {
-      await fetch(`/api/workspace/${workspaceId}/productivity/kanban/tasks/${taskId}`, {
-        method: 'DELETE'
-      });
+      await deleteKanbanTaskAction(taskId);
       setData(prev => {
         const newTasks = { ...prev.tasks };
         delete newTasks[taskId];
-        
-        // Also remove from column taskIds
+
         const newColumns = { ...prev.columns };
         Object.keys(newColumns).forEach(colId => {
           newColumns[colId].taskIds = newColumns[colId].taskIds.filter(id => id !== taskId);
@@ -242,12 +274,14 @@ export default function KanbanPage({ params }) {
           columns: newColumns
         };
       });
+      toast.success("Task deleted");
     } catch (error) {
       console.error("Failed to delete task", error);
+      toast.error("Failed to delete task");
     }
   };
 
-  const onUpdateTask = (taskId, task) => {
+  const onUpdateTask = (taskId) => {
     onOpen("addKanbanTask", {
       workspaceId,
       task: data.tasks[taskId],
@@ -255,60 +289,99 @@ export default function KanbanPage({ params }) {
     });
   };
 
+  const hasActiveFilters = searchTerm || filterType !== 'all' || filterPriority !== 'all' || filterDueStatus !== 'all';
 
   return (
-    <div className="absolute inset-0 flex flex-col gap-4 overflow-hidden bg-[#0a0a0b]">
-      {/* Dynamic Mesh Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+    <div className="absolute inset-0 flex flex-col gap-3 overflow-hidden">
+      {/* Background Glow Elements */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-30">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/10 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Kanban Modals */}
+      {/* Modals */}
       <AddKanbanColumnModal />
       <AddKanbanTaskModal />
 
-      {/* Header Section */}
-      <div className="relative z-10 flex items-center justify-between p-6 pb-2">
+      {/* Top Header Section with Metrics */}
+      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-6 pt-4 pb-2">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary shadow-lg shadow-primary/5 border border-primary/20">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary shadow-lg shadow-primary/5 border border-primary/20">
               <Sparkles size={20} className="animate-pulse" />
             </div>
             <div>
-              <h1 className="text-2xl text-foreground font-bold tracking-tight">
-                Unified Kanban Board
+              <h1 className="text-lg text-foreground font-bold flex items-center gap-2">
+                Kanban Productivity Board
               </h1>
-              <p className="text-[11px] text-muted-foreground font-medium opacity-70">
-                Manage your content pipeline and tasks across the entire workspace.
+              <p className="text-xs text-muted-foreground font-medium opacity-75">
+                Organize, track, and streamline tasks and workflows across your workspace.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics Cards */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/40 shadow-xs">
+            <ListTodo size={16} className="text-primary" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Total Tasks</span>
+              <span className="text-sm font-extrabold text-foreground leading-none">{metrics.totalTasks}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/40 shadow-xs">
+            <AlertTriangle size={16} className="text-amber-500" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">High/Urgent</span>
+              <span className="text-sm font-extrabold text-amber-500 leading-none">{metrics.urgentHighCount}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/40 shadow-xs">
+            <Clock size={16} className={metrics.overdueCount > 0 ? "text-rose-500 animate-pulse" : "text-muted-foreground"} />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Overdue</span>
+              <span className={`text-sm font-extrabold leading-none ${metrics.overdueCount > 0 ? 'text-rose-500' : 'text-foreground'}`}>
+                {metrics.overdueCount}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/40 shadow-xs">
+            <CheckCircle2 size={16} className="text-emerald-500" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Checklists</span>
+              <span className="text-sm font-extrabold text-emerald-500 leading-none">{metrics.checklistProgress}%</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Kanban Toolbar */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-6 px-6 py-3 mx-6 rounded-2xl bg-card/30 backdrop-blur-md border border-border/40 shadow-xl">
-        <div className="flex flex-wrap items-center gap-4 flex-1">
-          <div className="relative w-full md:w-96 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+      {/* Toolbar Section */}
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 px-6 py-2.5 mx-6 rounded-2xl bg-card/30 backdrop-blur-md border border-border/40 shadow-xl">
+        <div className="flex flex-wrap items-center gap-3 flex-1">
+          {/* Search Box */}
+          <div className="relative w-full md:w-80 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={15} />
             <Input
-              placeholder="Search tasks, articles, or platforms..."
-              className="pl-12 h-10 bg-background/50 border-border/20 focus:ring-1 focus:ring-primary/30 transition-all text-[12px] rounded-xl shadow-inner font-medium"
+              placeholder="Search tasks, content, or tags..."
+              className="pl-10 h-9 bg-background/50 border-border/30 focus:ring-1 focus:ring-primary/40 transition-all text-xs rounded-xl shadow-inner font-medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Type Filter */}
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="h-10 w-[140px] text-[11px] font-bold border-border/20 bg-background/50 rounded-xl hover:bg-background/80 transition-all">
+              <SelectTrigger className="h-9 w-[130px] text-xs font-bold border-border/30 bg-background/50 rounded-xl hover:bg-background/80 transition-all">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent className="rounded-xl border-border/40 font-bold">
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="task">Default Task</SelectItem>
+                <SelectItem value="task">Task</SelectItem>
                 <SelectItem value="article">Article</SelectItem>
                 <SelectItem value="social">Social Post</SelectItem>
                 <SelectItem value="note">Note/Draft</SelectItem>
@@ -317,107 +390,154 @@ export default function KanbanPage({ params }) {
 
             {/* Priority Filter */}
             <Select value={filterPriority} onValueChange={setFilterPriority}>
-              <SelectTrigger className="h-10 w-[140px] text-[11px] font-bold border-border/20 bg-background/50 rounded-xl hover:bg-background/80 transition-all">
+              <SelectTrigger className="h-9 w-[130px] text-xs font-bold border-border/30 bg-background/50 rounded-xl hover:bg-background/80 transition-all">
                 <SelectValue placeholder="All Priorities" />
               </SelectTrigger>
               <SelectContent className="rounded-xl border-border/40 font-bold">
                 <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
                 <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
               </SelectContent>
             </Select>
 
-            {(searchTerm || filterType !== 'all' || filterPriority !== 'all') && (
-              <Button 
+            {/* Due Status Filter */}
+            <Select value={filterDueStatus} onValueChange={setFilterDueStatus}>
+              <SelectTrigger className="h-9 w-[130px] text-xs font-bold border-border/30 bg-background/50 rounded-xl hover:bg-background/80 transition-all">
+                <SelectValue placeholder="Due Status" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border/40 font-bold">
+                <SelectItem value="all">Any Due Date</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="dueToday">Due Today</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   setSearchTerm('');
                   setFilterType('all');
                   setFilterPriority('all');
+                  setFilterDueStatus('all');
                 }}
-                className="h-10 px-4 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all rounded-xl"
+                className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all rounded-xl gap-1.5 font-semibold"
               >
-                Reset Filters
+                <FilterX size={14} /> Reset
               </Button>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button 
+        {/* Action Controls */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fetchData(true)}
+            disabled={isRefreshing || loading}
+            className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-xl"
+            title="Refresh Board"
+          >
+            <RefreshCw size={15} className={isRefreshing ? "animate-spin text-primary" : ""} />
+          </Button>
+
+          <Button
             variant="outline"
             size="sm"
-            className="h-10 px-6 text-[11px] font-bold border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all rounded-xl border-dashed"
+            className="h-9 px-4 text-xs font-bold border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all rounded-xl border-dashed"
             onClick={addColumn}
           >
-            <Plus size={16} className="mr-2"/> Add Column
+            <Plus size={15} className="mr-1.5" /> Add Column
           </Button>
-          <Button 
+
+          <Button
             size="sm"
-            className="h-10 px-6 text-[11px] font-bold shadow-lg shadow-primary/30 bg-primary hover:bg-primary/90 transition-all rounded-xl"
+            className="h-9 px-4 text-xs font-bold shadow-lg shadow-primary/25 bg-primary hover:bg-primary/90 transition-all rounded-xl"
             onClick={() => createTask()}
           >
-            <Plus size={16} className="mr-2"/> Create Task
+            <Plus size={15} className="mr-1.5" /> Create Task
           </Button>
         </div>
       </div>
 
-      {/* Kanban Board Area */}
+      {/* Kanban Board Container */}
       <ScrollArea className="flex-1 min-h-0 w-full px-6 pb-6 overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+          <KanbanSkeleton />
         ) : (
-          <div className="h-full pt-4">
+          <div className="h-full pt-3">
             <DragDropContext onDragEnd={onDragEnd}>
               <div className="flex gap-6 h-full min-w-max pb-4">
                 {data.columnOrder.map((columnId) => {
                   const column = data.columns[columnId];
-                  const tasks = column.taskIds
+                  if (!column) return null;
+
+                  const tasks = (column.taskIds || [])
                     .map((taskId) => data.tasks[taskId])
                     .filter(task => {
-                      const matchesSearch = task?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      if (!task) return false;
+
+                      const matchesSearch = !searchTerm ||
+                        task?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        task?.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         task?.type?.toLowerCase().includes(searchTerm.toLowerCase());
+
                       const matchesType = filterType === 'all' || task?.type === filterType;
                       const matchesPriority = filterPriority === 'all' || task?.priority === filterPriority;
-                      
-                      return matchesSearch && matchesType && matchesPriority;
+
+                      let matchesDue = true;
+                      if (filterDueStatus === 'overdue') {
+                        matchesDue = task.dueDate && new Date(task.dueDate) < new Date();
+                      } else if (filterDueStatus === 'dueToday') {
+                        if (!task.dueDate) matchesDue = false;
+                        else {
+                          const due = new Date(task.dueDate);
+                          const today = new Date();
+                          matchesDue = due.toDateString() === today.toDateString();
+                        }
+                      }
+
+                      return matchesSearch && matchesType && matchesPriority && matchesDue;
                     });
 
                   return (
-                    <KanbanColumn 
-                      key={column.id} 
-                      column={column} 
-                      tasks={tasks} 
+                    <KanbanColumn
+                      key={column.id}
+                      column={column}
+                      tasks={tasks}
                       onCreateTask={() => createTask(column.id)}
                       onDeleteColumn={onDeleteColumn}
                       onDeleteTask={onDeleteTask}
                       onUpdateTask={onUpdateTask}
+                      onRefresh={fetchData}
                     />
                   );
                 })}
 
-                {/* New Column Placeholder */}
-                <div 
-                  className="shrink-0 w-80 h-[200px] rounded-2xl border-2 border-dashed border-border/30 flex flex-col items-center justify-center group hover:border-primary/40 transition-all duration-300 bg-card/10 hover:bg-primary/5 cursor-pointer backdrop-blur-sm"
+                {/* Create Column Card Placeholder */}
+                <div
+                  className="shrink-0 w-80 h-[220px] rounded-2xl border-2 border-dashed border-border/30 flex flex-col items-center justify-center group hover:border-primary/50 transition-all duration-300 bg-card/10 hover:bg-primary/5 cursor-pointer backdrop-blur-sm shadow-xs"
                   onClick={addColumn}
                 >
-                  <div className="p-3 rounded-xl bg-background/50 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-300 shadow-sm">
-                    <Plus size={24} />
+                  <div className="p-3 rounded-xl bg-background/60 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-300 shadow-sm border border-border/20">
+                    <Plus size={22} />
                   </div>
-                  <span className="mt-4 text-[12px] font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                  <span className="mt-3 text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors">
                     Create New Column
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/50 mt-0.5 font-medium">
+                    Add a stage to your board
                   </span>
                 </div>
               </div>
             </DragDropContext>
           </div>
         )}
-        <ScrollBar orientation="horizontal" className="bg-muted/50" />
+        <ScrollBar orientation="horizontal" className="bg-muted/30" />
       </ScrollArea>
     </div>
   );

@@ -50,6 +50,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+import { 
+  createKanbanTaskAction,
+  updateKanbanTaskAction
+} from "../kanban/_actions/kanban-actions";
+
 export const AddKanbanTaskModal = () => {
   const { isOpen, onClose, type, data } = useModal();
   const isModalOpen = isOpen && type === "addKanbanTask";
@@ -159,20 +164,17 @@ export const AddKanbanTaskModal = () => {
         checklists: !isEdit ? checklists : undefined
       };
 
-      const url = isEdit 
-        ? `/api/workspace/${workspaceId}/productivity/kanban/tasks/${task.id}`
-        : `/api/workspace/${workspaceId}/productivity/kanban/tasks`;
-      
-      const method = isEdit ? 'PATCH' : 'POST';
+      let savedTask;
+      if (!isEdit) {
+        const res = await createKanbanTaskAction(workspaceId, payload);
+        if (!res?.success) throw new Error(res?.error || "Failed to create task");
+        savedTask = res.task;
+      } else {
+        const res = await updateKanbanTaskAction(task.id, { ...payload, checklists });
+        if (!res?.success) throw new Error(res?.error || "Failed to update task");
+        savedTask = res.task;
+      }
 
-      const response = await fetch(url, {
-        method,
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) throw new Error("Failed to save task");
-      
-      const savedTask = await response.json();
       toast.success(isEdit ? "Task updated" : "Task created");
       
       if (onApply) onApply(savedTask);

@@ -7,12 +7,13 @@ export async function GET(req, { params }) {
     try {
         const { workspaceId } = await params;
         const session = await getServerSession(authOptions);
+        const userId = session?.user?.userId || session?.user?.id;
         
-        if (!session || !session.user?.userId) {
+        if (!userId) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        // Fetch columns and tasks ordered by their 'order' field
+        // Fetch columns and tasks filtered strictly by authenticated user (owner or assignee)
         const columns = await db.kanbanColumn.findMany({
             where: { workspaceId },
             orderBy: { order: 'asc' },
@@ -20,8 +21,8 @@ export async function GET(req, { params }) {
                 tasks: {
                     where: {
                         OR: [
-                            { userId: session.user.userId },
-                            { assigneeId: session.user.userId }
+                            { userId },
+                            { assigneeId: userId }
                         ]
                     },
                     include: {

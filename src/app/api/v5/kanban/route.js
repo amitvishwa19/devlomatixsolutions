@@ -23,10 +23,18 @@ export async function GET(request) {
       return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
     }
 
+    const userId = await getUserIdFromRequest(request);
+
     const columns = await db.kanbanColumn.findMany({
       where: { workspaceId },
       include: {
         tasks: {
+          where: userId ? {
+            OR: [
+              { userId },
+              { assigneeId: userId }
+            ]
+          } : undefined,
           include: {
             assignee: { select: { id: true, displayName: true, email: true, avatar: true } },
             checklists: { orderBy: { order: 'asc' } },

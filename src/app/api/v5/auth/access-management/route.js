@@ -52,7 +52,8 @@ export async function GET(req) {
       status: r.status,
       permissionCount: r.permissions?.length || 0,
       userCount: r._count?.users || 0,
-      permissions: r.permissions?.map((p) => p.id) || [],
+      permissions: r.permissions || [],
+      permissionIds: r.permissions?.map((p) => p.id) || [],
       parentId: r.parentId,
     }));
 
