@@ -108,20 +108,23 @@ const handler = async (data) => {
         const contactMap = {};
         contacts.forEach(c => {
             const cleanPhone = c.phone.replace(/\D/g, '');
-            contactMap[cleanPhone] = c.name;
+            const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+            contactMap[last10] = c.name;
         });
         assignorContacts.forEach(c => {
             const cleanPhone = c.phone.replace(/\D/g, '');
-            if (!contactMap[cleanPhone]) contactMap[cleanPhone] = c.name;
+            const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+            if (!contactMap[last10]) contactMap[last10] = c.name;
         });
 
         const sharesMap = {};
         shares.forEach(s => {
-            const normalizedJid = s.jid.replace(/\D/g, '').split('@')[0] + "@s.whatsapp.net";
-            if (!sharesMap[normalizedJid]) {
-                sharesMap[normalizedJid] = [];
+            const cleanPhone = s.jid.replace(/\D/g, '').split('@')[0];
+            const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+            if (!sharesMap[last10]) {
+                sharesMap[last10] = [];
             }
-            sharesMap[normalizedJid].push({
+            sharesMap[last10].push({
                 id: s.id,
                 sharedWithUserId: s.sharedWithUserId,
                 sharedByUserId: s.sharedByUserId,
@@ -131,12 +134,14 @@ const handler = async (data) => {
 
         const conversationsMap = {};
         const processMsg = (msg, isAssigned) => {
-            const normalizedJid = msg.jid.replace(/\D/g, '').split('@')[0] + "@s.whatsapp.net";
-            if (!conversationsMap[normalizedJid]) {
-                const cleanPhone = normalizedJid.split('@')[0];
-                conversationsMap[normalizedJid] = {
-                    jid: normalizedJid,
-                    name: contactMap[cleanPhone] || null,
+            const cleanPhone = msg.jid.replace(/\D/g, '').split('@')[0];
+            const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+            const fullJid = cleanPhone.length === 10 ? `91${cleanPhone}@s.whatsapp.net` : `${cleanPhone}@s.whatsapp.net`;
+
+            if (!conversationsMap[last10]) {
+                conversationsMap[last10] = {
+                    jid: fullJid,
+                    name: contactMap[last10] || null,
                     lastMessage: JSON.stringify({
                         text: msg.text,
                         type: msg.metadata?.type || 'text',
@@ -149,13 +154,31 @@ const handler = async (data) => {
                     unreadCount: 0,
                     messages: [],
                     assigned: isAssigned ? true : undefined,
-                    sharedWith: sharesMap[normalizedJid] || []
+                    sharedWith: sharesMap[last10] || []
                 };
+            } else {
+                if (cleanPhone.length > 10) {
+                    conversationsMap[last10].jid = fullJid;
+                }
+                if (contactMap[last10] && !conversationsMap[last10].name) {
+                    conversationsMap[last10].name = contactMap[last10];
+                }
+                if (Number(msg.timestamp) > conversationsMap[last10].timestamp) {
+                    conversationsMap[last10].timestamp = Number(msg.timestamp);
+                    conversationsMap[last10].fromMe = msg.fromMe;
+                    conversationsMap[last10].lastMessage = JSON.stringify({
+                        text: msg.text,
+                        type: msg.metadata?.type || 'text',
+                        url: msg.metadata?.mediaUrl || msg.metadata?.raw?.[msg.metadata?.type]?.url || null,
+                        caption: msg.metadata?.caption || msg.metadata?.raw?.[msg.metadata?.type]?.caption || null,
+                        timestamp: Number(msg.timestamp)
+                    });
+                }
             }
-            if (!conversationsMap[normalizedJid].messages.find(m => m.id === msg.id)) {
-                conversationsMap[normalizedJid].messages.push({
+            if (!conversationsMap[last10].messages.find(m => m.id === msg.id)) {
+                conversationsMap[last10].messages.push({
                     id: msg.id,
-                    jid: normalizedJid,
+                    jid: conversationsMap[last10].jid,
                     text: msg.text,
                     fromMe: msg.fromMe,
                     timestamp: Number(msg.timestamp),
@@ -168,6 +191,10 @@ const handler = async (data) => {
 
         messages.forEach(msg => processMsg(msg, false));
         assignedMsgs.forEach(msg => processMsg(msg, true));
+
+        Object.values(conversationsMap).forEach(conv => {
+            conv.messages.sort((a, b) => a.timestamp - b.timestamp);
+        });
 
         const conversations = Object.values(conversationsMap).sort((a, b) => b.timestamp - a.timestamp);
 

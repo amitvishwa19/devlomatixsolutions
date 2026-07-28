@@ -102,7 +102,7 @@ export const getSidebarNavItems = (workspaceId) => {
             permission: `navbar:Documents:Parent`
         },
         {
-            parent: { title: "ATS Management", icon: "user", url: baseAtsPath },
+            parent: { title: "HireFlow", icon: "user", url: baseAtsPath },
             child: [
                 { title: "Dashboard", icon: "layout-grid", url: baseAtsPath },
                 { title: "Jobs", icon: "briefcase", url: `${baseAtsPath}/jobs` },

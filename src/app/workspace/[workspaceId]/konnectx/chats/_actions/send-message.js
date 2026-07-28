@@ -186,11 +186,12 @@ const handler = async (data) => {
             }
 
             const waMessageId = result.data?.messages?.[0]?.id;
+            const formattedJid = cleanTo.length === 10 ? `91${cleanTo}@s.whatsapp.net` : (cleanTo.includes('@') ? cleanTo : `${cleanTo}@s.whatsapp.net`);
             await db.whatsAppMessage.create({
                 data: {
                     userId,
                     waId: waMessageId || `local_${Date.now()}`,
-                    jid: cleanTo,
+                    jid: formattedJid,
                     text: logText,
                     fromMe: true,
                     timestamp: BigInt(Math.floor(Date.now() / 1000)),

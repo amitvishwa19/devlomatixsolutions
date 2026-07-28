@@ -182,9 +182,16 @@ export default function WhatsAppChatsPage() {
 
     const scrollRef = useRef(null);
 
+    // Helper: Extract last 10 digits of phone number / JID
+    const getPhoneLast10 = (str) => {
+        if (!str) return '';
+        const digits = String(str).replace(/\D/g, '').split('@')[0];
+        return digits.length >= 10 ? digits.slice(-10) : digits;
+    };
+
     // Derived State: Get the actual chat object based on selectedJid
-    const selectedChat = conversations.find(c => c.jid === selectedJid);
-    const selectedContact = allContacts.find(c => (c.phone + "@s.whatsapp.net") === selectedJid);
+    const selectedChat = conversations.find(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
+    const selectedContact = allContacts.find(c => getPhoneLast10(c.phone) === getPhoneLast10(selectedJid));
 
     // Display name for the header
     const activeName = selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0];
@@ -194,9 +201,9 @@ export default function WhatsAppChatsPage() {
         onSuccess: (data) => {
             if (data.conversations) {
                 setConversations(prevConversations => {
-                    const incomingConvMap = new Map(data.conversations.map(c => [c.jid, c]));
+                    const incomingConvMap = new Map(data.conversations.map(c => [getPhoneLast10(c.jid), c]));
                     const mergedResults = data.conversations.map(newConv => {
-                        const prevConv = prevConversations.find(p => p.jid === newConv.jid);
+                        const prevConv = prevConversations.find(p => getPhoneLast10(p.jid) === getPhoneLast10(newConv.jid));
                         if (!prevConv) return newConv;
                         const localTempMsgs = prevConv.messages.filter(m =>
                             String(m.id).startsWith('temp_') &&
@@ -205,7 +212,7 @@ export default function WhatsAppChatsPage() {
                         return { ...newConv, messages: [...localTempMsgs, ...newConv.messages] };
                     });
                     prevConversations.forEach(prevConv => {
-                        if (!incomingConvMap.has(prevConv.jid)) {
+                        if (!incomingConvMap.has(getPhoneLast10(prevConv.jid))) {
                             if (prevConv.messages.some(m => String(m.id).startsWith('temp_'))) mergedResults.push(prevConv);
                         }
                     });
@@ -249,7 +256,7 @@ export default function WhatsAppChatsPage() {
     const { execute: executeSendMessage } = useAction(sendMessage, {
         onSuccess: (data, context) => {
             setConversations(prev => prev.map(conv => {
-                if (conv.jid === context.to) {
+                if (getPhoneLast10(conv.jid) === getPhoneLast10(context.to)) {
                     return {
                         ...conv,
                         messages: conv.messages.map(m => m.id === context.tempId ? { ...m, status: 'SENT' } : m)
@@ -262,7 +269,7 @@ export default function WhatsAppChatsPage() {
         onError: (err, context) => {
             toast.error(err || "Failed to send message");
             setConversations(prev => prev.map(conv => {
-                if (conv.jid === context.to) {
+                if (getPhoneLast10(conv.jid) === getPhoneLast10(context.to)) {
                     return { ...conv, messages: conv.messages.filter(m => m.id !== context.tempId) };
                 }
                 return conv;
@@ -420,7 +427,7 @@ export default function WhatsAppChatsPage() {
 
         // UI OPTIMISTIC UPDATE
         setConversations(prev => prev.map(conv => {
-            if (conv.jid === selectedJid) {
+            if (getPhoneLast10(conv.jid) === getPhoneLast10(selectedJid)) {
                 return {
                     ...conv,
                     lastMessage: JSON.stringify({
@@ -591,8 +598,8 @@ export default function WhatsAppChatsPage() {
 
     // Helper: Find contact for a JID
     const getContactForJid = (jid) => {
-        const cleanJid = jid.replace(/\D/g, '').split('@')[0];
-        return allContacts.find(c => c.phone.replace(/\D/g, '') === cleanJid);
+        const jidLast10 = getPhoneLast10(jid);
+        return allContacts.find(c => getPhoneLast10(c.phone) === jidLast10);
     };
 
     const filteredConversations = conversations.filter(c => {
@@ -635,11 +642,7 @@ export default function WhatsAppChatsPage() {
         // If switching back to "chats" and the current selectedJid doesn't exist in conversations,
         // either select the first active conversation or clear the selection
         if (value === "chats" && selectedJid) {
-            const exists = conversations.some(c => {
-                const normalizedCid = c.jid.replace(/\D/g, '').split('@')[0] + "@s.whatsapp.net";
-                const cleanSelectedJid = selectedJid.replace(/\D/g, '').split('@')[0] + "@s.whatsapp.net";
-                return normalizedCid === cleanSelectedJid;
-            });
+            const exists = conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
             if (!exists) {
                 if (conversations.length > 0) {
                     setSelectedJid(conversations[0].jid);
@@ -748,7 +751,7 @@ export default function WhatsAppChatsPage() {
                                             <div
                                                 key={chat.jid}
                                                 onClick={() => setSelectedJid(chat.jid)}
-                                                className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${selectedJid === chat.jid ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                                className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${getPhoneLast10(selectedJid) === getPhoneLast10(chat.jid) ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
                                             >
                                                 <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
                                                     <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
@@ -866,12 +869,16 @@ export default function WhatsAppChatsPage() {
                                         </div>
                                     ) : (
                                         filteredContacts.map((contact) => {
-                                            const normalizedJid = contact.phone.replace(/\D/g, '') + "@s.whatsapp.net";
+                                            const contactLast10 = getPhoneLast10(contact.phone);
+                                            const existingConv = conversations.find(c => getPhoneLast10(c.jid) === contactLast10);
+                                            const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
+                                            const normalizedJid = existingConv ? existingConv.jid : (cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`);
+                                            const isSelected = getPhoneLast10(selectedJid) === contactLast10;
                                             return (
                                                 <div
                                                     key={contact.id}
                                                     onClick={() => setSelectedJid(normalizedJid)}
-                                                    className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${selectedJid === normalizedJid ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                                    className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${isSelected ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
                                                 >
                                                     <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
                                                         <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold text-xs">

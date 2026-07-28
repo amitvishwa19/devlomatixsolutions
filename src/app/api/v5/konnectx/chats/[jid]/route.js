@@ -7,10 +7,12 @@ export async function GET(request, { params }) {
         const limit = parseInt(searchParams.get("limit") || "50");
     const before = searchParams.get("before");
     const jid = decodeURIComponent(params.jid);
+    const cleanPhone = jid.replace(/\D/g, '').split('@')[0];
+    const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
 
     const userId = searchParams.get("userId");
 
-    const where = { userId, jid };
+    const where = { ...(userId && { userId }), jid: { contains: last10 } };
     if (before) {
       where.timestamp = { lt: BigInt(before) };
     }
@@ -37,11 +39,13 @@ export async function GET(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { searchParams } = new URL(request.url);
-        const jid = decodeURIComponent(params.jid);
+    const jid = decodeURIComponent(params.jid);
+    const cleanPhone = jid.replace(/\D/g, '').split('@')[0];
+    const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
 
     const userId = searchParams.get("userId");
 
-    const result = await db.whatsAppMessage.deleteMany({ where: { ...(userId && { userId }), jid } });
+    const result = await db.whatsAppMessage.deleteMany({ where: { ...(userId && { userId }), jid: { contains: last10 } } });
 
     return NextResponse.json({ success: true, message: `Deleted ${result.count} messages` });
   } catch (error) {

@@ -18,13 +18,15 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // Delete all messages associated with this JID for this user
-        // We normalize the JID just in case, but usually we use the exact match
+        const cleanPhone = jid.replace(/\D/g, '').split('@')[0];
+        const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+
+        // Delete all messages associated with this JID (or 10-digit number) for this user
         await db.whatsAppMessage.deleteMany({
             where: {
                 userId,
                 jid: {
-                    contains: jid.split('@')[0] // Match the phone number part to be safe
+                    contains: last10
                 }
             }
         });
