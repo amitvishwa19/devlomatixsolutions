@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,18 @@ export function ChatTab({ workspaceId }) {
     const [modelString, setModelString] = useState('openrouter/meta-llama/llama-3.1-8b-instruct');
     
     const messagesEndRef = useRef(null);
+    const scrollAreaRef = useRef(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+        if (!viewport) return;
+        const isNearBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 100;
+        if (isNearBottom) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
     };
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         scrollToBottom();
     }, [messages]);
 
@@ -135,7 +141,7 @@ export function ChatTab({ workspaceId }) {
 
             {/* Chat Area */}
             <Card className="flex-1 flex flex-col overflow-hidden border border-border/50 bg-card/40 backdrop-blur-xs">
-                <ScrollArea className="flex-1 p-4">
+                <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
                     {messages.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center opacity-50 my-20">
                             <Bot className="w-12 h-12 mb-4 text-muted-foreground" />
