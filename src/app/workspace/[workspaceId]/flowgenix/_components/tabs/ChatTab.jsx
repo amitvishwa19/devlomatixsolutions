@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useLayoutEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Bot, User, Loader2, Settings2, Trash2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function ChatTab({ workspaceId }) {
@@ -89,7 +89,7 @@ export function ChatTab({ workspaceId }) {
                                     return newMsgs;
                                 });
                             }
-                        } catch (e) {
+                        } catch {
                             // ignore JSON parse errors on partial chunks
                         }
                     }
