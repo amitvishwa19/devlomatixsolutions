@@ -5,7 +5,7 @@ export async function PUT(request, { params }) {
   try {
     const body = await request.json();
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
 
     const updateData = {};
     if (body.name !== undefined) updateData.name = body.name;
@@ -29,7 +29,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
 
     await db.messageTemplate.delete({ where: { id } });
 

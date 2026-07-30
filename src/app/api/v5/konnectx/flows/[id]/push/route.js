@@ -7,7 +7,7 @@ export async function POST(request, { params }) {
   try {
     const body = await request.json();
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
 
     const userId = searchParams.get("userId");
 

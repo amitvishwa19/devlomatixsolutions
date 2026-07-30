@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 export async function DELETE(request, { params }) {
   try {
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
 
     const group = await db.contactGroup.findFirst({ where: { id } });
     if (!group) return NextResponse.json({ error: "Group not found" }, { status: 404 });
@@ -21,7 +21,7 @@ export async function PATCH(request, { params }) {
   try {
     const body = await request.json();
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
 
     const updateData = {};
     if (body.name !== undefined) updateData.name = body.name;

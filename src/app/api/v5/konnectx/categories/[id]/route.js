@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 export async function DELETE(request, { params }) {
   try {
     const { searchParams } = new URL(request.url);
-        const categoryName = params.id;
+    const { id: categoryName } = await params;
 
     await db.contact.updateMany({
       where: { type: categoryName },

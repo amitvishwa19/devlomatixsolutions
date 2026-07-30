@@ -5,7 +5,7 @@ export async function PATCH(request, { params }) {
   try {
     const body = await request.json();
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
     const { active } = body;
 
     const userId = searchParams.get("userId");

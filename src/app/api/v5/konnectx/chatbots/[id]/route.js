@@ -5,7 +5,7 @@ export async function PUT(request, { params }) {
   try {
     const body = await request.json();
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
 
     const userId = searchParams.get("userId");
 
@@ -30,7 +30,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { searchParams } = new URL(request.url);
-        const { id } = params;
+    const { id } = await params;
 
     const userId = searchParams.get("userId");
 
