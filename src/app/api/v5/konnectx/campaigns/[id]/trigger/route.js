@@ -11,7 +11,10 @@ export async function POST(request, { params }) {
 
     const userId = searchParams.get("userId");
 
-    const campaign = await db.campaign.findFirst({ where: { id, userId } });
+    const campaign = await db.campaign.findFirst({
+      where: { id, userId },
+      include: { _count: { select: { recipients: true } } }
+    });
     if (!campaign) return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
 
     if (action === 'stop') {
@@ -19,7 +22,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: true, message: "Campaign stopped" });
     }
 
-    if (campaign.total === 0) {
+    if ((campaign._count?.recipients || 0) === 0) {
       return NextResponse.json({ error: "Cannot run campaign with no recipients" }, { status: 400 });
     }
 

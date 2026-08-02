@@ -43,7 +43,6 @@ export async function PATCH(request, { params }) {
       await db.campaignRecipient.createMany({
         data: body.recipients.map(r => ({ campaignId: id, phone: r.phone, variables: r.variables || {}, status: 'PENDING' })),
       });
-      updateData.total = body.recipients.length;
     }
 
     const updated = await db.campaign.update({ where: { id }, data: updateData, include: { template: true, recipients: true } });

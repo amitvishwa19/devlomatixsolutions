@@ -15,7 +15,7 @@ export async function POST(request) {
 
     const campaign = await db.campaign.create({
       data: {
-...(userId && { userId }),
+        ...(userId && { userId }),
         name,
         status: status || (scheduledAt ? 'SCHEDULED' : 'RUNNING'),
         messageTemplate: messageTemplate || {},
@@ -23,7 +23,6 @@ export async function POST(request) {
         messageType: messageType || 'text',
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
         credentialId: credential?.id || null,
-        total: recipients?.length || 0,
         recipients: recipients?.length ? {
           create: recipients.map(r => ({
             phone: r.phone,
@@ -47,7 +46,6 @@ export async function POST(request) {
           await db.campaignRecipient.create({
             data: { campaignId: campaign.id, phone: gc.phone, status: 'PENDING' },
           });
-          await db.campaign.update({ where: { id: campaign.id }, data: { total: { increment: 1 } } });
         }
       }
     }
