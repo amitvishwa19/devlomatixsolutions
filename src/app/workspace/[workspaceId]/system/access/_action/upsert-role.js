@@ -84,7 +84,8 @@ const handler = async (data) => {
         id: formData.id || '000'
       },
       create: {
-        title: slug(formData?.title),
+        title: formData?.title,
+        slug: slug(formData?.title),
         description: formData?.description,
         color: formData?.color,
         parent: formData.parentId ? { connect: { id: formData.parentId } } : undefined,
@@ -93,7 +94,8 @@ const handler = async (data) => {
         }
       },
       update: {
-        title: slug(formData?.title),
+        title: formData?.title,
+        slug: slug(formData?.title),
         description: formData?.description,
         color: formData?.color,
         parent: formData.parentId ? { connect: { id: formData.parentId } } : (formData.parentId === null ? { disconnect: true } : undefined),

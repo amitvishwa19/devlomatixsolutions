@@ -257,6 +257,7 @@ model DirectMessage {
 model Role {
   id          String       @id @default(cuid())
   title       String       @unique
+  slug        String?       @unique
   description String?
   color       String?
   status      Boolean      @default(true)
@@ -274,6 +275,7 @@ model Role {
 model Permission {
   id          String   @id @default(cuid())
   title       String
+  slug        String?   @unique
   value       String   @unique
   color       String?  @default("#FFFF")
   description String

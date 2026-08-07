@@ -247,12 +247,7 @@ const Navbar = () => {
 
 
                         <div className="flex gap-2 mt-3">
-                            {session && (
-                                session.user.role === 'admin' ||
-                                session.user.role === 'superadmin' ||
-                                session.user.role === 'super-admin' ||
-                                session.user.roles?.some(role => role.title === 'workspace')
-                            ) ? (
+                            {session ? (
                                 <Link href="/workspace" onClick={() => setIsOpen(false)} className="flex-1">
                                     <Button variant="outline" className="w-full rounded-full">Workspace</Button>
                                 </Link>

@@ -2,6 +2,7 @@ import { decrypt } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { slug } from "@/utils/functions";
 
 export async function POST(req) {
   try {
@@ -25,6 +26,7 @@ export async function POST(req) {
 
     const roleData = {
       title,
+      slug: slug(title),
       description: description || "",
       color: color || "#6b7280",
       status: true,

@@ -31,17 +31,31 @@ export default async function WorkspacePage() {
             select: { id: true },
         });
 
+        if (!server) {
+            server = await db.server.findFirst({
+                where: { userId: session.user.userId },
+                select: { id: true },
+            });
+        }
+
+        if (!server) {
+            server = await db.server.findFirst({
+                where: { members: { some: { userId: session.user.userId } } },
+                select: { id: true },
+            });
+        }
+
         console.log('server', server)
 
 
     } catch (error) {
         console.error("DB error:", error);
-        <WorkspaceLoader redirectTo="/unauthorized" />
+        redirect("/");
     }
 
 
     if (!server) {
-        return <WorkspaceLoader redirectTo="/unauthorized" />
+        return <WorkspaceLoader redirectTo="/" />
     }
 
 

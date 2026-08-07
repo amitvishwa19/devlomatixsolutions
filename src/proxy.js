@@ -19,7 +19,7 @@ export async function proxy(request) {
     const isMainDomain =
         process.env.NODE_ENV === 'production'
             ? host === 'devlomatix.com'
-            : host === 'localhost:3000'
+            : host === 'dev.devlomatix.com'
 
     const isDev = process.env.NODE_ENV !== 'production'
 
@@ -44,23 +44,27 @@ export async function proxy(request) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // Workspace Access Control (RBAC & Multi-Tenancy Isolation)
-    // if (pathname.startsWith('/workspace/') && token) {
-    //     const segments = pathname.split('/').filter(Boolean);
-    //     const workspaceId = segments[1]; // /workspace/[workspaceId]/...
+    // Workspace Access Control (Role Guard)
+    // Only users with a role slug in [super-admin, admin, demo] can access /workspace/[workspaceId]
+    if (pathname.startsWith('/workspace/') && token) {
+        const allowedSlugs = ['super-admin', 'admin', 'demo'];
 
-    //     const isSystemAdmin = token.role === 'ADMIN' || token.role === 'SUPER_ADMIN';
-    //     const hasWorkspaceMembership = token.workspaces?.includes(workspaceId);
+        // If roles are missing from the token entirely, the session is stale:
+        // let the page layer handle it to avoid lockouts during enrichment.
+        const isStaleSession = token.roles === undefined;
 
-    //     // PRODUCTION GRADE: If token.workspaces is missing entirely, 
-    //     // it means the session is stale. We allow it briefly but log it.
-    //     const isStaleSession = token.workspaces === undefined;
+        const hasAllowedRole = token.roles?.some((r) => {
+            const roleSlug = r.slug || String(r.title || '').toLowerCase().trim();
+            return allowedSlugs.includes(roleSlug);
+        });
 
-    //     if (!isSystemAdmin && !hasWorkspaceMembership && workspaceId && !isStaleSession) {
-    //         console.error(`[Security Guard] Blocked unauthorized access: ${token.email} tried to enter workspace ${workspaceId}`);
-    //         return NextResponse.redirect(new URL('/unauthorized', request.url));
-    //     }
-    // }
+        if (!isStaleSession && !hasAllowedRole) {
+            console.error(
+                `[Role Guard] Blocked access: ${token.email} (roles: ${JSON.stringify(token.roles?.map(r => r.slug))}) tried to enter ${pathname}`
+            );
+            return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+    }
 
     // Logged in -> Allow viewing the home page/landing page
     if (pathname === '/' && token) {

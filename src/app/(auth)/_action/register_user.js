@@ -48,12 +48,12 @@ const handler = async (data) => {
         const hashedPassword = await bcryptjs.hash(password, 10)
         const userId = uuidv4()
 
-        const accessToken = await new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+        const accessToken = await new SignJWT({ email }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
         const refreshToken = await new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
         user = await db.user.create({
             data: {
-                id: userId,
+                //id: userId,
                 email, password: hashedPassword, displayName,
                 accessToken, refreshToken,
             }

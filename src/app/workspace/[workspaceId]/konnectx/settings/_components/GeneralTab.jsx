@@ -204,9 +204,9 @@ export function GeneralTab({
 
     return (
         <ScrollArea className="flex-1 outline-none h-[70vh] ">
-            <div className="flex flex-row gap-4">
+            <div className="flex flex-col xl:flex-row gap-4">
 
-                <div className='min-w-[50%]'>
+                <div className='flex-1 min-w-0'>
                     {/* Developer App Information Card */}
                     <WhatsAppMetaCloudInfo
                         workspaceId={workspaceId}
@@ -215,7 +215,7 @@ export function GeneralTab({
                 </div>
 
 
-                <div className='flex flex-col gap-4 min-w-[50%]'>
+                <div className='flex flex-col gap-4 flex-1 min-w-0'>
                     {/* Main Content (Left) */}
                     <div className="">
 
@@ -248,14 +248,14 @@ export function GeneralTab({
                             <CardContent className="space-y-4">
                                 {cloudCreds.map((cred) => (
                                     <div key={cred.id} className="p-5 bg-card rounded-lg border shadow-sm hover:border-primary/20 transition-all group">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-card border flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shadow-sm">
+                                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                                            <div className="flex items-center gap-4 min-w-0 flex-1">
+                                                <div className="w-12 h-12 rounded-xl bg-card border flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shadow-sm shrink-0">
                                                     <MessageCircle className="w-5 h-5 text-green-500" />
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-semibold">{cred.profile || 'WhatsApp Account'}</span>
+                                                <div className="space-y-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="text-sm font-semibold truncate">{cred.profile || 'WhatsApp Account'}</span>
                                                         {cred.verified ? (
                                                             <Tooltip>
                                                                 <TooltipTrigger asChild>
@@ -277,23 +277,23 @@ export function GeneralTab({
                                                             </Badge>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium mt-1">
-                                                        <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium mt-1 flex-wrap">
+                                                        <div className="flex items-center gap-2 min-w-0">
                                                             <span className="opacity-60 font-semibold">Phone ID:</span>
-                                                            <span className="font-mono bg-muted/50 px-2 py-0.5 rounded text-[10px] text-foreground/80">{cred.phoneNumberId || '••••••••'}</span>
-                                                            <Copy size={12} className="hover:text-primary cursor-pointer transition-colors opacity-40 hover:opacity-100" onClick={() => copyToClipboard(cred.phoneNumberId)} />
+                                                            <span className="font-mono bg-muted/50 px-2 py-0.5 rounded text-[10px] text-foreground/80 truncate">{cred.phoneNumberId || '••••••••'}</span>
+                                                            <Copy size={12} className="hover:text-primary cursor-pointer transition-colors opacity-40 hover:opacity-100 shrink-0" onClick={() => copyToClipboard(cred.phoneNumberId)} />
                                                         </div>
-                                                        <Separator orientation="vertical" className="h-3 bg-border/40" />
-                                                        <div className="flex items-center gap-2">
+                                                        <Separator orientation="vertical" className="h-3 bg-border/40 hidden sm:block" />
+                                                        <div className="flex items-center gap-2 min-w-0">
                                                             <span className="opacity-60 font-semibold">WABA ID:</span>
-                                                            <span className="font-mono bg-muted/50 px-2 py-0.5 rounded text-[10px] text-foreground/80">{cred.wabaId || '••••••••'}</span>
-                                                            <Copy size={12} className="hover:text-primary cursor-pointer transition-colors opacity-40 hover:opacity-100" onClick={() => copyToClipboard(cred.wabaId)} />
+                                                            <span className="font-mono bg-muted/50 px-2 py-0.5 rounded text-[10px] text-foreground/80 truncate">{cred.wabaId || '••••••••'}</span>
+                                                            <Copy size={12} className="hover:text-primary cursor-pointer transition-colors opacity-40 hover:opacity-100 shrink-0" onClick={() => copyToClipboard(cred.wabaId)} />
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-3 shrink-0">
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <Button
