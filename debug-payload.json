@@ -1,92 +1,16 @@
 {
-  "templateName": "carousel_image",
-  "components": [
-    {
-      "type": "carousel",
-      "cards": [
-        {
-          "card_index": 0,
-          "components": [
-            {
-              "type": "header",
-              "parameters": [
-                {
-                  "type": "image",
-                  "image": {
-                    "id": "1567366984765994"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "card_index": 1,
-          "components": [
-            {
-              "type": "header",
-              "parameters": [
-                {
-                  "type": "image",
-                  "image": {
-                    "id": "3368942559951802"
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ],
+  "templateName": "devloatix_office_v4",
+  "components": [],
   "fullRequestData": {
-    "workspaceId": "cmorc8bws0006m0ik2zrlvl3i",
-    "to": "919712340450",
+    "workspaceId": "cmsbcq4mq0002z0ik2kxdh31f",
+    "to": "9724656328",
     "type": "template",
     "template": {
-      "name": "carousel_image",
+      "name": "devloatix_office_v4",
       "language": {
-        "code": "en_US"
+        "code": "en"
       },
-      "components": [
-        {
-          "type": "carousel",
-          "cards": [
-            {
-              "card_index": 0,
-              "components": [
-                {
-                  "type": "header",
-                  "parameters": [
-                    {
-                      "type": "image",
-                      "image": {
-                        "id": "1567366984765994"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "card_index": 1,
-              "components": [
-                {
-                  "type": "header",
-                  "parameters": [
-                    {
-                      "type": "image",
-                      "image": {
-                        "id": "3368942559951802"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      "components": []
     }
   }
 }

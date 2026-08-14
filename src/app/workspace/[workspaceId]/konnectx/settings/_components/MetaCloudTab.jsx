@@ -30,6 +30,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAction } from "@/hooks/use-action";
 import { testMetaApi } from "../_actions/test-meta-api";
 import { getDecryptedCredentials } from "../_actions/get-decrypted-credentials";
+import html2canvas from 'html2canvas';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
@@ -172,22 +173,48 @@ export function MetaCloudTab({ workspaceId }) {
         }, { type: 'qr_update' });
     };
 
-    const handleDownload = async (qr) => {
+    const saveQR = async (qr, elementRef) => {
         const imageUrl = qr.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr.deep_link_url)}`;
-        try {
-            const response = await fetch(imageUrl);
-            const blob = await response.blob();
+        const fileName = `whatsapp-qr-${qr.code}.png`;
+
+        const downloadBlob = (blob) => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `whatsapp-qr-${qr.code}.png`;
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+        };
+
+        try {
+            const response = await fetch(imageUrl);
+            if (response.ok) {
+                const blob = await response.blob();
+                downloadBlob(blob);
+                toast.success("QR Code saved");
+                return;
+            }
         } catch (error) {
-            console.error("Download failed:", error);
-            // Fallback: open in new tab if blob fetch fails
+            console.warn("QR image fetch failed, falling back to canvas capture:", error);
+        }
+
+        try {
+            const node = typeof elementRef === 'string' ? document.getElementById(elementRef) : elementRef?.current;
+            if (node) {
+                const canvas = await html2canvas(node, { useCORS: true, backgroundColor: '#ffffff' });
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        downloadBlob(blob);
+                        toast.success("QR Code saved");
+                    }
+                }, 'image/png');
+            } else {
+                window.open(imageUrl, '_blank');
+            }
+        } catch (error) {
+            console.error("Canvas capture failed:", error);
             window.open(imageUrl, '_blank');
         }
     };
@@ -333,7 +360,7 @@ export function MetaCloudTab({ workspaceId }) {
                                                         <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => { setSelectedQR(qr); setIsPrintModalOpen(true); }}>
                                                             <Printer className="w-4 h-4" />
                                                         </Button>
-                                                        <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => handleDownload(qr)}>
+                                                        <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => saveQR(qr)}>
                                                             <Download className="w-4 h-4" />
                                                         </Button>
                                                     </div>
@@ -399,7 +426,7 @@ export function MetaCloudTab({ workspaceId }) {
                                 </div>
                             </DialogHeader>
 
-                            <div className="relative aspect-square w-64 bg-white p-4 rounded-3xl border-4 border-muted/20 shadow-xl mb-8 flex items-center justify-center">
+                            <div className="relative aspect-square w-64 bg-white p-4 rounded-3xl border-4 border-muted/20 shadow-xl mb-8 flex items-center justify-center" id="qr-save-area">
                                 <img
                                     src={selectedQR?.qr_image_url || `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(selectedQR?.deep_link_url || '')}`}
                                     alt="QR Code"
@@ -414,6 +441,10 @@ export function MetaCloudTab({ workspaceId }) {
                         </div>
                         <DialogFooter className="p-6 bg-muted/5 border-t gap-3 sm:gap-0">
                             <Button variant="ghost" className="flex-1 font-bold" onClick={() => setIsPrintModalOpen(false)}>Cancel</Button>
+                            <Button variant="outline" className="flex-1 gap-2 font-bold" onClick={() => selectedQR && saveQR(selectedQR, 'qr-save-area')}>
+                                <Download className="w-4 h-4" />
+                                Save Image
+                            </Button>
                             <Button className="flex-1 gap-2 font-bold shadow-md" onClick={handlePrint}>
                                 <Printer className="w-4 h-4" />
                                 Print Now

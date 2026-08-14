@@ -35,13 +35,23 @@ export async function upsertProviderAction({ workspaceId, id, provider, name, la
             return { success: false, error: "Workspace, provider, and name are required." };
         }
 
+        const key = apiKey || "";
+
+        // Reject obvious placeholder / invalid API keys (local providers like Ollama are exempt)
+        const normalizedKey = key.trim().toLowerCase();
+        const placeholderKeys = ["free", "test", "demo", "1234", "sk-demo", "your-api-key", "api-key", "xxxx", "none", "no-key"];
+        const isLocalProvider = provider === "ollama";
+        if (key && !isLocalProvider && (placeholderKeys.includes(normalizedKey) || key.trim().length < 10)) {
+            return { success: false, error: "That doesn't look like a valid API key. Enter the real key from your provider (e.g. sk-or-v1-...)." };
+        }
+
         const dataPayload = {
             workspaceId,
             userId,
             provider,
             name,
             label: label || name,
-            apiKey: apiKey || "",
+            apiKey: key,
             baseUrl: baseUrl || null,
             description: description || null,
             isDefault: isDefault ?? false,
