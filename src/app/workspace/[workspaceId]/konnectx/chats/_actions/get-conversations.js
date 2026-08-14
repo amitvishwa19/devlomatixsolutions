@@ -56,25 +56,13 @@ const handler = async (data) => {
 
         // 3. Fetch messages: own messages + messages from assigned conversations
         const ownMessages = db.whatsAppMessage.findMany({
-            where: {
-                userId,
-                metadata: {
-                    path: ['phone_number_id'],
-                    equals: activePhoneId
-                }
-            },
+            where: { userId },
             orderBy: { timestamp: 'desc' }
         });
 
         const assignedMessages = assignedJids.length > 0
             ? db.whatsAppMessage.findMany({
-                where: {
-                    jid: { in: assignedJids },
-                    metadata: {
-                        path: ['phone_number_id'],
-                        equals: activePhoneId
-                    }
-                },
+                where: { jid: { in: assignedJids } },
                 orderBy: { timestamp: 'desc' }
             })
             : Promise.resolve([]);

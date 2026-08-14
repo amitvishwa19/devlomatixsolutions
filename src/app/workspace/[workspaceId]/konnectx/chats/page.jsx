@@ -209,7 +209,7 @@ export default function WhatsAppChatsPage() {
                             String(m.id).startsWith('temp_') &&
                             !newConv.messages.some(nm => nm.text === m.text && Math.abs(nm.timestamp - m.timestamp) < 30)
                         );
-                        return { ...newConv, messages: [...localTempMsgs, ...newConv.messages] };
+                        return { ...newConv, messages: [...newConv.messages, ...localTempMsgs] };
                     });
                     prevConversations.forEach(prevConv => {
                         if (!incomingConvMap.has(getPhoneLast10(prevConv.jid))) {
@@ -436,7 +436,7 @@ export default function WhatsAppChatsPage() {
                         timestamp: optimisticMsg.timestamp
                     }),
                     timestamp: optimisticMsg.timestamp,
-                    messages: [optimisticMsg, ...conv.messages]
+                    messages: [...conv.messages, optimisticMsg]
                 };
             }
             return conv;
@@ -963,7 +963,7 @@ export default function WhatsAppChatsPage() {
                                             <p className="text-sm font-medium italic">Starting a new conversation...</p>
                                         </div>
                                     ) : (
-                                        selectedChat.messages.slice().reverse().map((msg, i) => {
+                                        selectedChat.messages.map((msg, i) => {
                                             const isTemplate = msg.metadata?.type === 'template';
                                             const type = msg.metadata?.type?.toLowerCase() || 'text';
                                             const isMedia = ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'unsupported'].includes(type);
