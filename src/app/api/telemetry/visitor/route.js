@@ -90,6 +90,22 @@ export async function POST(req) {
             return NextResponse.json({ message: "Pathname is required" }, { status: 400 });
         }
 
+        // Check if visitor telemetry logging is disabled
+        if (workspaceId) {
+            const wsSettings = await prisma.appSettings.findUnique({
+                where: { key: workspaceId }
+            });
+            if (wsSettings?.privacy && wsSettings.privacy.visitorLoggingEnabled === false) {
+                return NextResponse.json({ success: true, disabled: true, message: "Visitor logging disabled" });
+            }
+        }
+        const appGeneral = await prisma.appSettings.findUnique({
+            where: { key: 'APP_GENERAL' }
+        });
+        if (appGeneral?.privacy && appGeneral.privacy.visitorLoggingEnabled === false) {
+            return NextResponse.json({ success: true, disabled: true, message: "Global visitor logging disabled" });
+        }
+
         // Extract IP & Headers
         const forwardedFor = req.headers.get("x-forwarded-for");
         const realIp = req.headers.get("x-real-ip");

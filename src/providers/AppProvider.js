@@ -10,6 +10,8 @@ import { useSession } from 'next-auth/react';
 import { useAction } from '@/hooks/use-action';
 //import { updateDeviceToken } from '@/app/(workspace)/workspace/_action/misc/update-devicetoken';
 
+import packageJson from '../../package.json';
+
 export const AppContext = createContext()
 
 export const AppProvider = ({ children }) => {
@@ -20,8 +22,9 @@ export const AppProvider = ({ children }) => {
     const router = useRouter()
     const { data: session, status, update } = useSession()
     const [deviceToken, setDeviceToken] = useState(null)
+    const appVersion = packageJson.version || '0.1.0';
 
-    //NOtification permission
+    //Notification permission
     useEffect(() => {
         //getDeviceToken()
     }, [])
@@ -109,7 +112,7 @@ export const AppProvider = ({ children }) => {
 
 
     return (
-        <AppContext.Provider value={{ theme, themeToggle, currentUser, userDefaultOrg, deviceToken, setAppTheme }}>
+        <AppContext.Provider value={{ theme, themeToggle, currentUser, userDefaultOrg, deviceToken, setAppTheme, appVersion }}>
             {children}
         </AppContext.Provider>
     )

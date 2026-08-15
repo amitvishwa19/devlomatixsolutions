@@ -140,8 +140,15 @@ export async function GET(req, { params }) {
             .sort((a, b) => b.count - a.count)
             .slice(0, 5);
 
+        // Fetch workspace settings for visitor logging status
+        const workspaceSettings = await prisma.appSettings.findUnique({
+            where: { key: workspaceId }
+        });
+        const visitorLoggingEnabled = workspaceSettings?.privacy?.visitorLoggingEnabled !== false;
+
         return NextResponse.json({
             logs,
+            visitorLoggingEnabled,
             pagination: {
                 page,
                 limit,
@@ -160,6 +167,50 @@ export async function GET(req, { params }) {
     } catch (error) {
         console.error("GET Visitor Logs Error:", error);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+// PATCH update visitor logging setting
+export async function PATCH(req, { params }) {
+    try {
+        const { workspaceId } = await params;
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.userId) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const body = await req.json();
+        const { visitorLoggingEnabled } = body || {};
+
+        if (typeof visitorLoggingEnabled !== "boolean") {
+            return NextResponse.json({ message: "visitorLoggingEnabled boolean required" }, { status: 400 });
+        }
+
+        const existing = await prisma.appSettings.findUnique({
+            where: { key: workspaceId }
+        });
+
+        const currentPrivacy = (typeof existing?.privacy === 'object' && existing?.privacy) ? existing.privacy : {};
+
+        await prisma.appSettings.upsert({
+            where: { key: workspaceId },
+            create: {
+                key: workspaceId,
+                privacy: { ...currentPrivacy, visitorLoggingEnabled }
+            },
+            update: {
+                privacy: { ...currentPrivacy, visitorLoggingEnabled }
+            }
+        });
+
+        return NextResponse.json({
+            message: `Visitor logging ${visitorLoggingEnabled ? 'enabled' : 'disabled'}`,
+            visitorLoggingEnabled
+        });
+    } catch (error) {
+        console.error("PATCH Visitor Log Settings Error:", error);
+        return NextResponse.json({ message: "Failed to update visitor logging status" }, { status: 500 });
     }
 }
 

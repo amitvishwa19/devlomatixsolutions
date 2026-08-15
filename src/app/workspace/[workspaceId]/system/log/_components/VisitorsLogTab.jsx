@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
     Loader2,
     RefreshCcw,
@@ -53,6 +54,7 @@ import {
     Chrome,
     Activity,
     Timer,
+    AlertTriangle,
 } from "lucide-react";
 import {
     Dialog,
@@ -118,6 +120,8 @@ export function VisitorsLogTab() {
     const [autoRefresh, setAutoRefresh] = useState(false);
     const [countdown, setCountdown] = useState(15);
     const [sortOrder, setSortOrder] = useState('desc');
+    const [visitorLoggingEnabled, setVisitorLoggingEnabled] = useState(true);
+    const [isTogglingLogging, setIsTogglingLogging] = useState(false);
     const intervalRef = useRef(null);
 
     const fetchVisitorLogs = useCallback(async () => {
@@ -136,6 +140,9 @@ export function VisitorsLogTab() {
             setLogs(res.data.logs || []);
             setPagination(res.data.pagination || { page: 1, limit: 25, total: 0, pages: 1 });
             if (res.data.stats) setStats(res.data.stats);
+            if (typeof res.data.visitorLoggingEnabled === 'boolean') {
+                setVisitorLoggingEnabled(res.data.visitorLoggingEnabled);
+            }
         } catch (error) {
             console.error(error);
             toast.error("Failed to load visitor telemetry logs");
@@ -143,6 +150,23 @@ export function VisitorsLogTab() {
             setIsLoading(false);
         }
     }, [workspaceId, pagination.page, pagination.limit, filters.country, filters.device, filters.dateRange, searchQuery]);
+
+    const handleToggleVisitorLogging = async (enabled) => {
+        setIsTogglingLogging(true);
+        try {
+            const res = await axios.patch(`/api/workspace/${workspaceId}/system/visitors`, {
+                visitorLoggingEnabled: enabled
+            });
+            const nextStatus = res.data.visitorLoggingEnabled !== false;
+            setVisitorLoggingEnabled(nextStatus);
+            toast.success(nextStatus ? "Visitor telemetry logging enabled" : "Visitor telemetry logging paused");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update visitor logging status");
+        } finally {
+            setIsTogglingLogging(false);
+        }
+    };
 
     useEffect(() => {
         fetchVisitorLogs();
@@ -286,6 +310,30 @@ export function VisitorsLogTab() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                    {/* Visitor Log ON/OFF Toggle */}
+                    <div className="flex items-center gap-2 bg-card/80 border border-border/60 rounded-md px-3 h-8 shadow-sm">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <Activity className={`w-3.5 h-3.5 ${visitorLoggingEnabled ? 'text-emerald-400' : 'text-amber-400'}`} />
+                            Visitor Log
+                        </span>
+                        <Switch
+                            checked={visitorLoggingEnabled}
+                            onCheckedChange={handleToggleVisitorLogging}
+                            disabled={isTogglingLogging}
+                            className="data-[state=checked]:bg-emerald-600 scale-75"
+                        />
+                        <Badge
+                            variant="outline"
+                            className={`h-5 text-[9px] font-bold px-1.5 border-0 ${
+                                visitorLoggingEnabled
+                                    ? 'bg-emerald-500/15 text-emerald-400'
+                                    : 'bg-amber-500/15 text-amber-400'
+                            }`}
+                        >
+                            {visitorLoggingEnabled ? 'ON' : 'OFF'}
+                        </Badge>
+                    </div>
+
                     {selectedLogIds.length > 0 && (
                         <div className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300">
                             <Badge variant="outline" className="px-3 h-8 font-mono tracking-widest text-[9px] border-border/60">
@@ -319,6 +367,30 @@ export function VisitorsLogTab() {
                     </Button>
                 </div>
             </div>
+
+            {/* Warning Banner when logging is disabled */}
+            {!visitorLoggingEnabled && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-md p-3.5 flex items-center justify-between gap-3 text-amber-400 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2.5">
+                        <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
+                        <div>
+                            <p className="text-xs font-bold">Visitor Telemetry Logging is Switched OFF</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                New site visits and dwell times are currently not being recorded for this workspace. Toggle visitor log ON to resume tracking.
+                            </p>
+                        </div>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleVisitorLogging(true)}
+                        disabled={isTogglingLogging}
+                        className="h-7 text-[10px] font-bold border-amber-500/40 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 shrink-0"
+                    >
+                        Enable Visitor Log
+                    </Button>
+                </div>
+            )}
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -87,10 +87,12 @@ export async function GET(req, { params }) {
                 maintenanceMode: false,
                 customCss: ""
             },
-            privacy: workspaceSettings?.privacy || {
+            privacy: {
                 dataRetention: 365,
                 gdprCompliant: true,
-                activityLogging: true
+                activityLogging: true,
+                visitorLoggingEnabled: true,
+                ...(workspaceSettings?.privacy || {})
             }
         };
 

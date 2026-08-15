@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useSettings } from "@/providers/WorkspaceProvider";
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Share2 } from "lucide-react";
 import Chatbot from "./Chatbot";
+import packageJson from "@/../package.json";
 
 const StickyBottomBar = () => {
     const { settings, loading } = useSettings();
@@ -46,6 +47,12 @@ const StickyBottomBar = () => {
                     <div className="flex items-center gap-4">
                         <p className="text-sm text-muted-foreground">
                             © 2022 {settings?.branding?.appName || process.env.NEXT_PUBLIC_APP_NAME || 'Devlomatix'}. All rights reserved.
+                        </p>
+
+
+                        {/* App Version */}
+                        <p className="text-xs  text-muted-foreground">
+                            V-{packageJson.version}
                         </p>
 
                         {/* Dynamic Social Links */}
