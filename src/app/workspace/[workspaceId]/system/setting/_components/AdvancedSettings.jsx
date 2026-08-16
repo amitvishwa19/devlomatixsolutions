@@ -41,7 +41,7 @@ export const AdvancedSettings = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
             >
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:border-amber-500/30 transition-colors">
+                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-amber-500/30 transition-colors">
                     <CardHeader className="pb-4 border-b border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
@@ -100,7 +100,7 @@ export const AdvancedSettings = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
             >
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:border-indigo-500/30 transition-colors">
+                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-indigo-500/30 transition-colors">
                     <CardHeader className="pb-4 border-b border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
@@ -146,7 +146,7 @@ export const AdvancedSettings = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
             >
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:border-primary/30 transition-colors">
+                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-primary/30 transition-colors">
                     <CardHeader className="pb-4 border-b border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-primary/10 rounded-lg border border-primary/20">

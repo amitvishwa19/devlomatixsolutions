@@ -12,7 +12,7 @@ export function ChatTab({ workspaceId }) {
     const [input, setInput] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
     const [modelString, setModelString] = useState('openrouter/meta-llama/llama-3.1-8b-instruct');
-    
+
     const messagesEndRef = useRef(null);
     const scrollAreaRef = useRef(null);
 
@@ -113,9 +113,10 @@ export function ChatTab({ workspaceId }) {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-180px)] gap-4 pb-6">
+        <div className="flex flex-col h-[calc(100vh-180px)] gap-2 pb-0">
+
             {/* Header Settings Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-border/50 bg-card/40 backdrop-blur-xs">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border bg-card/40 backdrop-blur-xs">
                 <div className="flex items-center gap-2">
                     <Bot className="w-5 h-5 text-purple-500" />
                     <div>
@@ -123,10 +124,10 @@ export function ChatTab({ workspaceId }) {
                         <p className="text-[10px] text-muted-foreground">Test models directly via the OmniRoute Gateway.</p>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:w-64">
-                        <Input 
+                        <Input
                             value={modelString}
                             onChange={(e) => setModelString(e.target.value)}
                             placeholder="provider/model-name"
@@ -140,8 +141,8 @@ export function ChatTab({ workspaceId }) {
             </div>
 
             {/* Chat Area */}
-            <Card className="flex-1 flex flex-col overflow-hidden border border-border/50 bg-card/40 backdrop-blur-xs">
-                <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+            <div className="flex-1 flex flex-col border-0 overflow-hidden background-transparent ">
+                <ScrollArea ref={scrollAreaRef} className="flex-1 p-2">
                     {messages.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center opacity-50 my-20">
                             <Bot className="w-12 h-12 mb-4 text-muted-foreground" />
@@ -157,11 +158,10 @@ export function ChatTab({ workspaceId }) {
                                             <Bot className="w-4 h-4 text-purple-500" />
                                         </div>
                                     )}
-                                    <div className={`px-4 py-3 rounded-xl max-w-[85%] text-sm leading-relaxed whitespace-pre-wrap ${
-                                        msg.role === 'user' 
-                                        ? 'bg-primary text-primary-foreground rounded-tr-sm' 
+                                    <div className={`px-4 py-3 rounded-xl max-w-[85%] text-sm leading-relaxed whitespace-pre-wrap ${msg.role === 'user'
+                                        ? 'bg-primary text-primary-foreground rounded-tr-sm'
                                         : 'bg-secondary/50 border border-border/30 rounded-tl-sm text-foreground'
-                                    }`}>
+                                        }`}>
                                         {msg.content}
                                     </div>
                                     {msg.role === 'user' && (
@@ -177,7 +177,7 @@ export function ChatTab({ workspaceId }) {
                 </ScrollArea>
 
                 {/* Input Area */}
-                <div className="p-4 border-t border-border/30 bg-black/20">
+                <div className="p-2  ">
                     <form onSubmit={handleSend} className="flex items-center gap-3">
                         <Input
                             value={input}
@@ -186,8 +186,8 @@ export function ChatTab({ workspaceId }) {
                             disabled={isStreaming}
                             className="flex-1 h-12 bg-black/40 border-border/50 focus-visible:ring-1 focus-visible:ring-purple-500"
                         />
-                        <Button 
-                            type="submit" 
+                        <Button
+                            type="submit"
                             disabled={isStreaming || !input.trim()}
                             className="h-12 px-6 bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold transition-all shadow-lg shadow-purple-500/20"
                         >
@@ -195,7 +195,7 @@ export function ChatTab({ workspaceId }) {
                         </Button>
                     </form>
                 </div>
-            </Card>
+            </div>
         </div>
     );
 }

@@ -249,7 +249,7 @@ export const DeveloperSettings = () => {
           </TabsList>
 
           <TabsContent value="cleaner" className="mt-0 space-y-4">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+            <Card className="bg-card border-white/10 backdrop-blur-xl">
               <CardHeader className="border-b border-white/10 bg-fuchsia-500/10 pb-6 p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -322,7 +322,7 @@ export const DeveloperSettings = () => {
           </TabsContent>
 
           <TabsContent value="webhooks" className="mt-0 space-y-4">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+            <Card className="bg-card border-white/10 backdrop-blur-xl">
               <CardHeader className="flex flex-row items-center justify-between pb-6 p-6 border-b border-white/10">
                 <div>
                   <CardTitle className="text-lg font-bold text-white">Webhook Endpoints</CardTitle>
@@ -398,7 +398,7 @@ export const DeveloperSettings = () => {
           </TabsContent>
 
           <TabsContent value="apikeys" className="mt-0 space-y-4">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+            <Card className="bg-card border-white/10 backdrop-blur-xl">
               <CardHeader className="flex flex-row items-center justify-between pb-6 p-6 border-b border-white/10">
                 <div>
                   <CardTitle className="text-lg font-bold text-white">Secret API Keys</CardTitle>
@@ -426,7 +426,7 @@ export const DeveloperSettings = () => {
           </TabsContent>
 
           <TabsContent value="activity" className="mt-0 space-y-4">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-xl min-h-[400px]">
+            <Card className="bg-card border-white/10 backdrop-blur-xl min-h-[400px]">
               <CardHeader className="flex flex-row items-center justify-between pb-6 p-6 border-b border-white/10">
                 <div>
                   <CardTitle className="text-lg font-bold text-white flex items-center gap-2">

@@ -24,7 +24,7 @@ export const DangerZone = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
             >
-                <Card className="bg-rose-500/5 border-rose-500/20 backdrop-blur-xl hover:border-rose-500/40 transition-colors">
+                <Card className="bg-card border-rose-500/20 backdrop-blur-xl hover:border-rose-500/40 transition-colors">
                     <CardHeader className="pb-4 border-b border-rose-500/10">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20 shrink-0">

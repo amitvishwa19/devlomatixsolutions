@@ -42,7 +42,7 @@ export const SecuritySettings = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
             >
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:border-sky-500/30 transition-colors">
+                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-sky-500/30 transition-colors">
                     <CardHeader className="pb-4 border-b border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-sky-500/10 rounded-lg border border-sky-500/20">

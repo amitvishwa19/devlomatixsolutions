@@ -35,7 +35,7 @@ export default function FlowgenixDashboard() {
     }
 
     return (
-        <div className="flex flex-col h-[93vh] overflow-hidden">
+        <div className="flex flex-col h-[96vh] overflow-hidden">
             <OmniRouteDashboard workspaceId={workspaceId} userId={userId} />
         </div>
     );
