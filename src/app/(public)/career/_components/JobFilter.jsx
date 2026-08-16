@@ -20,7 +20,8 @@ export const JobFilter = ({
   type, 
   setType, 
   location, 
-  setLocation 
+  setLocation,
+  departments = []
 }) => {
   const handleReset = () => {
     setSearch('');
@@ -48,14 +49,16 @@ export const JobFilter = ({
         {/* Filters Row */}
         <div className="flex flex-wrap gap-4">
           <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger className="w-[180px] h-14 bg-card/60 backdrop-blur-xl border-border/40 rounded-2xl font-bold text-xs uppercase tracking-widest px-4">
+            <SelectTrigger className="w-[200px] h-14 bg-card/60 backdrop-blur-xl border-border/40 rounded-2xl font-bold text-xs uppercase tracking-widest px-4">
               <SelectValue placeholder="Department" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/20 shadow-2xl">
               <SelectItem value="ALL" className="font-bold text-[10px] uppercase tracking-widest py-3">All Departments</SelectItem>
-              <SelectItem value="Engineering" className="font-bold text-[10px] uppercase tracking-widest py-3">Engineering</SelectItem>
-              <SelectItem value="Design" className="font-bold text-[10px] uppercase tracking-widest py-3">Design</SelectItem>
-              <SelectItem value="Marketing" className="font-bold text-[10px] uppercase tracking-widest py-3">Marketing</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept} className="font-bold text-[10px] uppercase tracking-widest py-3">
+                  {dept}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -80,7 +83,7 @@ export const JobFilter = ({
           <div className="flex flex-wrap gap-2">
             {search && (
               <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full group">
-                "{search}"
+                &quot;{search}&quot;
                 <X size={12} className="ml-2 cursor-pointer opacity-50 hover:opacity-100" onClick={() => setSearch('')}/>
               </Badge>
             )}

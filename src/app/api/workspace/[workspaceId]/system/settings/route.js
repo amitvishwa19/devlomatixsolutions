@@ -6,7 +6,13 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 // GET workspace settings
 export async function GET(req, { params }) {
     try {
-        const { workspaceId } = await params;
+        const resolvedParams = await params;
+        const workspaceId = resolvedParams?.workspaceId;
+
+        if (!workspaceId) {
+            return NextResponse.json({ message: "Workspace ID is required" }, { status: 400 });
+        }
+
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.userId) {
@@ -39,6 +45,16 @@ export async function GET(req, { params }) {
             where: { key: 'APP_GENERAL' }
         });
 
+        // Safely resolve JSON fields as objects
+        const workspaceGeneral = (typeof workspaceSettings?.general === 'object' && workspaceSettings?.general) ? workspaceSettings.general : {};
+        const workspaceSecurity = (typeof workspaceSettings?.security === 'object' && workspaceSettings?.security) ? workspaceSettings.security : {};
+        const workspaceNotifications = (typeof workspaceSettings?.notifications === 'object' && workspaceSettings?.notifications) ? workspaceSettings.notifications : {};
+        const workspaceIntegrations = (typeof workspaceSettings?.integrations === 'object' && workspaceSettings?.integrations) ? workspaceSettings.integrations : {};
+        const workspaceTechnical = (typeof workspaceSettings?.technical === 'object' && workspaceSettings?.technical) ? workspaceSettings.technical : {};
+        const workspacePrivacy = (typeof workspaceSettings?.privacy === 'object' && workspaceSettings?.privacy) ? workspaceSettings.privacy : {};
+
+        const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
+
         // Merge with defaults
         const defaultBranding = {
             primaryColor: "#3b82f6",
@@ -48,58 +64,60 @@ export async function GET(req, { params }) {
             workspaceUrl: `http://localhost:3000`
         };
 
-        const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
-
         const settings = {
             general: {
                 name: workspace.name,
                 description: workspace.description || "",
                 imageUrl: workspace.imageUrl || "",
                 inviteCode: workspace.inviteCode,
-                // Include workspace-specific social links if they exist
-                socialLinks: workspaceSettings?.general?.socialLinks || {}
+                socialLinks: workspaceGeneral.socialLinks || {},
+                ...workspaceGeneral
             },
             branding: {
                 ...defaultBranding,
                 ...globalSocial,
-                // Also merge socialLinks into branding for components that expect it there
-                socialLinks: workspaceSettings?.general?.socialLinks || globalSocial.socialLinks || {}
+                socialLinks: workspaceGeneral.socialLinks || globalSocial.socialLinks || {}
             },
-            security: workspaceSettings?.security || {
+            security: {
                 mfaEnabled: false,
                 sessionTimeout: 3600,
-                passwordPolicy: "standard"
+                passwordPolicy: "standard",
+                ...workspaceSecurity
             },
-            notifications: workspaceSettings?.notifications || {
+            notifications: {
                 whatsapp: true,
                 email: true,
-                push: false
+                push: false,
+                ...workspaceNotifications
             },
-            integrations: workspaceSettings?.integrations || {
+            integrations: {
                 webhooks: [],
-                apiKeys: []
+                apiKeys: [],
+                ...workspaceIntegrations
             },
-            developer: workspaceSettings?.integrations || {
+            developer: {
                 webhooks: [],
-                apiKeys: []
+                apiKeys: [],
+                ...workspaceIntegrations
             },
-            advanced: workspaceSettings?.technical || {
+            advanced: {
                 maintenanceMode: false,
-                customCss: ""
+                customCss: "",
+                ...workspaceTechnical
             },
             privacy: {
                 dataRetention: 365,
                 gdprCompliant: true,
                 activityLogging: true,
                 visitorLoggingEnabled: true,
-                ...(workspaceSettings?.privacy || {})
+                ...workspacePrivacy
             }
         };
 
         return NextResponse.json(settings);
     } catch (error) {
         console.error("GET Settings Error:", error);
-        return NextResponse.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
+        return NextResponse.json({ message: "Internal Server Error", error: error?.message || String(error) }, { status: 500 });
     }
 }
 

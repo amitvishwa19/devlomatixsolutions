@@ -97,3 +97,37 @@ export async function POST(req, { params }) {
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export async function DELETE(req, { params }) {
+    try {
+        const { workspaceId } = await params;
+        const session = await getServerSession(authOptions);
+        if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+
+        if (!id) {
+            return NextResponse.json({ message: "Department ID is required" }, { status: 400 });
+        }
+
+        // Unlink any jobs attached to this department category first
+        await prisma.job.updateMany({
+            where: { categoryId: id, workspaceId },
+            data: { categoryId: null }
+        });
+
+        // Delete the category
+        await prisma.category.delete({
+            where: {
+                id,
+                workspaceId
+            }
+        });
+
+        return NextResponse.json({ message: "Department deleted successfully" });
+    } catch (error) {
+        console.error("[ATS_DEPARTMENTS_DELETE]", error);
+        return NextResponse.json({ message: "Failed to delete department" }, { status: 500 });
+    }
+}

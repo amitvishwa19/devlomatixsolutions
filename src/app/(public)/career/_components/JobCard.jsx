@@ -3,13 +3,10 @@
 import { motion } from 'framer-motion';
 import {
     MapPin,
-    Briefcase,
     Clock,
     ArrowRight,
-    Building2,
-    DollarSign,
     Zap,
-    History
+    IndianRupee
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,30 +20,27 @@ export const JobCard = ({ job, onApply }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             whileHover={{ y: -5 }}
-            className="group relative bg-card/60 backdrop-blur-xl border border-border/40 rounded-3xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 cursor-pointer overflow-hidden"
+            className="group relative bg-card/60 backdrop-blur-xl border  rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 cursor-pointer overflow-hidden"
             onClick={() => onApply(job)}
         >
             {/* Background Glow */}
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-primary/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute -right-20 -top-20 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors duration-500" />
 
-            <div className="flex flex-col h-full space-y-4">
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                    <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                                {job.department || job.category?.name || "General"}
+            <div className="relative z-10 flex flex-col h-full space-y-4">
+                {/* Header: Title & Badges */}
+                <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors border-primary/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                {job.category?.name || job.department || 'Engineering'}
                             </Badge>
-                            {((job.createdAt && (new Date() - new Date(job.createdAt)) < 7 * 24 * 60 * 60 * 1000) || (job.postedAt && job.postedAt.includes('day'))) && (
-                                <Badge variant="outline" className="text-[10px] font-bold border-amber-500/30 text-amber-500 bg-amber-500/5 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                    <Zap size={10} className="fill-amber-500" /> NEW
+                            {job.isHot && (
+                                <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <Zap size={10} className="fill-amber-500" /> Urgent
                                 </Badge>
                             )}
                         </div>
                         <h3 className="text-xl tracking-tight group-hover:text-primary transition-colors line-clamp-1">{job.title}</h3>
-                        <p className="text-sm font-bold text-muted-foreground flex items-center gap-1.5 opacity-70">
-                            <Building2 size={14} /> {job.company || 'Devlomatix Solutions'}
-                        </p>
                     </div>
                 </div>
 
@@ -60,15 +54,9 @@ export const JobCard = ({ job, onApply }) => {
                     </div>
                     <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
                         <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
-                            <Briefcase size={12} className="text-primary" />
+                            <IndianRupee size={12} className="text-primary" />
                         </div>
-                        <span>{job.type}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
-                        <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
-                            <DollarSign size={12} className="text-primary" />
-                        </div>
-                        <span>{job.salaryRange || job.salary || 'Competitive'}</span>
+                        <span>{job.salaryRange || job.salary || 'Competitive'} p/m</span>
                     </div>
                     <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
                         <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
@@ -87,10 +75,10 @@ export const JobCard = ({ job, onApply }) => {
                 <div className="pt-4 mt-auto">
                     <Button
                         variant="link"
-                        className="p-0 h-auto text-[11px] uppercase tracking-widest text-primary hover:no-underline group/btn"
+                        className="p-0 h-auto text-xs font-bold text-primary hover:text-primary/80 flex items-center gap-1 group/btn"
                     >
-                        Apply Now
-                        <ArrowRight size={14} className="ml-2 transition-transform group-hover/btn:translate-x-1" />
+                        <span>Apply Position</span>
+                        <ArrowRight size={14} className="transition-transform group-hover/btn:translate-x-1" />
                     </Button>
                 </div>
             </div>

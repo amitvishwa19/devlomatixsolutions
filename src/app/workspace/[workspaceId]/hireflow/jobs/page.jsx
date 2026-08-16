@@ -41,7 +41,7 @@ export default function JobManagementPage() {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [viewMode, setViewMode] = useState("list"); // 'list' or 'grid'
-    
+
     // Sheet State
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedJob, setSelectedJob] = useState(null);
@@ -106,7 +106,7 @@ export default function JobManagementPage() {
                             href={`/workspace/${workspaceId}/ats`}
                             className="hover:text-primary cursor-pointer transition-colors"
                         >
-                            ATS
+                            Hireflow
                         </Link>
                         <ChevronRight size={10} />
                         <span className="text-primary/60">Jobs</span>
@@ -117,12 +117,12 @@ export default function JobManagementPage() {
                     <Button
                         variant="outline"
                         onClick={() => router.push(`/workspace/${workspaceId}/ats/departments`)}
-                        className="rounded-md px-6 font-bold  hover:bg-muted/20"
+                        className="rounded-md px-6 font-bold  "
                     >
                         <Building2 className="w-4 h-4 mr-2 opacity-50" />
                         Departments
                     </Button>
-                    <Button 
+                    <Button
                         className="rounded-md px-6 font-bold bg-primary shadow-lg shadow-primary/20"
                         onClick={() => {
                             setIsEditMode(false);

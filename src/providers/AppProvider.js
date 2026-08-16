@@ -22,7 +22,7 @@ export const AppProvider = ({ children }) => {
     const router = useRouter()
     const { data: session, status, update } = useSession()
     const [deviceToken, setDeviceToken] = useState(null)
-    const appVersion = packageJson.version || '0.1.0';
+
 
     //Notification permission
     useEffect(() => {
@@ -112,7 +112,7 @@ export const AppProvider = ({ children }) => {
 
 
     return (
-        <AppContext.Provider value={{ theme, themeToggle, currentUser, userDefaultOrg, deviceToken, setAppTheme, appVersion }}>
+        <AppContext.Provider value={{ theme, themeToggle, currentUser, userDefaultOrg, deviceToken, setAppTheme }}>
             {children}
         </AppContext.Provider>
     )

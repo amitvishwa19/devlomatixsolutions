@@ -10,7 +10,7 @@ export const getSidebarNavItems = (workspaceId) => {
     const baseDocPath = `${basePath}/document`;
     const systemPath = `${basePath}/system`;
     const baseProductivityPath = `${basePath}/productivity`;
-    const baseAtsPath = `${basePath}/ats`;
+    const baseAtsPath = `${basePath}/hireflow`;
     const baseAgentPath = `${basePath}/agent`;
     const baseMiscellaneousPath = `${basePath}/miscellaneous`;
     const baseEcommercePath = `${basePath}/ecommerce`;
@@ -105,7 +105,8 @@ export const getSidebarNavItems = (workspaceId) => {
             parent: { title: "HireFlow", icon: "user", url: baseAtsPath },
             child: [
                 { title: "Dashboard", icon: "layout-grid", url: baseAtsPath },
-                { title: "Jobs", icon: "briefcase", url: `${baseAtsPath}/jobs` },
+                { title: "Departments", icon: "briefcase", url: `${baseAtsPath}/departments` },
+                { title: "Jobs", icon: "handshake", url: `${baseAtsPath}/jobs` },
                 { title: "Candidates", icon: "user-search", url: `${baseAtsPath}/candidates` },
                 { title: "Pipeline", icon: "git-merge", url: `${baseAtsPath}/pipeline` },
             ],

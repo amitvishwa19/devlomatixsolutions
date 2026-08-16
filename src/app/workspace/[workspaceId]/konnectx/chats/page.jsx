@@ -402,12 +402,40 @@ export default function WhatsAppChatsPage() {
         };
     }, [workspaceId]);
 
+    const scrollToBottom = (behavior = 'auto') => {
+        const doScroll = () => {
+            if (!scrollRef.current) return;
+            scrollRef.current.scrollIntoView({ behavior, block: 'end', inline: 'nearest' });
+
+            const viewport = scrollRef.current.closest('[data-radix-scroll-area-viewport]') ||
+                             scrollRef.current.closest('.overflow-y-auto') ||
+                             scrollRef.current.parentElement;
+            if (viewport) {
+                if (behavior === 'smooth') {
+                    viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+                } else {
+                    viewport.scrollTop = viewport.scrollHeight;
+                }
+            }
+        };
+
+        doScroll();
+        const timer1 = setTimeout(doScroll, 50);
+        const timer2 = setTimeout(doScroll, 180);
+        const timer3 = setTimeout(doScroll, 400);
+
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+            clearTimeout(timer3);
+        };
+    };
+
     useEffect(() => {
-        // Scroll to bottom when selectedChat or messages change
-        if (scrollRef.current) {
-            scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+        if (selectedJid && selectedChat?.messages) {
+            return scrollToBottom('auto');
         }
-    }, [selectedChat]);
+    }, [selectedJid, selectedChat?.messages?.length]);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -444,6 +472,7 @@ export default function WhatsAppChatsPage() {
 
         setNewMessage("");
         setIsSending(true);
+        scrollToBottom('smooth');
         executeSendMessage({ workspaceId, to: selectedJid, type: 'text', body: textToSend }, { to: selectedJid, tempId, type: 'text' });
     };
 
@@ -952,11 +981,11 @@ export default function WhatsAppChatsPage() {
                             </div>
 
                             {/* Chat Messages */}
-                            <ScrollArea className="h-[75vh] p-6 relative">
+                            <ScrollArea className="flex-1 h-[calc(100vh-280px)] min-h-[350px] p-6 relative">
                                 {/* WhatsApp-style Background Pattern Overlay */}
                                 <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
 
-                                <div className="flex flex-col gap-3 relative z-10">
+                                <div className="flex flex-col gap-3 relative z-10 pb-12">
                                     {!selectedChat || selectedChat.messages.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center py-20 opacity-40">
                                             <MessageSquare className="w-12 h-12 mb-4" />
@@ -1021,7 +1050,7 @@ export default function WhatsAppChatsPage() {
                                             );
                                         })
                                     )}
-                                    <div ref={scrollRef} />
+                                    <div ref={scrollRef} className="h-8 w-full shrink-0" />
                                 </div>
                             </ScrollArea>
 

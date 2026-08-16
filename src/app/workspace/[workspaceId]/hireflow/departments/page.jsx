@@ -12,7 +12,8 @@ import {
   Search,
   Trash2,
   Edit2,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from 'sonner';
 import useSWR from 'swr';
 import axios from 'axios';
+import { deleteDepartmentAction } from './_actions/department-actions';
 
 const fetcher = url => axios.get(url).then(res => res.data);
 
@@ -44,13 +46,17 @@ export default function DepartmentsPage() {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  // Delete Modal State
+  const [departmentToDelete, setDepartmentToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // New Department Form State
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
   const { data: departments, error, isLoading, mutate } = useSWR(
-    `/api/workspace/${workspaceId}/ats/departments`, 
+    `/api/workspace/${workspaceId}/ats/departments`,
     fetcher
   );
 
@@ -79,13 +85,24 @@ export default function DepartmentsPage() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleConfirmDelete = async () => {
+    if (!departmentToDelete) return;
+
+    setIsDeleting(true);
     try {
-      // For simplicity, using the same route with a delete method if implemented, 
-      // or adding a specific one. I'll stick to listing for now.
-      toast.info("Delete functionality coming soon");
+      const res = await deleteDepartmentAction(departmentToDelete.id, workspaceId);
+      if (res?.success) {
+        toast.success(res.message || "Department deleted successfully!");
+        setDepartmentToDelete(null);
+        mutate();
+      } else {
+        toast.error(res?.error || "Failed to delete department");
+      }
     } catch (err) {
+      console.error("Delete error:", err);
       toast.error("Failed to delete department");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -95,19 +112,19 @@ export default function DepartmentsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40 uppercase">
-            <Link href={`/workspace/${workspaceId}/ats`} className="hover:text-primary transition-colors">ATS</Link>
+            <Link href={`/workspace/${workspaceId}/hireflow`} className="hover:text-primary transition-colors">HireFlow</Link>
             <ChevronRight size={10} />
-            <Link href={`/workspace/${workspaceId}/ats/jobs`} className="hover:text-primary transition-colors">Jobs</Link>
+            <Link href={`/workspace/${workspaceId}/hireflow/jobs`} className="hover:text-primary transition-colors">Jobs</Link>
             <ChevronRight size={10} />
             <span className="text-primary/60">Departments</span>
           </div>
-          <h1 className="text-xl font-bold italic tracking-tighter flex items-center gap-3">
+          <h1 className="text-xl font-bold italic  flex items-center gap-3">
             <Building2 className="text-primary" size={24} />
             Department Categories
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40">
-            Manage functional units using the unified hierarchy system. 
-            <Link href={`/workspace/${workspaceId}/category`} className="text-primary ml-2 hover:underline tracking-tighter italic">View Full Hierarchy →</Link>
+          <p className="text-[10px]   text-muted-foreground opacity-40">
+            Manage functional units using the unified hierarchy system.
+            <Link href={`/workspace/${workspaceId}/category`} className="text-primary ml-2 hover:underline  italic">View Full Hierarchy →</Link>
           </p>
         </div>
 
@@ -120,14 +137,14 @@ export default function DepartmentsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px] bg-card/90 backdrop-blur-2xl border-border/40 shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-black italic">Create Department</DialogTitle>
-              <DialogDescription className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">
+              <DialogTitle className="text-xl  italic">Create Department</DialogTitle>
+              <DialogDescription className="text-xs font-bold text-muted-foreground/60  mt-1">
                 Add a new functional area to your ATS
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-6 py-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-muted-foreground/40 ml-1 tracking-widest">Department Name</label>
+                <label className="text-[10px]  uppercase text-muted-foreground/40 ml-1 tracking-widest">Department Name</label>
                 <Input
                   placeholder="e.g. Engineering, Sales"
                   className="bg-muted/20 border-border/10 h-12 rounded-md font-bold shadow-inner"
@@ -136,7 +153,7 @@ export default function DepartmentsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-muted-foreground/40 ml-1 tracking-widest">Description (Optional)</label>
+                <label className="text-[10px]  uppercase text-muted-foreground/40 ml-1 tracking-widest">Description (Optional)</label>
                 <Textarea
                   placeholder="Briefly describe this department..."
                   className="bg-muted/20 border-border/10 min-h-[100px] rounded-md font-bold shadow-inner p-4"
@@ -146,10 +163,10 @@ export default function DepartmentsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                onClick={handleCreate} 
+              <Button
+                onClick={handleCreate}
                 disabled={isSubmitting}
-                className="w-full h-12 rounded-md font-black uppercase text-[10px] tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="w-full h-12 rounded-md  uppercase text-[10px] tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
                 {isSubmitting ? "Creating..." : "Save Department"}
               </Button>
@@ -188,7 +205,7 @@ export default function DepartmentsPage() {
                           </div>
                           <div>
                             <h4 className="text-sm font-bold group-hover:text-primary transition-colors tracking-tight">{dept.name}</h4>
-                            <p className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-wider">Functional Unit</p>
+                            <p className="text-[10px]  uppercase text-muted-foreground/40 tracking-wider">Functional Unit</p>
                           </div>
                         </div>
                       </td>
@@ -198,7 +215,7 @@ export default function DepartmentsPage() {
                         </p>
                       </td>
                       <td className="p-6 text-center">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">
+                        <span className="text-[10px]  uppercase tracking-wider text-muted-foreground/60">
                           {new Date(dept.createdAt).toLocaleDateString()}
                         </span>
                       </td>
@@ -211,14 +228,15 @@ export default function DepartmentsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48 rounded-md border-border/40 bg-card/90 backdrop-blur-xl">
-                              <DropdownMenuItem className="text-[10px] font-black uppercase tracking-widest p-3 gap-2">
+                              <DropdownMenuItem className="text-xs font-bold  p-3 gap-2">
                                 <Edit2 size={14} className="opacity-40" /> Edit Info
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-[10px] font-black uppercase tracking-widest p-3 gap-2 text-rose-500"
-                                onClick={() => handleDelete(dept.id)}
+                              <DropdownMenuItem
+                                className="text-xs font-bold p-3 gap-2 text-rose-500 cursor-pointer"
+                                onClick={() => setDepartmentToDelete(dept)}
                               >
-                                <Trash2 size={14} className="opacity-40" /> Delete
+                                <Trash2 size={14} className="opacity-40" />
+                                Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -233,14 +251,14 @@ export default function DepartmentsPage() {
                     {isLoading ? (
                       <div className="flex flex-col items-center gap-4 opacity-40">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                        <p className="text-[10px] font-black uppercase tracking-widest">Loading Departments...</p>
+                        <p className="text-[10px]  ">Loading Departments...</p>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-4 opacity-40">
                         <Info size={40} />
                         <div>
                           <p className="text-xs font-bold italic">No departments found.</p>
-                          <p className="text-[10px] font-black uppercase tracking-widest mt-1">Create your first functional area above.</p>
+                          <p className="text-[10px]   mt-1">Create your first functional area above.</p>
                         </div>
                       </div>
                     )}
@@ -251,6 +269,45 @@ export default function DepartmentsPage() {
           </table>
         </div>
       </div>
+
+      {/* Delete Department Confirmation Modal */}
+      <Dialog open={!!departmentToDelete} onOpenChange={(open) => !open && setDepartmentToDelete(null)}>
+        <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-destructive flex items-center gap-2">
+              <Trash2 className="w-5 h-5" /> Delete Department
+            </DialogTitle>
+            <DialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+              Are you sure you want to delete <span className="font-bold text-foreground">{departmentToDelete?.name}</span>?
+              Any job postings assigned to this department will remain intact but will be unassigned.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setDepartmentToDelete(null)}
+              disabled={isDeleting}
+              className="rounded-md font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="rounded-md font-bold"
+            >
+              {isDeleting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Deleting...
+                </span>
+              ) : (
+                "Delete Department"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

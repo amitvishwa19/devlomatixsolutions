@@ -41,16 +41,26 @@ export default function CareerPage() {
 
     const { data: jobs, isLoading } = useSWR('/api/public/jobs', fetcher);
 
+    const departmentsList = useMemo(() => {
+        if (!jobs) return [];
+        const set = new Set();
+        jobs.forEach(job => {
+            const dept = job.category?.name || job.department;
+            if (dept) set.add(dept);
+        });
+        return Array.from(set);
+    }, [jobs]);
+
     const filteredJobs = useMemo(() => {
         if (!jobs) return [];
         return jobs.filter(job => {
-            const deptName = job.department || job.category?.name || "";
+            const deptName = job.category?.name || job.department || "";
             const locName = job.location || "";
 
             const matchesSearch = (job.title || "").toLowerCase().includes(search.toLowerCase()) ||
                 deptName.toLowerCase().includes(search.toLowerCase());
-            const matchesDept = department === 'ALL' || deptName === department;
-            const matchesType = type === 'ALL' || job.type === type;
+            const matchesDept = department === 'ALL' || deptName.toLowerCase() === department.toLowerCase();
+            const matchesType = type === 'ALL' || (job.type || "").toLowerCase().includes(type.toLowerCase());
             const matchesLoc = location === 'ALL' || locName.toLowerCase().includes(location.toLowerCase());
 
             return matchesSearch && matchesDept && matchesType && matchesLoc;
@@ -173,7 +183,7 @@ export default function CareerPage() {
                             <span className="text-primary">Defined by People.</span>
                         </h2>
                         <p className="text-lg font-medium text-muted-foreground opacity-70">
-                            At Devlomatix, we're not just building apps—we're creating tools that change
+                            At Devlomatix, we&apos;re not just building apps—we&apos;re creating tools that change
                             how people communicate and grow. Our culture is built on trust, transparency,
                             and the relentless pursuit of excellence.
                         </p>
@@ -230,17 +240,31 @@ export default function CareerPage() {
                                     Showing {isLoading ? '...' : filteredJobs.length} opportunities across the globe
                                 </p>
                             </div>
-                            <div className="flex items-center gap-3 p-2 bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl">
-                                <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] font-bold px-3 py-1.5">
-                                    Engineering
-                                </Badge>
-                                <Badge variant="ghost" className="text-[10px] font-bold opacity-40">
-                                    Design
-                                </Badge>
-                                <Badge variant="ghost" className="text-[10px] font-bold opacity-40">
-                                    Sales
-                                </Badge>
-                            </div>
+                            {departmentsList.length > 0 && (
+                                <div className="flex items-center gap-2 flex-wrap p-2 bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl">
+                                    <Badge
+                                        variant={department === 'ALL' ? "secondary" : "ghost"}
+                                        onClick={() => setDepartment('ALL')}
+                                        className={`text-[10px] font-bold px-3 py-1.5 cursor-pointer transition-colors ${
+                                            department === 'ALL' ? 'bg-primary/10 text-primary border-none' : 'opacity-60 hover:opacity-100'
+                                        }`}
+                                    >
+                                        All ({jobs?.length || 0})
+                                    </Badge>
+                                    {departmentsList.map((dept) => (
+                                        <Badge
+                                            key={dept}
+                                            variant={department === dept ? "secondary" : "ghost"}
+                                            onClick={() => setDepartment(department === dept ? 'ALL' : dept)}
+                                            className={`text-[10px] font-bold px-3 py-1.5 cursor-pointer transition-colors ${
+                                                department === dept ? 'bg-primary/10 text-primary border-none' : 'opacity-60 hover:opacity-100'
+                                            }`}
+                                        >
+                                            {dept}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Search & Filter */}
@@ -253,6 +277,7 @@ export default function CareerPage() {
                             setType={setType}
                             location={location}
                             setLocation={setLocation}
+                            departments={departmentsList}
                         />
 
                         {/* Job Grid */}
@@ -311,12 +336,12 @@ export default function CareerPage() {
 
                         <div className="space-y-4 relative z-10">
                             <h2 className="text-4xl md:text-5xl tracking-tight leading-tight">
-                                Don't see the right role? <br />
+                                Don&apos;t see the right role? <br />
                                 <span className="text-primary">Apply anyway.</span>
                             </h2>
                             <p className="text-lg font-medium text-muted-foreground opacity-70 max-w-xl mx-auto">
-                                We're always on the lookout for exceptional talent. If you're passionate
-                                about what we do, let's talk.
+                                We&apos;re always on the lookout for exceptional talent. If you&apos;re passionate
+                                about what we do, let&apos;s talk.
                             </p>
                         </div>
 
@@ -331,7 +356,7 @@ export default function CareerPage() {
                                     location: 'Global / Remote',
                                     type: 'Flexible',
                                     salary: 'Competitive',
-                                    description: 'This is a general application for future opportunities at Devlomatix. Tell us why you\'d be a great fit!',
+                                    description: "This is a general application for future opportunities at Devlomatix. Tell us why you'd be a great fit!",
                                     requirements: ['Passion for innovation', 'Strong work ethic', 'Great communication'],
                                     benefits: ['Being part of the future', 'Global network', 'Career growth']
                                 })}

@@ -158,7 +158,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                         <div className="space-y-2">
                             <h2 className="text-2xl tracking-tight">Application Sent!</h2>
                             <p className="text-sm font-medium text-muted-foreground opacity-70">
-                                Thanks for applying to the <span className="text-primary font-bold">{job.title}</span> position at Devlomatix. We'll be in touch soon!
+                                Thanks for applying to the <span className="text-primary font-bold">{job.title}</span> position at Devlomatix. We&apos;ll be in touch soon!
                             </p>
                         </div>
                         <Button onClick={handleClose} className="w-full h-12 rounded-lg font-bold ">
@@ -171,14 +171,14 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
     }
 
     return (
-        <Dialog open={isOpen} onOpenChange={handleClose}>
+        <Dialog open={isOpen} onOpenChange={handleClose} modal={false}>
             <DialogContent className="min-h-[90vh] max-h-[90vh] min-w-[90vw] bg-background rounded-xl p-0 overflow-hidden flex flex-col border">
                 <div className="flex flex-col md:flex-row h-full max-h-[90vh] overflow-y-auto md:overflow-hidden">
 
 
                     {/* Left Panel: Job Details */}
-                    <div className="p-4 w-full md:w-[60%] overflow-y-visible md:overflow-y-auto border-b md:border-b-0 md:border-r border-border/40 scrollbar-hide h-auto md:h-[90vh] bg-card">
-                        <div className="space-y-8">
+                    <ScrollArea className="w-full md:w-[60%] border-b md:border-b-0 md:border-r border-border/40 h-auto md:h-[90vh] bg-card">
+                        <div className="p-6 space-y-8">
                             <div className="space-y-4">
                                 <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full">{job.department}</Badge>
                                 <DialogTitle className="text-3xl tracking-tight leading-tight">{job.title}</DialogTitle>
@@ -236,11 +236,11 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                                 </section>
                             </div>
                         </div>
-                    </div>
+                    </ScrollArea>
 
                     {/* Right Panel: Application Form */}
-                    <div className="p-4 w-full md:w-[40%] overflow-y-visible md:overflow-y-auto scrollbar-hide h-auto md:h-[90vh]">
-                        <div className="space-y-8">
+                    <ScrollArea className="w-full md:w-[40%] h-auto md:h-[90vh]">
+                        <div className="p-6 space-y-8">
                             <div className="space-y-1">
                                 <h3 className="text-xl tracking-tight">Apply Now</h3>
                                 <p className="text-xs font-bold text-muted-foreground opacity-60">Complete the form below to start your journey.</p>
@@ -362,7 +362,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </ScrollArea>
                 </div>
             </DialogContent>
         </Dialog>
