@@ -59,7 +59,7 @@ export function AuthSelector({ name = false, classname }) {
                     session ?
                         (
                             <div role='button' className=' flex gap-2 items-center cursor-pointer'>
-                                <Avatar className='h-10 w-10'>
+                                <Avatar className='h-10 w-10 rounded-lg'>
                                     <AvatarImage src={session?.user?.avatar} alt={session?.user?.displayName} />
                                     <AvatarFallback className=' capitalize'>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>
                                     {/* {name && <AvatarFallback>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>} */}
@@ -90,7 +90,7 @@ export function AuthSelector({ name = false, classname }) {
                 {session && (
                     <div>
                         <DropdownMenuLabel className='flex flex-row gap-2'>
-                            <Avatar className='h-8 w-8'>
+                            <Avatar className='h-8 w-8 rounded-lg'>
                                 <AvatarImage src={session?.user?.avatar} alt={session?.user?.displayName} />
                                 <AvatarFallback className=' capitalize'>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>
                             </Avatar>

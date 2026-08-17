@@ -81,6 +81,8 @@ export const authOptions = {
 
         async signIn({ user }) {
 
+            console.log('user from auth', user)
+
             if (!user?.email) return false;
 
             const usr = await db.user.upsert({
@@ -89,12 +91,12 @@ export const authOptions = {
                 },
                 update: {
                     displayName: user.name ?? undefined,
-                    avatar: user.picture ?? undefined,
+                    avatar: user.image ?? undefined,
                 },
                 create: {
                     email: user.email,
                     displayName: user.name ?? "",
-                    avatar: user.picture ?? "",
+                    avatar: user.image ?? "",
                     webDeviceToken: "deviceToken",
                     uuid: uuid(),
                     profile: { create: {} },
