@@ -28,14 +28,14 @@ export default function FlowgenixDashboard() {
             <div className="flex items-center justify-center h-screen bg-background text-foreground">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-xs font-mono animate-pulse uppercase tracking-widest">Initialising OmniRoute AI Gateway...</p>
+                    <p className="text-xs font-mono animate-pulse uppercase tracking-widest">Initialising FLowGenix AI Gateway...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-[96vh] overflow-hidden">
+        <div className="flex flex-col h-[94vh] overflow-hidden">
             <OmniRouteDashboard workspaceId={workspaceId} userId={userId} />
         </div>
     );

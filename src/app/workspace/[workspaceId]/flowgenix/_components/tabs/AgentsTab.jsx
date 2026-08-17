@@ -249,15 +249,26 @@ export function AgentsTab({ workspaceId }) {
         setTestOutput('');
 
         try {
-            // Find configured model or default gateway
-            const assignedModel = testAgent.models?.[0]?.model?.name || 'openrouter/auto';
+            // Determine best target model from agent assignments, or fall back to auto
+            let assignedModel = "auto";
+            if (testAgent.models && testAgent.models.length > 0) {
+                const assigned = testAgent.models[0]?.model;
+                if (assigned) {
+                    if (assigned.provider && assigned.name) {
+                        assignedModel = `${assigned.provider}/${assigned.name}`;
+                    } else {
+                        assignedModel = assigned.name || assigned.provider || "auto";
+                    }
+                }
+            }
+
             const res = await fetch(`/api/workspace/${workspaceId}/flowgenix/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: assignedModel,
                     messages: [
-                        { role: 'system', content: testAgent.config?.systemPrompt || 'You are an AI Agent.' },
+                        { role: 'system', content: testAgent.config?.systemPrompt || 'You are an autonomous AI Agent.' },
                         { role: 'user', content: testPrompt }
                     ],
                     stream: true
@@ -265,8 +276,13 @@ export function AgentsTab({ workspaceId }) {
             });
 
             if (!res.ok) {
-                const err = await res.text();
-                setTestOutput(`[Error]: ${err}`);
+                const errText = await res.text();
+                let cleanErr = errText;
+                try {
+                    const parsed = JSON.parse(errText);
+                    cleanErr = parsed.error || errText;
+                } catch {}
+                setTestOutput(`[Error]: ${cleanErr}`);
                 setTestingAgent(false);
                 return;
             }

@@ -64,39 +64,37 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
             </div>
 
             {/* Content Area */}
-            <ScrollArea className="flex-1 min-h-0 relative">
-                <div className="p-2">
-                    <Tabs value={activeTab} className="h-full">
-                        <TabsContent value="overview" className="mt-0">
-                            <OverviewTab onNavigateTab={setActiveTab} workspaceId={workspaceId} />
-                        </TabsContent>
+            <div className="flex-1 min-h-0 relative overflow-hidden">
+                <Tabs value={activeTab} className="h-full flex flex-col">
+                    <TabsContent value="overview" className="mt-0 h-full overflow-y-auto p-2">
+                        <OverviewTab onNavigateTab={setActiveTab} workspaceId={workspaceId} />
+                    </TabsContent>
 
-                        <TabsContent value="combos" className="mt-0">
-                            <CombosTab />
-                        </TabsContent>
+                    <TabsContent value="combos" className="mt-0 h-full overflow-y-auto p-2">
+                        <CombosTab workspaceId={workspaceId} />
+                    </TabsContent>
 
-                        <TabsContent value="chat" className="mt-0 h-full">
-                            <ChatTab workspaceId={workspaceId} />
-                        </TabsContent>
+                    <TabsContent value="chat" className="mt-0 h-full flex flex-col p-2 overflow-hidden">
+                        <ChatTab workspaceId={workspaceId} />
+                    </TabsContent>
 
-                        <TabsContent value="providers" className="mt-0">
-                            <ProvidersTab workspaceId={workspaceId} />
-                        </TabsContent>
+                    <TabsContent value="providers" className="mt-0 h-full overflow-y-auto p-2">
+                        <ProvidersTab workspaceId={workspaceId} />
+                    </TabsContent>
 
-                        <TabsContent value="agents" className="mt-0">
-                            <AgentsTab workspaceId={workspaceId} />
-                        </TabsContent>
+                    <TabsContent value="agents" className="mt-0 h-full overflow-y-auto p-2">
+                        <AgentsTab workspaceId={workspaceId} />
+                    </TabsContent>
 
-                        <TabsContent value="compression" className="mt-0">
-                            <CompressionTab />
-                        </TabsContent>
+                    <TabsContent value="compression" className="mt-0 h-full overflow-y-auto p-2">
+                        <CompressionTab />
+                    </TabsContent>
 
-                        <TabsContent value="logs" className="mt-0">
-                            <LogsTab />
-                        </TabsContent>
-                    </Tabs>
-                </div>
-            </ScrollArea>
+                    <TabsContent value="logs" className="mt-0 h-full overflow-y-auto p-2">
+                        <LogsTab workspaceId={workspaceId} />
+                    </TabsContent>
+                </Tabs>
+            </div>
         </div>
     );
 }
