@@ -4,7 +4,18 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LayoutDashboard, Layers, Cpu, TrendingDown, Activity, Zap, ShieldCheck, MessageSquare, Bot } from 'lucide-react';
+import { 
+    LayoutDashboard, 
+    Layers, 
+    Cpu, 
+    TrendingDown, 
+    Activity, 
+    Zap, 
+    ShieldCheck, 
+    MessageSquare, 
+    Bot,
+    BarChart3
+} from 'lucide-react';
 
 import { OverviewTab } from './tabs/OverviewTab';
 import { CombosTab } from './tabs/CombosTab';
@@ -13,6 +24,7 @@ import { AgentsTab } from './tabs/AgentsTab';
 import { CompressionTab } from './tabs/CompressionTab';
 import { LogsTab } from './tabs/LogsTab';
 import { ChatTab } from './tabs/ChatTab';
+import { AnalyticsTab } from './tabs/AnalyticsTab';
 
 export function OmniRouteDashboard({ workspaceId, userId }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -38,7 +50,7 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                 {/* Decluttered Tabs Selector */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto overflow-x-auto">
                     <TabsList className="bg-muted/40 p-1 rounded-lg border border-border/40 flex items-center gap-1 w-full md:w-auto">
-                        <TabsTrigger value="overview" className="gap-1.5 font-semibold text-xs  rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="overview" className="gap-1.5 font-semibold text-xs rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <LayoutDashboard className="h-3.5 w-3.5" /> Overview
                         </TabsTrigger>
                         <TabsTrigger value="combos" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
@@ -52,6 +64,9 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         </TabsTrigger>
                         <TabsTrigger value="agents" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Bot className="h-3.5 w-3.5" /> Agents
+                        </TabsTrigger>
+                        <TabsTrigger value="analytics" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                            <BarChart3 className="h-3.5 w-3.5" /> Analytics
                         </TabsTrigger>
                         <TabsTrigger value="compression" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <TrendingDown className="h-3.5 w-3.5" /> Compression
@@ -98,6 +113,14 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         <ScrollArea className="h-full">
                             <div className="p-2">
                                 <AgentsTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="analytics" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <AnalyticsTab workspaceId={workspaceId} />
                             </div>
                         </ScrollArea>
                     </TabsContent>

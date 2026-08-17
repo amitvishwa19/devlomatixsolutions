@@ -201,31 +201,34 @@ export async function executeGatewayRequest({
         }
     });
 
-    // Apply Token Compression to incoming messages if requested
-    let processedMessages = messages;
-    let totalSavingsPercent = 0;
-
-    if (compression?.rtk || compression?.caveman) {
-        processedMessages = messages.map(msg => {
-            if (typeof msg.content === 'string' && msg.content.length > 30) {
-                const comp = compressPayload(msg.content, {
-                    rtk: Boolean(compression.rtk),
-                    caveman: Boolean(compression.caveman),
-                    inflationGuard: true
-                });
-                if (comp.applied) {
-                    totalSavingsPercent = Math.max(totalSavingsPercent, comp.savingsPercent);
-                }
-                return { ...msg, content: comp.compressed };
-            }
+    // Check if any message contains multimodal image attachments
+    let hasImages = false;
+    let processedMessages = messages.map(msg => {
+        if (Array.isArray(msg.content)) {
+            const containsImg = msg.content.some(part => part.type === 'image_url' || part.image_url);
+            if (containsImg) hasImages = true;
             return msg;
-        });
-    }
+        }
+        if (typeof msg.content === 'string' && (compression?.rtk || compression?.caveman) && msg.content.length > 30) {
+            const comp = compressPayload(msg.content, {
+                rtk: Boolean(compression.rtk),
+                caveman: Boolean(compression.caveman),
+                inflationGuard: true
+            });
+            if (comp.applied) {
+                totalSavingsPercent = Math.max(totalSavingsPercent, comp.savingsPercent);
+            }
+            return { ...msg, content: comp.compressed };
+        }
+        return msg;
+    });
 
-    // Clean and validate message objects
+    // Clean and validate message objects (supporting both standard strings and multimodal vision arrays)
     const cleanMessages = processedMessages.map(m => ({
         role: String(m.role || 'user'),
-        content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content || '')
+        content: Array.isArray(m.content) 
+            ? m.content 
+            : (typeof m.content === 'string' ? m.content : JSON.stringify(m.content || ''))
     }));
 
     const inputTokens = estimateTokens(JSON.stringify(cleanMessages));

@@ -24,7 +24,15 @@ import {
     Cpu,
     RefreshCw,
     TrendingDown,
-    ArrowDown
+    ArrowDown,
+    Paperclip,
+    Image as ImageIcon,
+    FileText,
+    FileSpreadsheet,
+    FileCode,
+    File,
+    Eye,
+    UploadCloud
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -38,6 +46,7 @@ import {
 import { getCombosAction } from '../../_action/combo-actions';
 import { getProvidersAction } from '../../_action/provider-actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { processAttachedFile, buildMultimodalMessageContent } from '../../_lib/document-processor';
 
 export function ChatTab({ workspaceId }) {
     // Thread state
@@ -52,6 +61,13 @@ export function ChatTab({ workspaceId }) {
     const [input, setInput] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
     const [messagesLoading, setMessagesLoading] = useState(false);
+
+    // Multimodal attachments state
+    const [attachments, setAttachments] = useState([]);
+    const [isDragging, setIsDragging] = useState(false);
+    const [selectedImagePreview, setSelectedImagePreview] = useState(null);
+    const [selectedDocPreview, setSelectedDocPreview] = useState(null);
+    const fileInputRef = useRef(null);
 
     // Routing / Model config
     const [modelString, setModelString] = useState('auto/coding');
@@ -117,8 +133,12 @@ export function ChatTab({ workspaceId }) {
             try {
                 const res = await getThreadMessagesAction(activeThreadId);
                 if (res.success) {
-                    setMessages(res.data || []);
-                    // Scroll to bottom immediately on thread switch
+                    // Extract message objects and attached files if saved in metadata
+                    const formatted = (res.data || []).map(m => ({
+                        ...m,
+                        attachments: m.meta?.attachments || []
+                    }));
+                    setMessages(formatted);
                     setTimeout(() => {
                         scrollToBottom('instant');
                     }, 50);
@@ -154,12 +174,68 @@ export function ChatTab({ workspaceId }) {
         }
     };
 
-    // Auto-scroll when messages or streaming tokens arrive if user was at bottom
     useEffect(() => {
         if (isAtBottomRef.current) {
             scrollToBottom('instant');
         }
     }, [messages, isStreaming]);
+
+    // File Attachment Handlers
+    const handleFiles = async (fileList) => {
+        if (!fileList || fileList.length === 0) return;
+        const newAttachments = [];
+
+        for (let i = 0; i < fileList.length; i++) {
+            const f = fileList[i];
+            // 20MB limit per file
+            if (f.size > 20 * 1024 * 1024) {
+                toast.error(`File ${f.name} exceeds 20MB limit.`);
+                continue;
+            }
+            try {
+                const parsed = await processAttachedFile(f);
+                newAttachments.push(parsed);
+            } catch (err) {
+                toast.error(`Failed to process ${f.name}`);
+            }
+        }
+
+        if (newAttachments.length > 0) {
+            setAttachments(prev => [...prev, ...newAttachments]);
+            toast.success(`Attached ${newAttachments.length} file(s)`);
+        }
+    };
+
+    const handleFileInputChange = (e) => {
+        handleFiles(e.target.files);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleRemoveAttachment = (id) => {
+        setAttachments(prev => prev.filter(a => a.id !== id));
+    };
+
+    // Drag & Drop handlers
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+        }
+    };
 
     // Thread Operations
     const handleNewThread = async () => {
@@ -169,6 +245,7 @@ export function ChatTab({ workspaceId }) {
                 setThreads(prev => [res.data, ...prev]);
                 setActiveThreadId(res.data.id);
                 setMessages([]);
+                setAttachments([]);
                 toast.success("New conversation started");
             }
         } catch (err) {
@@ -216,14 +293,25 @@ export function ChatTab({ workspaceId }) {
     // Send Message & Stream Response
     const handleSend = async (e) => {
         e?.preventDefault();
-        if (!input.trim() || isStreaming) return;
+        if ((!input.trim() && attachments.length === 0) || isStreaming) return;
 
         const userText = input.trim();
-        const userMsg = { role: 'user', content: userText };
-        const updatedMessages = [...messages, userMsg];
+        const currentAttachments = [...attachments];
+        
+        // Structured payload for LLM (supports multimodal vision array)
+        const multimodalPayload = buildMultimodalMessageContent(userText, currentAttachments);
+
+        const userDisplayMsg = { 
+            role: 'user', 
+            content: userText || (currentAttachments.length > 0 ? `Sent ${currentAttachments.length} attachment(s)` : ''),
+            attachments: currentAttachments 
+        };
+
+        const updatedMessages = [...messages, userDisplayMsg];
 
         setMessages(updatedMessages);
         setInput('');
+        setAttachments([]);
         setIsStreaming(true);
         setLastResponseMeta(null);
         isAtBottomRef.current = true;
@@ -235,12 +323,29 @@ export function ChatTab({ workspaceId }) {
                 workspaceId,
                 threadId: currentThreadId,
                 role: 'user',
-                content: userText
+                content: userDisplayMsg.content,
+                meta: {
+                    attachments: currentAttachments.map(a => ({
+                        id: a.id,
+                        name: a.name,
+                        type: a.type,
+                        formattedSize: a.formattedSize,
+                        preview: a.type === 'image' ? a.dataUrl : (a.preview || '')
+                    }))
+                }
             });
         }
 
         // Add placeholder assistant message
         setMessages([...updatedMessages, { role: 'assistant', content: '' }]);
+
+        // Format history for upstream gateway (replacing latest user msg with multimodal payload)
+        const gatewayMessages = updatedMessages.map((m, idx) => {
+            if (idx === updatedMessages.length - 1) {
+                return { role: 'user', content: multimodalPayload };
+            }
+            return { role: m.role, content: m.content };
+        });
 
         try {
             const res = await fetch(`/api/workspace/${workspaceId}/flowgenix/chat`, {
@@ -248,7 +353,7 @@ export function ChatTab({ workspaceId }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: modelString,
-                    messages: updatedMessages,
+                    messages: gatewayMessages,
                     stream: true,
                     compression: {
                         rtk: enableRtk,
@@ -271,7 +376,7 @@ export function ChatTab({ workspaceId }) {
                 try {
                     const parsedErr = JSON.parse(errText);
                     errMsg = parsedErr.error || errText;
-                } catch { }
+                } catch {}
 
                 setMessages(prev => {
                     const next = [...prev];
@@ -307,7 +412,7 @@ export function ChatTab({ workspaceId }) {
                                 });
                             }
                         } catch {
-                            // ignore partial JSON chunk fragments
+                            // ignore partial JSON fragments
                         }
                     }
                 }
@@ -339,9 +444,43 @@ export function ChatTab({ workspaceId }) {
         }
     };
 
-    return (
-        <div className="flex flex-col md:flex-row h-full min-h-0 gap-3 overflow-hidden pb-1">
+    // Attachment icon helper
+    const getAttachmentIcon = (att) => {
+        if (att.type === 'image') return <ImageIcon className="w-3.5 h-3.5 text-blue-400" />;
+        if (att.type === 'csv') return <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />;
+        if (att.type === 'json' || att.extension === 'js' || att.extension === 'py' || att.extension === 'ts') {
+            return <FileCode className="w-3.5 h-3.5 text-purple-400" />;
+        }
+        return <FileText className="w-3.5 h-3.5 text-amber-400" />;
+    };
 
+    return (
+        <div 
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className="flex flex-col md:flex-row h-full min-h-0 gap-3 overflow-hidden pb-1 relative"
+        >
+            {/* Hidden File Input */}
+            <input 
+                type="file" 
+                multiple 
+                ref={fileInputRef} 
+                onChange={handleFileInputChange} 
+                className="hidden" 
+                accept="image/*,.pdf,.csv,.json,.txt,.md,.js,.jsx,.ts,.tsx,.py,.sql,.log,.html,.css,.env,.yaml,.yml" 
+            />
+
+            {/* Drag & Drop Overlay */}
+            {isDragging && (
+                <div className="absolute inset-0 z-50 bg-background/85 backdrop-blur-xs border-2 border-dashed border-primary rounded-xl flex flex-col items-center justify-center pointer-events-none gap-3 text-primary animate-in fade-in duration-150">
+                    <UploadCloud className="w-12 h-12 animate-bounce" />
+                    <div className="text-center">
+                        <h3 className="text-sm font-bold">Drop files here to attach</h3>
+                        <p className="text-xs text-muted-foreground">Images, PDFs, CSVs, JSON, Code, & Text Documents (up to 20MB)</p>
+                    </div>
+                </div>
+            )}
 
             {/* Left Thread Sidebar */}
             <div className="w-64 bg-card/60 backdrop-blur-md rounded-xl border border-border/50 flex flex-col h-full self-stretch min-h-full overflow-hidden shrink-0">
@@ -428,8 +567,6 @@ export function ChatTab({ workspaceId }) {
 
             {/* Right Chat Main Body */}
             <div className="flex-1 min-h-0 flex flex-col h-full bg-card/40 backdrop-blur-md rounded-xl border border-border/50 overflow-hidden relative">
-
-
                 {/* Header Control Bar */}
                 <div className="p-3 border-b border-border/40 flex flex-wrap items-center justify-between gap-3 bg-card/60 shrink-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -442,7 +579,7 @@ export function ChatTab({ workspaceId }) {
                                 className="bg-transparent text-xs font-mono font-bold text-primary focus:outline-none cursor-pointer"
                             >
                                 <optgroup label="⚡ Preset Cascades">
-                                    <option value="auto">auto (LKGP Balanced)</option>
+                                    <option value="auto">auto (LKGP Balanced / Vision Ready)</option>
                                     <option value="auto/coding">auto/coding (Quality-First Coding)</option>
                                     <option value="auto/fast">auto/fast (Lowest Latency)</option>
                                     <option value="auto/cheap">auto/cheap (Cost-Minimizer Free Tier)</option>
@@ -498,10 +635,10 @@ export function ChatTab({ workspaceId }) {
                 </div>
 
                 {/* Messages Scrollable Feed */}
-                <ScrollArea
+                <div
                     ref={messagesContainerRef}
                     onScroll={handleScroll}
-                    className=" h-[74vh]  p-4 space-y-4 relative scroll-smooth"
+                    className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 relative scroll-smooth"
                 >
                     {messagesLoading ? (
                         <div className="flex flex-col items-center justify-center h-48 gap-3 text-muted-foreground text-xs">
@@ -509,19 +646,21 @@ export function ChatTab({ workspaceId }) {
                             <span>Loading conversation history...</span>
                         </div>
                     ) : messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center text-center p-12 text-muted-foreground space-y-3 opacity-60">
+                        <div className="flex flex-col items-center justify-center text-center p-12 text-muted-foreground space-y-3 opacity-70">
                             <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
                                 <Bot className="w-8 h-8" />
                             </div>
-                            <h3 className="text-sm font-bold text-foreground">Interactive Multi-Model Gateway</h3>
+                            <h3 className="text-sm font-bold text-foreground">Multimodal Gateway & Document Workspace</h3>
                             <p className="text-xs max-w-sm">
-                                Type a prompt below to route through the FlowGenix Gateway with automated failover and token compression.
+                                Send text or attach <b>Images, PDFs, CSVs, Code, and JSON</b> to route across LLMs with automated vision parsing and compression.
                             </p>
                         </div>
                     ) : (
                         <div className="space-y-4 pb-2">
                             {messages.map((msg, i) => {
                                 const isUser = msg.role === 'user';
+                                const msgAttachments = msg.attachments || [];
+
                                 return (
                                     <div key={i} className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
                                         {!isUser && (
@@ -529,14 +668,51 @@ export function ChatTab({ workspaceId }) {
                                                 <Bot className="w-4 h-4 text-primary" />
                                             </div>
                                         )}
-                                        <div
-                                            className={`px-4 py-2.5 rounded-xl max-w-[85%] text-xs leading-relaxed whitespace-pre-wrap ${isUser
-                                                ? 'bg-primary text-primary-foreground font-medium rounded-tr-xs shadow-xs'
-                                                : 'bg-secondary/40 border border-border/40 text-foreground rounded-tl-xs shadow-xs font-mono'
-                                                }`}
-                                        >
-                                            {msg.content}
+                                        <div className={`space-y-2 max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
+                                            {/* Render Attached Files inside Message Bubble */}
+                                            {msgAttachments.length > 0 && (
+                                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                    {msgAttachments.map((att, attIdx) => (
+                                                        <div 
+                                                            key={attIdx} 
+                                                            className={`p-1.5 rounded-lg border text-xs flex items-center gap-2 ${
+                                                                isUser 
+                                                                    ? 'bg-primary/20 border-primary/40 text-primary-foreground' 
+                                                                    : 'bg-secondary/60 border-border/40 text-foreground'
+                                                            }`}
+                                                        >
+                                                            {att.type === 'image' && (att.preview || att.dataUrl) ? (
+                                                                <img 
+                                                                    src={att.preview || att.dataUrl} 
+                                                                    alt={att.name} 
+                                                                    onClick={() => setSelectedImagePreview(att.preview || att.dataUrl)}
+                                                                    className="w-10 h-10 rounded-md object-cover cursor-pointer hover:opacity-80 transition-opacity border border-border/40"
+                                                                />
+                                                            ) : (
+                                                                getAttachmentIcon(att)
+                                                            )}
+                                                            <div className="text-[11px] font-mono leading-tight">
+                                                                <span className="font-bold truncate max-w-[120px] block">{att.name}</span>
+                                                                <span className="text-[9px] opacity-70 block">{att.formattedSize}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Text Bubble */}
+                                            {msg.content && (
+                                                <div
+                                                    className={`px-4 py-2.5 rounded-xl text-xs leading-relaxed whitespace-pre-wrap ${isUser
+                                                        ? 'bg-primary text-primary-foreground font-medium rounded-tr-xs shadow-xs'
+                                                        : 'bg-secondary/40 border border-border/40 text-foreground rounded-tl-xs shadow-xs font-mono'
+                                                        }`}
+                                                >
+                                                    {msg.content}
+                                                </div>
+                                            )}
                                         </div>
+
                                         {isUser && (
                                             <div className="w-7 h-7 rounded-lg bg-foreground/10 border border-border/40 flex items-center justify-center shrink-0 mt-0.5">
                                                 <User className="w-4 h-4 text-foreground" />
@@ -548,7 +724,7 @@ export function ChatTab({ workspaceId }) {
                             <div ref={messagesEndRef} className="h-1" />
                         </div>
                     )}
-                </ScrollArea>
+                </div>
 
                 {/* Floating Scroll to Bottom Button */}
                 {showScrollBottomBtn && (
@@ -556,26 +732,69 @@ export function ChatTab({ workspaceId }) {
                         size="sm"
                         variant="secondary"
                         onClick={() => scrollToBottom('smooth')}
-                        className="absolute bottom-16 right-6 rounded-full w-8 h-8 p-0 shadow-lg border border-border/60 bg-card/90 hover:bg-card text-foreground z-10"
+                        className="absolute bottom-20 right-6 rounded-full w-8 h-8 p-0 shadow-lg border border-border/60 bg-card/90 hover:bg-card text-foreground z-10"
                         title="Scroll to latest message"
                     >
                         <ArrowDown className="w-4 h-4" />
                     </Button>
                 )}
 
+                {/* Pending Attachments Chip Bar */}
+                {attachments.length > 0 && (
+                    <div className="px-3 pt-2 pb-1 bg-card/80 border-t border-border/30 flex items-center gap-2 overflow-x-auto">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 flex items-center gap-1">
+                            <Paperclip className="w-3 h-3 text-primary" /> Attached:
+                        </span>
+                        {attachments.map((att) => (
+                            <div 
+                                key={att.id} 
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/50 border border-border/40 text-xs shrink-0 font-mono"
+                            >
+                                {att.type === 'image' && att.dataUrl ? (
+                                    <img src={att.dataUrl} alt={att.name} className="w-5 h-5 rounded object-cover" />
+                                ) : (
+                                    getAttachmentIcon(att)
+                                )}
+                                <span className="text-[11px] font-medium text-foreground truncate max-w-[110px]">{att.name}</span>
+                                <span className="text-[9px] text-muted-foreground">({att.formattedSize})</span>
+                                <button 
+                                    type="button" 
+                                    onClick={() => handleRemoveAttachment(att.id)}
+                                    className="p-0.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* Fixed Input Bar */}
                 <div className="p-3 border-t border-border/40 bg-card/60 shrink-0">
                     <form onSubmit={handleSend} className="flex items-center gap-2">
+                        {/* Attach File Button */}
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="h-10 w-10 shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10 border border-border/30 rounded-lg"
+                            title="Attach Image, PDF, CSV, or Document"
+                        >
+                            <Paperclip className="w-4 h-4" />
+                        </Button>
+
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder={`Ask anything via ${modelString}...`}
+                            placeholder={`Ask anything via ${modelString} (or drop files/images)...`}
                             disabled={isStreaming}
-                            className="h-10 text-xs bg-background/60 border-border/50 focus-visible:ring-primary"
+                            className="h-10 text-xs bg-background/60 border-border/50 focus-visible:ring-primary flex-1"
                         />
+
                         <Button
                             type="submit"
-                            disabled={isStreaming || !input.trim()}
+                            disabled={isStreaming || (!input.trim() && attachments.length === 0)}
                             className="h-10 px-4 text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
                         >
                             {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -583,9 +802,29 @@ export function ChatTab({ workspaceId }) {
                         </Button>
                     </form>
                 </div>
-
-
             </div>
+
+            {/* Image Full Size Modal */}
+            {selectedImagePreview && (
+                <div 
+                    onClick={() => setSelectedImagePreview(null)}
+                    className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+                >
+                    <div className="relative max-w-4xl max-h-[90vh] bg-card p-2 rounded-xl border border-border shadow-2xl">
+                        <button 
+                            onClick={() => setSelectedImagePreview(null)}
+                            className="absolute top-4 right-4 p-1 rounded-full bg-black/60 text-white hover:bg-black/80"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <img 
+                            src={selectedImagePreview} 
+                            alt="Preview" 
+                            className="max-w-full max-h-[85vh] rounded-lg object-contain" 
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

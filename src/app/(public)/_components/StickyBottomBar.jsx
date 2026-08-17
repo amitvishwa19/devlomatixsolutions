@@ -55,23 +55,7 @@ const StickyBottomBar = () => {
                             V-{packageJson.version}
                         </p>
 
-                        {/* Dynamic Social Links */}
-                        {activeSocialLinks.length > 0 && (
-                            <div className="flex items-center gap-4 pl-4 border-l border-border/50">
-                                {activeSocialLinks.map((social) => (
-                                    <a
-                                        key={social.id}
-                                        href={social.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 active:scale-95"
-                                        title={social.id.charAt(0).toUpperCase() + social.id.slice(1)}
-                                    >
-                                        <social.icon className="w-4 h-4" />
-                                    </a>
-                                ))}
-                            </div>
-                        )}
+
 
                         {!loading && activeSocialLinks.length === 0 && (
                             <div className="hidden group-hover:flex items-center gap-2 pl-4 border-l border-border/50 opacity-20">
@@ -82,6 +66,25 @@ const StickyBottomBar = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
+                        <div>
+                            {/* Dynamic Social Links */}
+                            {activeSocialLinks.length > 0 && (
+                                <div className="flex items-center gap-4 pl-4 border-l border-border/50">
+                                    {activeSocialLinks.map((social) => (
+                                        <a
+                                            key={social.id}
+                                            href={social.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 active:scale-95"
+                                            title={social.id.charAt(0).toUpperCase() + social.id.slice(1)}
+                                        >
+                                            <social.icon className="w-4 h-4" />
+                                        </a>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                         <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-bold">
                             Privacy Policy
                         </Link>
