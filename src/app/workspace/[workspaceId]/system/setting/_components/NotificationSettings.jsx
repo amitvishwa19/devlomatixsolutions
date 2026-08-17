@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSettings } from '@/providers/WorkspaceProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { BellRing, Mail, MessageSquare, Monitor, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { StickySaveBar } from './StickySaveBar';
 
 export const NotificationSettings = () => {
     const { settings, updateSettings, saving } = useSettings();
@@ -27,12 +29,32 @@ export const NotificationSettings = () => {
         }
     }, [settings]);
 
+    const isDirty = useMemo(() => {
+        if (!settings) return false;
+        return (
+            localNotifications.whatsapp !== (settings?.notifications?.whatsapp || false) ||
+            localNotifications.email !== (settings?.notifications?.email || false) ||
+            localNotifications.push !== (settings?.notifications?.push || false)
+        );
+    }, [localNotifications, settings]);
+
     const handleToggle = (key, checked) => {
         setLocalNotifications(prev => ({ ...prev, [key]: checked }));
     };
 
     const handleSave = () => {
         updateSettings({ notifications: localNotifications });
+        toast.success("Notification preferences saved successfully");
+    };
+
+    const handleReset = () => {
+        if (settings?.notifications) {
+            setLocalNotifications({
+                whatsapp: settings.notifications.whatsapp || false,
+                email: settings.notifications.email || false,
+                push: settings.notifications.push || false
+            });
+        }
     };
 
     const notificationItems = [
@@ -60,39 +82,39 @@ export const NotificationSettings = () => {
     ];
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-3 relative pb-8">
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
             >
                 <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-white/5">
+                    <CardHeader className="p-3 pb-2 border-b border-border/40">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-rose-500/10 rounded-md border border-rose-500/20">
                                 <BellRing className="w-3.5 h-3.5 text-rose-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-white">Notification Channels</CardTitle>
-                                <CardDescription className="text-[10px] text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-foreground">Notification Channels</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground">
                                     Configure how your team receives alerts.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-2 p-3 pt-2.5">
-                        {notificationItems.map((item, index) => (
+                        {notificationItems.map((item) => (
                             <div
                                 key={item.key}
-                                className="flex items-center justify-between gap-3 p-2 px-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                                className="flex items-center justify-between gap-3 p-2 px-3 rounded-lg bg-secondary/30 border border-border/40 hover:border-border transition-colors"
                             >
                                 <div className="flex items-center gap-2.5">
                                     <div className={`w-7 h-7 rounded-md flex items-center justify-center border shrink-0 ${item.color}`}>
                                         <item.icon className="w-3.5 h-3.5" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <Label className="text-xs font-semibold text-white">{item.label}</Label>
-                                        <p className="text-[10px] text-zinc-500">{item.description}</p>
+                                        <Label className="text-xs font-semibold text-foreground">{item.label}</Label>
+                                        <p className="text-[10px] text-muted-foreground">{item.description}</p>
                                     </div>
                                 </div>
                                 <Switch
@@ -104,24 +126,17 @@ export const NotificationSettings = () => {
                             </div>
                         ))}
                     </CardContent>
-                    <CardFooter className="border-t border-white/5 p-2.5">
-                        <Button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-8"
-                        >
-                            {saving ? "Saving..." : "Save Preferences"}
-                        </Button>
-                    </CardFooter>
                 </Card>
             </motion.div>
 
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-500">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span className="font-semibold uppercase tracking-wider text-[10px]">
-                    Settings synchronized globally
-                </span>
-            </div>
+            {/* Sticky Save Bar */}
+            <StickySaveBar
+                isDirty={isDirty}
+                saving={saving}
+                onSave={handleSave}
+                onReset={handleReset}
+                label="Unsaved Notification Settings"
+            />
         </div>
     );
 };

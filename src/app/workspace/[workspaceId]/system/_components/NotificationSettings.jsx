@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSettings } from '@/providers/WorkspaceProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import { BellRing, Mail, MessageSquare, Monitor, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { StickySaveBar } from './StickySaveBar';
 
 export const NotificationSettings = () => {
     const { settings, updateSettings, saving } = useSettings();
@@ -26,95 +29,114 @@ export const NotificationSettings = () => {
         }
     }, [settings]);
 
+    const isDirty = useMemo(() => {
+        if (!settings) return false;
+        return (
+            localNotifications.whatsapp !== (settings?.notifications?.whatsapp || false) ||
+            localNotifications.email !== (settings?.notifications?.email || false) ||
+            localNotifications.push !== (settings?.notifications?.push || false)
+        );
+    }, [localNotifications, settings]);
+
     const handleToggle = (key, checked) => {
         setLocalNotifications(prev => ({ ...prev, [key]: checked }));
     };
 
     const handleSave = () => {
         updateSettings({ notifications: localNotifications });
+        toast.success("Notification preferences saved successfully");
+    };
+
+    const handleReset = () => {
+        if (settings?.notifications) {
+            setLocalNotifications({
+                whatsapp: settings.notifications.whatsapp || false,
+                email: settings.notifications.email || false,
+                push: settings.notifications.push || false
+            });
+        }
     };
 
     const notificationItems = [
         {
             key: 'whatsapp',
             icon: MessageSquare,
-            color: 'emerald',
+            color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
             label: 'WhatsApp Alerts',
             description: 'Critical notifications via WhatsApp.',
         },
         {
             key: 'email',
             icon: Mail,
-            color: 'blue',
+            color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
             label: 'Email Digest',
-            description: 'Daily activity summaries.',
+            description: 'Daily activity summaries & reports.',
         },
         {
             key: 'push',
             icon: Monitor,
-            color: 'zinc',
+            color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
             label: 'Desktop Push',
-            description: 'Browser push notifications.',
+            description: 'Browser push notifications in real time.',
         },
     ];
 
     return (
-        <div className="space-y-3">
-            <Card className="bg-card border-border/50">
-                <CardHeader className="pb-3 px-3 border-b border-white/5">
-                    <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-rose-500/10 rounded-lg border border-rose-500/20">
-                            <BellRing className="w-3.5 h-3.5 text-rose-500" />
-                        </div>
-                        <div>
-                            <CardTitle className="text-xs font-bold text-white">Notification Channels</CardTitle>
-                            <CardDescription className="text-[10px] text-zinc-500">
-                                Configure how your team receives alerts.
-                            </CardDescription>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-2 pt-3 px-3">
-                    {notificationItems.map((item) => (
-                        <div
-                            key={item.key}
-                            className="flex items-center justify-between gap-3 p-2 rounded-lg bg-white/5 border border-white/10"
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className={`w-8 h-8 bg-${item.color}-500/10 rounded-lg flex items-center justify-center border border-${item.color}-500/20`}>
-                                    <item.icon className={`w-4 h-4 text-${item.color}-500`} />
-                                </div>
-                                <div className="space-y-0.5">
-                                    <Label className="text-xs font-semibold text-white">{item.label}</Label>
-                                    <p className="text-[10px] text-zinc-500">{item.description}</p>
-                                </div>
+        <div className="space-y-3 relative pb-8">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+            >
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-rose-500/10 rounded-md border border-rose-500/20">
+                                <BellRing className="w-3.5 h-3.5 text-rose-500" />
                             </div>
-                            <Switch
-                                disabled={saving}
-                                checked={localNotifications[item.key]}
-                                onCheckedChange={(checked) => handleToggle(item.key, checked)}
-                                className="data-[state=checked]:bg-rose-500 scale-90"
-                            />
+                            <div>
+                                <CardTitle className="text-xs font-bold text-foreground">Notification Channels</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground">
+                                    Configure how your team receives alerts.
+                                </CardDescription>
+                            </div>
                         </div>
-                    ))}
-                </CardContent>
-                <CardFooter className="border-t border-white/5 pt-3 px-3">
-                    <Button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs h-8"
-                    >
-                        {saving ? "Saving..." : "Save Preferences"}
-                    </Button>
-                </CardFooter>
-            </Card>
+                    </CardHeader>
+                    <CardContent className="space-y-2 p-3 pt-2.5">
+                        {notificationItems.map((item) => (
+                            <div
+                                key={item.key}
+                                className="flex items-center justify-between gap-3 p-2 px-3 rounded-lg bg-secondary/30 border border-border/40 hover:border-border transition-colors"
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <div className={`w-7 h-7 rounded-md flex items-center justify-center border shrink-0 ${item.color}`}>
+                                        <item.icon className="w-3.5 h-3.5" />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <Label className="text-xs font-semibold text-foreground">{item.label}</Label>
+                                        <p className="text-[10px] text-muted-foreground">{item.description}</p>
+                                    </div>
+                                </div>
+                                <Switch
+                                    disabled={saving}
+                                    checked={localNotifications[item.key]}
+                                    onCheckedChange={(checked) => handleToggle(item.key, checked)}
+                                    className="scale-85 origin-right data-[state=checked]:bg-rose-500"
+                                />
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </motion.div>
 
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <p className="text-xs font-semibold text-emerald-500 uppercase tracking-wider">
-                    Settings synchronized globally
-                </p>
-            </div>
+            {/* Sticky Save Bar */}
+            <StickySaveBar
+                isDirty={isDirty}
+                saving={saving}
+                onSave={handleSave}
+                onReset={handleReset}
+                label="Unsaved Notification Settings"
+            />
         </div>
     );
 };

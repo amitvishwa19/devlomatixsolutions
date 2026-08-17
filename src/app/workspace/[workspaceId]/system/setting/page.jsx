@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { WorkspaceProvider, useSettings } from '@/providers/WorkspaceProvider';
 import { GeneralSettings } from './_components/GeneralSettings';
 import { SecuritySettings } from './_components/SecuritySettings';
@@ -23,7 +23,9 @@ import {
   Terminal,
   ChevronRight,
   Search,
+  Tag,
 } from 'lucide-react';
+import { searchSettings } from '../_lib/settings-search-index';
 
 const settingTabs = [
   { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
@@ -40,9 +42,10 @@ const settingDescriptions = {
   security: 'Authentication policies and access controls.',
   notifications: 'Alert channels and notification preferences.',
   integrations: 'External services, webhooks, and APIs.',
-  advanced: 'System configuration and technical states.',
+  advanced: 'System configuration, code injection, and 1-click backups.',
   privacy: 'Data governance, GDPR compliance, and audit settings.',
   developer: 'API keys, webhooks, and developer tools.',
+  danger: 'Destructive workspace actions and factory reset.'
 };
 
 function SettingPageContent() {
@@ -52,84 +55,143 @@ function SettingPageContent() {
 
   const isDataLoading = settingsLoading || (loading && !settings);
 
-  const filteredTabs = searchQuery
-    ? settingTabs.filter(tab =>
-      tab.label.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  // Deep search results
+  const deepMatches = useMemo(() => {
+    return searchSettings(searchQuery);
+  }, [searchQuery]);
+
+  // Tab match filter
+  const matchedTabIds = useMemo(() => {
+    if (!searchQuery) return null;
+    const set = new Set(deepMatches.map(m => m.tabId));
+    settingTabs.forEach(tab => {
+      if (tab.label.toLowerCase().includes(searchQuery.toLowerCase())) {
+        set.add(tab.id);
+      }
+    });
+    if ('danger zone'.includes(searchQuery.toLowerCase())) set.add('danger');
+    return set;
+  }, [searchQuery, deepMatches]);
+
+  const filteredTabs = matchedTabIds
+    ? settingTabs.filter(tab => matchedTabIds.has(tab.id))
     : settingTabs;
 
+  const showDanger = !matchedTabIds || matchedTabIds.has('danger');
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="flex">
         {/* Left Sidebar */}
         <motion.aside
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="w-64 border-r border-white/5 backdrop-blur-xl sticky top-0 h-screen overflow-y-auto shrink-0"
+          className="w-64 border-r border-border/50 bg-card sticky top-0 h-screen overflow-y-auto shrink-0 flex flex-col"
         >
-          <div className="p-3 border-b border-white/5">
+          <div className="p-3 border-b border-border/50 shrink-0">
             <div className="flex items-center gap-2.5 mb-2.5">
               <div className="p-1.5 bg-primary/10 rounded-lg border border-primary/20">
                 <Settings className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h2 className="text-xs font-bold text-white">Workspace Settings</h2>
-                <p className="text-[9px] text-zinc-500">Configuration & Control</p>
+                <h2 className="text-xs font-bold text-foreground">Workspace Settings</h2>
+                <p className="text-[9px] text-muted-foreground">Configuration & Control</p>
               </div>
             </div>
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search settings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-md text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary/50"
+                className="w-full pl-8 pr-3 py-1.5 bg-secondary/30 border border-border/50 rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
               />
             </div>
+
+            {searchQuery && (
+              <div className="flex items-center justify-between mt-2 px-1 text-[10px] text-muted-foreground">
+                <span>Matches: {deepMatches.length} field(s)</span>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-primary hover:underline text-[9px] font-semibold cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
           </div>
 
-          <nav className="p-2 space-y-1 text-xs">
-            {filteredTabs.map((tab, index) => (
-              <motion.button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all ${activeTab === tab.id
-                  ? 'bg-primary/20 text-primary border border-primary/30 font-semibold'
-                  : 'hover:bg-white/5 text-zinc-400 hover:text-white'
+          <nav className="p-2 space-y-1 text-xs flex-1">
+            {filteredTabs.map((tab, index) => {
+              const isSelected = activeTab === tab.id;
+              const tabMatches = deepMatches.filter(m => m.tabId === tab.id);
+
+              return (
+                <div key={tab.id} className="space-y-1">
+                  <motion.button
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary/15 text-primary border border-primary/30 font-semibold shadow-xs'
+                        : 'hover:bg-secondary/40 text-muted-foreground hover:text-foreground'
+                    }`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    whileHover={{ x: 2 }}
+                  >
+                    <tab.icon className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? tab.color : ''}`} />
+                    <span className="font-medium text-xs truncate">{tab.label}</span>
+                    {tabMatches.length > 0 && searchQuery && (
+                      <span className="ml-auto px-1.5 py-0.2 rounded-full text-[9px] bg-primary/20 text-primary font-bold">
+                        {tabMatches.length}
+                      </span>
+                    )}
+                    {isSelected && !searchQuery && (
+                      <ChevronRight className="w-3 h-3 ml-auto text-primary" />
+                    )}
+                  </motion.button>
+
+                  {/* Deep search matching tags */}
+                  {searchQuery && tabMatches.length > 0 && (
+                    <div className="pl-6 pr-1 pb-1 space-y-1">
+                      {tabMatches.map((match, mIdx) => (
+                        <button
+                          key={mIdx}
+                          onClick={() => setActiveTab(tab.id)}
+                          className="w-full text-left p-1 px-1.5 rounded bg-secondary/20 hover:bg-secondary/60 border border-border/40 text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 truncate cursor-pointer"
+                        >
+                          <Tag className="w-2.5 h-2.5 text-primary shrink-0" />
+                          <span className="truncate">{match.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {showDanger && (
+              <>
+                <div className="my-2 border-t border-border/40" />
+                <motion.button
+                  key="danger"
+                  onClick={() => setActiveTab('danger')}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
+                    activeTab === 'danger'
+                      ? 'bg-rose-500/20 text-rose-500 border border-rose-500/30 font-semibold'
+                      : 'hover:bg-rose-500/10 text-rose-500/80 hover:text-rose-500'
                   }`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.03 }}
-                whileHover={{ x: 2 }}
-              >
-                <tab.icon className={`w-3.5 h-3.5 flex-shrink-0 ${activeTab === tab.id ? tab.color : ''}`} />
-                <span className="font-medium text-xs">{tab.label}</span>
-                {activeTab === tab.id && (
-                  <ChevronRight className="w-3 h-3 ml-auto text-primary" />
-                )}
-              </motion.button>
-            ))}
-
-            <div className="my-2 border-t border-white/5" />
-
-            <motion.button
-              key="danger"
-              onClick={() => setActiveTab('danger')}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all ${activeTab === 'danger'
-                ? 'bg-rose-500/20 text-rose-500 border border-rose-500/30 font-semibold'
-                : 'hover:bg-rose-500/5 text-rose-500/70 hover:text-rose-500'
-                }`}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: filteredTabs.length * 0.03 }}
-            >
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="font-medium text-xs">Danger Zone</span>
-            </motion.button>
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="font-medium text-xs">Danger Zone</span>
+                </motion.button>
+              </>
+            )}
           </nav>
 
-          <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/5 bg-[#0a0a0a]/80">
+          <div className="p-3 border-t border-border/50 bg-card shrink-0">
             <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -141,7 +203,7 @@ function SettingPageContent() {
         </motion.aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-5 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-5 max-w-6xl">
           {isDataLoading ? (
             <SettingContentSkeleton />
           ) : (
@@ -152,27 +214,28 @@ function SettingPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15 }}
-                className="mx-auto space-y-3"
+                className="space-y-4"
               >
-                {/* Compact Header */}
-                <div className="flex items-center gap-2.5 pb-1">
-                  <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+                {/* Header Banner */}
+                <div className="flex items-center gap-2.5 pb-2 border-b border-border/40">
+                  <div className="p-2 rounded-lg bg-secondary/40 border border-border/50">
                     {React.createElement(
-                      settingTabs.find(t => t.id === activeTab)?.icon || (activeTab === 'danger' ? AlertTriangle : Settings),
-                      { className: `w-4 h-4 ${activeTab === 'danger' ? 'text-rose-500' : 'text-primary'}` }
+                      settingTabs.find(t => t.id === activeTab)?.icon || AlertTriangle,
+                      { className: 'w-4 h-4 text-primary' }
                     )}
                   </div>
                   <div>
-                    <h1 className="text-base font-bold text-white leading-tight">
+                    <h1 className="text-base font-bold text-foreground">
                       {settingTabs.find(t => t.id === activeTab)?.label || 'Danger Zone'} Settings
                     </h1>
-                    <p className="text-[11px] text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       {settingDescriptions[activeTab] || 'Critical workspace operations.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                {/* Content */}
+                <div>
                   {activeTab === 'general' && <GeneralSettings />}
                   {activeTab === 'security' && <SecuritySettings />}
                   {activeTab === 'notifications' && <NotificationSettings />}
@@ -191,7 +254,7 @@ function SettingPageContent() {
   );
 }
 
-export default function SettingPage() {
+export default function WorkspaceSettingsPage() {
   return (
     <WorkspaceProvider>
       <SettingPageContent />

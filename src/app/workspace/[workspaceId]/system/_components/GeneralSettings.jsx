@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+'use client';
+
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSettings } from '@/providers/WorkspaceProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,9 +8,40 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { LayoutGrid, Palette, UploadCloud, Info, Loader2, Sparkles, Facebook, Twitter, Instagram, Linkedin, Youtube, Share2, Github } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
+import { 
+    LayoutGrid, 
+    Palette, 
+    UploadCloud, 
+    Info, 
+    Loader2, 
+    Sparkles, 
+    Facebook, 
+    Twitter, 
+    Instagram, 
+    Linkedin, 
+    Youtube, 
+    Share2, 
+    Github,
+    Eye,
+    Check,
+    RotateCcw
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { StickySaveBar } from './StickySaveBar';
+
+const COLOR_PRESETS = [
+    { name: 'Royal Blue', hex: '#3b82f6' },
+    { name: 'Emerald', hex: '#10b981' },
+    { name: 'Violet', hex: '#8b5cf6' },
+    { name: 'Rose', hex: '#f43f5e' },
+    { name: 'Amber', hex: '#f59e0b' },
+    { name: 'Cyan', hex: '#06b6d4' },
+    { name: 'Indigo', hex: '#6366f1' },
+    { name: 'Fuchsia', hex: '#d946ef' }
+];
 
 export const GeneralSettings = () => {
     const { settings, updateSettings, saving } = useSettings();
@@ -62,12 +95,48 @@ export const GeneralSettings = () => {
         }
     }, [settings]);
 
-    const handleSaveGeneral = () => {
-        updateSettings({ general: localGeneral });
+    // Check dirty state
+    const isDirty = useMemo(() => {
+        if (!settings) return false;
+        const generalChanged = 
+            localGeneral.name !== (settings?.general?.name || '') ||
+            localGeneral.description !== (settings?.general?.description || '');
+        
+        const brandingChanged = 
+            localBranding.primaryColor !== (settings?.branding?.primaryColor || '#3b82f6') ||
+            localBranding.appName !== (settings?.branding?.appName || '') ||
+            localBranding.appDescription !== (settings?.branding?.appDescription || '') ||
+            localBranding.logoUrl !== (settings?.branding?.logoUrl || '') ||
+            JSON.stringify(localBranding.socialLinks) !== JSON.stringify(settings?.branding?.socialLinks || {});
+
+        return generalChanged || brandingChanged;
+    }, [localGeneral, localBranding, settings]);
+
+    const handleSaveAll = () => {
+        updateSettings({
+            general: localGeneral,
+            branding: localBranding
+        });
+        toast.success("Workspace branding and identity updated!");
     };
 
-    const handleSaveBranding = () => {
-        updateSettings({ branding: localBranding });
+    const handleReset = () => {
+        if (settings?.general) {
+            setLocalGeneral({
+                name: settings.general.name || '',
+                description: settings.general.description || '',
+                imageUrl: settings.general.imageUrl || ''
+            });
+        }
+        if (settings?.branding) {
+            setLocalBranding({
+                primaryColor: settings.branding.primaryColor || '#3b82f6',
+                logoUrl: settings.branding.logoUrl || '',
+                appName: settings.branding.appName || '',
+                appDescription: settings.branding.appDescription || '',
+                socialLinks: settings.branding.socialLinks || {}
+            });
+        }
     };
 
     const handleSocialChange = (platform, field, value) => {
@@ -76,7 +145,7 @@ export const GeneralSettings = () => {
             socialLinks: {
                 ...prev.socialLinks,
                 [platform]: {
-                    ...prev.socialLinks[platform],
+                    ...prev.socialLinks?.[platform],
                     [field]: value
                 }
             }
@@ -135,218 +204,291 @@ export const GeneralSettings = () => {
         { id: 'github', label: 'GitHub', icon: Github, color: 'text-slate-400' }
     ];
 
+    const activeSocialList = socialPlatforms.filter(p => localBranding.socialLinks?.[p.id]?.active);
+
     return (
-        <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Card className="bg-card border-border/50">
-                    <CardHeader className="pb-3 px-3 border-b border-white/5">
+        <div className="space-y-3 relative pb-8">
+            {/* Live Interactive Branding Preview Canvas */}
+            <Card className="bg-card border-border/50 shadow-xs overflow-hidden">
+                <CardHeader className="p-3 pb-2 border-b border-border/40 bg-secondary/20">
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-primary/10 rounded-lg border border-primary/20">
+                            <Eye className="w-3.5 h-3.5 text-primary" />
+                            <CardTitle className="text-xs font-bold text-foreground">Live Branding Preview</CardTitle>
+                        </div>
+                        <Badge variant="outline" className="text-[9px] font-mono px-1.5 py-0">
+                            INTERACTIVE PREVIEW
+                        </Badge>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-3.5 bg-gradient-to-br from-card to-secondary/15">
+                    {/* Simulated Mini App Navigation Header */}
+                    <div className="p-2.5 rounded-lg border border-border/60 bg-background/80 flex items-center justify-between shadow-xs">
+                        <div className="flex items-center gap-2.5">
+                            {localBranding.logoUrl ? (
+                                <img src={localBranding.logoUrl} alt="Logo" className="w-6 h-6 object-contain rounded" />
+                            ) : (
+                                <div 
+                                    className="w-6 h-6 rounded flex items-center justify-center text-white text-[10px] font-black"
+                                    style={{ backgroundColor: localBranding.primaryColor }}
+                                >
+                                    {(localBranding.appName || 'D')[0]}
+                                </div>
+                            )}
+                            <div>
+                                <span className="text-xs font-bold text-foreground block leading-none">
+                                    {localBranding.appName || 'Devlomatix Platform'}
+                                </span>
+                                <span className="text-[9px] text-muted-foreground block truncate max-w-[200px]">
+                                    {localBranding.appDescription || 'Next-Gen Workspace'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {/* Live Badge */}
+                            <span 
+                                className="px-2 py-0.5 rounded-full text-[9px] font-bold text-white shadow-xs"
+                                style={{ backgroundColor: localBranding.primaryColor }}
+                            >
+                                PRO WORKSPACE
+                            </span>
+
+                            {/* Live Button */}
+                            <button
+                                style={{ backgroundColor: localBranding.primaryColor }}
+                                className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-xs transition-opacity hover:opacity-90 cursor-pointer"
+                            >
+                                Primary Action
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Active Social Chips Preview */}
+                    {activeSocialList.length > 0 && (
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
+                            <span className="font-semibold text-[9px] uppercase tracking-wider">Active Socials:</span>
+                            <div className="flex items-center gap-1.5">
+                                {activeSocialList.map(p => (
+                                    <span key={p.id} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-secondary/40 border border-border/40 text-[9px] font-mono text-foreground">
+                                        <p.icon className="w-2.5 h-2.5" />
+                                        <span>{p.label}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Form Cards Grid */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-3"
+            >
+                {/* Workspace Identity */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-primary/10 rounded-md border border-primary/20">
                                 <LayoutGrid className="w-3.5 h-3.5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-white">Workspace Identity</CardTitle>
-                                <CardDescription className="text-[10px] text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-foreground">Workspace Identity</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground">
                                     Global identification for this workspace.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-2.5 pt-3 px-3">
+                    <CardContent className="space-y-2.5 p-3 pt-2.5">
                         <div className="space-y-1">
-                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Workspace Name</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Workspace Name</Label>
                             <Input
                                 value={localGeneral.name}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, name: e.target.value }))}
                                 placeholder="Enter workspace name"
-                                className="bg-white/5 border-white/10 text-white text-xs h-8"
+                                className="bg-secondary/30 border-border/50 text-foreground text-xs h-8"
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Description</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Description</Label>
                             <Textarea
                                 rows={2}
                                 value={localGeneral.description}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Describe what this workspace is for..."
-                                className="bg-white/5 border-white/10 text-white text-xs resize-none"
+                                className="bg-secondary/30 border-border/50 text-foreground text-xs resize-none min-h-[56px] py-1.5"
                             />
                         </div>
                     </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-3 px-3">
-                        <Button
-                            onClick={handleSaveGeneral}
-                            disabled={saving}
-                            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold text-xs h-8"
-                        >
-                            {saving ? "Saving..." : "Update Identity"}
-                        </Button>
-                    </CardFooter>
                 </Card>
 
-                <Card className="bg-card border-border/50">
-                    <CardHeader className="pb-3 px-3 border-b border-white/5">
+                {/* Visual Identity & Palette Presets */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-border/40">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                                <Share2 className="w-3.5 h-3.5 text-indigo-500" />
-                            </div>
-                            <div>
-                                <CardTitle className="text-xs font-bold text-white">Social Presence</CardTitle>
-                                <CardDescription className="text-[10px] text-zinc-500">
-                                    Public profile links.
-                                </CardDescription>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pt-3 px-3">
-                        {socialPlatforms.map((platform) => (
-                            <div
-                                key={platform.id}
-                                className="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 border border-white/10"
-                            >
-                                <div className={`w-6 h-6 bg-white/10 rounded flex items-center justify-center border border-white/10 ${platform.color}`}>
-                                    <platform.icon className="w-3 h-3" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <Input
-                                        value={localBranding.socialLinks?.[platform.id]?.url || ''}
-                                        onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)}
-                                        placeholder={`${platform.label} URL`}
-                                        className="h-6 bg-transparent border-none text-xs"
-                                    />
-                                </div>
-                                <Switch
-                                    checked={localBranding.socialLinks?.[platform.id]?.active || false}
-                                    onCheckedChange={(checked) => handleSocialChange(platform.id, 'active', checked)}
-                                    className="data-[state=checked]:bg-indigo-500 scale-75"
-                                />
-                            </div>
-                        ))}
-                    </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-3 px-3">
-                        <Button
-                            onClick={handleSaveBranding}
-                            disabled={saving}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-8"
-                        >
-                            {saving ? "Saving..." : "Update Socials"}
-                        </Button>
-                    </CardFooter>
-                </Card>
-
-                <Card className="bg-card border-border/50">
-                    <CardHeader className="pb-3 px-3 border-b border-white/5">
-                        <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <CardTitle className="text-xs font-bold text-white">App Identity</CardTitle>
-                                <span className="text-[8px] font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded-full border border-amber-500/30 uppercase">Global</span>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2.5 pt-3 px-3">
-                        <div className="space-y-1">
-                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">App Name</Label>
-                            <Input
-                                value={localBranding.appName}
-                                onChange={(e) => setLocalBranding(prev => ({ ...prev, appName: e.target.value }))}
-                                placeholder="e.g. HealthFine Platform"
-                                className="bg-white/5 border-white/10 text-white text-xs h-8"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">App Tagline</Label>
-                            <Input
-                                value={localBranding.appDescription}
-                                onChange={(e) => setLocalBranding(prev => ({ ...prev, appDescription: e.target.value }))}
-                                placeholder="A brief tagline for your app"
-                                className="bg-white/5 border-white/10 text-white text-xs h-8"
-                            />
-                        </div>
-                    </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-3 px-3">
-                        <Button
-                            onClick={handleSaveBranding}
-                            disabled={saving}
-                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs h-8"
-                        >
-                            {saving ? "Saving..." : "Update Branding"}
-                        </Button>
-                    </CardFooter>
-                </Card>
-
-                <Card className="bg-card border-border/50">
-                    <CardHeader className="pb-3 px-3 border-b border-white/5">
-                        <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                            <div className="p-1.5 bg-blue-500/10 rounded-md border border-blue-500/20">
                                 <Palette className="w-3.5 h-3.5 text-blue-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-white">Visual Identity</CardTitle>
-                                <CardDescription className="text-[10px] text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-foreground">Visual Identity</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground">
                                     Brand colors and logo.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-3 pt-3 px-3">
-                        <div className="flex gap-4 items-start">
+                    <CardContent className="space-y-2.5 p-3 pt-2.5">
+                        <div className="flex gap-3 items-center">
                             <div
                                 onClick={() => !uploading && fileInputRef.current?.click()}
-                                className={`relative w-14 h-14 rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-1 group cursor-pointer hover:border-primary/50 transition-all shrink-0 overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`relative w-14 h-14 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-0.5 group cursor-pointer hover:border-primary/50 transition-all shrink-0 overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {localBranding.logoUrl ? (
                                     <img src={localBranding.logoUrl} alt="Logo" className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
                                 ) : (
                                     <>
-                                        <UploadCloud className="w-4 h-4 text-zinc-500 group-hover:text-primary transition-colors" />
-                                        <span className="text-[8px] font-semibold text-zinc-500">Logo</span>
+                                        <UploadCloud className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                        <span className="text-[8px] font-semibold text-muted-foreground">Logo</span>
                                     </>
                                 )}
                                 {uploading && (
-                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                                        <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
+                                        <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
                                     </div>
                                 )}
                             </div>
 
                             <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
 
-                            <div className="flex-1 space-y-2 w-full">
-                                <div className="space-y-1">
-                                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Brand Color</Label>
-                                    <div className="flex gap-2 items-center">
-                                        <div className="w-8 h-8 rounded-lg border border-white/10 shadow-lg" style={{ backgroundColor: localBranding.primaryColor }} />
-                                        <Input
-                                            value={localBranding.primaryColor}
-                                            onChange={(e) => setLocalBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                            className="bg-white/5 border-white/10 text-white font-mono text-xs h-8"
-                                        />
-                                    </div>
+                            <div className="flex-1 space-y-1">
+                                <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Primary Accent Color</Label>
+                                <div className="flex gap-2 items-center">
+                                    <div className="w-8 h-8 rounded-md border border-border/60 shrink-0 shadow-xs" style={{ backgroundColor: localBranding.primaryColor }} />
+                                    <Input
+                                        value={localBranding.primaryColor}
+                                        onChange={(e) => setLocalBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
+                                        className="bg-secondary/30 border-border/50 text-foreground font-mono text-xs h-8"
+                                    />
                                 </div>
                             </div>
                         </div>
-                    </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-3 px-3">
-                        <Button
-                            onClick={handleSaveBranding}
-                            disabled={saving}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-8"
-                        >
-                            {saving ? "Saving..." : "Update Visuals"}
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </div>
 
-            <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 flex gap-2 items-center">
-                <Info className="w-3.5 h-3.5 text-primary shrink-0" />
-                <p className="text-[10px] text-zinc-400">
-                    Workspace identity changes are recorded in the system audit logs.
-                </p>
-            </div>
+                        {/* Quick Color Palette Presets */}
+                        <div className="pt-1">
+                            <Label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">Presets:</Label>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                {COLOR_PRESETS.map((p) => (
+                                    <button
+                                        key={p.hex}
+                                        type="button"
+                                        onClick={() => setLocalBranding(prev => ({ ...prev, primaryColor: p.hex }))}
+                                        className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 flex items-center justify-center cursor-pointer ${localBranding.primaryColor === p.hex ? 'ring-2 ring-primary ring-offset-1 border-white' : 'border-border/60'}`}
+                                        style={{ backgroundColor: p.hex }}
+                                        title={p.name}
+                                    >
+                                        {localBranding.primaryColor === p.hex && <Check className="w-2.5 h-2.5 text-white" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* App Identity */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-amber-500/10 rounded-md border border-amber-500/20">
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-xs font-bold text-foreground">App Identity</CardTitle>
+                                    <CardDescription className="text-[10px] text-muted-foreground">Platform branding titles.</CardDescription>
+                                </div>
+                            </div>
+                            <span className="text-[8px] font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded-full border border-amber-500/30 uppercase">Global</span>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2.5 p-3 pt-2.5">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">App Name</Label>
+                            <Input
+                                value={localBranding.appName}
+                                onChange={(e) => setLocalBranding(prev => ({ ...prev, appName: e.target.value }))}
+                                placeholder="e.g. Devlomatix Platform"
+                                className="bg-secondary/30 border-border/50 text-foreground text-xs h-8"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">App Tagline</Label>
+                            <Input
+                                value={localBranding.appDescription}
+                                onChange={(e) => setLocalBranding(prev => ({ ...prev, appDescription: e.target.value }))}
+                                placeholder="A brief tagline for your app"
+                                className="bg-secondary/30 border-border/50 text-foreground text-xs h-8"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Social Presence */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-indigo-500/10 rounded-md border border-indigo-500/20">
+                                <Share2 className="w-3.5 h-3.5 text-indigo-500" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xs font-bold text-foreground">Social Presence</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground">
+                                    Public profile links.
+                                </CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-1.5 p-3 pt-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {socialPlatforms.map((platform) => (
+                                <div
+                                    key={platform.id}
+                                    className="flex items-center gap-2 p-1.5 px-2 rounded-md bg-secondary/30 border border-border/40 hover:border-border transition-colors"
+                                >
+                                    <div className={`w-6 h-6 bg-background rounded-sm flex items-center justify-center border border-border/50 shrink-0 ${platform.color}`}>
+                                        <platform.icon className="w-3 h-3" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <Input
+                                            value={localBranding.socialLinks?.[platform.id]?.url || ''}
+                                            onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)}
+                                            placeholder={`${platform.label}`}
+                                            className="h-6 bg-transparent border-none text-[11px] px-1 py-0"
+                                        />
+                                    </div>
+                                    <Switch
+                                        checked={localBranding.socialLinks?.[platform.id]?.active || false}
+                                        onCheckedChange={(checked) => handleSocialChange(platform.id, 'active', checked)}
+                                        className="scale-75 origin-right data-[state=checked]:bg-indigo-500"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
+
+            {/* Sticky Save Bar */}
+            <StickySaveBar
+                isDirty={isDirty}
+                saving={saving}
+                onSave={handleSaveAll}
+                onReset={handleReset}
+                label="Unsaved Branding & Identity Changes"
+            />
         </div>
     );
 };
