@@ -8,17 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-    Cpu, 
-    Plus, 
-    CheckCircle2, 
-    AlertCircle, 
-    Key, 
-    Globe, 
-    Eye, 
-    EyeOff, 
-    Trash2, 
-    RefreshCw, 
+import {
+    Cpu,
+    Plus,
+    CheckCircle2,
+    AlertCircle,
+    Key,
+    Globe,
+    Eye,
+    EyeOff,
+    Trash2,
+    RefreshCw,
     Search,
     ChevronRight,
     ChevronDown,
@@ -29,13 +29,13 @@ import {
     X
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-    getProvidersAction, 
-    upsertProviderAction, 
-    toggleProviderStatusAction, 
-    testProviderConnectionAction, 
+import {
+    getProvidersAction,
+    upsertProviderAction,
+    toggleProviderStatusAction,
+    testProviderConnectionAction,
     deleteProviderAction,
-    validateApiKeyAction 
+    validateApiKeyAction
 } from '../../_action/provider-actions';
 
 export function ProvidersTab({ workspaceId }) {
@@ -57,7 +57,7 @@ export function ProvidersTab({ workspaceId }) {
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showKey, setShowKey] = useState(false);
-    
+
     // Form state (matching screenshot)
     const [formData, setFormData] = useState({
         id: '',
@@ -147,7 +147,7 @@ export function ProvidersTab({ workspaceId }) {
         }
 
         setSubmitting(true);
-        
+
         // Imported models array
         const importedModels = keyValidationResult?.models || providerCatalog.find(c => c.id === formData.provider)?.defaultModels || [];
 
@@ -242,10 +242,10 @@ export function ProvidersTab({ workspaceId }) {
     });
 
     const renderAddModal = () => (
-        <Dialog open={isAddModalOpen} onOpenChange={(open) => { setIsAddModalOpen(open); if(!open) resetForm(); }}>
+        <Dialog open={isAddModalOpen} onOpenChange={(open) => { setIsAddModalOpen(open); if (!open) resetForm(); }}>
             <DialogContent className="sm:max-w-md bg-[#161822] text-foreground border border-border/40 shadow-2xl p-0 overflow-hidden rounded-xl">
                 <DialogTitle className="sr-only">Add {formData.providerName} API Key</DialogTitle>
-                
+
                 {/* macOS Traffic Lights Header */}
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between bg-card/60">
                     <div className="flex items-center gap-3">
@@ -261,13 +261,13 @@ export function ProvidersTab({ workspaceId }) {
                 <div className="p-5 space-y-5">
                     {/* Single / Bulk Add Tabs */}
                     <div className="flex items-center border-b border-border/30 gap-6">
-                        <button 
+                        <button
                             onClick={() => setModalTab('single')}
                             className={`pb-2 text-xs font-bold transition-all relative ${modalTab === 'single' ? 'text-primary border-b-2 border-red-500' : 'text-muted-foreground'}`}
                         >
                             Single
                         </button>
-                        <button 
+                        <button
                             onClick={() => setModalTab('bulk')}
                             className={`pb-2 text-xs font-bold transition-all relative ${modalTab === 'bulk' ? 'text-primary border-b-2 border-red-500' : 'text-muted-foreground'}`}
                         >
@@ -278,7 +278,7 @@ export function ProvidersTab({ workspaceId }) {
                     {/* Name Field */}
                     <div className="space-y-1.5 text-left">
                         <label className="text-xs font-bold text-foreground">Name</label>
-                        <Input 
+                        <Input
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             placeholder="main"
@@ -291,23 +291,23 @@ export function ProvidersTab({ workspaceId }) {
                         <label className="text-xs font-bold text-foreground">API Key</label>
                         <div className="flex items-center gap-2">
                             <div className="relative flex-1">
-                                <Input 
+                                <Input
                                     type={showKey ? "text" : "password"}
                                     value={formData.apiKey}
                                     onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
                                     placeholder="••••••••"
                                     className="bg-[#1e2230] border-purple-500/50 focus:border-purple-500 text-xs h-10 rounded-lg pr-10 font-mono"
                                 />
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={() => setShowKey(!showKey)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                 >
                                     {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
-                            <Button 
-                                type="button" 
+                            <Button
+                                type="button"
                                 variant="secondary"
                                 size="sm"
                                 disabled={checkingKey || !formData.apiKey}
@@ -333,16 +333,16 @@ export function ProvidersTab({ workspaceId }) {
                                 When enabled, only this provider's free models are imported. Paid models are skipped.
                             </p>
                         </div>
-                        <Switch 
-                            checked={formData.importFreeOnly} 
+                        <Switch
+                            checked={formData.importFreeOnly}
                             onCheckedChange={(val) => setFormData({ ...formData, importFreeOnly: val })}
                         />
                     </div>
 
                     {/* Collapsible Advanced Settings */}
                     <div className="border-t border-border/20 pt-3">
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={() => setShowAdvanced(!showAdvanced)}
                             className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1"
                         >
@@ -354,7 +354,7 @@ export function ProvidersTab({ workspaceId }) {
                             <div className="space-y-4 pt-3 text-left">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-foreground">Validation Model</label>
-                                    <Input 
+                                    <Input
                                         value={formData.validationModel}
                                         onChange={(e) => setFormData({ ...formData, validationModel: e.target.value })}
                                         placeholder="e.g. meta-llama/llama-3.1-8b-instruct"
@@ -367,7 +367,7 @@ export function ProvidersTab({ workspaceId }) {
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-foreground">Priority</label>
-                                    <Input 
+                                    <Input
                                         value={formData.priority}
                                         onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                                         className="bg-[#1e2230] border-border/30 text-xs h-10 rounded-lg"
@@ -380,8 +380,8 @@ export function ProvidersTab({ workspaceId }) {
 
                 {/* Modal Footer Actions */}
                 <div className="p-5 bg-[#12141d] border-t border-border/20 flex items-center justify-between gap-3">
-                    <Button 
-                        type="button" 
+                    <Button
+                        type="button"
                         className="w-1/2 h-10 bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-lg shadow-purple-500/20"
                         disabled={submitting}
                         onClick={handleSaveProvider}
@@ -389,8 +389,8 @@ export function ProvidersTab({ workspaceId }) {
                         {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
                         Save
                     </Button>
-                    <Button 
-                        type="button" 
+                    <Button
+                        type="button"
                         variant="ghost"
                         className="w-1/2 h-10 text-xs font-bold text-muted-foreground hover:text-foreground"
                         onClick={() => setIsAddModalOpen(false)}
@@ -405,7 +405,7 @@ export function ProvidersTab({ workspaceId }) {
     // Render Provider Detail Screen matching Screenshot #1
     if (activeDetailProvider) {
         const configuredConnections = providers.filter(p => p.provider === activeDetailProvider.id);
-        
+
         return (
             <div className="space-y-6 pb-6">
                 {/* Breadcrumbs & Navigation */}
@@ -417,7 +417,7 @@ export function ProvidersTab({ workspaceId }) {
                         <span>›</span>
                         <span className="text-foreground font-bold">{activeDetailProvider.name}</span>
                     </div>
-                    <button 
+                    <button
                         onClick={() => setActiveDetailProvider(null)}
                         className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-semibold transition-colors"
                     >
@@ -446,8 +446,8 @@ export function ProvidersTab({ workspaceId }) {
                             <CardTitle className="text-sm font-bold">Connections</CardTitle>
                             <Badge className="text-[10px] bg-secondary text-secondary-foreground">Provider Proxy</Badge>
                         </div>
-                        <Button 
-                            size="sm" 
+                        <Button
+                            size="sm"
                             className="bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20"
                             onClick={() => openAddModalForProvider(activeDetailProvider)}
                         >
@@ -462,7 +462,7 @@ export function ProvidersTab({ workspaceId }) {
                                 </div>
                                 <h4 className="text-sm font-bold text-foreground mb-1">No connections yet</h4>
                                 <p className="text-xs text-muted-foreground mb-4">Add your first connection to get started</p>
-                                <Button 
+                                <Button
                                     size="sm"
                                     className="bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-xs"
                                     onClick={() => openAddModalForProvider(activeDetailProvider)}
@@ -528,8 +528,8 @@ export function ProvidersTab({ workspaceId }) {
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 bg-secondary/30 px-3 py-1.5 rounded-lg border border-border/40">
                         <span className="text-xs font-semibold text-muted-foreground">Configured Only</span>
-                        <Switch 
-                            checked={configuredOnly} 
+                        <Switch
+                            checked={configuredOnly}
                             onCheckedChange={setConfiguredOnly}
                             className="scale-90"
                         />
@@ -544,8 +544,8 @@ export function ProvidersTab({ workspaceId }) {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-1.5 flex-wrap">
                     {categories.map((cat) => (
-                        <Button 
-                            key={cat.id} 
+                        <Button
+                            key={cat.id}
                             variant={selectedCategory === cat.id ? "secondary" : "ghost"}
                             size="sm"
                             className={`text-xs h-8 rounded-lg ${selectedCategory === cat.id ? "bg-primary/15 text-primary border border-primary/20 font-bold" : "text-muted-foreground"}`}
@@ -558,87 +558,91 @@ export function ProvidersTab({ workspaceId }) {
 
                 <div className="relative w-full sm:w-64">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input 
-                        placeholder="Search providers..." 
+                    <Input
+                        placeholder="Search providers..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 bg-secondary/30 border-border/40 text-xs h-8 rounded-lg" 
+                        className="pl-9 bg-secondary/30 border-border/40 text-xs h-8 rounded-lg"
                     />
                 </div>
             </div>
 
             {/* Provider Grid Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
                 {displayedProviders.map((catItem) => {
                     const dbMatch = providers.find(p => p.provider === catItem.id);
                     const isConfigured = !!dbMatch;
                     const isActive = dbMatch?.isActive ?? false;
 
                     return (
-                        <Card 
-                            key={catItem.id} 
+                        <Card
+                            key={catItem.id}
                             onClick={() => setActiveDetailProvider(catItem)}
-                            className={`border transition-all flex flex-col justify-between cursor-pointer hover:border-primary/50 ${isConfigured ? "border-primary/30 bg-card/60 shadow-xs" : "border-border/40 bg-card/30 opacity-90"}`}
+                            className={`border transition-all flex flex-col justify-between cursor-pointer hover:border-primary/50 hover:shadow-xs p-2 rounded-lg ${isConfigured ? "border-primary/30 bg-card" : "border bg-card opacity-90"}`}
                         >
-                            <CardHeader className="p-4 pb-2">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center border border-primary/30 text-sm">
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <div className="w-7 h-7 rounded-md bg-primary/15 text-primary font-bold flex items-center justify-center border border-primary/20 text-xs shrink-0">
                                             {catItem.name[0]}
                                         </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold text-sm text-foreground">{catItem.name}</span>
-                                                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1">
+                                                <span className="font-bold text-xs text-foreground truncate">{catItem.name}</span>
+                                                <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0" />
                                             </div>
-                                            <span className="text-[10px] text-muted-foreground font-mono block">{catItem.authType}</span>
+                                            <span className="text-[9px] text-muted-foreground font-mono truncate block">{catItem.authType}</span>
                                         </div>
                                     </div>
 
                                     {isConfigured && (
-                                        <Switch 
-                                            checked={isActive} 
+                                        <Switch
+                                            checked={isActive}
                                             onClick={(e) => e.stopPropagation()}
                                             onCheckedChange={() => handleToggleStatus(dbMatch.id, isActive)}
+                                            className="scale-75 shrink-0"
                                         />
                                     )}
                                 </div>
-                            </CardHeader>
 
-                            <CardContent className="p-4 pt-1 space-y-3">
-                                <div className="space-y-1">
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Supported Models</span>
-                                    <div className="flex items-center gap-1 flex-wrap">
-                                        {catItem.defaultModels.map((m, idx) => (
-                                            <Badge key={idx} variant="secondary" className="text-[9px] font-mono bg-secondary/40">
-                                                {m}
+                                <div className="flex items-center gap-1 flex-wrap min-h-[20px]">
+                                    {catItem.defaultModels.slice(0, 2).map((m, idx) => {
+                                        const shortName = m.includes('/') ? m.split('/').pop() : m;
+                                        return (
+                                            <Badge key={idx} variant="secondary" className="text-[9px] font-mono px-1.5 py-0 bg-secondary/50 truncate max-w-[100px]" title={m}>
+                                                {shortName}
                                             </Badge>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="pt-3 border-t border-border/30 flex items-center justify-between">
-                                    {isConfigured ? (
-                                        <Badge className="text-[9px] font-mono bg-emerald-500/15 text-emerald-400">
-                                            Connected • Active
+                                        );
+                                    })}
+                                    {catItem.defaultModels.length > 2 && (
+                                        <Badge variant="outline" className="text-[8px] font-mono px-1 py-0 text-muted-foreground">
+                                            +{catItem.defaultModels.length - 2}
                                         </Badge>
-                                    ) : (
-                                        <span className="text-[10px] text-muted-foreground italic">0 connections</span>
                                     )}
-
-                                    <Button 
-                                        size="sm" 
-                                        variant="outline" 
-                                        className="h-7 text-[10px] font-bold"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            openAddModalForProvider(catItem);
-                                        }}
-                                    >
-                                        <Plus className="w-3 h-3 mr-1" /> Add Key
-                                    </Button>
                                 </div>
-                            </CardContent>
+                            </div>
+
+                            <div className="pt-2 mt-2 border-t border-border/30 flex items-center justify-between">
+                                {isConfigured ? (
+                                    <Badge className="text-[8px] font-mono px-1.5 py-0 bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                        Connected
+                                    </Badge>
+                                ) : (
+                                    <span className="text-[10px] text-muted-foreground">0 keys</span>
+                                )}
+
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 px-2 text-[10px] font-bold"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openAddModalForProvider(catItem);
+                                    }}
+                                >
+                                    <Plus className="w-3 h-3 mr-0.5" /> Add
+                                </Button>
+                            </div>
                         </Card>
                     );
                 })}

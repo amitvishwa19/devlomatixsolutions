@@ -198,7 +198,7 @@ print(response.choices[0].message.content)`;
     ];
 
     return (
-        <div className="space-y-4 pb-4 overflow-hidden">
+        <div className="space-y-4 pb-4">
             {/* Top Gateway Status Banner */}
             <div className="p-5 rounded-xl border border-primary/20 bg-linear-to-r from-primary/10 via-card to-secondary/20 shadow-lg relative overflow-hidden">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">

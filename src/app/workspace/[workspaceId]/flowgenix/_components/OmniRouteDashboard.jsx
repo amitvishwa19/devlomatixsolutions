@@ -38,25 +38,25 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                 {/* Decluttered Tabs Selector */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto overflow-x-auto">
                     <TabsList className="bg-muted/40 p-1 rounded-lg border border-border/40 flex items-center gap-1 w-full md:w-auto">
-                        <TabsTrigger value="overview" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="overview" className="gap-1.5 font-semibold text-xs  rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <LayoutDashboard className="h-3.5 w-3.5" /> Overview
                         </TabsTrigger>
-                        <TabsTrigger value="combos" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="combos" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Layers className="h-3.5 w-3.5" /> Combos
                         </TabsTrigger>
-                        <TabsTrigger value="chat" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="chat" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <MessageSquare className="h-3.5 w-3.5" /> Chat
                         </TabsTrigger>
-                        <TabsTrigger value="providers" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="providers" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Cpu className="h-3.5 w-3.5" /> Providers
                         </TabsTrigger>
-                        <TabsTrigger value="agents" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="agents" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Bot className="h-3.5 w-3.5" /> Agents
                         </TabsTrigger>
-                        <TabsTrigger value="compression" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="compression" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <TrendingDown className="h-3.5 w-3.5" /> Compression
                         </TabsTrigger>
-                        <TabsTrigger value="logs" className="gap-1.5 font-semibold text-xs px-3 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                        <TabsTrigger value="logs" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Activity className="h-3.5 w-3.5" /> Logs
                         </TabsTrigger>
                     </TabsList>
@@ -66,32 +66,56 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
             {/* Content Area */}
             <div className="flex-1 min-h-0 relative overflow-hidden">
                 <Tabs value={activeTab} className="h-full flex flex-col">
-                    <TabsContent value="overview" className="mt-0 h-full overflow-y-auto p-2">
-                        <OverviewTab onNavigateTab={setActiveTab} workspaceId={workspaceId} />
+                    <TabsContent value="overview" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <OverviewTab onNavigateTab={setActiveTab} workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
                     </TabsContent>
 
-                    <TabsContent value="combos" className="mt-0 h-full overflow-y-auto p-2">
-                        <CombosTab workspaceId={workspaceId} />
+                    <TabsContent value="combos" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <CombosTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
                     </TabsContent>
 
                     <TabsContent value="chat" className="mt-0 h-full flex flex-col p-2 overflow-hidden">
                         <ChatTab workspaceId={workspaceId} />
                     </TabsContent>
 
-                    <TabsContent value="providers" className="mt-0 h-full overflow-y-auto p-2">
-                        <ProvidersTab workspaceId={workspaceId} />
+                    <TabsContent value="providers" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <ProvidersTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
                     </TabsContent>
 
-                    <TabsContent value="agents" className="mt-0 h-full overflow-y-auto p-2">
-                        <AgentsTab workspaceId={workspaceId} />
+                    <TabsContent value="agents" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <AgentsTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
                     </TabsContent>
 
-                    <TabsContent value="compression" className="mt-0 h-full overflow-y-auto p-2">
-                        <CompressionTab />
+                    <TabsContent value="compression" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <CompressionTab />
+                            </div>
+                        </ScrollArea>
                     </TabsContent>
 
-                    <TabsContent value="logs" className="mt-0 h-full overflow-y-auto p-2">
-                        <LogsTab workspaceId={workspaceId} />
+                    <TabsContent value="logs" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <LogsTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
                     </TabsContent>
                 </Tabs>
             </div>
