@@ -6,16 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-    Zap, 
-    ShieldCheck, 
-    TrendingDown, 
-    Activity, 
-    Cpu, 
-    Layers, 
-    Sparkles, 
-    CheckCircle2, 
-    Clock, 
+import {
+    Zap,
+    ShieldCheck,
+    TrendingDown,
+    Activity,
+    Cpu,
+    Layers,
+    Sparkles,
+    CheckCircle2,
+    Clock,
     ArrowUpRight,
     Server,
     Database,
@@ -97,7 +97,7 @@ export function OverviewTab({ onNavigateTab, workspaceId }) {
                 try {
                     const parsed = JSON.parse(errText);
                     cleanErr = parsed.error || errText;
-                } catch {}
+                } catch { }
                 setTestResponse(`⚠️ Gateway Error: ${cleanErr}`);
                 setIsTesting(false);
                 return;
@@ -121,7 +121,7 @@ export function OverviewTab({ onNavigateTab, workspaceId }) {
                             if (data.choices?.[0]?.delta?.content) {
                                 setTestResponse(prev => prev + data.choices[0].delta.content);
                             }
-                        } catch {}
+                        } catch { }
                     }
                 }
             }
@@ -198,7 +198,7 @@ print(response.choices[0].message.content)`;
     ];
 
     return (
-        <div className="space-y-6 pb-6">
+        <div className="space-y-4 pb-4 overflow-hidden">
             {/* Top Gateway Status Banner */}
             <div className="p-5 rounded-xl border border-primary/20 bg-linear-to-r from-primary/10 via-card to-secondary/20 shadow-lg relative overflow-hidden">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
@@ -270,7 +270,7 @@ print(response.choices[0].message.content)`;
                         <form onSubmit={handleTestSubmit} className="space-y-4">
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Routing Preset or Target Model</label>
-                                <Input 
+                                <Input
                                     value={testModel}
                                     onChange={(e) => setTestModel(e.target.value)}
                                     placeholder="auto/coding, auto/fast, or provider/model"
@@ -279,15 +279,15 @@ print(response.choices[0].message.content)`;
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Prompt</label>
-                                <textarea 
+                                <textarea
                                     value={testPrompt}
                                     onChange={(e) => setTestPrompt(e.target.value)}
                                     placeholder="Write a prompt..."
                                     className="w-full h-32 p-3 text-xs bg-black/40 border border-border/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary resize-none font-sans"
                                 />
                             </div>
-                            <Button 
-                                type="submit" 
+                            <Button
+                                type="submit"
                                 disabled={isTesting || !testPrompt.trim()}
                                 className="w-full text-xs font-bold h-9 bg-primary hover:bg-primary/90 text-primary-foreground"
                             >
@@ -338,9 +338,9 @@ print(response.choices[0].message.content)`;
                         </TabsList>
 
                         <TabsContent value="python" className="mt-3 relative">
-                            <Button 
-                                size="sm" 
-                                variant="ghost" 
+                            <Button
+                                size="sm"
+                                variant="ghost"
                                 onClick={() => handleCopy(pythonSnippet, 'Python')}
                                 className="absolute right-3 top-3 h-7 px-2 text-xs bg-secondary/80 hover:bg-secondary text-foreground z-10"
                             >
@@ -352,9 +352,9 @@ print(response.choices[0].message.content)`;
                         </TabsContent>
 
                         <TabsContent value="curl" className="mt-3 relative">
-                            <Button 
-                                size="sm" 
-                                variant="ghost" 
+                            <Button
+                                size="sm"
+                                variant="ghost"
                                 onClick={() => handleCopy(curlSnippet, 'cURL')}
                                 className="absolute right-3 top-3 h-7 px-2 text-xs bg-secondary/80 hover:bg-secondary text-foreground z-10"
                             >

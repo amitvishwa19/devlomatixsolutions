@@ -344,7 +344,7 @@ export function ChatTab({ workspaceId }) {
 
 
             {/* Left Thread Sidebar */}
-            <div className="w-64 bg-card/60 backdrop-blur-md rounded-xl border border-border/50 flex  flex-col h-full overflow-hidden shrink-0">
+            <div className="w-64 bg-card/60 backdrop-blur-md rounded-xl border border-border/50 flex flex-col h-full self-stretch min-h-full overflow-hidden shrink-0">
                 <div className="p-3 border-b border-border/40 flex items-center justify-between shrink-0 bg-card/40">
                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                         <MessageSquare className="w-3.5 h-3.5 text-primary" /> Conversations
