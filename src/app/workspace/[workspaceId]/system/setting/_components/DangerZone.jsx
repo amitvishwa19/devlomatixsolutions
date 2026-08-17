@@ -18,44 +18,42 @@ export const DangerZone = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.2 }}
             >
-                <Card className="bg-card border-rose-500/20 backdrop-blur-xl hover:border-rose-500/40 transition-colors">
-                    <CardHeader className="pb-4 border-b border-rose-500/10">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20 shrink-0">
-                                <AlertTriangle className="w-6 h-6 text-rose-500" />
+                <Card className="bg-card border-rose-500/20 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-rose-500/10">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-rose-500/10 rounded-md border border-rose-500/20 shrink-0">
+                                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-rose-500">Danger Zone</CardTitle>
-                                <CardDescription className="text-sm text-rose-500/60">
+                                <CardTitle className="text-xs font-bold text-rose-500">Danger Zone</CardTitle>
+                                <CardDescription className="text-[10px] text-rose-500/70">
                                     Irreversible and destructive actions.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4 pt-4">
-                        <motion.div
-                            className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
-                            whileHover={{ x: 4 }}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                                    <Power className="w-5 h-5 text-amber-500" />
+                    <CardContent className="space-y-2 p-3 pt-2.5">
+                        {/* Maintenance Mode */}
+                        <div className="flex items-center justify-between gap-3 p-2.5 px-3 rounded-lg bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-1.5 bg-amber-500/10 rounded-md border border-amber-500/20 shrink-0">
+                                    <Power className="w-3.5 h-3.5 text-amber-500" />
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-sm font-semibold text-white">Maintenance Mode</Label>
-                                    <p className="text-xs text-zinc-500">Restrict all workspace access immediately.</p>
+                                <div className="space-y-0.5">
+                                    <Label className="text-xs font-semibold text-white">Maintenance Mode</Label>
+                                    <p className="text-[10px] text-zinc-500">Restrict all workspace access immediately.</p>
                                 </div>
                             </div>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`rounded-xl text-sm font-semibold h-10 px-6 border ${
+                                className={`rounded-md text-xs font-bold h-7 px-3 border ${
                                     isMaintenanceMode
                                         ? 'bg-amber-500 text-white border-none'
                                         : 'text-amber-500 hover:bg-amber-500/10 border-amber-500/20'
@@ -67,61 +65,44 @@ export const DangerZone = () => {
                             >
                                 {isMaintenanceMode ? "DEACTIVATE" : "ACTIVATE"}
                             </Button>
-                        </motion.div>
+                        </div>
 
-                        <motion.div
-                            className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
-                            whileHover={{ x: 4 }}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                    <RotateCcw className="w-5 h-5 text-blue-500" />
+                        {/* Reset Configuration */}
+                        <div className="flex items-center justify-between gap-3 p-2.5 px-3 rounded-lg bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-1.5 bg-blue-500/10 rounded-md border border-blue-500/20 shrink-0">
+                                    <RotateCcw className="w-3.5 h-3.5 text-blue-500" />
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-sm font-semibold text-white">Reset Configuration</Label>
-                                    <p className="text-xs text-zinc-500">Restore all system settings to defaults.</p>
+                                <div className="space-y-0.5">
+                                    <Label className="text-xs font-semibold text-white">Reset Configuration</Label>
+                                    <p className="text-[10px] text-zinc-500">Restore all system settings to defaults.</p>
                                 </div>
                             </div>
-                            <Button variant="ghost" className="rounded-xl text-sm font-semibold h-10 px-6 border border-white/10 text-blue-500 hover:bg-blue-500/10">
+                            <Button variant="ghost" className="rounded-md text-xs font-bold h-7 px-3 border border-white/10 text-blue-500 hover:bg-blue-500/10">
                                 RESET
                             </Button>
-                        </motion.div>
+                        </div>
 
-                        <motion.div
-                            className="flex items-center justify-between gap-4 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20"
-                            whileHover={{ x: 4 }}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-rose-500/20 rounded-lg border border-rose-500/30">
-                                    <Trash2 className="w-5 h-5 text-rose-500" />
+                        {/* Delete Workspace */}
+                        <div className="flex items-center justify-between gap-3 p-2.5 px-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-1.5 bg-rose-500/20 rounded-md border border-rose-500/30 shrink-0">
+                                    <Trash2 className="w-3.5 h-3.5 text-rose-500" />
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-sm font-semibold text-rose-500">Delete Workspace</Label>
-                                    <p className="text-xs text-rose-500/70 italic">This action is permanent and irreversible.</p>
+                                <div className="space-y-0.5">
+                                    <Label className="text-xs font-semibold text-rose-500">Delete Workspace</Label>
+                                    <p className="text-[10px] text-rose-500/70 italic">This action is permanent and irreversible.</p>
                                 </div>
                             </div>
                             <Button
-                                variant="destructive"
-                                size="sm"
-                                className="rounded-xl text-sm font-semibold px-6 bg-rose-600 hover:bg-rose-700 h-10 shadow-lg shadow-rose-500/20"
                                 onClick={handleDeleteWorkspace}
+                                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-7 px-3 rounded-md"
                             >
                                 DELETE
                             </Button>
-                        </motion.div>
+                        </div>
                     </CardContent>
                 </Card>
-            </motion.div>
-
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="p-6 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center text-center"
-            >
-                <p className="text-sm font-semibold text-zinc-600 uppercase tracking-widest">
-                    Infrastructure Node: {settings?.general?.inviteCode || "DV-PRO-8291"}
-                </p>
             </motion.div>
         </div>
     );

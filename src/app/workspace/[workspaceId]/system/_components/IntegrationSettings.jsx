@@ -40,7 +40,7 @@ export const IntegrationSettings = () => {
 
     return (
         <div className="space-y-3">
-            <Card className="bg-white/5 border-white/10">
+            <Card className="bg-card border-border/50">
                 <CardHeader className="pb-3 px-3 border-b border-white/5">
                     <div className="flex flex-row items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -106,7 +106,7 @@ export const IntegrationSettings = () => {
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/5 border-white/10">
+            <Card className="bg-card border-border/50">
                 <CardHeader className="pb-3 px-3 border-b border-white/5">
                     <div className="flex items-center gap-2">
                         <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">

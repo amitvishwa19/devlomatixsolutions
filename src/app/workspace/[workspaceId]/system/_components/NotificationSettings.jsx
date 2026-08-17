@@ -60,7 +60,7 @@ export const NotificationSettings = () => {
 
     return (
         <div className="space-y-3">
-            <Card className="bg-white/5 border-white/10">
+            <Card className="bg-card border-border/50">
                 <CardHeader className="pb-3 px-3 border-b border-white/5">
                     <div className="flex items-center gap-2">
                         <div className="p-1.5 bg-rose-500/10 rounded-lg border border-rose-500/20">

@@ -138,7 +138,7 @@ export const GeneralSettings = () => {
     return (
         <div className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border/50">
                     <CardHeader className="pb-3 px-3 border-b border-white/5">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-primary/10 rounded-lg border border-primary/20">
@@ -184,7 +184,7 @@ export const GeneralSettings = () => {
                     </CardFooter>
                 </Card>
 
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border/50">
                     <CardHeader className="pb-3 px-3 border-b border-white/5">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
@@ -234,7 +234,7 @@ export const GeneralSettings = () => {
                     </CardFooter>
                 </Card>
 
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border/50">
                     <CardHeader className="pb-3 px-3 border-b border-white/5">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
@@ -277,7 +277,7 @@ export const GeneralSettings = () => {
                     </CardFooter>
                 </Card>
 
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border/50">
                     <CardHeader className="pb-3 px-3 border-b border-white/5">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">

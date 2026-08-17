@@ -70,15 +70,11 @@ export default function SettingModal({ open, onClose }) {
     return (
         <Dialog open={open} onOpenChange={onClose}>
 
-            <DialogContent className="min-h-[80vh] max-h-[80vh] min-w-[80vw] max-w-[80vw] p-0 overflow-y-hidden">
+            <DialogContent className="min-h-[80vh] max-h-[80vh] min-w-[80vw] max-w-[80vw] p-0 overflow-y-hidden bg-card border border-border">
 
                 <DialogHeader className="hidden">
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
-                    <DialogDescription>
-                        This action cannot be undone. This will permanently delete your&nbsp;
-                        <span className="font-medium">account</span> and remove your&nbsp;
-                        <span className="font-medium">data</span> from our servers.
-                    </DialogDescription>
+                    <DialogTitle>Workspace Settings</DialogTitle>
+                    <DialogDescription>Manage your workspace preferences.</DialogDescription>
                 </DialogHeader>
 
                 <div className="flex">
@@ -86,7 +82,7 @@ export default function SettingModal({ open, onClose }) {
                     <motion.aside
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        className="w-72 border-r border-white/5  backdrop-blur-xl sticky top-0 overflow-y-auto"
+                        className="w-72 border-r border-border/50 bg-card sticky top-0 overflow-y-auto"
                     >
                         <div className="p-4 border-b border-white/5">
                             <div className="flex items-center gap-3 mb-4">

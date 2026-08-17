@@ -39,80 +39,76 @@ export const NotificationSettings = () => {
         {
             key: 'whatsapp',
             icon: MessageSquare,
-            color: 'emerald',
+            color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
             label: 'WhatsApp Alerts',
             description: 'Critical notifications via WhatsApp.',
         },
         {
             key: 'email',
             icon: Mail,
-            color: 'blue',
+            color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
             label: 'Email Digest',
-            description: 'Daily activity summaries.',
+            description: 'Daily activity summaries & reports.',
         },
         {
             key: 'push',
             icon: Monitor,
-            color: 'zinc',
+            color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
             label: 'Desktop Push',
-            description: 'Browser push notifications.',
+            description: 'Browser push notifications in real time.',
         },
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.2 }}
             >
-                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-rose-500/30 transition-colors">
-                    <CardHeader className="pb-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-rose-500/10 rounded-lg border border-rose-500/20">
-                                <BellRing className="w-5 h-5 text-rose-500" />
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-rose-500/10 rounded-md border border-rose-500/20">
+                                <BellRing className="w-3.5 h-3.5 text-rose-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-base font-bold text-white">Notification Channels</CardTitle>
-                                <CardDescription className="text-xs text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-white">Notification Channels</CardTitle>
+                                <CardDescription className="text-[10px] text-zinc-500">
                                     Configure how your team receives alerts.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-3 pt-4">
+                    <CardContent className="space-y-2 p-3 pt-2.5">
                         {notificationItems.map((item, index) => (
-                            <motion.div
+                            <div
                                 key={item.key}
-                                className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                whileHover={{ x: 4 }}
+                                className="flex items-center justify-between gap-3 p-2 px-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 bg-${item.color}-500/10 rounded-lg flex items-center justify-center border border-${item.color}-500/20`}>
-                                        <item.icon className={`w-5 h-5 text-${item.color}-500`} />
+                                <div className="flex items-center gap-2.5">
+                                    <div className={`w-7 h-7 rounded-md flex items-center justify-center border shrink-0 ${item.color}`}>
+                                        <item.icon className="w-3.5 h-3.5" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <Label className="text-sm font-semibold text-white">{item.label}</Label>
-                                        <p className="text-xs text-zinc-500">{item.description}</p>
+                                        <Label className="text-xs font-semibold text-white">{item.label}</Label>
+                                        <p className="text-[10px] text-zinc-500">{item.description}</p>
                                     </div>
                                 </div>
                                 <Switch
                                     disabled={saving}
                                     checked={localNotifications[item.key]}
                                     onCheckedChange={(checked) => handleToggle(item.key, checked)}
-                                    className="data-[state=checked]:bg-rose-500"
+                                    className="scale-85 origin-right data-[state=checked]:bg-rose-500"
                                 />
-                            </motion.div>
+                            </div>
                         ))}
                     </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-4">
+                    <CardFooter className="border-t border-white/5 p-2.5">
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            className="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold h-11"
+                            className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-8"
                         >
                             {saving ? "Saving..." : "Save Preferences"}
                         </Button>
@@ -120,17 +116,12 @@ export const NotificationSettings = () => {
                 </Card>
             </motion.div>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
-            >
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                <p className="text-sm text-emerald-500 font-semibold uppercase tracking-wider">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-500">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span className="font-semibold uppercase tracking-wider text-[10px]">
                     Settings synchronized globally
-                </p>
-            </motion.div>
+                </span>
+            </div>
         </div>
     );
 };

@@ -18,7 +18,7 @@ export const DangerZone = () => {
 
     return (
         <div className="space-y-3">
-            <Card className="bg-rose-500/5 border-rose-500/20">
+            <Card className="bg-card border-rose-500/20">
                 <CardHeader className="pb-3 px-3 border-b border-rose-500/10">
                     <div className="flex items-center gap-2">
                         <div className="p-2 bg-rose-500/10 rounded-lg border border-rose-500/20 shrink-0">

@@ -137,210 +137,216 @@ export const GeneralSettings = () => {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-3"
             >
-                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-primary/30 transition-colors">
-                    <CardHeader className="pb-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-primary/10 rounded-lg border border-primary/20">
-                                <LayoutGrid className="w-5 h-5 text-primary" />
+                {/* Workspace Identity */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-primary/10 rounded-md border border-primary/20">
+                                <LayoutGrid className="w-3.5 h-3.5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-base font-bold text-white">Workspace Identity</CardTitle>
-                                <CardDescription className="text-xs text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-white">Workspace Identity</CardTitle>
+                                <CardDescription className="text-[10px] text-zinc-500">
                                     Global identification for this workspace.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Workspace Name</Label>
+                    <CardContent className="space-y-2.5 p-3 pt-2.5">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Workspace Name</Label>
                             <Input
                                 value={localGeneral.name}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, name: e.target.value }))}
                                 placeholder="Enter workspace name"
-                                className="bg-white/5 border-white/10 text-white text-sm h-11"
+                                className="bg-white/5 border-white/10 text-white text-xs h-8"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Description</Label>
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Description</Label>
                             <Textarea
-                                rows={3}
+                                rows={2}
                                 value={localGeneral.description}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Describe what this workspace is for..."
-                                className="bg-white/5 border-white/10 text-white text-sm resize-none"
+                                className="bg-white/5 border-white/10 text-white text-xs resize-none min-h-[56px] py-1.5"
                             />
                         </div>
                     </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-4">
+                    <CardFooter className="border-t border-white/5 p-2.5">
                         <Button
                             onClick={handleSaveGeneral}
                             disabled={saving}
-                            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-11"
+                            className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-xs h-8"
                         >
                             {saving ? "Saving..." : "Update Identity"}
                         </Button>
                     </CardFooter>
                 </Card>
 
-                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-indigo-500/30 transition-colors">
-                    <CardHeader className="pb-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                                <Share2 className="w-5 h-5 text-indigo-500" />
+                {/* Social Presence */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-indigo-500/10 rounded-md border border-indigo-500/20">
+                                <Share2 className="w-3.5 h-3.5 text-indigo-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-base font-bold text-white">Social Presence</CardTitle>
-                                <CardDescription className="text-xs text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-white">Social Presence</CardTitle>
+                                <CardDescription className="text-[10px] text-zinc-500">
                                     Public profile links.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-3 pt-4">
-                        {socialPlatforms.map((platform) => (
-                            <motion.div
-                                key={platform.id}
-                                className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
-                                whileHover={{ x: 4 }}
-                            >
-                                <div className={`w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 ${platform.color}`}>
-                                    <platform.icon className="w-4 h-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <Input
-                                        value={localBranding.socialLinks?.[platform.id]?.url || ''}
-                                        onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)}
-                                        placeholder={`${platform.label} URL`}
-                                        className="h-9 bg-transparent border-none text-sm"
+                    <CardContent className="space-y-1.5 p-3 pt-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {socialPlatforms.map((platform) => (
+                                <div
+                                    key={platform.id}
+                                    className="flex items-center gap-2 p-1.5 px-2 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                                >
+                                    <div className={`w-6 h-6 bg-white/10 rounded-sm flex items-center justify-center border border-white/10 shrink-0 ${platform.color}`}>
+                                        <platform.icon className="w-3 h-3" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <Input
+                                            value={localBranding.socialLinks?.[platform.id]?.url || ''}
+                                            onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)}
+                                            placeholder={`${platform.label}`}
+                                            className="h-6 bg-transparent border-none text-[11px] px-1 py-0"
+                                        />
+                                    </div>
+                                    <Switch
+                                        checked={localBranding.socialLinks?.[platform.id]?.active || false}
+                                        onCheckedChange={(checked) => handleSocialChange(platform.id, 'active', checked)}
+                                        className="scale-75 origin-right data-[state=checked]:bg-indigo-500"
                                     />
                                 </div>
-                                <Switch
-                                    checked={localBranding.socialLinks?.[platform.id]?.active || false}
-                                    onCheckedChange={(checked) => handleSocialChange(platform.id, 'active', checked)}
-                                    className="data-[state=checked]:bg-indigo-500"
-                                />
-                            </motion.div>
-                        ))}
+                            ))}
+                        </div>
                     </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-4">
+                    <CardFooter className="border-t border-white/5 p-2.5">
                         <Button
                             onClick={handleSaveBranding}
                             disabled={saving}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold h-11"
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-8"
                         >
                             {saving ? "Saving..." : "Update Socials"}
                         </Button>
                     </CardFooter>
                 </Card>
 
-                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-amber-500/30 transition-colors">
-                    <CardHeader className="pb-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                                <Sparkles className="w-5 h-5 text-amber-500" />
-                            </div>
+                {/* App Identity */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-white/5">
+                        <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <CardTitle className="text-base font-bold text-white">App Identity</CardTitle>
-                                <span className="text-[9px] font-bold bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/30 uppercase">Global</span>
+                                <div className="p-1.5 bg-amber-500/10 rounded-md border border-amber-500/20">
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-xs font-bold text-white">App Identity</CardTitle>
+                                    <CardDescription className="text-[10px] text-zinc-500">Platform branding titles.</CardDescription>
+                                </div>
                             </div>
+                            <span className="text-[8px] font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded-full border border-amber-500/30 uppercase">Global</span>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">App Name</Label>
+                    <CardContent className="space-y-2.5 p-3 pt-2.5">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">App Name</Label>
                             <Input
                                 value={localBranding.appName}
                                 onChange={(e) => setLocalBranding(prev => ({ ...prev, appName: e.target.value }))}
-                                placeholder="e.g. HealthFine Platform"
-                                className="bg-white/5 border-white/10 text-white text-sm h-11"
+                                placeholder="e.g. Devlomatix Platform"
+                                className="bg-white/5 border-white/10 text-white text-xs h-8"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">App Tagline</Label>
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">App Tagline</Label>
                             <Input
                                 value={localBranding.appDescription}
                                 onChange={(e) => setLocalBranding(prev => ({ ...prev, appDescription: e.target.value }))}
                                 placeholder="A brief tagline for your app"
-                                className="bg-white/5 border-white/10 text-white text-sm h-11"
+                                className="bg-white/5 border-white/10 text-white text-xs h-8"
                             />
                         </div>
                     </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-4">
+                    <CardFooter className="border-t border-white/5 p-2.5">
                         <Button
                             onClick={handleSaveBranding}
                             disabled={saving}
-                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold h-11"
+                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-8"
                         >
                             {saving ? "Saving..." : "Update Branding"}
                         </Button>
                     </CardFooter>
                 </Card>
 
-                <Card className="bg-card border-white/10 backdrop-blur-xl hover:border-blue-500/30 transition-colors">
-                    <CardHeader className="pb-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                <Palette className="w-5 h-5 text-blue-500" />
+                {/* Visual Identity */}
+                <Card className="bg-card border-border/50 transition-colors shadow-xs">
+                    <CardHeader className="p-3 pb-2 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-blue-500/10 rounded-md border border-blue-500/20">
+                                <Palette className="w-3.5 h-3.5 text-blue-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-base font-bold text-white">Visual Identity</CardTitle>
-                                <CardDescription className="text-xs text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-white">Visual Identity</CardTitle>
+                                <CardDescription className="text-[10px] text-zinc-500">
                                     Brand colors and logo.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4 pt-4">
-                        <div className="flex gap-6 items-start">
+                    <CardContent className="space-y-2.5 p-3 pt-2.5">
+                        <div className="flex gap-3 items-center">
                             <div
                                 onClick={() => !uploading && fileInputRef.current?.click()}
-                                className={`relative w-20 h-20 rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-1 group cursor-pointer hover:border-primary/50 transition-all shrink-0 overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`relative w-14 h-14 rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-0.5 group cursor-pointer hover:border-primary/50 transition-all shrink-0 overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {localBranding.logoUrl ? (
-                                    <img src={localBranding.logoUrl} alt="Logo" className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform" />
+                                    <img src={localBranding.logoUrl} alt="Logo" className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
                                 ) : (
                                     <>
-                                        <UploadCloud className="w-6 h-6 text-zinc-500 group-hover:text-primary transition-colors" />
-                                        <span className="text-[10px] font-semibold text-zinc-500">Logo</span>
+                                        <UploadCloud className="w-4 h-4 text-zinc-500 group-hover:text-primary transition-colors" />
+                                        <span className="text-[8px] font-semibold text-zinc-500">Logo</span>
                                     </>
                                 )}
                                 {uploading && (
-                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                                        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
+                                        <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
                                     </div>
                                 )}
                             </div>
 
                             <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
 
-                            <div className="flex-1 space-y-4 w-full">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Brand Color</Label>
-                                    <div className="flex gap-3 items-center">
-                                        <div className="w-11 h-11 rounded-lg border border-white/10 shadow-lg" style={{ backgroundColor: localBranding.primaryColor }} />
-                                        <Input
-                                            value={localBranding.primaryColor}
-                                            onChange={(e) => setLocalBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                            className="bg-white/5 border-white/10 text-white font-mono text-sm h-11"
-                                        />
-                                    </div>
+                            <div className="flex-1 space-y-1">
+                                <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Brand Color</Label>
+                                <div className="flex gap-2 items-center">
+                                    <div className="w-8 h-8 rounded-md border border-white/10 shrink-0 shadow-xs" style={{ backgroundColor: localBranding.primaryColor }} />
+                                    <Input
+                                        value={localBranding.primaryColor}
+                                        onChange={(e) => setLocalBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
+                                        className="bg-white/5 border-white/10 text-white font-mono text-xs h-8"
+                                    />
                                 </div>
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter className="border-t border-white/5 pt-4">
+                    <CardFooter className="border-t border-white/5 p-2.5">
                         <Button
                             onClick={handleSaveBranding}
                             disabled={saving}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-8"
                         >
                             {saving ? "Saving..." : "Update Visuals"}
                         </Button>
@@ -348,17 +354,10 @@ export const GeneralSettings = () => {
                 </Card>
             </motion.div>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex gap-3 items-center"
-            >
-                <Info className="w-5 h-5 text-primary shrink-0" />
-                <p className="text-sm text-zinc-400">
-                    Workspace identity changes are recorded in the system audit logs.
-                </p>
-            </motion.div>
+            <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 flex gap-2 items-center text-xs text-zinc-400">
+                <Info className="w-4 h-4 text-primary shrink-0" />
+                <span>Workspace identity changes are recorded in the system audit logs.</span>
+            </div>
         </div>
     );
 };

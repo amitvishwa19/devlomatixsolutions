@@ -1,14 +1,29 @@
-'use client'
-import { useModal } from '@/hooks/useModal';
-import React, { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Settings } from 'lucide-react';
+'use client';
+
+import React, { useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Building2,
+    Clock,
+    Users,
+    Wand2,
+    Database as DatabaseIcon,
+    FileText,
+    ShieldCheck,
+    User,
+    Settings,
+    Search,
+    ChevronRight,
+    Sparkles,
+} from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { DynamicIcon } from 'lucide-react/dynamic';
 
 import Organization from './_components/Organization';
 import Members from './_components/Members';
@@ -19,155 +34,208 @@ import PrivacyPolicy from './_components/PrivacyPolicy';
 import Timings from './_components/Timings';
 import SetupWizard from './_components/SetupWizard';
 
-
-
 const settingItems = [
-
     {
         title: 'General',
         value: 'general',
-        icon: 'settings',
+        icon: Building2,
+        color: 'text-primary',
         description: 'Manage organization details, structure, and preferences.',
         component: <Organization />
     },
     {
         title: 'Timings',
         value: 'timings',
-        icon: 'clipboard-clock',
-        description: 'Add, remove, and manage team members.',
+        icon: Clock,
+        color: 'text-sky-500',
+        description: 'Configure operational hours and availability slots.',
         component: <Timings />
     },
     {
         title: 'Members',
         value: 'members',
-        icon: 'users',
-        description: 'Add, remove, and manage team members.',
+        icon: Users,
+        color: 'text-emerald-500',
+        description: 'Add, remove, and manage workspace team members.',
         component: <Members />
     },
     {
         title: 'Setup Wizard',
         value: 'setup',
-        icon: 'tool-case',
-        description: 'Application setup and configuration wizard.',
+        icon: Wand2,
+        color: 'text-amber-500',
+        description: 'Guided workspace configuration and onboarding wizard.',
         component: <SetupWizard />
-    },
-    {
-        title: 'Appearance',
-        value: 'appearance',
-        icon: 'monitor',
-        description: 'Customize themes, colors, and UI style.',
-        component: <TermsnCondition />
-    },
-    {
-        title: 'Profile',
-        value: 'profile',
-        icon: 'monitor',
-        description: 'Update profile information and personal settings.',
-        component: <Profile />
-    },
-    {
-        title: 'Notification',
-        value: 'notification',
-        icon: 'bell',
-        description: 'Control email, push, and in-app notifications.',
-        component: <TermsnCondition />
-    },
-    {
-        title: 'Auth',
-        value: 'auth',
-        icon: 'shield-user',
-        description: 'Manage authentication methods and security.',
-        component: <TermsnCondition />
     },
     {
         title: 'Database',
         value: 'database',
-        icon: 'database',
+        icon: DatabaseIcon,
+        color: 'text-purple-500',
         description: 'Configure database storage, backups, and settings.',
         component: <Database />
     },
     {
-        title: 'Terms & Condition',
+        title: 'Terms & Conditions',
         value: 'terms',
-        icon: 'handshake',
-        description: 'Edit and manage terms & conditions content.',
+        icon: FileText,
+        color: 'text-indigo-500',
+        description: 'Edit and manage public terms & conditions content.',
         component: <TermsnCondition />
     },
     {
         title: 'Privacy Policy',
         value: 'privacy',
-        icon: 'globe-lock',
-        description: 'Manage and update privacy policy information.',
+        icon: ShieldCheck,
+        color: 'text-rose-500',
+        description: 'Manage and update organization privacy policy details.',
         component: <PrivacyPolicy />
+    },
+    {
+        title: 'Profile',
+        value: 'profile',
+        icon: User,
+        color: 'text-blue-500',
+        description: 'Update profile information and personal preferences.',
+        component: <Profile />
     }
 ];
 
+export default function SettingsModal({ isOpen, open, onClose }) {
+    const isModalOpen = isOpen !== undefined ? isOpen : open;
+    const [selectedTab, setSelectedTab] = useState('general');
+    const [searchQuery, setSearchQuery] = useState('');
 
+    const filteredItems = searchQuery
+        ? settingItems.filter(item =>
+            item.title.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : settingItems;
 
-export default function SettingsModal({ isOpen, onClose }) {
+    const currentItem = settingItems.find(i => i.value === selectedTab) || settingItems[0];
 
-    const [selected, setSelected] = useState({
-        title: 'General',
-        value: 'general',
-        icon: 'settings',
-        description: 'Basic application settings and overview.',
-        component: <Organization title={'General'} description={'Basic application settings and overview.'} />
-    })
-
-
-
-    const handleOpenChange = () => {
-        onClose()
-    }
+    const handleOpenChange = (val) => {
+        if (!val && onClose) {
+            onClose();
+        }
+    };
 
     return (
-        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-
-            <DialogContent className=" dark:bg-darkPrimaryBackground min-w-[95%] md:min-w-[90%] lg:min-w-[85%] min-h-[75%] max-h-[75%] rounded-lg p-0 overflow-hidden [&>button:last-child]:hidden" >
-
-                <DialogHeader className={'hidden'}>
-                    <DialogTitle>Edit profile</DialogTitle>
+        <Dialog open={Boolean(isModalOpen)} onOpenChange={handleOpenChange}>
+            <DialogContent className="min-h-[80vh] max-h-[80vh] min-w-[85vw] max-w-[85vw] p-0 overflow-hidden bg-card border border-border shadow-2xl rounded-xl">
+                <DialogHeader className="hidden">
+                    <DialogTitle>Workspace Settings</DialogTitle>
+                    <DialogDescription>Manage your workspace preferences and configurations.</DialogDescription>
                 </DialogHeader>
 
-
-                <div className="flex flex-row">
-
-                    <div className=' w-[20%] border border-l-0 border-t-0 border-b-0 hidden md:flex p-4 text-sm  flex-col gap-10'>
-                        <div className='flex flex-row gap-2 py-4'>
-                            <Settings size={18} />
-                            <span>Organization settings</span>
+                <div className="flex h-[80vh] overflow-hidden">
+                    {/* Left Sidebar Navigation */}
+                    <motion.aside
+                        initial={{ x: -15, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        className="w-64 border-r border-border/50 bg-card flex flex-col h-full shrink-0"
+                    >
+                        <div className="p-3 border-b border-border/50 shrink-0">
+                            <div className="flex items-center gap-2.5 mb-2.5">
+                                <div className="p-1.5 bg-primary/10 rounded-lg border border-primary/20">
+                                    <Settings className="w-4 h-4 text-primary" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xs font-bold text-foreground">Organization Settings</h2>
+                                    <p className="text-[9px] text-muted-foreground">Configuration & Preferences</p>
+                                </div>
+                            </div>
+                            <div className="relative">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <input
+                                    type="text"
+                                    placeholder="Search settings..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-secondary/30 border border-border/50 rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+                                />
+                            </div>
                         </div>
 
-                        <div>
-                            {
-                                settingItems.map((item, index) => {
+                        <ScrollArea className="flex-1 p-2">
+                            <nav className="space-y-1 text-xs">
+                                {filteredItems.map((item, index) => {
+                                    const isSelected = selectedTab === item.value;
+                                    const IconComponent = item.icon;
 
                                     return (
-                                        <div
-                                            key={index}
-                                            className={`flex flex-row items-center gap-4 p-2 w-full cursor-pointer  rounded-md mb-2 text-sm dark:hover:bg-darkFocusColor ${item.value === selected.value && 'dark:bg-darkFocusColor/50'}`}
-                                            onClick={() => { setSelected(item) }}
+                                        <motion.button
+                                            key={item.value}
+                                            onClick={() => setSelectedTab(item.value)}
+                                            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
+                                                isSelected
+                                                    ? 'bg-primary/15 text-primary border border-primary/30 font-semibold shadow-xs'
+                                                    : 'hover:bg-secondary/40 text-muted-foreground hover:text-foreground'
+                                            }`}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: index * 0.02 }}
+                                            whileHover={{ x: 2 }}
                                         >
-                                            <DynamicIcon name={item.icon} strokeWidth={2} size={15} />
-                                            <span className={`${item.value != selected.value && 'text-[13px] text-muted-foreground'}`}>{item.title}</span>
-                                        </div>
-                                    )
-                                })
-                            }
-                        </div>
-                    </div>
-
-
-                    <div className='w-full h-full'>
-                        <ScrollArea className='flex-1 w-full h-[75vh] '>
-                            <div className='p-2'>
-                                {selected.component}
-                            </div>
+                                            <IconComponent className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? item.color : ''}`} />
+                                            <span className="font-medium text-xs truncate">{item.title}</span>
+                                            {isSelected && (
+                                                <ChevronRight className="w-3 h-3 ml-auto text-primary" />
+                                            )}
+                                        </motion.button>
+                                    );
+                                })}
+                            </nav>
                         </ScrollArea>
-                    </div>
 
+                        <div className="p-3 border-t border-border/50 bg-card shrink-0">
+                            <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                </span>
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500">Operational</span>
+                            </div>
+                        </div>
+                    </motion.aside>
+
+                    {/* Right Main Content Area */}
+                    <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-card">
+                        {/* Compact Top Header */}
+                        <div className="flex items-center gap-2.5 p-3 px-4 border-b border-border/50 bg-card shrink-0">
+                            <div className="p-2 rounded-lg bg-secondary/40 border border-border/50 shrink-0">
+                                {React.createElement(currentItem.icon, {
+                                    className: `w-4 h-4 ${currentItem.color || 'text-primary'}`
+                                })}
+                            </div>
+                            <div className="min-w-0">
+                                <h1 className="text-sm font-bold text-foreground leading-tight truncate">
+                                    {currentItem.title}
+                                </h1>
+                                <p className="text-[10px] text-muted-foreground truncate">
+                                    {currentItem.description}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Scrollable Tab Body */}
+                        <ScrollArea className="flex-1 h-full p-4 overflow-y-auto bg-card">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={selectedTab}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="space-y-3 pb-6"
+                                >
+                                    {currentItem.component}
+                                </motion.div>
+                            </AnimatePresence>
+                        </ScrollArea>
+                    </main>
                 </div>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

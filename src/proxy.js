@@ -47,7 +47,7 @@ export async function proxy(request) {
     // Workspace Access Control (Role Guard)
     // Only users with a role slug in [super-admin, admin, demo] can access /workspace/[workspaceId]
     if (pathname.startsWith('/workspace/') && token) {
-        const allowedSlugs = ['super-admin', 'admin', 'demo'];
+        const allowedSlugs = ['super-admin', 'admin', 'demo', 'workspace'];
 
         // If roles are missing from the token entirely, the session is stale:
         // let the page layer handle it to avoid lockouts during enrichment.

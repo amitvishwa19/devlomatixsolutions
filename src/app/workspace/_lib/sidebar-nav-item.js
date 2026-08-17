@@ -142,7 +142,7 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Logs", icon: "scroll-text", url: `${systemPath}/log` },
                 { title: "Mailer", icon: "send", url: `${systemPath}/mailer` },
                 { title: "Cron Jobs", icon: "timer", url: `${systemPath}/cron` },
-                { title: "Settings", icon: "settings-2", url: `${systemPath}/setting` },
+                // { title: "Settings", icon: "settings-2", url: `${systemPath}/setting` },
             ],
             baseUrl: systemPath,
             permission: `navbar:System:Parent`

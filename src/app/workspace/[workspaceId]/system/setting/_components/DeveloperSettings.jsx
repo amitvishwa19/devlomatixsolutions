@@ -145,39 +145,6 @@ export const DeveloperSettings = () => {
     });
   };
 
-  const handleTestPing = async (url, id = null) => {
-    if (id) setTestingWebhookId(id);
-    else setIsPrechecking(true);
-
-    try {
-      const { data } = await axios.post(`/api/workspace/${workspaceId}/system/webhooks/test`, {
-        url: url
-      });
-
-      if (data.success) {
-        toast.success(`Ping successful! Server responded with ${data.status}`);
-        setTimeout(fetchLogs, 1000);
-      } else {
-        toast.error(`Ping failed: ${data.message || 'Server connection error'}`);
-      }
-    } catch (error) {
-      console.error("Test Ping Error:", error);
-      toast.error("An error occurred during ping.");
-    } finally {
-      setTestingWebhookId(null);
-      setIsPrechecking(false);
-    }
-  };
-
-  const toggleEvent = (eventId) => {
-    setNewWebhook(prev => ({
-      ...prev,
-      events: prev.events.includes(eventId)
-        ? prev.events.filter(id => id !== eventId)
-        : [...prev.events, eventId]
-    }));
-  };
-
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard");
@@ -202,178 +169,103 @@ export const DeveloperSettings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
+      {/* Dev Hub Header Banner */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="p-6 bg-fuchsia-500/10 rounded-xl border border-fuchsia-500/20 flex gap-6 items-center"
+        transition={{ duration: 0.2 }}
+        className="p-3 bg-fuchsia-500/10 rounded-xl border border-fuchsia-500/20 flex gap-3 items-center"
       >
-        <div className="w-16 h-16 bg-fuchsia-500/20 rounded-xl flex items-center justify-center border border-fuchsia-500/30 shrink-0">
-          <Terminal className="w-8 h-8 text-fuchsia-500" />
+        <div className="w-9 h-9 bg-fuchsia-500/20 rounded-lg flex items-center justify-center border border-fuchsia-500/30 shrink-0">
+          <Terminal className="w-4 h-4 text-fuchsia-500" />
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className="bg-fuchsia-500/20 text-fuchsia-500 border-fuchsia-500/30 text-xs font-semibold">Dev Hub</Badge>
-            <h3 className="text-lg font-bold text-white">Developer Operations</h3>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-fuchsia-500/20 text-fuchsia-500 border-fuchsia-500/30 text-[9px] font-semibold px-1.5 py-0">Dev Hub</Badge>
+            <h3 className="text-xs font-bold text-white">Developer Operations</h3>
           </div>
-          <p className="text-sm text-zinc-400">
-            Control your external integrations, API connectivity, and real-time event distribution.
+          <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+            External integrations, API connectivity, and real-time event distribution.
           </p>
         </div>
       </motion.div>
 
+      {/* Tabs */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
+        transition={{ duration: 0.2, delay: 0.05 }}
       >
         <Tabs defaultValue="webhooks" className="w-full">
-          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl mb-6">
-            <TabsTrigger value="webhooks" className="rounded-lg gap-2 text-sm font-semibold px-4 py-2 transition-all data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
-              <Webhook className="w-4 h-4" />
-              Webhooks & Automation
+          <TabsList className="bg-white/5 border border-white/10 p-0.5 rounded-lg mb-3">
+            <TabsTrigger value="webhooks" className="rounded-md gap-1.5 text-xs font-semibold px-3 py-1 data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
+              <Webhook className="w-3.5 h-3.5" /> Webhooks
             </TabsTrigger>
-            <TabsTrigger value="apikeys" className="rounded-lg gap-2 text-sm font-semibold px-4 py-2 transition-all data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
-              <Key className="w-4 h-4" />
-              API Access
+            <TabsTrigger value="apikeys" className="rounded-md gap-1.5 text-xs font-semibold px-3 py-1 data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
+              <Key className="w-3.5 h-3.5" /> API Keys
             </TabsTrigger>
-            <TabsTrigger value="activity" className="rounded-lg gap-2 text-sm font-semibold px-4 py-2 transition-all data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
-              <Activity className="w-4 h-4" />
-              Live Feed
+            <TabsTrigger value="activity" className="rounded-md gap-1.5 text-xs font-semibold px-3 py-1 data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
+              <Activity className="w-3.5 h-3.5" /> Live Feed
             </TabsTrigger>
-            <TabsTrigger value="cleaner" className="rounded-lg gap-2 text-sm font-semibold px-4 py-2 transition-all data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
-              <Sparkles className="w-4 h-4" />
-              Class Cleaner
+            <TabsTrigger value="cleaner" className="rounded-md gap-1.5 text-xs font-semibold px-3 py-1 data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-500">
+              <Sparkles className="w-3.5 h-3.5" /> Class Cleaner
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="cleaner" className="mt-0 space-y-4">
-            <Card className="bg-card border-white/10 backdrop-blur-xl">
-              <CardHeader className="border-b border-white/10 bg-fuchsia-500/10 pb-6 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-fuchsia-500" />
-                      Global Class Search
-                    </CardTitle>
-                    <CardDescription className="text-xs text-zinc-500">Find all occurrences of a specific CSS class across your project (src/app).</CardDescription>
-                  </div>
-                  {searchResults.length > 0 && (
-                    <Badge className="bg-fuchsia-500/20 text-fuchsia-500 border-fuchsia-500/30 font-semibold px-3 py-1">
-                      {searchResults.length} Matches
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex gap-3 mt-6">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                    <Input
-                      placeholder="Enter class name (e.g. font-bold, italic, uppercase...)"
-                      className="pl-11 h-12 bg-white/5 border-white/10 rounded-xl font-semibold text-sm"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    onClick={handleClassSearch}
-                    disabled={isSearching}
-                    className="rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold h-12 px-6 shadow-lg shadow-fuchsia-500/20"
-                  >
-                    {isSearching ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
-                    Scan Project
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
-                  {searchResults.length > 0 ? (
-                    <div className="divide-y divide-white/5">
-                      {searchResults.map((result, i) => (
-                        <div key={i} className="p-4 hover:bg-fuchsia-500/5 transition-all group">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-start gap-4 flex-1 min-w-0">
-                              <div className="p-2.5 bg-fuchsia-500/10 rounded-lg border border-fuchsia-500/20 mt-0.5 shrink-0">
-                                <FileCode className="w-4 h-4 text-fuchsia-500" />
-                              </div>
-                              <div className="flex-1 min-w-0 space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <p className="text-sm font-semibold text-white truncate">{result.file}</p>
-                                  <Badge variant="outline" className="text-[10px] font-semibold opacity-60">Line {result.line}</Badge>
-                                </div>
-                                <div className="bg-white/5 p-3 rounded-lg border border-white/10 overflow-x-auto whitespace-pre font-mono text-xs text-zinc-400 group-hover:text-fuchsia-400/80 transition-colors">
-                                  {result.snippet}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-24 text-center">
-                      <Search className="w-16 h-16 mx-auto opacity-20 mb-4" />
-                      <p className="text-sm font-semibold text-zinc-500 opacity-40">Scan results will appear here</p>
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="webhooks" className="mt-0 space-y-4">
-            <Card className="bg-card border-white/10 backdrop-blur-xl">
-              <CardHeader className="flex flex-row items-center justify-between pb-6 p-6 border-b border-white/10">
+          {/* Webhooks */}
+          <TabsContent value="webhooks" className="mt-0 space-y-3">
+            <Card className="bg-card border-border/50 shadow-xs">
+              <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-white/5">
                 <div>
-                  <CardTitle className="text-lg font-bold text-white">Webhook Endpoints</CardTitle>
-                  <CardDescription className="text-xs text-zinc-500">Receive real-time notifications when events happen in your workspace.</CardDescription>
+                  <CardTitle className="text-xs font-bold text-white">Webhook Endpoints</CardTitle>
+                  <CardDescription className="text-[10px] text-zinc-500">Receive real-time notifications when events happen.</CardDescription>
                 </div>
                 <Dialog open={isAddWebhookOpen} onOpenChange={setIsAddWebhookOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="rounded-xl gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold h-10">
-                      <Plus className="w-4 h-4" />
-                      Add Endpoint
+                    <Button size="sm" className="rounded-md gap-1 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold text-xs h-7 px-2.5">
+                      <Plus className="w-3 h-3" /> Add Endpoint
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px] rounded-xl bg-[#0a0a0a] border-white/10">
+                  <DialogContent className="sm:max-w-[400px] rounded-xl bg-[#0a0a0a] border-white/10 p-4">
                     <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-fuchsia-500">Configure Webhook</DialogTitle>
+                      <DialogTitle className="text-sm font-bold text-fuchsia-500">Configure Webhook</DialogTitle>
                     </DialogHeader>
-                    <div className="grid gap-6 py-4">
-                      <div className="grid gap-3">
-                        <Label className="text-xs font-semibold opacity-70">Endpoint URL</Label>
+                    <div className="grid gap-3 py-3">
+                      <div className="grid gap-1.5">
+                        <Label className="text-[10px] font-semibold opacity-70">Endpoint URL</Label>
                         <Input
                           placeholder="https://your-api.com/webhooks"
-                          className="rounded-xl border border-white/10 h-12 bg-white/5 shadow-inner font-semibold text-sm"
+                          className="rounded-lg border border-white/10 h-8 bg-white/5 text-xs"
                           value={newWebhook.url}
                           onChange={(e) => setNewWebhook(prev => ({ ...prev, url: e.target.value }))}
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleAddWebhook} className="rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white w-full h-12 font-semibold">Deploy Endpoint</Button>
+                      <Button onClick={handleAddWebhook} className="rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 text-white w-full h-8 text-xs font-bold">
+                        Deploy Endpoint
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="p-0 divide-y divide-white/5">
                 {webhooks.length > 0 ? (
                   webhooks.map((hook) => (
-                    <motion.div
+                    <div
                       key={hook.id}
-                      className="p-6 border-t border-white/10 hover:bg-fuchsia-500/5 transition-colors flex items-center justify-between group"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      className="p-2.5 px-3 hover:bg-fuchsia-500/5 transition-colors flex items-center justify-between group"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                          <Globe className="w-5 h-5 text-emerald-500" />
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-emerald-500/10 rounded-md border border-emerald-500/20 shrink-0">
+                          <Globe className="w-3.5 h-3.5 text-emerald-500" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold truncate max-w-xs text-white">{hook.url}</p>
-                          <div className="flex gap-2 mt-2">
+                          <p className="text-xs font-semibold truncate max-w-xs text-white">{hook.url}</p>
+                          <div className="flex gap-1 mt-1">
                             {hook.events.map(event => (
-                              <Badge key={event} variant="secondary" className="text-[10px] font-semibold bg-white/5 border border-white/10">{event}</Badge>
+                              <Badge key={event} variant="secondary" className="text-[9px] font-semibold bg-white/5 border border-white/10 px-1.5 py-0">{event}</Badge>
                             ))}
                           </div>
                         </div>
@@ -381,43 +273,44 @@ export const DeveloperSettings = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 text-rose-500 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+                        className="h-6 w-6 text-rose-500 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
                         onClick={() => handleDeleteWebhook(hook.id)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
-                    </motion.div>
+                    </div>
                   ))
                 ) : (
-                  <div className="p-12 text-center opacity-20">
-                    <Webhook className="w-12 h-12 mx-auto" />
+                  <div className="p-8 text-center opacity-30 text-xs">
+                    <Webhook className="w-8 h-8 mx-auto mb-1.5" />
+                    <span>No Webhooks registered</span>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="apikeys" className="mt-0 space-y-4">
-            <Card className="bg-card border-white/10 backdrop-blur-xl">
-              <CardHeader className="flex flex-row items-center justify-between pb-6 p-6 border-b border-white/10">
+          {/* API Keys */}
+          <TabsContent value="apikeys" className="mt-0 space-y-3">
+            <Card className="bg-card border-border/50 shadow-xs">
+              <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-white/5">
                 <div>
-                  <CardTitle className="text-lg font-bold text-white">Secret API Keys</CardTitle>
-                  <CardDescription className="text-xs text-zinc-500">Authenticate requests to the Devlomatix API.</CardDescription>
+                  <CardTitle className="text-xs font-bold text-white">Secret API Keys</CardTitle>
+                  <CardDescription className="text-[10px] text-zinc-500">Authenticate requests to the Devlomatix API.</CardDescription>
                 </div>
-                <Button size="sm" className="rounded-xl gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold h-10">
-                  <Plus className="w-4 h-4" />
-                  Create New Key
+                <Button size="sm" className="rounded-md gap-1 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold text-xs h-7 px-2.5">
+                  <Plus className="w-3 h-3" /> Create Key
                 </Button>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="p-0 divide-y divide-white/5">
                 {apiKeys.map((key) => (
-                  <div key={key.id} className="flex items-center justify-between p-6 border-t border-white/10 hover:bg-fuchsia-500/5 transition-colors group">
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-white">{key.name}</p>
-                      <code className="text-xs bg-white/10 px-2 py-1.5 rounded-lg border border-white/10 font-mono text-zinc-400">{key.key}</code>
+                  <div key={key.id} className="flex items-center justify-between p-2.5 px-3 hover:bg-fuchsia-500/5 transition-colors group">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-white">{key.name}</p>
+                      <code className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded border border-white/10 font-mono text-zinc-400">{key.key}</code>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white/5 rounded-lg" onClick={() => copyToClipboard(key.key)}>
-                      <Copy className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white/5 rounded-md" onClick={() => copyToClipboard(key.key)}>
+                      <Copy className="w-3 h-3" />
                     </Button>
                   </div>
                 ))}
@@ -425,43 +318,114 @@ export const DeveloperSettings = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="activity" className="mt-0 space-y-4">
-            <Card className="bg-card border-white/10 backdrop-blur-xl min-h-[400px]">
-              <CardHeader className="flex flex-row items-center justify-between pb-6 p-6 border-b border-white/10">
+          {/* Live Activity Feed */}
+          <TabsContent value="activity" className="mt-0 space-y-3">
+            <Card className="bg-card border-border/50 shadow-xs">
+              <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-white/5">
                 <div>
-                  <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-indigo-500" />
+                  <CardTitle className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-indigo-500" />
                     Webhook Activity
                   </CardTitle>
-                  <CardDescription className="text-xs text-zinc-500">Real-time log of outgoing deliveries.</CardDescription>
+                  <CardDescription className="text-[10px] text-zinc-500">Real-time log of outgoing deliveries.</CardDescription>
                 </div>
-                <Button variant="ghost" size="icon" className="h-10 w-10 bg-white/5 rounded-lg" onClick={fetchLogs} disabled={isLoadingLogs}>
-                  <RefreshCw className={`w-4 h-4 ${isLoadingLogs ? 'animate-spin' : ''}`} />
+                <Button variant="ghost" size="icon" className="h-7 w-7 bg-white/5 rounded-md" onClick={fetchLogs} disabled={isLoadingLogs}>
+                  <RefreshCw className={`w-3 h-3 ${isLoadingLogs ? 'animate-spin' : ''}`} />
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-[280px]">
                   {activityLogs.length > 0 ? (
-                    activityLogs.map((log) => (
-                      <div key={log.id} className="p-6 border-t border-white/10 hover:bg-white/5 transition-colors flex gap-4 items-start">
-                        <div className={`p-2.5 rounded-lg mt-0.5 ${log.level === 'SUCCESS' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}`}>
-                          {log.level === 'SUCCESS' ? <Check className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
+                    <div className="divide-y divide-white/5">
+                      {activityLogs.map((log) => (
+                        <div key={log.id} className="p-2.5 px-3 hover:bg-white/5 transition-colors flex gap-2.5 items-start">
+                          <div className={`p-1.5 rounded-md mt-0.5 shrink-0 ${log.level === 'SUCCESS' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}`}>
+                            {log.level === 'SUCCESS' ? <Check className="w-3 h-3 text-emerald-500" /> : <AlertCircle className="w-3 h-3 text-rose-500" />}
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-0.5">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-semibold truncate text-white">{log.message}</p>
+                              <span className="text-[10px] text-zinc-500 font-mono">{new Date(log.createdAt).toLocaleTimeString()}</span>
+                            </div>
+                            <p className="text-[10px] opacity-50 truncate font-mono">{JSON.stringify(log.details)}</p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold truncate text-white">{log.message}</p>
-                            <div className="flex items-center gap-2 text-zinc-500">
-                              <Clock className="w-4 h-4" />
-                              <span className="text-xs font-medium">{new Date(log.createdAt).toLocaleTimeString()}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-12 text-center opacity-30 text-xs">
+                      <Activity className="w-8 h-8 mx-auto mb-1.5" />
+                      <span>No activity logs recorded</span>
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Class Cleaner */}
+          <TabsContent value="cleaner" className="mt-0 space-y-3">
+            <Card className="bg-card border-border/50 shadow-xs">
+              <CardHeader className="border-b border-white/10 bg-fuchsia-500/10 p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-fuchsia-500" />
+                      Global Class Search
+                    </CardTitle>
+                    <CardDescription className="text-[10px] text-zinc-500">Find occurrences of CSS classes across src/app.</CardDescription>
+                  </div>
+                  {searchResults.length > 0 && (
+                    <Badge className="bg-fuchsia-500/20 text-fuchsia-500 border-fuchsia-500/30 text-[9px] font-semibold px-2 py-0">
+                      {searchResults.length} Matches
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-2.5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+                    <Input
+                      placeholder="Enter class name (e.g. font-bold, italic...)"
+                      className="pl-8 h-8 bg-white/5 border-white/10 rounded-md text-xs"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleClassSearch}
+                    disabled={isSearching}
+                    className="rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold text-xs h-8 px-3"
+                  >
+                    {isSearching ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Search className="w-3 h-3 mr-1.5" />}
+                    Scan
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[280px]">
+                  {searchResults.length > 0 ? (
+                    <div className="divide-y divide-white/5">
+                      {searchResults.map((result, i) => (
+                        <div key={i} className="p-2.5 px-3 hover:bg-fuchsia-500/5 transition-all group">
+                          <div className="flex items-start gap-2.5">
+                            <FileCode className="w-3.5 h-3.5 text-fuchsia-500 mt-0.5 shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-semibold text-white truncate">{result.file}</p>
+                                <Badge variant="outline" className="text-[9px] font-semibold opacity-60 px-1 py-0">L{result.line}</Badge>
+                              </div>
+                              <div className="bg-white/5 p-1.5 rounded-md border border-white/10 overflow-x-auto whitespace-pre font-mono text-[10px] text-zinc-400">
+                                {result.snippet}
+                              </div>
                             </div>
                           </div>
-                          <p className="text-xs opacity-50 truncate font-mono">{JSON.stringify(log.details)}</p>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   ) : (
-                    <div className="p-24 text-center opacity-20">
-                      <Activity className="w-12 h-12 mx-auto" />
+                    <div className="p-12 text-center opacity-30 text-xs">
+                      <Search className="w-8 h-8 mx-auto mb-1.5" />
+                      <span>Scan results will appear here</span>
                     </div>
                   )}
                 </ScrollArea>
@@ -471,17 +435,12 @@ export const DeveloperSettings = () => {
         </Tabs>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20 flex gap-4 items-start"
-      >
-        <ShieldCheck className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-        <p className="text-sm text-zinc-400 font-medium leading-relaxed">
-          Sensitive developer operations are recorded in secure audit vaults for compliance and tracking.
-        </p>
-      </motion.div>
+      <div className="p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20 flex gap-2.5 items-center text-xs text-amber-500">
+        <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
+        <span className="text-[10px] text-zinc-400 font-medium">
+          Sensitive developer operations are recorded in secure audit vaults for compliance.
+        </span>
+      </div>
     </div>
   );
 };
