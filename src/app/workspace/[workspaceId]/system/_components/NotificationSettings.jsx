@@ -88,15 +88,15 @@ export const NotificationSettings = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
             >
-                <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                <Card className="bg-card border-border/80 transition-colors shadow-xs">
+                    <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-rose-500/10 rounded-md border border-rose-500/20">
+                            <div className="p-1 bg-rose-500/10 rounded-md border border-rose-500/20">
                                 <BellRing className="w-3.5 h-3.5 text-rose-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-foreground">Notification Channels</CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground">
+                                <CardTitle className="text-xs font-bold text-foreground leading-tight">Notification Channels</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                     Configure how your team receives alerts.
                                 </CardDescription>
                             </div>

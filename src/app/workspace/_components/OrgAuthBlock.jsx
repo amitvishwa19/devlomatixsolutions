@@ -10,8 +10,7 @@ import { toast } from 'sonner'
 import { useApp } from '@/providers/AppProvider'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getInitials } from '@/utils/functions'
-import SettingsModalOld from '../_features/settings/SettingsModal'
-import SettingsModal from '../_features/settings/SettingsModal'
+import SettingModal from '../[workspaceId]/system/_components/SettingModal'
 
 
 
@@ -28,17 +27,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
 
 
-    const [settingModal, setSettingModal] = useState({
-        isOpen: false,
-        mode: 'add',
-        settings: null
-    })
-
-    const [settingModalOld, setSettingModalOld] = useState({
-        isOpen: false,
-        mode: 'add',
-        settings: null
-    })
+    const [settingModalOpen, setSettingModalOpen] = useState(false)
 
     const [documentModal, setDocumentModal] = useState({
         isOpen: false,
@@ -115,19 +104,11 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
 
                             <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
-                                setSettingModal({
-                                    isOpen: true,
-                                    mode: 'open',
-                                    setting: null
-                                })
+                                setSettingModalOpen(true)
                             }}>
                                 <Settings size={15} className='text-muted-foreground' />
                                 Settings
                             </DropdownMenuItem>
-
-
-
-
 
                             <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
                                 setDocumentModal({
@@ -176,15 +157,9 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
 
             </DropdownMenu>
-            <SettingsModal
-                isOpen={settingModal.isOpen}
-                onClose={() => {
-                    setSettingModal({
-                        isOpen: false,
-                        mode: 'open',
-                        setting: null
-                    })
-                }}
+            <SettingModal
+                open={settingModalOpen}
+                onClose={() => setSettingModalOpen(false)}
             />
         </div>
     )

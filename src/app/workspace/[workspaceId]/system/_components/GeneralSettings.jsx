@@ -10,19 +10,19 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { 
-    LayoutGrid, 
-    Palette, 
-    UploadCloud, 
-    Info, 
-    Loader2, 
-    Sparkles, 
-    Facebook, 
-    Twitter, 
-    Instagram, 
-    Linkedin, 
-    Youtube, 
-    Share2, 
+import {
+    LayoutGrid,
+    Palette,
+    UploadCloud,
+    Info,
+    Loader2,
+    Sparkles,
+    Facebook,
+    Twitter,
+    Instagram,
+    Linkedin,
+    Youtube,
+    Share2,
     Github,
     Eye,
     Check,
@@ -98,11 +98,11 @@ export const GeneralSettings = () => {
     // Check dirty state
     const isDirty = useMemo(() => {
         if (!settings) return false;
-        const generalChanged = 
+        const generalChanged =
             localGeneral.name !== (settings?.general?.name || '') ||
             localGeneral.description !== (settings?.general?.description || '');
-        
-        const brandingChanged = 
+
+        const brandingChanged =
             localBranding.primaryColor !== (settings?.branding?.primaryColor || '#3b82f6') ||
             localBranding.appName !== (settings?.branding?.appName || '') ||
             localBranding.appDescription !== (settings?.branding?.appDescription || '') ||
@@ -209,12 +209,12 @@ export const GeneralSettings = () => {
     return (
         <div className="space-y-3 relative pb-8">
             {/* Live Interactive Branding Preview Canvas */}
-            <Card className="bg-card border-border/50 shadow-xs overflow-hidden">
-                <CardHeader className="p-3 pb-2 border-b border-border/40 bg-secondary/20">
+            <Card className="bg-card border-border/80 shadow-xs overflow-hidden">
+                <CardHeader className="py-0 px-3 border-b border-border/40 bg-secondary/20 space-y-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Eye className="w-3.5 h-3.5 text-primary" />
-                            <CardTitle className="text-xs font-bold text-foreground">Live Branding Preview</CardTitle>
+                            <CardTitle className="text-xs font-bold text-foreground leading-none">Live Branding Preview</CardTitle>
                         </div>
                         <Badge variant="outline" className="text-[9px] font-mono px-1.5 py-0">
                             INTERACTIVE PREVIEW
@@ -228,7 +228,7 @@ export const GeneralSettings = () => {
                             {localBranding.logoUrl ? (
                                 <img src={localBranding.logoUrl} alt="Logo" className="w-6 h-6 object-contain rounded" />
                             ) : (
-                                <div 
+                                <div
                                     className="w-6 h-6 rounded flex items-center justify-center text-white text-[10px] font-black"
                                     style={{ backgroundColor: localBranding.primaryColor }}
                                 >
@@ -247,7 +247,7 @@ export const GeneralSettings = () => {
 
                         <div className="flex items-center gap-2">
                             {/* Live Badge */}
-                            <span 
+                            <span
                                 className="px-2 py-0.5 rounded-full text-[9px] font-bold text-white shadow-xs"
                                 style={{ backgroundColor: localBranding.primaryColor }}
                             >
@@ -289,15 +289,15 @@ export const GeneralSettings = () => {
                 className="grid grid-cols-1 lg:grid-cols-2 gap-3"
             >
                 {/* Workspace Identity */}
-                <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                <Card className="bg-card border-border/80 transition-colors shadow-xs">
+                    <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-primary/10 rounded-md border border-primary/20">
+                            <div className="p-1 bg-primary/10 rounded-md border border-primary/20">
                                 <LayoutGrid className="w-3.5 h-3.5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-foreground">Workspace Identity</CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground">
+                                <CardTitle className="text-xs font-bold text-foreground leading-tight">Workspace Identity</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                     Global identification for this workspace.
                                 </CardDescription>
                             </div>
@@ -310,7 +310,7 @@ export const GeneralSettings = () => {
                                 value={localGeneral.name}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, name: e.target.value }))}
                                 placeholder="Enter workspace name"
-                                className="bg-secondary/30 border-border/50 text-foreground text-xs h-8"
+                                className="bg-secondary/30 border-border/80 text-foreground text-xs h-8"
                             />
                         </div>
                         <div className="space-y-1">
@@ -320,22 +320,22 @@ export const GeneralSettings = () => {
                                 value={localGeneral.description}
                                 onChange={(e) => setLocalGeneral(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Describe what this workspace is for..."
-                                className="bg-secondary/30 border-border/50 text-foreground text-xs resize-none min-h-[56px] py-1.5"
+                                className="bg-secondary/30 border-border/80 text-foreground text-xs resize-none min-h-[56px] py-1.5"
                             />
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Visual Identity & Palette Presets */}
-                <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                <Card className="bg-card border-border/80 transition-colors shadow-xs">
+                    <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-blue-500/10 rounded-md border border-blue-500/20">
+                            <div className="p-1 bg-blue-500/10 rounded-md border border-blue-500/20">
                                 <Palette className="w-3.5 h-3.5 text-blue-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-foreground">Visual Identity</CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground">
+                                <CardTitle className="text-xs font-bold text-foreground leading-tight">Visual Identity</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                     Brand colors and logo.
                                 </CardDescription>
                             </div>
@@ -345,14 +345,14 @@ export const GeneralSettings = () => {
                         <div className="flex gap-3 items-center">
                             <div
                                 onClick={() => !uploading && fileInputRef.current?.click()}
-                                className={`relative w-14 h-14 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-0.5 group cursor-pointer hover:border-primary/50 transition-all shrink-0 overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`relative w-full h-20 rounded-lg border-2 border-dashed border-border/60 flex items-center justify-center gap-2 group cursor-pointer hover:border-primary/50 transition-all overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {localBranding.logoUrl ? (
                                     <img src={localBranding.logoUrl} alt="Logo" className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
                                 ) : (
                                     <>
                                         <UploadCloud className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                        <span className="text-[8px] font-semibold text-muted-foreground">Logo</span>
+                                        <span className="text-[10px] font-semibold text-muted-foreground">Click to upload logo</span>
                                     </>
                                 )}
                                 {uploading && (
@@ -363,52 +363,56 @@ export const GeneralSettings = () => {
                             </div>
 
                             <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
-
-                            <div className="flex-1 space-y-1">
-                                <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Primary Accent Color</Label>
-                                <div className="flex gap-2 items-center">
-                                    <div className="w-8 h-8 rounded-md border border-border/60 shrink-0 shadow-xs" style={{ backgroundColor: localBranding.primaryColor }} />
-                                    <Input
-                                        value={localBranding.primaryColor}
-                                        onChange={(e) => setLocalBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                        className="bg-secondary/30 border-border/50 text-foreground font-mono text-xs h-8"
-                                    />
-                                </div>
-                            </div>
                         </div>
 
                         {/* Quick Color Palette Presets */}
                         <div className="pt-1">
                             <Label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">Presets:</Label>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                {COLOR_PRESETS.map((p) => (
-                                    <button
-                                        key={p.hex}
-                                        type="button"
-                                        onClick={() => setLocalBranding(prev => ({ ...prev, primaryColor: p.hex }))}
-                                        className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 flex items-center justify-center cursor-pointer ${localBranding.primaryColor === p.hex ? 'ring-2 ring-primary ring-offset-1 border-white' : 'border-border/60'}`}
-                                        style={{ backgroundColor: p.hex }}
-                                        title={p.name}
-                                    >
-                                        {localBranding.primaryColor === p.hex && <Check className="w-2.5 h-2.5 text-white" />}
-                                    </button>
-                                ))}
+
+                            <div className='flex flex-col gap-2'>
+                                <div className="flex-1 space-y-1">
+                                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Primary Accent Color</Label>
+                                    <div className="flex gap-2 items-center">
+                                        <div className="w-8 h-8 rounded-md border border-border/60 shrink-0 shadow-xs" style={{ backgroundColor: localBranding.primaryColor }} />
+                                        <Input
+                                            value={localBranding.primaryColor}
+                                            onChange={(e) => setLocalBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
+                                            className="bg-secondary/30 border-border/80 text-foreground font-mono text-xs h-8"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    {COLOR_PRESETS.map((p) => (
+                                        <button
+                                            key={p.hex}
+                                            type="button"
+                                            onClick={() => setLocalBranding(prev => ({ ...prev, primaryColor: p.hex }))}
+                                            className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 flex items-center justify-center cursor-pointer ${localBranding.primaryColor === p.hex ? 'ring-2 ring-primary ring-offset-1 border-white' : 'border-border/60'}`}
+                                            style={{ backgroundColor: p.hex }}
+                                            title={p.name}
+                                        >
+                                            {localBranding.primaryColor === p.hex && <Check className="w-2.5 h-2.5 text-white" />}
+                                        </button>
+                                    ))}
+                                </div>
+
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* App Identity */}
-                <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                <Card className="bg-card border-border/80 transition-colors shadow-xs">
+                    <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-amber-500/10 rounded-md border border-amber-500/20">
+                                <div className="p-1 bg-amber-500/10 rounded-md border border-amber-500/20">
                                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-xs font-bold text-foreground">App Identity</CardTitle>
-                                    <CardDescription className="text-[10px] text-muted-foreground">Platform branding titles.</CardDescription>
+                                    <CardTitle className="text-xs font-bold text-foreground leading-tight">App Identity</CardTitle>
+                                    <CardDescription className="text-[10px] text-muted-foreground leading-none">Platform branding titles.</CardDescription>
                                 </div>
                             </div>
                             <span className="text-[8px] font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded-full border border-amber-500/30 uppercase">Global</span>
@@ -421,7 +425,7 @@ export const GeneralSettings = () => {
                                 value={localBranding.appName}
                                 onChange={(e) => setLocalBranding(prev => ({ ...prev, appName: e.target.value }))}
                                 placeholder="e.g. Devlomatix Platform"
-                                className="bg-secondary/30 border-border/50 text-foreground text-xs h-8"
+                                className="bg-secondary/30 border-border/80 text-foreground text-xs h-8"
                             />
                         </div>
                         <div className="space-y-1">
@@ -430,22 +434,22 @@ export const GeneralSettings = () => {
                                 value={localBranding.appDescription}
                                 onChange={(e) => setLocalBranding(prev => ({ ...prev, appDescription: e.target.value }))}
                                 placeholder="A brief tagline for your app"
-                                className="bg-secondary/30 border-border/50 text-foreground text-xs h-8"
+                                className="bg-secondary/30 border-border/80 text-foreground text-xs h-8"
                             />
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Social Presence */}
-                <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                <Card className="bg-card border-border/80 transition-colors shadow-xs">
+                    <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-indigo-500/10 rounded-md border border-indigo-500/20">
+                            <div className="p-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">
                                 <Share2 className="w-3.5 h-3.5 text-indigo-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-foreground">Social Presence</CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground">
+                                <CardTitle className="text-xs font-bold text-foreground leading-tight">Social Presence</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                     Public profile links.
                                 </CardDescription>
                             </div>
@@ -458,7 +462,7 @@ export const GeneralSettings = () => {
                                     key={platform.id}
                                     className="flex items-center gap-2 p-1.5 px-2 rounded-md bg-secondary/30 border border-border/40 hover:border-border transition-colors"
                                 >
-                                    <div className={`w-6 h-6 bg-background rounded-sm flex items-center justify-center border border-border/50 shrink-0 ${platform.color}`}>
+                                    <div className={`w-6 h-6 bg-background rounded-sm flex items-center justify-center border border-border/80 shrink-0 ${platform.color}`}>
                                         <platform.icon className="w-3 h-3" />
                                     </div>
                                     <div className="flex-1 min-w-0">

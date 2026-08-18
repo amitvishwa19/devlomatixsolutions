@@ -33,29 +33,29 @@ export const PrivacySettings = () => {
 
     return (
         <div className="space-y-3">
-            <Card className="bg-card border-border/50">
-                <CardHeader className="pb-3 px-3 border-b border-white/5">
+            <Card className="bg-card border-border/80">
+                <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                     <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                        <div className="p-1 bg-emerald-500/10 rounded-md border border-emerald-500/20">
                             <Database className="w-3.5 h-3.5 text-emerald-500" />
                         </div>
                         <div>
-                            <CardTitle className="text-xs font-bold text-white">Data Governance</CardTitle>
-                            <CardDescription className="text-[10px] text-zinc-500">
+                            <CardTitle className="text-xs font-bold text-foreground leading-tight">Data Governance</CardTitle>
+                            <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                 Storage and retention policies.
                             </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-2 pt-3 px-3">
+                <CardContent className="space-y-2 pt-2.5 px-3">
                     <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Retention Period</Label>
-                        <div className="flex gap-2 items-center p-2 rounded-lg bg-white/5 border border-white/10">
-                            <History className="w-3.5 h-3.5 text-zinc-500" />
+                        <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Retention Period</Label>
+                        <div className="flex gap-2 items-center p-2 rounded-lg bg-secondary/30 border border-border/40">
+                            <History className="w-3.5 h-3.5 text-muted-foreground" />
                             <div className="flex-1">
-                                <span className="text-xs font-semibold text-white uppercase tracking-tight">Current: {localPrivacy.dataRetention} Days</span>
+                                <span className="text-xs font-semibold text-foreground uppercase tracking-tight">Current: {localPrivacy.dataRetention} Days</span>
                             </div>
-                            <Button variant="ghost" size="sm" className="rounded-lg bg-white/5 border border-white/10 text-[10px] font-semibold h-7 px-2" disabled>
+                            <Button variant="ghost" size="sm" className="rounded-lg bg-secondary/30 border border-border/50 text-[10px] font-semibold h-7 px-2" disabled>
                                 Adjust
                             </Button>
                         </div>
@@ -80,25 +80,25 @@ export const PrivacySettings = () => {
                 </CardContent>
             </Card>
 
-            <Card className="bg-card border-border/50">
-                <CardHeader className="pb-3 px-3 border-b border-white/5">
+            <Card className="bg-card border-border/80">
+                <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                     <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-sky-500/10 rounded-lg border border-sky-500/20">
+                        <div className="p-1 bg-sky-500/10 rounded-md border border-sky-500/20">
                             <Eye className="w-3.5 h-3.5 text-sky-500" />
                         </div>
                         <div>
-                            <CardTitle className="text-xs font-bold text-white">Audit & Transparency</CardTitle>
-                            <CardDescription className="text-[10px] text-zinc-500">
+                            <CardTitle className="text-xs font-bold text-foreground leading-tight">Audit & Transparency</CardTitle>
+                            <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                 Visibility and system logs.
                             </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-2 pt-3 px-3">
-                    <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-white/5 border border-white/10">
+                <CardContent className="space-y-2 pt-2.5 px-3">
+                    <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-secondary/30 border border-border/40">
                         <div className="space-y-0.5">
-                            <Label className="text-xs font-semibold text-white">Activity Logging</Label>
-                            <p className="text-[10px] text-zinc-500">Log user interactions for security.</p>
+                            <Label className="text-xs font-semibold text-foreground">Activity Logging</Label>
+                            <p className="text-[10px] text-muted-foreground">Log user interactions for security.</p>
                         </div>
                         <Switch
                             checked={localPrivacy.activityLogging}
@@ -108,17 +108,17 @@ export const PrivacySettings = () => {
                     </div>
 
                     <button
-                        className="w-full rounded-lg border-2 border-dashed border-white/20 py-4 flex flex-col gap-1 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all"
+                        className="w-full rounded-lg border-2 border-dashed border-border/60 py-3 flex flex-col gap-1 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all cursor-pointer"
                         onClick={() => toast.info("Exporting workspace data bundle...")}
                     >
                         <div className="flex items-center gap-2 text-primary">
                             <FileText className="w-4 h-4" />
                             <span className="text-xs font-semibold uppercase tracking-widest">Export Data Bundle</span>
                         </div>
-                        <span className="text-[10px] text-zinc-500">Generate ZIP with all records</span>
+                        <span className="text-[10px] text-muted-foreground">Generate ZIP with all records</span>
                     </button>
                 </CardContent>
-                <CardFooter className="border-t border-white/5 pt-3 px-3">
+                <CardFooter className="border-t border-border/40 py-2 px-3">
                     <Button
                         onClick={handleSave}
                         disabled={saving}

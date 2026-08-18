@@ -148,11 +148,10 @@ export default function SettingModal({ open, onClose }) {
                                         <div key={tab.id} className="space-y-1">
                                             <motion.button
                                                 onClick={() => setActiveTab(tab.id)}
-                                                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
-                                                    isSelected
+                                                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${isSelected
                                                         ? 'bg-primary/15 text-primary border border-primary/30 font-semibold shadow-xs'
                                                         : 'hover:bg-secondary/40 text-muted-foreground hover:text-foreground'
-                                                }`}
+                                                    }`}
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: index * 0.02 }}
@@ -195,11 +194,10 @@ export default function SettingModal({ open, onClose }) {
                                         <motion.button
                                             key="danger"
                                             onClick={() => setActiveTab('danger')}
-                                            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
-                                                activeTab === 'danger'
+                                            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${activeTab === 'danger'
                                                     ? 'bg-rose-500/20 text-rose-500 border border-rose-500/30 font-semibold'
                                                     : 'hover:bg-rose-500/10 text-rose-500/80 hover:text-rose-500'
-                                            }`}
+                                                }`}
                                         >
                                             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                                             <span className="font-medium text-xs">Danger Zone</span>
@@ -223,7 +221,7 @@ export default function SettingModal({ open, onClose }) {
                     {/* Main Content Viewport */}
                     <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-card">
                         {/* Header */}
-                        <div className="flex items-center gap-2.5 p-3 px-4 border-b border-border/50 bg-card shrink-0">
+                        <div className="flex items-center gap-2.5 p-3 px-4 border-b border-border/80 bg-card shrink-0">
                             <div className="p-1.5 rounded-lg bg-secondary/40 border border-border/50 shrink-0">
                                 {React.createElement(
                                     settingTabs.find(t => t.id === activeTab)?.icon || AlertTriangle,

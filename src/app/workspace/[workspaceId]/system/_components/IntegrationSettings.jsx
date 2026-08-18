@@ -40,16 +40,16 @@ export const IntegrationSettings = () => {
 
     return (
         <div className="space-y-3">
-            <Card className="bg-card border-border/50">
-                <CardHeader className="pb-3 px-3 border-b border-white/5">
+            <Card className="bg-card border-border/80">
+                <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                     <div className="flex flex-row items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                            <div className="p-1 bg-emerald-500/10 rounded-md border border-emerald-500/20">
                                 <Globe className="w-3.5 h-3.5 text-emerald-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-white">Outgoing Webhooks</CardTitle>
-                                <CardDescription className="text-[10px] text-zinc-500">
+                                <CardTitle className="text-xs font-bold text-foreground leading-tight">Outgoing Webhooks</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                     Real-time event notifications via HTTPS.
                                 </CardDescription>
                             </div>
@@ -67,28 +67,28 @@ export const IntegrationSettings = () => {
                 <CardContent className="p-0">
                     {webhooks.length === 0 ? (
                         <div className="p-8 flex flex-col items-center justify-center gap-2">
-                            <Puzzle className="w-8 h-8 text-zinc-600" />
-                            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">No Webhooks</p>
+                            <Puzzle className="w-8 h-8 text-muted-foreground" />
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">No Webhooks</p>
                         </div>
                     ) : (
                         <Table>
-                            <TableHeader className="bg-white/5">
-                                <TableRow className="hover:bg-transparent border-b border-white/10">
-                                    <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-wider px-4 text-zinc-400">Endpoint</TableHead>
-                                    <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-wider px-4 text-zinc-400">Status</TableHead>
-                                    <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-wider px-4 text-zinc-400">Actions</TableHead>
+                            <TableHeader className="bg-secondary/20">
+                                <TableRow className="hover:bg-transparent border-b border-border/40">
+                                    <TableHead className="h-9 text-[10px] font-semibold uppercase tracking-wider px-4 text-muted-foreground">Endpoint</TableHead>
+                                    <TableHead className="h-9 text-[10px] font-semibold uppercase tracking-wider px-4 text-muted-foreground">Status</TableHead>
+                                    <TableHead className="h-9 text-right text-[10px] font-semibold uppercase tracking-wider px-4 text-muted-foreground">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {webhooks.map((hook) => (
-                                    <TableRow key={hook.id} className="hover:bg-white/5 border-b border-white/10 last:border-0">
-                                        <TableCell className="py-2.5 px-4 font-mono text-xs text-zinc-300 truncate max-w-[200px]">{hook.url}</TableCell>
-                                        <TableCell className="py-2.5 px-4">
-                                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 rounded text-[10px] font-semibold px-2 py-0.5">
+                                    <TableRow key={hook.id} className="hover:bg-secondary/20 border-b border-border/40 last:border-0">
+                                        <TableCell className="py-2 px-4 font-mono text-xs text-foreground truncate max-w-[200px]">{hook.url}</TableCell>
+                                        <TableCell className="py-2 px-4">
+                                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 rounded text-[10px] font-semibold px-2 py-0.5">
                                                 {hook.status.toUpperCase()}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="py-2.5 px-4 text-right">
+                                        <TableCell className="py-2 px-4 text-right">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -106,64 +106,64 @@ export const IntegrationSettings = () => {
                 </CardContent>
             </Card>
 
-            <Card className="bg-card border-border/50">
-                <CardHeader className="pb-3 px-3 border-b border-white/5">
+            <Card className="bg-card border-border/80">
+                <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                     <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                        <div className="p-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">
                             <Key className="w-3.5 h-3.5 text-indigo-500" />
                         </div>
                         <div>
-                            <CardTitle className="text-xs font-bold text-white">API Governance</CardTitle>
-                            <CardDescription className="text-[10px] text-zinc-500">
+                            <CardTitle className="text-xs font-bold text-foreground leading-tight">API Governance</CardTitle>
+                            <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                 Access keys for custom applications.
                             </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="pt-3 px-3">
-                    <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-white/5 border border-white/10">
+                <CardContent className="p-3">
+                    <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-secondary/30 border border-border/40">
                         <div className="space-y-0.5">
-                            <Label className="text-xs font-semibold text-white">Development Key</Label>
-                            <p className="text-[10px] text-zinc-500">Active • Last rotated 2d ago</p>
+                            <Label className="text-xs font-semibold text-foreground">Development Key</Label>
+                            <p className="text-[10px] text-muted-foreground">Active • Last rotated 2d ago</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <code className="bg-white/10 px-2 py-1 rounded border border-white/10 font-mono text-xs text-zinc-300">
+                            <code className="bg-secondary/50 px-2 py-1 rounded border border-border/60 font-mono text-xs text-foreground">
                                 dvlx_live_••••••••
                             </code>
                             <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 border border-white/10 rounded-lg bg-white/5"
+                                className="h-7 w-7 border border-border/50 rounded-lg bg-secondary/30"
                                 onClick={() => {
                                     navigator.clipboard.writeText("dvlx_live_example_key");
                                     toast.success("Key copied to clipboard");
                                 }}
                             >
-                                <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                                <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                             </Button>
-                            <Button variant="ghost" className="rounded-lg bg-white/5 border border-white/10 text-[10px] font-semibold h-7 px-2">
+                            <Button variant="ghost" className="rounded-lg bg-secondary/30 border border-border/50 text-[10px] font-semibold h-7 px-2">
                                 ROTATE
                             </Button>
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="border-t border-white/5 pt-3 px-3 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-500" />
+                <CardFooter className="border-t border-border/40 py-1.5 px-3 flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
                     <span className="text-[10px] font-semibold text-indigo-500 uppercase tracking-tighter">
                         Keys are AES-256 encrypted
                     </span>
                 </CardFooter>
             </Card>
 
-            <Card className="bg-white/5 border-white/10 opacity-60">
-                <CardHeader className="pb-3 px-3">
+            <Card className="bg-card border-border/80 opacity-60">
+                <CardHeader className="py-0 px-3 space-y-0">
                     <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                        <div className="p-1 bg-amber-500/10 rounded-md border border-amber-500/20">
                             <Puzzle className="w-3.5 h-3.5 text-amber-500" />
                         </div>
                         <div>
-                            <CardTitle className="text-xs font-bold text-white">App Marketplace</CardTitle>
-                            <CardDescription className="text-[10px] text-zinc-500">Launching in Q4 2026</CardDescription>
+                            <CardTitle className="text-xs font-bold text-foreground leading-tight">App Marketplace</CardTitle>
+                            <CardDescription className="text-[10px] text-muted-foreground leading-none">Launching in Q4 2026</CardDescription>
                         </div>
                     </div>
                 </CardHeader>

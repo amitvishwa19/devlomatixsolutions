@@ -127,15 +127,15 @@ export const AdvancedSettings = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
             >
-                <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                <Card className="bg-card border-border/80 transition-colors shadow-xs">
+                    <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-amber-500/10 rounded-md border border-amber-500/20">
+                            <div className="p-1 bg-amber-500/10 rounded-md border border-amber-500/20">
                                 <Cpu className="w-3.5 h-3.5 text-amber-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-foreground">System Infrastructure</CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground">
+                                <CardTitle className="text-xs font-bold text-foreground leading-tight">System Infrastructure</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
                                     Global technical behavior and states.
                                 </CardDescription>
                             </div>
@@ -183,15 +183,15 @@ export const AdvancedSettings = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: 0.05 }}
                 >
-                    <Card className="bg-card border-border/50 transition-colors shadow-xs h-full flex flex-col justify-between">
-                        <CardHeader className="p-3 pb-2 border-b border-border/40">
+                    <Card className="bg-card border-border/80 transition-colors shadow-xs h-full flex flex-col justify-between">
+                        <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-indigo-500/10 rounded-md border border-indigo-500/20">
+                                <div className="p-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">
                                     <Code className="w-3.5 h-3.5 text-indigo-500" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-xs font-bold text-foreground">Code Injection</CardTitle>
-                                    <CardDescription className="text-[10px] text-muted-foreground">Custom CSS stylesheet.</CardDescription>
+                                    <CardTitle className="text-xs font-bold text-foreground leading-tight">Code Injection</CardTitle>
+                                    <CardDescription className="text-[10px] text-muted-foreground leading-none">Custom CSS stylesheet.</CardDescription>
                                 </div>
                             </div>
                         </CardHeader>
@@ -204,7 +204,7 @@ export const AdvancedSettings = () => {
                                 value={localAdvanced.customCss}
                                 onChange={(e) => setLocalAdvanced(prev => ({ ...prev, customCss: e.target.value }))}
                                 placeholder="/* Add custom CSS rules */"
-                                className="bg-secondary/30 border-border/50 text-foreground font-mono text-xs resize-none p-2.5 rounded-lg min-h-[70px]"
+                                className="bg-secondary/30 border-border/80 text-foreground font-mono text-xs resize-none p-2.5 rounded-lg min-h-[70px]"
                             />
                         </CardContent>
                     </Card>
@@ -216,15 +216,15 @@ export const AdvancedSettings = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: 0.1 }}
                 >
-                    <Card className="bg-card border-border/50 transition-colors shadow-xs h-full flex flex-col justify-between">
-                        <CardHeader className="p-3 pb-2 border-b border-border/40">
+                    <Card className="bg-card border-border/80 transition-colors shadow-xs h-full flex flex-col justify-between">
+                        <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-primary/10 rounded-md border border-primary/20">
+                                <div className="p-1 bg-primary/10 rounded-md border border-primary/20">
                                     <Download className="w-3.5 h-3.5 text-primary" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-xs font-bold text-foreground">1-Click Config Backup</CardTitle>
-                                    <CardDescription className="text-[10px] text-muted-foreground">Export snapshot & rollback.</CardDescription>
+                                    <CardTitle className="text-xs font-bold text-foreground leading-tight">1-Click Config Backup</CardTitle>
+                                    <CardDescription className="text-[10px] text-muted-foreground leading-none">Export snapshot & rollback.</CardDescription>
                                 </div>
                             </div>
                         </CardHeader>
@@ -232,7 +232,7 @@ export const AdvancedSettings = () => {
                             <Button
                                 variant="outline"
                                 onClick={handleExportConfig}
-                                className="flex flex-col items-center justify-center h-16 rounded-lg border-border/50 hover:bg-secondary/40 gap-1.5 transition-all text-xs font-semibold"
+                                className="flex flex-col items-center justify-center h-16 rounded-lg border-border/60 hover:bg-secondary/40 gap-1.5 transition-all text-xs font-semibold"
                             >
                                 <FileJson className="w-4 h-4 text-primary" />
                                 <span>Export JSON</span>
