@@ -1,6 +1,6 @@
 /**
  * Refactored Sidebar Navigation structure.
- * This file contains the same items as sidebar-items.js but in a nested parent-child format.
+ * This file contains the complete workspace navigation items in nested parent-child format.
  */
 
 export const getSidebarNavItems = (workspaceId) => {
@@ -16,6 +16,13 @@ export const getSidebarNavItems = (workspaceId) => {
     const baseEcommercePath = `${basePath}/ecommerce`;
     const baseFlowbytePath = `${basePath}/flowbyte`;
     const baseFlowgenixPath = `${basePath}/flowgenix`;
+    const baseFlowforgePath = `${basePath}/flowforge`;
+    const baseDeskflowPath = `${basePath}/deskflow`;
+    const basePayflowPath = `${basePath}/payflow`;
+    const baseFormcraftPath = `${basePath}/formcraft`;
+    const baseMetricpulsePath = `${basePath}/metricpulse`;
+    const baseKnowbasePath = `${basePath}/knowbase`;
+    const baseSocialhubPath = `${basePath}/socialhub`;
 
     return [
         {
@@ -54,9 +61,6 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Templates", icon: "zap", url: `${baseWhatsappCloudApiPath}/template` },
                 { title: "Campaigns", icon: "megaphone", url: `${baseWhatsappCloudApiPath}/campaigns` },
                 { title: "Flows", icon: "megaphone", url: `${baseWhatsappCloudApiPath}/flows` },
-                // { title: "Analytics", icon: "line-chart", url: `${baseWhatsappCloudApiPath}/analytics` },
-                // { title: "Agents", icon: "bot", url: `${baseWhatsappCloudApiPath}/agents` },
-                // { title: "AI Assistant", icon: "sparkles", url: `${baseWhatsappCloudApiPath}/assistant` },
                 { title: "Chatbot", icon: "bot", url: `${baseWhatsappCloudApiPath}/chatbot` },
                 { title: "Usage & billing", icon: "credit-card", url: `${baseWhatsappCloudApiPath}/settings?tab=billing` },
                 { title: "Docs", icon: "book-open-text", url: `${baseWhatsappCloudApiPath}/docs` },
@@ -65,29 +69,93 @@ export const getSidebarNavItems = (workspaceId) => {
             baseUrl: baseWhatsappCloudApiPath,
             permission: `navbar:KonnectX:Parent`
         },
-        // {
-        //     parent: { title: "WA CRM", icon: "message-circle-more", url: baseWhatsappCrmPath },
-        //     child: [
-        //         { title: "Dashboard", icon: "message-circle-more", url: baseWhatsappCrmPath },
-        //         { title: "Inbox", icon: "bot-message-square", url: `${baseWhatsappCrmPath}/inbox` },
-        //         { title: "Contacts", icon: "users", url: `${baseWhatsappCrmPath}/contacts` },
-        //         { title: "Pipelines", icon: "zap", url: `${baseWhatsappCrmPath}/pipelines` },
-        //         { title: "Broadcasts", icon: "megaphone", url: `${baseWhatsappCrmPath}/broadcasts` },
-        //         { title: "Automations", icon: "megaphone", url: `${baseWhatsappCrmPath}/automations` },
-        //         // { title: "Analytics", icon: "line-chart", url: `${baseWhatsappCloudApiPath}/analytics` },
-        //         // { title: "Agents", icon: "bot", url: `${baseWhatsappCloudApiPath}/agents` },
-        //         // { title: "AI Assistant", icon: "sparkles", url: `${baseWhatsappCloudApiPath}/assistant` },
-        //         { title: "Flows", icon: "bot", url: `${baseWhatsappCrmPath}/flows` },
-        //         { title: "Settings", icon: "settings-2", url: `${baseWhatsappCrmPath}/settings` },
-        //     ],
-        //     baseUrl: baseWhatsappCrmPath,
-        //     permission: `navbar:wacrm:Parent`
-        // },
         {
             parent: { title: "FlowGenix", icon: "bot-message-square", url: baseFlowgenixPath },
             child: [],
             baseUrl: baseFlowgenixPath,
             permission: `navbar:KonnectXv2:Parent`
+        },
+        {
+            parent: { title: "FlowForge", icon: "workflow", url: baseFlowforgePath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseFlowforgePath },
+                { title: "Workflows", icon: "git-branch", url: `${baseFlowforgePath}/workflows` },
+                { title: "Triggers", icon: "zap", url: `${baseFlowforgePath}/triggers` },
+                { title: "Logs", icon: "scroll-text", url: `${baseFlowforgePath}/logs` },
+                { title: "Templates", icon: "layers", url: `${baseFlowforgePath}/templates` },
+            ],
+            baseUrl: baseFlowforgePath,
+            permission: `navbar:FlowForge:Parent`
+        },
+        {
+            parent: { title: "DeskFlow", icon: "messages-square", url: baseDeskflowPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseDeskflowPath },
+                { title: "Tickets", icon: "ticket", url: `${baseDeskflowPath}/tickets` },
+                { title: "Live Chat", icon: "message-circle-more", url: `${baseDeskflowPath}/chat` },
+                { title: "Agents", icon: "users", url: `${baseDeskflowPath}/agents` },
+                { title: "Responses", icon: "message-square-text", url: `${baseDeskflowPath}/responses` },
+            ],
+            baseUrl: baseDeskflowPath,
+            permission: `navbar:DeskFlow:Parent`
+        },
+        {
+            parent: { title: "PayFlow", icon: "credit-card", url: basePayflowPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: basePayflowPath },
+                { title: "Invoices", icon: "receipt", url: `${basePayflowPath}/invoices` },
+                { title: "Subscriptions", icon: "repeat", url: `${basePayflowPath}/subscriptions` },
+                { title: "Payments", icon: "dollar-sign", url: `${basePayflowPath}/payments` },
+                { title: "Customers", icon: "users", url: `${basePayflowPath}/customers` },
+            ],
+            baseUrl: basePayflowPath,
+            permission: `navbar:PayFlow:Parent`
+        },
+        {
+            parent: { title: "FormCraft", icon: "form-input", url: baseFormcraftPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseFormcraftPath },
+                { title: "Forms", icon: "file-edit", url: `${baseFormcraftPath}/forms` },
+                { title: "Submissions", icon: "inbox", url: `${baseFormcraftPath}/submissions` },
+                { title: "Templates", icon: "layout-template", url: `${baseFormcraftPath}/templates` },
+                { title: "Analytics", icon: "bar-chart-3", url: `${baseFormcraftPath}/analytics` },
+            ],
+            baseUrl: baseFormcraftPath,
+            permission: `navbar:FormCraft:Parent`
+        },
+        {
+            parent: { title: "MetricPulse", icon: "activity", url: baseMetricpulsePath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseMetricpulsePath },
+                { title: "Revenue", icon: "trending-up", url: `${baseMetricpulsePath}/revenue` },
+                { title: "Activity", icon: "activity", url: `${baseMetricpulsePath}/activity` },
+                { title: "Reports", icon: "pie-chart", url: `${baseMetricpulsePath}/reports` },
+            ],
+            baseUrl: baseMetricpulsePath,
+            permission: `navbar:MetricPulse:Parent`
+        },
+        {
+            parent: { title: "KnowBase", icon: "book-open", url: baseKnowbasePath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseKnowbasePath },
+                { title: "Articles", icon: "file-text", url: `${baseKnowbasePath}/articles` },
+                { title: "Categories", icon: "folder-tree", url: `${baseKnowbasePath}/categories` },
+                { title: "Feedback", icon: "thumbs-up", url: `${baseKnowbasePath}/feedback` },
+            ],
+            baseUrl: baseKnowbasePath,
+            permission: `navbar:KnowBase:Parent`
+        },
+        {
+            parent: { title: "SocialHub", icon: "share-2", url: baseSocialhubPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseSocialhubPath },
+                { title: "Calendar", icon: "calendar", url: `${baseSocialhubPath}/calendar` },
+                { title: "Composer", icon: "send", url: `${baseSocialhubPath}/composer` },
+                { title: "Scheduled", icon: "clock", url: `${baseSocialhubPath}/scheduled` },
+                { title: "Accounts", icon: "share-2", url: `${baseSocialhubPath}/accounts` },
+            ],
+            baseUrl: baseSocialhubPath,
+            permission: `navbar:SocialHub:Parent`
         },
         {
             parent: { title: "Documents", icon: "file", url: basePath },
@@ -142,7 +210,6 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Logs", icon: "scroll-text", url: `${systemPath}/log` },
                 { title: "Mailer", icon: "send", url: `${systemPath}/mailer` },
                 { title: "Cron Jobs", icon: "timer", url: `${systemPath}/cron` },
-                // { title: "Settings", icon: "settings-2", url: `${systemPath}/setting` },
             ],
             baseUrl: systemPath,
             permission: `navbar:System:Parent`
@@ -177,7 +244,7 @@ export const getSidebarItems = (workspaceId) => {
             });
         });
 
-        // Handle groups with no children (like FlowGenix/AI Agent in the current lib)
+        // Handle groups with no children (like FlowGenix)
         if (!group.child || group.child.length === 0) {
             flatItems.push({
                 ...group.parent,
