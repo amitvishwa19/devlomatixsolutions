@@ -29,24 +29,40 @@ export function AppLogo({ size = 130, width, height, link = '/', className, bord
 
     const logoWidth = Number(width || size || 130)
     const logoHeight = Number(height || size || 130)
+    const isRemote = typeof logo === 'string' && (logo.startsWith('http') || logo.startsWith('//'))
 
     const content = (
         <div
             className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-1 rounded-md shrink-0", className)}
         >
-            <Image
-                src={logo}
-                alt='logo'
-                width={logoWidth}
-                height={logoHeight}
-                className="object-contain"
-                style={{
-                    width: `${logoWidth}px`,
-                    height: height ? `${height}px` : 'auto',
-                    maxHeight: `${logoHeight}px`
-                }}
-                priority={false}
-            />
+            {isRemote ? (
+                <img
+                    src={logo}
+                    alt='logo'
+                    className="object-contain"
+                    style={{
+                        maxWidth: `${logoWidth}px`,
+                        maxHeight: `${logoHeight}px`,
+                        width: `${logoWidth}px`,
+                        height: height ? `${height}px` : 'auto'
+                    }}
+                    onError={() => setLogo(theme === 'dark' ? darkLogo : lightLogo)}
+                />
+            ) : (
+                <Image
+                    src={logo}
+                    alt='logo'
+                    width={logoWidth}
+                    height={logoHeight}
+                    className="object-contain"
+                    style={{
+                        width: `${logoWidth}px`,
+                        height: height ? `${height}px` : 'auto',
+                        maxHeight: `${logoHeight}px`
+                    }}
+                    priority={false}
+                />
+            )}
         </div>
     )
 
