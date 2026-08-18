@@ -255,7 +255,7 @@ print(response.choices[0].message.content)`;
             </div>
 
             {/* Live API Playground */}
-            <Card className="border border-border/50 bg-card/40 backdrop-blur-xs">
+            <Card className="border border-border/80 bg-card/40 backdrop-blur-xs">
                 <CardHeader className="p-5 pb-3">
                     <CardTitle className="text-sm font-bold flex items-center gap-2">
                         <Zap className="w-4 h-4 text-purple-500" /> Real-Time Gateway Playground
@@ -313,7 +313,7 @@ print(response.choices[0].message.content)`;
             </Card>
 
             {/* Universal External Gateway Integration Guide */}
-            <Card className="border border-border/50 bg-card/40 backdrop-blur-xs">
+            <Card className="border border-border/80 bg-card/40 backdrop-blur-xs">
                 <CardHeader className="p-5 pb-3">
                     <div className="flex items-center justify-between">
                         <div>

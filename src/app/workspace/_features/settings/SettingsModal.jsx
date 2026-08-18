@@ -122,7 +122,7 @@ export default function SettingsModal({ isOpen, open, onClose }) {
 
     return (
         <Dialog open={Boolean(isModalOpen)} onOpenChange={handleOpenChange}>
-            <DialogContent className="min-h-[80vh] max-h-[80vh] min-w-[85vw] max-w-[85vw] p-0 overflow-hidden bg-card border border-border shadow-2xl rounded-xl">
+            <DialogContent className="min-h-[80vh] max-h-[80vh] min-w-[85vw] max-w-[85vw] p-0 overflow-hidden bg-card border shadow-2xl rounded-xl">
                 <DialogHeader className="hidden">
                     <DialogTitle>Workspace Settings</DialogTitle>
                     <DialogDescription>Manage your workspace preferences and configurations.</DialogDescription>
@@ -133,9 +133,9 @@ export default function SettingsModal({ isOpen, open, onClose }) {
                     <motion.aside
                         initial={{ x: -15, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        className="w-64 border-r border-border/50 bg-card flex flex-col h-full shrink-0"
+                        className="w-64 border-r bg-card flex flex-col h-full shrink-0"
                     >
-                        <div className="p-3 border-b border-border/50 shrink-0">
+                        <div className="p-3 border-b shrink-0">
                             <div className="flex items-center gap-2.5 mb-2.5">
                                 <div className="p-1.5 bg-primary/10 rounded-lg border border-primary/20">
                                     <Settings className="w-4 h-4 text-primary" />
@@ -152,7 +152,7 @@ export default function SettingsModal({ isOpen, open, onClose }) {
                                     placeholder="Search settings..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 bg-secondary/30 border border-border/50 rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+                                    className="w-full pl-8 pr-3 py-1.5 bg-secondary/30 border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
                                 />
                             </div>
                         </div>
@@ -167,11 +167,10 @@ export default function SettingsModal({ isOpen, open, onClose }) {
                                         <motion.button
                                             key={item.value}
                                             onClick={() => setSelectedTab(item.value)}
-                                            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
-                                                isSelected
-                                                    ? 'bg-primary/15 text-primary border border-primary/30 font-semibold shadow-xs'
-                                                    : 'hover:bg-secondary/40 text-muted-foreground hover:text-foreground'
-                                            }`}
+                                            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${isSelected
+                                                ? 'bg-primary/15 text-primary border border-primary/30 font-semibold shadow-xs'
+                                                : 'hover:bg-secondary/40 text-muted-foreground hover:text-foreground'
+                                                }`}
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: index * 0.02 }}
@@ -188,7 +187,7 @@ export default function SettingsModal({ isOpen, open, onClose }) {
                             </nav>
                         </ScrollArea>
 
-                        <div className="p-3 border-t border-border/50 bg-card shrink-0">
+                        <div className="p-3 border-t bg-card shrink-0">
                             <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
                                 <span className="relative flex h-1.5 w-1.5">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -202,8 +201,8 @@ export default function SettingsModal({ isOpen, open, onClose }) {
                     {/* Right Main Content Area */}
                     <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-card">
                         {/* Compact Top Header */}
-                        <div className="flex items-center gap-2.5 p-3 px-4 border-b border-border/50 bg-card shrink-0">
-                            <div className="p-2 rounded-lg bg-secondary/40 border border-border/50 shrink-0">
+                        <div className="flex items-center gap-2.5 p-10 px-4 border-b bg-card shrink-0 ">
+                            <div className="p-2 rounded-lg bg-secondary/40 border shrink-0">
                                 {React.createElement(currentItem.icon, {
                                     className: `w-4 h-4 ${currentItem.color || 'text-primary'}`
                                 })}

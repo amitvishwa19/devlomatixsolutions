@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/tabs";
 import { ContactSheet } from './_components/ContactSheet';
 import { DeleteContactDialog } from './_components/DeleteContactDialog';
+import { EmptyState } from '@/components/global/EmptyState';
 
 
 const CONTACT_TYPES = [
@@ -413,12 +414,27 @@ export default function ContactManagementPage() {
                                 ))}
                             </div>
                         ) : filteredContacts.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center p-20 text-center">
-                                <div className="p-6 bg-zinc-900/50 rounded-full border border-white/5 mb-6">
-                                    <Users className="w-12 h-12 text-muted-foreground/20" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Voice of the Vault</h3>
-                                <p className="text-xs text-muted-foreground max-w-[280px]">No contacts match your current filter criteria. Try expanding your search or adding a new member.</p>
+                            <div className="py-16">
+                                <EmptyState
+                                    icon={Users}
+                                    title="No Contacts in Vault"
+                                    description="No contacts match your current search and filter criteria. Try expanding your search or register a new contact."
+                                    actionLabel="Add New Contact"
+                                    onAction={() => {
+                                        setEditingContact(null);
+                                        setFormData({
+                                            name: '',
+                                            phone: '',
+                                            email: '',
+                                            type: 'CONTACT',
+                                            groupIds: [],
+                                            tags: [],
+                                            categoryId: '',
+                                            info: {}
+                                        });
+                                        setIsSheetOpen(true);
+                                    }}
+                                />
                             </div>
                         ) : (
                             <div className="p-0">

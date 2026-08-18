@@ -24,6 +24,7 @@ import { CalendarView } from './_components/CalendarView';
 import { AddPostModal } from './_components/AddPostModal';
 import { MediaLibraryModal } from './_components/MediaLibraryModal';
 import { RecentLogsWidget } from './_components/RecentLogsWidget';
+import { EmptyState } from '@/components/global/EmptyState';
 import { cn } from '@/lib/utils';
 
 
@@ -176,18 +177,14 @@ export default function ArticlePage() {
                         : "flex flex-col gap-3"
                 )}>
                     {posts.length === 0 && !loading ? (
-                        <div className="col-span-full py-32 text-center bg-card/10 rounded-md border border-dashed border-border/60">
-                            <div className="bg-muted/30 w-20 h-20 rounded-md flex items-center justify-center mx-auto mb-6 border border-border/20">
-                                <Share2 className="w-10 text-muted-foreground/30" />
-                            </div>
-                            <h3 className="text-xl font-bold text-foreground mb-2">Your feed is quiet...</h3>
-                            <p className="text-muted-foreground mb-8 text-[10px] font-bold">Start your first multi-platform social media post.</p>
-                            <Button
-                                onClick={() => onOpen('addPost', { workspaceId, onApply: fetchPosts })}
-                                className="rounded-md font-bold px-8 text-[10px]"
-                            >
-                                Create First Post
-                            </Button>
+                        <div className="col-span-full py-16">
+                            <EmptyState
+                                icon={Share2}
+                                title="Your social feed is quiet"
+                                description="Start your first multi-platform social media post across Meta, X, and LinkedIn."
+                                actionLabel="Create First Post"
+                                onAction={() => onOpen('addPost', { workspaceId, onApply: fetchPosts })}
+                            />
                         </div>
                     ) : (
                         posts

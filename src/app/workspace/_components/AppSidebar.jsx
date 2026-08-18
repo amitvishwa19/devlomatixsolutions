@@ -62,6 +62,18 @@ export default function AppSidebar() {
         }
     }, [openGroups, hydrated]);
 
+    // Keyboard shortcut Ctrl+B / Cmd+B to toggle sidebar
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.key === 'b' || e.key === 'B') && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                setOpen(state !== "expanded");
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [state, setOpen]);
+
     const navigation = useMemo(
         () => getSidebarNavItems(workspaceId),
         [workspaceId],

@@ -15,6 +15,7 @@ import {
 import { MoreHorizontal, Share2, Download, Eye, Users } from'lucide-react';
 import ShareModal from'./ShareModal';
 import FileViewerModal from'./FileViewerModal';
+import { EmptyState } from '@/components/global/EmptyState';
 
 const statusStyles = {
  complete:"bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -109,11 +110,12 @@ export default function RecentDocuments({ workspaceId, userId }) {
  </CardHeader>
  <CardContent className="px-0">
  {recentDocs.length === 0 ? (
- <div className="py-20 flex flex-col items-center justify-center opacity-40">
- <div className="w-16 h-16 bg-muted/50 rounded-md flex items-center justify-center mb-4">
- <Clock className="h-8 w-8 text-muted-foreground"/>
- </div>
- <p className="text-xs font-bold text-muted-foreground">No recent files</p>
+ <div className="py-8">
+     <EmptyState
+         icon={FileText}
+         title="No Recent Documents"
+         description="You haven't uploaded or accessed any documents yet."
+     />
  </div>
  ) : (
  <div className="divide-y divide-border/10">

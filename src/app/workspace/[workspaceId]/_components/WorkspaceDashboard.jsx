@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     LayoutDashboard,
     Share2,
@@ -12,174 +12,298 @@ import {
     Zap,
     Users,
     ShieldCheck,
-    Activity
+    Activity,
+    Bot,
+    FolderKanban,
+    Sparkles,
+    CheckCircle2,
+    Clock,
+    Server,
+    ExternalLink,
+    Send,
+    Database,
+    Shield,
+    Terminal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-
-const DashboardCard = ({ title, description, icon: Icon, href, color, stats }) => (
-    <Link href={href}>
-        <Card className="relative overflow-hidden group border-border bg-card hover:bg-card/90 transition-all duration-500 hover:-translate-y-1 shadow-soft hover:shadow-medium cursor-pointer rounded-md animate-fade-in">
-            <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 bg-${color}/10 rounded-full blur-3xl group-hover:bg-${color}/20 transition-colors pointer-events-none`} />
-
-            <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                    <div className={`p-2.5 rounded-md bg-${color}/10 text-${color} group-hover:scale-110 transition-transform`}>
-                        <Icon size={24} />
-                    </div>
-                    <ArrowRight size={16} className="text-muted-foreground opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                </div>
-                <CardTitle className="text-xl font-extrabold mt-4">{title}</CardTitle>
-                <CardDescription className="text-xs font-medium opacity-70 leading-relaxed">
-                    {description}
-                </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-                <div className="flex items-center gap-4 mt-2">
-                    {stats?.map((stat, i) => (
-                        <div key={i} className="flex flex-col">
-                            <span className="text-xs font-bold text-foreground">{stat.value}</span>
-                            <span className="text-[10px] font-medium text-muted-foreground">{stat.label}</span>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-    </Link>
-);
+import { Badge } from "@/components/ui/badge";
+import Link from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useSettings } from "@/providers/WorkspaceProvider";
+import { motion } from "framer-motion";
 
 export default function WorkspaceDashboard({ workspaceId }) {
+    const router = useRouter();
+    const { settings } = useSettings();
+    const workspaceName = settings?.general?.name || settings?.branding?.appName || 'Devlomatix Workspace';
+
+    // Real-time simulated telemetry / stats
+    const [stats, setStats] = useState({
+        aiTokens: "1.42M",
+        waCampaigns: "24",
+        storageUsed: "4.2 GB",
+        teamMembers: "12",
+        activeLeads: "1,280",
+        uptime: "99.98%"
+    });
+
+    const quickActions = [
+        { label: "New AI Chat", icon: Bot, href: `/workspace/${workspaceId}/flowgenix`, color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
+        { label: "WhatsApp Campaign", icon: MessageCircle, href: `/workspace/${workspaceId}/konnectx`, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+        { label: "Publish Social Post", icon: Share2, href: `/workspace/${workspaceId}/article`, color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
+        { label: "Add CRM Lead", icon: Users, href: `/workspace/${workspaceId}/contact`, color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+    ];
+
     const modules = [
         {
-            title: "Social Media Hub",
-            description: "Design, schedule and publish content across Meta, X, and LinkedIn.",
-            icon: Share2,
-            href: `/workspace/${workspaceId}/article`,
-            color: "primary",
+            title: "FlowGenix AI Studio",
+            description: "Omni-route LLM inference, multimodal vision, prompt engineering & telemetry.",
+            icon: Bot,
+            href: `/workspace/${workspaceId}/flowgenix`,
+            badge: "Multi-Model",
             stats: [
-                { label: "Active", value: "8 Posts" },
-                { label: "Scheduled", value: "3" }
-            ]
+                { label: "Tokens Processed", value: stats.aiTokens },
+                { label: "Latency", value: "~280ms" }
+            ],
+            color: "text-purple-500"
         },
         {
-            title: "WhatsApp Manager",
-            description: "Direct customer engagement, bulk campaigns and automated bot flows.",
+            title: "WhatsApp Cloud Manager",
+            description: "Direct customer engagement, interactive bot templates and automated campaigns.",
             icon: MessageCircle,
-            href: `/workspace/${workspaceId}/wa-cloud-api`,
-            color: "green-500",
+            href: `/workspace/${workspaceId}/konnectx`,
+            badge: "Meta API",
             stats: [
                 { label: "Status", value: "Connected" },
-                { label: "Campaigns", value: "24" }
-            ]
+                { label: "Campaigns", value: stats.waCampaigns }
+            ],
+            color: "text-emerald-500"
         },
         {
-            title: "Digital Assets",
-            description: "Securely store and organize your documents, images and rich media.",
-            icon: FileText,
+            title: "Digital Assets Vault",
+            description: "Secure multi-tenant cloud storage for media, brand PDFs, and assets.",
+            icon: FolderKanban,
             href: `/workspace/${workspaceId}/document`,
-            color: "blue-500",
+            badge: "AES-256",
             stats: [
-                { label: "Storage", value: "4.2 GB" },
-                { label: "Files", value: "156" }
-            ]
+                { label: "Storage", value: stats.storageUsed },
+                { label: "Files", value: "248 items" }
+            ],
+            color: "text-blue-500"
         },
         {
-            title: "System & Access",
-            description: "Manage credentials, team permissions and platform configurations.",
-            icon: Settings,
-            href: `/workspace/${workspaceId}/system/setting`,
-            color: "orange-500",
+            title: "Social Media Hub",
+            description: "Schedule, preview and publish rich content across Meta, X, and LinkedIn.",
+            icon: Share2,
+            href: `/workspace/${workspaceId}/article`,
+            badge: "Multi-Channel",
             stats: [
-                { label: "Team", value: "12 Members" },
-                { label: "Security", value: "Shield On" }
-            ]
+                { label: "Active Posts", value: "14 scheduled" },
+                { label: "Engagement", value: "+28.4%" }
+            ],
+            color: "text-sky-500"
         },
         {
-            title: "Contacts & CRM",
-            description: "Centralized business vault for your leads, active clients, and team contacts.",
+            title: "Contacts & CRM Vault",
+            description: "Centralized customer intelligence, lead qualification, and classification.",
             icon: Users,
             href: `/workspace/${workspaceId}/contact`,
-            color: "purple-500",
+            badge: "CRM Vault",
             stats: [
-                { label: "Total Vault", value: "Syncing..." },
-                { label: "Classification", value: "Multi-tenant" }
-            ]
+                { label: "Active Contacts", value: stats.activeLeads },
+                { label: "Tags", value: "18 segments" }
+            ],
+            color: "text-amber-500"
+        },
+        {
+            title: "System & Governance",
+            description: "Configure workspace branding, developer webhooks, API keys, and RBAC.",
+            icon: Settings,
+            href: `/workspace/${workspaceId}/system/setting`,
+            badge: "Enterprise",
+            stats: [
+                { label: "Team", value: `${stats.teamMembers} Members` },
+                { label: "Security", value: "MFA Active" }
+            ],
+            color: "text-rose-500"
         }
     ];
 
+    const recentActivity = [
+        { title: "FlowGenix Prompt Generated", meta: "Claude 3.5 Sonnet • 1,420 tokens", time: "2 mins ago", icon: Bot, color: "text-purple-500" },
+        { title: "WhatsApp Broadcast Delivered", meta: "Campaign 'Summer VIP' sent to 450 contacts", time: "24 mins ago", icon: MessageCircle, color: "text-emerald-500" },
+        { title: "Social Article Published", meta: "Cross-posted to LinkedIn & X", time: "1 hour ago", icon: Share2, color: "text-blue-500" },
+        { title: "System Snapshot Created", meta: "Configuration backup exported", time: "3 hours ago", icon: Database, color: "text-amber-500" },
+    ];
+
+    const servicesHealth = [
+        { name: "OpenAI GPT-4o / Omni", status: "Operational", latency: "240ms" },
+        { name: "Google Gemini 2.0 Flash", status: "Operational", latency: "180ms" },
+        { name: "Anthropic Claude 3.5", status: "Operational", latency: "310ms" },
+        { name: "Meta WhatsApp Cloud API", status: "Operational", latency: "95ms" },
+        { name: "Supabase Realtime Engine", status: "Operational", latency: "42ms" },
+    ];
+
     return (
-        <div className="space-y-6 pb-10 animate-fade-in">
+        <div className="space-y-5 pb-10">
             {/* Hero Section */}
-            <div className="relative p-8 rounded-md overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-soft">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 blur-3xl -z-10" />
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary w-fit text-[10px] font-extrabold tracking-[0.2em]">
-                            <Zap size={12} className="fill-primary" /> Multi-Channel Engine
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative p-5 md:p-6 rounded-xl overflow-hidden bg-card border border-border/60 shadow-sm"
+            >
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="space-y-1.5 max-w-2xl">
+                        <div className="flex items-center gap-2">
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold tracking-wider uppercase border border-primary/20">
+                                <Zap size={11} className="fill-primary" /> Command Hub
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-mono">
+                                ID: {workspaceId}
+                            </span>
                         </div>
-                        <h1 className="text-4xl md:text-xl tracking-tighter text-foreground">
-                            Welcome to your <span className="text-primary tracking-normal italic">Workspace.</span>
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
+                            {workspaceName}
                         </h1>
-                        <p className="text-xs text-muted-foreground max-w-xl leading-relaxed font-medium">
-                            Control your entire digital presence from one centralized command center. Manage content, automate messaging, and secure your credentials with ease.
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Control your multi-model AI workflows, direct customer messaging, media storage, and organization governance from one unified command dashboard.
                         </p>
                     </div>
 
+                    {/* Quick Action Launchpad Buttons */}
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        {quickActions.map((action, idx) => (
+                            <Button
+                                key={idx}
+                                size="sm"
+                                variant="outline"
+                                onClick={() => router.push(action.href)}
+                                className={`h-8 text-xs font-semibold gap-1.5 rounded-lg border border-border/60 hover:bg-secondary/60 cursor-pointer shadow-2xs transition-all`}
+                            >
+                                <action.icon className="w-3.5 h-3.5" />
+                                <span>{action.label}</span>
+                            </Button>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            </motion.div>
 
-            {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {modules.map((module) => (
-                    <DashboardCard key={module.title} {...module} />
+            {/* Modules Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {modules.map((m, idx) => (
+                    <motion.div
+                        key={m.title}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2, delay: idx * 0.04 }}
+                    >
+                        <div
+                            onClick={() => router.push(m.href)}
+                            className="p-4 rounded-xl bg-card border border-border/60 hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between h-full group"
+                        >
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className={`p-2 rounded-lg bg-secondary/40 border border-border/60 ${m.color} group-hover:scale-105 transition-transform`}>
+                                        <m.icon size={18} />
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Badge variant="secondary" className="text-[9px] font-mono px-1.5 py-0 bg-secondary/50 border border-border/60">
+                                            {m.badge}
+                                        </Badge>
+                                        <ArrowRight size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all" />
+                                    </div>
+                                </div>
+
+                                <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors mb-1">
+                                    {m.title}
+                                </h3>
+                                <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-3">
+                                    {m.description}
+                                </p>
+                            </div>
+
+                            <div className="pt-2.5 border-t border-border/60 flex items-center justify-between text-xs">
+                                {m.stats.map((stat, i) => (
+                                    <div key={i} className="flex flex-col">
+                                        <span className="text-[10px] text-muted-foreground">{stat.label}</span>
+                                        <span className="text-xs font-bold text-foreground">{stat.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
                 ))}
             </div>
 
-            {/* Bottom Section - Status & Insights */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-border bg-card shadow-soft overflow-hidden rounded-md">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+            {/* Bottom Section: Activity Stream & System Health */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+                {/* Real-time Activity Stream */}
+                <Card className="lg:col-span-2 bg-card border-border/60 shadow-xs">
+                    <CardHeader className="p-3.5 pb-2 border-b border-border/60 flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle className="text-xl font-bold flex items-center gap-2">
-                                <Activity size={20} className="text-primary" /> Activity Overview
+                            <CardTitle className="text-xs font-bold text-foreground flex items-center gap-2">
+                                <Activity size={15} className="text-primary" /> Live Activity Feed
                             </CardTitle>
-                            <CardDescription className="text-xs">Real-time performance across all channels</CardDescription>
+                            <CardDescription className="text-[10px] text-muted-foreground">
+                                Real-time events and operations across your workspace
+                            </CardDescription>
                         </div>
-                        <Button variant="outline" size="sm" className="text-[10px] font-bold">
-                            View Full Logs
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push(`/workspace/${workspaceId}/system/setting`)}
+                            className="h-7 text-[10px] font-semibold text-primary hover:text-primary hover:bg-primary/10"
+                        >
+                            View Telemetry
                         </Button>
                     </CardHeader>
-                    <CardContent>
-                        <div className="h-[200px] w-full flex items-center justify-center border border-dashed border-border/60 rounded-md bg-background/30">
-                            <div className="flex flex-col items-center gap-2 opacity-50">
-                                <Activity size={40} />
-                                <span className="text-xs font-bold">Analytics Hydrating...</span>
+                    <CardContent className="p-3 space-y-2">
+                        {recentActivity.map((act, i) => (
+                            <div
+                                key={i}
+                                className="flex items-center justify-between p-2 px-2.5 rounded-lg bg-secondary/20 hover:bg-secondary/40 border border-border/60 transition-colors"
+                            >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className={`p-1.5 rounded-md bg-card border border-border/60 ${act.color} shrink-0`}>
+                                        <act.icon size={13} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <span className="text-xs font-semibold text-foreground block truncate">{act.title}</span>
+                                        <span className="text-[10px] text-muted-foreground block truncate">{act.meta}</span>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground font-mono shrink-0 ml-2">
+                                    {act.time}
+                                </span>
                             </div>
-                        </div>
+                        ))}
                     </CardContent>
                 </Card>
 
-                <Card className="border-border bg-card shadow-soft rounded-md">
-                    <CardHeader>
-                        <CardTitle className="text-xl font-bold flex items-center gap-2">
-                            <ShieldCheck size={20} className="text-green-500" /> System Health
-                        </CardTitle>
-                        <CardDescription className="text-xs">Token & security status</CardDescription>
+                {/* Multi-Service Health Status Matrix */}
+                <Card className="bg-card border-border/60 shadow-xs">
+                    <CardHeader className="p-3.5 pb-2 border-b border-border/60">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-xs font-bold text-foreground flex items-center gap-2">
+                                <ShieldCheck size={15} className="text-emerald-500" /> Service Status
+                            </CardTitle>
+                            <Badge variant="outline" className="text-[9px] font-mono text-emerald-500 border-emerald-500/30 bg-emerald-500/10">
+                                99.98% UPTIME
+                            </Badge>
+                        </div>
+                        <CardDescription className="text-[10px] text-muted-foreground">
+                            Connected APIs & Cloud dispatchers
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        {[
-                            { name: "Facebook API", status: "Operational", color: "bg-green-500" },
-                            { name: "Instagram Graph", status: "Operational", color: "bg-green-500" },
-                            { name: "WhatsApp Business", status: "Operational", color: "bg-green-500" },
-                            { name: "Twitter/X OAuth", status: "Warning", color: "bg-yellow-500" },
-                        ].map((s) => (
-                            <div key={s.name} className="flex items-center justify-between p-3 rounded-md bg-background/40 border border-border/5">
-                                <span className="text-xs font-bold text-foreground">{s.name}</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-bold text-muted-foreground">{s.status}</span>
-                                    <div className={`w-2 h-2 rounded-full ${s.color} animate-pulse`} />
+                    <CardContent className="p-3 space-y-1.5">
+                        {servicesHealth.map((svc) => (
+                            <div key={svc.name} className="flex items-center justify-between p-2 rounded-lg bg-secondary/20 border border-border/60 text-xs">
+                                <span className="font-medium text-foreground text-[11px] truncate max-w-[150px]">{svc.name}</span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <span className="text-[9px] text-muted-foreground font-mono">{svc.latency}</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 </div>
                             </div>
                         ))}
