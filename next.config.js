@@ -49,6 +49,16 @@ const nextConfig = {
   },
   turbopack: {},
   experimental: {
+    turbopackFileSystemCacheForDev: false,
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-icons',
+      'date-fns',
+      'framer-motion',
+      'recharts',
+      'lodash',
+      'react-icons',
+    ],
     serverActions: {
       bodySizeLimit: '10mb',
     },
