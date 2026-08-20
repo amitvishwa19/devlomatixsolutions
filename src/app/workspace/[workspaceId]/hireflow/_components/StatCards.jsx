@@ -11,16 +11,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
-export const StatCards = ({ stats = [] }) => {
-    const defaultStats = [
-        { label: "Total Applicants", value: "0", change: "...", icon: UserPlus, color: "text-blue-500", bg: "bg-blue-500/10" },
-        { label: "Active Openings", value: "0", change: "...", icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
-        { label: "Interviews This Week", value: "0", change: "...", icon: Calendar, color: "text-amber-500", bg: "bg-amber-500/10" },
-        { label: "Avg. Time to Hire", value: "0", change: "...", icon: Clock, color: "text-emerald-500", bg: "bg-emerald-500/10" }
-    ];
-
-    const displayStats = stats.length > 0 ? stats : defaultStats;
-
+export const StatCards = ({ stats }) => {
     const iconMap = {
         UserPlus,
         Briefcase,
@@ -28,6 +19,54 @@ export const StatCards = ({ stats = [] }) => {
         Clock,
         TrendingUp
     };
+
+    let displayStats = [];
+
+    if (Array.isArray(stats) && stats.length > 0) {
+        displayStats = stats;
+    } else if (stats && typeof stats === 'object') {
+        displayStats = [
+            {
+                label: "Total Candidates",
+                value: String(stats.totalCandidates ?? stats.totalApplicants ?? 0),
+                change: "+12% this month",
+                icon: UserPlus,
+                color: "text-blue-500",
+                bg: "bg-blue-500/10"
+            },
+            {
+                label: "Active Openings",
+                value: String(stats.activeJobs ?? stats.activeOpenings ?? 0),
+                change: "Live positions",
+                icon: Briefcase,
+                color: "text-primary",
+                bg: "bg-primary/10"
+            },
+            {
+                label: "Total Applications",
+                value: String(stats.totalApplications ?? 0),
+                change: "In pipeline",
+                icon: TrendingUp,
+                color: "text-amber-500",
+                bg: "bg-amber-500/10"
+            },
+            {
+                label: "Active Interviews",
+                value: String(stats.activeInterviews ?? 0),
+                change: "Scheduled",
+                icon: Calendar,
+                color: "text-emerald-500",
+                bg: "bg-emerald-500/10"
+            }
+        ];
+    } else {
+        displayStats = [
+            { label: "Total Candidates", value: "0", change: "...", icon: UserPlus, color: "text-blue-500", bg: "bg-blue-500/10" },
+            { label: "Active Openings", value: "0", change: "...", icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
+            { label: "Total Applications", value: "0", change: "...", icon: TrendingUp, color: "text-amber-500", bg: "bg-amber-500/10" },
+            { label: "Active Interviews", value: "0", change: "...", icon: Calendar, color: "text-emerald-500", bg: "bg-emerald-500/10" }
+        ];
+    }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

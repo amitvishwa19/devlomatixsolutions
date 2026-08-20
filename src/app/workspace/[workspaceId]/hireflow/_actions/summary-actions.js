@@ -109,12 +109,14 @@ export async function getHireflowSummaryAction(workspaceId) {
             },
             recentApplicants: recentApplicants.map(app => ({
                 id: app.id,
+                candidateId: app.candidateId,
                 name: app.candidate?.name || "Applicant",
                 role: app.job?.title || "Position",
                 appliedAt: new Date(app.appliedAt).toLocaleDateString(),
                 status: app.stage,
                 score: app.candidate?.aiMatchScore ? (app.candidate.aiMatchScore / 20).toFixed(1) : "N/A",
-                avatar: app.candidate?.name?.split(' ').map(n => n[0]).join('').substring(0, 2)
+                avatarUrl: app.candidate?.avatarUrl || null,
+                avatar: app.candidate?.name?.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase()
             })),
             pipelineStats,
             focusJobs: focusJobs.map(j => ({
