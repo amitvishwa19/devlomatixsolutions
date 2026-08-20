@@ -35,27 +35,77 @@ export async function GET(req, { params }) {
             return NextResponse.json({ message: "Workspace not found" }, { status: 404 });
         }
 
-        // 1. Fetch workspace-specific settings (Security, Notifications, etc.)
-        const workspaceSettings = await prisma.appSettings.findUnique({
+        // 1. Fetch Global Settings (Row 1: key = 'global')
+        let globalSettings = await prisma.appSettings.findUnique({
+            where: { key: 'global' }
+        }).catch(() => null);
+
+        if (!globalSettings) {
+            globalSettings = await prisma.appSettings.create({
+                data: {
+                    key: 'global',
+                    social: {
+                        primaryColor: "#3b82f6",
+                        logoUrl: workspace.imageUrl || "",
+                        appName: "Devlomatix",
+                        appDescription: "Your Productivity Platform",
+                        workspaceUrl: `http://localhost:3000`
+                    }
+                }
+            }).catch(() => null);
+        }
+
+        // 2. Fetch Workspace-Specific Settings (Row 2: key = workspaceId)
+        let workspaceSettings = await prisma.appSettings.findUnique({
             where: { key: workspaceId }
-        });
+        }).catch(() => null);
 
-        // 2. Fetch global app settings (Identity, Branding, Logo)
-        const globalSettings = await prisma.appSettings.findUnique({
-            where: { key: 'APP_GENERAL' }
-        });
+        if (!workspaceSettings) {
+            workspaceSettings = await prisma.appSettings.create({
+                data: {
+                    key: workspaceId,
+                    general: {
+                        name: workspace.name,
+                        description: workspace.description || "",
+                        imageUrl: workspace.imageUrl || "",
+                    },
+                    security: {
+                        mfaEnabled: false,
+                        sessionTimeout: 3600,
+                        passwordPolicy: "standard",
+                    },
+                    notifications: {
+                        whatsapp: true,
+                        email: true,
+                        push: false,
+                    },
+                    privacy: {
+                        dataRetention: 365,
+                        gdprCompliant: true,
+                        activityLogging: true,
+                        visitorLoggingEnabled: true,
+                    }
+                }
+            }).catch(() => null);
+        }
 
-        // Safely resolve JSON fields as objects
-        const workspaceGeneral = (typeof workspaceSettings?.general === 'object' && workspaceSettings?.general) ? workspaceSettings.general : {};
-        const workspaceSecurity = (typeof workspaceSettings?.security === 'object' && workspaceSettings?.security) ? workspaceSettings.security : {};
-        const workspaceNotifications = (typeof workspaceSettings?.notifications === 'object' && workspaceSettings?.notifications) ? workspaceSettings.notifications : {};
-        const workspaceIntegrations = (typeof workspaceSettings?.integrations === 'object' && workspaceSettings?.integrations) ? workspaceSettings.integrations : {};
-        const workspaceTechnical = (typeof workspaceSettings?.technical === 'object' && workspaceSettings?.technical) ? workspaceSettings.technical : {};
-        const workspacePrivacy = (typeof workspaceSettings?.privacy === 'object' && workspaceSettings?.privacy) ? workspaceSettings.privacy : {};
+        // Safely resolve JSON fields
+        const glSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
+        const glGeneral = (typeof globalSettings?.general === 'object' && globalSettings?.general) ? globalSettings.general : {};
+        const glSecurity = (typeof globalSettings?.security === 'object' && globalSettings?.security) ? globalSettings.security : {};
+        const glNotifications = (typeof globalSettings?.notifications === 'object' && globalSettings?.notifications) ? globalSettings.notifications : {};
+        const glIntegrations = (typeof globalSettings?.integrations === 'object' && globalSettings?.integrations) ? globalSettings.integrations : {};
+        const glTechnical = (typeof globalSettings?.technical === 'object' && globalSettings?.technical) ? globalSettings.technical : {};
+        const glPrivacy = (typeof globalSettings?.privacy === 'object' && globalSettings?.privacy) ? globalSettings.privacy : {};
 
-        const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
+        const wsGeneral = (typeof workspaceSettings?.general === 'object' && workspaceSettings?.general) ? workspaceSettings.general : {};
+        const wsSecurity = (typeof workspaceSettings?.security === 'object' && workspaceSettings?.security) ? workspaceSettings.security : {};
+        const wsNotifications = (typeof workspaceSettings?.notifications === 'object' && workspaceSettings?.notifications) ? workspaceSettings.notifications : {};
+        const wsIntegrations = (typeof workspaceSettings?.integrations === 'object' && workspaceSettings?.integrations) ? workspaceSettings.integrations : {};
+        const wsTechnical = (typeof workspaceSettings?.technical === 'object' && workspaceSettings?.technical) ? workspaceSettings.technical : {};
+        const wsPrivacy = (typeof workspaceSettings?.privacy === 'object' && workspaceSettings?.privacy) ? workspaceSettings.privacy : {};
 
-        // Merge with defaults
+        // Default Branding
         const defaultBranding = {
             primaryColor: "#3b82f6",
             logoUrl: workspace.imageUrl || "",
@@ -64,53 +114,65 @@ export async function GET(req, { params }) {
             workspaceUrl: `http://localhost:3000`
         };
 
+        const mergedBranding = {
+            ...defaultBranding,
+            ...glSocial,
+            ...glGeneral,
+        };
+
         const settings = {
             general: {
                 name: workspace.name,
                 description: workspace.description || "",
                 imageUrl: workspace.imageUrl || "",
                 inviteCode: workspace.inviteCode,
-                socialLinks: workspaceGeneral.socialLinks || {},
-                ...workspaceGeneral
+                socialLinks: wsGeneral.socialLinks || glGeneral.socialLinks || glSocial.socialLinks || {},
+                ...glGeneral,
+                ...wsGeneral,
             },
             branding: {
-                ...defaultBranding,
-                ...globalSocial,
-                socialLinks: workspaceGeneral.socialLinks || globalSocial.socialLinks || {}
+                ...mergedBranding,
+                socialLinks: wsGeneral.socialLinks || glSocial.socialLinks || {}
             },
             security: {
                 mfaEnabled: false,
                 sessionTimeout: 3600,
                 passwordPolicy: "standard",
-                ...workspaceSecurity
+                ...glSecurity,
+                ...wsSecurity,
             },
             notifications: {
                 whatsapp: true,
                 email: true,
                 push: false,
-                ...workspaceNotifications
+                ...glNotifications,
+                ...wsNotifications,
             },
             integrations: {
                 webhooks: [],
                 apiKeys: [],
-                ...workspaceIntegrations
+                ...glIntegrations,
+                ...wsIntegrations,
             },
             developer: {
                 webhooks: [],
                 apiKeys: [],
-                ...workspaceIntegrations
+                ...glIntegrations,
+                ...wsIntegrations,
             },
             advanced: {
                 maintenanceMode: false,
                 customCss: "",
-                ...workspaceTechnical
+                ...glTechnical,
+                ...wsTechnical,
             },
             privacy: {
                 dataRetention: 365,
                 gdprCompliant: true,
                 activityLogging: true,
                 visitorLoggingEnabled: true,
-                ...workspacePrivacy
+                ...glPrivacy,
+                ...wsPrivacy,
             }
         };
 
@@ -132,7 +194,7 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        // Verify ownership or admin role (simplifying for now)
+        // Verify ownership or admin role
         const workspace = await prisma.server.findUnique({
             where: { id: workspaceId }
         });
@@ -146,7 +208,7 @@ export async function PATCH(req, { params }) {
         // Sync developer with integrations if provided
         const finalIntegrations = developer || integrations;
 
-        // 1. Update Server Identity (Workspace Name/Description)
+        // 1. Update Server Identity (Workspace Name/Description/Image)
         const serverUpdateData = {};
         if (general?.name) serverUpdateData.name = general.name;
         if (general?.description !== undefined) serverUpdateData.description = general.description;
@@ -159,12 +221,12 @@ export async function PATCH(req, { params }) {
             });
         }
 
-        // 2. Update Global App Settings (if branding provided)
+        // 2. Update Global Branding (Row 1: key = 'global')
         if (branding) {
             await prisma.appSettings.upsert({
-                where: { key: 'APP_GENERAL' },
+                where: { key: 'global' },
                 create: {
-                    key: 'APP_GENERAL',
+                    key: 'global',
                     social: branding
                 },
                 update: {
@@ -173,9 +235,9 @@ export async function PATCH(req, { params }) {
             });
         }
 
-        // 3. Update Workspace-Specific Settings
+        // 3. Update Workspace-Specific Settings (Row 2: key = workspaceId)
         const workspaceUpdateData = {
-            general: general || undefined, // Store socialLinks and other general settings here
+            general: general || undefined,
             security: security || undefined,
             notifications: notifications || undefined,
             integrations: finalIntegrations || undefined,
@@ -183,27 +245,30 @@ export async function PATCH(req, { params }) {
             privacy: privacy || undefined
         };
 
-        // Filter out undefined to prevent clearing data
-        const cleanUpdate = Object.fromEntries(
+        const cleanWorkspaceUpdate = Object.fromEntries(
             Object.entries(workspaceUpdateData).filter(([_, v]) => v !== undefined)
         );
 
-        if (Object.keys(cleanUpdate).length > 0) {
-            await prisma.appSettings.upsert({
-                where: { key: workspaceId },
-                create: {
-                    key: workspaceId,
-                    ...cleanUpdate
-                },
-                update: cleanUpdate
-            });
-        }
+        // Always ensure the workspace row exists and is kept in sync
+        await prisma.appSettings.upsert({
+            where: { key: workspaceId },
+            create: {
+                key: workspaceId,
+                general: general || {},
+                security: security || {},
+                notifications: notifications || {},
+                integrations: finalIntegrations || {},
+                technical: advanced || {},
+                privacy: privacy || {}
+            },
+            update: cleanWorkspaceUpdate
+        });
 
         return NextResponse.json({
             message: "Settings updated successfully"
         });
     } catch (error) {
         console.error("PATCH Settings Error:", error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ message: "Internal Server Error", error: error?.message || String(error) }, { status: 500 });
     }
 }

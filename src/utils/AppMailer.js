@@ -50,7 +50,7 @@ export async function AppMailer(workspaceId, { to, subject, templateName, templa
 
         // 3. Get Global Branding for the App
         const globalSettings = await db.appSettings.findUnique({
-            where: { key: 'APP_GENERAL' }
+            where: { key: 'global' }
         });
 
         const branding = globalSettings?.social || {

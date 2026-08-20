@@ -99,10 +99,10 @@ export async function POST(req) {
                 return NextResponse.json({ success: true, disabled: true, message: "Visitor logging disabled" });
             }
         }
-        const appGeneral = await prisma.appSettings.findUnique({
-            where: { key: 'APP_GENERAL' }
+        const appGlobal = await prisma.appSettings.findUnique({
+            where: { key: 'global' }
         });
-        if (appGeneral?.privacy && appGeneral.privacy.visitorLoggingEnabled === false) {
+        if (appGlobal?.privacy && appGlobal.privacy.visitorLoggingEnabled === false) {
             return NextResponse.json({ success: true, disabled: true, message: "Global visitor logging disabled" });
         }
 

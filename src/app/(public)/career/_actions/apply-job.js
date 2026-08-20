@@ -82,7 +82,7 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
 
             // Fetch Global App Branding (Brand Logo, App Name) and Workspace Info
             const globalSettings = await prisma.appSettings.findUnique({
-                where: { key: 'APP_GENERAL' }
+                where: { key: 'global' }
             }).catch(() => null);
 
             const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};

@@ -36,7 +36,7 @@ export async function POST(req, { params }) {
 
         // 2. Fetch global app settings (Identity, Branding, Logo)
         const globalSettings = await db.appSettings.findUnique({
-            where: { key: 'APP_GENERAL' }
+            where: { key: 'global' }
         });
 
         const branding = globalSettings?.social || {
