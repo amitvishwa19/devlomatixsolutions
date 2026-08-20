@@ -24,6 +24,7 @@ import {
     Unplug,
     Sparkles,
     Tag,
+    MessageSquare,
 } from 'lucide-react';
 import { GeneralSettings } from './GeneralSettings';
 import { SecuritySettings } from './SecuritySettings';
@@ -32,6 +33,7 @@ import { IntegrationSettings } from './IntegrationSettings';
 import { AdvancedSettings } from './AdvancedSettings';
 import { PrivacySettings } from './PrivacySettings';
 import { DeveloperSettings } from './DeveloperSettings';
+import { WhatsAppCloudSettings } from './WhatsAppCloudSettings';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ConnectorSetting from './ConnectorSetting';
 import { DangerZone } from './DangerZone';
@@ -39,6 +41,7 @@ import { searchSettings } from '../_lib/settings-search-index';
 
 const settingTabs = [
     { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
+    { id: 'whatsapp', label: 'WhatsApp Cloud API', icon: MessageSquare, color: 'text-emerald-500' },
     { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
     { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
@@ -50,6 +53,7 @@ const settingTabs = [
 
 const settingDescriptions = {
     general: 'Configure workspace identity, branding, and social presence.',
+    whatsapp: 'Configure Meta WhatsApp Cloud API credentials, default production sender, and webhooks.',
     security: 'Manage authentication policies and access controls.',
     notifications: 'Configure alert channels and notification preferences.',
     integrations: 'Connect external services, webhooks, and APIs.',
@@ -250,6 +254,7 @@ export default function SettingModal({ open, onClose }) {
                                     className="space-y-3 pb-8"
                                 >
                                     {activeTab === 'general' && <GeneralSettings />}
+                                    {activeTab === 'whatsapp' && <WhatsAppCloudSettings />}
                                     {activeTab === 'security' && <SecuritySettings />}
                                     {activeTab === 'notifications' && <NotificationSettings />}
                                     {activeTab === 'integrations' && <IntegrationSettings />}

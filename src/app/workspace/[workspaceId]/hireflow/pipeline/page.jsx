@@ -158,8 +158,8 @@ export default function CandidatePipelinePage() {
                                 className="pl-11 h-11 rounded-md bg-card/40 backdrop-blur-xl border-border/40 text-sm font-medium"
                             />
                         </div>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => router.push(`/workspace/${workspaceId}/hireflow/candidates`)}
                             className="h-11 rounded-md px-4 font-bold border-border/40 bg-card/40 backdrop-blur-xl"
                         >
@@ -180,7 +180,7 @@ export default function CandidatePipelinePage() {
             {/* Kanban Board with ScrollArea */}
             {isMounted ? (
                 <DragDropContext onDragEnd={onDragEnd}>
-                    <ScrollArea className="flex-1 min-h-0 w-full overflow-hidden p-4">
+                    <ScrollArea className="flex-1 min-h-0  p-4">
                         <div className="flex gap-6 h-full min-w-max pb-4">
                             {STAGE_MAP.map((stage) => {
                                 const candidates = getStageCandidates(stage.id);
@@ -248,8 +248,8 @@ export default function CandidatePipelinePage() {
                                                                                     <p className="text-[10px] text-muted-foreground opacity-40">Applied {candidate.appliedAt}</p>
                                                                                 </div>
                                                                             </div>
-                                                                            <CandidateDropdown 
-                                                                                candidate={candidate} 
+                                                                            <CandidateDropdown
+                                                                                candidate={candidate}
                                                                                 workspaceId={workspaceId}
                                                                                 router={router}
                                                                                 onOpenDetails={() => {
@@ -398,7 +398,7 @@ function CandidateDropdown({ candidate, workspaceId, router, onOpenDetails }) {
                     Digital Offer Builder
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                     onClick={() => router.push(`/workspace/${workspaceId}/hireflow/candidates/${candidate.candidateId}`)}
                     className="text-xs cursor-pointer"
                 >

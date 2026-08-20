@@ -73,11 +73,17 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
             }
         });
 
-        // 5. Fetch Global App Branding & Context
+        // 5. Fetch HireFlow App Settings & Global Branding
+        const hireflowSettings = await prisma.appSettings.findUnique({
+            where: { key: 'hireflow' }
+        }).catch(() => null);
+
         const globalSettings = await prisma.appSettings.findUnique({
             where: { key: 'global' }
         }).catch(() => null);
 
+        const hfGeneral = (typeof hireflowSettings?.general === 'object' && hireflowSettings?.general) ? hireflowSettings.general : {};
+        const hfIntegrations = (typeof hireflowSettings?.integrations === 'object' && hireflowSettings?.integrations) ? hireflowSettings.integrations : {};
         const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
         const globalGeneral = (typeof globalSettings?.general === 'object' && globalSettings?.general) ? globalSettings.general : {};
 
@@ -109,6 +115,7 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
             '';
 
         const companyName =
+            hfGeneral.companyName ||
             workspaceServer?.name ||
             globalSocial.appName ||
             globalGeneral.appName ||
@@ -119,11 +126,12 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
 
         // 6. Send Acknowledgment & Notification Emails via Resend
         try {
-            const defaultSender = process.env.RESEND_FROM_EMAIL || 'careers@devlomatix.com';
-            const fromEmail = defaultSender.includes('<')
-                ? defaultSender
-                : `Devlomatix Careers <${defaultSender}>`;
-            const adminEmail = process.env.JOB_APPLICATION_MAIL || process.env.ADMIN_EMAIL;
+            const senderEmailAddress = hfIntegrations?.email?.senderEmail || process.env.RESEND_FROM_EMAIL || 'careers@devlomatix.com';
+            const senderDisplayName = hfIntegrations?.email?.senderName || `${companyName} Careers`;
+            const fromEmail = senderEmailAddress.includes('<')
+                ? senderEmailAddress
+                : `${senderDisplayName} <${senderEmailAddress}>`;
+            const adminEmail = hfIntegrations?.email?.adminNotificationEmail || process.env.JOB_APPLICATION_MAIL || process.env.ADMIN_EMAIL;
 
             // A. Send Confirmation Email to Candidate
             const candidateMailPromise = resend.emails.send({
@@ -172,19 +180,28 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
         }
 
         // 7. Send WhatsApp confirmation via Global WhatsApp Account (new_job_application template)
+        let whatsappSent = false;
         if (phone && String(phone).trim() !== '') {
-            sendJobApplicationWhatsApp({
-                phone,
-                name,
-                jobTitle: job.title,
-                companyName
-            }).catch(waErr => console.error("[CAREER_APPLY_WHATSAPP_ERROR]", waErr));
+            try {
+                const waResult = await sendJobApplicationWhatsApp({
+                    phone,
+                    name,
+                    jobTitle: job.title,
+                    companyName,
+                    workspaceId: job.workspaceId
+                });
+                whatsappSent = !!waResult?.success;
+                console.log("[CAREER_APPLY_WHATSAPP_RESULT]", waResult);
+            } catch (waErr) {
+                console.error("[CAREER_APPLY_WHATSAPP_ERROR]", waErr);
+            }
         }
 
         return {
             success: true,
             message: "Application submitted successfully! Please check your email and WhatsApp for confirmation.",
-            application
+            application,
+            whatsappSent
         };
 
     } catch (error) {

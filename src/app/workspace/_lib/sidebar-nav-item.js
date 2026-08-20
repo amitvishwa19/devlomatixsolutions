@@ -184,6 +184,7 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Jobs", icon: "handshake", url: `${baseAtsPath}/jobs` },
                 { title: "Candidates", icon: "user-search", url: `${baseAtsPath}/candidates` },
                 { title: "Pipeline", icon: "git-merge", url: `${baseAtsPath}/pipeline` },
+                { title: "Settings", icon: "settings", url: `${baseAtsPath}/settings` },
             ],
             baseUrl: baseAtsPath,
             permission: `navbar:ATS:Parent`

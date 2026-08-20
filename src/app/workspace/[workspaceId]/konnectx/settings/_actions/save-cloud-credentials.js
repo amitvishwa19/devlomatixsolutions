@@ -125,69 +125,7 @@ const handler = async (data) => {
             });
         }
 
-        // If this account is default, sync to AppSettings
-        if (account.isDefault) {
-            try {
-                const defaultInfo = {
-                    credentialId: account.id,
-                    profile: profile || '',
-                    phoneNumberId: phoneNumberId || '',
-                    wabaId: wabaId || '',
-                };
-
-                // 1. Always save to workspace settings
-                const existingWs = await db.appSettings.findUnique({ where: { key: workspaceId } }).catch(() => null);
-                const wsIntegrations = (typeof existingWs?.integrations === 'object' && existingWs?.integrations !== null)
-                    ? existingWs.integrations
-                    : {};
-
-                await db.appSettings.upsert({
-                    where: { key: workspaceId },
-                    create: {
-                        key: workspaceId,
-                        integrations: {
-                            ...wsIntegrations,
-                            whatsappDefault: defaultInfo,
-                        },
-                    },
-                    update: {
-                        integrations: {
-                            ...wsIntegrations,
-                            whatsappDefault: defaultInfo,
-                        },
-                    },
-                });
-
-                // 2. If super-admin, ALSO save to global settings
-                const isSuperAdmin = await checkIsSuperAdmin(session, userId);
-                if (isSuperAdmin) {
-                    const existingGlobal = await db.appSettings.findUnique({ where: { key: 'global' } }).catch(() => null);
-                    const glIntegrations = (typeof existingGlobal?.integrations === 'object' && existingGlobal?.integrations !== null)
-                        ? existingGlobal.integrations
-                        : {};
-
-                    await db.appSettings.upsert({
-                        where: { key: 'global' },
-                        create: {
-                            key: 'global',
-                            integrations: {
-                                ...glIntegrations,
-                                whatsappDefault: defaultInfo,
-                            },
-                        },
-                        update: {
-                            integrations: {
-                                ...glIntegrations,
-                                whatsappDefault: defaultInfo,
-                            },
-                        },
-                    });
-                }
-            } catch (syncErr) {
-                console.error("[saveCloudCredentials] AppSettings sync error:", syncErr.message);
-            }
-        }
-
+        // AppSettings integration is strictly managed from Workspace Setting Modal.
         return { success: true, accountId: account.id };
     } catch (error) {
         return { error: error.message || "Failed to save cloud credentials" };

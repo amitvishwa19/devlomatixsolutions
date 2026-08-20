@@ -12,6 +12,12 @@ export const SETTINGS_SEARCH_INDEX = [
     { tabId: 'general', title: 'Workspace Logo', description: 'Upload company logo or icon', keywords: ['logo', 'icon', 'image', 'avatar', 'upload', 'photo'] },
     { tabId: 'general', title: 'Social Media Links', description: 'Facebook, Twitter/X, Instagram, LinkedIn, YouTube, GitHub', keywords: ['social', 'facebook', 'twitter', 'x', 'instagram', 'linkedin', 'youtube', 'github', 'links'] },
 
+    // WhatsApp Cloud API
+    { tabId: 'whatsapp', title: 'WhatsApp Cloud API', description: 'Configure Meta WhatsApp Cloud API credentials and default production sender', keywords: ['whatsapp', 'meta cloud', 'cloud api', 'waba', 'phone number id', 'access token', 'meta', 'whatsapp credentials', 'default whatsapp'] },
+    { tabId: 'whatsapp', title: 'Phone Number ID & WABA ID', description: 'Meta WhatsApp Business Account identifiers', keywords: ['phone number id', 'waba id', 'waba', 'phone id', 'meta id', 'business account'] },
+    { tabId: 'whatsapp', title: 'WhatsApp Webhook Callback', description: 'Meta Webhook URL and verify token', keywords: ['webhook', 'verify token', 'callback url', 'meta webhook', 'whatsapp webhook'] },
+    { tabId: 'whatsapp', title: 'Default Production Sender', description: 'Lock global WhatsApp sender for Hireflow and notifications', keywords: ['default sender', 'global sender', 'production whatsapp', 'hireflow whatsapp', 'lock sender'] },
+
     // Security
     { tabId: 'security', title: 'Multi-Factor Authentication (MFA)', description: 'Enforce 2FA/TOTP verification for workspace members', keywords: ['mfa', '2fa', 'two-factor', 'totp', 'sms', 'security', 'auth'] },
     { tabId: 'security', title: 'Session Idle Timeout', description: 'Automatic logout time for inactive sessions', keywords: ['session', 'timeout', 'idle', 'expire', 'duration', 'minutes'] },
