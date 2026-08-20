@@ -7,7 +7,7 @@ import { Button } from'@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from'@/components/ui/avatar';
 import { Loader2, FolderOpen, FileText, Calendar, Database, HardDrive, Layers, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import axios from '@/utils/axios';
+import { getDocuments } from '../_actions/get-documents';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { AlertModal } from '@/components/global/AlertModal';
@@ -32,8 +32,10 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  const fetchFolderFiles = async () => {
  setIsLoading(true);
  try {
- const res = await axios.get(`/api/workspace/${workspaceId}/document?parentId=${folder.id}&isFolder=false`);
- setFiles(res.data);
+ const res = await getDocuments(workspaceId, { parentId: folder.id, isFolder: false });
+ if (res.success) {
+   setFiles(res.data || []);
+ }
  } catch (error) {
  console.error("Failed to load folder contents:", error);
  } finally {

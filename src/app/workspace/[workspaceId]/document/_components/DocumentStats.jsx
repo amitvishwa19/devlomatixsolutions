@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FileText, Users, HardDrive, Star, Sparkles, Loader2, Layers } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import axios from "@/utils/axios";
+import { getDocuments } from "../_actions/get-documents";
 
 export default function DocumentStats({ workspaceId, userId }) {
     const [documents, setDocuments] = useState([]);
@@ -14,8 +14,10 @@ export default function DocumentStats({ workspaceId, userId }) {
             if (!workspaceId) return;
             try {
                 setLoading(true);
-                const response = await axios.get(`/api/workspace/${workspaceId}/document`);
-                setDocuments(response.data || []);
+                const response = await getDocuments(workspaceId);
+                if (response.success) {
+                    setDocuments(response.data || []);
+                }
             } catch (error) {
                 console.error("Error fetching stats data:", error);
             } finally {

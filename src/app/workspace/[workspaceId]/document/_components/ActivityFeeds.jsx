@@ -1,9 +1,10 @@
-'use client'
-import React, { useState, useEffect, useCallback } from'react'
-import { FileText, Users, HardDrive, TrendingUp, Upload, Clock, CheckCircle2, AlertTriangle, Loader2 } from"lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from'@/components/ui/card'
-import axios from'@/utils/axios';
-import { formatDistanceToNow } from'date-fns';
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { FileText, Users, HardDrive, TrendingUp, Upload, Clock, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getDocuments } from '../_actions/get-documents';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function ActivityFeeds({ workspaceId, userId }) {
  const [activities, setActivities] = useState([]);
@@ -13,12 +14,14 @@ export default function ActivityFeeds({ workspaceId, userId }) {
  if (!workspaceId) return;
  try {
  setLoading(true);
- const response = await axios.get(`/api/workspace/${workspaceId}/document?limit=5`);
+ const response = await getDocuments(workspaceId, { limit: 5 });
+ if (response.success && response.data) {
  setActivities(response.data.map(doc => ({
  icon: doc.isFolder ? CheckCircle2 : Upload,
- text: `${doc.user?.displayName ||"Member"} ${doc.isFolder ?'created folder':'uploaded'} ${doc.name}`,
- time: formatDistanceToNow(new Date(doc.createdAt)) +" ago"
+ text: `${doc.user?.displayName || "Member"} ${doc.isFolder ? 'created folder' : 'uploaded'} ${doc.name}`,
+ time: formatDistanceToNow(new Date(doc.createdAt)) + " ago"
  })));
+ }
  } catch (error) {
  console.error("Error fetching activity feed:", error);
  } finally {

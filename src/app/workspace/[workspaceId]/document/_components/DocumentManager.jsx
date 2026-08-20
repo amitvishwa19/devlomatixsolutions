@@ -81,7 +81,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import axios from '@/utils/axios';
+import { getDocuments } from '../_actions/get-documents';
+import { getDocumentById } from '../_actions/get-document-by-id';
+import { createDocument } from '../_actions/create-document';
+import { updateDocument } from '../_actions/update-document';
+import { deleteDocument } from '../_actions/delete-document';
+import { moveDocuments } from '../_actions/move-documents';
+import { restoreDocuments } from '../_actions/restore-documents';
+import { emptyTrash } from '../_actions/empty-trash';
+import { duplicateDocument } from '../_actions/duplicate-document';
 
 import { DocumentCard } from './DocumentCard';
 import DocumentStats from './DocumentStats';
@@ -90,6 +98,7 @@ import FileViewerModal from './FileViewerModal';
 import RichDocumentEditorModal from './RichDocumentEditorModal';
 import DocumentInspector from './DocumentInspector';
 import FolderDetailsModal from './FolderDetailsModal';
+import DocumentAiModal from './DocumentAiModal';
 import { EmptyState } from '@/components/global/EmptyState';
 
 const getFileIcon = (fileType = '', name = '') => {
@@ -112,21 +121,18 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     const currentUserId = userId || session?.user?.userId || session?.user?.id;
 
     // View tab (all, files, folders, shared, starred, uploads, trash)
-    const viewParam = searchParams.get('view') || initialView;
-    const [activeTab, setActiveTab] = useState(viewParam);
-
-    // Filter & Search states
-    const [selectedType, setSelectedType] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('ALL');
-    const [categoryFilter, setCategoryFilter] = useState('ALL');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [viewMode, setViewMode] = useState('grid'); // grid | list
-    const [sortBy, setSortBy] = useState('createdAt');
-    const [sortOrder, setSortOrder] = useState('desc');
-
-    // Data states
+    const [activeTab, setActiveTab] = useState(initialView);
+    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Search and Filters
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedType, setSelectedType] = useState('all');
+    const [sortBy, setSortBy] = useState('createdAt');
+    const [sortOrder, setSortOrder] = useState('desc');
+    const [categoryFilter, setCategoryFilter] = useState('ALL');
+    const [statusFilter, setStatusFilter] = useState('ALL');
 
     // Hierarchy & Navigation
     const [currentFolder, setCurrentFolder] = useState(null);
@@ -150,6 +156,29 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     const [folderDetailsDoc, setFolderDetailsDoc] = useState(null);
     const [isFolderDetailsOpen, setIsFolderDetailsOpen] = useState(false);
 
+    // AI Intelligence Modal
+    const [aiTargetDoc, setAiTargetDoc] = useState(null);
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+    const handleOpenAiInsights = (doc) => {
+        setAiTargetDoc(doc);
+        setIsAiModalOpen(true);
+    };
+
+    const handleDuplicateDocument = async (doc) => {
+        try {
+            toast.loading("Duplicating document...", { id: "duplicate-doc" });
+            const res = await duplicateDocument(workspaceId, doc.id);
+            if (!res.success) throw new Error(res.error);
+            toast.success(`"${doc.name}" duplicated successfully`, { id: "duplicate-doc" });
+            fetchDocuments();
+            fetchAllFolders();
+        } catch (error) {
+            console.error("Duplicate error:", error);
+            toast.error(error.message || "Failed to duplicate document", { id: "duplicate-doc" });
+        }
+    };
+
     // Batch move & upload destination modal
     const [isBatchMoveOpen, setIsBatchMoveOpen] = useState(false);
     const [availableFolders, setAvailableFolders] = useState([]);
@@ -160,8 +189,10 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     const fetchAllFolders = useCallback(async () => {
         if (!workspaceId) return;
         try {
-            const res = await axios.get(`/api/workspace/${workspaceId}/document?isFolder=true`);
-            setAvailableFolders(res.data || []);
+            const res = await getDocuments(workspaceId, { isFolder: true });
+            if (res.success) {
+                setAvailableFolders(res.data || []);
+            }
         } catch (e) {
             console.error("Failed to load folders:", e);
         }
@@ -216,9 +247,9 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
         let isMounted = true;
         const fetchFolderInfo = async () => {
             try {
-                const res = await axios.get(`/api/workspace/${workspaceId}/document/${folderIdParam}`);
+                const res = await getDocumentById(workspaceId, folderIdParam);
                 if (!isMounted) return;
-                if (res.data) {
+                if (res.success && res.data) {
                     const folderData = res.data;
                     setCurrentFolder(folderData);
 
@@ -274,10 +305,10 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
             const folderIdParam = searchParams.get('folderId') || searchParams.get('parentId');
             const targetParentId = activeTab === 'all' ? (folderIdParam || currentFolder?.id || 'root') : undefined;
 
-            const params = {
+            const res = await getDocuments(workspaceId, {
                 filter: filterType,
-                isTrash: isTrashView ? 'true' : 'false',
-                isFolder: isFolderOnly ? 'true' : isFilesOnly ? 'false' : undefined,
+                isTrash: isTrashView,
+                isFolder: isFolderOnly ? true : isFilesOnly ? false : undefined,
                 type: selectedType !== 'all' ? selectedType : undefined,
                 search: searchTerm || undefined,
                 status: statusFilter !== 'ALL' ? statusFilter : undefined,
@@ -285,19 +316,22 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                 parentId: targetParentId,
                 sortBy,
                 sortOrder
-            };
+            });
 
-            const res = await axios.get(`/api/workspace/${workspaceId}/document`, { params });
-            setDocuments(res.data || []);
+            if (res.success) {
+                setDocuments(res.data || []);
 
-            // Check if preview param is in URL
-            const previewDocId = searchParams.get('preview');
-            if (previewDocId && !viewerTargetDoc) {
-                const found = res.data?.find(d => d.id === previewDocId);
-                if (found) {
-                    setViewerTargetDoc(found);
-                    setIsViewerModalOpen(true);
+                // Check if preview param is in URL
+                const previewDocId = searchParams.get('preview');
+                if (previewDocId && !viewerTargetDoc) {
+                    const found = res.data?.find(d => d.id === previewDocId);
+                    if (found) {
+                        setViewerTargetDoc(found);
+                        setIsViewerModalOpen(true);
+                    }
                 }
+            } else {
+                toast.error(res.error || "Failed to load documents");
             }
         } catch (error) {
             console.error("Error loading documents:", error);
@@ -394,7 +428,7 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                 destinationFolderId = currentFolder?.id || urlFolderId || null;
             }
 
-            await axios.post(`/api/workspace/${workspaceId}/document`, {
+            const res = await createDocument(workspaceId, {
                 name: file.name,
                 fileUrl: publicUrl,
                 fileKey: filePath,
@@ -403,6 +437,8 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                 isFolder: false,
                 parentId: destinationFolderId
             });
+
+            if (!res.success) throw new Error(res.error);
 
             setUploadQueue(curr => curr.map(u =>
                 u.id === uploadId ? { ...u, progress: 100, status: "complete" } : u
@@ -417,7 +453,7 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
             setUploadQueue(curr => curr.map(u =>
                 u.id === uploadId ? { ...u, status: "failed" } : u
             ));
-            toast.error(`Failed to upload ${file.name}`);
+            toast.error(error.message || `Failed to upload ${file.name}`);
         }
     };
 
@@ -439,18 +475,19 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
         setIsCreatingFolder(true);
         const activeFolderId = searchParams.get('folderId') || searchParams.get('parentId') || currentFolder?.id;
         try {
-            await axios.post(`/api/workspace/${workspaceId}/document`, {
+            const res = await createDocument(workspaceId, {
                 name: newFolderName.trim(),
                 isFolder: true,
                 parentId: activeFolderId || null
             });
+            if (!res.success) throw new Error(res.error);
             toast.success("Folder created successfully");
             setIsFolderOpen(false);
             setNewFolderName('');
             fetchDocuments();
             fetchAllFolders();
         } catch (error) {
-            toast.error("Failed to create folder");
+            toast.error(error.message || "Failed to create folder");
         } finally {
             setIsCreatingFolder(false);
         }
@@ -459,9 +496,10 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     // Star/Unstar toggle
     const handleToggleStar = async (doc) => {
         try {
-            await axios.patch(`/api/workspace/${workspaceId}/document/${doc.id}`, {
+            const res = await updateDocument(workspaceId, doc.id, {
                 isStarred: !doc.isStarred
             });
+            if (!res.success) throw new Error(res.error);
             setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, isStarred: !d.isStarred } : d));
             if (inspectorDoc?.id === doc.id) {
                 setInspectorDoc(prev => ({ ...prev, isStarred: !doc.isStarred }));
@@ -474,75 +512,73 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     // Soft delete
     const handleDeleteDocument = async (id) => {
         try {
-            await axios.delete(`/api/workspace/${workspaceId}/document/${id}`);
+            const res = await deleteDocument(workspaceId, id, false);
+            if (!res.success) throw new Error(res.error);
             toast.success("Moved to Trash");
             setDocuments(prev => prev.filter(d => d.id !== id));
             setSelectedDocIds(prev => prev.filter(item => item !== id));
             if (inspectorDoc?.id === id) setInspectorDoc(null);
         } catch (error) {
-            toast.error("Failed to delete document");
+            toast.error(error.message || "Failed to delete document");
         }
     };
 
     // Move document into folder
     const handleMoveDocument = async (draggedDocId, targetFolderId) => {
         try {
-            await axios.patch(`/api/workspace/${workspaceId}/document/${draggedDocId}`, {
+            const res = await updateDocument(workspaceId, draggedDocId, {
                 parentId: targetFolderId === 'root' ? null : targetFolderId
             });
+            if (!res.success) throw new Error(res.error);
             toast.success("Item moved successfully");
             fetchDocuments();
         } catch (error) {
-            toast.error("Failed to move item");
+            toast.error(error.message || "Failed to move item");
         }
     };
 
     // Trash operations
     const handleRestoreItem = async (id) => {
         try {
-            await axios.patch(`/api/workspace/${workspaceId}/document/${id}`, { deletedAt: null });
+            const res = await restoreDocuments(workspaceId, [id]);
+            if (!res.success) throw new Error(res.error);
             toast.success("Item restored!");
             setDocuments(prev => prev.filter(d => d.id !== id));
         } catch (error) {
-            toast.error("Failed to restore item");
+            toast.error(error.message || "Failed to restore item");
         }
     };
 
     const handlePermanentDeleteItem = async (id) => {
         try {
-            await axios.delete(`/api/workspace/${workspaceId}/document/${id}?force=true`);
+            const res = await deleteDocument(workspaceId, id, true);
+            if (!res.success) throw new Error(res.error);
             toast.success("Permanently deleted");
             setDocuments(prev => prev.filter(d => d.id !== id));
         } catch (error) {
-            toast.error("Failed to delete permanently");
+            toast.error(error.message || "Failed to delete permanently");
         }
     };
 
     const handleRestoreAllTrash = async () => {
         try {
-            await Promise.all(
-                documents.map(d =>
-                    axios.patch(`/api/workspace/${workspaceId}/document/${d.id}`, { deletedAt: null })
-                )
-            );
+            const res = await restoreDocuments(workspaceId, [], true);
+            if (!res.success) throw new Error(res.error);
             toast.success("All items restored!");
             fetchDocuments();
         } catch (error) {
-            toast.error("Failed to restore all items");
+            toast.error(error.message || "Failed to restore all items");
         }
     };
 
     const handleEmptyTrash = async () => {
         try {
-            await Promise.all(
-                documents.map(d =>
-                    axios.delete(`/api/workspace/${workspaceId}/document/${d.id}?force=true`)
-                )
-            );
+            const res = await emptyTrash(workspaceId, [], true);
+            if (!res.success) throw new Error(res.error);
             toast.success("Trash emptied successfully");
             setDocuments([]);
         } catch (error) {
-            toast.error("Failed to empty trash");
+            toast.error(error.message || "Failed to empty trash");
         }
     };
 
@@ -566,7 +602,7 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     const handleBatchDelete = async () => {
         if (selectedDocIds.length === 0) return;
         try {
-            await Promise.all(selectedDocIds.map(id => axios.delete(`/api/workspace/${workspaceId}/document/${id}`)));
+            await Promise.all(selectedDocIds.map(id => deleteDocument(workspaceId, id, false)));
             toast.success(`${selectedDocIds.length} items moved to Trash`);
             setSelectedDocIds([]);
             fetchDocuments();
@@ -577,10 +613,12 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
 
     const openBatchMoveModal = async () => {
         try {
-            const res = await axios.get(`/api/workspace/${workspaceId}/document?isFolder=true`);
-            setAvailableFolders(res.data.filter(d => !selectedDocIds.includes(d.id)));
-            setTargetFolderId('root');
-            setIsBatchMoveOpen(true);
+            const res = await getDocuments(workspaceId, { isFolder: true });
+            if (res.success) {
+                setAvailableFolders(res.data.filter(d => !selectedDocIds.includes(d.id)));
+                setTargetFolderId('root');
+                setIsBatchMoveOpen(true);
+            }
         } catch (error) {
             toast.error("Failed to load folders");
         }
@@ -588,19 +626,14 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
 
     const handleConfirmBatchMove = async () => {
         try {
-            await Promise.all(
-                selectedDocIds.map(id =>
-                    axios.patch(`/api/workspace/${workspaceId}/document/${id}`, {
-                        parentId: targetFolderId === 'root' ? null : targetFolderId
-                    })
-                )
-            );
+            const res = await moveDocuments(workspaceId, selectedDocIds, targetFolderId);
+            if (!res.success) throw new Error(res.error);
             toast.success(`${selectedDocIds.length} items moved`);
             setIsBatchMoveOpen(false);
             setSelectedDocIds([]);
             fetchDocuments();
         } catch (error) {
-            toast.error("Failed to move selected items");
+            toast.error(error.message || "Failed to move selected items");
         }
     };
 
@@ -1448,6 +1481,8 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                                         onUploadToFolder={handleOpenUploadModal}
                                         onMoveDocument={handleMoveDocument}
                                         onToggleStar={handleToggleStar}
+                                        onDuplicate={handleDuplicateDocument}
+                                        onAiInsights={handleOpenAiInsights}
                                         onSelectForInspector={(d) => setInspectorDoc(d)}
                                         viewMode="grid"
                                     />
@@ -1479,6 +1514,8 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                                         onUploadToFolder={handleOpenUploadModal}
                                         onMoveDocument={handleMoveDocument}
                                         onToggleStar={handleToggleStar}
+                                        onDuplicate={handleDuplicateDocument}
+                                        onAiInsights={handleOpenAiInsights}
                                         onSelectForInspector={(d) => setInspectorDoc(d)}
                                         viewMode="list"
                                     />
@@ -1507,6 +1544,7 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                             setIsRichDocOpen(true);
                         }}
                         onToggleStar={handleToggleStar}
+                        onDuplicate={handleDuplicateDocument}
                         onDelete={handleDeleteDocument}
                         workspaceId={workspaceId}
                     />
@@ -1528,6 +1566,7 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                 isOpen={isViewerModalOpen}
                 onOpenChange={setIsViewerModalOpen}
                 file={viewerTargetDoc}
+                workspaceId={workspaceId}
                 onShare={(d) => {
                     setShareTargetDoc(d);
                     setIsShareModalOpen(true);
@@ -1697,6 +1736,14 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* AI Document Intelligence Modal */}
+            <DocumentAiModal
+                isOpen={isAiModalOpen}
+                onOpenChange={setIsAiModalOpen}
+                document={aiTargetDoc}
+                workspaceId={workspaceId}
+            />
         </div>
     );
 }

@@ -20,7 +20,9 @@ import {
     Pencil,
     Users,
     Check,
-    Upload
+    Upload,
+    Sparkles,
+    Files
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,6 +106,8 @@ export const DocumentCard = ({
     onUploadToFolder,
     onMoveDocument,
     onToggleStar,
+    onDuplicate,
+    onAiInsights,
     onSelectForInspector,
     viewMode = "grid"
 }) => {
@@ -270,9 +274,19 @@ export const DocumentCard = ({
                                         <Eye className="w-3.5 h-3.5 text-primary" /> Preview
                                     </DropdownMenuItem>
                                 )}
+                                {!isFolder && onAiInsights && (
+                                    <DropdownMenuItem onClick={() => onAiInsights(document)} className="text-xs font-semibold gap-2 cursor-pointer text-purple-600 focus:text-purple-600 focus:bg-purple-50 dark:focus:bg-purple-950/30">
+                                        <Sparkles className="w-3.5 h-3.5 text-purple-500" /> AI Insights
+                                    </DropdownMenuItem>
+                                )}
                                 {isNote && (
                                     <DropdownMenuItem onClick={() => onEditNote && onEditNote(document)} className="text-xs font-semibold gap-2 cursor-pointer">
                                         <Pencil className="w-3.5 h-3.5 text-purple-500" /> Edit Note
+                                    </DropdownMenuItem>
+                                )}
+                                {!isFolder && onDuplicate && (
+                                    <DropdownMenuItem onClick={() => onDuplicate(document)} className="text-xs font-semibold gap-2 cursor-pointer">
+                                        <Files className="w-3.5 h-3.5 text-blue-500" /> Duplicate
                                     </DropdownMenuItem>
                                 )}
                                 {document.fileUrl && !isFolder && (
@@ -365,9 +379,19 @@ export const DocumentCard = ({
                                     <Eye className="w-3.5 h-3.5 text-primary" /> Preview
                                 </DropdownMenuItem>
                             )}
+                            {!isFolder && onAiInsights && (
+                                <DropdownMenuItem onClick={() => onAiInsights(document)} className="text-xs font-semibold gap-2 cursor-pointer text-purple-600 focus:text-purple-600 focus:bg-purple-50 dark:focus:bg-purple-950/30">
+                                    <Sparkles className="w-3.5 h-3.5 text-purple-500" /> AI Insights
+                                </DropdownMenuItem>
+                            )}
                             {isNote && (
                                 <DropdownMenuItem onClick={() => onEditNote && onEditNote(document)} className="text-xs font-semibold gap-2 cursor-pointer">
                                     <Pencil className="w-3.5 h-3.5 text-purple-500" /> Edit Note
+                                </DropdownMenuItem>
+                            )}
+                            {!isFolder && onDuplicate && (
+                                <DropdownMenuItem onClick={() => onDuplicate(document)} className="text-xs font-semibold gap-2 cursor-pointer">
+                                    <Files className="w-3.5 h-3.5 text-blue-500" /> Duplicate
                                 </DropdownMenuItem>
                             )}
                             {document.fileUrl && !isFolder && (

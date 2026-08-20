@@ -8,8 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Loader2, Users, X, UserPlus, Globe, Copy, Check, ShieldCheck, Shield, Lock, Trash2 } from 'lucide-react';
-import axios from '@/utils/axios';
 import { toast } from 'sonner';
+import { getDocumentShareInfo } from '../_actions/get-document-share-info';
+import { getShareableWorkspaceUsers } from '../_actions/get-shareable-workspace-users';
+import { shareDocumentWithUser } from '../_actions/share-document';
+import { unshareDocumentWithUser } from '../_actions/unshare-document';
 
 export default function ShareModal({ isOpen, onOpenChange, document, workspaceId, onShareComplete }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -27,9 +30,11 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
         if (!document?.id || !workspaceId) return;
         try {
             setIsLoadingAccess(true);
-            const res = await axios.get(`/api/workspace/${workspaceId}/document/${document.id}/share`);
-            setCollaborators(res.data.sharedWith || []);
-            setOwner(res.data.user || null);
+            const res = await getDocumentShareInfo(workspaceId, document.id);
+            if (res.success && res.data) {
+                setCollaborators(res.data.sharedWith || []);
+                setOwner(res.data.user || null);
+            }
         } catch (error) {
             console.error("Error fetching access list:", error);
         } finally {
@@ -52,12 +57,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
         const delayFn = setTimeout(async () => {
             setIsSearching(true);
             try {
-                const res = await axios.get(`/api/workspace/${workspaceId}/document/share/users`, {
-                    params: {
-                        q: searchQuery,
-                        documentId: document?.id
-                    }
-                });
+                const res = await getShareableWorkspaceUsers(workspaceId, searchQuery);
 
                 // Filter out the owner and already added users from the dropdown
                 const existingUserIds = new Set([
@@ -82,10 +82,11 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
         if (!document?.id || !targetUserId) return;
         setIsSubmitting(true);
         try {
-            await axios.post(`/api/workspace/${workspaceId}/document/${document.id}/share`, {
+            const res = await shareDocumentWithUser(workspaceId, document.id, {
                 userId: targetUserId,
                 role: roleToAssign
             });
+            if (!res.success) throw new Error(res.error);
             toast.success("Collaborator access granted");
             setSearchQuery('');
             setSearchResults([]);
@@ -93,7 +94,7 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
             if (onShareComplete) onShareComplete();
         } catch (error) {
             console.error("Failed to grant access:", error);
-            toast.error(error.response?.data?.message || "Failed to grant access");
+            toast.error(error.message || "Failed to grant access");
         } finally {
             setIsSubmitting(false);
         }
@@ -103,15 +104,16 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
         if (!document?.id || !targetUserId) return;
         setIsSubmitting(true);
         try {
-            await axios.post(`/api/workspace/${workspaceId}/document/${document.id}/share`, {
+            const res = await shareDocumentWithUser(workspaceId, document.id, {
                 userId: targetUserId,
                 role: newRole
             });
+            if (!res.success) throw new Error(res.error);
             toast.success(`Role updated to ${newRole}`);
             fetchAccessList();
             if (onShareComplete) onShareComplete();
         } catch (error) {
-            toast.error("Failed to update role");
+            toast.error(error.message || "Failed to update role");
         } finally {
             setIsSubmitting(false);
         }
@@ -121,14 +123,15 @@ export default function ShareModal({ isOpen, onOpenChange, document, workspaceId
         if (!document?.id || !targetUserId) return;
         setIsSubmitting(true);
         try {
-            await axios.delete(`/api/workspace/${workspaceId}/document/${document.id}/share`, {
-                params: { userId: targetUserId }
+            const res = await unshareDocumentWithUser(workspaceId, document.id, {
+                userId: targetUserId
             });
+            if (!res.success) throw new Error(res.error);
             toast.success("Access revoked");
             fetchAccessList();
             if (onShareComplete) onShareComplete();
         } catch (error) {
-            toast.error("Failed to revoke access");
+            toast.error(error.message || "Failed to revoke access");
         } finally {
             setIsSubmitting(false);
         }

@@ -1,11 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import {
     X,
     Eye,
@@ -29,9 +36,15 @@ import {
     Tag,
     Star,
     Check,
-    Pencil
+    Pencil,
+    Sparkles,
+    Files,
+    Printer,
+    FileCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportToMarkdown, exportToHTML, printDocumentToPDF } from '../_lib/exportUtils';
+import DocumentAiModal from './DocumentAiModal';
 
 export default function DocumentInspector({
     document,
@@ -41,10 +54,12 @@ export default function DocumentInspector({
     onShare,
     onEditNote,
     onToggleStar,
+    onDuplicate,
     onDelete,
     workspaceId
 }) {
-    const [copied, setCopied] = React.useState(false);
+    const [copied, setCopied] = useState(false);
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
     if (!document) return null;
 
@@ -198,6 +213,26 @@ export default function DocumentInspector({
                             <Pencil className="w-3.5 h-3.5 text-purple-500" /> Edit Note
                         </Button>
                     )}
+                    {workspaceId && !isFolder && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsAiModalOpen(true)}
+                            className="text-xs font-semibold gap-1.5 h-8 bg-purple-500/10 border-purple-500/30 text-purple-600 hover:bg-purple-500/20"
+                        >
+                            <Sparkles className="w-3.5 h-3.5 text-purple-500 animate-pulse" /> AI Insights
+                        </Button>
+                    )}
+                    {onDuplicate && !isFolder && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onDuplicate(document)}
+                            className="text-xs font-semibold gap-1.5 h-8 bg-background border-border/60 hover:bg-muted"
+                        >
+                            <Files className="w-3.5 h-3.5 text-blue-500" /> Duplicate
+                        </Button>
+                    )}
                     {document.fileUrl && !isFolder && (
                         <Button
                             variant="outline"
@@ -207,6 +242,40 @@ export default function DocumentInspector({
                         >
                             <Download className="w-3.5 h-3.5 text-emerald-500" /> Download
                         </Button>
+                    )}
+                    {isNote && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs font-semibold gap-1.5 h-8 bg-background border-border/60 hover:bg-muted"
+                                >
+                                    <Download className="w-3.5 h-3.5 text-emerald-500" /> Export
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-xl border-border/50">
+                                <DropdownMenuItem
+                                    onClick={() => exportToMarkdown(document)}
+                                    className="text-xs font-semibold gap-2 cursor-pointer"
+                                >
+                                    <FileCode className="w-3.5 h-3.5 text-blue-500" /> Export Markdown (.md)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => exportToHTML(document)}
+                                    className="text-xs font-semibold gap-2 cursor-pointer"
+                                >
+                                    <FileCheck className="w-3.5 h-3.5 text-emerald-500" /> Export HTML (.html)
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() => printDocumentToPDF(document)}
+                                    className="text-xs font-semibold gap-2 cursor-pointer"
+                                >
+                                    <Printer className="w-3.5 h-3.5 text-purple-500" /> Print / Save PDF
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
                     <Button
                         size="sm"
@@ -354,6 +423,16 @@ export default function DocumentInspector({
                     </Button>
                 </div>
             </div>
+
+            {/* AI Modal */}
+            {workspaceId && document?.id && !isFolder && (
+                <DocumentAiModal
+                    isOpen={isAiModalOpen}
+                    onOpenChange={setIsAiModalOpen}
+                    document={document}
+                    workspaceId={workspaceId}
+                />
+            )}
         </div>
     );
 }

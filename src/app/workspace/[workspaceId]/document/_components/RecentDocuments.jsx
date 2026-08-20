@@ -1,27 +1,29 @@
-'use client'
-import { useState, useEffect, useCallback } from'react';
-import { useParams } from'next/navigation';
-import { Badge } from'@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from'@/components/ui/card';
-import { FileText, Loader2, Clock } from'lucide-react';
-import axios from'@/utils/axios';
-import { formatDistanceToNow } from'date-fns';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileText, Loader2, Clock } from 'lucide-react';
+import { getDocuments } from '../_actions/get-documents';
+import { updateDocument } from '../_actions/update-document';
+import { formatDistanceToNow } from 'date-fns';
 import {
  DropdownMenu,
  DropdownMenuContent,
  DropdownMenuItem,
  DropdownMenuTrigger,
-} from'@/components/ui/dropdown-menu';
-import { MoreHorizontal, Share2, Download, Eye, Users } from'lucide-react';
-import ShareModal from'./ShareModal';
-import FileViewerModal from'./FileViewerModal';
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Share2, Download, Eye, Users } from 'lucide-react';
+import ShareModal from './ShareModal';
+import FileViewerModal from './FileViewerModal';
 import { EmptyState } from '@/components/global/EmptyState';
 
 const statusStyles = {
- complete:"bg-emerald-50 text-emerald-700 border-emerald-200",
- pending:"bg-amber-50 text-amber-700 border-amber-200",
- review:"bg-blue-50 text-blue-700 border-blue-200",
- approved:"bg-emerald-50 text-emerald-700 border-emerald-200",
+ complete: "bg-emerald-50 text-emerald-700 border-emerald-200",
+ pending: "bg-amber-50 text-amber-700 border-amber-200",
+ review: "bg-blue-50 text-blue-700 border-blue-200",
+ approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 export default function RecentDocuments({ workspaceId, userId }) {
@@ -32,8 +34,10 @@ export default function RecentDocuments({ workspaceId, userId }) {
  if (!workspaceId) return;
  try {
  setLoading(true);
- const response = await axios.get(`/api/workspace/${workspaceId}/document?limit=5&isFolder=false`);
- setRecentDocs(response.data);
+ const response = await getDocuments(workspaceId, { limit: 5, isFolder: false });
+ if (response.success && response.data) {
+   setRecentDocs(response.data);
+ }
  } catch (error) {
  console.error("Error fetching recent docs:", error);
  } finally {
@@ -48,7 +52,7 @@ export default function RecentDocuments({ workspaceId, userId }) {
  const toggleStar = async (e, doc) => {
  e.stopPropagation();
  try {
- await axios.patch(`/api/workspace/${workspaceId}/document/${doc.id}`, { isStarred: !doc.isStarred });
+ await updateDocument(workspaceId, doc.id, { isStarred: !doc.isStarred });
  fetchRecent();
  } catch (error) {
  console.error(error);
@@ -57,12 +61,12 @@ export default function RecentDocuments({ workspaceId, userId }) {
 
  const toggleStatus = async (e, doc) => {
  e.stopPropagation();
- const statuses = ["PENDING","REVIEW","APPROVED"];
- const currentIndex = statuses.indexOf((doc.status ||"APPROVED").toUpperCase());
+ const statuses = ["PENDING", "REVIEW", "APPROVED"];
+ const currentIndex = statuses.indexOf((doc.status || "APPROVED").toUpperCase());
  const nextStatus = statuses[(currentIndex + 1) % statuses.length];
 
  try {
- await axios.patch(`/api/workspace/${workspaceId}/document/${doc.id}`, { status: nextStatus });
+ await updateDocument(workspaceId, doc.id, { status: nextStatus });
  fetchRecent();
  } catch (error) {
  console.error(error);

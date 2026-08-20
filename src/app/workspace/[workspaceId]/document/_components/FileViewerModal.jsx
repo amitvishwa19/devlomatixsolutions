@@ -5,6 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
     Download,
     ExternalLink,
     FileIcon,
@@ -17,12 +24,19 @@ import {
     Maximize2,
     Calendar,
     HardDrive,
-    Tag
+    Tag,
+    Sparkles,
+    FileCode,
+    FileCheck,
+    Printer
 } from "lucide-react";
 import { format } from "date-fns";
+import { exportToMarkdown, exportToHTML, printDocumentToPDF } from '../_lib/exportUtils';
+import DocumentAiModal from './DocumentAiModal';
 
-export default function FileViewerModal({ isOpen, onOpenChange, file, onShare }) {
+export default function FileViewerModal({ isOpen, onOpenChange, file, onShare, workspaceId }) {
     const [isLoading, setIsLoading] = useState(true);
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
     if (!file) return null;
 
@@ -150,7 +164,8 @@ export default function FileViewerModal({ isOpen, onOpenChange, file, onShare })
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <>
+            <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-5xl h-[88vh] p-0 rounded-2xl border border-border/60 shadow-2xl flex flex-col overflow-hidden bg-card/95 backdrop-blur-xl">
                 {/* Header */}
                 <div className="px-6 py-4 flex items-center justify-between border-b border-border/40 shrink-0 bg-muted/20">
@@ -177,6 +192,56 @@ export default function FileViewerModal({ isOpen, onOpenChange, file, onShare })
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                        {/* AI Insights */}
+                        {workspaceId && file?.id && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsAiModalOpen(true)}
+                                className="h-8 text-xs font-semibold gap-1.5 rounded-lg bg-purple-500/10 border-purple-500/30 text-purple-600 hover:bg-purple-500/20 shadow-xs"
+                            >
+                                <Sparkles className="w-3.5 h-3.5 text-purple-500 animate-pulse" />
+                                AI Insights
+                            </Button>
+                        )}
+
+                        {/* Export Menu for Notes */}
+                        {(isNote || file.content) && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 text-xs font-semibold gap-1.5 rounded-lg border-border/60 bg-background shadow-xs"
+                                    >
+                                        <Download className="w-3.5 h-3.5 text-emerald-500" />
+                                        Export
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-xl border-border/50">
+                                    <DropdownMenuItem
+                                        onClick={() => exportToMarkdown(file)}
+                                        className="text-xs font-semibold gap-2 cursor-pointer"
+                                    >
+                                        <FileCode className="w-3.5 h-3.5 text-blue-500" /> Export Markdown (.md)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => exportToHTML(file)}
+                                        className="text-xs font-semibold gap-2 cursor-pointer"
+                                    >
+                                        <FileCheck className="w-3.5 h-3.5 text-emerald-500" /> Export HTML (.html)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={() => printDocumentToPDF(file)}
+                                        className="text-xs font-semibold gap-2 cursor-pointer"
+                                    >
+                                        <Printer className="w-3.5 h-3.5 text-purple-500" /> Print / Save PDF
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+
                         {onShare && (
                             <Button
                                 variant="outline"
@@ -211,5 +276,16 @@ export default function FileViewerModal({ isOpen, onOpenChange, file, onShare })
                 </div>
             </DialogContent>
         </Dialog>
+
+        {/* AI Assistant Modal */}
+        {workspaceId && file?.id && (
+            <DocumentAiModal
+                isOpen={isAiModalOpen}
+                onOpenChange={setIsAiModalOpen}
+                document={file}
+                workspaceId={workspaceId}
+            />
+        )}
+        </>
     );
 }

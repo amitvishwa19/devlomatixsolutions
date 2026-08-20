@@ -7,11 +7,12 @@ import {
  DialogHeader,
  DialogTitle,
  DialogFooter
-} from"@/components/ui/dialog";
-import { Button } from"@/components/ui/button";
-import { Input } from"@/components/ui/input";
-import { useModal } from"@/hooks/useModal";
-import axios from"@/utils/axios";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useModal } from "@/hooks/useModal";
+import { getDocuments } from "../../document/_actions/get-documents";
+import { createDocument } from "../../document/_actions/create-document";
 import {
  Loader2,
  Search,
@@ -28,24 +29,25 @@ import {
  Sparkles,
  CheckCircle2,
  UploadCloud,
-} from"lucide-react";
-import { ScrollArea } from"@/components/ui/scroll-area";
-import { cn } from"@/lib/utils";
-import AppImage from"@/components/ui/AppImage";
-import { clientLogger } from"@/utils/logger";
-import { ImageEditor } from'./ImageEditor';
-import { toast } from'sonner';
-import { Badge } from'@/components/ui/badge';
-import { Separator } from'@/components/ui/separator';
-import { useSession } from'next-auth/react';
-import { supabase } from'@/utils/supabaseClient';
+ Upload,
+ Trash2,
+ RefreshCw
+} from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import AppImage from "@/components/ui/AppImage";
+import { clientLogger } from "@/utils/logger";
+import { ImageEditor } from './ImageEditor';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { useSession } from 'next-auth/react';
+import { supabase } from "@/lib/supabase";
 
-export const MediaLibraryModal = () => {
+export const MediaLibraryModal = ({ workspaceId, onSelect, initialTab = "library" }) => {
+ const { isOpen, type, onClose, data } = useModal();
+ const isModalOpen = isOpen && type === "mediaLibrary";
  const { data: session } = useSession();
- const { isOpen, onClose, type, data, activeModals } = useModal();
- const isModalOpen = !!activeModals["mediaLibrary"];
- const modalData = activeModals["mediaLibrary"] || {};
- const { workspaceId, onSelect } = modalData;
 
  const fileInputRef = useRef(null);
  const [isLoading, setIsLoading] = useState(false);
@@ -66,12 +68,14 @@ export const MediaLibraryModal = () => {
  const fetchDocuments = async () => {
  setIsLoading(true);
  try {
- const res = await axios.get(`/api/workspace/${workspaceId}/document?isFolder=false`);
- const images = res.data.filter(doc =>
- doc.fileType?.startsWith('image/') ||
- ['.jpg','.jpeg','.png','.gif','.webp'].includes(doc.extension?.toLowerCase())
- );
- setDocuments(images);
+ const res = await getDocuments(workspaceId, { isFolder: false });
+ if (res.success && res.data) {
+   const images = res.data.filter(doc =>
+     doc.fileType?.startsWith('image/') ||
+     ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(doc.extension?.toLowerCase())
+   );
+   setDocuments(images);
+ }
  } catch (error) {
  console.error("[MEDIA_LIBRARY_FETCH]", error);
  } finally {
@@ -96,7 +100,6 @@ export const MediaLibraryModal = () => {
  setUploadProgress(10);
 
  try {
- const userId = session?.user?.userId || session?.user?.id;
  const fileExt = file.name.split('.').pop();
  const fileName = `${Date.now()}_${file.name.replace(/\.[^/.]+$/,"")}.${fileExt}`;
  const filePath = `workspace_${workspaceId}/media/${fileName}`;
@@ -120,18 +123,18 @@ export const MediaLibraryModal = () => {
  .from('devlomatix')
  .getPublicUrl(filePath);
 
- // Sync with Database
- await axios.post(`/api/workspace/${workspaceId}/document`, {
+ // Sync with Database via Server Action
+ const res = await createDocument(workspaceId, {
  name: file.name,
  fileUrl: publicUrl,
  fileKey: uploadData.path,
  fileSize: file.size,
  fileType: file.type,
- userId: userId,
- workspaceId: workspaceId,
  isFolder: false,
  category:"IMAGE"
  });
+
+ if (!res.success) throw new Error(res.error);
 
  setUploadProgress(100);
  toast.success("Media uploaded successfully!");
@@ -152,7 +155,6 @@ export const MediaLibraryModal = () => {
  const handleSaveEditedImage = async (blob) => {
  setIsLoading(true);
  try {
- const userId = session?.user?.userId || session?.user?.id;
  const fileName = `refined_${Date.now()}.webp`;
  const filePath = `workspace_${workspaceId}/media/${fileName}`;
 
@@ -166,17 +168,17 @@ export const MediaLibraryModal = () => {
  .from('devlomatix')
  .getPublicUrl(filePath);
 
- await axios.post(`/api/workspace/${workspaceId}/document`, {
+ const res = await createDocument(workspaceId, {
  name: fileName,
  fileUrl: publicUrl,
  fileKey: uploadData.path,
  fileSize: blob.size,
  fileType:'image/webp',
- userId: userId,
- workspaceId: workspaceId,
  isFolder: false,
  category:"IMAGE"
  });
+
+ if (!res.success) throw new Error(res.error);
 
  toast.success("Image refined and saved!");
  setIsEditing(false);
